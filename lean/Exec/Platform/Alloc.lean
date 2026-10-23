@@ -25,10 +25,4 @@ def AllocationAvailable {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat
     values.val.length + additional.val ≤ bound →
     ops.reserve values additional = .ok (true, values)
 
-theorem AllocationAvailable.mono {A : Type} {ops : runtime.platform.Alloc A}
-    {small large : Nat} (available : AllocationAvailable ops large) (bound : small ≤ large) :
-    AllocationAvailable ops small := by
-  intro T values additional request
-  exact available T values additional (Nat.le_trans request bound)
-
 end Exec.Platform

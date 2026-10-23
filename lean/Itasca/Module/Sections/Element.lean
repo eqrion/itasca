@@ -20,84 +20,6 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
-/-- The index loop returns `count` function indices, all in range, forming a `Rep IndexEncoding`
-span. -/
-@[step]
-theorem module.decode_func_indices_loop.spec (data : Slice U8) (env : module.Env)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
-    module.decode_func_indices_loop data env count (alloc.vec.Vec.new _) start 0#u32 ⦃ r => match r with
-      | .Ok (indices, next) => indices.val.length = count.val ∧
-          At (Rep IndexEncoding) data start indices.val next ∧
-          ∀ idx ∈ indices.val, idx.val < env.func_types.val.length
-      | .Err _ => True ⦄ := by
-  unfold module.decode_func_indices_loop
-  apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
-    (fun s => s.2.2.val ≤ count.val ∧ s.1.val.length = s.2.2.val ∧
-      At (Rep IndexEncoding) data start s.1.val s.2.1 ∧
-      ∀ idx ∈ s.1.val, idx.val < env.func_types.val.length)
-  · rintro ⟨out, pos, i⟩ ⟨hi, hlen, hbytes, hvalid⟩
-    dsimp only at hi hlen hbytes hvalid
-    unfold module.decode_func_indices_loop.body
-    dsimp only
-    split
-    · rename_i hstop
-      have heq : i.val = count.val := by scalar_tac
-      exact ⟨by omega, hbytes, hvalid⟩
-    · rename_i hmore
-      have hcapacity : out.val.length < Usize.max := by scalar_tac
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
-      rw [hr]
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          error.Error.Insts.CoreConvertFromOpError.from]
-      | Ok pair =>
-        obtain ⟨idx, next⟩ := pair
-        simp [core.result.Result.Insts.CoreOpsTry.branch]
-        step
-        split
-        · simp
-        · have hidx : idx.val < env.func_types.val.length := by scalar_tac
-          step
-          step
-          refine ⟨?_, ?_, ?_, ?_, ?_⟩
-          · scalar_tac
-          · simp only [out1_post, List.length_append, List.length_singleton]; scalar_tac
-          · simpa only [out1_post] using hbytes.snoc (At.of_u32 hp)
-          · intro value hm
-            rw [out1_post] at hm
-            rcases List.mem_append.mp hm with hm | hm
-            · exact hvalid value hm
-            · simpa [List.mem_singleton.mp hm] using hidx
-          · scalar_tac
-  · exact ⟨by simp, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp⟩
-
-/-- `module.decode_func_indices` returns the in-range function indices of a
-`VecEncoding IndexEncoding` span. -/
-@[step]
-theorem module.decode_func_indices.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
-    module.decode_func_indices data pos env ⦃ r => match r with
-      | .Ok (indices, next) => At (VecEncoding IndexEncoding) data pos indices.val next ∧
-          ∀ idx ∈ indices.val, idx.val < env.func_types.val.length
-      | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
-  cases r with
-  | Err e => simp [module.decode_func_indices, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      error.Error.Insts.CoreConvertFromOpError.from]
-  | Ok pair =>
-    obtain ⟨count, start⟩ := pair
-    obtain ⟨r, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_func_indices_loop.spec data env count start hc.span.2.2)
-    simp [module.decode_func_indices, hr, core.result.Result.Insts.CoreOpsTry.branch]
-    rw [hloop]
-    cases r with
-    | Err e => simp
-    | Ok pair =>
-      obtain ⟨indices, next⟩ := pair
-      obtain ⟨hlen, hb, ht⟩ := hp
-      exact ⟨At.vector hc hb hlen, ht⟩
-
 end Itasca
 
 namespace Itasca.ModuleSections
@@ -111,35 +33,6 @@ def ElementsAdded (env result : module.Env) (added : List module.Element) : Prop
 
 /-- An element is valid in the environment: its table, offset and initializers are valid. -/
 abbrev ElementValid := ModuleSegments.elementValid
-
-/-- A table index, an offset and a function index vector form a Wasm 1.0 element encoding. -/
-theorem element_encoded {data start p1 p2 next tableIdx offset init}
-    (ht : Leb128.Decoded data start tableIdx p1)
-    (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
-    (hi : ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.IndexEncoding) data p2 init next) :
-    ModuleBinary.At ModuleBinary.ElementEncoding data start ⟨.FuncRef, .Active tableIdx offset, init.map types.ConstExpr.RefFunc⟩ next := by
-  obtain ⟨tb, ht, hs⟩ := ModuleBinary.At.of_u32 ht
-  obtain ⟨ob, ho, hos⟩ := ho
-  obtain ⟨ib, hi, his⟩ := hi
-  exact ⟨tb ++ ob ++ ib, ⟨tableIdx, offset, init, tb, ob, ib, rfl, ht, ho, hi, rfl⟩, (hs.append hos).append his⟩
-
-/-- A flag word, the profile's table index encoding, an offset, an element kind and a function
-index vector form an `ElementEncodingFor profile` entry. -/
-theorem element_profile_encoded {profile data start first p1 p2 p3 next flags tableIdx explicit offset init}
-    (hf : Leb128.Decoded data start flags first)
-    (ht : ModuleBinary.At (fun pair => ModuleBinary.SegmentIndexEncoding profile flags pair.1 pair.2)
-      data first (tableIdx, explicit) p1)
-    (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
-    (hk : ModuleBinary.At (fun (_ : Unit) => ModuleBinary.ElementKindEncoding explicit) data p2 () p3)
-    (hi : ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.IndexEncoding) data p3 init next) :
-    ModuleBinary.At (ModuleBinary.ElementEncodingFor profile) data start ⟨.FuncRef, .Active tableIdx offset, init.map types.ConstExpr.RefFunc⟩ next := by
-  obtain ⟨fb, hf, hfs⟩ := ModuleBinary.At.of_u32 hf
-  obtain ⟨tb, ht, hts⟩ := ht
-  obtain ⟨ob, ho, hos⟩ := ho
-  obtain ⟨kb, hk, hks⟩ := hk
-  obtain ⟨ib, hi, his⟩ := hi
-  exact ⟨fb ++ tb ++ ob ++ kb ++ ib, ModuleBinary.ElementEncodingFor.of_parts hf ht ho hk hi,
-    (((hfs.append hts).append hos).append hks).append his⟩
 
 end Itasca.ModuleSections
 
@@ -259,30 +152,5 @@ theorem module.decode_element_section.profile_spec (data : Slice U8) (pos : Usiz
     | Ok next =>
       obtain ⟨added, hlen, henv, hb, ht, hsize, hrefs⟩ := hp
       exact ⟨added, henv, At.vector hc hb (by simpa using hlen), ht, hsize, hrefs⟩
-
-/-- Wasm 1.0 form of `module.decode_element_section_loop.profile_spec`. -/
-@[step]
-theorem module.decode_element_section_loop.spec (data : Slice U8) (env : module.Env)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hsize : env.elements.val.length ≤ start.val) (hrefs : env.declared_funcs.val.length ≤ start.val) :
-    module.decode_element_section_loop data env .Wasm1 count start 0#u32 ⦃ r => match r.1 with
-      | .Ok next => ∃ added, added.length = count.val ∧ ElementsAdded env r.2 added ∧
-          At (Rep ElementEncoding) data start (added.map ModuleEnv.rawElement) next ∧
-          (∀ entry ∈ added, ElementValid env entry) ∧ r.2.elements.val.length ≤ next.val ∧
-          r.2.declared_funcs.val.length ≤ next.val
-      | .Err _ => True ⦄ := by
-  exact module.decode_element_section_loop.profile_spec data env .Wasm1 count start hstart hsize hrefs
-
-/-- Wasm 1.0 form of `module.decode_element_section.profile_spec`. -/
-@[step]
-theorem module.decode_element_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
-    (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    module.decode_element_section data pos env .Wasm1 ⦃ r => match r.1 with
-      | .Ok next => ∃ added, ElementsAdded env r.2 added ∧
-          At (VecEncoding ElementEncoding) data pos (added.map ModuleEnv.rawElement) next ∧
-          (∀ entry ∈ added, ElementValid env entry) ∧ r.2.elements.val.length ≤ next.val ∧
-          r.2.declared_funcs.val.length ≤ next.val
-      | .Err _ => True ⦄ := by
-  exact module.decode_element_section.profile_spec data pos env .Wasm1 hsize hrefs
 
 end Itasca

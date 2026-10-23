@@ -5,11 +5,11 @@ open Aeneas Aeneas.Std Exec.Interp
 
 /-- Both direct and selected indirect calls explain exhaustion by decoded
 source FRAME_ nesting at the actual failure site. -/
-theorem CumulativeFailure.frame_depth {emission : StructuredMachine.FunctionEmission}
+theorem CumulativeFailure.frame_depth
     {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {source : Abs.AState} {sourceStore : _root_.store}
-    (stack : StructuredMachine.FrameStackRel emission store sourceStore exec source.frames)
+    (stack : StructuredMachine.FrameStackRel store sourceStore exec source.frames)
     (failure : CumulativeFailure allocator hooks exec store platform source (.Exhausted .CallStack)) :
     store.limits.max_frames.val ≤ Spec.frameDepth (Abs.decode source) := by
   rcases failure with ⟨⟨trap,kind,_⟩,_⟩ | ⟨kind,_⟩ | rejected

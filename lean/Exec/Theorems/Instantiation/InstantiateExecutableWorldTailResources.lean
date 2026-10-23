@@ -58,7 +58,7 @@ theorem instantiate_tail_executable_world_resource_causes {M P F A : Type}
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map decodeFuncType))
     (raw : ModuleBinary.Module)
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw) :
-    instantiate_tail memory hooks floats allocator identity store platform
+    runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false
       ⦃ out => ∀ error, out.1 = .Err error →
         WorldExecutableTailResourceCause memory hooks floats allocator view code store platform identity inst raw out.2.1 error ⦄div := by
   let continuation := (inst.module.module.env.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList

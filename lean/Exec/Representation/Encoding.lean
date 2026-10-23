@@ -36,13 +36,6 @@ def decodeOne (ty : valtype) (words : List Nat) : Option (val × List Nat) :=
       some ((if lo = 0 then .REF_NULL .EXTERNREF else .REF_HOST_ADDR (lo - 1)), rest)
   | _, _ => none
 
-def decodeValues : List valtype → List Nat → Option (List val × List Nat)
-  | [], words => some ([], words)
-  | ty :: types, words => do
-      let (value, rest) ← decodeOne ty words
-      let (values, tail) ← decodeValues types rest
-      pure (value :: values, tail)
-
 theorem encodeValue_length (value : val) :
     (encodeValue value).length = width (valueType value) := by
   cases value with
@@ -88,10 +81,6 @@ theorem decode_vector (bits : Nat) (rest : List Nat) :
   simp only [encodeValue, List.cons_append, List.nil_append, decodeOne]
   rw [Nat.mul_comm, Nat.mod_add_div]
 
-theorem decode_null (ty : reftype) (rest : List Nat) :
-    decodeOne (valtype_reftype ty) (encodeValue (.REF_NULL ty) ++ rest) =
-      some (.REF_NULL ty, rest) := by cases ty <;> rfl
-
 theorem decode_function_ref (address : Nat) (rest : List Nat) :
     decodeOne .FUNCREF (encodeValue (.REF_FUNC_ADDR address) ++ rest) =
       some (.REF_FUNC_ADDR address, rest) := by
@@ -135,76 +124,6 @@ theorem decode_encode (value : val) (h : wf_val value) (rest : List Nat) :
   | val_case_3 address => exact decode_function_ref address rest
   | val_case_4 address => exact decode_external_ref address rest
 
-theorem decode_encode_values (values : List val) (h : Forall wf_val values) (rest : List Nat) :
-    decodeValues (values.map valueType) (encodeValues values ++ rest) = some (values, rest) := by
-  induction values with
-  | nil => rfl
-  | cons value values ih =>
-    have hv := h value (by simp)
-    have hs : Forall wf_val values := fun v hm => h v (by simp [hm])
-    simp only [List.map_cons, encodeValues, List.flatMap_cons, List.append_assoc,
-      decodeValues, decode_encode value hv]
-    change (decodeValues (values.map valueType) (encodeValues values ++ rest)).bind
-      (fun pair => some (value :: pair.1, pair.2)) = some (value :: values, rest)
-    rw [ih hs]
-    rfl
-
-/-- Address-plus-one encoding reserves zero for null. This bound is supplied by
-the store representation invariant, separately from specification well-formedness. -/
-def RefFits : val → Prop
-  | .REF_FUNC_ADDR address | .REF_HOST_ADDR address => address + 1 < 2 ^ 64
-  | _ => True
-
-theorem encodeValue_word_bound (value : val) (h : wf_val value) (href : RefFits value) :
-    ∀ word ∈ encodeValue value, word < 2 ^ 64 := by
-  cases h with
-  | val_case_0 ty value hv =>
-    cases hv with
-    | num__case_0 kind bits _ hb hty =>
-      subst ty
-      cases kind <;> cases hb with
-      | uN_case_0 bits bounds =>
-        change Nat at bits
-        simp only [encodeValue, List.mem_singleton]
-        intro word heq
-        subst word
-        first
-        | have hb : bits ≤ 4294967295 := bounds.2
-          omega
-        | have hb : bits ≤ 18446744073709551615 := bounds.2
-          omega
-    | num__case_1 kind value hv hty =>
-      subst ty
-      cases kind with
-      | F32 =>
-        have hb := Float.floatBits_lt_32 value hv
-        change ∀ word ∈ [floatBits 32 value], word < 2 ^ 64
-        simp only [List.mem_singleton]
-        intro word heq
-        subst word
-        omega
-      | F64 =>
-        change ∀ word ∈ [floatBits 64 value], word < 2 ^ 64
-        simpa only [List.mem_singleton, forall_eq] using
-          Float.floatBits_lt_64 value hv
-  | val_case_1 ty value _ hv =>
-    cases ty
-    cases hv with
-    | uN_case_0 bits bounds =>
-      change Nat at bits
-      have hb : bits ≤ 340282366920938463463374607431768211455 := bounds.2
-      have hlo : bits % 2 ^ 64 < 2 ^ 64 := Nat.mod_lt _ (by decide)
-      have hhi : bits / 2 ^ 64 < 2 ^ 64 := by omega
-      simpa only [encodeValue, List.mem_cons, List.not_mem_nil, or_false,
-        forall_eq_or_imp, forall_eq] using And.intro hlo hhi
-  | val_case_2 ty =>
-    simp only [encodeValue, List.mem_singleton]
-    intro word heq
-    subst word
-    decide
-  | val_case_3 address | val_case_4 address =>
-    simpa only [RefFits, encodeValue, List.mem_singleton, forall_eq] using href
-
 theorem encodeValues_append (xs ys : List val) :
     encodeValues (xs ++ ys) = encodeValues xs ++ encodeValues ys := by
   exact List.flatMap_append
@@ -221,14 +140,5 @@ theorem encodeValues_take (values : List val) (count : Nat) :
     rw [encodeValues_length]
     simp only [offset, List.map_take]
   rw [hl, List.take_left]
-
-theorem encodeValues_injective_of_types {xs ys : List val}
-    (hx : Forall wf_val xs) (hy : Forall wf_val ys)
-    (ht : xs.map valueType = ys.map valueType)
-    (he : encodeValues xs = encodeValues ys) : xs = ys := by
-  have hdx := decode_encode_values xs hx []
-  have hdy := decode_encode_values ys hy []
-  rw [ht, he, hdy] at hdx
-  exact (congrArg Prod.fst (Option.some.inj hdx)).symm
 
 end Exec.Code

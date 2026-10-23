@@ -59,18 +59,4 @@ theorem control_read_typing_preserved {s : store} {frame : _root_.frame} {contex
       | rfl
       | (apply getElem?_of_bangEq <;> assumption)
 
-theorem control_read_config_preserved {s : store} {frame : _root_.frame}
-    {before after : List admininstr} {types : resulttype}
-    (source : Step_read ⟨⟨s,frame⟩,before⟩ after) (scope : ControlReadCode before)
-    (typed : Config_ok ⟨⟨s,frame⟩,before⟩ types) : Config_ok ⟨⟨s,frame⟩,after⟩ types := by
-  cases typed with
-  | mk_Config_ok _ _ _ output context state expression _ _ _ =>
-    have frameTyped : Frame_ok s frame context := by cases state; assumption
-    have storeTyped := state_ok_store state
-    have body : Instrs_ok2 s context before (.mk_functype (.mk_list []) (.mk_list output)) := by
-      cases expression
-      assumption
-    exact state_instructions_config_ok state
-      (control_read_typing_preserved (.of_frame_ok frameTyped) (source_store_components storeTyped) source scope body)
-
 end Exec.Spec

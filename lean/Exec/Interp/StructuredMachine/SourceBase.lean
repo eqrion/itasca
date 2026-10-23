@@ -2,9 +2,9 @@ import Exec.Interp.StructuredMachine.StructuredCall
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
-theorem FrameStackRel.source_base {M : Type} {emission : FunctionEmission}
+theorem FrameStackRel.source_base {M : Type}
     {store : runtime.store.Store M} {sourceStore : _root_.store} {exec : runtime.interp.Execution}
-    {f : Abs.AFrame} {rest : List Abs.AFrame} (stack : FrameStackRel emission store sourceStore exec (f::rest))
+    {f : Abs.AFrame} {rest : List Abs.AFrame} (stack : FrameStackRel store sourceStore exec (f::rest))
     {raw : runtime.interp.Frame} {index : Usize}
     (last : index.val+1=exec.frames.length) (found : exec.frames.val[index.val]?=some raw) :
     raw.base.val=suspendedSourceWords rest := by

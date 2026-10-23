@@ -18,27 +18,4 @@ theorem encode_decoded_ref (ty : Itasca.types.ElemType) (word : U64) :
   · simpa only [decodeWords,pairWords,sourceType,reduceCtorEq,ite_false] using encode_decode_words .FuncRef word 0#u64 (by simp)
   · simpa only [decodeWords,pairWords,sourceType,reduceCtorEq,ite_false] using encode_decode_words .ExternRef word 0#u64 (by simp)
 
-/-- The extracted null test produces the exact canonical Boolean whose source
-instruction has the generated pure transition. -/
-theorem ref_is_null_source_effect
-    (exec : runtime.interp.Execution) (base : Usize) (dst src : U32)
-    (ty : Itasca.types.ElemType) (s : _root_.store) (ambient : frame)
-    (sourceBound : base.val+src.val < exec.slots.length)
-    (destinationBound : base.val+dst.val < exec.slots.length)
-    (storeWf : wf_store s) (ambientWf : wf_frame ambient) :
-    runtime.interp.execute_ref_is_null exec base dst src ⦃ out =>
-      out.1 = .Ok () ∧ ∃ result : U64,
-        result.val = Spec.referenceIsNull (decodeRef ty exec.slots.val[base.val+src.val]!) ∧
-        SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) result) ∧
-        StepH ⟨⟨s,ambient⟩,[admininstr_ref (decodeRef ty exec.slots.val[base.val+src.val]!),.REF_IS_NULL]⟩ []
-          ⟨⟨s,ambient⟩,[Spec.Segment.i32 result.val]⟩ ⦄ := by
-  apply WP.spec_mono (ref_is_null_effect exec base dst src sourceBound destinationBound)
-  intro out effect
-  obtain ⟨success,written⟩ := effect
-  let result : U64 := if exec.slots.val[base.val+src.val]! = 0#u64 then 1#u64 else 0#u64
-  have resultValue : result.val = Spec.referenceIsNull (decodeRef ty exec.slots.val[base.val+src.val]!) := by
-    rw [decode_ref_is_null]
-    dsimp only [result]
-    split <;> rfl
-  exact ⟨success,result,resultValue,written,resultValue ▸ Spec.ref_is_null_step s ambient _ storeWf ambientWf⟩
 end Exec.Interp

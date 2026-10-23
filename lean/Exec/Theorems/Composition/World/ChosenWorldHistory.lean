@@ -1,9 +1,8 @@
 import Exec.Theorems.Composition.World.ChosenWorld
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 theorem ChosenWorld.history_erases {choices M P F A memory hooks floats allocator view expected before after n events}
-    (history : Iterations (ChosenWorldTransition (emission:=emission) (allowed:=allowed) choices (M:=M) (P:=P) (F:=F) (A:=A)
+    (history : Iterations (ChosenWorldTransition choices (M:=M) (P:=P) (F:=F) (A:=A)
       memory hooks floats allocator (view:=view) (expected:=expected)) n before events after) :
     Iterations (WorldRecordedTransition memory hooks floats allocator) n before.toEventfulWorld events after.toEventfulWorld := by
   induction history with
@@ -11,7 +10,7 @@ theorem ChosenWorld.history_erases {choices M P F A memory hooks floats allocato
   | cons edge tail ih => exact .cons edge.recorded ih
 
 theorem ChosenWorld.history_source {choices M P F A memory hooks floats allocator view expected before after n events}
-    (history : Iterations (ChosenWorldTransition (emission:=emission) (allowed:=allowed) choices (M:=M) (P:=P) (F:=F) (A:=A)
+    (history : Iterations (ChosenWorldTransition choices (M:=M) (P:=P) (F:=F) (A:=A)
       memory hooks floats allocator (view:=view) (expected:=expected)) n before events after) :
     ∃ count, after.occurrence=before.occurrence+count ∧
       ChosenStepsN choices before.occurrence count (Abs.decode before.machine.source) events (Abs.decode after.machine.source) := by

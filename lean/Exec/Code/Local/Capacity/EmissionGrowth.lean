@@ -141,28 +141,6 @@ theorem compiler_copy_growth {A : Type} (ops : runtime.platform.Alloc A)
     · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
       exact compiler_emit_growth ops law before after instruction status emitted
 
-theorem compiler_finish_op_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 1 := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => 
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact compiler_emit_growth ops law before middle instruction (.Err error) emitted
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    rw [compiler_observe_code_result ops law middle after state status rest]
-    exact compiler_emit_growth ops law before middle instruction (.Ok ()) emitted
-
 theorem compiler_pair_code_result {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (a b : U32)
     (status : core.result.Result U32 Itasca.error.VisitError)

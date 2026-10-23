@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed select uses the source-selected width for its instruction check. -/
 theorem reader_typed_select_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (localsMatch : compilerLocals before = C.LOCALS)

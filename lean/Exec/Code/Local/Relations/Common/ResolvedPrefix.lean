@@ -33,11 +33,6 @@ theorem resolvedCode_append_code (code emitted : List Bytecode) (groups : List F
     intro g member site atSite
     simpa [patchCode_length] using inside g (List.mem_cons_of_mem _ member) site atSite
 
-/-- Closing the innermost label performs exactly the pending resolution and
-removes that group; the resolved prefix is unchanged. -/
-theorem resolvedCode_close (code : List Bytecode) (group : FixupTarget) (rest : List FixupTarget) :
-    resolvedCode (patchCode code group.sites group.target) rest = resolvedCode code (group :: rest) := rfl
-
 /-- A newly emitted forward branch belongs to exactly its selected label group.
 Resolving that extended schedule appends the branch with its final static target
 and leaves all earlier resolved instructions unchanged. -/

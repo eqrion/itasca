@@ -50,13 +50,4 @@ theorem Run.span {profile} {data initial decls start initialId after afterDecls 
   | custom _ hb ih => have := hb.span; omega
   | step _ _ hh _ ih => have := hh.span; omega
 
-/-- A run never lowers the last-seen section rank. -/
-theorem Run.id_bounds {profile} {data initial decls start initialId after afterDecls next id}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
-    (hstart : initialId.val ≤ 10) : initialId.val ≤ id.val ∧ id.val ≤ 10 := by
-  induction h with
-  | nil => exact ⟨le_rfl, hstart⟩
-  | custom _ _ ih => exact ih
-  | step _ ho _ he ih => have := he.id_range; omega
-
 end Itasca.ModuleEnv

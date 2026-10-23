@@ -55,51 +55,6 @@ theorem call_instruction_type {s : store} {context : _root_.context} {instructio
     simpa only [Option.some.injEq,functype.mk_functype.injEq,list.mk_list.injEq] using actual.symm
   all_goals simp [instructionCallAddress] at call
 
-theorem call_expression_results {s : store} {context : _root_.context} {address : funcaddr}
-    {args : List val} {params results output : List valtype}
-    (typed : Expr_ok2 s context (vals args++[.CALL_ADDR address]) (.mk_list output))
-    (arguments : ResultsTyped s params args)
-    (signature : s.FUNCS[address]?.map funcinst.TYPE = some (.mk_functype (.mk_list params) (.mk_list results))) :
-    Resulttype_sub (.mk_list results) (.mk_list output) := by
-  cases typed
-  have instructions : Instrs_ok2 s context (vals args++[.CALL_ADDR address])
-      (.mk_functype (.mk_list []) (.mk_list output)) := by assumption
-  obtain ⟨types,values,called⟩ := closed_value_prefix_typing instructions
-  have same := resultsTyped_types_unique values arguments
-  subst types
-  obtain ⟨base,input,produced,primitive,inputSub,outputSub⟩ := instruction_typing_effect called (.CALL_ADDR address) rfl
-  obtain ⟨rfl,rfl⟩ := call_instruction_type primitive rfl signature
-  have count := (resulttype_sub_iff.mp inputSub).length_eq
-  have empty : base=[] := by
-    have zero : base.length=0 := by simp only [List.length_append] at count; omega
-    simpa using zero
-  subst base
-  exact outputSub
-
-theorem direct_host_return_config_preserved {s t : store} {frame : _root_.frame} {address : funcaddr}
-    {identity : Nat} {args returned : List val} {params results output : List valtype}
-    (typed : Config_ok ⟨⟨s,frame⟩,vals args++[.CALL_ADDR address]⟩ (.mk_list output))
-    (host : HostFunction s address identity params results)
-    (arguments : ResultsTyped s params args) (extension : Extend_store s t)
-    (storeTyped : Store_ok t) (values : ResultsTyped t results returned) :
-    Config_ok ⟨⟨t,frame⟩,vals returned⟩ (.mk_list output) := by
-  obtain ⟨module,found⟩ := host
-  have signature : s.FUNCS[address]?.map funcinst.TYPE = some (.mk_functype (.mk_list params) (.mk_list results)) := by
-    simp only [found,Option.map_some]
-  cases typed with
-  | mk_Config_ok _ _ _ _ context state expression _ _ _ =>
-    exact host_return_config_ok state extension storeTyped
-      (resultsTyped_subtype values (call_expression_results expression arguments signature))
-
-theorem direct_host_trap_config_preserved {s t : store} {frame : _root_.frame}
-    {body : List admininstr} {output : List valtype}
-    (typed : Config_ok ⟨⟨s,frame⟩,body⟩ (.mk_list output))
-    (extension : Extend_store s t) (storeTyped : Store_ok t) :
-    Config_ok ⟨⟨t,frame⟩,[.TRAP]⟩ (.mk_list output) := by
-  cases typed with
-  | mk_Config_ok _ _ _ _ context state _ _ _ _ =>
-    exact host_trap_config_ok state extension storeTyped output
-
 theorem resulttype_sub_cancel_suffix {left right tail : List valtype}
     (sub : Resulttype_sub (.mk_list (left++tail)) (.mk_list (right++tail))) :
     Resulttype_sub (.mk_list left) (.mk_list right) := by

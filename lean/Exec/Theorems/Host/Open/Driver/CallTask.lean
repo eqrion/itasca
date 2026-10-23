@@ -23,7 +23,7 @@ theorem WasmTask.prepare {M F A : Type}
     (active : 0<exec.frames.length) :
     prepareStep memory (inert memory) floats allocator exec store () ⦃phase=>CallTask memory view code store root signature phase⦄ := by
   obtain ⟨source,pc,pending,machine,owned⟩ := guard.2 rfl
-  let world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType) :=
+  let world : EventfulWorld M Unit view (signature.results.val.map sourceType) :=
     ⟨code,⟨store,exec,(),source,pc,pending,machine,held.toCertifiedApiStore.toCertifiedSupportedStore,owned⟩⟩
   obtain ⟨phase,actual,post⟩ := WP.spec_imp_exists (prepare_world_step memory floats allocator correct allocation view laws world held active)
   rw [actual,WP.spec_ok]

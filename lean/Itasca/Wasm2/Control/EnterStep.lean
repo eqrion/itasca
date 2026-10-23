@@ -28,18 +28,18 @@ def Frames.Form.opcode (form : Frames.Form) : U8 :=
   | _ => 0x02#u8
 
 /-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
-theorem Pending.enter_after {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.enter_after {data env profile locals index st} (p : Pending data env profile locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
-    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have hcap : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  apply WP.spec_mono (code.enter.sound st data env form initial outer p.current.vals vals
+  apply WP.spec_mono (code.enter.sound st data env profile form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core hcap)
   intro r hr hok
-  obtain ⟨bt, ins, outs, hdecoded, hin, hout, hip, hop, remaining, newBase,
+  obtain ⟨bt, ins, outs, hdecoded, hscalar, hin, hout, hip, hop, remaining, newBase,
     hlen, hbase, hpop, hctrls, hblocks, hvals⟩ := hr hok
   have encoded : At data p.start (form.token bt) r.2.core.pos := by
     apply At.of_block_type bt p.inbounds hbyte p.pos _ hdecoded
@@ -54,11 +54,16 @@ theorem Pending.enter_after {data env locals index st} (p : Pending data env loc
     (by simpa [base] using hbase) hctrls hblocks
     (by simpa [vals, base] using hvals)
   refine p.running_after r.2 _ _ (form.token bt) encoded ho ?_ ?_ ?_
+    (p.profileFrames.enter form initial bt ins outs newBase remaining hscalar) ?_
     (by cases form <;> simp [Frames.Form.token, Token.Declared])
   · simpa [Frames.bodyType_enter] using p.bodyType
   · have he : form.opening bt = [form.token bt] := by
       rcases initial with rfl | rfl | rfl <;> rfl
     simpa [he] using htrace
   · simp [hblocks]
+  · intro hp
+    refine p.wasm1_at encoded ?_ ?_ hp
+    · rw [hbyte]; rcases initial with rfl | rfl | rfl <;> decide
+    · rcases initial with rfl | rfl | rfl <;> exact hscalar hp
 
 end Itasca.Wasm2

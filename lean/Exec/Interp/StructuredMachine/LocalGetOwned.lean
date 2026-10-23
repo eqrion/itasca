@@ -7,12 +7,11 @@ import Exec.Interp.StructuredMachine.LinearContinuation
 import Exec.Abs.Core.Typing
 import Exec.Interp.StructuredMachine.SuspendedPoint
 import Exec.Interp.Relations.ControlPoint
-import Exec.Interp.Relations.LocalCertified
+import Exec.Interp.Relations.LocalCodePoint
+import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.ValueLookup
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem step_localGet_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -31,7 +30,7 @@ theorem step_localGet_owned_forward {M P F A : Type}
     (slots : FrameSlots exec raw f)
     (capacity : ∀ value, f.locals[localIndex.val]? = some value →
       raw.base.val + Code.slots ((f.locals ++ f.vals).map Code.valueType) + Code.width (Code.valueType value) ≤ exec.slots.length)
-    (point : FramePoint emission s raw { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after }
+    (point : FramePoint s raw { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
@@ -40,7 +39,7 @@ theorem step_localGet_owned_forward {M P F A : Type}
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
+        ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SourceClosure { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after } g ∧
@@ -49,9 +48,9 @@ theorem step_localGet_owned_forward {M P F A : Type}
           ⟨s, ambient, g :: rest, []⟩ ∧
         (g = {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} ∨ ∃locals values, g = {f with code := after,locals := locals,vals := values}) ∧
         FrameOwnershipClosure {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} g ⦄ := by
-  rcases structuredCodeWithTables_linear_inv (by rfl) point.code.current with skip | branch
+  rcases structuredCode_linear_inv (by rfl) point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -90,7 +89,7 @@ theorem step_localGet_owned_forward {M P F A : Type}
     apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
       (Code.move (Code.valueType value) dst src) last hf hi hc fetched pcBound
     intro pc hpc
-    have nextPoint : FramePoint emission s { raw with pc := pc }
+    have nextPoint : FramePoint s { raw with pc := pc }
         { f with code := after, vals := f.vals ++ [value] }
         compiled C targets next output := by
       apply linear_continuation point pc f.locals (f.vals ++ [value]) after middle
@@ -110,45 +109,5 @@ theorem step_localGet_owned_forward {M P F A : Type}
     · apply ConcreteSim.of_source
       exact simulation
     · exact FrameOwnershipClosure.local_get {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} after localIndex.val value lookup
-
-theorem step_localGet_owned {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (localIndex : U32) (after : List instr)
-    (last : index.val + 1 = exec.frames.length)
-    (hf : exec.frames.val[index.val]? = some raw)
-    (hi : store.instances.val[raw.instance.val]? = some inst)
-    (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after } :: rest, []⟩)
-    (slots : FrameSlots exec raw f)
-    (capacity : ∀ value, f.locals[localIndex.val]? = some value →
-      raw.base.val + Code.slots ((f.locals ++ f.vals).map Code.valueType) + Code.width (Code.valueType value) ≤ exec.slots.length)
-    (point : FramePoint emission s raw { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after }
-      compiled C targets next output) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame) (targets' : List Code.LabelTarget) (next' : Nat)
-        (output' : List valtype) (pending : Bool),
-        { out.2.1 with slots := exec.slots } =
-          { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
-        FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
-        Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
-        FrameMetadata f g ∧
-        SourceClosure { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after } g ∧
-        ConcreteSim compiled.code.length raw.pc.val pc.val false pending
-          ⟨s, ambient, { f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after } :: rest, []⟩
-          ⟨s, ambient, g :: rest, []⟩ ∧
-        (g = {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} ∨ ∃locals values, g = {f with code := after,locals := locals,vals := values}) ∧
-        FrameOwnershipClosure {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} g ⦄ := by
-  apply WP.spec_mono (step_localGet_owned_forward memory hooks floats allocator exec store platform index raw inst compiled C targets next output s ambient f rest localIndex after last hf hi hc pcBound typed slots capacity point)
-  rintro out ⟨success,same,platform,pc,g,targets',next',output',pending,forward,pendingEq,rest⟩
-  exact ⟨success,same,platform,pc,g,targets',next',output',pending,rest⟩
 
 end Exec.Interp.StructuredMachine

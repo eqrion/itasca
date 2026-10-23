@@ -1,16 +1,19 @@
-import Exec.Interp.StructuredMachine.IndirectProjection
-import Exec.Interp.Cumulative.Machine
+import Exec.Interp.StructuredMachine.Heads
+import Exec.Interp.StructuredMachine.IndirectPoint
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
 import Exec.Abs.Indirect.Operands
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 
-theorem indirect_values_head {emission : FunctionEmission} {s : _root_.store} {raw : runtime.interp.Frame} {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction} {C targets next output}
+theorem indirect_values_head {s : _root_.store} {raw : runtime.interp.Frame} {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction} {C targets next output}
     [IndirectProjection (emission compiled) compiled.indirect.val]
     (table type : Nat) (after : List instr)
-    (point : FramePoint emission s raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
+    (point : FramePoint s raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
     (typed : Abs.FrameTyped s {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} []) :
     (∃ target : U32, raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      FramePoint emission s {raw with pc:=target} {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output) ∨
+      FramePoint s {raw with pc:=target} {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output) ∨
     (∃ (front args : List val) (params results : List valtype) (position : Nat)
         (typeIndex tableIndex entry index base : U32) (bounds : limits),
       typeIndex.val=type ∧ tableIndex.val=table ∧
@@ -22,7 +25,7 @@ theorem indirect_values_head {emission : FunctionEmission} {s : _root_.store} {r
       compiled.indirect.val[entry.val]?=some (tableIndex,typeIndex) ∧
       base.val=Code.slots ((f.locals++front).map Code.valueType) ∧ index.val=base.val+Code.slots params ∧
       compiled.code.val[raw.pc.val]?=some (.CallIndirect entry index base) ∧
-      Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
         (front.map Code.valueType++results) after (raw.pc.val+1) next output) := by
   rcases indirect_point_head table type after (fun _ _ _ head => IndirectProjection.project (pairs:=compiled.indirect.val) head) point.code with jump | actual
   · obtain ⟨target,forward,fetched,tail⟩ := jump

@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderMetadata
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
-theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 37#u8)
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
@@ -31,7 +31,7 @@ theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env 
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_table_set_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_table_set_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 38#u8)
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
@@ -60,7 +60,7 @@ theorem reader_table_set_wasm2 {data env locals index st} (p : Pending data env 
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_ref_null_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_ref_null_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
     (hsize : st.core.vals.val.length < Usize.max)
     (value : types.ElemType) (out : code.OpIterState)
@@ -82,7 +82,7 @@ theorem reader_ref_null_wasm2 {data env locals index st} (p : Pending data env l
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_table_grow_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_table_grow_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 15#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -113,7 +113,7 @@ theorem reader_table_grow_wasm2 {data env locals index st} (p : Pending data env
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_table_size_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_table_size_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 16#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -144,7 +144,7 @@ theorem reader_table_size_wasm2 {data env locals index st} (p : Pending data env
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_table_fill_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_table_fill_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 17#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -175,7 +175,7 @@ theorem reader_table_fill_wasm2 {data env locals index st} (p : Pending data env
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_data_drop_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_data_drop_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -203,7 +203,7 @@ theorem reader_data_drop_wasm2 {data env locals index st} (p : Pending data env 
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env locals index st)
+theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)

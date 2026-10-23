@@ -116,26 +116,4 @@ theorem Shape.element_drop {M : Type} {view : M → Slice U8} {store : runtime.s
   · exact shape.tableAccounting
   · exact shape.tableLimit
 
-theorem TableInitializationEffect.compiled {M : Type} {store : runtime.store.Store M}
-    {tableIndex table segment destination source count out}
-    (effect : TableInitializationEffect store tableIndex table segment destination source count out)
-    (code : CodeInterpretation) (compiled : Interp.CompiledFunctions code store) :
-    Interp.CompiledFunctions code out.2 := by
-  unfold TableInitializationEffect at effect
-  split at effect
-  · obtain ⟨words, rfl, values⟩ := effect
-    exact compiled_functions_metadata code rfl rfl rfl rfl compiled
-  · rw [effect]; exact compiled
-
-theorem MemoryInitializationEffect.compiled {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {memoryIndex memory segment destination source count out}
-    (effect : MemoryInitializationEffect view store memoryIndex memory segment destination source count out)
-    (code : CodeInterpretation) (compiled : Interp.CompiledFunctions code store) :
-    Interp.CompiledFunctions code out.2 := by
-  unfold MemoryInitializationEffect at effect
-  split at effect
-  · obtain ⟨buffer, rfl, values⟩ := effect
-    exact compiled_functions_metadata code rfl rfl rfl rfl compiled
-  · rw [effect]; exact compiled
-
 end Exec.Store

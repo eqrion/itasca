@@ -8,12 +8,6 @@ def IndirectTarget (s : store) (f : frame) (table type position address : Nat) :
   (fun_table ⟨s,f⟩ (.mk_uN table)).REFS[position]? = some (.REF_FUNC_ADDR address) ∧
     ∃ function,s.FUNCS[address]?=some function ∧ fun_type ⟨s,f⟩ (.mk_uN type)=function.TYPE
 
-theorem indirect_target_unique {s f table type position a b}
-    (first : IndirectTarget s f table type position a) (second : IndirectTarget s f table type position b) : a=b := by
-  have equal := Option.some.inj (first.1.symm.trans second.1)
-  cases equal
-  rfl
-
 theorem call_indirect_resolve (s : store) (f : frame) (table type position address : Nat)
     (hs : wf_store s) (hf : wf_frame f) (ht : table<2^32) (hy : type<2^32) (hp : position<2^32)
     (target : IndirectTarget s f table type position address) :

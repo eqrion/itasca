@@ -1,4 +1,6 @@
-import Exec.Interp.Machines.Slice.SliceOutcome
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Control.NormalizeCompose
+import Exec.Interp.Relations.SourceCallCause
 
 namespace Exec.Interp
 open Aeneas Aeneas.Std
@@ -28,27 +30,5 @@ theorem ConcreteSim.widen {small large beforePC afterPC : Nat}
   rcases simulation with ⟨same, decrease⟩ | steps
   · exact Or.inl ⟨same, dispatchMeasure_widen bound decrease⟩
   · exact Or.inr steps
-
-theorem SliceAdvance.widen {M : Type} {store : runtime.store.Store M} {exec : runtime.interp.Execution}
-    {expected : List valtype} {small large pc : Nat} {pending : Bool} {before : Abs.AState}
-    (advance : SliceAdvance store exec expected small pc pending before) (bound : small ≤ large) :
-    SliceAdvance store exec expected large pc pending before := by
-  obtain ⟨after, nextPC, nextPending, invariant, sameStore, sameAmbient, simulation, bounded, references⟩ := advance
-  exact ⟨after, nextPC, nextPending, invariant, sameStore, sameAmbient, simulation.widen bound, bounded, references⟩
-
-theorem SliceOutcome.widen {M P A : Type} {allocator : runtime.platform.Alloc A}
-    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {expected : List valtype} {small large pc : Nat}
-    {pending : Bool} {source : Abs.AState} {out}
-    (outcome : SliceOutcome allocator hooks exec store platform expected small pc pending source out)
-    (bound : small ≤ large) :
-    SliceOutcome allocator hooks exec store platform expected large pc pending source out := by
-  obtain ⟨sameStore, transition⟩ := outcome
-  refine ⟨sameStore, ?_⟩
-  cases status : out.1 with
-  | Ok u =>
-    simp only [status] at transition ⊢
-    exact transition.widen bound
-  | Err error => simpa only [status] using transition
 
 end Exec.Interp

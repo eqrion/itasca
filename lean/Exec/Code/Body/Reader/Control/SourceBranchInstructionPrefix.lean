@@ -1,5 +1,5 @@
-import Exec.Code.Body.Reader.Table.StructuredReaderBranchLayoutWithTables
-import Exec.Code.Body.Control.Table.StructuredBranchIfLayoutWithTables
+import Exec.Code.Body.Reader.Table.StructuredReaderBranchLayout
+import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Exec.Code.Local.Callbacks.Common.FixupBudget
 import Exec.Code.Local.Relations.Table.BranchTableArguments
 import Exec.Code.Local.Checking.BranchCallbackInstructionPrefix
@@ -20,10 +20,10 @@ theorem FrameScope.loop_instruction_target {A : Type} {compiler : runtime.compil
 
 /-- Typed source label selection supplies every transfer and target premise
 needed by the actual unconditional branch callback. -/
-theorem StructuredCompilerPrefixWithTables.br_open_instructions
+theorem StructuredCompilerPrefix.br_open_instructions
     {jumpTables : List U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (state : code.OpIterState) (depth : U32) (view : signature.ResultType)
@@ -68,10 +68,10 @@ theorem StructuredCompilerPrefixWithTables.br_open_instructions
 
 /-- Conditional source label selection additionally bounds the consumed i32
 selector and the local continuation around an actual transfer. -/
-theorem StructuredCompilerPrefixWithTables.br_if_open_instructions
+theorem StructuredCompilerPrefix.br_if_open_instructions
     {jumpTables : List U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (state : code.OpIterState) (depth : U32) (view : signature.ResultType)

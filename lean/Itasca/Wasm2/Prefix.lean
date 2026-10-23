@@ -1,4 +1,6 @@
-import Itasca.Wasm1.Frames
+import Itasca.Wasm1.ProfileSyntax
+import Itasca.Handler.ResumePrefix
+import Itasca.Binary.Wasm1.Encoding
 
 /-!
 # Typed instruction prefixes

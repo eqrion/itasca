@@ -35,13 +35,4 @@ def decodeInstruction : instr → Option Instruction
   | unary ty op => cases op <;> (try cases ty) <;> rfl
   | conversion op => cases op <;> rfl
 
-theorem Instruction.source_injective : Function.Injective Instruction.source := by
-  intro left right same
-  have := congrArg decodeInstruction same
-  simpa only [decodeInstruction_source, Option.some.injEq] using this
-
-@[simp] theorem Instruction.source_eq_iff (left right : Instruction) :
-    left.source = right.source ↔ left = right :=
-  ⟨fun same => source_injective same, congrArg Instruction.source⟩
-
 end Exec.Abs.Numeric

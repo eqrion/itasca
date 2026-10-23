@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.EntryCompilerInitial
 import Exec.Code.Body.Reader.Common.IndexedReaderCompilerInitial
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPointWithTables
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 theorem indexed_witness_compiler_start (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
@@ -16,7 +16,7 @@ theorem indexed_witness_compiler_start (jumpTables : List U32) (emit : List valt
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial) :
     CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
-    StructuredCompilerPrefixWithTables jumpTables emit w.startedState w.startedState
+    StructuredCompilerPrefix jumpTables emit w.startedState w.startedState
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
       [] (SourceScope.initial (w.ft.results.val.map Translate.valueType)) [] 0 := by
@@ -36,23 +36,23 @@ theorem indexed_witness_compiler_start (jumpTables : List U32) (emit : List valt
     · simpa only [sigs] using signatureTable
     · simpa only [FunctionParameterSlots, funcs] using functionTable
     · exact function_body_coordinate_bound w.body_bytes bodyStart endFits
-  · exact structured_compiler_function_start_prefix_with_tables emit ops law signatures functionSlots budget batchStart initial w.startedState
+  · exact structured_compiler_function_start_prefix emit ops law signatures functionSlots budget batchStart initial w.startedState
       w.ctx w.typeIdx signature w.bodyStart finish _ _ _ lookup matched.resultWords beginFits endFits created w.function_start
 
 theorem indexed_witness_compiler_initial_wasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final .Wasm2)
+      data env index start finish initial final profile)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial) :
     CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
-    StructuredReaderCompilerPointWithTablesWasm2 jumpTables emit w.startedState w.startedState
+    StructuredReaderCompilerPointWasm2 jumpTables emit w.startedState w.startedState
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
       w.body env w.ctx.locals w.typeIdx w.ft (Wasm2.initial w.typeIdx) ∧
@@ -60,49 +60,8 @@ theorem indexed_witness_compiler_initial_wasm2 (jumpTables : List U32) (emit : L
       w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) w.startedState final := by
   obtain ⟨facts, compiled⟩ := indexed_witness_compiler_start jumpTables emit ops law w signatureTable functionTable endFits created
   have run := witness_typed_steps w
-  change TypedRunWasm2 _ _ _ _ _ _ _ _ at run
   have lookup : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
-  exact ⟨facts, (StructuredReaderCompilerStateWithTablesWasm2.initial _ _ _ _ _ _ _ _ _ lookup run.body_size compiled).point, run⟩
+  exact ⟨facts, (StructuredReaderCompilerStateWasm2.initial _ _ _ _ _ _ _ _ _ lookup run.body_size compiled).point, run⟩
 
-theorem indexed_witness_compiler_initial_wasm1 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops)
-    {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
-    {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish}
-    (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final .Wasm1)
-    (signatureTable : SignatureSequence signatures.val env.types.val)
-    (functionTable : functionSlots.val.map (fun word => word.val) =
-      env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
-    (endFits : batchStart.val + finish.val ≤ Usize.max)
-    (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    (singleResult : w.ft.results.val.length ≤ 1) :
-    CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
-    Control.resultTypes (Wasm1.Loop.initialBlockType w.ctx.results.val) = w.ctx.results.val.map Translate.valueType ∧
-    StructuredReaderCompilerPointWithTablesWasm1 jumpTables emit w.startedState w.startedState
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ctx.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      w.body env w.ctx (Wasm1.Loop.initialBlockType w.ctx.results.val)
-      (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType w.ctx.results.val)) ∧
-    TypedRunWasm1 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      w.body env w.ctx (Wasm1.Loop.initialBlockType w.ctx.results.val)
-      (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType w.ctx.results.val)) w.startedState final := by
-  obtain ⟨facts, compiled⟩ := indexed_witness_compiler_start jumpTables emit ops law w signatureTable functionTable endFits created
-  have run := witness_typed_steps w
-  change TypedRunWasm1 _ _ _ _ _ _ _ _ at run
-  obtain ⟨bt, results⟩ := CodeEntry.blockType_of_length w.ft.results.val singleResult
-  have initialBt : Wasm1.Loop.initialBlockType w.ctx.results.val = bt := by
-    rw [w.context_results, results, Wasm1.Loop.initialBlockType_results]
-  have returns : Control.resultTypes (Wasm1.Loop.initialBlockType w.ctx.results.val) =
-      w.ctx.results.val.map Translate.valueType := by
-    rw [initialBt, w.context_results, results]
-    rfl
-  have state := StructuredReaderCompilerStateWithTablesWasm1.initial w.startedState
-    (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-    (w.ctx.locals.val.map Translate.valueType) w.body env w.ctx
-    (Wasm1.Loop.initialBlockType w.ctx.results.val) run.body_size
-    (by rw [returns, w.context_results]; exact compiled)
-  rw [returns] at state
-  exact ⟨facts, returns, state.point, run⟩
 end Exec.Code

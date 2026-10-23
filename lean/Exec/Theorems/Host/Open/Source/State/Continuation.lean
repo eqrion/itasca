@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Exec.Interp SpecExt Exec.Interp.StructuredMachine
 /-- A saved native caller is related to one particular source context at every
 future checked world, including newly published code. This contract concerns
 resumption, and never assumes that the intervening host control returns. -/
-def SourceContinuation {M : Type} (emission : FunctionEmission) (allowed : instr → Prop)
+def SourceContinuation {M : Type}
     (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (ready : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize)
     (sourcePending : Spec.OpenHost.Pending) (expected : List valtype) : Prop :=
@@ -17,10 +17,10 @@ def SourceContinuation {M : Type} (emission : FunctionEmission) (allowed : instr
       FrameTypeBounds store →
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode freshStore) →
       Store_ok (Store.decodeStore view afterCode freshStore) →
-      CertifiedSupportedStore emission allowed view afterCode freshStore →
+      CertifiedSupportedStore view afterCode freshStore →
       ∀values status,(∀value∈values.val,Store.IssuedValue freshStore value) →
       hostResume memory ready freshStore address base values status ⦃out=>out.1=.Ok () →
-        ∃source finalPC pendingFlag,Execution emission (Abs.SupportedState allowed) view afterCode freshStore out.2
+        ∃source finalPC pendingFlag,Execution view afterCode freshStore out.2
           source expected finalPC pendingFlag ∧
           Abs.Ownership.StatefulOwned (Store.ownershipBounds freshStore) source ∧
           Abs.decode source=sourcePending.completed (checkedHostReply memory view afterCode freshStore signature values status)⦄
@@ -28,8 +28,8 @@ def SourceContinuation {M : Type} (emission : FunctionEmission) (allowed : instr
 /-- The saved-context contract is constructed from native frame, slot and code
 certificates and the independently derived source-context completion equation. -/
 theorem source_continuation_of_prepared {M : Type}
-    {emission : FunctionEmission}
-    {allowed : instr → Prop}
+
+
     {view : M → Slice U8}
     {code : Store.CodeInterpretation}
     {store : runtime.store.Store M}
@@ -42,7 +42,7 @@ theorem source_continuation_of_prepared {M : Type}
     {expected : List valtype}
     {sourcePC : Nat}
     {pendingFlag : Bool}
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op::after}::rest,[]⟩ expected sourcePC pendingFlag)
     {raw : runtime.interp.Frame}
     {frameIndex : Usize}
@@ -53,7 +53,7 @@ theorem source_continuation_of_prepared {M : Type}
     (slots : FrameSlots exec raw f)
     {compiled C targets next output}
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := op::after} compiled C targets next output)
     {front args consumed : List val}
     {returns : List valtype}
@@ -62,7 +62,7 @@ theorem source_continuation_of_prepared {M : Type}
     (split : f.vals=front++consumed)
     (destination : base.val=raw.base.val+Code.slots ((f.locals++front).map Code.valueType))
     (heights : ∀ label∈f.labels, label.height≤front.length)
-    (continuation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++returns) after pc.val next output)
     (pending : Abs.HostPending
       ⟨Store.decodeStore view code store,ambient,{f with code := after,vals := front}::rest,[]⟩ returns)
@@ -90,7 +90,7 @@ theorem source_continuation_of_prepared {M : Type}
     (sourcePending : Spec.OpenHost.Pending)
     (completion : ∀fresh returned,sourcePending.completed ⟨fresh,some returned⟩=
       Abs.decode ⟨fresh,ambient,{f with code:=after,vals:=front++returned}::rest,[]⟩) :
-    SourceContinuation emission allowed memory view code store {padded with host_args:=copied}
+    SourceContinuation memory view code store {padded with host_args:=copied}
       address base sourcePending expected := by
   refine ⟨function,signature,functionAt,signatureAt,?_⟩
   intro afterCode freshStore agrees retained externs bounds extension sourceTyped fresh values status issued

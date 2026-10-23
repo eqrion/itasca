@@ -104,24 +104,4 @@ theorem table_grow_certified {M A : Type} (memory : runtime.platform.MemoryBuffe
   step with table_grow_index_certified memory allocator allocation view code store certified
     index delta lo inBounds canonical as ⟨result, after, certificate, bounds, extension⟩
   exact ⟨certificate, bounds, extension⟩
-/-- A rejected fill type also preserves all execution certificates. -/
-theorem table_grow_any_certified {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (certified : ExecutableInv view code store)
-
-    (index : Usize) (delta : U32) (value : runtime.Value)
-    (inBounds : index.val < store.tables.length) (owned : Store.ValueInStore store value) :
-    runtime.store.Store.grow_table_with memory allocator store ⟨store.id, index⟩ delta value ⦃ answer =>
-      ExecutableInv view code answer.2 ∧ Store.FunctionCapacities code answer.2 ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view code answer.2) ⦄ := by
-  let capacities := certified.capacities
-  by_cases typed : Store.elementValueType (store.tables.val[index.val]).ty = Interp.rawType value
-  · exact table_grow_certified memory allocator allocation view code store certified
-      index delta value inBounds typed owned
-  · apply WP.spec_mono (Store.table_grow_wrong_type memory allocator store index delta value inBounds owned typed)
-    intro answer same
-    simp only [same]
-    exact ⟨certified, capacities, Spec.extend_store_refl _
-      (Store.decodeStore_wf view code store certified.shape certified.storeSyntax)⟩
 end Exec.Theorems.ExecutableInv

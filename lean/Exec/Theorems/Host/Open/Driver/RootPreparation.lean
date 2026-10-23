@@ -13,7 +13,7 @@ inductive RootCallReady {M : Type} (view : M → Slice U8) (code : Store.CodeInt
       (status : answer.1=.Err error) (sameStore : answer.2.2.1=store) : RootCallReady view code store ambient address signature arguments (.done answer)
   | defined (answer : Answer M Unit) (entry : Abs.AState)
       (status : answer.1=.Ok ()) (sameStore : answer.2.2.1=store)
-      (machine : StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+      (machine : StructuredMachine.Execution
         view code store answer.2.1 entry (signature.results.val.map sourceType) 0 false)
       (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) entry)
       (ambientEq : entry.ambient=ambient)

@@ -2,7 +2,10 @@ import Exec.Store.Invariant.FunctionSignatures
 import Exec.Store.Invariant.SupportedFunctionTables
 import Exec.Code.Body.Relations.Common.ExecutableModuleFunctions
 import Exec.Code.Body.Relations.Common.ExecutableFunctionContext
-import Exec.Interp.StructuredMachine.ExecutableHeads
+import Exec.Interp.StructuredMachine.StatefulProjection
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.StructuredMachine.SimdPoint
+import Exec.Interp.StructuredMachine.IndirectPoint
 
 namespace Exec.Store
 open Aeneas Aeneas.Std
@@ -15,7 +18,7 @@ actual canonical type/function maps. -/
 theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (oldCompiled : Interp.StructuredMachine.CompiledFunctions Interp.Executable.emission oldCode before)
+    (oldCompiled : Interp.StructuredMachine.CompiledFunctions oldCode before)
     (inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     (certificate : Code.ExecutableModuleFunctions inst.module sources)
@@ -26,7 +29,7 @@ theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     (table : Interp.FunctionTable after inst (inst.module.module.env.func_types.val.map decodeFuncType))
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
-    Interp.StructuredMachine.CompiledFunctions Interp.Executable.emission (installCode oldCode before.instances.len.val sources) after := by
+    Interp.StructuredMachine.CompiledFunctions (installCode oldCode before.instances.len.val sources) after := by
   intro function present
   rcases staged function present with old | ⟨index, bound, encoded, signatureFound⟩
   · exact supported_function_compiled_prefix shape retained (installCode_agrees before oldCode sources) (oldCompiled function old)

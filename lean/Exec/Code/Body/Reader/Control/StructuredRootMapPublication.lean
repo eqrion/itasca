@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredPrefixDeadWithTables
+import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Publication.RootMapPublication
 import Exec.Code.Local.Publication.FinalControlMapBounds
 
@@ -13,7 +13,7 @@ theorem structured_root_map_publication {jumpTables : List U32}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {types functions returns locals current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals [] current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals [] current raw position)
     (rootForm : current.form = .body) (sourceBound : position ≤ limits.MAX_MODULE_BYTES.val)
     (state : code.OpIterState) (kind : code.LabelKind) (bt : signature.BlockType)
     (maps : ControlMapPublication before) (consumed : position < state.pos.val)

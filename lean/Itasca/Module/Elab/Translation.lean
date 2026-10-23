@@ -20,13 +20,6 @@ def funcs : List externtype → List functype
   | .FUNC t :: rest => t :: funcs rest
   | _ :: rest => funcs rest
 
-/-- `funcs` distributes over append. -/
-@[simp] theorem funcs_append (xs ys : List externtype) :
-    funcs (xs ++ ys) = funcs xs ++ funcs ys := by
-  induction xs with
-  | nil => rfl
-  | cons x xs ih => cases x <;> simp [funcs, ih]
-
 /-- `funcs` satisfies the generated `fun_funcsxt` relation. -/
 theorem funcs_spec (xs : List externtype) : fun_funcsxt xs (funcs xs) := by
   induction xs with
@@ -47,13 +40,6 @@ def globals : List externtype → List globaltype
   | [] => []
   | .GLOBAL t :: rest => t :: globals rest
   | _ :: rest => globals rest
-
-/-- `globals` distributes over append. -/
-@[simp] theorem globals_append (xs ys : List externtype) :
-    globals (xs ++ ys) = globals xs ++ globals ys := by
-  induction xs with
-  | nil => rfl
-  | cons x xs ih => cases x <;> simp [globals, ih]
 
 /-- `globals` satisfies the generated `fun_globalsxt` relation. -/
 theorem globals_spec (xs : List externtype) : fun_globalsxt xs (globals xs) := by
@@ -76,13 +62,6 @@ def tables : List externtype → List tabletype
   | .TABLE t :: rest => t :: tables rest
   | _ :: rest => tables rest
 
-/-- `tables` distributes over append. -/
-@[simp] theorem tables_append (xs ys : List externtype) :
-    tables (xs ++ ys) = tables xs ++ tables ys := by
-  induction xs with
-  | nil => rfl
-  | cons x xs ih => cases x <;> simp [tables, ih]
-
 /-- `tables` satisfies the generated `fun_tablesxt` relation. -/
 theorem tables_spec (xs : List externtype) : fun_tablesxt xs (tables xs) := by
   induction xs with
@@ -103,13 +82,6 @@ def mems : List externtype → List memtype
   | [] => []
   | .MEM t :: rest => t :: mems rest
   | _ :: rest => mems rest
-
-/-- `mems` distributes over append. -/
-@[simp] theorem mems_append (xs ys : List externtype) :
-    mems (xs ++ ys) = mems xs ++ mems ys := by
-  induction xs with
-  | nil => rfl
-  | cons x xs ih => cases x <;> simp [mems, ih]
 
 /-- `mems` satisfies the generated `fun_memsxt` relation. -/
 theorem mems_spec (xs : List externtype) : fun_memsxt xs (mems xs) := by

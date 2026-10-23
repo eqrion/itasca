@@ -49,23 +49,4 @@ theorem source_local_chosen_single {M F A : Type} (memory : runtime.platform.Mem
   exact WP.spec.ret ⟨next,rfl,.of_transition worldEffect sourceGuard step (by
     simp only [visibleSourceHistory,List.flatMap_cons,visibleSourceObservation,List.flatMap_nil,List.nil_append,List.append_nil]
     exact congrArg sourceHistory historyEq)⟩
-theorem source_local_chosen_step {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (select : Selector)
-    (owner : Usize) (stop : Spec.OpenExecution.StopReason → config → Prop)
-    (choices : SourceOperationChoices) (compatible : SourceAPIChoicesCompatible memory allocator view choices) (occurrence : Nat)
-    (code : Store.CodeInterpretation) (native : State M) (source : Spec.OpenExecution.State SourceControl) (rank : Nat)
-    (guard : SourceStateGuard memory allocator view code native source rank)
-    (host : HostState) (hostSource : SourceHostState) (mode : native.mode=.host host)
-    (sourceMode : source.mode=.host (.active hostSource))
-    (represented : HostStateRepresents native.store.id hostSource host)
-    (localInstruction : ∀instruction,host.code[host.pc]?=some instruction →
-      match instruction with | .invoke _ _ _ | .publish _ _ _ _=>False | _=>True) :
-    tick memory floats allocator select native ⦃out=>∃next,out=.cont next ∧
-      ChosenSourceAdvance memory allocator view select owner stop choices occurrence code native source rank next⦄ := by
-  apply WP.spec_mono (source_local_chosen_single memory floats allocator correct allocation view laws select owner stop choices compatible occurrence
-    code native source rank guard host hostSource mode sourceMode represented localInstruction)
-  rintro out ⟨next,equal,single⟩
-  exact ⟨next,equal,single.advance⟩
 end Exec.Theorems.OpenReentrantControl

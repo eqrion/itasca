@@ -55,18 +55,4 @@ open Aeneas Aeneas.Std
             refine ⟨?_, slotsExact, effect2 rfl⟩
             simpa only [sameSignatures] using sequence
 
-@[step] theorem compiler_environment_ready {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (emptyTypes : scheduler.signatures.val = [])
-    (emptySlots : scheduler.func_param_slots.val = []) (emptyFunctions : scheduler.functions.val = []) :
-    runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready ops scheduler env ⦃ out =>
-      ∀ config, out.1 = .Ok config →
-        SignatureTable out.2.signatures.deref (env.types.val.map Itasca.EnvTranslation.funcType) ∧
-        out.2.func_param_slots.val.map (fun word => word.val) = env.func_types.val.map (fun ty => signatureSlots ty.params.val) ∧
-        out.2.functions.val = List.replicate env.func_type_indices.val.length none ⦄ := by
-  apply WP.spec_mono (compiler_environment_ready_sequence ops law scheduler env emptyTypes emptySlots emptyFunctions)
-  intro out post config accepted
-  obtain ⟨sequence, widths, functions⟩ := post config accepted
-  exact ⟨SignatureSequence.table (signatures := out.2.signatures.deref)
-    (by simpa [alloc.vec.Vec.deref] using sequence), widths, functions⟩
 end Exec.Code

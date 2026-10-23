@@ -1,22 +1,16 @@
 import Exec.Theorems.Composition.World.ChosenWorldSourceStep
 import Exec.Theorems.Composition.Supported.SupportedChosenHostDispatch
-import Exec.Theorems.Composition.Recorded.RecordedNonhostStep
+import Exec.Theorems.Composition.Eventful.EventfulHistory
+import Exec.Theorems.Composition.Supported.SupportedHostDispatch
+import Exec.Theorems.Composition.Eventful.EventfulErrors
+import Exec.Interp.Relations.StepRecording
+import Exec.Theorems.Host.HostRecordingBoundary
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 theorem chosen_world_step_or_host {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (numericChoice : choices.numeric=Spec.firstNumericChoice) (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat)
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.RecordingHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -26,20 +20,20 @@ theorem chosen_world_step_or_host {choices : Spec.SourceChoices} (admissible : c
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (update : ∀code before after,Inv code before → CumulativeStoreMutation view code before after → Inv code after)
-    {expected : List valtype} (machine : EventfulMachine emission allowed M P view code expected)
+    {expected : List valtype} (machine : EventfulMachine M P view code expected)
     (valid : Inv code machine.store)
     (active : 0 < machine.exec.frames.length)
  :
-    StructuredHostSite emission allowed view code machine.exec machine.store expected machine.pc machine.pending machine.source ∨
+    StructuredHostSite view code machine.exec machine.store expected machine.pc machine.pending machine.source ∨
     runtime.interp.step memory hooks floats allocator machine.exec machine.store machine.platform
-      ⦃ out => ChosenWorldSourceStepResult choices occurrence (emission:=emission) (allowed:=allowed) (view:=view) memory hooks floats allocator Inv code expected
+      ⦃ out => ChosenWorldSourceStepResult choices occurrence (view:=view) memory hooks floats allocator Inv code expected
         machine.exec machine.store machine.platform machine.source machine.pc machine.pending out ⦄ := by
   cases selected : hostStepAddress machine.exec machine.store with
   | some address =>
-    exact Or.inl (recording_host_site language view code machine.exec machine.store machine.source expected machine.pc machine.pending
+    exact Or.inl (recording_host_site view code machine.exec machine.store machine.source expected machine.pc machine.pending
       machine.invariant.storeEq machine.certified.shape machine.owned.values machine.invariant active address selected)
   | none =>
-    rcases step_supported_chosen_host_site admissible numericChoice vector occurrence language memory hooks floats allocator correct allocation interrupts view laws code compatible
+    rcases step_supported_chosen_host_site admissible numericChoice vector occurrence memory hooks floats allocator correct allocation interrupts view laws code compatible
       machine.exec machine.store machine.platform machine.source expected machine.pc machine.pending
       machine.invariant.storeEq machine.certified.shape machine.certified.storeSyntax machine.certified.segmentBounds
       machine.certified.compiled machine.certified.typed machine.owned machine.invariant active with host | operation
@@ -56,7 +50,7 @@ theorem chosen_world_step_or_host {choices : Spec.SourceChoices} (admissible : c
         have owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source := by
           rw [mutation.ownership_bounds]
           exact ownership _ machine.owned
-        let next : EventfulMachine emission allowed M P view code expected :=
+        let next : EventfulMachine M P view code expected :=
           ⟨store,exec,platform,source,pc,pending,invariant,fresh,owned⟩
         refine ⟨⟨code,next⟩,newValid,rfl,?_,mutation.extension,mutation.metadata.prefix,ambient,?_⟩
         · simpa only [stepHostEvents,selected] using simulation.eventful

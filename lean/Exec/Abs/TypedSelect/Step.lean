@@ -25,8 +25,8 @@ theorem Step.correct {before next} (step : Step before next) (typed : CoreTyped 
     subst actual
     exact ⟨fresh,simulation⟩
 
-theorem Step.next_supported {allowed : instr → Prop} {before next}
-    (step : Step before next) (covered : SupportedState allowed before) : SupportedState allowed next := by
+theorem Step.next_supported {before next}
+    (step : Step before next) (covered : SupportedState before) : SupportedState next := by
   cases step with
   | next equation =>
     have frame := covered.active _ (List.mem_cons_self ..)
@@ -35,14 +35,6 @@ theorem Step.next_supported {allowed : instr → Prop} {before next}
     all_goals
       apply Supported.advance_covered covered equation
       exact ⟨fun i member => frame.1 i (List.mem_cons_of_mem _ member),frame.2⟩
-
-theorem Step.metadata {before next} (step : Step before next) :
-    next.store = before.store ∧ next.ambient = before.ambient := by
-  cases step with
-  | next equation =>
-    simp only [Core.select] at equation
-    repeat' first | split at equation | contradiction
-    all_goals cases equation; exact ⟨rfl,rfl⟩
 
 theorem Step.next_bound {bound before next} (step : Step before next)
     (bounded : CodeBound bound before) : CodeBound bound next := by
@@ -72,10 +64,5 @@ theorem Step.next_owned {bounds before next} (step : Step before next)
       refine ⟨frame.1,?_⟩
       have values := frame.2
       aesop (add safe forward ValuesOwned.pop)
-
-theorem Step.next_extends {before next} (step : Step before next) (typed : CoreTyped before) :
-    Extend_store before.store next.store := by
-  rw [step.metadata.1]
-  exact extend_store_refl _ typed.typed.store
 
 end Exec.Abs.TypedSelect

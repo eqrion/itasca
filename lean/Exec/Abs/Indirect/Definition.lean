@@ -92,8 +92,4 @@ def step (s : AState) (f : AFrame) (rest : List AFrame) (table type : Nat) (afte
       | none => .trap
       | some address => invoke s {f with vals:=front} rest address after
 
-theorem direct_invoke (s : AState) (f : AFrame) (rest : List AFrame) (index address : Nat) (after : List instr)
-    (mapped : f.module.FUNCS[index]?=some address) : call s f rest index after=invoke s f rest address after := by
-  simp only [call,mapped,invoke]
-  rfl
 end Exec.Abs.Indirect

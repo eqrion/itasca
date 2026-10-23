@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Handler.NumericDispatch
-import Itasca.Wasm1.StepScalar
+import Itasca.Handler.NumericDispatch
 import Itasca.Visitor.Dispatch
 
 /-!

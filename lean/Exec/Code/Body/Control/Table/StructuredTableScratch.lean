@@ -1,15 +1,15 @@
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 namespace Exec.Code
 open Aeneas Aeneas.Std
 
 /-- Collecting table labels changes only private scratch and allocation
 accounting; it preserves the complete source/code invariant. -/
-theorem StructuredCompilerPrefixWithTables.table_scratch {A : Type}
+theorem StructuredCompilerPrefix.table_scratch {A : Type}
     {initial before : runtime.compiler.FunctionCompiler A}
     {jumpTables emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals parents current raw position)
     (budget : runtime.compiler.Budget A) (depths : alloc.vec.Vec U32) :
-    StructuredCompilerPrefixWithTables jumpTables emit initial {before with budget,table_depths := depths}
+    StructuredCompilerPrefix jumpTables emit initial {before with budget,table_depths := depths}
       types functions returns locals parents current raw position := by
   refine ⟨⟨invariant.metadata.metadata,invariant.metadata.capacity⟩,?_,invariant.entryChain,invariant.dormant,
     invariant.conditions,invariant.known,?_,invariant.arms,invariant.sources,invariant.codeBudget,

@@ -64,7 +64,7 @@ theorem CoreInstructionBounds.accepts {function : runtime.bytecode.CompiledFunct
   cases bounds
   all_goals simp only [runtime.bytecode.CompiledFunction.instruction_valid,
     runtime.bytecode.Instr.scalar,runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,
-    runtime.bytecode.Instr.simd,bind_ok]
+    runtime.bytecode.Instr.simd,runtime.bytecode.CompiledFunction.other_valid,bind_ok]
   all_goals repeat' first
     | rw [slots_fit_accepts _ _ _ (by scalar_tac)]
     | simp only [bind_ok,ite_true,lift]

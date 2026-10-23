@@ -2,13 +2,12 @@ import Exec.Interp.StructuredMachine.StackPreservation
 import Exec.Interp.Calls.ReturnRefinement
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission}
 
 /-- Returning to a suspended caller restores the active certificate and
 preserves the older caller chain. -/
 theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
     {before after : runtime.interp.Execution} {callee caller : Abs.AFrame} {rest : List Abs.AFrame}
-    (relation : FrameStackRel emission store sourceStore before (callee :: caller :: rest))
+    (relation : FrameStackRel store sourceStore before (callee :: caller :: rest))
     (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
     {src count : Nat} (effect : ReturnEffect before after raw.base.val src count)
     (results : List val)
@@ -17,8 +16,8 @@ theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.S
     (width : count = Code.slots (results.map Code.valueType))
     (bounds : raw.base.val + src + count ≤ before.slots.length)
     (heights : Abs.FrameHeights caller) :
-    FrameStackRel emission store sourceStore after ({ caller with vals := caller.vals ++ results } :: rest) ∧
-      ReadyTop emission store sourceStore after { caller with vals := caller.vals ++ results } := by
+    FrameStackRel store sourceStore after ({ caller with vals := caller.vals ++ results } :: rest) ∧
+      ReadyTop store sourceStore after { caller with vals := caller.vals ++ results } := by
   cases relation with
   | @active actual _ raws _ frames active saved =>
     have same : actual = raw := by simpa only [frames, List.getLast?_concat, Option.some.injEq] using top
@@ -43,26 +42,12 @@ theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.S
         rw [effect.frames frames]
         simp
 
-theorem FrameStackRel.return_to_caller {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
-    {before after : runtime.interp.Execution} {callee caller : Abs.AFrame} {rest : List Abs.AFrame}
-    (relation : FrameStackRel emission store sourceStore before (callee :: caller :: rest))
-    (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
-    {src count : Nat} (effect : ReturnEffect before after raw.base.val src count)
-    (results : List val)
-    (represented : ValuesAt before.slots.val (raw.base.val + src) results)
-    (types : results.map Code.valueType = callee.resultTypes)
-    (width : count = Code.slots (results.map Code.valueType))
-    (bounds : raw.base.val + src + count ≤ before.slots.length)
-    (heights : Abs.FrameHeights caller) :
-    FrameStackRel emission store sourceStore after ({ caller with vals := caller.vals ++ results } :: rest) := by
-  exact (relation.return_to_caller_ready raw top effect results represented types width bounds heights).1
-
 /-- The last return removes the concrete frame stack completely. -/
 theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
     {before after : runtime.interp.Execution} {callee : Abs.AFrame}
-    (relation : FrameStackRel emission store sourceStore before [callee])
+    (relation : FrameStackRel store sourceStore before [callee])
     {base src count : Nat} (effect : ReturnEffect before after base src count) :
-    FrameStackRel emission store sourceStore after [] := by
+    FrameStackRel store sourceStore after [] := by
   cases relation with
   | active frames active saved =>
     obtain ⟨empty, _⟩ := saved.empty_inv
@@ -71,7 +56,7 @@ theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {s
 
 theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
     {before after : runtime.interp.Execution} {callee : Abs.AFrame} {rest : List Abs.AFrame}
-    (relation : FrameStackRel emission store sourceStore before (callee :: rest))
+    (relation : FrameStackRel store sourceStore before (callee :: rest))
     (ambient : frame)
     (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
     {src count : Nat} (effect : ReturnEffect before after raw.base.val src count)
@@ -81,8 +66,8 @@ theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M}
     (width : count = Code.slots (results.map Code.valueType))
     (bounds : raw.base.val + src + count ≤ before.slots.length)
     (heights : ∀ caller ∈ rest, Abs.FrameHeights caller) :
-    FrameStackRel emission store sourceStore after (returnedState sourceStore ambient rest results).frames ∧
-      ReadyState emission store after (returnedState sourceStore ambient rest results) := by
+    FrameStackRel store sourceStore after (returnedState sourceStore ambient rest results).frames ∧
+      ReadyState store after (returnedState sourceStore ambient rest results) := by
   cases rest with
   | nil =>
     refine ⟨relation.return_final effect, ?_⟩

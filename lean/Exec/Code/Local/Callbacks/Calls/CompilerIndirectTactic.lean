@@ -1,4 +1,4 @@
-import Exec.Code.Local.Callbacks.Calls.CompilerIndirect
+import Exec.Code.Local.Callbacks.Table.CompilerTablePreservation
 import Exec.Code.Local.Source.SourceLengthsTactic
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts

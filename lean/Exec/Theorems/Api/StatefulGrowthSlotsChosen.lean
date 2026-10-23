@@ -1,4 +1,4 @@
-import Exec.Theorems.Api.GrowthChoiceMatching
+import Exec.Contracts
 import Exec.Theorems.Api.StatefulMemoryGrowChosenEffect
 import Exec.Theorems.Api.StatefulTableGrowChosenEffect
 import Exec.Interp.State.StatefulOperandSlots

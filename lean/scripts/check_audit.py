@@ -22,6 +22,16 @@ VALIDATOR_LAYERS = {
     "Spec": {"Spec", "Support", "Generated"},
     "Binary": {"Binary", "Spec", "Support", "Generated"},
     "Handler": {"Handler", "Binary", "Spec", "Support", "Generated", "Visitor"},
+    "Contracts": {"Module", "Profile", "Binary", "Spec", "Support", "Generated"},
+    "Main": {"Contracts", "Results"},
+}
+# Headline results sit at the top: only the entry module and examples import them.
+RESULT_IMPORTERS = {"Main", "Examples"}
+# Examples use the results exactly as their library's `Main` exports them. Each
+# exception names an example of a supporting result that is not a headline theorem.
+EXAMPLE_IMPORTS = {
+    ("Itasca.Examples.Module.CustomTrace", "Itasca.Module.Custom.Trace"),
+    ("Exec.Examples.Host.AllocationCallbackExamples", "Exec.Store.Api.HostAvailability"),
 }
 # Representation owns shared certificates; no compiler, interpreter or store
 # construction proof can enter through that foundation.
@@ -35,6 +45,13 @@ EXEC_LAYERS = {
     "Interp": {"Exec.Interp", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Abs", "Exec.Code", "Exec.Spec", "SpecExt.Builtins", "Itasca.Support"},
     "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
     "Theorems": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+    # Contracts stay below the constructions that assume them. The API invariant
+    # and checked host reply are named until Theorems/Api leaves the Theorems layer.
+    "Contracts": {"Exec.Platform", "Exec.Generated", "Exec.Spec", "Exec.Representation", "Exec.Store",
+                  "Exec.Interp.Relations", "Exec.Theorems.Api.ExecutableInv",
+                  "Exec.Theorems.Host.Chosen.HostChoiceMatching", "SpecExt"},
+    "Results": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+    "Main": {"Exec.Contracts", "Exec.Results"},
     "Examples": {"Exec", "SpecExt", "Itasca", "Aeneas"},
 }
 # Integration stages can use local proofs, but never flow back into them.
@@ -81,6 +98,13 @@ def check_layer(name: str, imported: str, library: str) -> None:
     if name == library + ".Audit":
         return
     layer = name.split(".")[1]
+    if library in {"Itasca", "Exec"}:
+        main = library + ".Main"
+        if (imported == main or under(imported, library + ".Results")) and layer not in RESULT_IMPORTERS:
+            raise ValueError(f"{name} imports {imported}; only Main and Examples import the headline results")
+        if (layer == "Examples" and under(imported, library) and imported != main
+                and not under(imported, library + ".Examples") and (name, imported) not in EXAMPLE_IMPORTS):
+            raise ValueError(f"{name} imports {imported}; examples import only {main}")
     if library == "Itasca":
         if any(under(imported, other) for other in ("Exec", "SpecExt")):
             raise ValueError(f"{name} imports {imported}; validator imports must stay independent")
@@ -99,7 +123,7 @@ def check_layer(name: str, imported: str, library: str) -> None:
         if layer not in EXEC_LAYERS:
             raise ValueError(f"{name} has no declared Exec import layer")
         allowed = EXEC_LAYERS[layer] | FOUNDATIONS
-        if layer in {"Spec", "Theorems", "Examples"}:
+        if layer in {"Spec", "Theorems", "Results", "Examples"}:
             allowed = allowed | SPEC_MODULES
         if name in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
             allowed = allowed | {"Itasca.Generated"}
@@ -120,6 +144,8 @@ def check_layer(name: str, imported: str, library: str) -> None:
         if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
             if not under(name, f"Exec.{owner}.{final}"):
                 raise ValueError(f"{name} imports {imported}, above its integration stage")
+    if library == "Exec" and imported == "Exec.Generated.Funs" and layer != "Generated":
+        raise ValueError(f"{name} imports {imported}; import Exec.Generated.Equations, which shares the runtime's equation lemmas")
     if library == "Exec" and under(imported, "Itasca.Generated"):
         if name not in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
             raise ValueError(f"{name} imports {imported}, outside the Exec.{layer} layer; only external adapters may directly reuse validator generated declarations")

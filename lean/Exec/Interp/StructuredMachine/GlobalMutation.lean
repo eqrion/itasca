@@ -2,7 +2,6 @@ import Exec.Interp.Core.Mutation
 import Exec.Interp.StructuredMachine.GlobalMutationStep
 import Exec.Interp.Control.PendingJump
 namespace Exec.Interp.StructuredMachine.Global
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -19,7 +18,7 @@ theorem coreFramePoint_globalSet_store_mutation (platform : P) (frameIndex : Usi
     (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after} :: rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       CoreStoreMutation view ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ store out.2.2.1 ⦄ := by

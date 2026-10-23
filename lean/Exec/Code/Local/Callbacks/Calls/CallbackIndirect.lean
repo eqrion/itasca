@@ -1,17 +1,8 @@
-import Exec.Code.Local.Relations.Calls.ControlIndirect
+import Exec.Code.Local.Callbacks.Calls.CompilerIndirectTactic
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
-
-theorem compiler_branch_indirect_result {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (depth skip : U32) (conditional : Bool) (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status, after)) :
-    status = .Ok () → after.function.indirect = before.function.indirect := by
-  intro success
-  subst status
-  exact compiler_branch_indirect ops law before after depth skip conditional accepted
 
 open Lean Meta Elab Tactic in
 elab "control_indirect_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -48,65 +39,5 @@ macro "control_indirect_step " h:ident " using " ops:term ", " law:term : tactic
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | sources_split $h)
-
-theorem compiler_unreachable_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-      ops before state = .ok (.Ok (), after)) :
-    after.function.indirect = before.function.indirect := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' control_indirect_step accepted using ops, law
-
-theorem compiler_return_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
-      ops before state = .ok (.Ok (), after)) :
-    after.function.indirect = before.function.indirect := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' control_indirect_step accepted using ops, law
-
-theorem compiler_br_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (depth : U32) (types : Itasca.signature.ResultType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-      ops before state depth types = .ok (.Ok (), after)) :
-    after.function.indirect = before.function.indirect := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' control_indirect_step accepted using ops, law
-
-theorem compiler_br_if_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (depth : U32) (types : Itasca.signature.ResultType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
-      ops before state depth types = .ok (.Ok (), after)) :
-    after.function.indirect = before.function.indirect := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' control_indirect_step accepted using ops, law
-
-
-theorem compiler_block_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_block
-      ops before state bt = .ok (.Ok (), after)) : after.function.indirect = before.function.indirect := by
-  exact compiler_enter_indirect ops law before after state .Block bt accepted
-
-theorem compiler_loop_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_loop
-      ops before state bt = .ok (.Ok (), after)) : after.function.indirect = before.function.indirect := by
-  exact compiler_enter_indirect ops law before after state .Loop bt accepted
-
-theorem compiler_if_indirect {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_if
-      ops before state bt = .ok (.Ok (), after)) : after.function.indirect = before.function.indirect := by
-  exact compiler_enter_indirect ops law before after state .Then bt accepted
 
 end Exec.Code

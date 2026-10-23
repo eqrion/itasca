@@ -55,28 +55,5 @@ theorem invoke_source_chosen_complete {count events target}
   cases outcome with
   | host answer history=>cases matching
   | invocation answer history=>exact WP.spec.ret ⟨afterCode,effect,matching,observed⟩
-
-/-- The actual synchronous invoke_with implementation returns the outcome of
-one terminating chosen combined source run. No universal callback-normality
-or absence-of-all-infinite-runs premise is used. -/
-theorem native_invoke_chosen_source_complete {count events target}
-    (reference : Spec.OpenExecution.ChoiceTrace (sourceModel view (sourcePublication allocator view) select store.id stop)
-      (sourceControlChoices choices) occurrence count
-      (sourceInvocationEntry view code store address signature args) events target)
-    (completed : ∃result,target.mode=.completed result) :
-    runtime.interp.invoke_with memory (platform memory floats allocator select) floats allocator exec store () address args results
-      ⦃out=>∃afterCode,
-        ReentrantCallbacks.Effect view code store afterCode out.2.2.1 ∧
-        SourceOutcome view afterCode (.invocation out []) target ∧
-        ∃history,invoke memory floats allocator select exec store address args results=.ok (out,history) ∧
-          sourceHistory history=sourceHistory [Observation.invokeEnter address args]++visibleSourceHistory events⦄ := by
-  obtain ⟨⟨answer,history⟩,returned,afterCode,effect,matching,observed⟩:=WP.spec_imp_exists
-    (invoke_source_chosen_complete memory floats allocator correct allocation view laws select choices admissible numericChoice vectorChoice
-      growthCompatible apiCompatible publicationCompatible occurrence code store held exec address owner function signature functionAt signatureAt
-      args owned results stop resources available reference completed)
-  have erased:=invoke_return_erases memory floats allocator correct allocation view laws select code store held exec address owner
-    function signature functionAt signatureAt args (fun value member=>(owned value member).issued) results answer history returned
-  rw [erased]
-  exact WP.spec.ret ⟨afterCode,effect,matching,history,returned,observed⟩
 end
 end Exec.Theorems.OpenReentrantControl

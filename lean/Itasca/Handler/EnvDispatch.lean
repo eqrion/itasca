@@ -1,5 +1,5 @@
 import Itasca.Handler.EnvCalls
-import Itasca.Handler.EnvMemory
+import Itasca.Binary.Wasm1.MemoryTyping
 import Itasca.Visitor.Basic
 import Itasca.Visitor.Total
 
@@ -68,30 +68,6 @@ theorem code.step_global_set.dispatch {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_GLOBAL_SET v =
       CoreVisitor.run (code.read_global_set st data env) visitor.on_global_set v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-theorem code.step_call.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_CALL v =
-      CoreVisitor.run (code.read_call st data env) visitor.on_call v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-theorem code.step_call_indirect.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_CALL_INDIRECT v =
-      CoreVisitor.run (code.read_call_indirect st data env) (fun v s idx => visitor.on_call_indirect v s idx 0#u32) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
     code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1

@@ -85,28 +85,4 @@ theorem compiler_lower_table_layout_prefix {A : Type} (ops : runtime.platform.Al
       rw [tables,startEq]
       rw [List.getElem?_append_right (by omega)]
       simpa only [Nat.add_sub_cancel_left] using entryAt
-theorem compiler_lower_table_layout {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (locals stack : List valtype) (scopes : List SourceScope) (labels : List LabelTarget)
-    (depths : List U32) (fallback : U32) (groups : List FixupTarget)
-    (buffer : before.table_depths.val = depths++[fallback])
-    (layout : CompilerLayout before (stack++[.I32])) (localTypes : compilerLocals before=locals)
-    (paired : List.Forall₂ (ScopeFrameShape locals) scopes before.frames.val)
-    (labelShapes : List.Forall₂ ScopeLabel scopes.reverse labels)
-    (inputs : TableOperandScopes scopes stack (depths++[fallback]))
-    (dominance : before.function.jump_tables.val.length ≤ before.function.code.val.length)
-    (sites : ∀ frame ∈ before.frames.val, FrameSites before.function.code.val frame)
-    (plans : FramePlans after.function.code.val.length locals after.frames.val labels groups)
-    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
-    ∃ previous start len selector,
-      FramePlans before.function.code.val.length locals before.frames.val labels previous ∧
-      BranchTableLayout after.function.jump_tables.val locals labels stack
-        (resolvedCode after.function.code.val groups) (depths.map (fun d => .mk_uN d.val)) (.mk_uN fallback.val)
-        before.function.code.val.length after.function.code.val.length selector start len ∧
-      before.function.code.val.length+1≤after.function.code.val.length ∧
-      after.function.jump_tables.val.length≤after.function.code.val.length := by
-  obtain ⟨previous,start,len,selector,prior,certificate,header,dominance,_⟩ :=
-    compiler_lower_table_layout_prefix ops law before after locals stack scopes labels depths fallback groups
-      buffer layout localTypes paired labelShapes inputs dominance sites plans accepted
-  exact ⟨previous,start,len,selector,prior,certificate,header,dominance⟩
 end Exec.Code

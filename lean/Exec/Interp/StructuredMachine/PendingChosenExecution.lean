@@ -5,7 +5,7 @@ import Exec.Spec.Extend
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 
-theorem step_pending_chosen_execution {choices : Spec.SourceChoices} (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {supported : Abs.AState → Prop}
+theorem step_pending_chosen_execution {choices : Spec.SourceChoices} (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (platform : P) (frameIndex : Usize) (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -17,13 +17,13 @@ theorem step_pending_chosen_execution {choices : Spec.SourceChoices} (occurrence
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : ControlPoint emission (Store.decodeStore view code store) raw f compiled C targets next output true)
+    (point : ControlPoint (Store.decodeStore view code store) raw f compiled C targets next output true)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val true) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val true) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ pc : U32, Execution emission supported view code store out.2.1 initial expected pc.val false ∧
+      ∃ pc : U32, Execution view code store out.2.1 initial expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val true false initial initial ⦄ := by
   dsimp only
   cases point with

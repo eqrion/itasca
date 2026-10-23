@@ -7,19 +7,6 @@ set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
 
 namespace ReachedBody
-/-- Only steps actually accepted by the independent reference run must be
-matched. The relation may retain typed source state and compiler resource and
-control invariants. No statement about unrelated callbacks is required. -/
-def AcceptingStepRefinement {V W : Type} (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (related : code.BodyState → V → W → Prop) : Prop :=
-  ∀ st v w, related st v w → st.core.ctrls.val ≠ [] →
-    ∀ (inbounds : st.core.pos.val < data.length) (next : Usize), next.val = st.core.pos.val+1 →
-    ∀ out middle, code.step_profile source {core := {st.core with pos := next}} data env ctx typeIndex profile
-      data.val[st.core.pos.val] v = .ok (.Ok (),out,middle) →
-    code.step_profile target {core := {st.core with pos := next}} data env ctx typeIndex profile
-      data.val[st.core.pos.val] w ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
-        related out middle result.2.2 ∧ next.val ≤ out.core.pos.val ⦄
 
 /-- A refinement may inspect the independent accepted suffix, for example to
 bound the sizes of all remaining source observations. This supplies source
@@ -122,38 +109,23 @@ theorem code.body_loop_loop.accepted_suffix_replay_on {V W : Type}
         simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at reference
 
-/-- The usual reached-step contract is a specialization that does not need
-the independent reference suffix. -/
-theorem code.body_loop_loop.accepted_replay_on {V W : Type}
-    (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
-    (stepRefinement : ReachedBody.AcceptingStepRefinement source target data env ctx typeIndex profile related)
-    (st : code.BodyState) (v final : V) (w : W) (initial : related st v w)
-    (reference : code.body_loop_loop source data env ctx typeIndex profile v st = .ok (.Ok (),final)) :
-    code.body_loop_loop target data env ctx typeIndex profile w st ⦃ result =>
-      result.1 = .Ok () ∧ ∃ closed, related closed final result.2 ∧
-        closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
-  exact code.body_loop_loop.accepted_suffix_replay_on source target data env ctx typeIndex profile related final
-    (fun st v w held _ => stepRefinement st v w held) st v w initial reference
-
 /-- Lift reached-step acceptance through the actual size check and the shared,
 visitor-independent initial-state construction. The reference may be the
 validator's accepting recorder; no successful target run is assumed. -/
-theorem code.validate_body_with_profile.accepted_suffix_replay_on {V W : Type}
+theorem code.validate_body_with.accepted_suffix_replay_on {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
     (final : V)
     (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex profile final related)
     (v : V) (w : W)
-    (initial : ∀ st, code.initial_state env ctx typeIndex profile = .ok (.Ok st) → related st v w)
-    (reference : code.validate_body_with_profile source data env ctx typeIndex profile v =
+    (initial : ∀ st, code.initial_state env typeIndex = .ok (.Ok st) → related st v w)
+    (reference : code.validate_body_with source data env ctx typeIndex profile v =
       .ok (.Ok (),final)) :
-    code.validate_body_with_profile target data env ctx typeIndex profile w ⦃ result =>
+    code.validate_body_with target data env ctx typeIndex profile w ⦃ result =>
       result.1 = .Ok () ∧ ∃ closed, related closed final result.2 ∧
         closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
-  unfold code.validate_body_with_profile at reference ⊢
+  unfold code.validate_body_with at reference ⊢
   dsimp only at reference ⊢
   split at reference
   · simp at reference
@@ -170,22 +142,5 @@ theorem code.validate_body_with_profile.accepted_suffix_replay_on {V W : Type}
       apply code.body_loop_loop.accepted_suffix_replay_on source target data env ctx typeIndex profile related final
         stepRefinement st v w (initial st started)
       simpa [core.result.Result.Insts.CoreOpsTry.branch,code.body_loop] using tail
-
-
-/-- Replay without inspecting the independent remaining source run. -/
-theorem code.validate_body_with_profile.accepted_replay_on {V W : Type}
-    (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
-    (stepRefinement : ReachedBody.AcceptingStepRefinement source target data env ctx typeIndex profile related)
-    (v final : V) (w : W)
-    (initial : ∀ st, code.initial_state env ctx typeIndex profile = .ok (.Ok st) → related st v w)
-    (reference : code.validate_body_with_profile source data env ctx typeIndex profile v =
-      .ok (.Ok (),final)) :
-    code.validate_body_with_profile target data env ctx typeIndex profile w ⦃ result =>
-      result.1 = .Ok () ∧ ∃ closed, related closed final result.2 ∧
-        closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
-  exact code.validate_body_with_profile.accepted_suffix_replay_on source target data env ctx typeIndex profile
-    related final (fun st v w held _ => stepRefinement st v w held) v w initial reference
 
 end Itasca

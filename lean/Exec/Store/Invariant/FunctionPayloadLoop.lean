@@ -21,14 +21,14 @@ theorem function_payload_loop {M A : Type} (memory : runtime.platform.MemoryBuff
     (count : inst.funcs.length = seed.funcs.length + start.val)
     (capacity : seed.funcs.length + seed.module.module.env.func_type_indices.val.length ≤ Usize.max)
     (payload : FunctionPayload before store seed instanceIndex start.val) :
-    runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store (.Ok ()) start inst instanceIndex
+    runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator store (.Ok ()) start inst instanceIndex
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with funcs := after.funcs} ∧ next = {seed with funcs := next.funcs} ∧
         StagedPrefix before after ∧ objectCount after ≤ Usize.max ∧
         (∀ address ∈ next.funcs.val, address.index.val < after.funcs.length) ∧
         (status = .Ok () → next.funcs.length = seed.funcs.length + seed.module.module.env.func_type_indices.val.length ∧
           FunctionPayload before after seed instanceIndex seed.module.module.env.func_type_indices.val.length) ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop4
+  unfold runtime.store.instantiate.Store.prepare_instance_loop4
   apply loop.spec_decr_nat (fun state => seed.module.module.env.func_type_indices.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with funcs := state.1.funcs} ∧
       state.2.2.2 = {seed with funcs := state.2.2.2.funcs} ∧ StagedPrefix before state.1 ∧
@@ -45,7 +45,7 @@ theorem function_payload_loop {M A : Type} (memory : runtime.platform.MemoryBuff
     have types : currentInst.types = seed.types := by
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop4.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, source, bind_ok]
     split

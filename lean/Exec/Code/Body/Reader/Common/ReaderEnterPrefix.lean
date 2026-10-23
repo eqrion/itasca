@@ -1,5 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderPopPrefix
-import Exec.Code.Body.Relations.Common.KnownEntryStack
+import Exec.Code.Local.Relations.Common.KnownPopStack
+import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 set_option maxHeartbeats 2000000
@@ -68,10 +69,10 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 
 theorem reader_enter_prefix_wasm2 {data env locals index st out bt} {form : Frames.Form}
-    (p : Wasm2.Pending data env locals index st) (initial : form.Initial)
-    (accepted : code.enter_info st data env form.kind = .ok (.Ok bt, out)) :
+    (p : Wasm2.Pending data env .Wasm2 locals index st) (initial : form.Initial)
+    (accepted : code.enter_info st data env .Wasm2 form.kind = .ok (.Ok bt, out)) :
     EntryPrefix st.core out.core := by
-  have erased : code.enter st data env form.kind = .ok (.Ok (), out) := by
+  have erased : code.enter st data env .Wasm2 form.kind = .ok (.Ok (), out) := by
     simp [code.enter, accepted, core.result.Result.Insts.CoreOpsTry.branch]
   rw [enter_eq] at erased
   obtain ⟨readResult, readCall, rest⟩ := bind_ok_inv _ _ _ erased

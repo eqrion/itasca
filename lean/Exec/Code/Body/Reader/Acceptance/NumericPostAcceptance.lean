@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the numeric callback runs, including extension opcodes. -/
 theorem ReaderPostWasm2.numeric_available {data env locals index st out instruction values}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderPostWasm2 p out instruction p.current.ctrl.polymorphic_base values)
     {input : List types.ValueType} {output : types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
@@ -35,7 +35,7 @@ theorem ReaderPostWasm2.numeric_available {data env locals index st out instruct
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the float callback runs, including extension opcodes. -/
 theorem ReaderPostWasm2.float_available {data env locals index st out instruction values}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderPostWasm2 p out instruction p.current.ctrl.polymorphic_base values)
     {input : List types.ValueType} {output : types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)

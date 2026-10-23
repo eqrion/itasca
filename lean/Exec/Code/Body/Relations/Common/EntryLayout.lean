@@ -15,7 +15,7 @@ theorem stackWords_types (values : List code.StackType) :
 /-- A reader's child frame base identifies exactly the physical source prefix
 below its parameters. This comes from the canonical control zipper. -/
 theorem ReaderEnterPostWasm2.front {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
     (initial : form.Initial) :
     out.core.ctrls.val = (p.parents ++ [{p.current with vals := remaining}]).map Wasm2.Frames.Saved.ctrl ++
@@ -39,7 +39,7 @@ theorem ReaderEnterPostWasm2.front {data env locals index st out form bt ins out
 front is a prefix of the already observed operand stack. -/
 theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val)
@@ -61,44 +61,6 @@ theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.Func
   have words : stackWords (out.core.vals.val.take base.val) = slots front := by
     rw [prefixEq, stackWords_types, prefixTypes]
   refine ⟨front, oldTypes, newTypes, newKnown, baseFits, words, ?_⟩
-  have height := layout.height
-  rw [oldTypes, slots_append] at height
-  have bound : compiler.height.val ≤ U32.max := by scalar_tac
-  rw [words, layout.localSlots]
-  omega
-
-/-- Wasm 1 entry has no block parameters; its entire post-reader operand vector
-is the physical prefix below the fresh control frame. -/
-theorem ReaderEnterPostWasm1.front {data env ctx bodyBt st out form bt remaining token}
-    {p : Wasm1.Pending data env ctx bodyBt st}
-    (post : ReaderEnterPostWasm1 p out form bt remaining token) :
-    out.ctrls.val = (p.parents ++ [{p.current with vals := remaining}]).map Wasm1.Frames.Saved.ctrl ++
-      [(Wasm1.Frames.Saved.fresh out form bt).ctrl] ∧
-    (Wasm1.Frames.Saved.fresh out form bt).ctrl.value_stack_base.val = out.vals.val.length ∧
-    out.vals.val = p.parents.flatMap Wasm1.Frames.Saved.vals ++ remaining := by
-  obtain ⟨C, outer, spine, header, position, typed, controls, values⟩ := post.opened
-  have outerEq : outer = p.parents.flatMap Wasm1.Frames.Saved.vals ++ remaining := by
-    simpa [List.flatMap_append] using wasm1_spine_values spine
-  have valuesEq : out.vals.val = outer := by simpa [Wasm1.Frames.Saved.fresh] using values
-  exact ⟨controls, by simpa only [valuesEq] using position, valuesEq.trans outerEq⟩
-
-theorem ReaderEnterPostWasm1.layout {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
-    {data env ctx bodyBt st out form bt remaining token}
-    {p : Wasm1.Pending data env ctx bodyBt st}
-    (post : ReaderEnterPostWasm1 p out form bt remaining token)
-    (live : p.current.ctrl.polymorphic_base = false) (known : ConcreteStack st.vals.val)
-    (layout : CompilerLayout compiler (Sequence.stackTypes st.vals.val)) :
-    ∃ front : List valtype,
-      Sequence.stackTypes st.vals.val = front ++ form.inputs ∧
-      Sequence.stackTypes out.vals.val = front ∧ ConcreteStack out.vals.val ∧
-      stackWords (out.vals.val.take (Wasm1.Frames.Saved.fresh out form bt).ctrl.value_stack_base.val) = slots front ∧
-      compiler.function.local_slots.val +
-        stackWords (out.vals.val.take (Wasm1.Frames.Saved.fresh out form bt).ctrl.value_stack_base.val) ≤ U32.max := by
-  obtain ⟨front, oldTypes, newTypes, newKnown⟩ := post.stacks live known
-  obtain ⟨controls, position, values⟩ := post.front
-  have words : stackWords (out.vals.val.take (Wasm1.Frames.Saved.fresh out form bt).ctrl.value_stack_base.val) = slots front := by
-    rw [position, List.take_length, stackWords_types, newTypes]
-  refine ⟨front, oldTypes, newTypes, newKnown, words, ?_⟩
   have height := layout.height
   rw [oldTypes, slots_append] at height
   have bound : compiler.height.val ≤ U32.max := by scalar_tac

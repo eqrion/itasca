@@ -6,13 +6,11 @@ import Exec.Interp.Relations.PrefixDispatch
 import Exec.Interp.Relations.LocalCodePoint
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem localGet_fetch {s raw compiled C targets next output} {f : Abs.AFrame}
     (index : Nat) (after : List instr)
-    (point : FramePoint emission s raw {f with code := .LOCAL_GET (.mk_uN index)::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := .LOCAL_GET (.mk_uN index)::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
-  rcases structuredCodeWithTables_linear_inv (by rfl) point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,continuation⟩
+  rcases structuredCode_linear_inv (by rfl) point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,continuation⟩
   · exact ⟨_,fetch,.jump target⟩
   · obtain ⟨ty,src,dst,localType,emittedEq,middleEq,source,position⟩ := linearEmission_localGet_inv index (emission_localGet_pure index head)
     refine ⟨Code.move ty dst src,?_,move_prefix ty dst src⟩
@@ -20,10 +18,10 @@ theorem localGet_fetch {s raw compiled C targets next output} {f : Abs.AFrame}
 
 theorem localWrite_fetch {s raw compiled C targets next output} {f : Abs.AFrame}
     (index : Nat) (keep : Bool) (after : List instr)
-    (point : FramePoint emission s raw {f with code := (if keep then .LOCAL_TEE (.mk_uN index) else .LOCAL_SET (.mk_uN index))::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := (if keep then .LOCAL_TEE (.mk_uN index) else .LOCAL_SET (.mk_uN index))::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
   have linear : linearSource (if keep then .LOCAL_TEE (.mk_uN index) else .LOCAL_SET (.mk_uN index)) = true := by cases keep <;> rfl
-  rcases structuredCodeWithTables_linear_inv linear point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,continuation⟩
+  rcases structuredCode_linear_inv linear point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,continuation⟩
   · exact ⟨_,fetch,.jump target⟩
   · obtain ⟨stack,ty,dst,src,shape,localType,emittedEq,middleEq,destination,source⟩ := linearEmission_localWrite_inv index keep (emission_localWrite_pure index keep head)
     refine ⟨Code.move ty dst src,?_,move_prefix ty dst src⟩

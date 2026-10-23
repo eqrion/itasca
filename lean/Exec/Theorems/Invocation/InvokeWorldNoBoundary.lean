@@ -1,10 +1,16 @@
-import Exec.Theorems.Invocation.InvokeWorldChosenOutcomes
+import Exec.Theorems.Composition.World.ChosenWorldTotal
+import Exec.Theorems.Composition.World.ChosenWorldLoopResult
+import Exec.Spec.Choices.NeutralStep
+import Exec.Theorems.Composition.Eventful.EventfulWorldLoop
+import Exec.Theorems.Composition.Supported.SupportedEntryOutcomes
+import Exec.Interp.Invocation.InvokePrefixCauses
+import Exec.Theorems.Api.ReadbackIssued
+import Exec.Spec.HostCall
 import Exec.Theorems.Composition.World.ChosenWorldResourceLoop
 import Exec.Theorems.Api.InvocationPrimitiveResources
 import Exec.Interp.Calls.ResourcesAdequate
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Internal public-call composition: independent source and primitive resource
 conditions exclude exhaustion and interruption, including result readback. The
@@ -16,7 +22,7 @@ theorem invoke_defined_world_no_boundary {choices : SourceChoices} (admissible :
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _=>True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀c store,Inv c store → CertifiedSupportedStore emission allowed view c store)
+    (certify : ∀c store,Inv c store → CertifiedSupportedStore view c store)
     (capacities : ∀c store,Inv c store → Store.FunctionCapacities c store)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (valid : Inv code store)
     (ambient : frame) (ambientWf : wf_frame ambient) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
@@ -26,7 +32,7 @@ theorem invoke_defined_world_no_boundary {choices : SourceChoices} (admissible :
     (hf : store.funcs.val[address.index.val]?=some function) (hs : store.types.val[function.signature.val]?=some signature)
     (hw : function.code=.Wasm instanceIndex functionIndex)
     (accepted : runtime.interp.check_values memory store args signature.params.deref=.ok (.Ok ()))
-    (steps : ChosenWorldStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view
       (signature.results.val.map sourceType) Inv)
     {valueLimit frameLimit : Nat}
     (floors : ∀c store,Inv c store → valueLimit≤store.limits.max_values.val ∧ frameLimit≤store.limits.max_frames.val)
@@ -42,7 +48,7 @@ theorem invoke_defined_world_no_boundary {choices : SourceChoices} (admissible :
   have certified := certify code store valid
   have initialFloors := floors code store valid
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) => after=store ∧ ∃source,
-    StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store prepared source
+    StructuredMachine.Execution view code store prepared source
       (signature.results.val.map sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
@@ -80,7 +86,7 @@ theorem invoke_defined_world_no_boundary {choices : SourceChoices} (admissible :
     have sourcePrefix : ChosenStepsN choices occurrence 1
         ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source) := by
       simpa only [List.nil_append] using ChosenStepsN.cons chosenEntry (ChosenStepsN.refl (occurrence+1) invariant.typed.typed.decode_wf)
-    let initial : ChosenWorld emission allowed M P view (signature.results.val.map sourceType) :=
+    let initial : ChosenWorld M P view (signature.results.val.map sourceType) :=
       ⟨⟨code,⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩⟩,occurrence+1⟩
     have bodyResources : ChosenWorldResources choices initial.occurrence (Abs.decode source) valueLimit frameLimit := by
       intro count events next suffix

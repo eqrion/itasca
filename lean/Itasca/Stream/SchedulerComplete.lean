@@ -1,14 +1,13 @@
 import Itasca.Stream.BatchComplete
 import Itasca.Stream.Scheduler
+import Itasca.Contracts
 
 /-!
 # Accepting schedulers
 
-`StreamAcceptingScheduler.Accepts` is one scheduler policy under which completeness holds: every
-polled worker is the actual `stream.CodeBatch.validate_all` result of an issued seed, in any
-order, with positive batch configuration. It is an obligation on the embedding and does not
-describe every possible worker strategy. `StreamAcceptingScheduler.Valid` collects the independent
-byte, typing and size premises of an issued batch. `StreamAcceptingScheduler.retire_complete` and
+Consequences of `StreamAcceptingScheduler.Accepts`, the scheduler policy under which completeness
+holds, and of `StreamAcceptingScheduler.Valid`, the independent premises of an issued batch. Both
+are defined in `Itasca/Contracts`. `StreamAcceptingScheduler.retire_complete` and
 `StreamAcceptingScheduler.drain_complete` show that valid queued work retires and drains
 successfully.
 -/
@@ -19,60 +18,13 @@ namespace Itasca.StreamAcceptingScheduler
 
 variable {validationProfile : ValidationProfile}
 
-/-- Independent byte, typing, and size premises for an issued batch. -/
-structure Valid (issued : StreamBatch.Issued)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
-  validation_profile : issued.profile = validationProfile
-  bounded : issued.Bounded
-  entry_bounds : CodeEntry.Bounds issued.env
-  profile : Profile.Environment validationProfile issued.env
-  limits : Profile.EnvironmentWithinLimits validationProfile issued.env
-  entries : ∃ entries, entries.length = issued.num_funcs.val ∧
-    ModuleCode.EntriesTyped (profile := validationProfile) issued.env issued.first_func.val entries ∧
-    ModuleBinary.Rep (Profile.CodeEncodingWithinLimits validationProfile) entries issued.code.val
-
-/-- Every batch in the queue belongs to module `id` and is `Valid`. -/
-def ValidQueue (id : U64) (queue : List StreamBatch.Issued)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
-  ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued validationProfile
-
-/-- One accepting worker policy: each returned worker is the actual result of `validate_all` on an
-issued seed. The policy permits arbitrary return order and any positive batching configuration.
-Successful finish is derived from `Valid` and is not required of polling. It does not characterize
-every possible worker strategy. The visitor state is tracked by `Queued`, which lists the issued
-batches not yet polled. -/
-structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
-  batch_positive : 0 < config.batch_bytes.val
-  capacity_positive : 0 < config.max_batches.val
-  custom_accepts : ModuleTail.HooksAccept visitor.moduleModuleVisitorInst
-  custom_preserves : ∀ id queue, ModuleTail.PreservesInvariant
-    visitor.moduleModuleVisitorInst (Queued id queue)
-  region : ∀ id queue v region, Queued id queue v →
-    ∃ v', visitor.custom_region v region = .ok v' ∧ Queued id queue v'
-  environment : ∀ id queue v env, Queued id queue v →
-    ∃ v', visitor.environment_ready v env = .ok (.Ok config, v') ∧ Queued id queue v'
-  submit : ∀ id queue issued v, Queued id queue v → Valid issued validationProfile →
-    issued.module_id = id → queue.length < config.max_batches.val →
-    ∃ v', visitor.submit_code_batch v issued.seed = .ok (.Ok (), v') ∧
-      Queued id (queue ++ [issued]) v'
-  poll : ∀ id queue v, Queued id queue v → ValidQueue id queue validationProfile → queue ≠ [] →
-    ∃ issued rest after v', (issued :: rest).Perm queue ∧
-      visitor.poll_code_batch v = .ok (.Ok after, v') ∧
-      stream.CodeBatch.validate_all issued.seed = .ok after ∧ Queued id rest v'
-  code_end : ∀ id queue v, Queued id queue v →
-    ∃ v', visitor.code_end v = .ok (.Ok (), v') ∧ Queued id queue v'
-  tail_ready : ∀ id queue v tail, Queued id queue v →
-    ∃ v', visitor.tail_ready v tail = .ok (.Ok (), v') ∧ Queued id queue v'
-
 /-- Running `validate_all` on the seed of a `Valid` batch gives a worker with the issued identity
 that `stream.CodeBatch.finish` accepts. -/
 theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued validationProfile)
     {after : stream.CodeBatch} (hr : stream.CodeBatch.validate_all issued.seed = .ok after) :
     StreamBatch.Identity issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
   obtain ⟨entries, hn, ht, hb⟩ := h.entries
-  obtain ⟨result, hrun, hreachable, hfinish⟩ := stream.CodeBatch.validate_all.complete_seed
+  obtain ⟨result, hrun, hreachable, hfinish⟩ := stream.CodeBatch.validate_all.complete_at_seed
     issued entries h.bounded hn ht h.profile h.limits h.entry_bounds hb h.validation_profile
   have he : result = after := by simpa using hrun.symm.trans hr
   subst result

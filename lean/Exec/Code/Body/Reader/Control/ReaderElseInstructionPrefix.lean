@@ -1,5 +1,4 @@
 import Exec.Code.Body.Reader.Control.StructuredElseInstructionPrefix
-import Exec.Code.Body.Reader.Common.ReaderCloseWasm1
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
 
@@ -7,42 +6,12 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
-theorem reader_else_open_instructions_wasm1 {jumpTables : List U32} {data env ctx bodyBt st}
-    (p : Wasm1.Pending data env ctx bodyBt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (initial before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
-      parents current st.vals.val p.start.val)
-    (same : ReaderScopeZipperWasm1 parents current p.parents p.current)
-    (held : CompilerInstructionPrefix before)
-    (byte : data.val[p.start.val]'p.inbounds = code.OP_ELSE)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx code.OP_ELSE before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
-  obtain ⟨callback,_,sourceForm,_⟩ := reader_else_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out byte accepted
-  have matched := same.current.form
-  rw [sourceForm] at matched
-  have sourceThen : ∃ condition, current.form = .then_ (Control.blockType p.current.ctrl.block_type) condition := by
-    generalize currentForm : current.form = scopeForm at matched
-    cases matched with
-    | then_ condition => exact ⟨condition,rfl⟩
-  obtain ⟨condition,form⟩ := sourceThen
-  have sourceBound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := by
-    have size := p.size
-    have inside := p.inbounds
-    change p.start.val < data.val.length at inside
-    norm_num [limits.MAX_FUNCTION_BYTES,limits.MAX_MODULE_BYTES] at size ⊢
-    omega
-  exact invariant.else_open_instructions ops law out _ condition form (Control.signature p.current.ctrl.block_type) sourceBound held callback
-
-/-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
 theorem reader_else_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (held : CompilerInstructionPrefix before)

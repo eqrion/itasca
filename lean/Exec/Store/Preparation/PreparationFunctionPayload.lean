@@ -12,9 +12,9 @@ theorem preparation_function_payload {M A : Type} (memory : runtime.platform.Mem
     {tables memories} (cache : Cache seed.module.module.env tables memories)
     (instanceIndex : Usize) (typed functions : runtime.store.Store M)
     (typeInst funcInst : runtime.store.ModuleInst)
-    (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
+    (typeRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
-    (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
+    (functionRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
       .ok (typeParts functions (.Ok ()) funcInst)) :
     typed.funcs = before.funcs ∧ typeInst.module = seed.module ∧ typeInst.funcs = seed.funcs ∧
     TypeEntries typed seed.module.module.env.types.val typeInst.types.val ∧

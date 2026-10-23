@@ -1,5 +1,5 @@
 import Exec.Spec.Depth
-import Exec.Platform.Hooks
+import Exec.Generated.Types
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 /-- Call-stack exhaustion is bounded by decoded frame nesting; termination

@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm1.Syntax
+import Itasca.Binary.Wasm2.Syntax
 import Itasca.Binary.Wasm1.NumericMeaning
 import Itasca.Binary.Wasm1.MemoryMeaning
 import Itasca.Binary.Wasm1.BlockType
@@ -23,6 +23,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
 
+export Wasm2 (Token Simple Emits BodyTokens)
+
 /-- `bytes` is the slice of `data` from `start` to `next`, followed by the untouched suffix. -/
 structure BytesAt (data : Slice U8) (start : Usize) (bytes : List U8) (next : Usize) : Prop where
   suffix : data.val.drop start.val = bytes ++ data.val.drop next.val
@@ -35,14 +37,14 @@ inductive IndicesEncoding : List U32 → List U8 → Prop where
   | cons {idx indices first rest} : Leb128.Encoding first idx.val →
       IndicesEncoding indices rest → IndicesEncoding (idx :: indices) (first ++ rest)
 
-/-- The immediate bytes that follow an opcode byte for a Wasm 1.0 token. Literal opcode values and
-the numeric and memory opcode tables define the accepted syntax. -/
+/-- The immediate bytes that follow an opcode byte for a Wasm 1.0 token. Literal opcode values,
+the numeric and memory opcode tables and `ScalarBlockByte` define the accepted syntax. -/
 inductive Immediate : U8 → Token → List U8 → Prop where
   | unreachable : Immediate 0x00#u8 (.plain .UNREACHABLE) []
   | nop : Immediate 0x01#u8 (.plain .NOP) []
-  | block (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x02#u8 (.block bt) [Control.blockByte bt]
-  | loop (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x03#u8 (.loop bt) [Control.blockByte bt]
-  | if_ (bt : code.BlockType) (hbt : Control.ScalarBlockType bt) : Immediate 0x04#u8 (.if_ bt) [Control.blockByte bt]
+  | block {bt b} : ScalarBlockByte bt b → Immediate 0x02#u8 (.block bt) [b]
+  | loop {bt b} : ScalarBlockByte bt b → Immediate 0x03#u8 (.loop bt) [b]
+  | if_ {bt b} : ScalarBlockByte bt b → Immediate 0x04#u8 (.if_ bt) [b]
   | else_ : Immediate 0x05#u8 .else_ []
   | end_ : Immediate 0x0B#u8 .end_ []
   | br (idx : U32) {bytes} : Leb128.Encoding bytes idx.val →
@@ -155,13 +157,6 @@ theorem At.no_immediate {data start next opcode token}
     At data start token next := by
   exact .of_immediate hstart hbyte hnext himm (.nil data next (by omega))
 
-/-- A consumed span is within the input. -/
-theorem Consumed.span {data start tokens next} (h : Consumed data start tokens next) :
-    start.val ≤ next.val ∧ next.val ≤ data.length := by
-  induction h with
-  | nil hb => exact ⟨Nat.le_refl _, hb⟩
-  | snoc _ ha ih => have := ha.span; omega
-
 /-- Consumed spans compose. -/
 theorem Consumed.append {data start middle next first rest}
     (hfirst : Consumed data start first middle) (hrest : Consumed data middle rest next) :
@@ -241,18 +236,6 @@ theorem At.of_byte {data : Slice U8} {start pos next : Usize} {opcode token} (im
     (hnext : next.val = pos.val + 1) : At data start token next := by
   exact .of_immediate hstart hbyte hpos himm (.byte data pos next immediate hbound hvalue hnext)
 
-/-- A `call_indirect` token from a decoded type index and the reserved zero byte. -/
-theorem At.of_index_zero {data start pos middle next} (idx : U32)
-    (hstart : start.val < data.length) (hbyte : data.val[start.val] = 0x11#u8)
-    (hpos : pos.val = start.val + 1) (hindex : Leb128.Decoded data pos idx middle)
-    (hbound : middle.val < data.length) (hzero : data.val[middle.val] = 0#u8)
-    (hnext : next.val = middle.val + 1) :
-    At data start (.plain (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))) next := by
-  obtain ⟨bytes, hs, hl, hb, he⟩ := hindex
-  exact .of_immediate hstart hbyte hpos (.callIndirect idx he)
-    ((show BytesAt data pos bytes middle from ⟨hs, hl, hb⟩).append
-      (.byte data middle next 0#u8 hbound hzero hnext))
-
 /-- A memory access token from a decoded alignment and offset. -/
 theorem At.of_memory {data start pos middle next opcode} (operation : MemoryMeaning.Operation)
     (arg : code.MemArg) (meaning : MemoryMeaning.opcodeMeaning opcode = some operation)
@@ -264,18 +247,5 @@ theorem At.of_memory {data start pos middle next opcode} (operation : MemoryMean
   obtain ⟨os, hos, hol, hob, hoe⟩ := hoffset
   exact .of_immediate hstart hbyte hpos (.memory opcode operation arg meaning hae hoe)
     ((show BytesAt data pos alignBytes middle from ⟨has, hal, hab⟩).append ⟨hos, hol, hob⟩)
-
-end Itasca.Wasm1
-
-namespace Itasca.Wasm1
-
-/-- A structured instruction header token from a decoded one-byte block type. -/
-theorem At.of_block_type {data start pos next opcode token} (bt : code.BlockType)
-    (hstart : start.val < data.length) (hbyte : data.val[start.val] = opcode)
-    (hpos : pos.val = start.val + 1)
-    (himm : Control.ScalarBlockType bt → Immediate opcode token [Control.blockByte bt])
-    (hdecoded : Control.BlockDecoded data pos bt next) : At data start token next := by
-  obtain ⟨hb, hv, hn, _, hbt⟩ := hdecoded
-  exact .of_byte (Control.blockByte bt) hstart hbyte hpos (himm hbt) hb hv hn
 
 end Itasca.Wasm1

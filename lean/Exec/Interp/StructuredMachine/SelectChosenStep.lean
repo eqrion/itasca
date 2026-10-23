@@ -1,13 +1,11 @@
 import Exec.Abs.Sim.ChosenBasic
 import Exec.Interp.Relations.ChosenControlSource
-import Exec.Interp.StructuredMachine.FloatHeads
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.StructuredMachine.SelectPoint
 import Exec.Interp.Relations.SelectSlots
 import Exec.Interp.Machines.Core.CoreSelectOperands
 import Exec.Interp.StructuredMachine.ForwardJump
 namespace Exec.Interp.StructuredMachine.Select
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Aeneas Aeneas.Std SpecExt
 
 theorem step_select_core_chosen {choices : Exec.Spec.SourceChoices} (admissible : choices.Admissible)
@@ -23,7 +21,7 @@ theorem step_select_core_chosen {choices : Exec.Spec.SourceChoices} (admissible 
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max) (slots : FrameSlots exec raw f)
-    (point : FramePoint emission sourceStore raw {f with code := .SELECT none::after} compiled C targets next output)
+    (point : FramePoint sourceStore raw {f with code := .SELECT none::after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩) :
     let initial : Abs.AState := ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -31,14 +29,14 @@ theorem step_select_core_chosen {choices : Exec.Spec.SourceChoices} (admissible 
       ∃ (pc : U32) (g : Abs.AFrame),
         {out.2.1 with slots := exec.slots} = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
         FrameSlots out.2.1 {raw with pc := pc} g ∧
-        FramePoint emission sourceStore {raw with pc := pc} g compiled C targets next output ∧
+        FramePoint sourceStore {raw with pc := pc} g compiled C targets next output ∧
         Abs.CoreTyped {initial with frames := g::rest} ∧ FrameMetadata f g ∧
         (initial = {initial with frames := g::rest} ∨ Abs.Core.step initial = .next {initial with frames := g::rest}) ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
         SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ⦄ := by
   dsimp only
   rcases corePoint_select_head after point.code with ⟨target,forward,fetched,tail⟩ | ⟨types,ty,a,b,condition,input,leftPos,rightPos,conditionPos,fetched,tail⟩
-  · have retained : FramePoint emission sourceStore {raw with pc := target} {f with code := .SELECT none::after} compiled C targets next output :=
+  · have retained : FramePoint sourceStore {raw with pc := target} {f with code := .SELECT none::after} compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels,tail⟩
     apply WP.spec_mono (step_forward_jump_flat memory hooks floats allocator exec store platform index raw inst compiled
       sourceStore ambient {f with code := .SELECT none::after} rest C targets next output target
@@ -72,7 +70,7 @@ theorem step_select_core_chosen {choices : Exec.Spec.SourceChoices} (admissible 
     apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
       (Code.selectInstruction (decide (Code.width ty = 2)) a b condition) last frameFound instanceFound codeFound fetched pcBound
     intro pc pcNext
-    have continuation : FramePoint emission sourceStore {raw with pc := pc}
+    have continuation : FramePoint sourceStore {raw with pc := pc}
         {f with code := after,vals := front++[if bits = 0 then right else left]} compiled C targets next output := by
       refine ⟨point.bindings,point.locals,?_,?_⟩
       · have labels : LabelsMatch (front++[left,right,Abs.integerVal .I32 bits]) f.labels targets := by simpa only [split] using point.labels

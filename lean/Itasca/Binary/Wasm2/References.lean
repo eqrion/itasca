@@ -38,16 +38,4 @@ inductive Immediate : U8 → instr → List U8 → Prop where
       Immediate 0x11#u8 (.CALL_INDIRECT (.mk_uN tableIndex.val) (.mk_uN typeIndex.val))
         (typeBytes ++ tableBytes)
 
-/-- Every reference instruction spelled by `Immediate` is well formed. -/
-theorem Immediate.wellFormed {opcode op bytes} (h : Immediate opcode op bytes) : wf_instr op := by
-  cases h with
-  | refNull rt => exact .instr_case_40 _
-  | refIsNull => exact .instr_case_42
-  | refFunc i _ => exact .instr_case_41 _ (EnvTranslation.index_wf i)
-  | selectTyped _ _ => exact .instr_case_3 _
-  | tableGet i _ => exact .instr_case_48 _ (EnvTranslation.index_wf i)
-  | tableSet i _ => exact .instr_case_49 _ (EnvTranslation.index_wf i)
-  | callIndirect ti table _ _ =>
-      exact .instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf ti)
-
 end Itasca.Wasm2.ReferencesBinary

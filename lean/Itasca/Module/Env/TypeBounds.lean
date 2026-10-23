@@ -26,13 +26,6 @@ theorem FuncTypeEncoding.params_bound {ty bytes} (h : FuncTypeEncoding ty bytes)
   simp only [List.length_cons, List.length_append]
   omega
 
-theorem At.funcType_params_bound {data start ty next}
-    (h : At FuncTypeEncoding data start ty next) : ty.params.val.length ≤ next.val := by
-  obtain ⟨bytes, he, hs⟩ := h
-  have := he.params_bound
-  have := hs.length
-  omega
-
 theorem Rep.funcTypes_params_bound {types bytes} (h : Rep FuncTypeEncoding types bytes) :
     ∀ ty ∈ types, ty.params.val.length ≤ bytes.length := by
   induction h with
@@ -46,15 +39,6 @@ theorem Rep.funcTypes_params_bound {types bytes} (h : Rep FuncTypeEncoding types
     · have := ih ty hm
       simp only [List.length_append]
       omega
-
-theorem At.funcTypes_params_bound {data start types next}
-    (h : At (Rep FuncTypeEncoding) data start types next) :
-    ∀ ty ∈ types, ty.params.val.length ≤ next.val := by
-  obtain ⟨bytes, he, hs⟩ := h
-  intro ty hm
-  have := he.funcTypes_params_bound ty hm
-  have := hs.length
-  omega
 
 /-- Every function type in a decoded type vector has at most as many parameters as the end
 position of the vector. -/

@@ -6,8 +6,6 @@ import Exec.Interp.Relations.Capacity
 namespace Exec.Code
 open Aeneas Aeneas.Std
 open Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 /-- Even behind forward skips, a local read's destination lies within the
 allocation checked for the complete function bytecode. -/
 theorem structured_local_get_capacity
@@ -17,14 +15,14 @@ theorem structured_local_get_capacity
     (labels : List LabelTarget) (index : Nat) (after : List instr)
     (next : Nat) (output : List valtype) (ty : valtype)
     (localType : C.LOCALS[index]? = some ty) :
-    ∀ pc, StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
+    ∀ pc, StructuredCode (Interp.emission compiled C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
       (.LOCAL_GET (.mk_uN index) :: after) pc next output →
       slots C.LOCALS + slots stack + width ty ≤ compiled.slot_count.val := by
   intro pc relation
   generalize measureEq : compiled.code.val.length - pc = measure
   induction measure using Nat.strong_induction_on generalizing pc with
   | h measure ih =>
-    rcases Interp.StructuredMachine.structuredCodeWithTables_linear_inv (by rfl) relation with skip | branch
+    rcases Interp.StructuredMachine.structuredCode_linear_inv (by rfl) relation with skip | branch
     · obtain ⟨target, forward, fetched, continuation⟩ := skip
       have targetBound := continuation.entry_bound
       exact ih (compiled.code.val.length - target.val) (by omega) target.val continuation rfl
@@ -45,8 +43,6 @@ end Exec.Code
 namespace Exec.Interp
 open Aeneas Aeneas.Std
 open Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 /-- LOCAL_GET needs no independent spare-capacity premise: retained code and
 frame certificates establish it for the actual represented local value. -/
 theorem structured_local_get_storage_capacity {M : Type}
@@ -58,7 +54,7 @@ theorem structured_local_get_storage_capacity {M : Type}
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true)
     {s C targets next output} (index : Nat) (after : List instr)
-    (point : FramePoint emission s raw { source with code := .LOCAL_GET (.mk_uN index) :: after }
+    (point : FramePoint s raw { source with code := .LOCAL_GET (.mk_uN index) :: after }
       compiled C targets next output)
     (value : val) (lookup : source.locals[index]? = some value) :
     raw.base.val + Code.slots ((source.locals ++ source.vals).map Code.valueType) +

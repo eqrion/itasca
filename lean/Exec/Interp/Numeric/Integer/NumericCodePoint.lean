@@ -35,18 +35,6 @@ theorem linearEmission_numeric_inv {locals before after : List valtype} {emitted
     exact ⟨stack, a, a, rfl, rfl, rfl, ha, by simp [Instruction.arity]⟩
   | _ => simp [decodeInstruction] at decoded
 
-theorem linearCodeRel_numeric {locals before after : List valtype} {source : List instr}
-    {code : List Code.Bytecode} {pc next : Nat} (op : Instruction)
-    (relation : Code.LinearCodeRel locals before (op.source :: source) code pc next after) :
-    ∃ stack a b,
-      before = stack ++ List.replicate op.arity (Code.integerType op.input) ∧
-      a.val = Code.slots locals + Code.slots stack ∧ b.val = a.val + (op.arity - 1) ∧
-      code[pc]? = some (Code.integerInstruction op a a b) ∧
-      Code.LinearCodeRel locals (stack ++ [Code.integerType op.output]) source code (pc + 1) next after := by
-  obtain ⟨middle, emitted, head, fetch, tail⟩ := linearCodeRel_head relation
-  obtain ⟨stack, a, b, beforeEq, emittedEq, afterEq, ha, hb⟩ := linearEmission_numeric_inv op head
-  refine ⟨stack, a, b, beforeEq, ha, hb, fetch _ [] emittedEq, ?_⟩
-  simpa only [emittedEq, afterEq, List.length_singleton] using tail
 theorem integerValue_type (ty : Inn) (bits : Nat) :
     Code.valueType (Abs.integerVal ty bits) = Code.integerType ty := by cases ty <;> rfl
 
@@ -56,26 +44,5 @@ theorem numericOperand_types (op : Instruction)
   rcases op.arity_cases with one | two
   · simp [Instruction.operands, one, integerValue_type]
   · simp [Instruction.operands, two, integerValue_type]
-
-theorem linearPoint_numeric {raw : runtime.interp.Frame} {f : Abs.AFrame}
-    {compiled : runtime.bytecode.CompiledFunction} {next : Nat} {output : List valtype}
-    (front : List val) (op : Instruction)
-    (a b : BitVec (sizenn (numtype_Inn op.input)))
-    (result : BitVec (sizenn (numtype_Inn op.output))) (after : List instr)
-    (point : LinearPoint raw { f with code := op.source :: after, vals := front ++ op.operands a b } compiled next output) :
-    ∃ left right,
-      left.val = Code.slots ((f.locals ++ front).map Code.valueType) ∧
-      right.val = left.val + (op.arity - 1) ∧
-      compiled.code.val[raw.pc.val]? = some (Code.integerInstruction op left left right) ∧
-      Code.LinearCodeRel (f.locals.map Code.valueType)
-        ((front ++ [Abs.integerVal op.output result.toNat]).map Code.valueType)
-        after compiled.code.val (raw.pc.val + 1) next output := by
-  obtain ⟨stack, left, right, stackEq, hl, hr, fetch, tail⟩ := linearCodeRel_numeric op point
-  simp only [List.map_append, numericOperand_types] at stackEq
-  have stackIs : front.map Code.valueType = stack := List.append_cancel_right stackEq
-  subst stack
-  refine ⟨left, right, ?_, hr, fetch, ?_⟩
-  · simpa only [List.map_append, Code.slots_append] using hl
-  · simpa only [List.map_append, List.map_cons, List.map_nil, integerValue_type] using tail
 
 end Exec.Interp

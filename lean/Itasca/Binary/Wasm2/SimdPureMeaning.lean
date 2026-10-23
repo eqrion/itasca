@@ -19,7 +19,6 @@ namespace Itasca.Wasm2.Simd
 inductive Signature where
   | unary | binary | ternary | test | shift
   | splatI32 | splatI64 | splatF32 | splatF64
-  deriving DecidableEq
 
 /-- The operand types of a signature. -/
 def Signature.inputs : Signature → List valtype
@@ -2450,12 +2449,6 @@ def pureMeaning (subopcode : Nat) : Option Operation :=
   | 254 => some pure254
   | 255 => some pure255
   | _ => none
-
-/-- A generated typing of a table instruction has the row's signature. -/
-theorem pure_signature {opcode op} (_hmap : pureMeaning opcode = some op)
-    (C : context) (ins outs : List valtype)
-    (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs))) :
-    ins = op.signature.inputs ∧ outs = op.signature.outputs := op.principal C ins outs ht
 
 /-- Pure SIMD subopcodes are below 256. -/
 theorem pure_bound {opcode op} (hmap : pureMeaning opcode = some op) : opcode < 256 := by

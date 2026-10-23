@@ -39,11 +39,6 @@ theorem Emitted.stable {A : Type} {before after : runtime.compiler.FunctionCompi
   obtain ⟨budget, code, sources, rfl, _, _⟩ := emitted
   exact ⟨rfl, Nat.le_refl _⟩
 
-theorem OnlyCode.stable {A : Type} {before after : runtime.compiler.FunctionCompiler A}
-    (changed : OnlyCode before after) : CompilerStable before after := by
-  obtain ⟨code, rfl⟩ := changed
-  exact ⟨rfl, Nat.le_refl _⟩
-
 /-- A successful observation preserves fixed metadata and only increases the
 slot capacity. Its allocation decisions and current validator operands vary freely. -/
 theorem compiler_observe_stable {A : Type} (ops : runtime.platform.Alloc A)
@@ -62,94 +57,4 @@ theorem compiler_observe_stable {A : Type} (ops : runtime.platform.Alloc A)
     · exact Nat.le_max_left _ _
     · exact Nat.le_refl _
 
-/-- Successful emission preserves fixed metadata without requiring any spare
-capacity or coordinate premise: a success equation already witnesses those checks. -/
-theorem compiler_emit_stable {A : Type} (ops : runtime.platform.Alloc A)
-    (before after : runtime.compiler.FunctionCompiler A) (instruction : runtime.bytecode.Instr)
-    (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (.Ok (), after)) :
-    CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.emit at accepted
-  obtain ⟨⟨pc, current⟩, called, rest⟩ := bind_ok_inv _ _ _ accepted
-  have effect := compiler_pc ops before
-  rw [called, WP.spec_ok] at effect
-  obtain ⟨_, _, budget, currentEq⟩ := effect
-  change current = {before with budget} at currentEq
-  subst current
-  cases pc with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨charged, budget1⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases charged with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨⟨pushed, budget2, code⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-      cases pushed with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok value =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨coordinate, _, rest⟩ := bind_ok_inv _ _ _ rest
-        obtain ⟨⟨result, budget3, sources⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-        simp only [uncurry_apply_pair, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        exact ⟨rfl, Nat.le_refl _⟩
-
-theorem compiler_copy_stable {A : Type} (ops : runtime.platform.Alloc A)
-    (before after : runtime.compiler.FunctionCompiler A) (dst src count : U32)
-    (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (.Ok (), after)) :
-    CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := by simpa using accepted
-    subst after
-    exact .refl _
-  · split at accepted
-    · have same : before = after := by simpa using accepted
-      subst after
-      exact .refl _
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_stable ops before after instruction emitted
-
-theorem compiler_pair_stable {A : Type} (ops : runtime.platform.Alloc A)
-    (before after : runtime.compiler.FunctionCompiler A) (a b index : U32)
-    (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (.Ok index, after)) :
-    CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact ⟨rfl, Nat.le_refl _⟩
-
-theorem compiler_finish_op_stable {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
-    (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (), after)) :
-    CompilerStable before after := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    exact (compiler_emit_stable ops before middle instruction emitted).trans
-      (compiler_observe_stable ops law middle after state rest)
 end Exec.Code

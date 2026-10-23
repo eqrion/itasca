@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Control.Table.StructuredUniversalBranchTable
 import Exec.Code.Local.Control.Control.StructuredElseResolvedAppend
 import Exec.Code.Local.Relations.Table.BranchTableCallbackLayout
@@ -11,11 +11,11 @@ open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful live table callback advances the indexed compiler
 certificate once, retaining every dispatch arm under all future fixup plans. -/
-theorem StructuredCompilerPrefixWithTables.br_table {A : Type}
+theorem StructuredCompilerPrefix.br_table {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {jumpTables : List U32} {emit types functions returns locals parents current raw position nextRaw}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (state : code.OpIterState) (depths : List U32) (fallback : U32) (blockTypes : signature.ResultType)
     (stack : List valtype) (stackEq : Sequence.stackTypes raw = stack ++ [.I32])
@@ -30,10 +30,10 @@ theorem StructuredCompilerPrefixWithTables.br_table {A : Type}
     (live : before.reachable = true)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
       ops before state fallback blockTypes = .ok (.Ok (),after)) :
-    StructuredCompilerPrefixWithTables jumpTables emit initial after types functions returns locals parents
+    StructuredCompilerPrefix jumpTables emit initial after types functions returns locals parents
       (current.advance (.BR_TABLE (depths.map (fun d => .mk_uN d.val)) (.mk_uN fallback.val))) nextRaw state.pos.val := by
   obtain ⟨entered, original⟩ := invariant.live live
-  have retained : StructuredUniversalPrefixWithTables jumpTables emit before types functions returns locals
+  have retained : StructuredUniversalPrefix jumpTables emit before types functions returns locals
       parents current (stack ++ [.I32]) := stackEq ▸ original
   have fixed := compiler_br_table_fixed ops law before after state fallback blockTypes live accepted
   have localsEq : compilerLocals after = locals := by

@@ -1,4 +1,4 @@
-import Exec.Abs.Executable
+import Exec.Abs.BinaryInstr
 import Exec.Abs.Simd.Exclusion
 namespace Exec.Abs
 
@@ -7,7 +7,7 @@ def executableExtensionTag : instr → Bool
   | .SELECT (some _) | .BR_TABLE .. => true
   | _ => false
 
-theorem SliceInstr.executable_extension_tag {source} (allowed : SliceInstr source) :
+theorem PureHead.executable_extension_tag {source} (allowed : PureHead source) :
     executableExtensionTag source = false := by
   cases allowed with
   | numeric op => cases op with
@@ -15,35 +15,21 @@ theorem SliceInstr.executable_extension_tag {source} (allowed : SliceInstr sourc
     | _ => rfl
   | _ => rfl
 
-theorem CoreInstr.executable_extension_tag {source} (allowed : CoreInstr source) :
+theorem CoreHead.executable_extension_tag {source} (allowed : CoreHead source) :
     executableExtensionTag source = false := by
   cases allowed with
-  | slice h => exact h.executable_extension_tag
+  | pure h => exact h.executable_extension_tag
   | _ => rfl
 
-theorem FloatCoreInstr.executable_extension_tag {source} (allowed : FloatCoreInstr source) :
+theorem ScalarHead.executable_extension_tag {source} (allowed : ScalarHead source) :
     executableExtensionTag source = false := by
   cases allowed with
   | core h => exact h.executable_extension_tag
-  | scalar op => cases op <;> rfl
-  | _ => rfl
-
-theorem CumulativeInstr.executable_extension_tag {source} (allowed : CumulativeInstr source) :
-    executableExtensionTag source = false := by
-  cases allowed with
-  | core h => exact h.executable_extension_tag
-  | stateful op => cases op <;> rfl
-  | _ => rfl
+  | float op => cases op <;> rfl
 
 theorem SimdInstr.executable_extension_tag {source} (allowed : SimdInstr source) :
     executableExtensionTag source = false := by
   have tag := allowed.source_tag
   cases source <;> simp_all [executableExtensionTag,simdSourceTag]
 
-theorem SimdCumulativeInstr.executable_extension_tag {source} (allowed : SimdCumulativeInstr source) :
-    executableExtensionTag source = false := by
-  cases allowed with
-  | cumulative h => exact h.executable_extension_tag
-  | simd h => exact h.executable_extension_tag
-  | _ => rfl
 end Exec.Abs

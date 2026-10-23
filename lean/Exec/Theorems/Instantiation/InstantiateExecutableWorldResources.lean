@@ -26,7 +26,7 @@ def WorldExecutableInstantiationResourceCause {M P F A : Type}
       ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       fun_instantiate (decodeStore view oldCode before) (ModuleElaboration.moduleOf raw) (imports.val.map decodeExternal)
         (sourceInstantiationConfiguration view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready inst raw) ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id,before.instances.len⟩ ready platform =
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id,before.instances.len⟩ false =
         runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false ∧
       WorldExecutableTailResourceCause memory hooks floats allocator view
         (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready platform
@@ -118,47 +118,4 @@ theorem instantiate_compiled_executable_world_resource_causes {M P F A : Type}
       have cause := causes error rfl
       cases error <;> try trivial
       all_goals exact Or.inr ⟨ready,inst,found,source,allocated,continued,cause⟩
-/-- Source refinement and exact resource evidence hold for the same actual result. -/
-theorem instantiate_compiled_executable_world_causal_source {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (correct : Platform.FloatOpsCorrect floats) (law : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
-    (imports : Slice runtime.Extern) (platform : P)
-    (oldCode : CodeInterpretation) (old : ExecutableInv view oldCode before)
-    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
-    (raw : ModuleBinary.Module)
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile)
-    (sound : HostWorldSound hooks view (ExecutableInv view))
-    (preserve : ∀ c store, ExecutableInv view c store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer → Interp.FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ c store, ExecutableInv view c store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length)
-    (issued : ∀ c store, ExecutableInv view c store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, IssuedValue answer.2.2.1 value) :
-    Module_ok (ModuleElaboration.moduleOf raw) ∧
-      runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
-        ⦃ out => ∃ afterCode, CodeAgreesOn before oldCode afterCode ∧
-          ExecutableInv view afterCode out.2.1 ∧ Interp.FrameStorePrefix before out.2.1 ∧
-          Extend_store (decodeStore view oldCode before) (decodeStore view afterCode out.2.1) ∧
-          EventfulInstantiationSourceOutcome view oldCode afterCode before module imports raw platform
-            out.1 out.2.1 out.2.2 ∧
-          (∀ error, out.1 = .Err error →
-            WorldExecutableInstantiationResourceCause memory hooks floats allocator view oldCode before module imports platform raw out.2.1 error) ⦄div := by
-  have source := instantiate_compiled_executable_world_source memory hooks floats allocator view laws correct law
-    interrupts before module imports platform oldCode old handles bytes profile limits accepted raw encoded sound preserve externs issued
-  have causes := instantiate_compiled_executable_world_resource_causes memory hooks floats allocator view laws correct law
-    interrupts before module imports platform oldCode old handles bytes profile limits accepted raw encoded sound preserve externs issued
-  refine ⟨source.1,?_⟩
-  apply WP.dspec_mono (eventful_resource_return_post source.2 (fun out actual => by
-    have retained := causes.2
-    rw [actual,WP.dspec_ok] at retained
-    exact retained))
-  rintro out ⟨⟨afterCode,agrees,valid,kept,extension,outcome⟩,causal⟩
-  exact ⟨afterCode,agrees,valid,kept,extension,outcome,causal⟩
 end Exec.Theorems

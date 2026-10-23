@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.WordEncoding
 import Exec.Interp.Relations.PrefixEffect
-import Exec.Interp.State.GlobalDispatchSource
+import Exec.Interp.State.GlobalSource
 import Exec.Abs.Core.Globals
 
 namespace Exec.Interp

@@ -38,14 +38,6 @@ def FrameBinding {M : Type} (s : runtime.store.Store M) (exec : runtime.interp.E
     source.locals.map Code.valueType = compiled.locals.val.map sourceType ∧
     raw.base.val + compiled.slot_count.val ≤ exec.slots.length
 
-/-- At a straight-line point, the source suffix and emitted bytecode fragment
-agree at the actual program counter. Callers must separately establish this
-certificate from the compiler; the relation does not presume that result. -/
-def LinearPoint (raw : runtime.interp.Frame) (source : Abs.AFrame)
-    (compiled : runtime.bytecode.CompiledFunction) (next : Nat) (output : List valtype) : Prop :=
-  Code.LinearCodeRel (source.locals.map Code.valueType) (source.vals.map Code.valueType)
-    source.code compiled.code.val raw.pc.val next output
-
 theorem WordsAt.append_left {words : List U64} {base : Nat} {left right : List Nat}
     (h : WordsAt words base (left ++ right)) : WordsAt words base left := by
   intro index hi
@@ -105,38 +97,5 @@ theorem ValuesAt.operands {words : List U64} {base : Nat} {locals values : List 
     ValuesAt words (base + Code.slots (locals.map Code.valueType)) values := by
   simp only [ValuesAt, Code.encodeValues_append] at h ⊢
   simpa only [Code.encodeValues_length] using h.append_right
-
-/-- A concrete emitted instruction is fetched at its recorded code offset. -/
-theorem emission_fetch {code : List Code.Bytecode} {pc : Nat}
-    {head : Code.Bytecode} {emitted : List Code.Bytecode}
-    (location : ∃ pre suffix, code = pre ++ head :: emitted ++ suffix ∧ pre.length = pc) :
-    code[pc]? = some head := by
-  obtain ⟨pre, suffix, rfl, rfl⟩ := location
-  simp
-
-/-- Split a checked emitted fragment at its source head. Zero-byte source
-instructions retain the same program counter; nonempty emission exposes the
-actual instruction fetched there. -/
-theorem linearCodeRel_head {locals before after : List valtype} {source : List instr}
-    {instruction : instr} {code : List Code.Bytecode} {pc next : Nat}
-    (relation : Code.LinearCodeRel locals before (instruction :: source) code pc next after) :
-    ∃ middle emitted,
-      Code.LinearEmission locals before instruction emitted middle ∧
-      (∀ head tail, emitted = head :: tail → code[pc]? = some head) ∧
-      Code.LinearCodeRel locals middle source code (pc + emitted.length) next after := by
-  obtain ⟨pre, full, suffix, hcode, hpc, hnext, relation⟩ := relation
-  cases relation with
-  | cons head tail =>
-    rename_i middle emitted codeTail
-    refine ⟨_, _, head, ?_, ?_⟩
-    · intro first rest he
-      apply emission_fetch (emitted := rest)
-      refine ⟨pre, codeTail ++ suffix, ?_, hpc⟩
-      rw [hcode, he]
-      simp only [List.append_assoc, List.cons_append]
-    · refine ⟨pre ++ emitted, codeTail, suffix, ?_, ?_, ?_, tail⟩
-      · simpa only [List.append_assoc] using hcode
-      · simp only [List.length_append, hpc]
-      · simpa only [List.length_append, Nat.add_assoc] using hnext
 
 end Exec.Interp

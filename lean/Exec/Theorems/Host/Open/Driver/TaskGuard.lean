@@ -27,7 +27,7 @@ def WasmTask {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation
     (store : runtime.store.Store M) (exec : runtime.interp.Execution) (status : Status)
     (root : runtime.FuncAddr) (signature : Itasca.types.FuncType) : Prop :=
   RootMetadata store root signature ∧ (status=.Ok () → ∃source pc pending,
-    StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+    StructuredMachine.Execution
       view code store exec source (signature.results.val.map sourceType) pc pending ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source)
 
@@ -35,7 +35,7 @@ def WasmTask {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation
 and its cumulative effect. This is an actual opcode proof, not a step law
 imposed on host implementations. -/
 theorem ResumedWorldResult.task {M : Type} {view : M → Slice U8} {signature : Itasca.types.FuncType}
-    {world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType)}
+    {world : EventfulWorld M Unit view (signature.results.val.map sourceType)}
     {out : Answer M Unit} {root : runtime.FuncAddr} (post : ResumedWorldResult world out)
     (metadata : RootMetadata world.machine.store root signature) :
     ∃afterCode,ReentrantCallbacks.Effect view world.code world.machine.store afterCode out.2.2.1 ∧
@@ -57,7 +57,7 @@ theorem ResumedWorldResult.task {M : Type} {view : M → Slice U8} {signature : 
 /-- The same guard is available at the exact post-callback interpretation,
 so newly published code is never forgotten when a saved caller resumes. -/
 theorem ResumedWorldResultAt.task {M : Type} {view : M → Slice U8} {signature : Itasca.types.FuncType}
-    {world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType)}
+    {world : EventfulWorld M Unit view (signature.results.val.map sourceType)}
     {target : Store.CodeInterpretation} {out : Answer M Unit} {root : runtime.FuncAddr}
     (post : ResumedWorldResultAt world target out) (metadata : RootMetadata world.machine.store root signature) :
     WasmTask view target out.2.2.1 out.2.1 out.1 root signature := by
@@ -99,7 +99,7 @@ theorem suspended_world_task {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     {signature : Itasca.types.FuncType}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+    (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (root : runtime.FuncAddr) (metadata : RootMetadata world.machine.store root signature)
     (ready : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize) (identity : U64)

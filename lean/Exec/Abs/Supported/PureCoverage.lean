@@ -1,10 +1,12 @@
-import Exec.Abs.Cumulative.PureCoverage
-import Exec.Abs.Supported.Language
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Step
+import Exec.Abs.Supported.CoreStuck
 namespace Exec.Abs.Supported
 
 theorem replace_frame {s : store} {ambient : frame} {f f' : AFrame}
-    {rest : List AFrame} (h : SupportedState allowed ⟨s, ambient, f :: rest, []⟩)
-    (hf : FrameSupported allowed f') : SupportedState allowed ⟨s, ambient, f' :: rest, []⟩ := by
+    {rest : List AFrame} (h : SupportedState ⟨s, ambient, f :: rest, []⟩)
+    (hf : FrameSupported f') : SupportedState ⟨s, ambient, f' :: rest, []⟩ := by
   refine ⟨?_, h.functions⟩
   intro frame hm
   simp only [List.mem_cons] at hm
@@ -13,16 +15,16 @@ theorem replace_frame {s : store} {ambient : frame} {f f' : AFrame}
   · exact h.active frame (by simp [hm])
 
 theorem advance_covered {s : store} {ambient : frame} {f f' : AFrame}
-    {rest : List AFrame} {next : AState} (h : SupportedState allowed ⟨s, ambient, f :: rest, []⟩)
+    {rest : List AFrame} {next : AState} (h : SupportedState ⟨s, ambient, f :: rest, []⟩)
     (step : advance ⟨s, ambient, f :: rest, []⟩ f' rest = .next next)
-    (hf : FrameSupported allowed f') : SupportedState allowed next := by
+    (hf : FrameSupported f') : SupportedState next := by
   simp only [advance, AResult.next.injEq] at step
   rw [← step]
   exact replace_frame h hf
 
 theorem returnFrame_covered {s : store} {ambient : frame} {f : AFrame}
-    {rest : List AFrame} {next : AState} (h : SupportedState allowed ⟨s, ambient, f :: rest, []⟩)
-    (step : returnFrame ⟨s, ambient, f :: rest, []⟩ f rest = .next next) : SupportedState allowed next := by
+    {rest : List AFrame} {next : AState} (h : SupportedState ⟨s, ambient, f :: rest, []⟩)
+    (step : returnFrame ⟨s, ambient, f :: rest, []⟩ f rest = .next next) : SupportedState next := by
   simp only [returnFrame] at step
   split at step
   · cases rest with
@@ -42,8 +44,8 @@ theorem returnFrame_covered {s : store} {ambient : frame} {f : AFrame}
   · contradiction
 
 theorem branch_covered {s : store} {ambient : frame} {f : AFrame}
-    {rest : List AFrame} {depth : Nat} {next : AState} (h : SupportedState allowed ⟨s, ambient, f :: rest, []⟩)
-    (step : branch ⟨s, ambient, f :: rest, []⟩ f rest depth = .next next) : SupportedState allowed next := by
+    {rest : List AFrame} {depth : Nat} {next : AState} (h : SupportedState ⟨s, ambient, f :: rest, []⟩)
+    (step : branch ⟨s, ambient, f :: rest, []⟩ f rest depth = .next next) : SupportedState next := by
   simp only [branch] at step
   split at step
   · contradiction
@@ -64,8 +66,8 @@ theorem branch_covered {s : store} {ambient : frame} {f : AFrame}
 call selects a body already covered by the store's slice invariant. -/
 theorem call_covered {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {index : Nat} {after : List instr} {next : AState}
-    (h : SupportedState allowed ⟨s, ambient, f :: rest, []⟩) (ha : Forall allowed after)
-    (step : call ⟨s, ambient, f :: rest, []⟩ f rest index after = .next next) : SupportedState allowed next := by
+    (h : SupportedState ⟨s, ambient, f :: rest, []⟩) (ha : Forall BinaryInstr after)
+    (step : call ⟨s, ambient, f :: rest, []⟩ f rest index after = .next next) : SupportedState next := by
   cases resolve : f.module.FUNCS[index]? with
   | none => simp [call, resolve] at step
   | some address =>
@@ -102,13 +104,13 @@ theorem call_covered {s : store} {ambient : frame} {f : AFrame}
 transition, including code introduced by structured control. -/
 theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (descriptor : SliceInstr op)
-    (language : Language allowed)
-    (slice : SupportedState allowed ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
+    (descriptor : PureHead op)
+
+    (slice : SupportedState ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (step : astep ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ = .next next) :
-    SupportedState allowed next := by
+    SupportedState next := by
   have hf := slice.active { f with code := op :: after } (by simp)
-  have ha : Forall allowed after := fun i hm => hf.1 i (by simp [hm])
+  have ha : Forall BinaryInstr after := fun i hm => hf.1 i (by simp [hm])
   have hl := hf.2
   cases descriptor with
   | numeric descriptor =>
@@ -121,26 +123,6 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
     repeat' first | split at step | contradiction
     all_goals exact advance_covered slice step ⟨ha, hl⟩
   | drop =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_covered slice step ⟨ha, hl⟩
-  | add ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_covered slice step ⟨ha, hl⟩
-  | sub ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_covered slice step ⟨ha, hl⟩
-  | eqz ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_covered slice step ⟨ha, hl⟩
-  | eq ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_covered slice step ⟨ha, hl⟩
-  | lt_u ty =>
     simp only [astep, integerBinary] at step
     repeat' first | split at step | contradiction
     all_goals exact advance_covered slice step ⟨ha, hl⟩
@@ -159,8 +141,8 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
   | br index => cases index with | mk_uN i => exact branch_covered slice step
   | call index => cases index with | mk_uN i => exact call_covered slice ha step
   | ret => exact returnFrame_covered slice step
-  | block bt body hb =>
-    have hb : Forall allowed body := fun i member => language.cumulative (.of_core (.slice (hb i member)))
+  | block bt body =>
+    have hb := Abs.BinaryInstr.block_body (hf.1 _ (List.mem_cons_self ..))
     simp only [astep, enterLabel, Bool.false_eq_true, ite_false] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -171,8 +153,8 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
       rcases hm with rfl | hm
       · exact ⟨by simp [Forall], ha⟩
       · exact hl label hm
-  | loop bt body hb =>
-    have hb : Forall allowed body := fun i member => language.cumulative (.of_core (.slice (hb i member)))
+  | loop bt body =>
+    have hb := Abs.BinaryInstr.loop_body (hf.1 _ (List.mem_cons_self ..))
     simp only [astep, enterLabel, ite_true] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -185,11 +167,10 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
         intro i hi
         simp only [List.mem_singleton] at hi
         subst i
-        exact language.loop bt body hb
+        exact hf.1 _ (List.mem_cons_self ..)
       · exact hl label hm
-  | ifelse bt yes no hy hn =>
-    have hy : Forall allowed yes := fun i member => language.cumulative (.of_core (.slice (hy i member)))
-    have hn : Forall allowed no := fun i member => language.cumulative (.of_core (.slice (hn i member)))
+  | ifelse bt yes no =>
+    obtain ⟨hy, hn⟩ := Abs.BinaryInstr.if_bodies (hf.1 _ (List.mem_cons_self ..))
     simp only [astep] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -198,7 +179,7 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
       intro i hi
       simp only [List.mem_cons] at hi
       rcases hi with rfl | hi
-      · apply language.block
+      · apply Abs.BinaryInstr.block
         first | assumption | split <;> assumption
       · exact ha i hi
   | br_if index =>
@@ -214,7 +195,7 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
           intro op hm
           simp only [List.mem_cons] at hm
           rcases hm with rfl | hm
-          · exact language.cumulative (.of_core (.slice (.br _)))
+          · exact Abs.BinaryInstr.br _
           · exact ha op hm
 
 

@@ -125,24 +125,6 @@ theorem entries_at_append {data start middle finish first second} {R : ModuleBin
 def Encoding (profile : ValidationProfile := .Wasm1) := ModuleBinary.OptionalSectionEncoding 10#u8
   (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) []
 
-/-- The code section from `start` to `finish` has an independent encoding with one entry per
-defined function, and every entry is typed. -/
-def Validated (data : Slice U8) (start : Usize) (env : module.Env) (finish : Usize)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
-  ∃ entries, ModuleBinary.At (Encoding (profile := profile)) data start entries finish ∧
-    entries.length = env.func_type_indices.val.length ∧ EntriesTyped (profile := profile) env 0 entries
-
-/-- A validated code section is a padded section encoding whose entries are typed against the
-function type indices. -/
-theorem Validated.padded {data start env finish} {profile : ValidationProfile} (h : Validated (profile := profile) data start env finish) :
-    ∃ entries, ModuleBinary.At
-      (ModuleBinary.PaddedEncoding 10#u8 (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) [])
-      data start entries finish ∧
-      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val entries := by
-  obtain ⟨entries, ⟨bytes, he, hb⟩, hn, ht⟩ := h
-  exact ⟨entries, ⟨bytes, ⟨[], bytes, .nil, he, rfl⟩, hb⟩,
-    by simpa using ht.forall₂ (by simpa using hn)⟩
-
 /-- A section header and an independent entry repetition with the right count give the section
 `Encoding`. -/
 theorem Section.encoding {data start env cs entries} {profile : ValidationProfile}

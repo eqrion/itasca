@@ -1,4 +1,6 @@
-import Exec.Code.Module.SchedulerDriverSafety
+import Exec.Code.Module.SchedulerSubmissionSafety
+import Exec.Code.Module.Stream
+import Itasca.Stream.InvariantDriver
 import Exec.Code.Module.CompileStreamSource
 import Exec.Code.Module.InitializerSourceTotal
 import Exec.Code.Module.CompilerLargeEnvironment
@@ -60,27 +62,5 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
           simp only [uninitializedModule] at lowered
           rw [lowered]
           cases result <;> cases choice : finalBudget.error <;> simp [choice]
-
-/-- Driver normal return, conditional only on the internal reached-entry
-obligation discharged by the body callback safety proof. -/
-theorem compile_with_total_of_entries {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
-    (limits : CompileLimits) (entries : ReachedEntriesTotal ops profile) :
-    runtime.compiler.compile_with ops bytes profile limits ⦃ _ => True ⦄ := by
-  have streaming (codeStart codeEnd : Usize) (storage : module.Env)
-      (bounds : codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length) :
-      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
-        (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile
-        {bytes,code_start := codeStart,code_end := codeEnd}
-        (initialScheduler A limits codeStart) storage ⦃ out =>
-          out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
-    by_cases small : codeStart.val ≤ Itasca.limits.MAX_MODULE_BYTES.val
-    · exact compiler_stream_spec_of_entries ops law profile entries
-        {bytes,code_start := codeStart,code_end := codeEnd} bounds _
-        ⟨rfl,rfl,rfl,rfl,small⟩ storage
-    · rw [compiler_stream_large_environment _ profile
-        {bytes,code_start := codeStart,code_end := codeEnd} bounds (by change Itasca.limits.MAX_MODULE_BYTES.val < codeStart.val; omega)]
-      simp
-  exact compile_with_total_of_streaming ops law bytes profile limits streaming
 
 end Exec.Code

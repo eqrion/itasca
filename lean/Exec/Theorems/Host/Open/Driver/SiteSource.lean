@@ -6,11 +6,11 @@ import Exec.Theorems.Host.HostFrameSiteExecution
 namespace Exec.Theorems.OpenReentrantControl
 open Aeneas Aeneas.Std SpecExt Exec.Interp Exec.Interp.OpenCall Exec.Interp.StructuredMachine
 
-theorem PreparedSourceHost.prepend {M P : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem PreparedSourceHost.prepend {M P : Type}
     {memory : runtime.platform.MemoryBuffer M} {exec : runtime.interp.Execution} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {first middle : config} {expected : resulttype} {phase : CallPhase M P}
-    (head : StepsH first [] middle) (chosenHead : Spec.UniversalQuietPrefix first middle) (post : PreparedSourceHost emission allowed memory view code store exec middle expected phase) :
-    PreparedSourceHost emission allowed memory view code store exec first expected phase := by
+    (head : StepsH first [] middle) (chosenHead : Spec.UniversalQuietPrefix first middle) (post : PreparedSourceHost memory view code store exec middle expected phase) :
+    PreparedSourceHost memory view code store exec first expected phase := by
   cases phase with
   | done answer => exact post
   | pending exec after token address base identity args defaults =>
@@ -28,7 +28,7 @@ private theorem normalization_quiet {count : Nat} {before after : Abs.AFrame}
 
 /-- Actual native preparation at a typed source host site exposes its source
 request through all source-only control normalization. -/
-theorem prepare_site_source {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem prepare_site_source {M P F A : Type}
     [∀compiled,OrdinaryHeads (emission compiled)] [∀compiled,IndirectProjection (emission compiled) compiled.indirect.val]
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -36,10 +36,10 @@ theorem prepare_site_source {M P F A : Type} {emission : FunctionEmission} {allo
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (shaped : Store.Shape view store)
     {expected : List valtype} {pc : Nat} {pending : Bool} {source : Abs.AState}
-    (site : StructuredHostSite emission allowed view code exec store expected pc pending source)
+    (site : StructuredHostSite view code exec store expected pc pending source)
     (typed : Abs.ATyped source) (configurationTyped : Config_ok (Abs.decode source) (.mk_list expected)) :
     prepareStep memory hooks floats allocator exec store platform
-      ⦃phase=>PreparedSourceHost emission allowed memory view code store exec (Abs.decode source) (.mk_list expected) phase⦄ := by
+      ⦃phase=>PreparedSourceHost memory view code store exec (Abs.decode source) (.mk_list expected) phase⦄ := by
   induction site with
   | @ready ambient f rest op after site kind =>
     rcases kind with direct|indirect
@@ -84,14 +84,14 @@ theorem pending_source {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (configurationTyped : Config_ok (Abs.decode world.machine.source) (.mk_list expected))
     (ready : runtime.interp.Execution) (after : runtime.store.Store M) (token : Unit)
     (address : runtime.FuncAddr) (base : Usize) (identity : U64) (args defaults : alloc.vec.Vec runtime.Value)
     (pending : prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform=
       .ok (.pending ready after token address base identity args defaults)) :
-    PreparedSourceHost Executable.emission Abs.ExecutableInstr memory view world.code world.machine.store world.machine.exec (Abs.decode world.machine.source) (.mk_list expected)
+    PreparedSourceHost memory view world.code world.machine.store world.machine.exec (Abs.decode world.machine.source) (.mk_list expected)
       (.pending ready after token address base identity args defaults) := by
   have site := pending_source_site memory floats allocator correct allocation view laws world held active ready after token address base identity args defaults pending
   have total := prepare_site_source memory (inert memory) floats allocator allocation (fun _=>WP.spec.ret trivial)

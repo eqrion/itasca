@@ -1,11 +1,13 @@
-import Exec.Code.Module.SchedulerDriverSafety
+import Exec.Code.Module.SchedulerSubmissionSafety
+import Exec.Code.Module.Stream
+import Itasca.Stream.InvariantDriver
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
 /-- Signature restrictions retained from actual profile environment decoding. -/
 def ProfileEnvironment (profile : ValidationProfile) (env : module.Env) : Prop :=
-  Profile.Environment profile env ∧ Profile.EnvironmentWithinLimits profile env
+  Profile.Environment profile env ∧ Profile.EnvironmentWithinLimits env
 
 def ReachedProfileEntriesTotal {A : Type} (ops : runtime.platform.Alloc A)
     (profile : ValidationProfile) : Prop :=
@@ -75,7 +77,7 @@ theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platfo
     stream.validate_streaming CompileSource.Insts.ItascaStreamSource
       (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile source scheduler storage ⦃ out =>
         out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
-  apply WP.spec_mono (stream.validate_streaming.profile_spec_on CompileSource.Insts.ItascaStreamSource
+  apply WP.spec_mono (stream.validate_streaming.spec_on CompileSource.Insts.ItascaStreamSource
     (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage
     (source_callbacks_total source sourceBounds) SchedulerInitial
     (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment profile env)

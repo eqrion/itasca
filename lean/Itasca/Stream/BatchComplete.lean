@@ -1,13 +1,12 @@
 import Itasca.Stream.BatchTotal
 import Itasca.Profile.EntryComplete
-import Itasca.Module.Code.EntryComplete
 
 /-!
 # Worker completeness
 
 Completeness of `stream.CodeBatch.validate_func` and `stream.CodeBatch.validate_all`. Independently
 encoded and typed entries, together with an accepting visitor (`FullVisitor.Accepts`), make the
-actual worker loop succeed. `stream.CodeBatch.validate_all.complete_seed` runs an issued batch from
+actual worker loop succeed. `stream.CodeBatch.validate_all.complete_at_seed` runs an issued batch from
 its seed to a reachable state accepted by `stream.CodeBatch.finish`. The premises are about the
 module and the visitor, not about a worker that is assumed to succeed.
 -/
@@ -21,7 +20,7 @@ open ModuleBinary
 
 /-- An accepting worker validates the independently encoded next entry and
 advances exactly one function, without requiring prior dispatch. -/
-theorem stream.CodeBatch.validate_func.complete {V : Type} (visitor : code.OpVisitor V)
+theorem stream.CodeBatch.validate_func.complete_at {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (batch : stream.CodeBatch) (index : Usize)
     (entry : Code) (finish : Usize) (v : V)
     (herror : batch.error = none) (hcount : batch.num_validated.val < batch.num_funcs.val)
@@ -29,7 +28,7 @@ theorem stream.CodeBatch.validate_func.complete {V : Type} (visitor : code.OpVis
     (hi : index.val < batch.env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed batch.env batch.env.func_type_indices.val[index.val] entry profile)
     (henv : Profile.Environment profile batch.env)
-    (hlimits : Profile.EnvironmentWithinLimits profile batch.env) (hbound : CodeEntry.Bounds batch.env)
+    (hlimits : Profile.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) batch.code batch.validated_end entry finish)
     (hprofile : batch.profile = profile) :
     ∃ count v', count.val = batch.num_validated.val + 1 ∧
@@ -58,7 +57,7 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
     (htyped : ModuleCode.EntriesTyped (profile := profile) batch.env
       (batch.first_func.val + batch.num_validated.val) entries)
     (henv : Profile.Environment profile batch.env)
-    (hlimits : Profile.EnvironmentWithinLimits profile batch.env) (hbound : CodeEntry.Bounds batch.env)
+    (hlimits : Profile.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) batch.code batch.validated_end entries finish)
     (hprofile : batch.profile = profile) :
     stream.CodeBatch.validate_all_loop batch true = .ok
@@ -83,7 +82,7 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
       obtain ⟨index, hadd, hindex⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := batch.first_func) (y := batch.num_validated) (by scalar_tac))
       obtain ⟨next, hentry, hremaining⟩ := hbytes.rep_cons
-      obtain ⟨count, v', hcountval, hstep⟩ := stream.CodeBatch.validate_func.complete
+      obtain ⟨count, v', hcountval, hstep⟩ := stream.CodeBatch.validate_func.complete_at
         code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
         batch index entry next () herror hc hindex (by simpa [hindex] using hi)
         (by simpa [hindex] using ht) henv hlimits hbound hentry hprofile
@@ -102,14 +101,14 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
 
 /-- Independently encoded and typed batch contents are accepted by running the extracted worker
 loop, which ends with every function validated and `error = none`. -/
-theorem stream.CodeBatch.validate_all.complete (batch : stream.CodeBatch)
+theorem stream.CodeBatch.validate_all.complete_at (batch : stream.CodeBatch)
     (entries : List Code) (finish : Usize)
     (herror : batch.error = none)
     (hcount : batch.num_validated.val + entries.length = batch.num_funcs.val)
     (htyped : ModuleCode.EntriesTyped (profile := profile) batch.env
       (batch.first_func.val + batch.num_validated.val) entries)
     (henv : Profile.Environment profile batch.env)
-    (hlimits : Profile.EnvironmentWithinLimits profile batch.env) (hbound : CodeEntry.Bounds batch.env)
+    (hlimits : Profile.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) batch.code batch.validated_end entries finish)
     (hprofile : batch.profile = profile) :
     stream.CodeBatch.validate_all batch = .ok
@@ -119,22 +118,22 @@ theorem stream.CodeBatch.validate_all.complete (batch : stream.CodeBatch)
 
 /-- A bounded issued batch whose contents are independently valid runs from its seed to a
 reachable state that `stream.CodeBatch.finish` accepts. -/
-theorem stream.CodeBatch.validate_all.complete_seed (issued : StreamBatch.Issued)
+theorem stream.CodeBatch.validate_all.complete_at_seed (issued : StreamBatch.Issued)
     (entries : List Code) (hissued : issued.Bounded)
     (hcount : entries.length = issued.num_funcs.val)
     (htyped : ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries)
     (henv : Profile.Environment profile issued.env)
-    (hlimits : Profile.EnvironmentWithinLimits profile issued.env) (hbound : CodeEntry.Bounds issued.env)
+    (hlimits : Profile.EnvironmentWithinLimits issued.env) (hbound : CodeEntry.Bounds issued.env)
     (hbytes : Rep (Profile.CodeEncodingWithinLimits profile) entries issued.code.val)
     (hprofile : issued.profile = profile) :
     ∃ after, stream.CodeBatch.validate_all issued.seed = .ok after ∧
       StreamBatch.Reachable issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
   have hb : At (Rep (Profile.CodeEncodingWithinLimits profile)) issued.code 0#usize entries
       (Slice.len issued.code) := ⟨issued.code.val, hbytes, by constructor <;> simp⟩
-  have hr := stream.CodeBatch.validate_all.complete issued.seed entries (Slice.len issued.code)
+  have hr := stream.CodeBatch.validate_all.complete_at issued.seed entries (Slice.len issued.code)
     rfl (by simpa [StreamBatch.Issued.seed] using hcount)
     (by simpa [StreamBatch.Issued.seed] using htyped) henv hlimits hbound hb hprofile
-  have hs := stream.CodeBatch.validate_all.spec issued issued.seed hissued hbound .seed hprofile
+  have hs := stream.CodeBatch.validate_all.reachable issued issued.seed hissued hbound .seed hprofile
   rw [hr] at hs
   simp only [WP.spec_ok] at hs
   refine ⟨_, hr, hs, ?_⟩

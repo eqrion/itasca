@@ -1,4 +1,5 @@
-import Itasca.Handler.Branch
+import Itasca.Handler.Block
+import Itasca.Handler.Unreachable
 import Itasca.Spec.TypingInversion
 
 /-!
@@ -7,9 +8,8 @@ import Itasca.Spec.TypingInversion
 Relates the validator's operand stack (`code.StackType`, with `Bot` for unreachable code) to
 declarative stacks. `Sequence.Realizes` says a declarative stack is a possible reading of a
 validator stack, and `Sequence.TypedPrefix` says the instructions read so far type at every
-realized stack. `TypedPrefix.append`, `.branch`, `.close_block` and `.close_loop` extend or close a
-prefix with generated `Instr_ok` rules, `code.read_unreachable.prefix` is the handler step for
-`unreachable`, and `DeclarativeComplete.head_realizes` is the inverse used by completeness proofs.
+realized stack. `TypedPrefix.append` extends a prefix with generated `Instr_ok` rules, and
+`DeclarativeComplete.head_realizes` is the inverse used by completeness proofs.
 -/
 
 open Aeneas Aeneas.Std
@@ -87,86 +87,9 @@ theorem TypedPrefix.append {C : context} {ops : List instr} {poly poly' : Bool}
     exact .seq C ops [op] [] out input (h.typed input hin) hop hC
       h.wellFormed (by simpa [Forall] using hwf)
 
-/-- Appending `nop` preserves a typed prefix. -/
-theorem TypedPrefix.nop {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : TypedPrefix C ops poly vals) (hC : wf_context C) :
-    TypedPrefix C (ops ++ [.NOP]) poly vals := by
-  apply h.append hC .NOP .instr_case_0
-  intro ts ht
-  refine ⟨ts, ht, ?_⟩
-  simpa using Instrs_ok.frame C [.NOP] ts [] []
-    (.instr C .NOP [] [] (.nop C hC .instr_case_0) hC .instr_case_0)
-    hC (by simp [Forall]; exact .instr_case_0)
-
-/-- Appending `unreachable` gives a typed prefix on a polymorphic empty stack. -/
-theorem TypedPrefix.unreachable {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : TypedPrefix C ops poly vals) (hC : wf_context C) :
-    TypedPrefix C (ops ++ [.UNREACHABLE]) true [] := by
-  apply h.append hC .UNREACHABLE .instr_case_1
-  intro ts _
-  exact ⟨stackTypes vals, realizes_default poly vals,
-    .instr C .UNREACHABLE (stackTypes vals) ts
-      (.unreachable C _ ts hC .instr_case_1) hC .instr_case_1⟩
-
-/-- Appending `br depth` gives a typed prefix on a polymorphic empty stack, when the stack realizes
-the target label's argument types. -/
-theorem TypedPrefix.branch {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : TypedPrefix C ops poly vals) (hC : wf_context C)
-    (cs : List code.Ctrl) (hlabels : C.LABELS = Control.labels cs)
-    (depth : U32) (hdepth : depth.val < cs.length) (front : List valtype)
-    (hargs : Realizes poly vals (front ++
-      (Control.targetTypes (cs[cs.length - 1 - depth.val]'(by omega))).map Translate.valueType)) :
-    TypedPrefix C (ops ++ [.BR (.mk_uN depth.val)]) true [] := by
-  have hwf : wf_instr (.BR (.mk_uN depth.val)) := by
-    apply wf_instr.instr_case_7
-    apply wf_uN.uN_case_0
-    have hd := depth.hmax
-    norm_num at hd ⊢
-    omega
-  apply h.append hC _ hwf
-  intro ts _
-  refine ⟨_, hargs, ?_⟩
-  exact .instr C _ _ ts (Control.branch_typed C hC cs hlabels depth hdepth front ts) hC hwf
-
-/-- A typed prefix whose stack realizes the block results forms a typed `block`. -/
-theorem TypedPrefix.close_block {C : context} (hC : wf_context C) (bt : code.BlockType)
-    {ops : List instr} {poly : Bool} {vals : List code.StackType}
-    (h : TypedPrefix (Control.labelContext (Control.resultTypes bt) ++ C) ops poly vals)
-    (hresults : Realizes poly vals (Control.resultTypes bt)) :
-    Instr_ok C (.BLOCK (Control.blockType bt) ops)
-      (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt))) :=
-  Control.block_typed C hC bt ops h.wellFormed (h.typed _ hresults)
-
-/-- A typed prefix whose stack realizes the loop results forms a typed `loop`. -/
-theorem TypedPrefix.close_loop {C : context} (hC : wf_context C) (bt : code.BlockType)
-    {ops : List instr} {poly : Bool} {vals : List code.StackType}
-    (h : TypedPrefix (Control.labelContext [] ++ C) ops poly vals)
-    (hresults : Realizes poly vals (Control.resultTypes bt)) :
-    Instr_ok C (.LOOP (Control.blockType bt) ops)
-      (.mk_functype (.mk_list []) (.mk_list (Control.resultTypes bt))) :=
-  Control.loop_typed C hC bt ops h.wellFormed (h.typed _ hresults)
-
 end Itasca.Sequence
 
 namespace Itasca
-
-/-- `code.read_unreachable` succeeds, truncates the operand stack to the outer frames' operands,
-marks the current frame polymorphic, and extends the typed prefix by `unreachable`. -/
-theorem code.read_unreachable.prefix (st : code.OpIterState) (C : context)
-    (hC : wf_context C) (cs : List code.Ctrl) (c : code.Ctrl)
-    (outer segment : List code.StackType) (ops : List instr)
-    (hctrls : st.ctrls.val = cs ++ [c]) (hvals : st.vals.val = outer ++ segment)
-    (hbase : c.value_stack_base.val = outer.length)
-    (htyped : Sequence.TypedPrefix C ops c.polymorphic_base segment) :
-    ∃ st', code.read_unreachable st = .ok (.Ok (), st') ∧
-      st'.vals.val = outer ∧
-      st'.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
-      st'.pos = st.pos ∧ Sequence.TypedPrefix C (ops ++ [.UNREACHABLE]) true [] := by
-  obtain ⟨st', hr, hv, _, hc, hp⟩ := WP.spec_imp_exists
-    (code.mark_unreachable.spec st cs c hctrls (by simp [hbase, hvals]))
-  refine ⟨st', ?_, ?_, hc, hp, htyped.unreachable hC⟩
-  · simp [code.read_unreachable, hr]
-  · simpa [hvals, hbase] using hv
 
 end Itasca
 

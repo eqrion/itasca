@@ -1,4 +1,34 @@
-import Exec.Theorems.Instantiation.InstantiateTailSlice
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Initialization.SegmentExtension
+import Exec.Store.Invariant.SourceSyntax
+import Exec.Code.Local.Source.SourceFunctionTyping
+import Exec.Store.Invariant.CodeAgreement
+import Exec.Store.Invariant.FunctionSignatures
+import Exec.Store.Initialization.SegmentCodeMetadata
+import Exec.Store.Initialization.SegmentInitializeMetadata
+import Exec.Store.Initialization.SegmentInitializeShape
+import Exec.Theorems.Instantiation.StartResolution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
@@ -13,29 +43,4 @@ def InstantiationExecution (initial : config) (store : _root_.store) (ambient : 
     ∃ frame body, StepsH initial [] ⟨⟨store, frame⟩, body⟩
   | .Err _ => False
 
-/-- Successful segment initialization composes with the actual optional start
-outcome; all start error prefixes retain the initialized store. -/
-theorem TailSourceResult.initialized_execution {M : Type}
-    {view : M → Slice U8} {code : Store.CodeInterpretation}
-    {inst : runtime.store.ModuleInst} {store : runtime.store.Store M}
-    {identity : runtime.InstanceAddr} {result : core.result.Result runtime.InstanceAddr runtime.ExecError}
-    (outcome : TailSourceResult view code inst store identity (.Ok ()) result)
-    (initial : config)
-    (initialSteps : StepsH initial [] ⟨⟨Store.decodeStore view code store, moduleStartFrame store inst⟩,
-      (inst.module.module.env.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList⟩) :
-    InstantiationExecution initial (Store.decodeStore view code store) (moduleStartFrame store inst) result := by
-  rcases outcome with ⟨absent, returned⟩ | ⟨index, address, start, mapped, returns, errors⟩
-  · subst result
-    simpa only [InstantiationExecution, absent, Option.map_none, Option.toList_none] using initialSteps
-  · have callPrefix : StepsH initial [] (moduleStartConfiguration view code store inst index) := by
-      simpa only [start, Option.map_some, Option.toList_some, moduleStartConfiguration] using initialSteps
-    cases result with
-    | Ok address =>
-      exact Spec.stepsH_trans callPrefix (returns address rfl).2
-    | Err error =>
-      have failed := errors error rfl
-      cases error <;> simp only [SliceInvocationError, InstantiationExecution] at failed ⊢
-      · exact Spec.stepsH_trans callPrefix failed.2
-      · exact ⟨moduleStartFrame store inst, [.CALL (.mk_uN index.val)], callPrefix⟩
-      · exact ⟨moduleStartFrame store inst, [.CALL (.mk_uN index.val)], callPrefix⟩
 end Exec.Theorems

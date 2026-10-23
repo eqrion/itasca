@@ -114,7 +114,7 @@ theorem invoke_world_invariant_issued {M P F A : Type}
         args (alloc.vec.Vec.deref signature.params) argumentIssued checked
       cases kind : function.code with
       | Wasm ii fi =>
-        apply WP.dspec_mono (invoke_defined_world_outcomes Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws code
+        apply WP.dspec_mono (invoke_defined_world_outcomes memory hooks floats allocator correct allocation interrupts view laws code
           (Inv) (fun c s held=>(project c s held).toCertifiedApiStore.toCertifiedSupportedStore)
           update sound preserve externs issuedResults exec store platform valid Spec.invocationFrame ambientWf address function signature
           ii fi args results owner owned hf hs kind checked)
@@ -186,7 +186,7 @@ theorem invoke_world_invariant_infinite_source {M P F A : Type}
       args (alloc.vec.Vec.deref signature.params) argumentIssued accepted
     cases kind : function.code with
     | Wasm ii fi =>
-      have infinite := invoke_defined_world_infinite_source Abs.executable_language memory hooks floats allocator
+      have infinite := invoke_defined_world_infinite_source memory hooks floats allocator
         correct allocation interrupts view laws code (Inv)
         (fun c s held=>(project c s held).toCertifiedApiStore.toCertifiedSupportedStore)
         update sound preserve externs issuedResults

@@ -6,14 +6,14 @@ import Itasca.Stream.SubmissionComplete
 /-!
 # Streaming driver completeness
 
-`stream.validate_streaming.profile_complete`: an independently encoded, elaborated and typed
+`stream.validate_streaming.complete`: an independently encoded, elaborated and typed
 module within the selected profile and limits is accepted by `stream.validate_streaming`, provided
 the source makes the canonical split of the input available (`StreamSource.CanonicalAvailable`)
 and the scheduler is accepting (`StreamAcceptingScheduler.Accepts`). The returned environment and
 delivered tail describe the same raw module, including public metadata
 (`Matches`, `AccessorTypes`). Both premises on the embedding are required: completeness fails if
-reads are unavailable or workers do not accept. `stream.validate_streaming.wasm_complete` is the
-Wasm 1.0 instance.
+reads are unavailable or workers do not accept. `Itasca/Results/Stream` states the public
+`profile_complete` and `wasm_complete`.
 -/
 
 open Aeneas Aeneas.Std
@@ -66,13 +66,6 @@ theorem Split.unique {data : Slice U8} {first second : stream.SliceSource}
 end Itasca.StreamCompleteRegions
 
 namespace Itasca.StreamSource
-
-/-- The source makes available the environment, code and tail regions of the canonical split of
-`data` that `stream.find_code_region` computes. This says nothing about parser success or worker
-validation. -/
-def CanonicalAvailable {S : Type} (source : stream.Source S) (state : S) (data : Slice U8) : Prop :=
-  ∃ regions : stream.SliceSource, StreamCompleteRegions.Split data regions ∧
-    Available source state regions.env.val regions.code.val regions.tail.val
 
 /-- Canonical availability transfers to any split of `data` produced by the splitter. -/
 theorem CanonicalAvailable.for_split {S : Type} {source : stream.Source S} {state data regions}
@@ -231,14 +224,14 @@ open ModuleBinary ModuleElaboration
 accepted by `stream.validate_streaming` under canonical available reads and an accepting
 scheduler. The returned environment and delivered tail describe the same raw module, including
 public metadata. -/
-theorem stream.validate_streaming.profile_complete {S V : Type}
+theorem stream.validate_streaming.complete {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (ha : StreamAcceptingScheduler.Accepts visitor config Queued profile)
     (id : U64) (state : S) (before : V) (storage : module.Env)
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
-    (hsignatures : ModuleSignaturesWithinLimits raw profile)
+    (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
     (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile)
     (hs : StreamSource.CanonicalAvailable source state data) (hv : Queued id [] before) :
@@ -250,23 +243,5 @@ theorem stream.validate_streaming.profile_complete {S V : Type}
     source visitor config Queued ha id state data raw regions env tail hc
     (hs.for_split hc.split) before storage hv
   exact ⟨env, after, run, hrun, by simpa [htail] using hc.realization, hc.metadata, hvafter⟩
-
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_complete`. -/
-theorem stream.validate_streaming.wasm_complete {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (ha : StreamAcceptingScheduler.Accepts visitor config Queued)
-    (id : U64) (state : S) (before : V) (storage : module.Env)
-    (data : Slice U8) (raw : ModuleBinary.Module)
-    (hb : ModuleEncodingWithinLimits raw data.val)
-    (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw)
-    (hs : StreamSource.CanonicalAvailable source state data) (hv : Queued id [] before) :
-    ∃ env after, ∃ run : StreamRun.Accepted source visitor id state before after env,
-      stream.validate_streaming source visitor id .Wasm1 state before storage = .ok (.Ok (), after, env) ∧
-      Matches env run.remaining.tail raw ∧ AccessorTypes env raw ∧ Queued id [] after :=
-  stream.validate_streaming.profile_complete source visitor config Queued ha id state before storage
-    data raw hb (fun _ _ => trivial) he ht hp hs hv
 
 end Itasca

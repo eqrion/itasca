@@ -47,7 +47,7 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
     have hnil : queue = [] := by simpa using hroom
     subst queue
     obtain ⟨entries, hn, ht, hb⟩ := hvalid.entries
-    obtain ⟨after, hr, _, _⟩ := stream.CodeBatch.validate_all.complete_seed
+    obtain ⟨after, hr, _, _⟩ := stream.CodeBatch.validate_all.complete_at_seed
       issued entries hvalid.bounded hn ht hvalid.profile hvalid.limits hvalid.entry_bounds hb hvalid.validation_profile
     refine ⟨{ state with completed := some after }, ?_, after, rfl, hr⟩
     simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr]

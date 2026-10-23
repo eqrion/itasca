@@ -36,12 +36,6 @@ theorem ScopeNesting.advance {parents current} (nested : ScopeNesting parents cu
     (instruction : instr) : ScopeNesting parents (current.advance instruction) :=
   nested.change_current _ rfl nested.geometry
 
-theorem ScopeNesting.begin_else {parents current} (nested : ScopeNesting parents current)
-    (bt : blocktype) (condition : U32) (yesExit : Nat) (noEntry : U32) (normal : Bool)
-    (order : current.entry ≤ noEntry.val) :
-    ScopeNesting parents (current.begin_else bt condition yesExit noEntry normal) :=
-  nested.change_current _ rfl order
-
 theorem ScopeNesting.pop {parents parent child}
     (nested : ScopeNesting (parents ++ [parent]) child) : ScopeNesting parents parent := by
   generalize equation : parents ++ [parent] = allParents at nested

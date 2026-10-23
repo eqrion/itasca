@@ -14,9 +14,6 @@ theorem SourceStack.of_map {raw : List code.StackType} {types : List valtype}
   refine ⟨(concreteStack_iff raw).mpr ⟨values, concrete⟩, ?_⟩
   simpa only [concrete, Sequence.stackTypes, List.map_map, Function.comp_def] using decoded
 
-theorem SourceStack.unique {raw first second} (left : SourceStack raw first) (right : SourceStack raw second) :
-    first = second := left.decoded.symm.trans right.decoded
-
 /-- Actual lowering plus the exact post-reader type vector. Word offsets alone
 would not distinguish source types that share the same machine width. -/
 def TypedLowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)

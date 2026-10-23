@@ -10,8 +10,8 @@ open Aeneas Aeneas.Std
 
 /-- A resolved defined indirect call reuses the actual call installer while
 saving the caller after consuming both its arguments and table selector. -/
-theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem call_indirect_selected
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
@@ -22,7 +22,7 @@ theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr �
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (params results : List valtype) (pc : U32) (base : Usize)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
-    (compiledFunctions : StructuredMachine.CompiledFunctions emission code store)
+    (compiledFunctions : StructuredMachine.CompiledFunctions code store)
     (functionTyping : CoreFunctionsTyped view code store)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (defined : function.code = .Wasm instanceIndex functionIndex)
@@ -36,15 +36,15 @@ theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr �
     (heights : ∀ label∈f.labels,label.height≤front.length)
     (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
-    (tail : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
+    (tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
       (front.map Code.valueType++results) after pc.val next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false) :
     runtime.interp.call memory hooks floats allocator
       {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base ⦃ out =>
       out.2.2.1=store ∧
-      (out.1=.Ok () → Advance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store out.2.1 expected compiled.code.length raw.pc.val false
+      (out.1=.Ok () → Advance view code store out.2.1 expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩) ∧
       (∀ error,out.1=.Err error → ∃ inst callee,
         store.instances.val[instanceIndex.val]?=some inst ∧ inst.module.functions.val[functionIndex.val]?=some callee ∧
@@ -74,8 +74,8 @@ theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr �
         (actualSignature.results.val.map sourceType) args defaults body::{f with code:=after,vals:=front}::rest,[]⟩ := by
     simpa only [← split] using exactStep
   have transition : Abs.Cumulative.Step _ _ := .indirect sourceStep (by intro impossible;cases impossible)
-  have nextTyped := transition.next_typed_supported language machine.typed machine.core
-  have nextCovered := transition.next_covered_supported language machine.typed machine.core
+  have nextTyped := transition.next_typed_supported machine.typed machine.core
+  have nextCovered := transition.next_covered_supported machine.typed machine.core
   have arguments : ValuesAt exec.slots.val base.val args := by
     have words : WordsAt exec.slots.val raw.base.val
         (Code.encodeValues (f.locals++front) ++ (Code.encodeValues args ++ Code.encodeValues [Abs.integerVal .I32 position])) := by
@@ -85,7 +85,7 @@ theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr �
   have identity : exec.store=store.id := by
     obtain ⟨_,_,_,_,identity,_⟩ := binding
     exact identity
-  have tail' : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+  have tail' : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
       (front.map Code.valueType++actualSignature.results.val.map sourceType) after pc.val next output := by
     simpa only [signatureTypes.2] using tail
   obtain ⟨raws,frames,saved⟩ := machine.stack.prepare_call raw frameIndex pc last hf binding slots program point
@@ -108,8 +108,8 @@ theorem call_indirect_selected {emission : FunctionEmission} {allowed : instr �
   refine ⟨result.1,?_,fun error rejected => ⟨inst,calleeCode,instanceAt,calleeAt,causes error rejected⟩⟩
   intro success
   obtain ⟨stack,top,ready⟩ := result.2 success
-  refine ⟨0,false,_,?_,ConcreteSim.of_source _ _ _ _ _ (transition.next_simulation_supported language machine.typed machine.core),
-    fun _ h => transition.next_owned_supported language machine.typed machine.core h,rfl,fun _ h => transition.next_bound_supported language machine.typed machine.core h⟩
+  refine ⟨0,false,_,?_,ConcreteSim.of_source _ _ _ _ _ (transition.next_simulation_supported machine.typed machine.core),
+    fun _ h => transition.next_owned_supported machine.typed machine.core h,rfl,fun _ h => transition.next_bound_supported machine.typed machine.core h⟩
   refine ⟨rfl,nextTyped,nextCovered,Abs.Indirect.step_result machine.result sourceStep,stack,?_⟩
   obtain ⟨head,code,C,targets,next,output,found,program,point⟩ := ready
   have same : head.pc.val=0 := by rw [top] at found;cases found;rfl

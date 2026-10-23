@@ -22,12 +22,6 @@ def SourceCanonicalFunctionCapacity (store : _root_.store) (address : funcaddr) 
       Func_ok (sourceCapacityContext env dataCount) (.FUNC index locals body) function.TYPE) ∧
     Code.SourceFrameCapacity profile env typeIndex function.CODE words
 
-theorem SourceCanonicalFunctionCapacity.capacity {store address words}
-    (bound : SourceCanonicalFunctionCapacity store address words) :
-    SourceFunctionCapacity store address words := by
-  obtain ⟨function,profile,env,typeIndex,dataCount,found,coherent,bindings,typed,trace⟩ := bound
-  exact ⟨function,profile,env,typeIndex,found,coherent,trace⟩
-
 /-- Canonical module typing supplies every namespace required by full-profile
 capacity traces, including mutable globals, tables, memories and segments. -/
 theorem function_canonical_capacity_decoded {M : Type} (view : M → Slice U8)

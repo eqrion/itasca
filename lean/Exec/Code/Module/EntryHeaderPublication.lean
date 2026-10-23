@@ -19,18 +19,15 @@ theorem witness_header_publication {A : Type} (ops : runtime.platform.Alloc A)
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val+finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
-    (singleResult : profile = .Wasm1 → w.ft.results.val.length ≤ 1) :
+    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source) :
     FunctionPublicationHeader final.function ∧ final.frames.val = [] ∧ final.function.code.length ≤ U32.max := by
   have bodyFacts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
-      StructuredCompiledBodyWithTables final.function.jump_tables.val
+      StructuredCompiledBody final.function.jump_tables.val
         (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx))
         w.startedState final (env.types.val.map EnvTranslation.funcType)
         (env.func_types.val.map EnvTranslation.funcType) (w.ft.results.val.map Translate.valueType)
-        (w.ctx.locals.val.map Translate.valueType) source := by
-    cases profile with
-    | Wasm1 => exact witness_body_executable_wasm1 ops law w signatureTable functionTable endFits created encoded (singleResult rfl)
-    | Wasm2 => exact witness_body_executable_wasm2 ops law w signatureTable functionTable endFits created encoded
+        (w.ctx.locals.val.map Translate.valueType) source :=
+    witness_body_executable ops law w signatureTable functionTable endFits created encoded
   obtain ⟨facts,target,stable,closed,_,⟨returnStart,returnCount,_,last⟩,length,codeBound⟩ := bodyFacts
   obtain ⟨_,_,_,_,_,paramsEq,localsEq,bodyStartEq,_,_⟩ := stable.fields
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by

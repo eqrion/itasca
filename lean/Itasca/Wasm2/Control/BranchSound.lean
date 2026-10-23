@@ -54,6 +54,19 @@ end Itasca.Wasm2
 
 namespace Itasca
 
+/-- An independently decoded depth with a resolved label makes `code.read_label_info` accept. -/
+theorem code.read_label_info.complete (st : code.BodyState) (data : Slice U8)
+    (depth : U32) (next : Usize) (view : signature.ResultType)
+    (ha : st.blocks.val.length = st.core.ctrls.val.length)
+    (hd : Leb128.Decoded data st.core.pos depth next)
+    (hl : Wasm2.labelAt st depth.val = some view) :
+    code.read_label_info st data =
+      .ok (.Ok (depth, view), { st with core := { st.core with pos := next } }) := by
+  have hlabel := code.label.complete
+    { st with core := { st.core with pos := next } } depth ha view hl
+  simp [code.read_label_info, reader.read_u32_leb.complete data st.core.pos depth next hd,
+    hlabel, core.result.Result.Insts.CoreOpsTry.branch]
+
 /-- Reading an independently encoded depth that resolves to a label succeeds with that label. -/
 theorem code.read_multi_value_label.complete (st : code.BodyState) (data : Slice U8)
     (depth : U32) (next : Usize) (view : signature.ResultType)

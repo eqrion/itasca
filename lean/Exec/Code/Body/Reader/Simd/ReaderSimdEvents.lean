@@ -1,9 +1,15 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
-import Exec.Code.Body.Reader.Simd.ReaderSimdLaneEmission
-import Exec.Code.Body.Reader.Simd.ReaderSimdMemoryEmission
-import Exec.Code.Body.Reader.Simd.ReaderSimdMemoryLaneEmission
-import Exec.Code.Body.Reader.Simd.ReaderSimdConstantEmission
-import Exec.Code.Body.Reader.Simd.ReaderSimdShuffleEmission
+import Exec.Code.Body.Reader.Simd.ReaderSimdLane
+import Exec.Code.Body.Reader.Simd.ReaderSimdEmissions
+import Exec.Code.Local.Lowering.Simd.SimdCallbacks
+import Exec.Code.Body.Reader.Simd.SimdReaderMeaning
+import Exec.Code.Body.Reader.Simd.ReaderSimdMemory
+import Exec.Code.Body.Reader.Memory.ReaderMemoryTypes
+import Exec.Code.Body.Reader.Simd.ReaderSimdMemoryLane
+import Exec.Code.Body.Reader.Simd.ReaderSimdConstant
+import Exec.Code.Local.Lowering.Simd.SimdBitsCallbacks
+import Exec.Code.Local.Lowering.Simd.SimdBits
+import Exec.Code.Body.Reader.Simd.ReaderSimdShuffleFixed
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -15,7 +21,7 @@ theorem simdCompilerOpcode_val (sub : U32) (bound : sub.val < 256) :
   omega
 
 section
-variable {data env locals index st} (p : Wasm2.Pending data env locals index st) {A : Type}
+variable {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
   (ops : runtime.platform.Alloc A) (before after : runtime.compiler.FunctionCompiler A)
   (out : code.BodyState) (ctx : code.Context) (C : context)
   (sub : U32) (next : Usize) (decoded : Leb128.Decoded data st.core.pos sub next)

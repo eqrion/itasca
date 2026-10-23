@@ -6,7 +6,7 @@ import Itasca.Profile.EntryPipeline
 
 Termination of `stream.CodeBatch.validate_next`, `stream.CodeBatch.validate_func` and the
 whole-batch loop `stream.CodeBatch.validate_all` on arbitrary bytes, given a total visitor
-(`FullVisitor.Total`). `stream.CodeBatch.validate_all.spec` also shows that the final state is
+(`FullVisitor.Total`). `stream.CodeBatch.validate_all.reachable` also shows that the final state is
 reachable from the issued seed by actual batch operations. Both profiles are covered through the
 `profile` variable.
 -/
@@ -41,7 +41,7 @@ theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisito
 
 /-- `stream.CodeBatch.validate_func` returns an ordinary result, stores worker errors, and cannot
 overflow its counter because a successful entry validation occurs only before the batch end. -/
-theorem stream.CodeBatch.validate_func.total {V : Type} (visitor : code.OpVisitor V)
+theorem stream.CodeBatch.validate_func.returns {V : Type} (visitor : code.OpVisitor V)
     (htotal : FullVisitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
     (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
@@ -109,7 +109,7 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
     · rename_i hcount
       split
       · step
-        obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.CodeBatch.validate_func.total
+        obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.CodeBatch.validate_func.returns
           code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
           current index () (by simpa [henv] using hbound) hrange (hp.trans hprofile)
         cases v
@@ -138,7 +138,7 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
 /-- Running `stream.CodeBatch.validate_all` terminates in a reachable state, including on invalid
 bytes and stored errors. -/
 @[step]
-theorem stream.CodeBatch.validate_all.spec (issued : StreamBatch.Issued)
+theorem stream.CodeBatch.validate_all.reachable (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (hissued : issued.Bounded)
     (hbound : CodeEntry.Bounds issued.env) (hreach : StreamBatch.Reachable issued batch)
     (hprofile : issued.profile = profile) :
@@ -146,14 +146,5 @@ theorem stream.CodeBatch.validate_all.spec (issued : StreamBatch.Issued)
   obtain ⟨result, hr, after, hafter, rfl⟩ := WP.spec_imp_exists
     (stream.CodeBatch.validate_all_loop.spec issued batch true hissued hbound hreach hprofile)
   simpa [stream.CodeBatch.validate_all, hr] using hafter
-
-/-- `stream.CodeBatch.validate_all` returns a reachable batch. -/
-theorem stream.CodeBatch.validate_all.total (issued : StreamBatch.Issued)
-    (batch : stream.CodeBatch) (hissued : issued.Bounded)
-    (hbound : CodeEntry.Bounds issued.env) (hreach : StreamBatch.Reachable issued batch)
-    (hprofile : issued.profile = profile) :
-    ∃ after, stream.CodeBatch.validate_all batch = .ok after ∧
-      StreamBatch.Reachable issued after :=
-  WP.spec_imp_exists (stream.CodeBatch.validate_all.spec issued batch hissued hbound hreach hprofile)
 
 end Itasca

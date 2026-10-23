@@ -11,8 +11,8 @@ theorem StatefulDropEffect.mutation_of_shape {M : Type} {view : M → Slice U8} 
   | data address issued => exact data_drop_cumulative_mutation_of_shape shaped sourceSyntax bounds (List.getElem?_eq_getElem issued)
   | element address issued => exact element_drop_cumulative_mutation_of_shape shaped sourceSyntax bounds (List.getElem?_eq_getElem issued)
 
-theorem stateful_drop_execution_supported {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_drop_execution_supported
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -24,13 +24,13 @@ theorem stateful_drop_execution_supported {emission : StructuredMachine.Function
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      SupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_drop_point_step memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
     ambient f rest after op isDrop last frameFound found codeFound program.fetchBound moduleEq slots point machine.typed with jump | actual
@@ -45,7 +45,7 @@ theorem stateful_drop_execution_supported {emission : StructuredMachine.Function
     obtain ⟨success,samePlatform,effect,metadata,pc,pcNext,exactState,represented,retained,transition⟩ := result
     have mutation := effect.mutation_of_shape shaped sourceSyntax bounds
     apply SupportedStepOutcome.success mutation success
-    exact StructuredMachine.ordinary_cumulative_step language view code ambient {f with code:=op.source::after} {f with code:=after} rest expected raw.pc.val false
+    exact StructuredMachine.ordinary_cumulative_step view code ambient {f with code:=op.source::after} {f with code:=after} rest expected raw.pc.val false
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       (by rw [exactState]) (by rw [exactState]; exact .refl _ _) transition
 

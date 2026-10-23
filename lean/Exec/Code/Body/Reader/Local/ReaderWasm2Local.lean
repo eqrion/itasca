@@ -3,7 +3,7 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_append_context_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (C : context) (outer : List code.StackType)
+    (p : Pending data env .Wasm2 locals index st) (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
@@ -18,13 +18,13 @@ theorem reader_append_context_wasm2 {data env locals index st}
     (declared : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction) :
     ReaderPostWasm2 p out instruction poly values := by
   refine ⟨encoded, ?_, ?_⟩
-  · exact ⟨C, outer, spine, ⟨header.kind, header.placeholder, header.inputs, header.outputs,
+  · exact ⟨C, outer, spine, ⟨header.kind, header.inputs, header.outputs,
       header.prior, .simple header.emits (.plain instruction wf)⟩, base, typed, controls, blocks, stack⟩
   · exact p.append_result C outer spine header base {core := out} instruction poly values
-      wf encoded typed controls blocks stack declared
+      wf encoded typed controls blocks stack (fun h => nomatch h) declared
 
 theorem reader_index_post_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (C : context) (outer : List code.StackType)
+    (p : Pending data env .Wasm2 locals index st) (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
@@ -56,7 +56,7 @@ theorem reader_index_post_wasm2 {data env locals index st}
   · exact encoded.declared _
 
 theorem reader_local_get_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 32#u8)
@@ -80,7 +80,7 @@ theorem reader_local_get_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_local_set_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 33#u8)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_SET before =
@@ -103,7 +103,7 @@ theorem reader_local_set_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_local_tee_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 34#u8)

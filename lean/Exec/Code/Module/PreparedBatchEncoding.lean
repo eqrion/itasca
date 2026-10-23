@@ -16,13 +16,13 @@ theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : module.Env) (pro
     (typed : ModuleCode.EntriesTyped (profile := profile) env index entries)
     (encoded : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncodingWithinLimits profile)) data start entries finish)
     (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
-    (limits : Profile.EnvironmentWithinLimits profile env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (maxima : ∀ (ordinal position next : Usize) (entry : ModuleBinary.Code),
       ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data position entry next →
       ∀ w : CodeEntry.Prepared data env ordinal position profile, w.finish = next →
       Profile.Body profile w.body env w.ctx.locals w.typeIdx →
       w.body.length ≤ bodyBytes ∧ w.ctx.locals.val.length ≤ localCount ∧
-      (independentBodyDemand profile w.body env w.ctx w.typeIdx).operands ≤ peak) :
+      (independentBodyDemand w.body env w.ctx w.typeIdx).operands ≤ peak) :
     PreparedBatchSource data env profile bodyBytes localCount peak index start entries finish := by
   induction entries generalizing index start with
   | nil =>

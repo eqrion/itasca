@@ -1,7 +1,5 @@
 import Exec.Interp.Simd.Float.SimdFloatResizeLanes
 import Exec.Spec.SimdFloatResizeStep
-import Exec.Interp.Simd.Float.SimdFloatResizeLanes
-import Exec.Spec.SimdFloatResizeStep
 namespace Exec.Interp.Simd
 open Aeneas Aeneas.Std Platform
 

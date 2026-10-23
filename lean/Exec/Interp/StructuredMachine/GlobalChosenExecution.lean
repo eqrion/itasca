@@ -1,20 +1,21 @@
 import Exec.Interp.Relations.ChosenControlSource
 import Exec.Abs.Sim.NeutralDecode
 import Exec.Interp.Machines.Uniform.UniformSourceControl
-import Exec.Interp.StructuredMachine.ControlSemantics
-import Exec.Interp.Machines.Core.CoreBound
+import Exec.Interp.StructuredMachine.SupportedControlSemantics
+import Exec.Abs.Core.Bound
 import Exec.Interp.Machines.Core.CoreOwnership
 import Exec.Interp.StructuredMachine.GlobalCertifiedStepOwned
 import Exec.Interp.StructuredMachine.OrdinaryExecution
-import Exec.Interp.Core.StoreTransport
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
 import Exec.Interp.StructuredMachine.ForwardJump
 import Exec.Spec.Extend
 namespace Exec.Interp.StructuredMachine.Global
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 variable {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat)
-variable {allowed supported owned} (semantics : ControlSemantics allowed supported owned)
-include semantics admissible vector occurrence
+include admissible vector occurrence
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -32,17 +33,17 @@ theorem step_globalGet_chosen_execution_owned_uniform (platform : P) (frameIndex
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ pc : U32, ∃ g : Abs.AFrame,
-        Execution emission supported view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
+        Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
         UniformConcreteSim raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ [] ∧
-        (∀ bounds, owned bounds initial → owned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
@@ -61,7 +62,7 @@ theorem step_globalGet_chosen_execution_owned_uniform (platform : P) (frameIndex
       (Store.decodeStore view code store) ambient {f with code := .GLOBAL_GET (.mk_uN index) :: after} rest C targets next output target last frameFound found codeFound pcBound forward fetch slots tail machine.typed)
     intro out effect
     obtain ⟨success,storeSame,platformSame,exactState,represented,retained,typed,simulation⟩ := effect
-    refine ⟨success,storeSame,platformSame,target,_,?_,Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward tail.code.current.entry_bound⟩,UniformConcreteSim.forward rfl forward (by scalar_tac),fun _ owned => owned,fun _ h => h⟩
+    refine ⟨success,storeSame,platformSame,target,_,?_,Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward tail.code.current.entry_bound⟩,UniformConcreteSim.forward rfl forward (by scalar_tac),fun _ h => h,fun _ h => h⟩
     exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false (.refl store)
       (extend_store_refl _ machine.typed.typed.store) raw frameIndex target last frameFound program (.ready retained)
       represented ⟨rfl,rfl,rfl,rfl⟩ (by rw [exactState]) (by rw [exactState]; exact .refl _ _) typed machine.core
@@ -69,15 +70,14 @@ theorem step_globalGet_chosen_execution_owned_uniform (platform : P) (frameIndex
     intro out effect
     obtain ⟨success,storeSame,platformSame,g,pc,pcNext,unchanged,typed,source,represented,retained,⟨values,shape⟩,prefixEffect,sourceStep⟩ := effect
     have metadata : FrameMetadata {f with code := .GLOBAL_GET (.mk_uN index) :: after} g := by rw [shape]; exact ⟨rfl,rfl,rfl,rfl⟩
-    have covered : supported ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-      exact semantics.next_covered machine.typed machine.core sourceStep
-    refine ⟨success,storeSame,platformSame,pc,g,?_,?_,UniformConcreteSim.single source,semantics.owned_transition machine.typed machine.core (Or.inr sourceStep),semantics.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
+    have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+      exact StructuredMachine.core_step_supported machine.typed machine.core sourceStep
+    refine ⟨success,storeSame,platformSame,pc,g,?_,?_,UniformConcreteSim.single source,StructuredMachine.owned_transition machine.typed machine.core (Or.inr sourceStep),StructuredMachine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
     · exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false (.refl store)
         (extend_store_refl _ machine.typed.typed.store) raw frameIndex pc last frameFound program (.ready retained)
         represented metadata unchanged prefixEffect typed covered
     · exact ChosenConcreteSim.single admissible (Abs.chosen_neutral_simulation admissible vector occurrence source
         (by simp only [List.map_cons,admininstr_instr,neutralActive]))
-
 
 theorem step_globalGet_chosen_execution_owned (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -91,18 +91,18 @@ theorem step_globalGet_chosen_execution_owned (platform : P) (frameIndex : Usize
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ pc : U32, ∃ g : Abs.AFrame,
-        Execution emission supported view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
+        Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
-        (∀ bounds, owned bounds initial → owned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
-  apply WP.spec_mono (step_globalGet_chosen_execution_owned_uniform admissible vector occurrence semantics memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program small point expected machine)
+  apply WP.spec_mono (step_globalGet_chosen_execution_owned_uniform admissible vector occurrence memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program small point expected machine)
   rintro out ⟨success,same,platform,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,same,platform,pc,g,machine,simulation,ownership,bounded⟩
 
@@ -117,18 +117,18 @@ theorem step_globalSet_chosen_execution_owned_uniform (platform : P) (frameIndex
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.2 = platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store initial.store (Store.decodeStore view code out.2.2.1) ∧
       ∃ pc : U32, ∃ g : Abs.AFrame,
-        Execution emission supported view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
+        Execution view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ ∧
         UniformConcreteSim raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ [] ∧
-        (∀ bounds, owned bounds initial → owned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
   dsimp only
   have pcBound : raw.pc.val < U32.max := by
@@ -143,7 +143,7 @@ theorem step_globalSet_chosen_execution_owned_uniform (platform : P) (frameIndex
     intro out effect
     obtain ⟨success,storeSame,platformSame,exactState,represented,retained,typed,simulation⟩ := effect
     simp only [storeSame]
-    refine ⟨success,platformSame,.refl store,extend_store_refl _ machine.typed.typed.store,target,_,?_,Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward tail.code.current.entry_bound⟩,UniformConcreteSim.forward rfl forward (by scalar_tac),fun _ owned => owned,fun _ h => h⟩
+    refine ⟨success,platformSame,.refl store,extend_store_refl _ machine.typed.typed.store,target,_,?_,Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward tail.code.current.entry_bound⟩,UniformConcreteSim.forward rfl forward (by scalar_tac),fun _ h => h,fun _ h => h⟩
     exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false (.refl store)
       (extend_store_refl _ machine.typed.typed.store) raw frameIndex target last frameFound program (.ready retained)
       represented ⟨rfl,rfl,rfl,rfl⟩ (by rw [exactState]) (by rw [exactState]; exact .refl _ _) typed machine.core
@@ -151,9 +151,9 @@ theorem step_globalSet_chosen_execution_owned_uniform (platform : P) (frameIndex
     intro out effect
     obtain ⟨success,platformSame,stores,g,pc,pcNext,unchanged,typed,extension,source,represented,retained,⟨values,shape⟩,sourceStep⟩ := effect
     have metadata : FrameMetadata {f with code := .GLOBAL_SET (.mk_uN index) :: after} g := by rw [shape]; exact ⟨rfl,rfl,rfl,rfl⟩
-    have covered : supported ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ := by
-      exact semantics.next_covered machine.typed machine.core sourceStep
-    refine ⟨success,platformSame,stores,extension,pc,g,?_,?_,UniformConcreteSim.single source,semantics.owned_transition machine.typed machine.core (Or.inr sourceStep),semantics.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
+    have covered : Abs.SupportedState ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ := by
+      exact StructuredMachine.core_step_supported machine.typed machine.core sourceStep
+    refine ⟨success,platformSame,stores,extension,pc,g,?_,?_,UniformConcreteSim.single source,StructuredMachine.owned_transition machine.typed machine.core (Or.inr sourceStep),StructuredMachine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
     · exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false stores extension
         raw frameIndex pc last frameFound program (.ready retained)
         represented metadata (by rw [unchanged]) (by rw [unchanged]; exact .refl _ _) typed covered
@@ -170,21 +170,20 @@ theorem step_globalSet_chosen_execution_owned (platform : P) (frameIndex : Usize
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.2 = platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store initial.store (Store.decodeStore view code out.2.2.1) ∧
       ∃ pc : U32, ∃ g : Abs.AFrame,
-        Execution emission supported view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
+        Execution view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ ∧
-        (∀ bounds, owned bounds initial → owned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
-  apply WP.spec_mono (step_globalSet_chosen_execution_owned_uniform admissible vector occurrence semantics memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program point expected machine)
+  apply WP.spec_mono (step_globalSet_chosen_execution_owned_uniform admissible vector occurrence memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program point expected machine)
   rintro out ⟨success,platform,metadata,extension,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,platform,metadata,extension,pc,g,machine,simulation,ownership,bounded⟩
-
 
 end Exec.Interp.StructuredMachine.Global

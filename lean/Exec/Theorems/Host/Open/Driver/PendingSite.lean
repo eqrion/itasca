@@ -17,15 +17,15 @@ theorem pending_source_site {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (ready : runtime.interp.Execution) (after : runtime.store.Store M) (token : Unit)
     (address : runtime.FuncAddr) (base : Usize) (identity : U64) (args defaults : alloc.vec.Vec runtime.Value)
     (pending : prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform=
       .ok (.pending ready after token address base identity args defaults)) :
-    StructuredHostSite Executable.emission Abs.ExecutableInstr view world.code world.machine.exec world.machine.store
+    StructuredHostSite view world.code world.machine.exec world.machine.store
       expected world.machine.pc world.machine.pending world.machine.source := by
-  rcases world_step_or_host Abs.executable_language memory (pendingProbe memory) floats allocator correct allocation
+  rcases world_step_or_host memory (pendingProbe memory) floats allocator correct allocation
     (fun _=>WP.spec.ret trivial) view laws world.code (ExecutableInv view) (fun _ _ _ held mutation=>held.update mutation)
     world.machine held active with site|ordinary
   · exact site

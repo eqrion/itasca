@@ -51,7 +51,7 @@ just extract          # Rust -> LLBC -> validator and runtime Lean models
 just extract-check    # Regenerate separately and reject stale models
 just extract-primary  # Run only the canonical validator extraction pass
 just extract-exec     # Refresh validator dependencies, then the runtime model
-just check Itasca.Module.Validation  # Build specific modules
+just check Itasca.Results.Validate  # Build specific modules
 just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
 just prove            # Check audit coverage and build validator proofs
 just prove-exec       # Build execution and specification-extension proofs
@@ -107,18 +107,20 @@ The `SpecTecSupport` library compiles upstream's handwritten
 
 ## Proof contracts
 
-`profile_*` theorems quantify over both `ValidationProfile` values; `wasm_*`
-corollaries specialize to Wasm 1.0.
+[Itasca/Main.lean](Itasca/Main.lean) lists every headline theorem, and each is
+stated in full under [Itasca/Results/](Itasca/Results). `profile_*` theorems
+quantify over both `ValidationProfile` values; `wasm_*` corollaries specialize to
+Wasm 1.0.
 
 | Layer | Contracts |
 | --- | --- |
-| Whole module | [Module/Validation](Itasca/Module/Validation.lean): `module.validate_module.profile_total`, `profile_sound`, `profile_spec`. [Module/Completeness](Itasca/Module/Completeness.lean): `profile_complete`, `profile_complete_with_metadata`. |
-| Streaming driver | `stream.validate_streaming.profile_sound`, `profile_total`, and `profile_complete` in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
+| Whole module | [Results/Validate](Itasca/Results/Validate.lean): `module.validate_module.profile_total`, `profile_sound`, `profile_spec`, `profile_complete`, `profile_complete_with_metadata`. |
+| Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.profile_sound`, `profile_total`, and `profile_complete`, proved in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
 | Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
-| Worker batches | [Stream/Batch](Itasca/Stream/Batch.lean) and [BatchComplete](Itasca/Stream/BatchComplete.lean): ordered entry validation and exact coverage. |
-| Bodies and entries | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) for both profiles, built on [Wasm1/](Itasca/Wasm1) and [Wasm2/](Itasca/Wasm2) `Soundness`, `Totality`, and `Completeness`. |
-| Callback traces | [Wasm1/Trace/Body](Itasca/Wasm1/Trace/Body.lean), [Module/Code/EntryTrace](Itasca/Module/Code/EntryTrace.lean), and [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean). |
-| Decoding uniqueness | [Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) and [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean), without typing or size premises. |
+| Worker batches | [Results/Batch](Itasca/Results/Batch.lean): `stream.CodeBatch.validate_func`, `validate_all`, and `finish.sound`, giving ordered entry validation and exact coverage. |
+| Bodies and entries | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) for both profiles, built on [Wasm2/](Itasca/Wasm2) `Soundness`, `Totality`, and `Completeness`. |
+| Callback traces | [Results/Trace](Itasca/Results/Trace.lean), proved in [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean) and [Profile/EntryTrace](Itasca/Profile/EntryTrace.lean). |
+| Decoding uniqueness | [Results/Unique](Itasca/Results/Unique.lean), built on [Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) and [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean), without typing or size premises. |
 
 Soundness yields `ModuleSound.Validated`: one raw module that the bytes encode,
 that elaborates to a `Module_ok` SpecTec module satisfying the profile, and that
@@ -128,6 +130,8 @@ the returned environment, tail, and accessors describe. Completeness assumes
 bounds include the final `end`; local bounds exclude parameters.
 
 ### Streaming premises
+
+[Itasca/Contracts.lean](Itasca/Contracts.lean) defines every premise below.
 
 | Claim | Requires |
 | --- | --- |
@@ -153,7 +157,9 @@ an exact error for every malformed input.
 
 The directories below are layered top to bottom. `just prove` enforces the
 foundation: `Support/`, `Spec/`, and `Binary/` import only rows above them, and
-`Handler/` adds only `Visitor/`. Above that, the order is a guide.
+`Handler/` adds only `Visitor/`. `Contracts` imports only `Module/` and below.
+`Results/` and `Main` sit at the top: only `Main` and `Examples/` import them,
+and examples import only `Main`. Between these, the order is a guide.
 
 | Directory | Contents |
 | --- | --- |
@@ -163,21 +169,25 @@ foundation: `Support/`, `Spec/`, and `Binary/` import only rows above them, and
 | `Binary/` | The independent grammar: LEB128, floats, names, modules, uniqueness, and the `Wasm1/` and `Wasm2/` instruction grammars. |
 | `Handler/` | Lemmas about individual extracted handlers, and `Realizes`/`TypedPrefix` for stacks. |
 | `Visitor/` | Profile-agnostic visitor contracts, erasure, lifting, and the trace framework. |
-| `Wasm1/` | Wasm 1.0 bodies: zipper, invariant, steps, results, plus `Complete/`, `Visitor/`, and `Trace/`. |
-| `Wasm2/` | Wasm 2.0 bodies, split like the Rust dispatch into `Scalar/`, `NumericExt/`, `References/`, `Bulk/`, `Simd/`, `Control/`, and `Step/`, with the same subdirectories as `Wasm1/`. |
+| `Wasm1/` | The Wasm 1.0 restrictions on instruction trees, and completeness lemmas for the instructions both profiles share. |
+| `Wasm2/` | Function bodies for both profiles, split like the Rust dispatch into `Scalar/`, `NumericExt/`, `References/`, `Bulk/`, `Simd/`, `Control/`, and `Step/`, plus `Complete/`, `Visitor/`, and `Trace/`. The `Profile*` files state the Wasm 1.0 filters and relate the two profiles. |
 | `Profile/` | Body and entry contracts parametric over the profile. |
-| `Module/` | Readers, constant expressions, sections, environment, code entries, elaboration, custom sections, and the public theorems. |
-| `Stream/` | Source and scheduler contracts, batches, the driver, and the contiguous adapter. |
-| `Examples/` | Kernel-checked examples. |
+| `Contracts` | Definitions of the streaming source, scheduler, and worker obligations. |
+| `Module/` | Readers, constant expressions, sections, environment, code entries, elaboration, and custom sections. |
+| `Stream/` | Sources, scheduler proofs, batches, the driver, and the contiguous adapter. |
+| `Results/` | The headline theorems, each a projection of its internal construction. |
+| `Main` | The validator entry module, listing every headline theorem. |
+| `Examples/` | Kernel-checked examples, using the results through `Main`. |
 
 Within a family, `X` or `XSound` proves soundness or invariant preservation,
 `XTotal` termination, and `XComplete` acceptance from independent premises.
 
-Some dependencies run against intuition. The public module theorems build on
+Some dependencies run against intuition. The whole-module results build on
 `Stream/` because `validate_module` runs through the streaming adapter. Both
-profiles share `code.body_loop_loop`; [Wasm1/SharedLoop](Itasca/Wasm1/SharedLoop.lean)
-proves it equal at `.Wasm1` to the proof-only
-[Wasm1/LegacyExecution](Itasca/Wasm1/LegacyExecution.lean) model. Keep the
+profiles share `code.body_loop_loop`; at `.Wasm1` it filters each step
+([Wasm2/ProfileFilters](Itasca/Wasm2/ProfileFilters.lean)) before running the
+Wasm 2.0 rules, and [Wasm2/ProfileAgreement](Itasca/Wasm2/ProfileAgreement.lean)
+shows a Wasm 1.0 run matches the Wasm 2.0 run unless a filter rejects. Keep the
 independent body contracts in [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean) and
 [Profile/BodySpec](Itasca/Profile/BodySpec.lean) free of the soundness and
 completeness proofs, so grammar and module code can import them cheaply.
@@ -269,9 +279,8 @@ completeness together. Keep language restrictions separate from the bounds in
 
 Segment and table instructions cross the module/body boundary.
 [Module/Code/BodyContext](Itasca/Module/Code/BodyContext.lean) transports typing
-across it, and [Module/Code/BodySyntax](Itasca/Module/Code/BodySyntax.lean)
-holds the Wasm 1.0 restriction on them. Changes to tables, value types, segments,
-or constant expressions also touch
+across it. Changes to tables, value types, segments, or constant expressions also
+touch
 [Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean),
 [Module/Elab/Profile](Itasca/Module/Elab/Profile.lean), and the module grammar.
 
@@ -285,7 +294,9 @@ the setting changes only the report.
 
 [scripts/check_audit.py](scripts/check_audit.py) checks that `Itasca.Audit`
 imports exactly the sink modules of the import graph, that the foundation
-layers import only downward, and that nothing imports the external template.
+layers import only downward, that only `Main` and `Examples/` import
+`Results/`, that examples import only `Main` (`EXAMPLE_IMPORTS` lists the
+exceptions), and that nothing imports the external template.
 [scripts/check_externals.py](scripts/check_externals.py) compares extraction
 requests with the external models. Both run under `just prove` and
 `just extract-check`.
@@ -296,12 +307,15 @@ audit ensures the proofs do not depend on them.
 ## Execution boundary
 
 The slot runtime has checked public correspondence, invariant, resource-cause
-and progress theorems under explicit platform and callback contracts. The
-[execution proof guide](Exec/README.md) describes their premises and embedder
-obligations. `SpecExt.Builtins` supplies
-concrete definitions for all 64 pinned builtin signatures. Float rounding uses
-exact rationals and midpoint comparisons; the NaN sets retain permitted
-nondeterminism. The audit rejects any new opaque builtin placeholder.
+and progress theorems under explicit platform and callback contracts.
+[Exec/Main.lean](Exec/Main.lean) lists every headline theorem, each stated in
+full under [Exec/Results/](Exec/Results), and [Exec/Contracts.lean](Exec/Contracts.lean)
+lists every premise an embedder must discharge. The
+[execution proof guide](Exec/README.md) describes how the proofs are assembled.
+
+`SpecExt.Builtins` supplies concrete definitions for all 64 pinned builtin
+signatures. Float rounding uses exact rationals and midpoint comparisons; the
+NaN sets retain permitted nondeterminism. The audit rejects any new opaque builtin placeholder.
 
 `SpecExt.Host` adds atomic host-call steps with explicit typed inputs/results,
 store extension, post-call `Store_ok`, and well-formedness premises. The checked
@@ -331,48 +345,48 @@ conditions, not assumptions about machine execution. The complete-profile
 compiler body fold is checked for both profiles. Actual construction, entry
 validation, and finishing produce a certificate for the independently encoded
 source body. The
-[complete compilation theorem](Exec/Theorems/Compilation.lean) combines
+[complete compilation theorem](Exec/Results/Compile.lean) combines
 all-input normal return with independently encoded complete-profile function,
 initializer, metadata and capacity certificates. It has no accepted-body or
-opcode-subset premise. [Compiler completeness](Exec/Theorems/CompilationComplete.lean)
+opcode-subset premise. [Compiler completeness](Exec/Results/Compile.lean)
 constructs actual successful compilation and that certificate from independent
 source validity, conservative source-only `CompileEligible` bounds, allocator
 correctness, and bounded allocation availability. The envelope uses uniform
 source body/local/operand maxima and aggregates function and initializer costs;
 it need not accept every module exactly at a configured output limit.
 
-[Public world-aware invocation](Exec/Theorems/Invocation/PublicExecutableWorldInvocation.lean)
+[Public world-aware invocation](Exec/Results/Invoke.lean)
 covers issued Wasm and host handles, retains the full `ExecutableInv` with the
 chosen final code interpretation, proves unchanged-state API rejection, and
 relates returned values, errors and final stores to source runs.
-[Exact public recording](Exec/Theorems/Invocation/PublicExecutableWorldResources.lean)
+[Exact public recording](Exec/Results/Invoke.lean)
 uses the same actual event log in those source runs.
-[Public divergence](Exec/Theorems/Invocation/PublicExecutableWorldDivergence.lean) yields
-coherent infinite source execution. [Actual finite prefixes](Exec/Theorems/Progress/ExecutableWorldFinite.lean)
+[Public divergence](Exec/Results/Invoke.lean) yields
+coherent infinite source execution. [Actual finite prefixes](Exec/Results/Invoke.lean)
 have a uniform source-progress bound independent of host-published code sizes.
-[World-aware instantiation](Exec/Theorems/Instantiation/InstantiateExecutableWorldSource.lean)
+[World-aware instantiation](Exec/Results/Instantiate.lean)
 retains rollback and committed initialization/start effects while callbacks may
 publish fresh code. These theorems require the explicit indexed callback and raw
-preservation laws. [Instantiation recording and resource causes](Exec/Theorems/Instantiation/InstantiateExecutableWorldRecordingResources.lean)
+preservation laws. [Instantiation recording and resource causes](Exec/Results/Instantiate.lean)
 retain the same final interpretation and actual recorded event list. The
 resource accounting and raw-host-retention obligations are recorded in the
-execution reference. [Chosen-world completeness](Exec/Theorems/Invocation/PublicWorldChosenMatches.lean)
+execution reference. [Chosen-world completeness](Exec/Results/Invoke.lean)
 additionally matches one terminating selected source run, including its final
 store and exact recorder events, under explicit source capacities, allocation
 availability, choice compatibility, continuing interrupts and returning-host
 resource laws. It covers both complete profiles and issued Wasm/host functions;
 it does not assert global source-step determinism.
 
-[Combined chosen completeness](Exec/Theorems/Host/Open/Completeness/ChosenSourceCompleteness.lean)
+[Combined chosen completeness](Exec/Results/Host.lean)
 establishes the corresponding outcome for the synchronous certified host driver
 from one terminating combined Wasm/host source run, including unbounded
 reentrancy and expanded nesting observations. Its premises require owned
 inputs, source-prefix capacities at the initial store limits, allocation
 availability and matching numeric, vector, growth, API and publication choices.
 The driver supplies continuing interrupts and excludes host stack exhaustion.
-[Selected divergence reflection](Exec/Theorems/Host/Open/Native/NativeChosenSourceInvocation.lean)
+[Selected divergence reflection](Exec/Results/Host.lean)
 separately constructs productive combined execution under the same policy.
-[Returning recovery](Exec/Theorems/Host/Open/Completeness/ReturningRecovery.lean) proves that
+[Returning recovery](Exec/Results/Host.lean) proves that
 finite checked-action callbacks in this driver recover the original callback
 package and absence-of-source-divergence invocation contract.
 

@@ -40,13 +40,6 @@ theorem sectionRank_prefix {id : U8} (hlo : 1 ≤ (sectionRank id).val)
   rw [he] at hlo hhi
   omega
 
-/-- Ids below `10` are their own rank. -/
-theorem sectionRank_early {id : U8} (h : id.val < 10) : sectionRank id = id := by
-  have h12 : id.val ≠ 12 := by omega
-  have h10 : id.val ≠ 10 := by omega
-  have h11 : id.val ≠ 11 := by omega
-  simp [sectionRank]
-
 end Itasca.ModuleBinary
 
 namespace Itasca

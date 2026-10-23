@@ -2,11 +2,6 @@ import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Invariant.TypeStaging
 namespace Exec.Store
 open Aeneas Aeneas.Std
-/-- An empty generic store has no defined-function certificate obligations. -/
-theorem new_function_capacities {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (id : Usize) (limits : runtime.store.StoreLimits) (code : CodeInterpretation) :
-    runtime.store.Store.with_identity memory id limits ⦃ store => FunctionCapacities code store ⦄ := by
-  simp [runtime.store.Store.with_identity, FunctionCapacities]
 
 /-- Defining a host function preserves all existing Wasm compiler certificates
 on success and every allocation rejection. The new host entry has no Wasm body

@@ -28,16 +28,4 @@ def decode (s : AState) : config :=
 
 @[simp] theorem decodeFrames_nil (code : List admininstr) : decodeFrames [] code = code := rfl
 
-/-- A completed invocation exposes precisely its returned values. -/
-theorem decode_done (s : store) (ambient : frame) (results : List val) :
-    decode ⟨s, ambient, [], results⟩ = .mk_config (.mk_state s ambient) (vals results) := rfl
-
-/-- One active function, before entering a structured label. -/
-theorem decode_one_frame (s : store) (ambient : frame) (f : AFrame)
-    (h : f.labels = []) :
-    decode ⟨s, ambient, [f], []⟩ =
-      .mk_config (.mk_state s ambient)
-        [.FRAME_ f.arity f.toFrame (vals f.vals ++ f.code.map admininstr_instr)] := by
-  simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, h, decodeLabels]
-
 end Exec.Abs

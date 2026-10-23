@@ -46,7 +46,7 @@ cargo test
 cargo test --no-default-features
 just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
-just check Itasca.Module.Validation
+just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build validator proofs and check audit coverage and axioms
 just prove-exec       # Build execution and specification-extension proofs
@@ -222,14 +222,16 @@ does not supply that condition.
 
 Check encoded counts before allocation where available. `MAX_LOCALS` excludes
 parameters; `MAX_FUNCTION_BYTES` includes the final `end` and excludes local
-declarations. Wasm 2.0 signatures have at most 1000 parameters and results.
-Do not tighten Wasm 1.0's parameter behavior as a side effect of another profile.
+declarations. Signatures in either profile have at most 1000 parameters and
+results; Wasm 1.0 additionally allows at most one result.
 
 Place new proofs by layer, as described in the
 [Lean guide](lean/README.md#proof-architecture): independent grammar in
-`Binary/`, per-handler lemmas in `Handler/`, and body proofs in `Wasm1/` or
-`Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
-`just audit-imports` after adding or moving files. `just prove` rejects a stale
+`Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
+in `Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
+`just audit-imports` after adding or moving files. Its declarations must also be
+used by a headline theorem or an example: `just prove-exec` runs the
+reachability check over both libraries. `just prove` rejects a stale
 audit import list and upward imports from the grammar layers. The audit checks
 all local declarations and rejects axioms beyond the three documented logical
 foundations. New proof-bearing adapters receive the same scrutiny as exported

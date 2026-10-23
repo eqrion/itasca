@@ -57,31 +57,4 @@ theorem compiler_br_table_layout_prefix {A : Type} (ops : runtime.platform.Alloc
     · simpa only [depthsEq] using clearedEq
     · simpa only [codeEq,tablesEq] using targets
   · simpa only [codeEq] using resolved
-theorem compiler_br_table_layout {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (fallback : U32) (types : Itasca.signature.ResultType)
-    (locals stack : List valtype) (scopes : List SourceScope) (labels : List LabelTarget)
-    (depths : List U32) (groups : List FixupTarget)
-    (buffer : before.table_depths.val = depths)
-    (layout : CompilerLayout before (stack++[.I32])) (localTypes : compilerLocals before=locals)
-    (paired : List.Forall₂ (ScopeFrameShape locals) scopes before.frames.val)
-    (labelShapes : List.Forall₂ ScopeLabel scopes.reverse labels)
-    (inputs : TableOperandScopes scopes stack (depths++[fallback]))
-    (dominance : before.function.jump_tables.val.length ≤ before.function.code.val.length)
-    (sites : ∀ frame ∈ before.frames.val, FrameSites before.function.code.val frame)
-    (plans : FramePlans after.function.code.val.length locals after.frames.val labels groups)
-    (live : before.reachable=true)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
-      ops before state fallback types=.ok (.Ok (),after)) :
-    ∃ previous start len selector,
-      FramePlans before.function.code.val.length locals before.frames.val labels previous ∧
-      BranchTableLayout after.function.jump_tables.val locals labels stack
-        (resolvedCode after.function.code.val groups) (depths.map (fun d => .mk_uN d.val)) (.mk_uN fallback.val)
-        before.function.code.val.length after.function.code.val.length selector start len ∧
-      before.function.code.val.length+1≤after.function.code.val.length ∧
-      CompilerTableBoundary after ∧ after.reachable=false := by
-  obtain ⟨previous,start,len,selector,prior,certificate,header,boundary,dead,_⟩ :=
-    compiler_br_table_layout_prefix ops law before after state fallback types locals stack scopes labels depths groups
-      buffer layout localTypes paired labelShapes inputs dominance sites plans live accepted
-  exact ⟨previous,start,len,selector,prior,certificate,header,boundary,dead⟩
 end Exec.Code

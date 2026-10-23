@@ -26,18 +26,6 @@ theorem FrameBinding.resolve_call {M : Type} {store : runtime.store.Store M}
   rw [binding.module_lookup inst lookup]
   simp only [Store.decodeInstance, List.getElem?_map, found, Option.map_some]
 
-/-- Source function-map membership also reconstructs the actual concrete
-address used by direct-call dispatch. -/
-theorem FrameBinding.resolve_call_back {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
-    (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
-    (lookup : store.instances.val[raw.instance.val]? = some inst)
-    (index address : Nat) (found : source.module.FUNCS[index]? = some address) :
-    ∃ rawAddress, inst.funcs.val[index]? = some rawAddress ∧ rawAddress.index.val = address := by
-  rw [binding.module_lookup inst lookup] at found
-  simp only [Store.decodeInstance, List.getElem?_map] at found
-  exact Option.map_eq_some_iff.mp found
-
 /-- A concrete defined-function entry selects precisely the retained source
 body and owning module in the decoded store. -/
 theorem defined_function_lookup {M : Type} (view : M → Slice U8)

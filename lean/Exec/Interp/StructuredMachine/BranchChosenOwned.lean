@@ -21,7 +21,7 @@ open Aeneas Aeneas.Std
 administrative skips. All operand decomposition, slots and target continuation
 come from retained structured code evidence and generated source typing. -/
 theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -38,7 +38,7 @@ theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissi
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (capacity : raw.base.val + Code.slots ((f.locals ++ f.vals).map Code.valueType) ≤ exec.slots.length)
-    (point : FramePoint emission s raw { f with code := .BR (.mk_uN depth) :: after }
+    (point : FramePoint s raw { f with code := .BR (.mk_uN depth) :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
@@ -47,10 +47,10 @@ theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissi
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
+        ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
-        SyntaxClosure allowed { f with code := .BR (.mk_uN depth) :: after } g ∧
+        SyntaxClosure { f with code := .BR (.mk_uN depth) :: after } g ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false pending
           ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after } :: rest, []⟩
           ⟨s, ambient, g :: rest, []⟩ ∧
@@ -61,7 +61,7 @@ theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissi
         FrameBoundClosure {f with code := .BR (.mk_uN depth) :: after} g ⦄ := by
   rcases codeRel_branch_inv point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .BR (.mk_uN depth) :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -79,7 +79,7 @@ theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissi
       destination, source, size⟩ := point.labels.branchLayout f.locals depth target staticLookup dst src count (by simpa only [point.locals] using layout)
     have frameTyped : Abs.FrameTyped s { f with code := .BR (.mk_uN depth) :: after } [] := by
       cases typed.typed.frames with | cons h _ => exact h
-    have point' : FramePoint emission s raw { f with code := .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results }
+    have point' : FramePoint s raw { f with code := .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results }
         compiled C targets next output := by simpa only [← split] using point
     have typed' : Abs.ATyped ⟨s, ambient,
         { f with code := .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results } :: rest, []⟩ := by
@@ -150,45 +150,5 @@ theorem step_branch_owned_uniform_chosen {choices : Spec.SourceChoices} (admissi
         .jump target.target (by simpa only [hpc] using jump) targetPoint, ⟨nextTyped,typed.contents⟩, ⟨rfl, rfl, rfl, rfl⟩, .branch _ depth label lookup _, ?_,uniform _ _,ownership,.branch {f with code := .BR (.mk_uN depth)::after} depth label lookup _⟩
       apply ChosenConcreteSim.of_source
       exact Abs.ChosenNextSim.counted (by simpa only [← split] using sourceCounted) (by omega)
-
-theorem step_branch_owned_chosen {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (depth : Nat) (after : List instr)
-    (last : index.val + 1 = exec.frames.length)
-    (hf : exec.frames.val[index.val]? = some raw)
-    (hi : store.instances.val[raw.instance.val]? = some inst)
-    (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after } :: rest, []⟩)
-    (slots : FrameSlots exec raw f)
-    (capacity : raw.base.val + Code.slots ((f.locals ++ f.vals).map Code.valueType) ≤ exec.slots.length)
-    (point : FramePoint emission s raw { f with code := .BR (.mk_uN depth) :: after }
-      compiled C targets next output) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame) (targets' : List Code.LabelTarget) (next' : Nat)
-        (output' : List valtype) (pending : Bool),
-        { out.2.1 with slots := exec.slots } =
-          { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
-        FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
-        Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
-        FrameMetadata f g ∧
-        SyntaxClosure allowed { f with code := .BR (.mk_uN depth) :: after } g ∧
-        ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false pending
-          ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after } :: rest, []⟩
-          ⟨s, ambient, g :: rest, []⟩ ∧
-        FrameOwnershipClosure {f with code := .BR (.mk_uN depth) :: after} g ∧
-        FrameBoundClosure {f with code := .BR (.mk_uN depth) :: after} g ⦄ := by
-  apply WP.spec_mono (step_branch_owned_uniform_chosen admissible vector occurrence memory hooks floats allocator exec store platform index raw inst compiled C targets next output s ambient f rest depth after last hf hi hc pcBound typed slots capacity point)
-  rintro out ⟨success,storeSame,platformSame,pc,g,targets',next',output',pending,unchanged,slots,point,typed,metadata,closure,simulation,uniform,ownership,bounded⟩
-  exact ⟨success,storeSame,platformSame,pc,g,targets',next',output',pending,unchanged,slots,point,typed,metadata,closure,simulation,ownership,bounded⟩
 
 end Exec.Interp.StructuredMachine

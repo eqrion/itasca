@@ -1,10 +1,8 @@
-import Exec.Code.Body.Reader.Common.ReaderExtraScratch
-import Exec.Code.Body.Reader.Common.ReaderExtraCodeMonotone
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerExtraWithTables
+import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerExtra
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPreserved
-import Exec.Code.Body.Control.Common.CumulativeEmbedding
-import Exec.Code.Body.Reader.Table.ReaderExtraTables
-import Exec.Code.Body.Lowering.Float.FloatEmbedding
+import Exec.Code.Body.Control.Common.OrdinaryEmbedding
+import Exec.Code.Body.Control.Common.StructuredScalarEmbedding
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}
@@ -13,7 +11,7 @@ theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}
     {types functions returns locals data env ctx index ft st}
     (C : context)
     {emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop}
-    (includeCumulative : ∀ tables, CumulativeEmbedding tables.indirect C (emit tables))
+    (includeCumulative : ∀ tables, OrdinaryEmbedding tables.indirect C (emit tables))
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st)
     (contextLocals : C.LOCALS = locals)
     (contextGlobals : C.GLOBALS = env.global_types.val.map Translate.globalType)
@@ -28,13 +26,10 @@ theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
-  have pairs := reader_core_extra_tables_wasm2 p ops law before after out ctx rfl opcode covered byte accepted
-  have depths := reader_core_extra_depths_wasm2 p ops law before after out ctx rfl opcode covered byte accepted
-  have growth := reader_core_extra_code_mono_wasm2 p ops law before after out ctx rfl opcode covered byte accepted
-  apply point.preserved_step pairs depths growth
+  have effects := reader_scalar_effects_wasm2 ops law before after _ out data env ctx _ opcode covered accepted
+  apply point.preserved_step effects.tables effects.depths effects.code_mono
   intro future old
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
-  letI : FloatEmbedding C (emit ((CompilerTables.ofFunction before.function).append future)) := ⟨fun h => (includeCumulative ((CompilerTables.ofFunction before.function).append future)).lift (.left h)⟩
-  letI : CoreEmbedding C (emit ((CompilerTables.ofFunction before.function).append future)) := ⟨fun h => (includeCumulative ((CompilerTables.ofFunction before.function).append future)).lift (.left (.core h))⟩
+  letI : ScalarEmbedding C (emit ((CompilerTables.ofFunction before.function).append future)) := ⟨(includeCumulative ((CompilerTables.ofFunction before.function).append future)).scalar⟩
   exact state.core_extra ops law C contextLocals contextGlobals contextMemories next advance inbounds out sourceBound bodyBound opcode covered byte accepted
 end Exec.Code

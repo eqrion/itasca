@@ -19,9 +19,4 @@ theorem ChosenNextSim.counted {choices : SourceChoices} {occurrence : Nat} {s ne
     (source : ChosenStepsN choices occurrence n (decode s) [] (decode next)) (positive : 0<n) :
     ChosenNextSim choices occurrence s next := .inr ⟨n,positive,source⟩
 
-theorem ChosenNextSim.erases {choices : SourceChoices} (admissible : choices.Admissible)
-    {occurrence : Nat} {s next : AState} (simulation : ChosenNextSim choices occurrence s next) : NextSim s next := by
-  rcases simulation with silent | ⟨n,positive,source⟩
-  · exact .inl silent
-  · exact .inr ⟨n,positive,source.erases admissible⟩
 end Exec.Abs

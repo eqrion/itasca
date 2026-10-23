@@ -1,22 +1,34 @@
 import Exec.Theorems.Composition.Certified.CertifiedSupported
 import Exec.Store.Initialization.SegmentExtension
 import Exec.Store.Invariant.SourceSyntax
-import Exec.Theorems.Composition.SourceCumulative
-import Exec.Store.Invariant.CumulativeFunctionTables
+import Exec.Abs.Core
+import Exec.Abs.Float.Decode
+import Exec.Abs.Stateful.Descriptor
+import Exec.Abs.PureHead
+import Itasca.Module.Soundness
+import Itasca.Results.Unique
+import Itasca.Profile.EntrySound
+import Exec.Code.Local.Source.SourceSlice
+import Exec.Store.Invariant.CodeAgreement
+import Exec.Store.Invariant.FunctionSignatures
+import Exec.Store.Initialization.SegmentCodeMetadata
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Control.Common.CumulativeFunctionContext
 import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Initialization.SegmentInitializeMetadata
 import Exec.Store.Initialization.SegmentInitializeShape
 namespace Exec.Theorems
-variable {emission : Interp.StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 open Aeneas Aeneas.Std
 
 /-- Segment writes and drops preserve the complete static cumulative
 certificate, including the source typing of every existing function. -/
 theorem CertifiedSupportedStore.segments {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {before after : runtime.store.Store M}
-    (certified : CertifiedSupportedStore emission allowed view code before)
+    (certified : CertifiedSupportedStore view code before)
     (metadata : Store.SegmentObjectMetadata view before after) (shape : Store.Shape view after) :
-    CertifiedSupportedStore emission allowed view code after ∧
+    CertifiedSupportedStore view code after ∧
       Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
   have syntaxAfter := certified.storeSyntax.instances_eq metadata.space.instances
   have extension := metadata.extends code
@@ -49,11 +61,11 @@ theorem initialize_segments_certified_supported {M P F A : Type}
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
-    (code : Store.CodeInterpretation) (certified : CertifiedSupportedStore emission allowed view code store)
+    (code : Store.CodeInterpretation) (certified : CertifiedSupportedStore view code store)
     (imports : Store.InitializerImports store inst) (bindings : Store.InitializerBindings store inst)
     (types : Store.SegmentTypeBindings store inst) :
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
-      ⦃ out => CertifiedSupportedStore emission allowed view code out.2.1 ∧
+      ⦃ out => CertifiedSupportedStore view code out.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.1) ∧
         Store.SegmentObjectMetadata view store out.2.1 ∧ out.2.2 = platform ⦄ := by
   have shaped := Store.initialize_segments_compiled_shape memory hooks floats allocator view laws law

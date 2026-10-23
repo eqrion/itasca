@@ -12,21 +12,6 @@ def ObjectsExtend {α : Type} [Inhabited α] (R : α → α → Prop)
     (xs ys : List α) : Prop :=
   xs.length ≤ ys.length ∧ ∀ i, i < xs.length → R xs[i]! ys[i]!
 
-private theorem append_old {α : Type} [Inhabited α] (xs ys : List α)
-    (i : Nat) (hi : i < xs.length) : (xs ++ ys)[i]! = xs[i]! := by
-  simp only [getElem!_pos xs i hi,
-    getElem!_pos (xs ++ ys) i (by simp only [List.length_append]; omega),
-    List.getElem_append_left hi]
-
-/-- Appending objects preserves every existing address. -/
-theorem objectsExtend_append {α : Type} [Inhabited α] {R : α → α → Prop}
-    {xs : List α} (ys : List α) (h : ObjectsExtend R xs xs) :
-    ObjectsExtend R xs (xs ++ ys) := by
-  refine ⟨by simp, ?_⟩
-  intro i hi
-  rw [append_old xs ys i hi]
-  exact h.2 i hi
-
 /-- A single object replacement leaves all other addresses unchanged. -/
 theorem objectsExtend_set {α : Type} [Inhabited α] {R : α → α → Prop}
     {xs : List α} (i : Nat) (value : α) (h : ObjectsExtend R xs xs)
@@ -93,20 +78,6 @@ theorem extend_store_objects {s t : store} (h : Extend_store s t) :
       ⟨len _ _ bd, fun i hi => rd i (List.mem_range.mpr hi)⟩,
       ⟨len _ _ be, fun i hi => re i (List.mem_range.mpr hi)⟩⟩
 
-/-- Allocate any collection of objects by appending to the six address spaces. -/
-theorem extend_store_append (s added : store) (hs : wf_store s)
-    (ht : wf_store ⟨s.FUNCS ++ added.FUNCS, s.GLOBALS ++ added.GLOBALS,
-      s.TABLES ++ added.TABLES, s.MEMS ++ added.MEMS,
-      s.ELEMS ++ added.ELEMS, s.DATAS ++ added.DATAS⟩) :
-    Extend_store s ⟨s.FUNCS ++ added.FUNCS, s.GLOBALS ++ added.GLOBALS,
-      s.TABLES ++ added.TABLES, s.MEMS ++ added.MEMS,
-      s.ELEMS ++ added.ELEMS, s.DATAS ++ added.DATAS⟩ := by
-  obtain ⟨hg, hm, ht', hf, hd, he⟩ := extend_store_objects (extend_store_refl s hs)
-  exact extend_store_of_objects hs ht
-    (objectsExtend_append _ hg) (objectsExtend_append _ hm)
-    (objectsExtend_append _ ht') (objectsExtend_append _ hf)
-    (objectsExtend_append _ hd) (objectsExtend_append _ he)
-
 /-- Replace one global object by an extension, preserving all other addresses. -/
 theorem extend_store_set_global (s : store) (i : Nat) (value : globalinst)
     (hs : wf_store s) (ht : wf_store { s with GLOBALS := s.GLOBALS.set i value })
@@ -133,15 +104,6 @@ theorem extend_store_set_table (s : store) (i : Nat) (value : tableinst)
   obtain ⟨hg, hm, ht', hf, hd, he⟩ := extend_store_objects (extend_store_refl s hs)
   exact extend_store_of_objects hs ht
     hg hm (objectsExtend_set i value ht' hv) hf hd he
-
-/-- Replace one func object by an extension, preserving all other addresses. -/
-theorem extend_store_set_func (s : store) (i : Nat) (value : funcinst)
-    (hs : wf_store s) (ht : wf_store { s with FUNCS := s.FUNCS.set i value })
-    (hv : i < s.FUNCS.length → Extend_funcinst s.FUNCS[i]! value) :
-    Extend_store s { s with FUNCS := s.FUNCS.set i value } := by
-  obtain ⟨hg, hm, ht', hf, hd, he⟩ := extend_store_objects (extend_store_refl s hs)
-  exact extend_store_of_objects hs ht
-    hg hm ht' (objectsExtend_set i value hf hv) hd he
 
 /-- Replace one data object by an extension, preserving all other addresses. -/
 theorem extend_store_set_data (s : store) (i : Nat) (value : datainst)

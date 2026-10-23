@@ -20,14 +20,14 @@ theorem executable_world_finite_progress {M P F A : Type}
     (issuedResults : ∀code store,ExecutableInv view code store → ∀host p args results answer,
       hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     {expected : List valtype} (dispatches : Nat)
-    (initial : EventfulWorld Interp.Executable.emission Abs.ExecutableInstr M P view expected)
+    (initial : EventfulWorld M P view expected)
     (valid : ExecutableInv view initial.code initial.machine.store) (last : ExecutionState M P)
     (trace : ContinuingTrace (executionBody memory hooks floats allocator) dispatches
       (initial.machine.exec,initial.machine.store,initial.machine.platform,.Ok ()) last) :
     ∃previous events count, Spec.StepsHN count (Abs.decode initial.machine.source) events (Abs.decode previous) ∧
       dispatches / (2 * U32.max + 3) ≤ count := by
   apply uniform_world_finite_progress memory hooks floats allocator (ExecutableInv view) ?_ dispatches initial valid last trace
-  exact uniform_world_step_total Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws
+  exact uniform_world_step_total memory hooks floats allocator correct allocation interrupts view laws
     (ExecutableInv view) (fun _ _ held => held.toCertifiedApiStore.toCertifiedSupportedStore) (fun _ _ _ held mutation => held.update mutation)
     sound preserve externs issuedResults expected
 end Exec.Theorems

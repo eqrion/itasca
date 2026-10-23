@@ -1,4 +1,4 @@
-import Exec.Code.Body.Reader.Table.TableReaderReplay
+import Exec.Code.Body.Reader.Table.TableLoopReaderReplay
 import Exec.Code.Body.Reader.Table.TableDecodePrefix
 import Exec.Code.Body.Reader.Table.LabelCollectionAvailability
 
@@ -13,7 +13,7 @@ theorem compiler_table_loop_collect_available {A V : Type}
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.OpIterState) (out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (count : U32) (all : List U32)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (all : List U32)
     (empty : compiler.table_depths.val = []) (length : all.length = count.val+1)
     (decoded : BrTable.LabelsDecoded data st.pos all out.core.pos)
     (branches : compiler.budget.branches.val+count.val ≤ compiler.budget.limits.max_branch_table_entries.val)
@@ -27,10 +27,10 @@ theorem compiler_table_loop_collect_available {A V : Type}
       source.on_br_table sourceBefore marked depth ts = .ok (.Ok (),sourceAfter) →
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_br_table current marked depth ts
         ⦃ result => result.1 = .Ok () ∧ post {state with core := marked} sourceAfter result.2 ⦄)
-    (reference : code.branch_table_with_loop source st data env before count none 0#u32 =
+    (reference : code.branch_table_with_loop source st data env profile before count none .Empty 0#u32 =
       .ok (.Ok (),out,after)) :
     code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env compiler count none 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env profile compiler count none .Empty 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         post out after result.2.2 ⦄ := by
   let related := fun index state (_ : V) current =>
     LabelCollectionPrefix compiler current index ∧
@@ -66,10 +66,10 @@ theorem compiler_table_loop_collect_available {A V : Type}
     refine ⟨(.Ok (),targetAfter),called,rfl,collected,?_,held.2.2⟩
     simpa only [frame,appended] using decodedPrefix
   obtain ⟨targetAfter,called,retained⟩ := table_loop_reader_accepted_replay source
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) related readRelated post data env count
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) related readRelated post data env profile count
     readMoves label (fun state sourceBefore current marked depth ts sourceAfter held mark call =>
       finish state current marked depth ts sourceBefore sourceAfter held.1 held.2.1 held.2.2.1 held.2.2.2 mark call)
-    0#u32 (by simp) none st out before after compiler
+    0#u32 (by simp) none .Empty st out before after compiler
     ⟨LabelCollectionPrefix.initial compiler,by simpa [empty] using TableDecodePrefix.initial st decoded,rfl,rfl⟩ reference
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,targetAfter),called,rfl,rfl,retained⟩

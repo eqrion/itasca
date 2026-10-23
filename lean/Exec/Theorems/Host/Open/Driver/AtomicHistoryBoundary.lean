@@ -17,11 +17,11 @@ def NativeWasmBoundary {M : Type} (state : State M) : Prop :=
 host preparation suspends immediately; its atomic callback is never needed to
 construct that prefix. Without a suspension the prefix reaches the atomic end. -/
 theorem atomic_history_open_boundary {choices : Spec.SourceChoices} {M F A : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (select : Selector)
     {view : M → Slice U8} {expected : List valtype}
-    {before after : ChosenWorld emission allowed M Unit view expected} {count events}
+    {before after : ChosenWorld M Unit view expected} {count events}
     (historyPath : Spec.Iterations (ChosenWorldTransition choices memory (inert memory) floats allocator) count before events after)
     (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value) (stack : List Continuation) (history : List Observation) :
     ∃ticks reached,ContinuingTrace (tick memory floats allocator select) ticks

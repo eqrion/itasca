@@ -32,46 +32,4 @@ macro "growth_control_step " h:ident " using " ops:term ", " law:term : tactic =
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | split at $h:ident)
 
-theorem compiler_unreachable_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-      ops before state = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 1 := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' growth_control_step accepted using ops, law
-
-theorem compiler_return_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
-      ops before state = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 1 := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' growth_control_step accepted using ops, law
-
-theorem compiler_br_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (depth : U32) (types : Itasca.signature.ResultType)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-      ops before state depth types = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 2 := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' growth_control_step accepted using ops, law
-
-theorem compiler_br_if_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (depth : U32) (types : Itasca.signature.ResultType)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
-      ops before state depth types = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 3 := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' growth_control_step accepted using ops, law
-
 end Exec.Code

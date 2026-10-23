@@ -23,9 +23,9 @@ theorem indexed_table_witness_compiler_initial_wasm2
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final .Wasm2)
+      data env index start finish initial final profile)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val)=
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
@@ -44,34 +44,4 @@ theorem indexed_table_witness_compiler_initial_wasm2
     ops law w signatureTable functionTable endFits created
   exact ⟨(all .empty).1,⟨witness_compiler_table_boundary ops law w created,fun more => (all more).2.1⟩,(all .empty).2.2⟩
 
-theorem indexed_table_witness_compiler_initial_wasm1
-    (emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop)
-    {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
-    {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish}
-    (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final .Wasm1)
-    (signatureTable : SignatureSequence signatures.val env.types.val)
-    (functionTable : functionSlots.val.map (fun word => word.val)=
-      env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
-    (endFits : batchStart.val+finish.val≤Usize.max)
-    (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial)
-    (singleResult : w.ft.results.val.length≤1) :
-    CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
-    Control.resultTypes (Wasm1.Loop.initialBlockType w.ctx.results.val)=w.ctx.results.val.map Translate.valueType ∧
-    IndexedTableReaderCompilerPointWasm1 emit w.startedState w.startedState
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ctx.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      w.body env w.ctx (Wasm1.Loop.initialBlockType w.ctx.results.val)
-      (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType w.ctx.results.val)) ∧
-    TypedRunWasm1 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      w.body env w.ctx (Wasm1.Loop.initialBlockType w.ctx.results.val)
-      (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType w.ctx.results.val)) w.startedState final := by
-  have all := fun more : CompilerTables => indexed_witness_compiler_initial_wasm1
-    ((CompilerTables.ofFunction w.startedState.function).append more).jumpTables
-    (emit ((CompilerTables.ofFunction w.startedState.function).append more))
-    ops law w signatureTable functionTable endFits created singleResult
-  exact ⟨(all .empty).1,(all .empty).2.1,
-    ⟨witness_compiler_table_boundary ops law w created,fun more => (all more).2.2.1⟩,(all .empty).2.2.2⟩
 end Exec.Code

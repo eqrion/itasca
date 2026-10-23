@@ -9,13 +9,13 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 open Exec.Interp.StructuredMachine
 
 theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s, Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s, Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (entryTyped : Store_ok (Store.decodeStore view code store))
@@ -35,12 +35,12 @@ theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices
     (heights : ∀label∈f.labels,label.height≤front.length)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
-    (tail : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results) after pc.val next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
@@ -57,7 +57,7 @@ theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices
     (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
     runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base ⦃ out =>
-      ∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore emission allowed view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
+      ∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length≤out.2.2.1.externs.length ∧
       HostSignatureSite ⟨Store.decodeStore view code store,ambient,
@@ -69,7 +69,7 @@ theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices
         (∃n,2≤n ∧ Spec.ChosenStepsN choices occurrence n
           (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
           (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
-        (out.1=.Ok () → ∃finalPC,Execution emission (Abs.SupportedState allowed) view afterCode out.2.2.1 out.2.1
+        (out.1=.Ok () → ∃finalPC,Execution view afterCode out.2.2.1 out.2.1
           ⟨Store.decodeStore view afterCode out.2.2.1,ambient,{f with code:=after,vals:=front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
           Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ⦄ := by
   have certified := certify code store valid
@@ -113,10 +113,10 @@ theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices
   intro out result
   obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
   have same := Store.decodeStore_code_agrees view agrees
-  have newMachine : Execution emission (Abs.SupportedState allowed) view afterCode store exec
+  have newMachine : Execution view afterCode store exec
       ⟨Store.decodeStore view afterCode store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false := by
     simpa only [same] using machine.change_code agrees
-  have newPoint : FramePoint emission (Store.decodeStore view afterCode store) raw
+  have newPoint : FramePoint (Store.decodeStore view afterCode store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output := by
     simpa only [same] using point
   have newPending : Abs.HostPending
@@ -153,7 +153,7 @@ theorem call_indirect_host_structured_chosen_world {choices : Spec.SourceChoices
         (Exec.Spec.resultsTyped_wf argumentTyped)
       simpa only [←split,same] using events
     · intro success
-      have tail' : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+      have tail' : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
           compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++signature.results.val.map sourceType) after pc.val next output := by
         simpa only [signatureTypes.2] using tail
       obtain ⟨finalPC,resumed⟩ := host_structured_resume newMachine last hf binding slots program newPoint (by simpa only [List.append_assoc] using split)

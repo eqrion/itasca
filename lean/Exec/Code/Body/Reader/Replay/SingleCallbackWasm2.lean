@@ -11,8 +11,6 @@ actual callback at its returned state, with source-bounded SIMD arguments. -/
 theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (opcode : U8) (before after : V) (out : code.OpIterState)
-    (blocked : opcode ≠ code.OP_BLOCK ∧ opcode ≠ code.OP_LOOP ∧ opcode ≠ code.OP_IF ∧
-      opcode ≠ code.OP_END ∧ opcode ≠ code.OP_BR_TABLE)
     (accepted : code.step_wasm2 visitor st data env ctx opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
       invoke visitor before (.op out action) = .ok (.Ok (),after) := by
@@ -53,13 +51,13 @@ theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
       obtain ⟨sub,next⟩ := pair
       dsimp only at accepted
       split at accepted
-      · exact reader_single_callback_extended visitor st data env ctx 0xfc#u8 before after out (by simp [global_simps]) accepted
+      · exact reader_single_callback_extended visitor st data env ctx 0xfc#u8 before after out accepted
       · exact reader_single_callback_bulk visitor {st with pos := next} data env sub before after out accepted
   have base : opcode.val ∉ [28,37,38,208,209,210,252,253] := by
     simp only [List.mem_cons,List.not_mem_nil,or_false,not_or]
     have neq {a b : U8} (h : a ≠ b) : a.val ≠ b.val := fun same => h (UScalar.eq_of_val_eq same)
     exact ⟨neq h28,neq h37,neq h38,neq h208,neq h209,neq h210,neq h252,neq h253⟩
   rw [code.step_wasm2.base visitor st data env ctx opcode before base] at accepted
-  exact reader_single_callback_extended visitor st data env ctx opcode before after out blocked accepted
+  exact reader_single_callback_extended visitor st data env ctx opcode before after out accepted
 
 end Exec.Code

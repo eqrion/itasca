@@ -208,10 +208,6 @@ def ConstAllowed (profile : ValidationProfile) (expr : types.ConstExpr) : Prop :
   | .Wasm1, .V128 _ _ | .Wasm1, .RefNull _ | .Wasm1, .RefFunc _ => False
   | _, _ => True
 
-/-- A constant expression encoding restricted to the profile's allowed forms. -/
-def ConstEncodingFor (profile : ValidationProfile) (expr : types.ConstExpr)
-    (bytes : List U8) : Prop := ConstEncoding expr bytes ∧ ConstAllowed profile expr
-
 /-- An import descriptor: a kind byte followed by a type index or a table, memory or global type. -/
 inductive ImportDescEncoding : module.ImportDesc → List U8 → Prop where
   | func (index : U32) {bytes} : IndexEncoding index bytes →
@@ -313,10 +309,6 @@ def SegmentIndexEncoding (profile : ValidationProfile) (flags index : U32)
       (flags = 0#u32 ∧ index = 0#u32 ∧ explicit = false ∧ bytes = []) ∨
       (flags = 2#u32 ∧ explicit = true ∧ IndexEncoding index bytes)
 
-/-- The element kind byte, present exactly when the table index is explicit. -/
-def ElementKindEncoding (explicit : Bool) (bytes : List U8) : Prop :=
-  if explicit then bytes = [0#u8] else bytes = []
-
 /-- The element segment grammar of the profile. -/
 def ElementEncodingFor (profile : ValidationProfile) (entry : Element)
     (bytes : List U8) : Prop :=
@@ -341,31 +333,6 @@ theorem ActiveIndexEncoding.parts {index explicit bytes}
   | implicit hf => exact ⟨0#u32, _, [], hf, Or.inl ⟨rfl, rfl, rfl, rfl⟩, by simp⟩
   | explicit hf hi => exact ⟨2#u32, _, _, hf, Or.inr ⟨rfl, rfl, hi⟩, rfl⟩
 
-/-- Assembles the active index-vector element segment for either profile from its flag, table
-index, offset, kind and index vector. -/
-theorem ElementEncodingFor.of_parts {profile flags tableIndex explicit offset init fb tb ob kb ib}
-    (hf : IndexEncoding flags fb)
-    (ht : SegmentIndexEncoding profile flags tableIndex explicit tb)
-    (ho : ConstEncoding offset ob) (hk : ElementKindEncoding explicit kb)
-    (hi : VecEncoding IndexEncoding init ib) :
-    ElementEncodingFor profile
-      ⟨.FuncRef, .Active tableIndex offset, init.map types.ConstExpr.RefFunc⟩
-      (fb ++ tb ++ ob ++ kb ++ ib) := by
-  cases profile with
-  | Wasm1 =>
-    obtain ⟨rfl, rfl, rfl⟩ := ht
-    have hk' : kb = [] := hk
-    subst kb
-    exact ⟨tableIndex, offset, init, fb, ob, ib, rfl, hf, ho, hi, by simp⟩
-  | Wasm2 =>
-    rcases ht with ⟨rfl, rfl, rfl, rfl⟩ | ⟨rfl, rfl, ht⟩
-    · have hk' : kb = [] := hk
-      subst kb
-      simpa [ElementEncodingFor] using Wasm2ElementEncoding.activeIndices hf ho hi
-    · have hk' : kb = [0#u8] := hk
-      subst kb
-      exact .explicitIndices hf ht ho hi
-
 /-- A local declaration: a count followed by a value type byte. -/
 def LocalEncoding (entry : U32 × types.ValueType) (bytes : List U8) : Prop :=
   ∃ count, IndexEncoding entry.1 count ∧ bytes = count ++ [valueByte entry.2]
@@ -373,7 +340,7 @@ def LocalEncoding (entry : U32 × types.ValueType) (bytes : List U8) : Prop :=
 /-- A function body: tokens including the final `end`, assembled into structured instructions.
 No typing premise is involved. -/
 def BodyEncoding (body : List instr) (bytes : List U8) : Prop :=
-  ∃ tokens, Rep Wasm1.TokenEncoding tokens bytes ∧ Wasm1.BodyTokens tokens body
+  ∃ tokens, Rep Wasm1.TokenEncoding tokens bytes ∧ Wasm2.BodyTokens tokens body
 
 /-- A code entry: a byte size, the local declaration vector and the body. -/
 def CodeEncoding (entry : Code) (bytes : List U8) : Prop :=

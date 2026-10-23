@@ -24,7 +24,7 @@ theorem instantiate_compiled_linked_bounded_decomposition {M P F A : Type}
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧
       SegmentAccounting ready ∧ InstantiationCode before ready inst ∧ SegmentBounds ready ∧
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id, before.instances.len⟩ ready platform =
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false := by
   obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law

@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Shuffle validation retains its checked lane vector, exact source bytes,
 compiler callback, and polymorphic operand effect. -/
 theorem reader_simd_shuffle_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (next : Usize) (decoded : Leb128.Decoded data st.core.pos 13#u32 next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
@@ -50,10 +50,10 @@ theorem reader_simd_shuffle_wasm2 {data env locals index st}
   have finalBlocks : ({st with core := out.core} : code.BodyState).blocks.val =
       p.parents.map Wasm2.Frames.Saved.bt ++ [p.current.bt] := by simpa [controls,ctrls] using blocks
   refine ⟨low,high,bits,bounds,callback,read,controls,values,effect,encoded,?_,?_⟩
-  · exact ⟨C,outer,spine,⟨header.kind,header.placeholder,header.inputs,header.outputs,
+  · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
       header.prior,.simple header.emits (.plain _ (Wasm2.Simd.shuffle_wf low high))⟩,
       base,typed,finalControls,finalBlocks,valuesEq⟩
   · exact p.append_result C outer spine header base {st with core := out.core} _
       p.current.ctrl.polymorphic_base values (Wasm2.Simd.shuffle_wf low high) encoded typed finalControls finalBlocks valuesEq
-      (Wasm2.Simd.shuffle_declared _ low high)
+      (fun h => nomatch h) (Wasm2.Simd.shuffle_declared _ low high)
 end Exec.Code

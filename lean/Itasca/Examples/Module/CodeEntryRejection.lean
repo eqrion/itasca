@@ -1,9 +1,6 @@
-import Itasca.Stream.BatchTotal
-import Itasca.Module.Code.EntryComplete
-import Itasca.Module.Custom.Invariant
-import Itasca.Module.Sections.TailComplete
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Examples.Wasm1.Instructions
+import Itasca.Examples.Wasm1.Support
 import Itasca.Examples.Module.Support
 
 /-!
@@ -34,9 +31,9 @@ def badBytes : Slice U8 := Examples.ModuleSupport.bytes [2#u8,0#u8,0xFF#u8]
 /-- An environment with one function of type `[] -> []`. -/
 def badEnv : module.Env :=
   { Examples.ModuleBasic.emptyEnv with
-    types := alloc.vec.Vec.from [Examples.Wasm1Instructions.voidFunction] (by simp; scalar_tac)
+    types := alloc.vec.Vec.from [Examples.BodySupport.voidFunction] (by simp; scalar_tac)
     func_type_indices := alloc.vec.Vec.from [0#u32] (by simp; scalar_tac)
-    func_types := alloc.vec.Vec.from [Examples.Wasm1Instructions.voidFunction] (by simp; scalar_tac) }
+    func_types := alloc.vec.Vec.from [Examples.BodySupport.voidFunction] (by simp; scalar_tac) }
 
 private theorem bad_size : Leb128.Decoded badBytes 0#usize 2#u32 1#usize :=
   (show Wasm1.BytesAt badBytes 0#usize [2#u8] 1#usize by
@@ -53,20 +50,26 @@ private theorem bad_locals : module.decode_locals badBytes 1#usize .Wasm1 =
   simpa [he] using hl
 
 private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-    (Examples.Wasm1Support.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext () =
+    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm1 () =
       .ok (.Err .UnrecognizedOpcode, ()) := by
-  obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.wasm_total
+  obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-    (Examples.Wasm1Support.bytes [0xFF#u8]) badEnv Examples.Wasm1Instructions.emptyContext ()
-  have he : r = .Err .UnrecognizedOpcode := by
-    simpa [code.validate_body, hr] using Examples.Wasm1Instructions.unknown_opcode_rejected badEnv
-  simpa [he] using hr
+    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm1 ()
+  have he := code.validate_body_with.eq_core (Examples.BodySupport.bytes [0xFF#u8]) badEnv
+    Examples.BodySupport.emptyContext 0#u32 .Wasm1
+  rw [show Examples.BodySupport.emptyContext.locals = alloc.vec.Vec.new _ from rfl,
+    show Examples.BodySupport.emptyContext.results = alloc.vec.Vec.new _ from rfl,
+    Examples.BodySupport.unknown_opcode_rejected badEnv .Wasm1 rfl, hr] at he
+  cases v
+  simp at he
+  subst he
+  exact hr
 
 /-- `module.validate_code_entry` on `badBytes` returns `Body UnrecognizedOpcode`. -/
 theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 =
     .ok (.Err (.Body .UnrecognizedOpcode)) := by
   have hread := reader.read_u32_leb.complete badBytes 0#usize 2#u32 1#usize bad_size
-  have htypes : badEnv.types.val = [Examples.Wasm1Instructions.voidFunction] := rfl
+  have htypes : badEnv.types.val = [Examples.BodySupport.voidFunction] := rfl
   have hfuncs : badEnv.func_type_indices.val = [0#u32] := rfl
   have hs : module.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 ⦃ r =>
       r = .Err (.Body .UnrecognizedOpcode) ⦄ := by
@@ -89,24 +92,24 @@ theorem bad_body_entry_rejected : module.validate_code_entry badBytes 0#usize ba
     rw [hti]
     simp [htypes]
     step as ⟨ft, ft_post⟩
-    have hft : ft = Examples.Wasm1Instructions.voidFunction := by simpa [htypes] using ft_post
+    have hft : ft = Examples.BodySupport.voidFunction := by simpa [htypes] using ft_post
     rw [hft]
-    step as ⟨v1, v1_post⟩ by simp [Examples.Wasm1Instructions.voidFunction, alloc.vec.Vec.deref]
+    step as ⟨v1, v1_post⟩ by simp [Examples.BodySupport.voidFunction, alloc.vec.Vec.deref]
     have hv1 : v1 = alloc.vec.Vec.new types.ValueType :=
-      alloc.vec.Vec.ext _ _ (by simpa [Examples.Wasm1Instructions.voidFunction, alloc.vec.Vec.deref] using v1_post)
+      alloc.vec.Vec.ext _ _ (by simpa [Examples.BodySupport.voidFunction, alloc.vec.Vec.deref] using v1_post)
     subst v1
     step as ⟨v2, v2_post⟩
     have hv2 : v2 = alloc.vec.Vec.new types.ValueType :=
-      alloc.vec.Vec.ext _ _ (by simpa [Examples.Wasm1Instructions.voidFunction, alloc.vec.Vec.deref] using v2_post)
+      alloc.vec.Vec.ext _ _ (by simpa [Examples.BodySupport.voidFunction, alloc.vec.Vec.deref] using v2_post)
     subst v2
     simp [code.OpVisitor.on_function_start.default]
     step as ⟨body, body_post, body_post1⟩ by simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]
-    have hb : body = Examples.Wasm1Support.bytes [0xFF#u8] one_room := by
+    have hb : body = Examples.BodySupport.bytes [0xFF#u8] one_room := by
       apply Slice.ext
-      simpa [badBytes, Examples.ModuleSupport.bytes, Examples.Wasm1Support.bytes, alloc.vec.Vec.deref] using body_post
+      simpa [badBytes, Examples.ModuleSupport.bytes, Examples.BodySupport.bytes, alloc.vec.Vec.deref] using body_post
     rw [hb]
     have hh := bad_body_with
-    simp only [Examples.Wasm1Instructions.emptyContext] at hh
+    simp only [Examples.BodySupport.emptyContext] at hh
     simp [hh]
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
@@ -117,9 +120,9 @@ def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usi
 
 private theorem bad_bounds : CodeEntry.Bounds badEnv := by
   intro ft hm
-  have he : ft = Examples.Wasm1Instructions.voidFunction := by simpa [badEnv] using hm
+  have he : ft = Examples.BodySupport.voidFunction := by simpa [badEnv] using hm
   subst ft
-  simp [Examples.Wasm1Instructions.voidFunction, limits.MAX_LOCALS]
+  simp [Examples.BodySupport.voidFunction, limits.MAX_LOCALS]
   scalar_tac
 
 /-- The batch worker `stream.CodeBatch.validate_func` rejects the well-framed entry with
@@ -128,9 +131,9 @@ theorem bad_batch_validation_rejected : ∃ after,
     stream.CodeBatch.validate_func code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       badIssued.seed 0#usize () = .ok (.Err (.Body .UnrecognizedOpcode), after, ()) ∧
     after.error = some (.Body .UnrecognizedOpcode) := by
-  obtain ⟨⟨r, v⟩, hr⟩ := module.validate_code_entry_with.total
+  obtain ⟨⟨r, v⟩, hr⟩ := module.validate_code_entry_with.profile_total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-    badBytes 0#usize badEnv 0#usize () bad_bounds
+    badBytes 0#usize badEnv 0#usize () bad_bounds .Wasm1
   cases v
   have he : r = .Err (.Body .UnrecognizedOpcode) := by
     simpa [module.validate_code_entry, hr] using bad_body_entry_rejected

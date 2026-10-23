@@ -66,30 +66,6 @@ theorem step_firstOperation {before after : config} (source : Step before after)
   all_goals try { simp [trapCode,firstOperation,admininstr.ctorIdx,firstOperation_value,firstOperation_vals,firstOperation_map] }
   all_goals try { casesm* ref; all_goals simp [trapCode,admininstr_ref,firstOperation,admininstr.ctorIdx] }
 
-theorem step_no_values {state : _root_.state} {values : List val} {after : config} :
-    ¬ Step ⟨state,vals values⟩ after := by
-  intro source
-  have ready := (step_firstOperation source).1
-  have empty : firstOperation (vals values)=none := by
-    simpa only [List.append_nil,firstOperation] using firstOperation_vals values []
-  exact ready empty
-
-theorem step_no_branch {state : _root_.state} {values : List val} {index : idx}
-    {tail : List admininstr} {after : config} :
-    ¬ Step ⟨state,vals values++(.BR index::tail)⟩ after := by
-  intro source
-  have ready := (step_firstOperation source).2.1
-  apply ready
-  simp only [trapCode,firstOperation_vals,firstOperation,admininstr.ctorIdx]
-
-theorem step_no_return {state : _root_.state} {values : List val}
-    {tail : List admininstr} {after : config} :
-    ¬ Step ⟨state,vals values++(.RETURN::tail)⟩ after := by
-  intro source
-  have ready := (step_firstOperation source).2.2
-  apply ready
-  simp only [trapCode,firstOperation_vals,firstOperation,admininstr.ctorIdx]
-
 theorem activeTrap_minimum_size {code : List admininstr} (active : activeTrap code=true) :
     sizeOf ([admininstr.TRAP])≤sizeOf code := by
   cases code with

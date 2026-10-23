@@ -1,19 +1,19 @@
-import Exec.Interp.State.StatefulPoint
+import Exec.Interp.StructuredMachine.OrdinaryHeads
 namespace Exec.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- An ordinary source suffix may consume and produce values above every live
 label. The exact static continuation and source extension retain its point. -/
-theorem FramePoint.continue {emission : FunctionEmission} {before afterStore raw f compiled C targets next output}
-    (point : FramePoint emission before raw f compiled C targets next output)
+theorem FramePoint.continue {before afterStore raw f compiled C targets next output}
+    (point : FramePoint before raw f compiled C targets next output)
     (extension : Extend_store before afterStore)
     (front operands results : List val) (after : List instr)
     (values : f.vals=front++operands)
     (heights : ∀ label ∈ f.labels, label.height≤front.length)
-    (tail : Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (tail : Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results.map Code.valueType) after (raw.pc.val+1) next output)
     (pc : U32) (pcNext : pc.val=raw.pc.val+1) :
-    FramePoint emission afterStore {raw with pc:=pc} {f with code:=after,vals:=front++results}
+    FramePoint afterStore {raw with pc:=pc} {f with code:=after,vals:=front++results}
       compiled C targets next output := by
   refine ⟨point.bindings.extend extension,point.locals,?_,?_⟩
   · have labels := point.labels

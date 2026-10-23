@@ -3,17 +3,6 @@ import Exec.Interp.Calls.ReturnRefinement
 namespace Exec.Interp
 open Abs.Ownership
 
-/-- Exact abstract steps and source stutters preserve reference provenance.
-This uses the executable Core transition, never an arbitrary source trace. -/
-theorem core_owned_transition {initial next : Abs.AState}
-    (typed : Abs.CoreTyped initial) (covered : Abs.CoreState initial)
-    (transition : initial = next ∨ Abs.Core.step initial = .next next) :
-    ∀ bounds, CoreOwned bounds initial → CoreOwned bounds next := by
-  intro bounds owned
-  rcases transition with same | step
-  · exact same ▸ owned
-  · exact step_owned typed covered owned step
-
 /-- Returning retains only the existing result suffix and the saved callers;
 no returned reference can acquire a different owner. -/
 theorem returnedState_owned {s : store} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}

@@ -12,11 +12,6 @@ def GlobalMutation {M : Type} (before after : runtime.store.Store M) (value : va
     (old.ty.valtype ≠ .V128 → hi = old.hi) ∧
     after = {before with globals := before.globals.set index {old with lo,hi}}
 
-theorem GlobalMutation.frame_metadata {M : Type} {before after : runtime.store.Store M} {value}
-    (mutation : GlobalMutation before after value) : FrameStoreMetadata before after := by
-  obtain ⟨index,old,lo,hi,_,_,_,_,_,rfl⟩ := mutation
-  exact ⟨rfl,rfl,rfl,rfl⟩
-
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)

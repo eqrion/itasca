@@ -34,14 +34,6 @@ theorem stepH_label {c c' : config} {es : List HostEvent}
       obtain ⟨hw, hw'⟩ := stepH_wf h
       exact .ctxt_label h (wf_config_label arity hw hc) (wf_config_label arity hw' hc) hw hw'
 
-theorem stepsH_label {c c' : config} {es : List HostEvent}
-    (h : StepsH c es c') (arity : Nat) (cont : List instr) (hc : Forall wf_instr cont) :
-    StepsH (labelContext arity cont c) es (labelContext arity cont c') := by
-  apply stepsH_map (wrap := labelContext arity cont) ?_ (fun _ _ _ h => stepH_label h arity cont hc) h
-  intro c hw
-  cases c
-  exact wf_config_label arity hw hc
-
 theorem stepH_frame {c c' : config} {es : List HostEvent}
     (h : StepH c es c') (arity : Nat) (outer : frame) (hf : wf_frame outer) :
     StepH (frameContext arity outer c) es (frameContext arity outer c') := by
@@ -51,15 +43,6 @@ theorem stepH_frame {c c' : config} {es : List HostEvent}
       cases z'
       obtain ⟨hw, hw'⟩ := stepH_wf h
       exact .ctxt_frame h (wf_config_frame arity hw hf) (wf_config_frame arity hw' hf) hw hw'
-
-theorem stepsH_frame {c c' : config} {es : List HostEvent}
-    (h : StepsH c es c') (arity : Nat) (outer : frame) (hf : wf_frame outer) :
-    StepsH (frameContext arity outer c) es (frameContext arity outer c') := by
-  apply stepsH_map (wrap := frameContext arity outer) ?_ (fun _ _ _ h => stepH_frame h arity outer hf) h
-  intro c hw
-  cases c with | mk_config z body =>
-    cases z
-    exact wf_config_frame arity hw hf
 
 theorem stepH_instrs {c c' : config} {es : List HostEvent}
     (h : StepH c es c') (vs : List val) (after : List admininstr)
@@ -84,12 +67,5 @@ theorem stepsH_instrs {c c' : config} {es : List HostEvent}
   intro c hw
   cases c
   exact wf_config_instrs hw hv ha
-
-@[simp] theorem instrContext_comp (vs₁ vs₂ : List val) (after₁ after₂ : List admininstr)
-    (c : config) :
-    instrContext vs₁ after₁ (instrContext vs₂ after₂ c) =
-      instrContext (vs₁ ++ vs₂) (after₂ ++ after₁) c := by
-  cases c
-  simp [instrContext, vals, List.map_append, List.append_assoc]
 
 end Exec.Spec

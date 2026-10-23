@@ -5,8 +5,8 @@ import Exec.Interp.StructuredMachine.IndirectOperands
 import Exec.Interp.StructuredMachine.IndirectSelected
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-theorem step_indirect_supported_execution {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem step_indirect_supported_execution
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
@@ -21,16 +21,16 @@ theorem step_indirect_supported_execution {emission : StructuredMachine.Function
     (moduleEq : f.module=Store.decodeInstance store inst)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (shaped : Store.Shape view store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions emission code store)
+    (compiledFunctions : StructuredMachine.CompiledFunctions code store)
     (functionTyping : CoreFunctionsTyped view code store) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
     SourceIndirectHostBoundary store initial ∨ runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1=store ∧
-      (out.1=.Ok () → StructuredMachine.Advance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store out.2.1 expected compiled.code.length raw.pc.val false initial) ∧
+      (out.1=.Ok () → StructuredMachine.Advance view code store out.2.1 expected compiled.code.length raw.pc.val false initial) ∧
       (∀ error,out.1=.Err error →
         ((∃ trap,error=.Trap trap ∧ IndirectTrap trap) ∧ ∃ count,0<count ∧ Spec.StepsHN count (Abs.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩) ∨
         SourceIndirectCallCause allocator hooks code exec store platform index raw compiled initial error) ⦄ := by
@@ -109,7 +109,7 @@ theorem step_indirect_supported_execution {emission : StructuredMachine.Function
       cases defined : function.code with
       | Host id => exact (host ⟨f,rest,table.val,type.val,position,after,front++args,address,function,id,rfl,values,bounded,resolved,functionAt,defined⟩).elim
       | Wasm instanceIndex functionIndex =>
-        apply WP.spec_mono (StructuredMachine.call_indirect_selected language memory hooks floats allocator allocation interrupts view code exec store platform index raw compiled C targets next output
+        apply WP.spec_mono (StructuredMachine.call_indirect_selected memory hooks floats allocator allocation interrupts view code exec store platform index raw compiled C targets next output
           ambient f rest table.val type.val position after front args params results pc base {store:=store.id,index:=address} function instanceIndex functionIndex
           compiledFunctions functionTyping functionAt defined resolved (sameType.trans signatureEq) last hf pcEq values bounded argumentTypes
           (by rw [baseOffset,basePosition]) heights slots program point (by simpa only [pcEq] using tail.current) expected machine)

@@ -91,14 +91,4 @@ theorem Emits.cons_iff {tokens op ops} :
   · rintro ⟨first, rest, rfl, hop, ht⟩
     simpa using hop.emits.append ht
 
-/-- A token list emits one instruction exactly when it is that instruction's atom. -/
-theorem Emits.singleton_iff {tokens op} : Emits tokens [op] ↔ Atom tokens op := by
-  rw [Emits.cons_iff]
-  constructor
-  · rintro ⟨first, rest, rfl, hop, ht⟩
-    have he := Emits.empty_iff.mp ht
-    simpa [he] using hop
-  · intro h
-    exact ⟨tokens, [], by simp, h, .nil⟩
-
 end Itasca.Wasm2

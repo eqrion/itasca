@@ -1,16 +1,13 @@
-import Exec.Abs.Executable
+import Exec.Abs.BinaryInstr
 import Itasca.Binary.Wasm2.Encoding
-set_option maxHeartbeats 2000000
-set_option maxRecDepth 8192
 namespace Exec.Code.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
-theorem core {i} (h : Abs.CoreInstr i) : Abs.ExecutableInstr i := .base (.cumulative (.core (.core h)))
-theorem integer (op : Abs.Numeric.Instruction) : Abs.ExecutableInstr op.source := core (.slice (.numeric op))
-theorem floating (op : Abs.Float.Instruction) : Abs.ExecutableInstr op.source := .base (.cumulative (.core (.scalar op)))
+theorem integer (op : Abs.Numeric.Instruction) : Abs.BinaryInstr op.source := .numeric op
+theorem floating (op : Abs.Float.Instruction) : Abs.BinaryInstr op.source := .float op
 
 theorem numeric {opcode operation} (meaning : Numeric.opcodeMeaning opcode = some operation) :
-    Abs.ExecutableInstr operation.instruction := by
+    Abs.BinaryInstr operation.instruction := by
   unfold Numeric.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -139,7 +136,7 @@ theorem numeric {opcode operation} (meaning : Numeric.opcodeMeaning opcode = som
   · exact floating (.reinterpretInt .I64)
 
 theorem sign {opcode operation} (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation) :
-    Abs.ExecutableInstr operation.instruction := by
+    Abs.BinaryInstr operation.instruction := by
   unfold Wasm2.NumericExtensions.signMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -150,7 +147,7 @@ theorem sign {opcode operation} (meaning : Wasm2.NumericExtensions.signMeaning o
   · exact integer (.unary .I64 .extend32)
 
 theorem saturating {opcode operation} (meaning : Wasm2.NumericExtensions.saturatingMeaning opcode = some operation) :
-    Abs.ExecutableInstr operation.instruction := by
+    Abs.BinaryInstr operation.instruction := by
   unfold Wasm2.NumericExtensions.saturatingMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -165,31 +162,31 @@ theorem saturating {opcode operation} (meaning : Wasm2.NumericExtensions.saturat
 
 theorem memory {opcode operation} (arg : code.MemArg)
     (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) :
-    Abs.ExecutableInstr (operation.op arg) := by
+    Abs.BinaryInstr (operation.op arg) := by
   unfold MemoryMeaning.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
-  · exact core (.load (.full .I32) _)
-  · exact core (.load (.full .I64) _)
-  · exact core (.load (.full .F32) _)
-  · exact core (.load (.full .F64) _)
-  · exact core (.load (.packed .I32 .byte .S) _)
-  · exact core (.load (.packed .I32 .byte .U) _)
-  · exact core (.load (.packed .I32 .half .S) _)
-  · exact core (.load (.packed .I32 .half .U) _)
-  · exact core (.load (.packed .I64 .byte .S) _)
-  · exact core (.load (.packed .I64 .byte .U) _)
-  · exact core (.load (.packed .I64 .half .S) _)
-  · exact core (.load (.packed .I64 .half .U) _)
-  · exact core (.load (.packed .I64 .word .S) _)
-  · exact core (.load (.packed .I64 .word .U) _)
-  · exact core (.store (.full .I32) _)
-  · exact core (.store (.full .I64) _)
-  · exact core (.store (.full .F32) _)
-  · exact core (.store (.full .F64) _)
-  · exact core (.store (.packed .I32 .byte) _)
-  · exact core (.store (.packed .I32 .half) _)
-  · exact core (.store (.packed .I64 .byte) _)
-  · exact core (.store (.packed .I64 .half) _)
-  · exact core (.store (.packed .I64 .word) _)
+  · exact .load (.full .I32) _
+  · exact .load (.full .I64) _
+  · exact .load (.full .F32) _
+  · exact .load (.full .F64) _
+  · exact .load (.packed .I32 .byte .S) _
+  · exact .load (.packed .I32 .byte .U) _
+  · exact .load (.packed .I32 .half .S) _
+  · exact .load (.packed .I32 .half .U) _
+  · exact .load (.packed .I64 .byte .S) _
+  · exact .load (.packed .I64 .byte .U) _
+  · exact .load (.packed .I64 .half .S) _
+  · exact .load (.packed .I64 .half .U) _
+  · exact .load (.packed .I64 .word .S) _
+  · exact .load (.packed .I64 .word .U) _
+  · exact .store (.full .I32) _
+  · exact .store (.full .I64) _
+  · exact .store (.full .F32) _
+  · exact .store (.full .F64) _
+  · exact .store (.packed .I32 .byte) _
+  · exact .store (.packed .I32 .half) _
+  · exact .store (.packed .I64 .byte) _
+  · exact .store (.packed .I64 .half) _
+  · exact .store (.packed .I64 .word) _
 end Exec.Code.SourceExecutable

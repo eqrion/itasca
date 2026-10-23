@@ -1,8 +1,5 @@
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Module.Sections.ExportComplete
-import Itasca.Module.Sections.MemoryComplete
-import Itasca.Module.Env.Replay
-import Itasca.Stream.SplitComplete
 import Itasca.Examples.Module.Support
 
 /-!

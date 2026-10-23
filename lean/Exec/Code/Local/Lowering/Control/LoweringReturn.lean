@@ -47,34 +47,4 @@ open Aeneas Aeneas.Std
       · simpa [exactState] using hframes
       · simp [compilerLocals, hl, exactState]
 
-/-- Actual RETURN lowering builds a terminal structured certificate using the
-source result suffix and the body frame's declared result width. -/
-@[step] theorem callback_return_certificate {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (body : runtime.compiler.Frame) (source : U32)
-    (types functions : List functype) (returns front final : List valtype)
-    (labels : List LabelTarget) (tail : List instr)
-    (reachable : compiler.reachable = true)
-    (bodyFrame : compiler.frames.val[0]? = some body)
-    (layout : CompilerLayout compiler (front ++ returns))
-    (position : source.val = slots (compilerLocals compiler) + slots front)
-    (resultWidth : body.results.val = slots returns)
-    (codeFits : compiler.function.code.val.length < Usize.max)
-    (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return ops compiler state ⦃ out =>
-      out.1 = .Ok () → out.2.reachable = false ∧
-        CodeRel types functions returns (compilerLocals compiler) out.2.function.code.val labels
-          (front ++ returns) (.RETURN :: tail) compiler.function.code.val.length
-          (compiler.function.code.val.length + 1) final ⦄ := by
-  have height : compiler.height.val = source.val + body.results.val := by
-    rw [layout.height, slots_append, position, resultWidth]
-    omega
-  apply WP.spec_mono (callback_return ops law compiler state body source reachable bodyFrame height
-    codeFits sourceFits coordinateFits)
-  intro out result accepted
-  obtain ⟨dead, code, frames, locals⟩ := result accepted
-  refine ⟨dead, CodeRel.return_ position resultWidth ?_ (Nat.le_refl _) ?_⟩
-  · simp [code]
-  · simp [code]
 end Exec.Code

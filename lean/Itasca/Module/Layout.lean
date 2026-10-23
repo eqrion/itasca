@@ -1,5 +1,4 @@
 import Itasca.Module.Limits
-import Itasca.Module.Code.BodySyntax
 import Itasca.Module.Env.NameFacts
 import Itasca.Module.Code.Section
 import Itasca.Module.Composition
@@ -28,20 +27,6 @@ performs, which an empty optional byte span alone does not justify. -/
 def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) (profile : ValidationProfile := .Wasm1) : Prop :=
   At (SectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile))) data start entries finish ∨
     entries = [] ∧ finish = start ∧ ModuleCode.AbsentAt data start
-
-/-- A `CodeAt` span is an optional code section. -/
-theorem CodeAt.optional {profile data start entries finish} (h : CodeAt data start entries finish profile) :
-    At (OptionalSectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile)) [])
-      data start entries finish := by
-  rcases h with ⟨bytes, he, hs⟩ | ⟨he, hn, hstop⟩
-  · exact ⟨bytes, .present he, hs⟩
-  · subst entries
-    subst finish
-    have hb : start.val ≤ data.length := by
-      rcases hstop with h | ⟨_, _, _, hh, _⟩
-      · omega
-      · have := hh.span; omega
-    exact ⟨[], .absent, Wasm1.BytesAt.nil data start hb⟩
 
 /-- Independent byte spans for the environment prefix, code section and tail, arranged as the
 greedy environment, code and tail parsers consume them. `stop` says that `codePos` is a place

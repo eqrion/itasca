@@ -122,22 +122,6 @@ theorem dispatch_global_set {V : Type} (visitor : code.OpVisitor V)
       CoreVisitor.run (code.read_global_set st data env) (fun v s a => invoke visitor v (.op s (.global_set a))) v :=
   code.step_global_set.dispatch visitor st data env ctx v
 
-/-- `code.step` on `code.OP_CALL` runs `code.read_call` and then calls the hook for the `call`
-event. -/
-theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_CALL v =
-      CoreVisitor.run (code.read_call st data env) (fun v s a => invoke visitor v (.op s (.call a))) v :=
-  code.step_call.dispatch visitor st data env ctx v
-
-/-- `code.step` on `code.OP_CALL_INDIRECT` runs `code.read_call_indirect` and then calls the hook
-for the `call_indirect` event. -/
-theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_CALL_INDIRECT v =
-      CoreVisitor.run (code.read_call_indirect st data env) (fun v s a => invoke visitor v (.op s (.call_indirect a 0#u32))) v :=
-  code.step_call_indirect.dispatch visitor st data env ctx v
-
 /-- `code.step` on `code.OP_MEMORY_SIZE` runs `code.read_memory_size` and then calls the hook for
 the `memory_size` event. -/
 theorem dispatch_memory_size {V : Type} (visitor : code.OpVisitor V)
@@ -188,66 +172,5 @@ end Itasca.VisitorTrace
 open Aeneas Aeneas.Std
 
 namespace Itasca.VisitorTrace
-
-/-- `code.step` on `code.OP_BLOCK` runs `code.read_block` and then calls the hook for the `block`
-event. -/
-theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BLOCK v =
-      CoreVisitor.run (code.read_block st data) (fun v s a => invoke visitor v (.op s (.block (Control.signature a)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_block visitor st data env ctx v
-
-/-- `code.step` on `code.OP_LOOP` runs `code.read_loop` and then calls the hook for the `loop`
-event. -/
-theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_LOOP v =
-      CoreVisitor.run (code.read_loop st data) (fun v s a => invoke visitor v (.op s (.loop (Control.signature a)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_loop visitor st data env ctx v
-
-/-- `code.step` on `code.OP_IF` runs `code.read_if` and then calls the hook for the `if` event. -/
-theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_IF v =
-      CoreVisitor.run (code.read_if st data) (fun v s a => invoke visitor v (.op s (.if_ (Control.signature a)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_if visitor st data env ctx v
-
-/-- `code.step` on `code.OP_ELSE` runs `code.read_else` and then calls the hook for the `else`
-event. -/
-theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_ELSE v =
-      CoreVisitor.run (code.read_else st) (fun v s a => invoke visitor v (.op s (.else_ (Control.signature a)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_else visitor st data env ctx v
-
-/-- `code.step` on `code.OP_END` runs `code.read_end` and then calls the hook for the `end` event. -/
-theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_END v =
-      CoreVisitor.run (code.read_end st) (fun v s arg => invoke visitor v (.op s (.end_ arg.1 (Control.signature arg.2)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_end visitor st data env ctx v
-
-/-- `code.step` on `code.OP_BR` runs `code.read_br` and then calls the hook for the `br` event. -/
-theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BR v =
-      CoreVisitor.run (code.read_br st data) (fun v s arg => invoke visitor v (.op s (.br arg.1 (Control.resultView arg.2)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_br visitor st data env ctx v
-
-/-- `code.step` on `code.OP_BR_IF` runs `code.read_br_if` and then calls the hook for the `br_if`
-event. -/
-theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BR_IF v =
-      CoreVisitor.run (code.read_br_if st data) (fun v s arg => invoke visitor v (.op s (.br_if arg.1 (Control.resultView arg.2)))) v := by
-  simpa only [invoke] using OpDispatch.dispatch_br_if visitor st data env ctx v
-
-/-- `code.step` on `code.OP_RETURN` runs `code.read_return` and then calls the hook for the `return`
-event. -/
-theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_RETURN v =
-      CoreVisitor.run (code.read_return st ctx) (fun v s _ => invoke visitor v (.op s .return_)) v := by
-  simpa only [invoke] using OpDispatch.dispatch_return visitor st data env ctx v
 
 end Itasca.VisitorTrace

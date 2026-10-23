@@ -1,6 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Body.Reader.Local.ReaderWasm2Local
-import Exec.Code.Body.Reader.Local.ReaderWasm1Local
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 

@@ -19,7 +19,7 @@ def ExecutableWorldInvocationSourceCause {M P F A : Type}
   ∃ function signature,store.funcs.val[address.index.val]?=some function ∧
     store.types.val[function.signature.val]?=some signature ∧
     ((∃ ii fi,function.code=.Wasm ii fi ∧
-      WorldDefinedSourceResourceCause (emission:=Executable.emission) (allowed:=Abs.ExecutableInstr)
+      WorldDefinedSourceResourceCause
         memory hooks floats allocator view code (ExecutableInv view) store Spec.invocationFrame address signature args after error) ∨
      ∃ identity,function.code=.Host identity ∧ InitialHostSourceResourceCause hooks allocator store after identity signature error)
 

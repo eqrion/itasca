@@ -1,6 +1,7 @@
 import Itasca.Binary.Wasm2.EncodingComplete
 import Itasca.Wasm2.Invariant
-import Itasca.Wasm1.Complete.Program
+import Itasca.Wasm1.Complete.Frame
+import Itasca.Profile.Types
 
 /-!
 # Frames for Wasm 2.0 completeness
@@ -8,19 +9,12 @@ import Itasca.Wasm1.Complete.Program
 Defines `Completeness.Frame`, a Wasm 2.0 body state with an explicit control frame and block
 descriptor stack, together with its output relation `Frame.Output`. `Completeness.Bounds` records
 the size invariants that keep operand and control counts below `Usize.max`. `Labels` relates the
-runtime block descriptors to the SpecTec label context, and `EnvironmentWithinLimits` states the
-signature size limits that the structured-control proofs use.
+runtime block descriptors to the SpecTec label context.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
-
-/-- Every type signature and function signature of the environment has at most 1000 parameters
-and 1000 results. -/
-structure EnvironmentWithinLimits (env : module.Env) : Prop where
-  types : ∀ ft ∈ env.types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
-  funcs : ∀ ft ∈ env.func_types.val, ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
 
 /-- The SpecTec result type of the label at `depth`, with innermost labels first, if any. -/
 def labelTypes (env : module.Env) (st : code.BodyState) (depth : Nat) : Option resulttype :=
@@ -76,12 +70,11 @@ theorem Frame.Output.next {st s out} {f : Frame st} (h : f.Output out s) :
     ∃ g : Frame s, g.parents = f.parents ∧ g.current = f.current ∧
       g.core.parents = f.core.parents ∧ g.core.outer = f.core.outer ∧
       g.core.current.kind = f.core.current.kind ∧
-      g.core.current.block_type = f.core.current.block_type ∧
       g.core.current.value_stack_base = f.core.current.value_stack_base ∧
       Sequence.Realizes g.core.current.polymorphic_base g.core.operands out := by
-  obtain ⟨g, hp, ho, hk, hb, hsig, hbase, hr⟩ := h.1.next
+  obtain ⟨g, hp, ho, hk, hsig, hbase, hr⟩ := h.1.next
   exact ⟨⟨g, f.parents, f.current, by rw [h.2]; exact f.blocks,
-    by rw [hp]; exact f.aligned⟩, rfl, rfl, hp, ho, hk, hb, hbase, hr⟩
+    by rw [hp]; exact f.aligned⟩, rfl, rfl, hp, ho, hk, hbase, hr⟩
 
 theorem Frame.Output.labels {env C st s out} {f : Frame st} (h : f.Output out s)
     (hl : Labels env st C) : Labels env s C := by
@@ -96,7 +89,6 @@ theorem Frame.Output.transfer {st s t out} {f : Frame st} {g : Frame s}
     (h : g.Output out t) (hs : s.blocks = st.blocks)
     (hp : g.core.parents = f.core.parents) (ho : g.core.outer = f.core.outer)
     (hk : g.core.current.kind = f.core.current.kind)
-    (hb : g.core.current.block_type = f.core.current.block_type)
     (hbase : g.core.current.value_stack_base = f.core.current.value_stack_base) :
     f.Output out t := by
   have hsignatures : s.core.ctrls.val.map code.Ctrl.signature =
@@ -106,7 +98,7 @@ theorem Frame.Output.transfer {st s t out} {f : Frame st} {g : Frame s}
   have hsig : g.core.current.signature = f.core.current.signature := by
     have hl := congrArg List.getLast? hsignatures
     simpa using hl
-  exact ⟨h.1.transfer hp ho hk hb hsig hbase, h.2.trans hs⟩
+  exact ⟨h.1.transfer hp ho hk hsig hbase, h.2.trans hs⟩
 
 /-- Size invariants of a body prefix: the function is within `MAX_FUNCTION_BYTES`, and operand
 and control counts grow at most linearly in the cursor. Each byte adds at most 500 values, and

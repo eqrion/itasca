@@ -18,7 +18,7 @@ namespace Itasca.Wasm2
 
 /-- A successful metadata decoder supplies byte provenance and a principal
 effect; the shared fixed checker transports both through the typed zipper. -/
-theorem Pending.metadata_read {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.metadata_read {data env profile locals index st} (p : Pending data env profile locals index st)
     {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)
@@ -30,7 +30,7 @@ theorem Pending.metadata_read {data env locals index st} (p : Pending data env l
       EnvTranslation.Matches env ⟨locals, p.ft.results⟩ C →
       Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
         (.mk_list (Simd.outputTypes (output a)))))
-    (hsize : st.core.vals.val.length < Usize.max)
+    (hsize : st.core.vals.val.length < Usize.max) (hwasm2 : profile ≠ .Wasm1)
     (hdecl : ∀ a, DeclaredReferences.Instruction
       (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a) := by
         intro a
@@ -63,7 +63,8 @@ theorem Pending.metadata_read {data env locals index st} (p : Pending data env l
         (by simpa [hpoly, Frames.enter] using typed) (hw a) (ht a ⟨decoded, hr⟩ _ hC)
       apply p.append_result C outer spine header base {st with core := out} (operation a)
         p.current.ctrl.polymorphic_base after (hw a) (by simpa [hp] using hed a rfl)
-        (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hva (hdecl a)
+        (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hva (fun hp => absurd hp hwasm2)
+        (hdecl a)
       · simpa [hc, hcd] using ctrls
       · simpa [code.BodyState.blocks_eq_of_ctrls (hc.trans hcd)] using blocks
 
@@ -71,12 +72,13 @@ theorem reference_value_translation (rt : types.ElemType) :
     Translate.valueType (ModuleConstants.referenceValueType rt) = valtype_reftype (Translate.referenceType rt) := by
   cases rt <;> rfl
 
-theorem Pending.table_get {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.table_get {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 37#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_get st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_get.fixed]
-  apply p.metadata_read (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
     (fun a => .TABLE_GET (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec st.core data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -95,12 +97,13 @@ theorem Pending.table_get {data env locals index st} (p : Pending data env local
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translate.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
-theorem Pending.table_set {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.table_set {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 38#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_set st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_set.fixed]
-  apply p.metadata_read (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_SET (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec st.core data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -119,12 +122,13 @@ theorem Pending.table_set {data env locals index st} (p : Pending data env local
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translate.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
-theorem Pending.ref_null {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.ref_null {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_null st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_ref_null.fixed]
-  apply p.metadata_read (code.take_reference_type st.core data) (fun _ => [])
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_reference_type st.core data) (fun _ => [])
     (fun rt => some (ModuleConstants.referenceValueType rt)) id
     (fun rt => .REF_NULL (Translate.referenceType rt)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_reference_type.spec st.core data)
@@ -138,7 +142,7 @@ theorem Pending.ref_null {data env locals index st} (p : Pending data env locals
 
 /-- The `ref.func` leaf uses the runtime declaration check independently of
 its ordinary generated instruction typing. -/
-theorem Pending.ref_func {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.ref_func {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
@@ -158,7 +162,8 @@ theorem Pending.ref_func {data env locals index st} (p : Pending data env locals
     (.REF_FUNC (.mk_uN idx.val)) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .FuncRef]) (.instr_case_41 _ (EnvTranslation.index_wf idx))
     (At.of_immediate p.inbounds hbyte p.pos (.reference (.refFunc idx hencoding))
-      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl
+      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
+    hdecl
   · apply typed.append hC.wf _ (.instr_case_41 _ (EnvTranslation.index_wf idx))
     intro ts ht
     obtain ⟨front, hfront, rfl⟩ := (Sequence.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
@@ -170,12 +175,13 @@ theorem Pending.ref_func {data env locals index st} (p : Pending data env locals
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
   · simpa [stack, List.append_assoc] using hv
 
-theorem Pending.typed_select {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.typed_select {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 28#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_typed_select st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_typed_select.fixed]
-  apply p.metadata_read (selectType st.core data) (fun ty => [.I32, ty, ty]) some id
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (selectType st.core data) (fun ty => [.I32, ty, ty]) some id
     (fun ty => .SELECT (some [Translate.valueType ty])) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (selectType.spec st.core data)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -188,14 +194,15 @@ theorem Pending.typed_select {data env locals index st} (p : Pending data env lo
     simpa [Simd.inputTypes, Simd.outputTypes, show Translate.valueType .I32 = valtype.I32 from rfl] using
       Instr_ok.select_expl C (Translate.valueType ty) hC.wf (.instr_case_3 _)
 
-theorem Pending.table_grow {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.table_grow {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 15#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_grow {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_grow.fixed]
-  apply p.metadata_read (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_GROW (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -215,14 +222,15 @@ theorem Pending.table_grow {data env locals index st} (p : Pending data env loca
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.table_size {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.table_size {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 16#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_size {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_size.fixed]
-  apply p.metadata_read (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_SIZE (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -242,14 +250,15 @@ theorem Pending.table_size {data env locals index st} (p : Pending data env loca
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.table_fill {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.table_fill {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 17#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_fill {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_fill.fixed]
-  apply p.metadata_read (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_FILL (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -269,14 +278,15 @@ theorem Pending.table_fill {data env locals index st} (p : Pending data env loca
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.data_drop {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.data_drop {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.take_data_index {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [← metadataOperands.empty (code.take_data_index {st.core with pos := next} data env)]
-  apply p.metadata_read _ (fun _ => []) (fun _ => none) id
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    _ (fun _ => []) (fun _ => none) id
     (fun idx => .DATA_DROP (.mk_uN idx.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_data_index.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -293,14 +303,15 @@ theorem Pending.data_drop {data env locals index st} (p : Pending data env local
     obtain ⟨_, count, hc, hi⟩ := hspec.2.2 idx rfl
     exact hC.data_drop idx count hc hi
 
-theorem Pending.elem_drop {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.elem_drop {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.take_element {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [← metadataOperands.empty (code.take_element {st.core with pos := next} data env)]
-  apply p.metadata_read _ (fun _ => []) (fun _ => none) id
+  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+    _ (fun _ => []) (fun _ => none) id
     (fun a => .ELEM_DROP (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_element.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -317,7 +328,7 @@ theorem Pending.elem_drop {data env locals index st} (p : Pending data env local
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
     exact hC.elem_drop idx env.elements.val[idx.val] hi rfl
 
-theorem Pending.ref_is_null {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.ref_is_null {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_is_null st.core ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
@@ -340,6 +351,7 @@ theorem Pending.ref_is_null {data env locals index st} (p : Pending data env loc
   apply p.append_result C outer spine header base {st with core := out} .REF_IS_NULL
     p.current.ctrl.polymorphic_base after .instr_case_42 ?_
     (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hv
+    (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
   · apply At.of_immediate p.inbounds hbyte p.pos (.reference .refIsNull)
     exact ⟨by simp [hp], by simp [hp], by have := p.pos; have := p.inbounds; simp only [hp]; omega⟩
   · simpa [hc] using ctrls

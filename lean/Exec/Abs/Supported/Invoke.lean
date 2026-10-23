@@ -5,17 +5,17 @@ open SpecExt Exec.Spec
 
 /-- A real defined function address and typed arguments construct the initial
 abstract state and its generated specification call reduction. -/
-theorem defined_supported_invocation {allowed : instr → Prop} (s : store) (ambient : frame) (address : funcaddr)
+theorem defined_supported_invocation (s : store) (ambient : frame) (address : funcaddr)
     (moduleInst : moduleinst) (typeIndex : idx) (params results : List valtype)
     (locals : List «local») (body : List instr) (args : List val)
     (hs : wf_store s) (ha : wf_frame ambient) (functions : FunctionsTyped s)
-    (covered : FunctionsSupported allowed s)
+    (covered : FunctionsSupported s)
     (lookup : s.FUNCS[address]? = some ⟨⟨.mk_list params, .mk_list results⟩, moduleInst,
       .FUNC typeIndex locals body⟩)
     (arguments : ResultsTyped s params args) :
     ∃ defaults, defaultLocals locals = some defaults ∧
       ATyped (entryState s ambient address moduleInst results body args defaults) ∧
-      SupportedState allowed (entryState s ambient address moduleInst results body args defaults) ∧
+      SupportedState (entryState s ambient address moduleInst results body args defaults) ∧
       StepH ⟨⟨s, ambient⟩, vals args ++ [.CALL_ADDR address]⟩ []
         (decode (entryState s ambient address moduleInst results body args defaults)) := by
   have member := List.mem_of_getElem? lookup

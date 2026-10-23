@@ -11,7 +11,7 @@ theorem SourceContinuation.task {M : Type} (memory : runtime.platform.MemoryBuff
     {exec : runtime.interp.Execution} {address root : runtime.FuncAddr} {base : Usize}
     {signature : Itasca.types.FuncType} {pending : Spec.OpenHost.Pending}
     (held : ExecutableInv view code store) (metadata : RootMetadata store root signature)
-    (saved : SourceContinuation Executable.emission Abs.ExecutableInstr memory view code store exec address base pending
+    (saved : SourceContinuation memory view code store exec address base pending
       (signature.results.val.map sourceType)) : SavedWasm memory view code store exec address base root signature := by
   obtain ⟨function,calledSignature,functionAt,signatureAt,resume⟩ := saved
   intro afterCode after effect status values issued
@@ -36,7 +36,7 @@ def SourceSavedCaller {M : Type} (memory : runtime.platform.MemoryBuffer M) (vie
     suspended.expected=.mk_list (signature.results.val.map sourceType) ∧
     suspended.pending.before=Store.decodeStore view entryCode entryStore ∧
     suspended.pending.address=address.index.val ∧ exec.host_args.val.map sourceValue=suspended.pending.arguments ∧
-    SourceContinuation Executable.emission Abs.ExecutableInstr memory view entryCode entryStore exec address base suspended.pending
+    SourceContinuation memory view entryCode entryStore exec address base suspended.pending
       (signature.results.val.map sourceType)
 
 theorem SourceSavedCaller.extend {M : Type} {memory : runtime.platform.MemoryBuffer M} {view : M → Slice U8}

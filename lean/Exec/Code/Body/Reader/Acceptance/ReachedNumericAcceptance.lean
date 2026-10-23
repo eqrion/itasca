@@ -6,80 +6,10 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
-/-- The independently accepted Wasm 1 reader supplies the live operand
-layout needed by numeric lowering. No accepted compiler callback is assumed. -/
-theorem reached_reader_numeric_available_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A V : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (source : code.OpVisitor V) (before after : V)
-    (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (demand : CallbackDemand compiler out bound)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
-    (capacity : st.vals.val.length < Usize.max)
-    (known : compiler.reachable = true → ConcreteStack st.vals.val)
-    (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.vals.val))
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step source st data env ctx (UScalar.cast .U8 (integerOpcode op)) before =
-      .ok (.Ok (),out,after)) :
-    code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
-      result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
-        (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  by_cases live : compiler.reachable = true
-  · obtain ⟨operation,hook,meaning,handler,_,inputs,_⟩ := integer_reader_facts ops compiler out op base
-    obtain ⟨_,_,_,_,values,effect,post⟩ := reader_numeric_wasm1 p source before after out _ operation hook
-      capacity byte meaning handler reference
-    rw [monomorphic live] at effect
-    obtain ⟨old,new⟩ := post.values
-    obtain ⟨front,_,oldTypes,_⟩ := numeric_full_stack_types (known live) old new effect
-    rw [inputs] at oldTypes
-    have layout := wholeLayout live
-    rw [oldTypes] at layout
-    exact compiler_reader_numeric_available ops bound available source before after compiler st out data env
-      ctx demand front op base (fun _ => layout) reference
-  · exact compiler_reader_numeric_available ops bound available source before after compiler st out data env
-      ctx demand [] op base (fun impossible => False.elim (live impossible)) reference
-
-/-- The independently accepted Wasm 1 reader supplies the live operand
-layout needed by float lowering. No accepted compiler callback is assumed. -/
-theorem reached_reader_float_available_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A V : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (source : code.OpVisitor V) (before after : V)
-    (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (demand : CallbackDemand compiler out bound)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
-    (capacity : st.vals.val.length < Usize.max)
-    (known : compiler.reachable = true → ConcreteStack st.vals.val)
-    (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.vals.val))
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (reference : code.step source st data env ctx (UScalar.cast .U8 (floatOpcode op)) before =
-      .ok (.Ok (),out,after)) :
-    code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (floatOpcode op)) compiler ⦃ result =>
-      result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
-        (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  by_cases live : compiler.reachable = true
-  · obtain ⟨operation,hook,meaning,handler,_,inputs,_⟩ := float_reader_facts ops compiler out op base
-    obtain ⟨_,_,_,_,values,effect,post⟩ := reader_numeric_wasm1 p source before after out _ operation hook
-      capacity byte meaning handler reference
-    rw [monomorphic live] at effect
-    obtain ⟨old,new⟩ := post.values
-    obtain ⟨front,_,oldTypes,_⟩ := numeric_full_stack_types (known live) old new effect
-    rw [inputs] at oldTypes
-    have layout := wholeLayout live
-    rw [oldTypes] at layout
-    exact compiler_reader_float_available ops bound available source before after compiler st out data env
-      ctx demand front op base (fun _ => layout) reference
-  · exact compiler_reader_float_available ops bound available source before after compiler st out data env
-      ctx demand [] op base (fun impossible => False.elim (live impossible)) reference
-
 /-- The independently accepted Wasm 2 reader supplies the live operand
 layout needed by numeric lowering. No accepted compiler callback is assumed. -/
 theorem reached_reader_numeric_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -114,7 +44,7 @@ theorem reached_reader_numeric_available_wasm2 {data env locals index st}
 /-- The independently accepted Wasm 2 reader supplies the live operand
 layout needed by float lowering. No accepted compiler callback is assumed. -/
 theorem reached_reader_float_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -149,7 +79,7 @@ theorem reached_reader_float_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 profile dispatcher accepts this reached numeric
 step, deriving its capacity check from independent reference acceptance. -/
 theorem reached_profile_numeric_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
@@ -180,7 +110,7 @@ theorem reached_profile_numeric_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 profile dispatcher accepts this reached float
 step, deriving its capacity check from independent reference acceptance. -/
 theorem reached_profile_float_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)

@@ -115,6 +115,18 @@ macro_rules! bytecode {
 
 super::operators::with_ops!(bytecode);
 
+impl Instr {
+    /// Replaces the target of a branch; other instructions have no target.
+    pub(crate) fn retarget(self, target: u32) -> Option<Self> {
+        match self {
+            Instr::Jump { .. } => Some(Instr::Jump { target }),
+            Instr::JumpIfZero { cond, .. } => Some(Instr::JumpIfZero { cond, target }),
+            Instr::JumpIfNonZero { cond, .. } => Some(Instr::JumpIfNonZero { cond, target }),
+            _ => None,
+        }
+    }
+}
+
 /// Slot widths of SIMD operands and result; absent operands have width zero.
 pub(crate) fn simd_shape(op: u32) -> Option<(u32, u32, u32, u32)> {
     match op {
@@ -156,7 +168,6 @@ impl CompiledFunction {
     }
 
     fn instruction_valid(&self, instruction: Instr) -> bool {
-        let length = self.code.len();
         if let Some((_, dst, a, b)) = instruction.scalar() {
             self.slots_fit(dst, 1) && self.slots_fit(a, 1) && self.slots_fit(b, 1)
         } else if let Some((_, dst, addr, _)) = instruction.load() {
@@ -173,70 +184,76 @@ impl CompiledFunction {
                 None => false,
             }
         } else {
-            match instruction {
-                Instr::Copy { dst, src } => self.slots_fit(dst, 1) && self.slots_fit(src, 1),
-                Instr::Copy2 { dst, src } => self.slots_fit(dst, 2) && self.slots_fit(src, 2),
-                Instr::CopyN { dst, src, n } => {
-                    dst <= src && self.slots_fit(dst, n) && self.slots_fit(src, n)
-                }
-                Instr::Const32 { dst, .. }
-                | Instr::Const64 { dst, .. }
-                | Instr::GlobalGet { dst, .. }
-                | Instr::MemorySize { dst }
-                | Instr::MemoryGrow { dst }
-                | Instr::TableSize { dst, .. }
-                | Instr::RefNull { dst }
-                | Instr::RefFunc { dst, .. } => self.slots_fit(dst, 1),
-                Instr::GlobalGet2 { dst, .. } => self.slots_fit(dst, 2),
-                Instr::ConstV128 { dst, pool } => {
-                    self.slots_fit(dst, 2) && (pool as usize) < self.v128_pool.len()
-                }
-                Instr::Jump { target } => (target as usize) < length,
-                Instr::JumpIfZero { cond, target } | Instr::JumpIfNonZero { cond, target } => {
-                    self.slots_fit(cond, 1) && (target as usize) < length
-                }
-                Instr::JumpTable { index, start, len } => {
-                    self.slots_fit(index, 1)
-                        && len > 0
-                        && (start as usize) <= self.jump_tables.len()
-                        && (len as usize) <= self.jump_tables.len() - start as usize
-                }
-                Instr::Call { base, .. } => self.slots_fit(base, 0),
-                Instr::CallIndirect { entry, index, base } => {
-                    self.slots_fit(base, 0)
-                        && self.slots_fit(index, 1)
-                        && (entry as usize) < self.indirect.len()
-                }
-                Instr::Return { src, n } => self.slots_fit(src, n),
-                Instr::Select { a, b, cond } => {
-                    self.slots_fit(a, 1) && self.slots_fit(b, 1) && self.slots_fit(cond, 1)
-                }
-                Instr::Select2 { a, b, cond } => {
-                    self.slots_fit(a, 2) && self.slots_fit(b, 2) && self.slots_fit(cond, 1)
-                }
-                Instr::GlobalSet { src, .. } => self.slots_fit(src, 1),
-                Instr::GlobalSet2 { src, .. } => self.slots_fit(src, 2),
-                Instr::MemoryFill { d }
-                | Instr::MemoryCopy { d }
-                | Instr::MemoryInit { d, .. }
-                | Instr::TableFill { d, .. } => self.slots_fit(d, 3),
-                Instr::TableCopy { d, entry } | Instr::TableInit { d, entry } => {
-                    self.slots_fit(d, 3) && (entry as usize) < self.indirect.len()
-                }
-                Instr::TableGet { dst, index, .. } => {
-                    self.slots_fit(dst, 1) && self.slots_fit(index, 1)
-                }
-                Instr::TableSet { index, value, .. } => {
-                    self.slots_fit(index, 1) && self.slots_fit(value, 1)
-                }
-                Instr::TableGrow { dst, .. } => self.slots_fit(dst, 2),
-                Instr::RefIsNull { dst, a } => self.slots_fit(dst, 1) && self.slots_fit(a, 1),
-                Instr::LoopHead
-                | Instr::Unreachable
-                | Instr::DataDrop { .. }
-                | Instr::ElemDrop { .. } => true,
-                _ => false,
+            self.other_valid(instruction)
+        }
+    }
+
+    /// Checks the instructions that have no scalar, load, store or SIMD view.
+    fn other_valid(&self, instruction: Instr) -> bool {
+        let length = self.code.len();
+        match instruction {
+            Instr::Copy { dst, src } => self.slots_fit(dst, 1) && self.slots_fit(src, 1),
+            Instr::Copy2 { dst, src } => self.slots_fit(dst, 2) && self.slots_fit(src, 2),
+            Instr::CopyN { dst, src, n } => {
+                dst <= src && self.slots_fit(dst, n) && self.slots_fit(src, n)
             }
+            Instr::Const32 { dst, .. }
+            | Instr::Const64 { dst, .. }
+            | Instr::GlobalGet { dst, .. }
+            | Instr::MemorySize { dst }
+            | Instr::MemoryGrow { dst }
+            | Instr::TableSize { dst, .. }
+            | Instr::RefNull { dst }
+            | Instr::RefFunc { dst, .. } => self.slots_fit(dst, 1),
+            Instr::GlobalGet2 { dst, .. } => self.slots_fit(dst, 2),
+            Instr::ConstV128 { dst, pool } => {
+                self.slots_fit(dst, 2) && (pool as usize) < self.v128_pool.len()
+            }
+            Instr::Jump { target } => (target as usize) < length,
+            Instr::JumpIfZero { cond, target } | Instr::JumpIfNonZero { cond, target } => {
+                self.slots_fit(cond, 1) && (target as usize) < length
+            }
+            Instr::JumpTable { index, start, len } => {
+                self.slots_fit(index, 1)
+                    && len > 0
+                    && (start as usize) <= self.jump_tables.len()
+                    && (len as usize) <= self.jump_tables.len() - start as usize
+            }
+            Instr::Call { base, .. } => self.slots_fit(base, 0),
+            Instr::CallIndirect { entry, index, base } => {
+                self.slots_fit(base, 0)
+                    && self.slots_fit(index, 1)
+                    && (entry as usize) < self.indirect.len()
+            }
+            Instr::Return { src, n } => self.slots_fit(src, n),
+            Instr::Select { a, b, cond } => {
+                self.slots_fit(a, 1) && self.slots_fit(b, 1) && self.slots_fit(cond, 1)
+            }
+            Instr::Select2 { a, b, cond } => {
+                self.slots_fit(a, 2) && self.slots_fit(b, 2) && self.slots_fit(cond, 1)
+            }
+            Instr::GlobalSet { src, .. } => self.slots_fit(src, 1),
+            Instr::GlobalSet2 { src, .. } => self.slots_fit(src, 2),
+            Instr::MemoryFill { d }
+            | Instr::MemoryCopy { d }
+            | Instr::MemoryInit { d, .. }
+            | Instr::TableFill { d, .. } => self.slots_fit(d, 3),
+            Instr::TableCopy { d, entry } | Instr::TableInit { d, entry } => {
+                self.slots_fit(d, 3) && (entry as usize) < self.indirect.len()
+            }
+            Instr::TableGet { dst, index, .. } => {
+                self.slots_fit(dst, 1) && self.slots_fit(index, 1)
+            }
+            Instr::TableSet { index, value, .. } => {
+                self.slots_fit(index, 1) && self.slots_fit(value, 1)
+            }
+            Instr::TableGrow { dst, .. } => self.slots_fit(dst, 2),
+            Instr::RefIsNull { dst, a } => self.slots_fit(dst, 1) && self.slots_fit(a, 1),
+            Instr::LoopHead
+            | Instr::Unreachable
+            | Instr::DataDrop { .. }
+            | Instr::ElemDrop { .. } => true,
+            _ => false,
         }
     }
 

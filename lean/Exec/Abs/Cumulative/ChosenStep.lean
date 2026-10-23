@@ -39,23 +39,23 @@ theorem ChosenStep.erases {choices : SourceChoices} (admissible : choices.Admiss
   | indirect equation executable => exact .indirect equation executable
 
 theorem ChosenStep.next_simulation {choices : SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=firstVectorChoice) {occurrence before next allowed}
-    (step : ChosenStep choices occurrence before (.next next)) (language : Supported.Language allowed)
-    (typed : CoreTyped before) (covered : SupportedState allowed before) :
+    (vector : choices.vector=firstVectorChoice) {occurrence before next}
+    (step : ChosenStep choices occurrence before (.next next))
+    (typed : CoreTyped before) (covered : SupportedState before) :
     ChosenNextSim choices occurrence before next := by
   cases step with
-  | core equation executable => exact Supported.step_chosen_simulation admissible vector _ _ _ typed covered language.head equation
+  | core equation executable => exact Supported.step_chosen_simulation admissible vector _ _ _ typed covered equation
   | scalar transition => exact ChosenNextSim.single admissible (Float.chosen_transition_simulation admissible _ _ _ _ _ _ _ typed.typed transition)
   | indirect equation executable => exact ChosenNextSim.counted (Indirect.chosen_next_simulation admissible vector _ _ _ _ _ _ _ _ _ typed equation) (by decide)
   | stateful transition executable => exact (Stateful.transition_chosen_safe admissible vector _ _ _ _ _ _ _ _ typed transition).2.2
 
 theorem ChosenStep.trap_simulation {choices : SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=firstVectorChoice) {occurrence before allowed}
-    (step : ChosenStep choices occurrence before .trap) (language : Supported.Language allowed)
-    (typed : CoreTyped before) (covered : SupportedState allowed before) :
+    (vector : choices.vector=firstVectorChoice) {occurrence before}
+    (step : ChosenStep choices occurrence before .trap)
+    (typed : CoreTyped before) (covered : SupportedState before) :
     ∃ count,0<count ∧ ChosenStepsN choices occurrence count (decode before) [] ⟨⟨before.store,before.ambient⟩,[.TRAP]⟩ := by
   cases step with
-  | core equation executable => exact Supported.step_chosen_trap admissible vector _ _ typed covered language.head equation
+  | core equation executable => exact Supported.step_chosen_trap admissible vector _ _ typed covered equation
   | scalar transition => exact Float.chosen_transition_trap_simulation admissible _ _ _ _ _ _ typed.typed transition
   | indirect equation executable => exact Indirect.chosen_trap_simulation admissible vector _ _ _ _ _ _ _ _ typed equation
   | stateful transition executable => exact Stateful.transition_chosen_safe admissible vector _ _ _ _ _ _ _ _ typed transition

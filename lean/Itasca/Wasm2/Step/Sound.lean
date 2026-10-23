@@ -18,7 +18,7 @@ namespace Itasca.Wasm2
 
 /-- Callbacks may reject, but any successful callback keeps the reader's
 independent byte and typing certificate. -/
-theorem Pending.reader_run {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.reader_run {data env profile locals index st} (p : Pending data env profile locals index st)
     {A V : Type} (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
     (v : V)
@@ -34,7 +34,7 @@ theorem Pending.reader_run {data env locals index st} (p : Pending data env loca
     exact ⟨trivial, fun a ha => h ⟨a, ha⟩⟩
 
 /-- The `0xfc` bulk dispatcher transports each independently decoded immediate. -/
-theorem Pending.bulk {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.bulk {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (subopcode : U32) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos subopcode next)
@@ -59,7 +59,7 @@ theorem Pending.bulk {data env locals index st} (p : Pending data env locals ind
 
 /-- Unified reference, table, bulk and numeric dispatch. SIMD is supplied by
 its independently checked branch contract. -/
-theorem Pending.wasm2_dispatch {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.wasm2_dispatch {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
@@ -122,7 +122,7 @@ theorem Pending.wasm2_dispatch {data env locals index st} (p : Pending data env 
 
 /-- Every non-control Wasm 2.0 instruction preserves the independent body
 certificate, including declaration membership for `ref.func`. -/
-theorem Pending.wasm2_scalar {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.wasm2_scalar {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)

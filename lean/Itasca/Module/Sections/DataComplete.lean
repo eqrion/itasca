@@ -193,31 +193,4 @@ theorem module.decode_data_section.profile_complete (data : Slice U8) (pos : Usi
   simp [module.decode_data_section, reader.read_u32_leb.complete data pos count first hc,
     hr, heq, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- Wasm 1.0 form of `module.decode_data_segment.profile_complete`. -/
-theorem module.decode_data_segment.complete {data : Slice U8} {pos next : Usize}
-    {env : module.Env} (segment : module.Data)
-    (hb : At DataEncoding data pos (ModuleData.raw segment) next)
-    (hv : ModuleData.Valid env segment) :
-    module.decode_data_segment data pos env .Wasm1 = .ok (.Ok (segment, next)) := by
-  exact module.decode_data_segment.profile_complete segment .Wasm1 hb hv
-
-/-- Wasm 1.0 form of `module.decode_data_section_loop.profile_complete`. -/
-theorem module.decode_data_section_loop.complete (data : Slice U8) (env : module.Env)
-    (count : U32) (out : alloc.vec.Vec module.Data) (pos : Usize) (i : U32)
-    (segments : List module.Data) (next : Usize)
-    (hb : At (Rep DataEncoding) data pos (segments.map ModuleData.raw) next)
-    (hc : i.val + segments.length = count.val) (hlen : out.val.length ≤ i.val)
-    (hv : ∀ s ∈ segments, ModuleData.Valid env s) :
-    ∃ result, module.decode_data_section_loop data env .Wasm1 count out pos i = .ok (.Ok (result, next)) ∧
-      result.val = out.val ++ segments := by
-  exact module.decode_data_section_loop.profile_complete data env .Wasm1 count out pos i segments next hb hc hlen hv
-
-/-- Wasm 1.0 form of `module.decode_data_section.profile_complete`. -/
-theorem module.decode_data_section.complete (data : Slice U8) (pos : Usize) (env : module.Env)
-    (segments : alloc.vec.Vec module.Data) (next : Usize)
-    (hb : At (VecEncoding DataEncoding) data pos (segments.val.map ModuleData.raw) next)
-    (hv : ∀ s ∈ segments.val, ModuleData.Valid env s) :
-    module.decode_data_section data pos env .Wasm1 = .ok (.Ok (segments, next)) := by
-  exact module.decode_data_section.profile_complete data pos env .Wasm1 segments next hb hv
-
 end Itasca

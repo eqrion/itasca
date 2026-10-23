@@ -2,14 +2,13 @@ import Exec.Theorems.Composition.World.WorldRecordedHistory
 import Exec.Platform.RecordingSpec
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 def WorldRecordedLoopOutcome {M P : Type} {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected) (result : ExecutionResult M P) (events : List HostEvent) : Prop :=
+    (initial : EventfulWorld M P view expected) (result : ExecutionResult M P) (events : List HostEvent) : Prop :=
   let finalStore := result.2.2.2.2.2.1
   let status := result.2.2.2.2.2.2.2
-  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore emission allowed view finalCode finalStore ∧
+  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore view finalCode finalStore ∧
     FrameStorePrefix initial.machine.store finalStore ∧ Store.CodeAgreesOn initial.machine.store initial.code finalCode ∧
     Extend_store (Store.decodeStore view initial.code initial.machine.store) (Store.decodeStore view finalCode finalStore) ∧
     (status=.Ok () → ∃values,
@@ -25,7 +24,7 @@ theorem world_recorded_loop_finished {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected) (state : ExecutionState M P)
+    (initial : EventfulWorld M P view expected) (state : ExecutionState M P)
     (invariant : WorldLoopInvariant memory hooks floats allocator Inv initial state)
     (stopped : ¬ActiveExecution state) : ∃events,
       (∀prior,recordedInvokeLoop memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) prior=
@@ -81,8 +80,8 @@ theorem world_recorded_loop_results {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store) :
     recordedInvokeLoop memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) []
       ⦃ (result,events) => WorldRecordedLoopOutcome Inv initial result events ⦄div := by
   apply Platform.Recording.lift_dspec _ _ _ _

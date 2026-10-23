@@ -1,7 +1,6 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldLoop
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- An actual divergent loop retains its current interpretation and invariant
 through the next recorded dispatch, including a host publication. -/
@@ -10,8 +9,8 @@ theorem world_divergent_next {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (before : EventfulWorld emission allowed M P view expected) (valid : Inv before.code before.machine.store)
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (before : EventfulWorld M P view expected) (valid : Inv before.code before.machine.store)
     (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div) :
     ∃events next,WorldRecordedTransition memory hooks floats allocator before events next ∧ Inv next.code next.machine.store ∧
       runtime.interp.invoke_with_loop1 memory hooks floats allocator next.machine.exec next.machine.store next.machine.platform (.Ok ())=.div := by
@@ -39,11 +38,11 @@ theorem world_loop_infinite {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store)
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store)
     (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     Spec.InfiniteSourceWithEvents (Abs.decode initial.machine.source) := by
-  let running := fun state : EventfulWorld emission allowed M P view expected => Inv state.code state.machine.store ∧
+  let running := fun state : EventfulWorld M P view expected => Inv state.code state.machine.store ∧
     runtime.interp.invoke_with_loop1 memory hooks floats allocator state.machine.exec state.machine.store state.machine.platform (.Ok ())=.div
   let next := fun (before : {s // running s}) events (after : {s // running s}) =>
     WorldRecordedTransition memory hooks floats allocator before.val events after.val

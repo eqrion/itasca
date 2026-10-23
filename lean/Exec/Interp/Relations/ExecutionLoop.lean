@@ -73,22 +73,6 @@ theorem execution_loop_trace_safe
     have hp := finished (current, currentStore, currentPlatform, currentStatus) hinv (by simp [ActiveExecution, hframes])
     simpa [finishExecution] using hp
 
-/-- A stream of actual continuing instructions forces actual loop divergence. -/
-theorem execution_loop_diverges (states : Nat → ExecutionState M P)
-    (active : ∀ n, ActiveExecution (states n))
-    (steps : ∀ n, runtime.interp.step memory hooks floats allocator
-      (states n).1 (states n).2.1 (states n).2.2.1 =
-      .ok ((states (n + 1)).2.2.2, (states (n + 1)).1,
-        (states (n + 1)).2.1, (states (n + 1)).2.2.1)) :
-    runtime.interp.invoke_with_loop1 memory hooks floats allocator
-      (states 0).1 (states 0).2.1 (states 0).2.2.1 (states 0).2.2.2 = .div := by
-  change loop (executionBody memory hooks floats allocator) (states 0) = .div
-  apply loop_diverges_of_stream
-  intro n
-  rw [executionBody_active memory hooks floats allocator (states n) (active n), steps n]
-  simp
-
-
 /-- Every normal return stops at an invariant state with either no remaining
 frames or a reported error. This is the outer-loop interface used by invocation. -/
 theorem execution_loop_stops

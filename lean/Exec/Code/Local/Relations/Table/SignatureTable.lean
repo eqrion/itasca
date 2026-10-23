@@ -18,48 +18,6 @@ theorem SignatureSequence.append {signatures types signature ty}
   | nil => exact .cons last .nil
   | cons head tail ih => exact .cons head ih
 
-@[step] theorem capture_signatures_loop {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
-    (bound : index.val ≤ env.types.val.length)
-    (prefixMatches : status = .Ok () → SignatureSequence scheduler.signatures.val (env.types.val.take index.val)) :
-    runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-      ops scheduler env index status ⦃ out =>
-      out.2.2.2.2.2.2.2 = .Ok () → SignatureSequence out.1.val env.types.val ⦄ := by
-  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-  apply loop.spec_decr_nat (fun p => env.types.val.length - p.2.1.val)
-    (fun p => p.2.1.val ≤ env.types.val.length ∧
-      (p.2.2 = .Ok () → SignatureSequence p.1.signatures.val (env.types.val.take p.2.1.val)))
-  · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
-    dsimp only at hi certified
-    unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [module.Env.types, Itasca.module.Env.impl.types, bind_ok]
-    split
-    · rename_i more
-      have hb : i.val < env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac
-      cases result with
-      | Err error => simp [core.result.Result.is_ok]
-      | Ok unit =>
-        cases unit
-        have currentMatches := certified rfl
-        have length := List.Forall₂.length_eq currentMatches
-        have capacity := env.types.property
-        have fits : current.signatures.val.length < Usize.max := by simp [List.length_take, Nat.min_eq_left hi] at length; omega
-        simp only [core.result.Result.is_ok, bind_ok, ite_true]
-        step with capture_signature ops law current env i env.types.val[i.val]
-          (List.getElem?_eq_getElem hb) fits as ⟨answer, changed, effect⟩
-        step as ⟨next, hnext⟩
-        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
-        intro accepted
-        obtain ⟨signature, budget, changedEq, appended, exactSignature⟩ := effect accepted
-        rw [hnext, ← List.take_concat_get' env.types.val i.val hb, appended]
-        exact currentMatches.append exactSignature
-    · rename_i finished
-      have same : i.val = env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at finished; scalar_tac
-      simp only [WP.spec_ok]
-      intro accepted
-      simpa [same] using certified accepted
-  · exact ⟨bound, prefixMatches⟩
 theorem SignatureSequence.lookup {signatures types}
     (sequence : SignatureSequence signatures types) {index : Nat} {signature : runtime.compiler.Signature}
     (found : signatures[index]? = some signature) :
@@ -82,19 +40,6 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
   refine ⟨_, _, ?_, matched⟩
   simp [List.getElem?_map, lookup, Itasca.EnvTranslation.funcType]
 
-/-- The scheduler's actual complete capture loop constructs the table used by
-control-entry certificates, starting from the empty signature vector. -/
-@[step] theorem capture_signatures {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (empty : scheduler.signatures.val = []) :
-    runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-      ops scheduler env 0#usize (.Ok ()) ⦃ out =>
-      out.2.2.2.2.2.2.2 = .Ok () →
-        SignatureTable out.1.deref (env.types.val.map Itasca.EnvTranslation.funcType) ⦄ := by
-  apply WP.spec_mono (capture_signatures_loop ops law scheduler env 0#usize (.Ok ())
-    (by simp) (by intro _; simp [empty, SignatureSequence]))
-  intro out post accepted
-  exact SignatureSequence.table (by simpa [alloc.vec.Vec.deref] using post accepted)
 @[step] theorem capture_signatures_loop_frame {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
     (env : Itasca.module.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)

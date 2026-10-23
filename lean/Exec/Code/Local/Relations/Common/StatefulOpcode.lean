@@ -68,7 +68,4 @@ def StatefulPair (pairs : List (U32 × U32)) (op : Abs.Stateful.Instruction)
   | .tableCopy .. | .tableInit .. => pairs[entry.val]? = some (a, b)
   | _ => True
 
-theorem statefulOpcode_bound (op : Abs.Stateful.Instruction) : (statefulOpcode op).val < 512 := by
-  cases op <;> simp only [statefulOpcode] <;> decide
-
 end Exec.Code

@@ -85,6 +85,5 @@ theorem ReaderReachability.pop {Saved : Type} {poly : Saved → Bool}
   rw [resumedPoly]
   exact parentMono (entered live)
 
-abbrev ReaderReachabilityWasm1 := ReaderReachability (fun saved : Wasm1.Frames.Saved => saved.ctrl.polymorphic_base)
 abbrev ReaderReachabilityWasm2 := ReaderReachability (fun saved : Wasm2.Frames.Saved => saved.ctrl.polymorphic_base)
 end Exec.Code

@@ -115,22 +115,6 @@ def observedHeight (height : Nat) : List Itasca.code.StackType → Nat
   split <;> simp_all
   scalar_tac
 
-/-- Observation preserves reachability and never reduces allocated frame capacity. -/
-@[step] theorem compiler_observe_capacity {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) :
-    runtime.compiler.FunctionCompiler.observe ops compiler state ⦃ out =>
-      out.1 = .Ok () →
-        out.2.reachable = compiler.reachable ∧
-        compiler.function.slot_count.val ≤ out.2.function.slot_count.val ∧
-        (out.2.reachable = true → out.2.height.val ≤ out.2.function.slot_count.val) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.observe
-  split <;> step*
-  all_goals cases r <;> simp_all [core.cmp.impls.OrdU32.max, alloc.vec.Vec.deref]
-  all_goals try exact fun e => ⟨e⟩
-  split <;> simp_all
-  all_goals scalar_tac
-
 theorem observedHeight_values (height : Nat) (types : List Itasca.types.ValueType) :
     observedHeight height (types.map Itasca.code.StackType.Val) =
       height + slots (types.map Itasca.Translate.valueType) := by

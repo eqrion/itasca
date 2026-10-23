@@ -42,20 +42,4 @@ theorem compiler_nop_drop_available {A : Type} (ops : runtime.platform.Alloc A)
   rw [dispatch]
   exact compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots
 
-/-- Explicit unreachable emits its instruction only on a live input path. -/
-theorem compiler_unreachable_available {A : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : CallbackDemand compiler state bound) :
-    runtime.compiler.lower.FunctionCompiler.op ops compiler state 0#u16 0#u32 0#u32 0#u128
-      ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
-        (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  split
-  · exact finish_op_available_effect ops bound available compiler state demand _
-  · apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
-
 end Exec.Code

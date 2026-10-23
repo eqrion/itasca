@@ -9,18 +9,18 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 the actual direct or indirect call and construct its eventful successor. The
 callback transport assumptions remain separate from the source host law. -/
 theorem host_ready_world_uniform {M P F A : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s,Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s,Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (expected : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (op : instr) (after : List instr)
-    (site : HostFrameSite emission allowed view code exec store expected ambient {f with code:=op::after} rest)
+    (site : HostFrameSite view code exec store expected ambient {f with code:=op::after} rest)
     [StructuredMachine.OrdinaryHeads (emission site.compiled)]
     [StructuredMachine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
     (kind : DirectHostInstruction store site.raw site.inst site.compiled op ∨
@@ -36,7 +36,7 @@ theorem host_ready_world_uniform {M P F A : Type}
     (issued : ∀p host args results answer,hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformWorldSourceSuccess (emission:=emission) (allowed:=allowed) (view:=view)
+      UniformWorldSourceSuccess (view:=view)
         Inv code expected store
         ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ site.raw.pc.val false out ⦄ := by
   rcases kind with direct | indirect

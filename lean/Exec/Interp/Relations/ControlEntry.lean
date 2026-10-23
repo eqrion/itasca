@@ -48,41 +48,6 @@ theorem LabelsMatch.enter {values : List val} {labels : List Abs.Label} {targets
     obtain ⟨target, found, matching⟩ := outer.atIndex depth label (by simpa using lookup)
     exact ⟨target, by simpa using found, matching⟩
 
-/-- BLOCK creates a source label without consuming bytecode. Its two retained
-continuations distinguish normal IF-arm completion from explicit branches. -/
-theorem block_entry_point (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
-    (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (bt : blocktype) (body after : List instr) (front params results : List valtype)
-    (normalExit : Nat) (branchExit : U32) (normalLive branchLive : Bool)
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .BLOCK bt body :: after } :: rest, []⟩)
-    (slots : FrameSlots exec raw f)
-    (point : StructuredFramePoint raw { f with code := .BLOCK bt body :: after }
-      compiled functions targets next output)
-    (shape : f.vals.map Code.valueType = front ++ params)
-    (signature : Code.BlockSignature f.module.TYPES bt params results)
-    (bodyCode : Code.CodeRel f.module.TYPES functions f.resultTypes (f.locals.map Code.valueType)
-      compiled.code.val (⟨front, results, results, branchExit, normalExit, [], after, normalLive, branchLive⟩ :: targets)
-      (front ++ params) body raw.pc.val normalExit (front ++ results))
-    (normal : normalLive = true → Code.CodeRel f.module.TYPES functions f.resultTypes (f.locals.map Code.valueType)
-      compiled.code.val targets (front ++ results) after normalExit next output)
-    (branch : branchLive = true → Code.CodeRel f.module.TYPES functions f.resultTypes (f.locals.map Code.valueType)
-      compiled.code.val targets (front ++ results) after branchExit.val next output) :
-    let g := { f with code := body, labels := ⟨results, results, [], front.length, after⟩ :: f.labels }
-    FrameSlots exec raw g ∧
-    StructuredFramePoint raw g compiled functions
-      (⟨front, results, results, branchExit, normalExit, [], after, normalLive, branchLive⟩ :: targets) normalExit (front ++ results) ∧
-    Abs.ATyped ⟨s, ambient, g :: rest, []⟩ ∧
-    Abs.NextSim ⟨s, ambient, { f with code := .BLOCK bt body :: after } :: rest, []⟩
-      ⟨s, ambient, g :: rest, []⟩ := by
-  have step := block_source_step s ambient f rest bt body after front params results signature shape
-  refine ⟨slots, ⟨point.labels.enter front params results results branchExit normalExit [] after shape, ?_⟩,
-    Abs.block_preservation s ambient f rest after bt body _ typed step,
-    Abs.typed_block_simulation s ambient f rest after bt body _ typed step⟩
-  simpa only [shape] using Code.StructuredPoint.block_body bodyCode normal branch
-    point.code.targets point.code.normal point.code.exit point.code.root
-
 theorem loop_source_step (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (bt : blocktype) (body after : List instr) (front params results : List valtype)
     (signature : Code.BlockSignature f.module.TYPES bt params results)
@@ -98,6 +63,5 @@ theorem loop_source_step (s : store) (ambient : frame) (f : Abs.AFrame) (rest : 
   rw [height] at args
   have resolved := blockSignature_resolves f.module bt params results signature
   simp [Abs.astep, Abs.enterLabel, resolved, height, args, show params.length ≤ f.vals.length by omega, Abs.advance]
-
 
 end Exec.Interp

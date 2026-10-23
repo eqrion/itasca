@@ -199,13 +199,4 @@ theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw
         exact split_after_code data codePos first last id hh
           (by simp [hid]) (by simp [hid])
 
-/-- An independently encoded module has a normalized layout, and the splitter returns its
-boundaries. No successful parser run is assumed. -/
-theorem stream.find_code_region.complete {profile} (data : Slice U8) (raw : ModuleBinary.Module)
-    (h : ModuleEncodingWithinLimits raw data.val profile) :
-    ∃ decls codePos tailPos, ModuleLayout.Layout data raw decls codePos tailPos profile ∧
-      stream.find_code_region data = .ok (codePos, tailPos) := by
-  obtain ⟨decls, codePos, tailPos, hl⟩ := ModuleLayout.normalize data raw h
-  exact ⟨decls, codePos, tailPos, hl, stream.find_code_region.complete_layout hl⟩
-
 end Itasca

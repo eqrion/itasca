@@ -61,6 +61,6 @@ theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisito
     | exact h16 (UScalar.eq_of_val_eq same)
     | exact h17 (UScalar.eq_of_val_eq same)
   obtain ⟨_,raw⟩ := profile_scalar_success visitor st out data env ctx index opcode before after ordinary accepted
-  exact reader_single_callback_wasm2 visitor st.core data env ctx opcode before after out.core blocked raw
+  exact reader_single_callback_wasm2 visitor st.core data env ctx opcode before after out.core raw
 
 end Exec.Code

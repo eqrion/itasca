@@ -21,22 +21,6 @@ theorem vector_read_bounds (bytes : List byte) (address : Nat) (value : vec_)
   apply integer_read_bounds bytes address 128 value (by decide)
   simpa only [vbytes_,vsize] using read
 
-/-- The shared source equality for splat and lane loads enforces every lane
-width's bounds, rather than relying on the clamping behavior of List.take. -/
-theorem lane_read_bounds (ty : Jnn) (bytes : List byte) (address : Nat) (value : uN)
-    (read : ibytes_ (lsize (lanetype_Jnn ty)) value =
-      (bytes.drop address).take (rat_to_nat ((lsize (lanetype_Jnn ty) : Rat)/8))) :
-    address+rat_to_nat ((lsize (lanetype_Jnn ty) : Rat)/8) ≤ bytes.length := by
-  apply integer_read_rat_bounds bytes address _ value _ read
-  cases ty <;> decide
-
-/-- Both zero-extending load widths enforce their complete source byte range. -/
-theorem zero_read_bounds (bytes : List byte) (address bits : Nat) (value : uN)
-    (width : bits = 32 ∨ bits = 64)
-    (read : ibytes_ bits value = (bytes.drop address).take (rat_to_nat ((bits : Rat)/8))) :
-    address+rat_to_nat ((bits : Rat)/8) ≤ bytes.length :=
-  integer_read_rat_bounds bytes address bits value (by tauto) read
-
 /-- Widening loads read eight bytes in total. The final lane's exact source
 slice supplies the end bound for all three widening shapes. -/
 theorem extending_read_bounds (ty : WidenWidth) (bytes : List byte) (address : Nat) (words : List uN)
@@ -87,10 +71,5 @@ theorem extending_read_values_unique (ty : WidenWidth) (payload : Nat → List b
       (leftBound _ (List.getElem_mem leftInside)) (rightBound _ (List.getElem_mem rightInside))
       (range_relation_get _ _ _ leftCount leftRead index leftInside)
       (range_relation_get _ _ _ rightCount rightRead index rightInside)
-
-/-- Every successful SIMD read equality excludes its complementary source
-out-of-bounds guard; this lemma is shared by the instruction families above. -/
-theorem successful_read_excludes_trap {address width length : Nat} (success : address+width ≤ length) :
-    ¬ length < address+width := Nat.not_lt.mpr success
 
 end Exec.Spec.Simd

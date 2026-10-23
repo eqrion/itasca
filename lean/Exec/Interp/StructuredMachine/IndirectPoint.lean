@@ -11,10 +11,10 @@ theorem indirect_point_head {emission : ContextEmission} {pairs C returns code l
     (project : ∀ before emitted result,
       emission C before (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)) emitted result →
         Code.IndirectCallEmission pairs C before (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)) emitted result)
-    (point : Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
       code jumpTables labels stack (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after) pc next output) :
     (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels stack (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after) target.val next output) ∨
     (∃ (front params results : List valtype) (typeIndex tableIndex entry index base : U32) (bounds : limits),
       typeIndex.val = type ∧ tableIndex.val = table ∧ stack = (front ++ params) ++ [.I32] ∧
@@ -23,7 +23,7 @@ theorem indirect_point_head {emission : ContextEmission} {pairs C returns code l
       pairs[entry.val]? = some (tableIndex,typeIndex) ∧
       base.val = Code.slots C.LOCALS + Code.slots front ∧ index.val = base.val + Code.slots params ∧
       code[pc]? = some (.CallIndirect entry index base) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels (front ++ results) after (pc+1) next output) := by
   have relation := point.current
   generalize sourceEq : instr.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after = source at relation

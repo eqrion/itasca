@@ -17,13 +17,13 @@ theorem quiet_boundary_atomic_terminates {choices : Spec.SourceChoices} (admissi
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
-    {expected : List valtype} (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    {expected : List valtype} (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) {count endpoint}
     (prefixSteps : Spec.ChosenStepsN choices occurrence count (Abs.decode world.machine.source) [] endpoint)
     (boundary : Spec.OpenHost.QuietBoundary endpoint) :
     let trapped : Spec.SourceChoices:={choices with host:=Spec.trappingHostChoice}
     let Inv:=ReentrantCallbacks.FloorInv view world.machine.store.externs.length
-    let initial : ChosenWorld Executable.emission Abs.ExecutableInstr M Unit view expected:=⟨world,occurrence⟩
+    let initial : ChosenWorld M Unit view expected:=⟨world,occurrence⟩
     runtime.interp.invoke_with_loop1 memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform (.Ok ())
       ⦃result=>∃state,ChosenWorldLoopInvariant trapped memory (inert memory) floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result⦄ := by
@@ -41,7 +41,7 @@ theorem quiet_boundary_atomic_terminates {choices : Spec.SourceChoices} (admissi
   have sound : HostWorldChosenSound memory (inert memory) view Inv trapped:=
     PureCallbacks.trapping_chosen_sound memory view Inv (fun _ _ valid=>valid.1.source_typed) trapped rfl
   have steps : ChosenWorldStepOutcomes trapped memory (inert memory) floats allocator view expected Inv:=
-    chosen_world_step_outcomes permitted numericChoice vector Abs.executable_language memory (inert memory) floats allocator correct allocation
+    chosen_world_step_outcomes permitted numericChoice vector memory (inert memory) floats allocator correct allocation
     (fun _=>WP.spec.ret trivial) view laws growth Inv
     (fun _ _ valid=>valid.1.toCertifiedApiStore.toCertifiedSupportedStore)
     (fun _ _ _ valid mutation=>valid.update mutation) (fun _ _ valid=>valid.1.source_typed) sound
@@ -60,6 +60,6 @@ theorem quiet_boundary_atomic_terminates {choices : Spec.SourceChoices} (admissi
     expected
   obtain ⟨total,events,target,run,terminal⟩:=boundary.trapping_completion admissible prefixSteps
   exact WP.spec_mono (chosen_world_loop_terminates permitted memory (inert memory) floats allocator Inv steps
-    (⟨world,occurrence⟩ : ChosenWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (⟨world,occurrence⟩ : ChosenWorld M Unit view expected)
     ⟨held,Nat.le_refl _⟩ run.erase_count terminal) (fun result post=>post.2)
 end Exec.Theorems.OpenReentrantControl

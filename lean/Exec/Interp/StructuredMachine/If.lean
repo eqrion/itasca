@@ -11,7 +11,7 @@ import Exec.Interp.Relations.TypedOperands
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
-theorem step_if {M P F A : Type} {emission : FunctionEmission}
+theorem step_if {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -27,7 +27,7 @@ theorem step_if {M P F A : Type} {emission : FunctionEmission}
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .IFELSE bt yes no :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .IFELSE bt yes no :: after }
+    (point : FramePoint s raw { f with code := .IFELSE bt yes no :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
@@ -36,7 +36,7 @@ theorem step_if {M P F A : Type} {emission : FunctionEmission}
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
+        ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SourceClosure { f with code := .IFELSE bt yes no :: after } g ∧
@@ -46,7 +46,7 @@ theorem step_if {M P F A : Type} {emission : FunctionEmission}
         (g = {f with code := .IFELSE bt yes no :: after} ∨ Abs.Core.step ⟨s,ambient,{f with code := .IFELSE bt yes no :: after}::rest,[]⟩ = .next ⟨s,ambient,g::rest,[]⟩) ⦄ := by
   rcases codeRel_if_inv point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .IFELSE bt yes no :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -110,15 +110,15 @@ theorem step_if {M P F A : Type} {emission : FunctionEmission}
       by_cases zero : bits = 0
       · simpa only [if_pos zero, frame_set_twice] using exactState
       · simpa only [if_neg zero] using exactState
-    have selectedPoint : FramePoint emission s { raw with pc := if bits = 0 then noEntry else pc }
+    have selectedPoint : FramePoint s { raw with pc := if bits = 0 then noEntry else pc }
         { f with code := .BLOCK bt (if bits = 0 then no else yes) :: after, vals := values }
         compiled C targets next output := by
       refine ⟨point.bindings,point.locals,labelsAfter, ⟨?_, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
       by_cases zero : bits = 0
       · simp only [if_pos zero, valueTypes]
-        exact Code.StructuredCodeWithTables.ordinary_block signature noCode (fun live => continuation (Or.inr (Or.inr live))) ⟨bounds.2.1, bounds.2.2⟩
+        exact Code.StructuredCode.ordinary_block signature noCode (fun live => continuation (Or.inr (Or.inr live))) ⟨bounds.2.1, bounds.2.2⟩
       · simp only [if_neg zero, valueTypes]
-        apply Code.StructuredCodeWithTables.if_then signature _ skipCode noCode.pc_le_next
+        apply Code.StructuredCode.if_then signature _ skipCode noCode.pc_le_next
           (fun live => continuation (live.elim Or.inl (fun h => Or.inr (Or.inl h))))
           ⟨by omega, bounds.2.2⟩
         simpa only [hpc] using yesCode

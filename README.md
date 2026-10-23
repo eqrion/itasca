@@ -113,6 +113,15 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
+[lean/Itasca/Main.lean](lean/Itasca/Main.lean) lists every headline theorem. Each
+is stated in full under [lean/Itasca/Results/](lean/Itasca/Results), and the
+streaming premises are defined in
+[lean/Itasca/Contracts.lean](lean/Itasca/Contracts.lean).
+
+[lean/Exec/Main.lean](lean/Exec/Main.lean) does the same for execution: its
+results are stated under [lean/Exec/Results/](lean/Exec/Results), and every
+embedder obligation is listed in [lean/Exec/Contracts.lean](lean/Exec/Contracts.lean).
+
 TODO, summarize the execution proofs.
 
 ### Trust boundary

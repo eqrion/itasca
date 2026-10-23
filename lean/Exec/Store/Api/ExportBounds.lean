@@ -70,8 +70,4 @@ theorem ExportBounds.staged {M : Type} {before after : runtime.store.Store M}
     subst index
     exact fresh inst found
 
-theorem new_export_bounds {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (identity : Usize) (limits : runtime.store.StoreLimits) :
-    runtime.store.Store.with_identity memory identity limits ⦃ store => ExportBounds store ⦄ := by
-  simp [runtime.store.Store.with_identity,WP.spec_ok,ExportBounds,alloc.vec.Vec.new]
 end Exec.Store

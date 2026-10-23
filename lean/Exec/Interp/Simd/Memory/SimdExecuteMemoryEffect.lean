@@ -119,36 +119,4 @@ theorem execute_simd_memory_effect_bounded {M F : Type}
     · simp [memBack]
     simp [SlotsEffect,simdResultSlots,zeroNat,notTwo]
 
-theorem execute_simd_memory_effect {M F : Type}
-    (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instIndex function base : Usize) (op dst a entry : U32)
-    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (imm : runtime.bytecode.SimdImmediate) (wa wb wc wr : U32)
-    (value : U128)
-    (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : inst.module.functions.val[function.val]? = some code)
-    (immediate : code.simd.val[entry.val]? = some imm)
-    (shape : runtime.bytecode.simd_shape op = .ok (some (wa,wb,wc,wr)))
-    (ma : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (mapped : inst.memories.val[0]? = some ma)
-    (issued : store.memories.val[ma.index.val]? = some object)
-    (bytesAfter : Slice U8) (lengthEq : bytesAfter.length = (view object.buf).length)
-    (space : base.val + a.val + wa.val + wb.val + 1 ≤ Usize.max)
-    (capacity : base.val + dst.val + wr.val ≤ exec.slots.length)
-    (numeric : runtime.interp.simd.simd floats op imm.offset imm.lane imm.bits
-      (simdInput exec.slots.val (base.val+a.val) wa)
-      (simdInput exec.slots.val (base.val+a.val+wa.val) wb)
-      (simdInput exec.slots.val (base.val+a.val+wa.val+wb.val) wc) (some (view object.buf)) =
-        .ok (.Ok value,some bytesAfter)) :
-    runtime.interp.execute_simd memory floats exec store instIndex function base op dst a entry
-      ⦃ out => out.1 = .Ok () ∧
-        (∃ buffer, out.2.2 = {store with memories := store.memories.set ma.index {object with buf := buffer}} ∧
-          view buffer = bytesAfter) ∧ SlotsEffect exec out.2.1
-        (simdResultSlots exec.slots.val (base.val+dst.val) wr value) ⦄ := by
-  exact execute_simd_memory_effect_bounded memory floats view laws exec store instIndex function base
-    op dst a entry inst code imm wa wb wc wr value found compiled immediate shape ma object mapped issued
-    bytesAfter lengthEq (by omega) (by intro; omega) capacity numeric
-
 end Exec.Interp

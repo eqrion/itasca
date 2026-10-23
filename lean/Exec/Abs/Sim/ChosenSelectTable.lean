@@ -4,14 +4,6 @@ import Exec.Abs.Sim.ChosenBasic
 namespace Exec.Abs.TypedSelect
 open SpecExt Exec.Spec
 
-theorem Step.chosen {choices : SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=firstVectorChoice) (occurrence : Nat) {before next}
-    (step : Step before next) (typed : CoreTyped before) :
-    ChoiceStep choices occurrence (decode before) [] (decode next) := by
-  have source := (step.correct typed).2
-  cases step
-  exact chosen_neutral_simulation admissible vector occurrence source
-    (by simp only [List.map_cons,admininstr_instr,neutralActive])
 end Exec.Abs.TypedSelect
 namespace Exec.Abs.BrTable
 open SpecExt Exec.Spec

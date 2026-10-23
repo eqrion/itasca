@@ -32,7 +32,7 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
       env.types.val[typeIdx.val]? = some ft → ctx.results.val = ft.results.val →
       body.length ≤ limits.MAX_FUNCTION_BYTES.val → Profile.Body profile body env ctx.locals typeIdx →
       ∀ started, ∃ ended,
-        CodeEntry.runBody visitor profile body env ctx typeIdx started = .ok (.Ok (), ended)) :
+        code.validate_body_with visitor body env ctx typeIdx profile started = .ok (.Ok (), ended)) :
     module.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
   obtain ⟨bytes, he, hspan⟩ := hbytes
   obtain ⟨hcap, sizeBytes, localBytes, bodyBytes, hsize, hlocals, hbody, hbodyCap, rfl⟩ := he
@@ -87,29 +87,25 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
   obtain ⟨started, hstart⟩ := haccept.on_function_start v ⟨locals, results⟩ type_idx bodyStart «end»
   rw [hstart]
   simp only [bind_ok]
-  cases profile
-  all_goals
-    simp only [CodeEntry.runBody] at hcomplete
-    simp only [Std.bind_assoc]
-    step as ⟨r, r_post⟩
-    have hactual := ModuleBinary.slice_bytes (by have := hbodySpan.length; scalar_tac)
-      (by rw [hendEq]; exact hbodySpan.bound) r_post
-    have hslice : r.val = bodyBytes := by
-      rw [hendEq] at hactual
-      exact List.append_cancel_right (hactual.suffix.symm.trans hbodySpan.suffix)
-    have hctxlocals : (⟨locals, results⟩ : code.Context).locals.val =
-        env.types.val[type_idx.val].params.val ++ entry.declared := by
-      rw [hft]
-      simpa [alloc.vec.Vec.deref, hdeclaredVal, ModuleBinary.Code.declared, ModuleLocals.declared] using hbuildVal
-    have hctxresults : (⟨locals, results⟩ : code.Context).results.val = ft.results.val := by
-      simpa [alloc.vec.Vec.deref] using hcopyVal
-    have hlookup : env.types.val[type_idx.val]? = some ft := by simp [List.getElem?_eq_getElem hti, hft]
-    have hencoding := Profile.BodyBytes.body (data := r) (by simpa [hslice] using hbody)
-    have hcert := ht.body r locals hctxlocals hencoding
-    obtain ⟨finished, hfinished⟩ := hcomplete r ⟨locals, results⟩ type_idx ft hlookup hctxresults
-      (by simpa [Slice.length, hslice] using hbodyCap) hcert started
-    rw [hfinished]
-    simp [hendEq]
+  step as ⟨r, r_post⟩
+  have hactual := ModuleBinary.slice_bytes (by have := hbodySpan.length; scalar_tac)
+    (by rw [hendEq]; exact hbodySpan.bound) r_post
+  have hslice : r.val = bodyBytes := by
+    rw [hendEq] at hactual
+    exact List.append_cancel_right (hactual.suffix.symm.trans hbodySpan.suffix)
+  have hctxlocals : (⟨locals, results⟩ : code.Context).locals.val =
+      env.types.val[type_idx.val].params.val ++ entry.declared := by
+    rw [hft]
+    simpa [alloc.vec.Vec.deref, hdeclaredVal, ModuleBinary.Code.declared, ModuleLocals.declared] using hbuildVal
+  have hctxresults : (⟨locals, results⟩ : code.Context).results.val = ft.results.val := by
+    simpa [alloc.vec.Vec.deref] using hcopyVal
+  have hlookup : env.types.val[type_idx.val]? = some ft := by simp [List.getElem?_eq_getElem hti, hft]
+  have hencoding := Profile.BodyBytes.body (data := r) (by simpa [hslice] using hbody)
+  have hcert := ht.body r locals hctxlocals hencoding
+  obtain ⟨finished, hfinished⟩ := hcomplete r ⟨locals, results⟩ type_idx ft hlookup hctxresults
+    (by simpa [Slice.length, hslice] using hbodyCap) hcert started
+  rw [hfinished]
+  simp [hendEq]
 
 /-- Entry validation succeeds, as a weakest-precondition statement, for either profile under the
 profile's environment and size bounds. -/
@@ -118,15 +114,15 @@ theorem module.validate_code_entry_with.profile_complete_spec {V : Type} (visito
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
-    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits profile env)
+    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
     module.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
   apply module.validate_code_entry_with.complete_spec_of_body visitor haccept data pos env index entry next v
     profile hi (Profile.EntryTyped.of_core htyped (henv.1 _ (List.getElem_mem _))) hbound hbytes
   intro body ctx typeIdx ft hlookup hresults hsize hcert started
-  exact CodeEntry.runBody.complete visitor haccept profile body env ctx typeIdx ft started
-    hlookup hresults henv hlimits hsize hcert
+  exact code.validate_body_with.profile_complete visitor haccept body env ctx typeIdx profile started
+    hlimits hsize hcert
 
 /-- Entry validation returns `.Ok next` for either profile under the profile's environment and size
 bounds. -/
@@ -135,7 +131,7 @@ theorem module.validate_code_entry_with.profile_complete {V : Type} (visitor : c
     (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
-    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits profile env)
+    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
     ∃ v', module.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok next, v') := by

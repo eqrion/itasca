@@ -40,13 +40,6 @@ theorem DataEncoding.init_bounded {entry bytes} (h : DataEncoding entry bytes) :
   obtain ⟨_, _, _, _, _, _, _, _, hi, _⟩ := h
   exact VecEncoding.length_bounded hi
 
-/-- A `DataEncoding` entry is the raw form of some runtime `module.Data`. -/
-theorem DataEncoding.materialize {entry bytes} (h : DataEncoding entry bytes) :
-    ∃ segment : module.Data, ModuleData.raw segment = entry := by
-  refine ⟨⟨entry.mode, Vec.from entry.init h.init_bounded⟩, ?_⟩
-  simp [ModuleData.raw]
-
-
 /-- A profile data segment's bytes fit in `Usize`. -/
 theorem DataEncodingFor.init_bounded {profile entry bytes}
     (h : DataEncodingFor profile entry bytes) : entry.init.length ≤ Usize.max := by

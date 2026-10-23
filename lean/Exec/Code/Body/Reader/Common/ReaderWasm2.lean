@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 /-- A reader advances this precise source zipper; source instructions are not
 recovered from an unrelated existential post-state witness. -/
 structure ReaderPostWasm2 {data env locals index st}
-    (pending : Pending data env locals index st) (out : code.OpIterState)
+    (pending : Pending data env .Wasm2 locals index st) (out : code.OpIterState)
     (instruction : instr) (poly : Bool) (values : List code.StackType) : Prop where
   encoded : At data pending.start (.plain instruction) out.pos
   opened : Frames.Open env (bodyContext env locals pending.ft) {st with core := out}
@@ -14,7 +14,7 @@ structure ReaderPostWasm2 {data env locals index st}
   after : pending.After {st with core := out}
 
 theorem reader_append_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (out : code.OpIterState)
+    (p : Pending data env .Wasm2 locals index st) (out : code.OpIterState)
     (instruction : instr) (poly : Bool) (values : List code.StackType)
     (wf : wf_instr instruction) (encoded : At data p.start (.plain instruction) out.pos)
     (typed : ∀ C, wf_context C →
@@ -36,13 +36,13 @@ theorem reader_append_wasm2 {data env locals index st}
   have newBlocks : ({st with core := out} : code.BodyState).blocks.val = p.parents.map Frames.Saved.bt ++ [p.current.bt] := by
     simpa [controls, ctrls] using blocks
   refine ⟨encoded, ?_, ?_⟩
-  · exact ⟨C, outer, spine, ⟨header.kind, header.placeholder, header.inputs, header.outputs,
+  · exact ⟨C, outer, spine, ⟨header.kind, header.inputs, header.outputs,
       header.prior, .simple header.emits (.plain instruction wf)⟩, base, newTyped, controls, newBlocks, newVals⟩
   · exact p.append_result C outer spine header base {st with core := out} instruction poly values
-      wf encoded newTyped controls newBlocks newVals declared
+      wf encoded newTyped controls newBlocks newVals (fun h => nomatch h) declared
 
 theorem reader_nop_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_NOP before =
@@ -64,7 +64,7 @@ theorem reader_nop_wasm2 {data env locals index st}
   · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
 theorem reader_i32_const_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
@@ -93,7 +93,7 @@ theorem reader_i32_const_wasm2 {data env locals index st}
   · exact encoded.declared _
 
 theorem reader_i64_const_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
@@ -122,7 +122,7 @@ theorem reader_i64_const_wasm2 {data env locals index st}
   · exact encoded.declared _
 
 theorem reader_numeric_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (opcode : U8)
     (operation : Numeric.Operation) (hook : NumericHook)
     (capacity : st.core.vals.val.length < Usize.max)

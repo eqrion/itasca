@@ -34,41 +34,4 @@ theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   simp only [decodeMemory,lengthEq,bytesEq,Spec.Segment.withBytes]
   rfl
 
-theorem MemoryCopyEffect.refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
-    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M) (destination source count : U64)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
-    (effect : MemoryCopyEffect view store address.index memory destination source count out)
-    (moduleEq : ambient.MODULE = decodeInstance store inst)
-    (mapped : inst.memories.val[0]? = some address)
-    (target : store.memories.val[address.index.val]? = some memory)
-    (shape : Shape view store) (sourceSyntax : StoreSyntax code store) (ambientWf : wf_frame ambient)
-    (dstBound : destination.val < 2^32) (srcBound : source.val < 2^32) (countBound : count.val < 2^32) :
-    StepsH ⟨⟨decodeStore view code store,ambient⟩,Spec.Segment.operands destination.val source.val count.val ++ [.MEMORY_COPY]⟩ []
-      ⟨⟨decodeStore view code out.2,ambient⟩,segmentResult out.1⟩ := by
-  have memoryRead : fun_mem ⟨decodeStore view code store,ambient⟩ (.mk_uN 0) = decodeMemory view memory := by
-    simp [fun_mem,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,target]
-  have wf := decodeStore_wf view code store shape sourceSyntax
-  unfold MemoryCopyEffect at effect
-  split at effect
-  · rename_i inside
-    obtain ⟨buffer,rfl,copied⟩ := effect
-    simp only [segmentResult]
-    rw [memory_copy_decodes view code store inst ambient address memory destination.val source.val count.val buffer
-      moduleEq mapped target ⟨inside.2,inside.1⟩ copied]
-    apply Spec.Segment.memory_copy_steps _ _ _ _ _ wf ambientWf dstBound srcBound countBound
-    · simpa [moduleEq,decodeInstance] using (List.getElem?_eq_some_iff.mp mapped).1
-    · have addressRead : ambient.MODULE.MEMS[0]! = address.index.val := by
-        simp [moduleEq,decodeInstance,List.getElem!_eq_getElem?_getD,mapped]
-      rw [addressRead]
-      simpa [decodeStore] using (List.getElem?_eq_some_iff.mp target).1
-    · simpa [memoryRead,decodeMemory,decodeBytes] using (shape.memories memory (List.mem_of_getElem? target)).length_bound
-    · simpa [memoryRead,decodeMemory,decodeBytes] using And.intro inside.2 inside.1
-  · rename_i outside
-    rw [effect]
-    apply Spec.stepsH_single
-    apply Spec.Segment.memory_copy_trap _ _ _ _ _ wf ambientWf dstBound srcBound countBound
-    simp only [memoryRead,decodeMemory,decodeBytes,List.length_map]
-    simp only [Slice.length] at outside
-    omega
 end Exec.Store

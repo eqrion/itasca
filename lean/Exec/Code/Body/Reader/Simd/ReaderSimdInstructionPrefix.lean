@@ -1,4 +1,4 @@
-import Exec.Code.Body.Reader.Simd.ReaderSimdEventTablesWithTables
+import Exec.Code.Body.Reader.Simd.ReaderSimdEventTables
 import Exec.Code.Body.Relations.Common.ExecutableInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackExitSlots
@@ -15,7 +15,7 @@ theorem SimdReaderEvent.instruction_prefix {jumpTables : List U32} {A : Type} {o
     (law : Platform.AllocCorrect ops)
     {emit types functions returns locals parents current}
     (contextLocals : C.LOCALS = locals)
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -47,7 +47,7 @@ theorem SimdReaderEvent.instruction_prefix {jumpTables : List U32} {A : Type} {o
     have layout := retained.layout
     rw [oldTypes] at layout
     exact ⟨lowered.1.executableInstructionPrefix layout reachable (contextLocals.trans retained.localsEq.symm)
-      (.base (.right emission)) emission.not_branchTable growth held ordinary.frames,
+      (.simd emission) emission.not_branchTable growth held ordinary.frames,
       exits.retained (congrArg alloc.vec.Vec.val ordinary.frames) ordinary.capacity⟩
 
 end Exec.Code

@@ -12,50 +12,6 @@ theorem SegmentBounds.same {M : Type} {before after : runtime.store.Store M}
   · simpa [elements] using bounded.elements
   · simpa [datas] using bounded.data
 
-theorem SegmentBounds.element_drop {M : Type} (store : runtime.store.Store M)
-    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.ElemInst) :
-    SegmentBounds {store with elems := store.elems.set address {segment with refs := alloc.vec.Vec.new U64}} := by
-  constructor
-  · intro element member
-    simp only [alloc.vec.Vec.set_val_eq] at member
-    have oldOrNew := List.mem_or_eq_of_mem_set member
-    rcases oldOrNew with old | rfl
-    · exact bounded.elements element old
-    · simp
-  · exact bounded.data
-
-theorem SegmentBounds.data_drop {M : Type} (store : runtime.store.Store M)
-    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.DataInst) :
-    SegmentBounds {store with datas := store.datas.set address {segment with bytes := alloc.vec.Vec.new U8}} := by
-  constructor
-  · exact bounded.elements
-  · intro data member
-    simp only [alloc.vec.Vec.set_val_eq] at member
-    have oldOrNew := List.mem_or_eq_of_mem_set member
-    rcases oldOrNew with old | rfl
-    · exact bounded.data data old
-    · simp
-
-theorem TableInitializationEffect.bounds {M : Type} {store : runtime.store.Store M}
-    {index table segment destination source count out}
-    (effect : TableInitializationEffect store index table segment destination source count out)
-    (bounded : SegmentBounds store) : SegmentBounds out.2 := by
-  unfold TableInitializationEffect at effect
-  split at effect
-  · obtain ⟨words, rfl, _⟩ := effect
-    exact bounded.same rfl rfl
-  · rw [effect]; exact bounded
-
-theorem MemoryInitializationEffect.bounds {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {index memory segment destination source count out}
-    (effect : MemoryInitializationEffect view store index memory segment destination source count out)
-    (bounded : SegmentBounds store) : SegmentBounds out.2 := by
-  unfold MemoryInitializationEffect at effect
-  split at effect
-  · obtain ⟨buffer, rfl, _⟩ := effect
-    exact bounded.same rfl rfl
-  · rw [effect]; exact bounded
-
 /-- Data staging copies the accepted source payload exactly, hence cannot grow
 it beyond its binary vector count. Allocation refusal leaves all bounds intact. -/
 theorem add_instance_data_bounds {M A : Type} (memory : runtime.platform.MemoryBuffer M)

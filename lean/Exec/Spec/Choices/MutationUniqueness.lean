@@ -24,23 +24,9 @@ theorem source_with_table_unique {before left right : state} (index : tableidx) 
   cases second
   with_reducible rfl
 
-theorem source_with_tableinst_unique {before left right : state} (index : tableidx) (value : tableinst)
-    (first : fun_with_tableinst before index value left)
-    (second : fun_with_tableinst before index value right) : left=right := by
-  cases first
-  cases second
-  with_reducible rfl
-
 theorem source_with_mem_unique {before left right : state} (index : memidx) (position count : Nat) (bytes : List byte)
     (first : fun_with_mem before index position count bytes left)
     (second : fun_with_mem before index position count bytes right) : left=right := by
-  cases first
-  cases second
-  with_reducible rfl
-
-theorem source_with_meminst_unique {before left right : state} (index : memidx) (value : meminst)
-    (first : fun_with_meminst before index value left)
-    (second : fun_with_meminst before index value right) : left=right := by
   cases first
   cases second
   with_reducible rfl

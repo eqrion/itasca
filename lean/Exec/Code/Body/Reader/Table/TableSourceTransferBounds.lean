@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredBranchIfLayoutWithTables
+import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Exec.Code.Local.Source.TableTransferBounds
 
 namespace Exec.Code
@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Source typing of every table label supplies overlap-safe transfer bounds
 and already opened loop targets, including repeated and outer labels. -/
-theorem StructuredCompilerPrefixWithTables.table_transfer_geometry
+theorem StructuredCompilerPrefix.table_transfer_geometry
     {jumpTables : List U32} {A : Type} {initial compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position stack} {depths : List U32}
-    (invariant : StructuredCompilerPrefixWithTables (jumpTables := jumpTables) emit initial compiler
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial compiler
       types functions returns locals parents current raw position)
     (live : compiler.reachable = true)
     (input : Sequence.stackTypes raw = stack++[.I32])
@@ -39,18 +39,5 @@ theorem StructuredCompilerPrefixWithTables.table_transfer_geometry
   have start := shape.start
   have entry := shape.entryBound
   cases form : scope.form <;> simp_all [ScopeForm.kind,SourceScope.frameStart]
-
-/-- Specialize source table geometry to the scratch labels of the actual lowerer. -/
-theorem StructuredCompilerPrefixWithTables.table_transfer_bounds
-    {jumpTables : List U32} {A : Type} {initial compiler : runtime.compiler.FunctionCompiler A}
-    {emit types functions returns locals parents current raw position stack}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial compiler
-      types functions returns locals parents current raw position)
-    (live : compiler.reachable = true)
-    (input : Sequence.stackTypes raw = stack++[.I32])
-    (labels : ∀ depth ∈ compiler.table_depths.val, ∃ scope discarded,
-      (current :: parents.reverse)[depth.val]? = some scope ∧
-      stack = scope.front++discarded++scope.branchTypes) : TableTransferBounds compiler :=
-  invariant.table_transfer_geometry live input labels
 
 end Exec.Code

@@ -24,12 +24,4 @@ theorem table_immediate_byte_bound {data start depths fallback next}
   have defaultBytes := defaultDecoded.span
   omega
 
-/-- The complete emitted table header and all copies/jumps fit the existing
-three-instructions-per-source-byte budget. -/
-theorem table_instruction_growth_bound {data start depths fallback next}
-    (decoded : BrTable.Decoded data start depths fallback next)
-    (sourceStart codeLength : Nat) (position : start.val=sourceStart+1) :
-    codeLength+1+2*(depths.length+1) ≤ codeLength+3*(next.val-sourceStart) := by
-  have consumed := table_immediate_byte_bound decoded
-  omega
 end Exec.Code

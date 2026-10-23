@@ -66,14 +66,6 @@ theorem ObservedStack.operand_le_height {A} {compiler : runtime.compiler.Functio
   have le := stackWords_take_mono values (a := index) (b := values.length) (by omega)
   simpa using Nat.add_le_add_left le compiler.function.local_slots.val
 
-theorem ObservedStack.ordered {A} {compiler : runtime.compiler.FunctionCompiler A} {values}
-    (h : ObservedStack compiler values) (left right : Nat)
-    (leftBound : left < compiler.before.val.length)
-    (rightBound : right < compiler.before.val.length) (order : left ≤ right) :
-    (compiler.before.val[left]).val ≤ (compiler.before.val[right]).val := by
-  rw [h.get left leftBound, h.get right rightBound]
-  exact Nat.add_le_add_left (stackWords_take_mono values order) _
-
 @[step] theorem compiler_observe_stack {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) :
@@ -99,17 +91,5 @@ theorem ObservedStack.ordered {A} {compiler : runtime.compiler.FunctionCompiler 
       rw [success] at exactValue
       cases exactValue
       exact List.getElem_mem _
-
-@[step] theorem observed_stack_height {A} {compiler : runtime.compiler.FunctionCompiler A}
-    (values : Slice Itasca.code.StackType) (observed : ObservedStack compiler values.val)
-    (count : Usize) (bound : count.val ≤ values.val.length) :
-    runtime.compiler.control.stack_height values count compiler.function.local_slots ⦃ out =>
-      out.val = compiler.function.local_slots.val + stackWords (values.val.take count.val) ⦄ := by
-  apply control_stack_height values count compiler.function.local_slots bound
-  have mono := stackWords_take_mono values.val (a := count.val) (b := values.val.length) bound
-  have max : compiler.height.val ≤ U32.max := by scalar_tac
-  rw [observed.height] at max
-  simp only [List.take_length] at mono
-  omega
 
 end Exec.Code

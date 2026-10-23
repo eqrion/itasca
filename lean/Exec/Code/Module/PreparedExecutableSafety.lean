@@ -11,8 +11,8 @@ theorem prepared_executable_safety_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start}
-    (w : CodeEntry.Prepared data env index start .Wasm2)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
+    (w : CodeEntry.Prepared data env index start profile)
     (small : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =
@@ -43,45 +43,4 @@ theorem prepared_executable_safety_wasm2 {A} (ops : runtime.platform.Alloc A)
   refine ⟨rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,?_⟩
   simp only [EnvTranslation.context,w.context_results]
 
-/-- The single-result initial block follows from the validated Wasm 1
-signature environment; it is not a caller-supplied compilation premise. -/
-theorem prepared_executable_safety_wasm1 {A} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops)
-    {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
-    {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start}
-    (w : CodeEntry.Prepared data env index start .Wasm1)
-    (small : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (environment : ProfileEnvironment .Wasm1 env)
-    (signaturesMatch : SignatureSequence signatures.val env.types.val)
-    (slotsMatch : functionSlots.val.map (fun word => word.val) =
-      env.func_types.val.map (fun ty => signatureSlots ty.params.val))
-    (batchBound : batchStart.val + data.length ≤ Usize.max)
-    (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    (begun : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
-      ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
-    let C := EnvTranslation.context env w.ctx
-    CompilerEntryFacts started env w.ctx w.typeIdx w.ft w.body ∧
-    EnvTranslation.Matches env w.ctx C ∧
-    Control.resultTypes (Wasm1.Loop.initialBlockType w.ctx.results.val) = w.ctx.results.val.map Translate.valueType ∧
-    IndexedTableReaderCompilerPointWasm1 (fun tables => ExecutableEmission tables C) started started
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ctx.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      w.body env w.ctx (Wasm1.Loop.initialBlockType w.ctx.results.val)
-      (Wasm1.Loop.initial (Wasm1.Loop.initialBlockType w.ctx.results.val)) ∧
-    ObservedStack started [] ∧
-    started.function.indirect.val.length ≤ started.function.code.val.length ∧
-    started.function.simd.val.length ≤ started.function.code.val.length ∧
-    started.function.v128_pool.val.length ≤ started.function.code.val.length ∧
-    FixupBudget started.frames.val started.function.code.val.length := by
-  have endFits : batchStart.val + w.finish.val ≤ Usize.max := by
-    have bound := w.body_bytes.bound
-    omega
-  have single : w.ft.results.val.length ≤ 1 := environment.1.1 w.ft
-    (by rw [←w.function_type]; exact List.getElem_mem w.type_lt)
-  obtain ⟨facts,results,point⟩ := indexed_table_prepared_compiler_initial_wasm1
-    (fun tables => ExecutableEmission tables (EnvTranslation.context env w.ctx))
-    ops law w small signaturesMatch slotsMatch endFits created begun single
-  exact ⟨facts,EnvTranslation.Matches.root _ _,results,point,
-    prepared_compiler_raw_initial ops law w signaturesMatch endFits created begun⟩
 end Exec.Code

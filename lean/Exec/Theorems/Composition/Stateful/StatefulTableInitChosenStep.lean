@@ -3,10 +3,11 @@ import Exec.Abs.Stateful.ChosenSelection
 import Exec.Theorems.Composition.Stateful.StatefulTableInitDispatch
 import Exec.Interp.State.StatefulContinue
 import Exec.Interp.StructuredMachine.StatefulPrepare
-import Exec.Interp.Cumulative.Machine
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp Exec.Interp.Stateful
-variable {emission : Exec.Interp.StructuredMachine.FunctionEmission}
 
 theorem stateful_table_init_point_step_chosen {choices : SourceChoices} (occurrence : Nat) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -22,18 +23,18 @@ theorem stateful_table_init_point_step_chosen {choices : SourceChoices} (occurre
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (fetchBound : compiled.code.length≤U32.max)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after}::rest,[]⟩) :
     let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after}::rest,[]⟩
     (∃ target : U32,raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      StructuredMachine.FramePoint emission (decodeStore view code store) {raw with pc:=target} {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output) ∨
+      StructuredMachine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       ((∃ pc : U32,∃ front : List val,
         out.1=.Ok () ∧ pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}} ∧
         (∃ address : runtime.TableAddr,∃ sourceAddress : Usize,∃ object segment destination source count,store.tables.val[address.index.val]?=some object ∧ store.elems.val[sourceAddress.val]?=some segment ∧ segment.ty=object.ty ∧ TableInitializationEffect store address.index object segment destination source count (out.1,out.2.2.1)) ∧
         FrameSlots out.2.1 {raw with pc:=pc} {f with code:=after,vals:=front} ∧
-        StructuredMachine.FramePoint emission (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
+        StructuredMachine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
         Abs.Cumulative.ChosenStep choices occurrence initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩)) ∨
       (out.1=.Err (.Trap .TableOutOfBounds) ∧ out.2.2.1=store ∧
         (∃ pc : U32,pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}}) ∧
@@ -81,7 +82,7 @@ theorem stateful_table_init_point_step_chosen {choices : SourceChoices} (occurre
       refine Or.inl ⟨pc,front,success,pcNext,same,⟨address,sourceAddress,object,segment,destination,source,count,issued,sourceFound,sameType,effect⟩,represented,?_,?_⟩
       · have safe := Abs.Stateful.transition_next (.tableInit tableIndex sourceIndex) (decodeStore view code store) ambient {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} rest after
           ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩ typed sourceStep
-        have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,Cumulative.emission,List.map_nil] using tail) pc pcNext
+        have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,List.map_nil] using tail) pc pcNext
         simpa only [List.append_nil] using continued
       · exact .stateful (sourceStep.chosen_of_no_growth (by rfl)) (by intro impossible;cases impossible)
     · change out.1=.Err (.Trap .TableOutOfBounds) at error

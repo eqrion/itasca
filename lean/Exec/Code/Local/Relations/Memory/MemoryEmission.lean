@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryLoadOpcode op) offset alignment 0#u128
       ⦃ out => out.1 = .Ok () → ∃ instruction,
         Lowered compiler out.2 instruction (front ++ [valtype_numtype op.type]) ∧
-        CoreEmission C (front ++ [.I32]) (op.source argument) [instruction] (front ++ [valtype_numtype op.type]) ⦄ := by
+        ScalarEmission C (front ++ [.I32]) (op.source argument) [instruction] (front ++ [valtype_numtype op.type]) ⦄ := by
   apply WP.spec_mono (compiler_memory_load_lowered ops law compiler state types front op offset alignment
     layout reachable concrete typed codeFits sourceFits coordinateFits)
   intro out success accepted
@@ -42,7 +42,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryStoreOpcode op) offset alignment 0#u128
       ⦃ out => out.1 = .Ok () → ∃ instruction,
         Lowered compiler out.2 instruction front ∧
-        CoreEmission C (front ++ [.I32,valtype_numtype op.type]) (op.source argument) [instruction] front ⦄ := by
+        ScalarEmission C (front ++ [.I32,valtype_numtype op.type]) (op.source argument) [instruction] front ⦄ := by
   apply WP.spec_mono (compiler_memory_store_lowered ops law compiler state types front op offset alignment
     layout reachable concrete typed codeFits sourceFits coordinateFits)
   intro out success accepted

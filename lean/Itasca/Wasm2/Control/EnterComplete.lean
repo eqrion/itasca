@@ -13,12 +13,12 @@ open Aeneas Aeneas.Std Result
 
 namespace Itasca.Wasm2
 
-/-- A block type whose resolved signature is within the limits passes `checkBlock`. -/
-theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
+/-- A block type whose resolved signature is within the limits passes `checkIndex`. -/
+theorem checkIndex.complete (env : module.Env) (bt : signature.BlockType)
     (ins outs : List types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
-    checkBlock env bt = .ok (.Ok ()) := by
+    checkIndex env bt = .ok (.Ok ()) := by
   cases bt with
   | Empty | Value _ => rfl
   | TypeIndex index =>
@@ -29,8 +29,8 @@ theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
       simpa [inputs, resolve, List.getElem?_eq_getElem hi] using hin
     have houts : env.types.val[index.val].results.val = outs := by
       simpa [outputs, resolve, List.getElem?_eq_getElem hi] using hout
-    have hspec : checkBlock env (.TypeIndex index) ⦃ r => r = .Ok () ⦄ := by
-      unfold checkBlock
+    have hspec : checkIndex env (.TypeIndex index) ⦃ r => r = .Ok () ⦄ := by
+      unfold checkIndex
       step
       split
       · scalar_tac
@@ -41,6 +41,23 @@ theorem checkBlock.complete (env : module.Env) (bt : signature.BlockType)
         simp
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hspec
     exact hr
+
+/-- A profile-admitted block type whose resolved signature is within the limits passes
+`checkBlock`. -/
+theorem checkBlock.complete (env : module.Env) (profile : ValidationProfile)
+    (bt : signature.BlockType) (ins outs : List types.ValueType)
+    (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
+    (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
+    (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
+    checkBlock env profile bt = .ok (.Ok ()) := by
+  have hcheck : code.check_block_type profile bt = .ok (.Ok ()) := by
+    cases profile with
+    | Wasm2 => rfl
+    | Wasm1 =>
+      obtain ⟨b, hb⟩ := hscalar rfl
+      exact code.check_block_type.complete hb _
+  simp only [checkBlock, hcheck, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  exact checkIndex.complete env bt ins outs hin hout hip hop
 
 /-- Forward realization and exact effects after opening, used by recursive
 independent completeness rather than assuming an accepted handler. -/
@@ -118,10 +135,11 @@ namespace Itasca
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
 theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (form : Wasm2.Frames.Form) (initial : form.Initial)
+    (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (next : Usize) (ins outs : List types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hdecoded : Wasm2.BlockDecoded data st.core.pos bt next)
+    (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
     (hin : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
     (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000)
@@ -129,11 +147,11 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : modul
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
-    code.enter st data env form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
+    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
       Wasm2.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   rw [Wasm2.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [Wasm2.checkBlock.complete env bt ins outs hin hout hip hop]
+  rw [Wasm2.checkBlock.complete env profile bt ins outs hscalar hin hout hip hop]
   simp only [bind_ok]
   exact Wasm2.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
     ins outs outer segment ts initial hin hv hb hcap hvalsCap ht

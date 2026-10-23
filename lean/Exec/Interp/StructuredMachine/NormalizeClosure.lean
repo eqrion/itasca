@@ -6,15 +6,15 @@ import Exec.Interp.Control.NormalizeClosure
 
 namespace Exec.Interp.StructuredMachine
 
-theorem normalization_choice {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem normalization_choice (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (typed : Abs.CoreTyped ⟨s, ambient, f :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw f compiled C targets next output) :
-    ForwardSkip emission s raw f compiled C targets next output ∨
-      NormalizedPoint emission s exec raw compiled C f ∨ ReadySource f := by
+    (point : FramePoint s raw f compiled C targets next output) :
+    ForwardSkip s raw f compiled C targets next output ∨
+      NormalizedPoint s exec raw compiled C f ∨ ReadySource f := by
   by_cases ready : ReadySource f
   · exact Or.inr (Or.inr ready)
   have frameTyped : Abs.FrameTyped s f [] := by cases typed.typed.frames with | cons h _ => exact h
@@ -45,19 +45,19 @@ theorem normalization_choice {emission : FunctionEmission} (exec : runtime.inter
 
 /-- Source-only normalization reaches either a retained forward jump or a
 bytecode-bearing source position after a bounded finite number of reductions. -/
-theorem normalize {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem normalize (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (typed : Abs.CoreTyped ⟨s, ambient, f :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw f compiled C targets next output) :
+    (point : FramePoint s raw f compiled C targets next output) :
     ∃ count g targets' next' output', ErasedSteps count f g ∧
       count + normalizationMeasure g ≤ normalizationMeasure f ∧
       FrameSlots exec raw g ∧
-      FramePoint emission s raw g compiled C targets' next' output' ∧
+      FramePoint s raw g compiled C targets' next' output' ∧
       Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
-      (ForwardSkip emission s raw g compiled C targets' next' output' ∨ ReadySource g) := by
+      (ForwardSkip s raw g compiled C targets' next' output' ∨ ReadySource g) := by
   induction measure : normalizationMeasure f using Nat.strong_induction_on
       generalizing f targets next output with
   | h measure ih =>

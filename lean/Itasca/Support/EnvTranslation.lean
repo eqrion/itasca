@@ -286,9 +286,6 @@ theorem Matches.table_funcref {env ctx C} (h : Matches env ctx C)
   rw [htt]
   cases he : tt.elem <;> simp_all [tableType, Translate.referenceType]
 
-theorem Matches.table_exists {env ctx C} (h : Matches env ctx C)
-    (hi : 0 < C.TABLES.length) : 0 < env.table_types.val.length := by simpa [h.tables] using hi
-
 theorem Matches.memory_exists {env ctx C} (h : Matches env ctx C)
     (hi : 0 < C.MEMS.length) : 0 < env.mem_types.val.length := by simpa [h.mems] using hi
 

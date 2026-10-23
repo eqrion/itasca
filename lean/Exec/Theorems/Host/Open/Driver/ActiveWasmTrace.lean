@@ -13,14 +13,6 @@ inductive ActiveWasmTrace {M F A : Type} (memory : runtime.platform.MemoryBuffer
       (tail : ActiveWasmTrace memory floats allocator select count after last) :
       ActiveWasmTrace memory floats allocator select (count+1) state last
 
-theorem ActiveWasmTrace.continuing {M F A : Type} {memory : runtime.platform.MemoryBuffer M}
-    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A} {select : Selector}
-    {count first last} (trace : ActiveWasmTrace memory floats allocator select count first last) :
-    ContinuingTrace (tick memory floats allocator select) count first last := by
-  induction trace with
-  | nil => exact .nil _
-  | next mode active actual tail ih => exact .next actual ih
-
 /-- Any finite actual prefix reaching a Wasm boundary has an active-Wasm-only
 prefix to its first such boundary. Later host actions cannot enter this trace. -/
 theorem continuing_first_wasm_boundary {M F A : Type} (memory : runtime.platform.MemoryBuffer M)

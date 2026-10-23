@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A successful fixed-operand reader retains the supplied source zipper and
 its exact operand effect, including polymorphic unreachable stacks. -/
 theorem reader_simd_fixed_post {data env locals index st}
-    (p : Wasm2.Pending data env locals index st)
+    (p : Wasm2.Pending data env .Wasm2 locals index st)
     (position : Usize) (out : code.OpIterState)
     (inputs : List types.ValueType) (output : Option types.ValueType) (source : instr)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -48,9 +48,9 @@ theorem reader_simd_fixed_post {data env locals index st}
   have finalBlocks : ({st with core := out} : code.BodyState).blocks.val =
       p.parents.map Wasm2.Frames.Saved.bt ++ [p.current.bt] := by simpa [controls,ctrls] using blocks
   refine ⟨controls,cursor,values,finalEffect,finalEncoded,?_,?_⟩
-  · exact ⟨C,outer,spine,⟨header.kind,header.placeholder,header.inputs,header.outputs,
+  · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
       header.prior,.simple header.emits (.plain source wf)⟩,base,finalTyped,finalControls,finalBlocks,valuesEq⟩
   · exact p.append_result C outer spine header base {st with core := out} source
-      p.current.ctrl.polymorphic_base values wf finalEncoded finalTyped finalControls finalBlocks valuesEq declared
+      p.current.ctrl.polymorphic_base values wf finalEncoded finalTyped finalControls finalBlocks valuesEq (fun h => nomatch h) declared
 
 end Exec.Code

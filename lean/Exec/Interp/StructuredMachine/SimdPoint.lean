@@ -10,15 +10,15 @@ theorem simd_point_head {emission : ContextEmission} {immediates constants C ret
     (allowed : Abs.SimdInstr source)
     (project : ∀ before emitted result, emission C before source emitted result →
       Code.SimdEmission immediates constants C before source emitted result)
-    (point : Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
       code jumpTables labels stack (source::after) pc next output) :
     (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels stack (source::after) target.val next output) ∨
     (∃ (instruction : Code.Bytecode) (result : List valtype),
       Code.SimdEmission immediates constants C stack source [instruction] result ∧
       code[pc]? = some instruction ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels result after (pc+1) next output) := by
   have relation := point.current
   generalize sourceEq : source::after = cursor at relation

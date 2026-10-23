@@ -1,5 +1,7 @@
-import Exec.Code.Local.Control.Table.StructuredCodeTableLegacy
-import Exec.Code.Local.Lowering.Float.FloatCoreEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Table.StructuredCodePoint
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas.Std
 
@@ -17,19 +19,14 @@ theorem LinearEmission.not_branchTable {locals before instruction emitted after}
   | numeric stack op => exact numeric_not_branchTable op depths fallback
   | _ => simp
 
-theorem CoreEmission.not_branchTable {C before instruction emitted after}
-    (h : CoreEmission C before instruction emitted after) (depths fallback) :
+theorem ScalarEmission.not_branchTable {C before instruction emitted after}
+    (h : ScalarEmission C before instruction emitted after) (depths fallback) :
     instruction ≠ .BR_TABLE depths fallback := by
   cases h with
-  | pure h => exact h.not_branchTable depths fallback
+  | linear h => exact h.not_branchTable depths fallback
+  | float stack op => cases op <;> simp [Abs.Float.Instruction.source]
   | load => simp [Abs.Memory.Load.source]
   | store => simp [Abs.Memory.Store.source]
   | _ => simp
 
-theorem FloatCoreEmission.not_branchTable {C before instruction emitted after}
-    (h : FloatCoreEmission C before instruction emitted after) (depths fallback) :
-    instruction ≠ .BR_TABLE depths fallback := by
-  cases h with
-  | core h => exact h.not_branchTable depths fallback
-  | scalar stack op => cases op <;> simp [Abs.Float.Instruction.source]
 end Exec.Code

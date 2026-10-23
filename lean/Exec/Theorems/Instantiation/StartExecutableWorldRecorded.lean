@@ -4,7 +4,30 @@ import Exec.Theorems.Invocation.InvokeHostWorldRecorded
 import Exec.Theorems.Api.ExecutableInv
 import Exec.Theorems.Host.HostSegmentPublication
 import Exec.Theorems.Composition.Certified.CertifiedExecutable
-import Exec.Theorems.Instantiation.InstantiateStartSlice
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
 import Exec.Theorems.Instantiation.StartAmbient
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
@@ -46,7 +69,7 @@ theorem invoke_start_executable_world_recorded_ambient {M P F A : Type}
     args signature.params (by simp [ResultsTyped,params,empty]) (by simp [empty])
   cases kind : function.code with
   | Wasm instanceIndex functionIndex =>
-    apply WP.dspec_mono (invoke_defined_world_recorded_outcomes Abs.executable_language memory hooks floats allocator correct allocation interrupts
+    apply WP.dspec_mono (invoke_defined_world_recorded_outcomes memory hooks floats allocator correct allocation interrupts
       view laws code (ExecutableInv view) (fun c s held=>held.toCertifiedApiStore.toCertifiedSupportedStore)
       (fun c before after held mutation=>held.update mutation) sound preserve externs issued exec store platform certified ambient ambientWf address function signature
       instanceIndex functionIndex args (alloc.vec.Vec.new runtime.Value) owner (by simp [empty]) hf hs kind checked)

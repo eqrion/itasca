@@ -22,17 +22,4 @@ theorem compile_complete {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨executable,compiled⟩ := Code.compile_with_available ops law bound allocation bytes profile raw limits valid eligible
   exact ⟨executable,compiled,compile_accepted_certificate ops law bytes profile limits executable compiled⟩
 
-/-- Successful Rust return and its source certificate as an Aeneas normal-return
-contract, for either complete validation profile. -/
-theorem compile_complete_spec {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : Code.ValidCompilationSource bytes profile raw)
-    (eligible : Code.CompileEligible A bytes profile raw limits bound) :
-    runtime.compiler.compile_with ops bytes profile limits ⦃ result =>
-      ∃ executable, result = .Ok executable ∧ CompilationCertificate bytes profile executable ⦄ := by
-  obtain ⟨executable,compiled,certificate⟩ := compile_complete ops law bound allocation bytes profile raw limits valid eligible
-  rw [compiled,WP.spec_ok]
-  exact ⟨executable,rfl,certificate⟩
-
 end Exec.Theorems

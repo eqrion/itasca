@@ -20,6 +20,6 @@ structure LinkedPreparedRun {M P F A : Type}
     (platform : P) (ready : runtime.store.Store M)
     extends PreparedRun memory hooks floats allocator view before module platform ready where
   importsLength : imports.length = module.module.env.imports.length
-  linkRun : runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
+  linkRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory before imports
     (.Ok ()) 0#usize (emptyInstance module) = .ok (before, .Ok (), seed)
 end Exec.Store

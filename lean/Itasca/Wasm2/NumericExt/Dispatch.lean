@@ -16,9 +16,6 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.NumericExtensions
 
-private theorem scalar_eq {ty} {a b : UScalar ty} : a = b ↔ a.val = b.val :=
-  ⟨congrArg UScalar.val, UScalar.eq_of_val_eq⟩
-
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- Sign-extension effects agree with the independent opcode meaning. -/

@@ -7,13 +7,13 @@ theorem InstantiationCode.source_executable {M : Type} {view : M → Slice U8}
     {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (raw : ModuleBinary.Module) (shape : Shape view before)
-    (oldSlice : Abs.FunctionsSupported Abs.ExecutableInstr (decodeStore view oldCode before))
+    (oldSlice : Abs.FunctionsSupported (decodeStore view oldCode before))
     (found : ready.instances.val[before.instances.len.val]? = some inst)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
     {profile bytes}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile) :
-    Abs.FunctionsSupported Abs.ExecutableInstr (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready) := by
+    Abs.FunctionsSupported (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready) := by
   obtain ⟨staged, count, rfl, retained, entries, table, signatures⟩ := code
   have functionsEq := congrArg ModuleBinary.Module.functions matched.1
   simp only [ModuleElaboration.fromEnv] at functionsEq

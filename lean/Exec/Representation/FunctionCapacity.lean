@@ -1,5 +1,5 @@
 import Exec.Representation.ValidatedStacks
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -16,7 +16,7 @@ def SourceFrameCapacity (profile : ValidationProfile) (env : module.Env)
     ctx.locals.val = signature.params.val ++ declared ∧
     ctx.results.val = signature.results.val ∧
     Profile.BodyEncoding profile data body ∧
-    ProfileValidatedStacks profile data env ctx typeIndex samples ∧
+    ValidatedStacksWasm2 data env ctx typeIndex (Wasm2.initial typeIndex) samples ∧
     words = slots ((signature.params.val ++ declared).map Translate.valueType) + maximumStackWords samples
 
 /-- The allocated compiled frame is bounded by the independently described

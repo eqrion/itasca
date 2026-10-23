@@ -14,7 +14,7 @@ theorem source_boundary_native_prefix {choices : Spec.SourceChoices} (admissible
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices) (select : Selector)
-    {expected : List valtype} (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    {expected : List valtype} (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) {count endpoint}
     (prefixSteps : Spec.ChosenStepsN choices occurrence count (Abs.decode world.machine.source) [] endpoint)
     (boundary : Spec.OpenHost.QuietBoundary endpoint)
@@ -26,7 +26,7 @@ theorem source_boundary_native_prefix {choices : Spec.SourceChoices} (admissible
       view laws compatible world held prefixSteps boundary)
   obtain ⟨ticks,reached,path,stops⟩:=atomic_loop_open_boundary memory floats allocator select
     (ReentrantCallbacks.FloorInv view world.machine.store.externs.length)
-    (⟨world,occurrence⟩ : ChosenWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (⟨world,occurrence⟩ : ChosenWorld M Unit view expected)
     state invariant stopped root results stack history
   exact continuing_first_wasm_boundary memory floats allocator select path world.machine.exec root results rfl stops
 end Exec.Theorems.OpenReentrantControl

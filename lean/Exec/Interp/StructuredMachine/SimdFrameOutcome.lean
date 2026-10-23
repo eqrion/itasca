@@ -4,7 +4,7 @@ import Exec.Interp.Simd.Common.SimdMutation
 namespace Exec.Interp.StructuredMachine.Simd
 open Aeneas.Std
 
-def FrameOutcome (emission : FunctionEmission) {M P : Type} (view : M → Slice U8)
+def FrameOutcome {M P : Type} (view : M → Slice U8)
     (interpretation : Store.CodeInterpretation) (store : runtime.store.Store M)
     (exec : runtime.interp.Execution) (platform : P) (raw : runtime.interp.Frame) (index : Usize)
     (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
@@ -16,7 +16,7 @@ def FrameOutcome (emission : FunctionEmission) {M P : Type} (view : M → Slice 
     {out.2.1 with slots:=exec.slots}={exec with frames:=exec.frames.set index {raw with pc:=pc}} ∧
     SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ∧
     FrameSlots out.2.1 {raw with pc:=pc} updated ∧ FrameMetadata source updated ∧
-    FramePoint emission (Store.decodeStore view interpretation out.2.2.1) {raw with pc:=pc} updated compiled C targets next output ∧
+    FramePoint (Store.decodeStore view interpretation out.2.2.1) {raw with pc:=pc} updated compiled C targets next output ∧
     Abs.Simd.Step ⟨Store.decodeStore view interpretation store,ambient,source::rest,[]⟩
       (.next ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩)) ∨
   (out.1=.Err (.Trap .MemoryOutOfBounds) ∧

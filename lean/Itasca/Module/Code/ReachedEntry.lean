@@ -41,7 +41,7 @@ theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVi
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
     (bodyTotal : ∀ (prepared : CodeEntry.Prepared data env index pos profile) started,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-      CodeEntry.runBody visitor profile prepared.body env prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄) :
+      code.validate_body_with visitor prepared.body env prepared.ctx prepared.typeIdx profile started ⦃ _ => True ⦄) :
     module.validate_code_entry_with visitor data pos env index profile v ⦃ _ => True ⦄ := by
   unfold module.validate_code_entry_with
   dsimp only
@@ -130,11 +130,9 @@ theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVi
                       cases acceptedUnit
                       obtain ⟨⟨reply,ended⟩,run,_⟩ := WP.spec_imp_exists (bodyTotal prepared started hstart)
                       dsimp only [prepared] at run
-                      cases profile <;> simp only [CodeEntry.runBody] at run
-                      all_goals
-                        simp only [bind_ok,sliced]
-                        simp only [Std.bind_assoc,Std.uncurry,bind_ok]
-                        rw [run]
-                        cases reply <;> simp
+                      simp only [bind_ok,sliced]
+                      simp only [Std.bind_assoc,Std.uncurry,bind_ok]
+                      rw [run]
+                      cases reply <;> simp
 
 end Itasca

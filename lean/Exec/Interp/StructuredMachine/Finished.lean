@@ -1,10 +1,10 @@
 import Exec.Interp.StructuredMachine.Execution
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-theorem Execution.finished {emission : FunctionEmission} {supported : Abs.AState → Prop} {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
+theorem Execution.finished {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution} {source : Abs.AState}
     {expected : List valtype} {pc : Nat} {pending : Bool}
-    (invariant : Execution emission supported view code store exec source expected pc pending) (empty : exec.frames.val = []) :
+    (invariant : Execution view code store exec source expected pc pending) (empty : exec.frames.val = []) :
     source.frames = [] ∧ SpecExt.ResultsTyped source.store expected source.results ∧
       ValuesAt exec.slots.val 0 source.results := by
   have sourceEmpty : source.frames = [] := by

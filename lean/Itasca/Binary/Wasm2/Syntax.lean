@@ -1,9 +1,9 @@
-import Itasca.Binary.Wasm1.Syntax
+import Itasca.Support.ControlTranslation
 
 /-!
 # Wasm 2.0 instruction syntax
 
-The Wasm 2.0 counterpart of `Binary/Wasm1/Syntax`: flat tokens (`Token`) whose block types are
+The instruction syntax shared by both profiles: flat tokens (`Token`) whose block types are
 `signature.BlockType` values, the relation `Emits` between tokens and the structured SpecTec
 instructions they spell, and `BodyTokens` for a function body with its final `end`.
 `Emits.wellFormed` shows that the emitted instructions satisfy `wf_instr`.
@@ -13,8 +13,9 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-/-- A flat Wasm 2.0 instruction stream element: a plain instruction, a structured instruction
-header or `else` or `end`. Block types may be type-section indices. -/
+/-- A flat instruction stream element: a plain instruction, a structured instruction header or
+`else` or `end`. Block types may be type-section indices; the Wasm 1.0 grammar admits only
+`ScalarBlockByte` ones. -/
 inductive Token where
   | plain (op : instr)
   | block (bt : signature.BlockType)

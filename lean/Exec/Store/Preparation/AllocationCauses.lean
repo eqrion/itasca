@@ -13,27 +13,6 @@ theorem reserve_with_cause {A T : Type} (allocator : runtime.platform.Alloc A)
   refine ⟨answer,?_,called⟩
   cases answer <;> simp [runtime.reserve,called]
 
-/-- A reserve error proves the exact reached allocator request was refused. -/
-theorem reserve_error_cause {A T : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize)
-    (error : runtime.ExecError) (after : alloc.vec.Vec T)
-    (run : runtime.reserve allocator values extra = .ok (.Err error,after)) :
-    error = .Exhausted .Allocation ∧ after = values ∧
-      allocator.reserve values extra = .ok (false,values) := by
-  obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law values extra
-  rw [wrapped] at run
-  cases answer <;> simp_all
-
-/-- Object exhaustion at the actual object gate is a concrete quota witness. -/
-theorem room_error_cause {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (bound : objectCount store ≤ Usize.max)
-    (error : runtime.ExecError)
-    (run : runtime.store.Store.room memory store = .ok (.Err error)) :
-    error = .Exhausted .Objects ∧ store.limits.max_objects.val ≤ objectCount store := by
-  have result := room_spec memory store bound
-  rw [run,WP.spec_ok] at result
-  split at result <;> simp_all
-
 /-- A signature copy may refuse either of its two exact empty-vector requests. -/
 def TypeCopyRefusal {A : Type} (allocator : runtime.platform.Alloc A)
     (ty : Itasca.types.FuncType) : Prop :=

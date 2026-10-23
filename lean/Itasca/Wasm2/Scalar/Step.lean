@@ -1,7 +1,6 @@
 import Itasca.Wasm2.Scalar.Memory
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Step.ScalarContext
-import Itasca.Wasm1.StepEnv
 import Itasca.Binary.Wasm1.DeclaredReferences
 
 /-!
@@ -17,8 +16,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-private theorem Pending.append_scalar {data env locals index st}
-    (p : Pending data env locals index st)
+private theorem Pending.append_scalar {data env profile locals index st}
+    (p : Pending data env profile locals index st)
     (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
@@ -33,14 +32,16 @@ private theorem Pending.append_scalar {data env locals index st}
     (hc : s.ctrls.val = p.parents.map Frames.Saved.ctrl ++
       [{ p.current.ctrl with polymorphic_base := poly }])
     (hv : s.vals.val = outer ++ newVals)
-    (_hlen : newVals.length ≤ p.current.vals.length + 1) : p.After {st with core := s} := by
+    (_hlen : newVals.length ≤ p.current.vals.length + 1)
+    (hbr : data.val[p.start.val]'p.inbounds ≠ 0x0E#u8) : p.After {st with core := s} := by
   have hb := p.opened
   obtain ⟨_, _, _, _, _, _, _, blocks, _⟩ := hb
   exact p.append_result C outer spine header base {st with core := s} op poly newVals hwf
-    (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv (encoded.declared _)
+    (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv
+    (fun _ => ⟨encoded, encoded.leaf p.inbounds hbr _⟩) (encoded.declared _)
 
-private theorem Pending.append_scalar_simple {data env locals index st}
-    (p : Pending data env locals index st)
+private theorem Pending.append_scalar_simple {data env profile locals index st}
+    (p : Pending data env profile locals index st)
     (s : code.OpIterState) (op : instr) (poly : Bool) (vals : List code.StackType)
     (hwf : wf_instr op) (encoded : Wasm1.At data p.start (.plain op) s.pos)
     (htyped : ∀ C, wf_context C →
@@ -51,11 +52,12 @@ private theorem Pending.append_scalar_simple {data env locals index st}
     (hctrls : s.ctrls.val = p.parents.map Frames.Saved.ctrl ++
       [{ p.current.ctrl with polymorphic_base := poly }])
     (hvals : s.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ++ vals)
-    (hlen : vals.length ≤ p.current.vals.length + 1) : p.After {st with core := s} := by
+    (hlen : vals.length ≤ p.current.vals.length + 1)
+    (hbr : data.val[p.start.val]'p.inbounds ≠ 0x0E#u8) : p.After {st with core := s} := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
   apply p.append_scalar C outer spine header base ctrls stack s op poly vals hwf encoded
     (htyped _ (Frames.enter_wf _ (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩)) _ _ _) typed)
-    hctrls _ hlen
+    hctrls _ hlen hbr
   simpa [stack, base] using hvals
 
 end Itasca.Wasm2
@@ -64,8 +66,8 @@ namespace Itasca.Wasm2
 
 
 /-- NOP accepts arbitrary unread suffixes and records its opcode byte. -/
-theorem Pending.step_nop {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_nop {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_NOP v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -73,15 +75,15 @@ theorem Pending.step_nop {data env locals index st}
   intro r hr _
   rw [hr]
   obtain ⟨_, outer, _, _, hbase, _, hc, _, hv⟩ := p.opened
-  apply p.append_scalar_simple st.core .NOP p.current.ctrl.polymorphic_base p.current.vals .instr_case_0
+  apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) st.core .NOP p.current.ctrl.polymorphic_base p.current.vals .instr_case_0
     (.no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop)
     (fun C hC h => h.nop hC) _ _ (by omega)
   · simpa using hc
   · simp [hv, hbase]
 
 /-- UNREACHABLE trims the current frame and records the exact byte. -/
-theorem Pending.step_unreachable {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_unreachable {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_UNREACHABLE v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -94,7 +96,7 @@ theorem Pending.step_unreachable {data env locals index st}
     have encoded : Wasm1.At data p.start (.plain .UNREACHABLE) s.pos :=
       .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
         (by simpa [hspos] using p.pos) .unreachable
-    have hafter := p.append_scalar_simple s .UNREACHABLE true [] .instr_case_1 encoded
+    have hafter := p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s .UNREACHABLE true [] .instr_case_1 encoded
       (fun C hC h => h.unreachable hC) hsctrls (by simpa using hsvals) (by simp)
     simp only [code.read_unreachable, hr, bind_ok, WP.spec_ok]
     exact ⟨trivial, fun _ _ => hafter⟩
@@ -102,8 +104,8 @@ theorem Pending.step_unreachable {data env locals index st}
     exact (hr.2 hok).choose_spec
 
 /-- DROP covers concrete and polymorphic operands, and may reject an empty stack. -/
-theorem Pending.step_drop {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_drop {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_DROP v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -126,7 +128,7 @@ theorem Pending.step_drop {data env locals index st}
     have encoded : Wasm1.At data p.start (.plain .DROP) s.pos :=
       .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
         (by simpa [hp] using p.pos) .drop
-    apply p.append_scalar_simple s .DROP p.current.ctrl.polymorphic_base rest .instr_case_2 encoded
+    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s .DROP p.current.ctrl.polymorphic_base rest .instr_case_2 encoded
       (fun C hC h => hout.wasm2_prefix_drop C hC p.current.ops h) _ _
       (by have := hout.length; omega)
     · simpa [hc] using hctrls
@@ -140,8 +142,8 @@ namespace Itasca.Wasm2
 
 
 /-- The i32 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
-theorem Pending.step_i32Const {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_i32Const {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_I32_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -158,7 +160,7 @@ theorem Pending.step_i32Const {data env locals index st}
     obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
     have encoded : Wasm1.At data p.start (.plain (Spec.i32Const value)) s.pos :=
       .of_s32 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple s (Spec.i32Const value) p.current.ctrl.polymorphic_base
+    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (Spec.i32Const value) p.current.ctrl.polymorphic_base
       (p.current.vals ++ [.Val .I32]) (Spec.i32Const_wf value) encoded
       (fun C hC h => h.i32Const hC value) _ _ (by simp)
     · simpa [hc] using hctrls
@@ -167,8 +169,8 @@ theorem Pending.step_i32Const {data env locals index st}
     exact (hr.2 hok).choose_spec
 
 /-- The i64 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
-theorem Pending.step_i64Const {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_i64Const {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_I64_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -185,7 +187,7 @@ theorem Pending.step_i64Const {data env locals index st}
     obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
     have encoded : Wasm1.At data p.start (.plain (ScalarConst.i64 value)) s.pos :=
       .of_s64 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple s (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
+    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
       (p.current.vals ++ [.Val .I64]) (ScalarConst.i64_wf value) encoded
       (fun C hC h => h.i64Const hC value) _ _ (by simp)
     · simpa [hc] using hctrls
@@ -194,8 +196,8 @@ theorem Pending.step_i64Const {data env locals index st}
     exact (hr.2 hok).choose_spec
 
 /-- The f32 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
-theorem Pending.step_f32Const {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_f32Const {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_F32_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -212,7 +214,7 @@ theorem Pending.step_f32Const {data env locals index st}
     obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
     have encoded : Wasm1.At data p.start (.plain (ScalarConst.f32 value)) s.pos :=
       .of_f32 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple s (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
+    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
       (p.current.vals ++ [.Val .F32]) (ScalarConst.f32_wf value) encoded
       (fun C hC h => h.f32Const hC value) _ _ (by simp)
     · simpa [hc] using hctrls
@@ -221,8 +223,8 @@ theorem Pending.step_f32Const {data env locals index st}
     exact (hr.2 hok).choose_spec
 
 /-- The f64 constant step terminates on arbitrary immediate bytes and preserves the invariant on success. -/
-theorem Pending.step_f64Const {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_f64Const {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_F64_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -239,7 +241,7 @@ theorem Pending.step_f64Const {data env locals index st}
     obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
     have encoded : Wasm1.At data p.start (.plain (ScalarConst.f64 value)) s.pos :=
       .of_f64 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple s (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
+    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
       (p.current.vals ++ [.Val .F64]) (ScalarConst.f64_wf value) encoded
       (fun C hC h => h.f64Const hC value) _ _ (by simp)
     · simpa [hc] using hctrls
@@ -253,8 +255,8 @@ namespace Itasca.Wasm2
 
 
 /-- Every numeric opcode extends the generated typing derivation under the current frame context. -/
-theorem Pending.step_numeric_mapped {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_numeric_mapped {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max) (opcode : U8) (op : Numeric.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
     (hmap : Numeric.opcodeMeaning opcode = some op) :
@@ -272,14 +274,15 @@ theorem Pending.step_numeric_mapped {data env locals index st}
   dsimp only at hc hp hv hlen hout hok ⊢
   have encoded : Wasm1.At data p.start (.plain op.instruction) s.pos :=
     .no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) (.numeric opcode op hmap)
-  apply p.append_scalar C outer spine header base ctrls stack s op.instruction
+  apply p.append_scalar (hbr := by rw [hbyte]; rintro rfl; simp [Numeric.opcodeMeaning] at hmap)
+    C outer spine header base ctrls stack s op.instruction
     p.current.ctrl.polymorphic_base after op.wellFormed encoded _ _ hv hlen
   · simpa [hpoly] using hout hok
   · simpa [hc] using ctrls
 
 /-- Unmapped high opcodes terminate with rejection; mapped scalar opcodes preserve the invariant. -/
-theorem Pending.step_numeric {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_numeric {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max) (opcode : U8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) (hlow : 0x45 ≤ opcode.val) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ opcode v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -291,8 +294,8 @@ theorem Pending.step_numeric {data env locals index st}
   | some op => exact p.step_numeric_mapped visitor hvisitor v hsize opcode op hbyte hm
 
 /-- SELECT preserves its joined concrete/bottom result and exact opcode provenance. -/
-theorem Pending.step_select {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+theorem Pending.step_select {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_SELECT v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -310,7 +313,8 @@ theorem Pending.step_select {data env locals index st}
   have encoded : Wasm1.At data p.start (.plain (.SELECT none)) s.pos :=
     .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hp] using p.pos) .select
-  apply p.append_scalar C outer spine header base ctrls stack s (.SELECT none)
+  apply p.append_scalar (hbr := by rw [hbyte]; simp [global_simps]) C outer spine header base ctrls stack s
+    (.SELECT none)
     p.current.ctrl.polymorphic_base after (.instr_case_3 _) encoded _ _ hv hlen
   · simpa [hpoly] using hout hok
   · simpa [hc] using ctrls
@@ -320,8 +324,8 @@ end Itasca.Wasm2
 namespace Itasca.Wasm2
 
 
-private theorem run_after {A V : Type} {data env locals index st}
-    (p : Pending data env locals index st)
+private theorem run_after {A V : Type} {data env profile locals index st}
+    (p : Pending data env profile locals index st)
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
     (v : V) (hread : read ⦃ r => ∀ a, r.1 = .Ok a → p.After {st with core := r.2} ⦄)
@@ -333,7 +337,7 @@ private theorem run_after {A V : Type} {data env locals index st}
   obtain ⟨_, ha⟩ := h.2 hr
   exact ha
 
-private theorem Pending.index_post_after {data env locals index st} (p : Pending data env locals index st)
+private theorem Pending.index_post_after {data env profile locals index st} (p : Pending data env profile locals index st)
     (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
@@ -346,19 +350,20 @@ private theorem Pending.index_post_after {data env locals index st} (p : Pending
     (r : core.result.Result U32 error.OpError × code.OpIterState)
     (hpost : Scalar.IndexPost ((p.current.form.params p.current.ins).map Translate.valueType) data st.core outer p.current.vals
       (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops op r)
-    (idx : U32) (hr : r.1 = .Ok idx)
-    : p.After {st with core := r.2} := by
+    (idx : U32) (hr : r.1 = .Ok idx) (hbr : opcode ≠ 0x0E#u8 := by decide) :
+    p.After {st with core := r.2} := by
   obtain ⟨hd, hc, rest, hv, hl, ht⟩ := hpost idx hr
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply p.append_scalar C outer spine header base ctrls vals r.2 (op idx)
+  apply p.append_scalar (hbr := by rw [hbyte]; exact hbr) C outer spine header base ctrls vals r.2
+    (op idx)
     p.current.ctrl.polymorphic_base rest (hwf idx) _ (by simpa [hpoly] using ht) _ hv hl
   · obtain ⟨bytes, hs, hn, hb, he⟩ := hd
     exact .of_immediate p.inbounds hbyte p.pos (himm idx bytes he) ⟨hs, hn, hb⟩
   · simp [hc, ctrls]
 
 /-- `local.get` preserves `Pending` on success. -/
-theorem Pending.step_local_get {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_local_get {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x20#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_GET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -377,7 +382,7 @@ theorem Pending.step_local_get {data env locals index st} (p : Pending data env 
     (fun idx _ he => .localGet idx he) r hr idx hi
 
 /-- `local.set` preserves `Pending` on success. -/
-theorem Pending.step_local_set {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_local_set {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x21#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_SET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -396,7 +401,7 @@ theorem Pending.step_local_set {data env locals index st} (p : Pending data env 
     (fun idx _ he => .localSet idx he) r hr idx hi
 
 /-- `local.tee` preserves `Pending` on success. -/
-theorem Pending.step_local_tee {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_local_tee {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x22#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_TEE v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -416,7 +421,7 @@ theorem Pending.step_local_tee {data env locals index st} (p : Pending data env 
     (fun idx _ he => .localTee idx he) r hr idx hi
 
 /-- `global.get` preserves `Pending` on success. -/
-theorem Pending.step_global_get {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_global_get {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x23#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_GET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -435,7 +440,7 @@ theorem Pending.step_global_get {data env locals index st} (p : Pending data env
     (fun idx _ he => .globalGet idx he) r hr idx hi
 
 /-- `global.set` preserves `Pending` on success. -/
-theorem Pending.step_global_set {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_global_set {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x24#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_SET v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -453,7 +458,7 @@ theorem Pending.step_global_set {data env locals index st} (p : Pending data env
     (fun idx => .instr_case_47 _ (EnvTranslation.index_wf idx))
     (fun idx _ he => .globalSet idx he) r hr idx hi
 
-private theorem Pending.reserved_post_after {data env locals index st} (p : Pending data env locals index st)
+private theorem Pending.reserved_post_after {data env profile locals index st} (p : Pending data env profile locals index st)
     (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
@@ -465,18 +470,18 @@ private theorem Pending.reserved_post_after {data env locals index st} (p : Pend
     (r : core.result.Result Unit error.OpError × code.OpIterState)
     (hpost : Scalar.ReservedPost ((p.current.form.params p.current.ins).map Translate.valueType) data st.core outer p.current.vals
       (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops op r)
-    (hr : r.1 = .Ok ())
-    : p.After {st with core := r.2} := by
+    (hr : r.1 = .Ok ()) (hbr : opcode ≠ 0x0E#u8 := by decide) :
+    p.After {st with core := r.2} := by
   obtain ⟨⟨hp, hz, hn⟩, hc, rest, hv, hl, ht⟩ := hpost hr
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply p.append_scalar C outer spine header base ctrls vals r.2 op
+  apply p.append_scalar (hbr := by rw [hbyte]; exact hbr) C outer spine header base ctrls vals r.2 op
     p.current.ctrl.polymorphic_base rest hwf _ (by simpa [hpoly] using ht) _ hv hl
   · exact .of_immediate p.inbounds hbyte p.pos himm (.byte data st.core.pos r.2.pos 0#u8 hp hz hn)
   · simp [hc, ctrls]
 
 /-- `memory.size` preserves `Pending` on success. -/
-theorem Pending.step_memory_size {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_memory_size {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x3F#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_MEMORY_SIZE v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -495,7 +500,7 @@ theorem Pending.step_memory_size {data env locals index st} (p : Pending data en
     .instr_case_62 .memorySize r hr hi
 
 /-- `memory.grow` preserves `Pending` on success. -/
-theorem Pending.step_memory_grow {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_memory_grow {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x40#u8) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_MEMORY_GROW v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
@@ -515,7 +520,7 @@ theorem Pending.step_memory_grow {data env locals index st} (p : Pending data en
     .instr_case_63 .memoryGrow r hr hi
 
 /-- Loads and stores preserve `Pending` on success. -/
-theorem Pending.step_memory {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.step_memory {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hsize : st.core.vals.val.length < Usize.max) (hvisitor : FullVisitor.Total visitor)
     (opcode : U8) (operation : MemoryMeaning.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
@@ -547,7 +552,8 @@ theorem Pending.step_memory {data env locals index st} (p : Pending data env loc
   intro r hr arg hi
   obtain ⟨⟨middle, halign, hoffset⟩, hc, rest, hv, hl, ht⟩ := hr arg hi
   have hwf : wf_instr (operation.op arg) := ht.wellFormed _ (by simp)
-  apply p.append_scalar C outer spine header base ctrls vals r.2 (operation.op arg)
+  apply p.append_scalar (hbr := by rw [hbyte]; rintro rfl; simp [MemoryMeaning.opcodeMeaning] at hrow)
+    C outer spine header base ctrls vals r.2 (operation.op arg)
     p.current.ctrl.polymorphic_base rest hwf _ (by simpa [hpoly] using ht) _ hv hl
   · obtain ⟨alignment, ha, hna, hba, hea⟩ := halign
     obtain ⟨offset, ho, hno, hbo, heo⟩ := hoffset
@@ -560,7 +566,7 @@ namespace Itasca.Wasm2
 
 /-- Successful shared scalar dispatch preserves the control zipper
 and appends exactly the independently decoded instruction. -/
-theorem Pending.scalar {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.scalar {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hvisitor : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)

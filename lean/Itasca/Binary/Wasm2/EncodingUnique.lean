@@ -201,7 +201,7 @@ theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) 
   case plain.plain =>
     rename_i op hp op' hp'
     obtain ⟨hh, rfl, rfl⟩ := Wasm1.Immediate.prefix_unique opcode hp hp' he
-    exact ⟨congrArg Token.plain (Wasm1.Token.plain.inj hh), rfl, rfl⟩
+    exact ⟨hh, rfl, rfl⟩
   case plain.reference =>
     rename_i op hp op' hp'
     obtain ⟨rfl, rfl, rfl⟩ := plain_reference_prefix hp hp' he

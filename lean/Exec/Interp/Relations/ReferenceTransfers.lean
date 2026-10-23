@@ -37,11 +37,4 @@ theorem values_references_prefix (f : Abs.AFrame) (front suffix : List val)
   rw [shape] at bounded
   exact (Abs.valuesBound_append.mp bounded).1
 
-theorem values_references_branch (f : Abs.AFrame) (front discarded results : List val)
-    (shape : f.vals = front ++ discarded ++ results) (bound : Nat) (bounded : Abs.ValuesBound bound f.vals) :
-    Abs.ValuesBound bound (front ++ results) := by
-  rw [shape] at bounded
-  obtain ⟨prior, final⟩ := Abs.valuesBound_append.mp bounded
-  exact Abs.valuesBound_append.mpr ⟨(Abs.valuesBound_append.mp prior).1, final⟩
-
 end Exec.Interp

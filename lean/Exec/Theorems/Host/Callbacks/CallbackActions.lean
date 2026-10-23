@@ -130,15 +130,4 @@ theorem callback_package {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     as ⟨answer,_,effect,issued⟩
   exact ⟨effect,issued⟩
 
-theorem world_sound {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8)
-    (laws : Platform.MemoryLaws memory view) :
-    HostWorldSound (platform memory allocator select) view (ExecutableInv view) := by
-  apply HostWorldSound.of_fixed
-  intro code
-  apply Platform.HostSound.of_invariant (fun _ held => held.source_typed)
-  intro token store identity args results held
-  exact WP.spec_mono (callback_package memory allocator allocation select view laws code store held token identity args results)
-    (fun _ post => ⟨post.1.invariant,post.1.extension⟩)
 end Exec.Theorems.CallbackActions

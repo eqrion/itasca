@@ -45,9 +45,4 @@ theorem chosen_float_unary_first (occurrence : Nat) (type : Fnn) (op : unop_Fnn)
     · exact numeric_unop_results_wf source
   · simp only [List.head?_map,head,Option.map_some]
 
-theorem chosen_vector_of_reply {choices : VectorChoices} (occurrence : Nat)
-    {request : VectorRequest} {reply : Option vec_} (source : VectorResultAllowed request reply)
-    (same : choices occurrence request=reply) : ChosenVector choices occurrence request reply := by
-  rw [← same] at source ⊢
-  exact .selected source
 end Exec.Spec

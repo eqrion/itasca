@@ -1,5 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Stream.Source
+import Itasca.Contracts
 
 /-!
 # Batch retirement
@@ -15,12 +16,6 @@ pending vector by swap-and-pop, and requires `stream.CodeBatch.finish` to succee
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamRetirement
-
-/-- Polling returns an ordinary result in every visitor state. It may report an error or return
-an arbitrary record. Termination of retirement needs no batch provenance, worker correctness or
-successful finish. -/
-def PollTotal {V : Type} (visitor : stream.StreamingVisitor V) : Prop :=
-  ∀ state, ∃ r, visitor.poll_code_batch state = .ok r
 
 /-- The pending search finds the first matching entry or its vector's end. -/
 def SearchPost (pending : alloc.vec.Vec Usize) (needle first found : Usize) : Prop :=
@@ -70,12 +65,6 @@ theorem stream.retire_code_batch_loop.spec (pending : alloc.vec.Vec Usize)
       exact ⟨hlo, hhi, hprev, by omega⟩
   · exact ⟨by omega, hfirst, by omega⟩
 
-theorem stream.retire_code_batch_loop.total (pending : alloc.vec.Vec Usize)
-    (needle first : Usize) (hfirst : first.val ≤ pending.length) :
-    ∃ found, stream.retire_code_batch_loop pending needle first = .ok found := by
-  obtain ⟨found, hr, _⟩ := WP.spec_imp_exists (stream.retire_code_batch_loop.spec pending needle first hfirst)
-  exact ⟨found, hr⟩
-
 end Itasca
 
 namespace Itasca.StreamRetirement
@@ -103,28 +92,6 @@ theorem swap_pop_perm {α : Type} (xs : List α) (i : Nat) (hi : i < xs.length) 
   have hperm := hrotate.trans (List.set_perm_cons_eraseIdx hi last)
   exact (List.Perm.cons xs[i] (List.Perm.cons_inv hperm)).trans
     (List.getElem_cons_eraseIdx_perm hi)
-
-/-- Under the driver's distinctness invariant, removal excludes the returned
-ID and preserves every other member and distinctness. -/
-theorem swap_pop_nodup {α : Type} (xs : List α) (i : Nat) (hi : i < xs.length)
-    (hn : xs.Nodup) :
-    let ys := (xs.set i (xs[xs.length - 1]'(by omega))).dropLast
-    ys.Nodup ∧ xs[i] ∉ ys ∧ ∀ x, x ∈ ys ↔ x ∈ xs ∧ x ≠ xs[i] := by
-  dsimp only
-  have hp := swap_pop_perm xs i hi
-  have hn' := hp.nodup_iff.mpr hn
-  rw [List.nodup_cons] at hn'
-  refine ⟨hn'.2, hn'.1, ?_⟩
-  intro x
-  constructor
-  · intro hx
-    refine ⟨hp.mem_iff.mp (by simp [hx]), ?_⟩
-    intro he
-    subst x
-    exact hn'.1 hx
-  · rintro ⟨hx, hne⟩
-    have := hp.mem_iff.mpr hx
-    simpa [hne] using this
 
 end Itasca.StreamRetirement
 
@@ -212,7 +179,6 @@ theorem stream.retire_code_batch.total {V : Type} (visitor : stream.StreamingVis
     (stream.retire_code_batch.spec visitor moduleId state pending hreturn)
   exact ⟨r, hr⟩
 
-
 /-- Successful retirement exposes its actual poll and finish checks without
 assuming that any callback returns on unexecuted paths. -/
 theorem stream.retire_code_batch.accepted {V : Type} (visitor : stream.StreamingVisitor V)
@@ -227,34 +193,6 @@ theorem stream.retire_code_batch.accepted {V : Type} (visitor : stream.Streaming
     exact ⟨r, hr⟩
   have hs := stream.retire_code_batch.spec visitor moduleId state pending hex
   simpa [h, StreamRetirement.Retired] using hs
-
-/-- The polled batch ID was pending, is absent from the remaining IDs, and every other pending ID
-remains. The driver removes the ID before checking finish. This statement concerns successful
-retirements only. -/
-theorem stream.retire_code_batch.removes {V : Type} (visitor : stream.StreamingVisitor V)
-    (moduleId : U64) (state state' : V) (pending remaining : alloc.vec.Vec Usize)
-    (hn : pending.val.Nodup)
-    (h : stream.retire_code_batch visitor moduleId state pending = .ok (.Ok (), state', remaining)) :
-    ∃ batch, visitor.poll_code_batch state = .ok (.Ok batch, state') ∧
-      batch.batch_id ∈ pending.val ∧ batch.batch_id ∉ remaining.val ∧
-      remaining.val.Nodup ∧ remaining.length + 1 = pending.length ∧
-      (∀ id, id ∈ remaining.val ↔ id ∈ pending.val ∧ id ≠ batch.batch_id) := by
-  obtain ⟨batch, hpoll, _, _, hp⟩ := stream.retire_code_batch.accepted
-    visitor moduleId state state' pending remaining h
-  have hnd := hp.nodup_iff.mpr hn
-  rw [List.nodup_cons] at hnd
-  refine ⟨batch, hpoll, hp.mem_iff.mp (by simp), hnd.1, hnd.2, ?_, ?_⟩
-  · simpa [alloc.vec.Vec.length] using hp.length_eq
-  · intro id
-    constructor
-    · intro hm
-      refine ⟨hp.mem_iff.mp (by simp [hm]), ?_⟩
-      intro heq
-      subst id
-      exact hnd.1 hm
-    · rintro ⟨hm, hne⟩
-      have := hp.mem_iff.mpr hm
-      simpa [hne] using this
 
 /-- Draining terminates under returning polls even when those polls supply foreign, unfinished or
 fabricated records. An accepted drain leaves the pending vector empty. -/

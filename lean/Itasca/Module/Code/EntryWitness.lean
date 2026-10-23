@@ -123,12 +123,4 @@ theorem module.validate_code_entry_with.witness_profile {V : Type} (visitor : co
               · simpa [alloc.vec.Vec.deref] using hresultsval
               · exact ModuleBinary.slice_bytes (by omega) (by scalar_tac) hbodyval
 
-/-- `module.validate_code_entry_with.witness_profile` for Wasm 1.0. -/
-theorem module.validate_code_entry_with.witness {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
-    (v v' : V) (hbound : CodeEntry.Bounds env)
-    (h : module.validate_code_entry_with visitor data pos env index .Wasm1 v = .ok (.Ok finish, v')) :
-    Nonempty (CodeEntry.Witness visitor data env index pos finish v v') :=
-  module.validate_code_entry_with.witness_profile visitor data pos env index finish v v' hbound .Wasm1 h
-
 end Itasca

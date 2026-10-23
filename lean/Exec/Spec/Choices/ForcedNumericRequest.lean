@@ -19,20 +19,6 @@ theorem integer_binary_request_forced (type : Inn) (op : binop_Inn) (left right 
   cases source
   exact integer_binop_at_most_one (by assumption)
 
-theorem ChosenNumeric.forced_policy_independent {left right : NumericChoices}
-    (leftValid : left.Admissible) (rightValid : right.Admissible) {occurrence : Nat} {request : NumericRequest}
-    {firstReply secondReply : Option num_} (forced : request.Forced)
-    (first : ChosenNumeric left occurrence request firstReply) (second : ChosenNumeric right occurrence request secondReply) :
-    firstReply=secondReply := by
-  cases first with
-  | selected firstResults firstAllowed =>
-    cases second with
-    | selected secondResults secondAllowed =>
-      have same := NumericRequest.allowed_unique firstAllowed secondAllowed
-      cases same
-      exact numeric_reply_forced (forced firstResults firstAllowed)
-        (leftValid occurrence request firstResults firstAllowed) (rightValid occurrence request firstResults secondAllowed)
-
 def scalarFormatResize : cvtop__ → Bool
   | .mk_cvtop___3 _ _ _ => true
   | _ => false

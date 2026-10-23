@@ -22,7 +22,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
     (ordered : AddressOrder base initial store.tables.length (inst.tables.val.map fun address => address.index.val))
     (matching : AllocationPrefix (fun ty => Spec.allocationTable (Itasca.EnvTranslation.tableType ty))
       seed.module.module.env.table_types.val allocationStart original (store.tables.val.map decodeTable) start.val) :
-    runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator store (.Ok ()) start inst
+    runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator store (.Ok ()) start inst
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with tables := after.tables, table_elements := after.table_elements} ∧ next = {seed with tables := next.tables} ∧
         StagedPrefix before after ∧ objectCount after ≤ Usize.max ∧
@@ -33,7 +33,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
           seed.module.module.env.table_types.val allocationStart original (after.tables.val.map decodeTable)
           seed.module.module.env.table_types.val.length) ⦄ := by
   have capacity := seed.module.module.env.table_types.property
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop5
+  unfold runtime.store.instantiate.Store.prepare_instance_loop5
   apply loop.spec_decr_nat (fun state => seed.module.module.env.table_types.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with tables := state.1.tables, table_elements := state.1.table_elements} ∧
       state.2.2.2 = {seed with tables := state.2.2.2.tables} ∧ StagedPrefix before state.1 ∧
@@ -50,7 +50,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
     have source : currentInst.module = seed.module := by
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop5.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.table_types, Itasca.module.Env.impl.table_types, source, bind_ok]
     split
@@ -119,7 +119,7 @@ theorem table_allocation_success {M A : Type} (memory : runtime.platform.MemoryB
     (objectBound : objectCount before ≤ Usize.max)
     (issued : ∀ address ∈ inst.tables.val, address.index.val < before.tables.length)
     (count : inst.tables.length = start.val)
-    (run : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator before (.Ok ()) start inst =
+    (run : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator before (.Ok ()) start inst =
       .ok (typeParts after (.Ok ()) next)) :
     after.tables.val.map decodeTable = before.tables.val.map decodeTable ++
       (inst.module.module.env.table_types.val.drop start.val).map

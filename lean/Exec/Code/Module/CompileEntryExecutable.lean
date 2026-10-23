@@ -19,8 +19,7 @@ theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platfor
     (entry : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       w.dispatched.code w.dispatched.env w.entry.index w.dispatched.validated_end finish
       w.initial w.final w.dispatched.profile)
-    {source : List instr} (encoded : Profile.BodyEncoding w.dispatched.profile entry.body source)
-    (singleResult : w.dispatched.profile = .Wasm1 → entry.ft.results.val.length ≤ 1) :
+    {source : List instr} (encoded : Profile.BodyEncoding w.dispatched.profile entry.body source) :
     DefinedExecutableFunctionCode batch.env entry.typeIdx
       (.FUNC (.mk_uN entry.typeIdx.val)
         ((ModuleLocals.declared entry.groups).map Translate.valueType |>.map local.LOCAL) source) w.final.function := by
@@ -28,7 +27,7 @@ theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platfor
     (signatures := before.signatures.deref) (functionSlots := before.func_param_slots.deref)
     (by simpa [alloc.vec.Vec.deref, w.metadata.1] using signatureTable)
     (by simpa [alloc.vec.Vec.deref, w.metadata.1] using functionTable)
-    (w.end_fits reachable bounded origin entry) w.created encoded singleResult
+    (w.end_fits reachable bounded origin entry) w.created encoded
     w.final.function w.final.budget w.finished
   simpa only [w.metadata.1] using certificate
 end Exec.Code

@@ -4,7 +4,7 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_select_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)

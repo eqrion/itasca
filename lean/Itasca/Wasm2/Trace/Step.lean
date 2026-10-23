@@ -6,7 +6,7 @@ import Itasca.Wasm2.Trace.TableBytes
 /-!
 # Step-level callback byte provenance
 
-`steps` shows that the extracted `code.step_profile` at `.Wasm2` satisfies `StepContract`: every
+`steps` shows that the extracted `code.step_profile` satisfies `StepContract`: every
 ordinary return has an exact independent callback byte trace, without a total-visitor premise.
 `step_contract_of_table` assembles the scalar, control and non-control leaf traces once the
 `br_table` case is supplied.
@@ -20,21 +20,26 @@ open VisitorTrace
 outcomes. -/
 theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (opcode : U8) (v : V)
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (opcode : U8) (v : V)
+    (hcheck : code.check_opcode profile opcode = .ok (.Ok ()))
     (hscalar : opcode.val ∉ controlOpcodes) :
-    code.step_profile visitor st data env ctx index .Wasm2 opcode v =
+    code.step_profile visitor st data env ctx index profile opcode v =
       if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st, v)
       else (do
         let (r, s, v') ← code.step_wasm2 visitor st.core data env ctx opcode v
         .ok (r, {st with core := s}, v')) := by
   unfold code.step_profile
-  conv => lhs; whnf
+  have hok : core.result.Result.Insts.CoreOpsTry.branch
+      (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
+  rw [hcheck]
+  simp only [bind_ok]
+  rw [hok]
+  simp only [bind_ok]
   split
   case h_1 | h_2 | h_3 | h_4 | h_5 | h_6 | h_7 | h_8 | h_9 | h_10 | h_11 =>
     exact False.elim (hscalar (by decide))
   case h_12 =>
-    dsimp only
     split
     · rfl
     · congr 1
@@ -43,14 +48,14 @@ theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
       cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem step_scalar {data env locals index st} (p : Pending data env locals index st)
+theorem step_scalar {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
     (byte : data.val[p.start.val]'p.inbounds = opcode) :
     ProfileStepRecords p visitor observe ctx opcode := by
   intro v result final v' run
-  rw [dispatch_scalar _ _ _ _ _ _ _ _ hscalar] at run
+  rw [dispatch_scalar _ _ _ _ _ _ _ _ _ (byte ▸ p.check_opcode) hscalar] at run
   split at run
   · simp only [Result.ok.injEq, Prod.mk.injEq] at run
     obtain ⟨rfl, rfl, rfl⟩ := run
@@ -66,16 +71,17 @@ theorem step_scalar {data env locals index st} (p : Pending data env locals inde
 /-- Assemble every concrete step once the branch-table protocol is supplied. -/
 theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
-    (table : ∀ st (p : Pending data env locals index st),
+    (table : ∀ st (p : Pending data env profile locals index st),
       data.val[p.start.val]'p.inbounds = 0x0e#u8 →
       ProfileStepRecords p visitor observe ctx 0x0e#u8) :
-    StepContract visitor observe data env locals ctx index := by
+    StepContract visitor observe data env profile locals ctx index := by
   intro st p v result out v' run
   let opcode := data.val[p.start.val]'p.inbounds
   have byte : data.val[p.start.val]'p.inbounds = opcode := rfl
-  change code.step_profile visitor st data env ctx index .Wasm2 opcode v = _ at run
+  change code.step_profile visitor st data env ctx index profile opcode v = _ at run
   by_cases hs : opcode.val ∉ controlOpcodes
   · exact step_scalar p visitor observe records ctx hlocals opcode hs byte v result out v' run
   · have hm := Classical.not_not.mp hs
@@ -99,10 +105,11 @@ theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
 provenance for every ordinary return, without a total-visitor premise. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals) :
-    StepContract visitor observe data env locals ctx index := by
-  exact step_contract_of_table visitor observe records data env locals ctx index hlocals
+    StepContract visitor observe data env profile locals ctx index := by
+  exact step_contract_of_table visitor observe records data env profile locals ctx index hlocals
     (fun _ p byte => step_br_table p visitor observe records ctx byte)
 
 end Itasca.Wasm2.CallbackTrace

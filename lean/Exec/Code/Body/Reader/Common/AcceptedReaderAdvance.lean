@@ -43,12 +43,12 @@ theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law 
     data.val[st.core.pos.val]
   rw [called,WP.spec_ok] at normal
   have observed := normal rfl
-  have fresh := ledger.reader_wasm2 ops law pending out ⟨sourceLocals,ft.results⟩ rfl observed
+  have fresh := ledger.reader_wasm2 ops law pending out ⟨sourceLocals,ft.results⟩ observed
     (by simpa only [pending,ReaderBoundaryWasm2.pending] using called)
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out called
-  have cursor := code.step_profile.accepted_progress_wasm2
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
+  have cursor := code.step_profile.accepted_progress
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance called
   apply WP.exists_imp_spec

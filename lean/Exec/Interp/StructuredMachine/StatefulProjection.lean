@@ -1,13 +1,6 @@
-import Exec.Interp.Cumulative.Machine
-import Exec.Interp.State.StatefulPoint
-namespace Exec.Interp.StructuredMachine
-
-/-- The current stateful source head retains its exact immutable index-pair metadata. -/
-class StatefulProjection (emission : ContextEmission) (pairs : List (Aeneas.Std.U32 × Aeneas.Std.U32)) : Prop where
-  project : ∀ {C before op emitted after}, emission C before (Abs.Stateful.Instruction.source op) emitted after →
-    Code.StatefulEmission pairs C before op.source emitted after
-
-end Exec.Interp.StructuredMachine
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Code.Local.Relations.Common.StatefulEmission
+import Exec.Interp.StructuredMachine.OrdinaryHeads
 namespace Exec.Interp.Stateful
 open Aeneas.Std
 
@@ -30,10 +23,10 @@ theorem emission_inv {pairs C before emitted after} (op : Abs.Stateful.Instructi
 theorem point_head {emission : StructuredMachine.ContextEmission} {pairs C returns code labels stack pc next output}
     [projection : StructuredMachine.StatefulProjection emission pairs]
     (op : Abs.Stateful.Instruction) (after : List instr)
-    (point : Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
       code jumpTables labels stack (op.source::after) pc next output) :
     (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels stack (op.source::after) target.val next output) ∨
     (∃ front input result first second a b entry,
       Abs.Stateful.Signature C op input result ∧ stack = front++input ∧
@@ -41,7 +34,7 @@ theorem point_head {emission : StructuredMachine.ContextEmission} {pairs C retur
       (op.arity ≥ 2 → second.val = first.val+1) ∧
       Code.StatefulArguments op a b ∧ Code.StatefulPair pairs op a b entry ∧
       code[pc]? = some (Code.statefulInstruction op first second a entry) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels (front++result) after (pc+1) next output) := by
   have relation := point.current
   generalize sourceEq : op.source::after = source at relation
@@ -60,29 +53,3 @@ theorem point_head {emission : StructuredMachine.ContextEmission} {pairs C retur
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => cases op <;> simp [Abs.Stateful.Instruction.source] at sourceEq
 end Exec.Interp.Stateful
-
-namespace Exec.Interp.StructuredMachine
-instance {pairs} : StatefulProjection (Code.CumulativeEmission pairs) pairs where
-  project := by
-    intro C before op emitted after head
-    cases head with
-    | left h =>
-      have impossible := Stateful.float_decode_none h
-      simp only [Abs.Stateful.decode_source] at impossible
-      contradiction
-    | right h => exact h
-    | indirect h =>
-      generalize sourceEq : op.source=source at h
-      cases h with
-      | call front params results typeIndex tableIndex entry index base bounds signature table pair basePosition indexPosition =>
-        have impossible := congrArg Abs.Stateful.decodeInstruction sourceEq
-        rw [Abs.Stateful.decode_source] at impossible
-        contradiction
-end Exec.Interp.StructuredMachine
-
-namespace Exec.Interp.StructuredMachine
-instance (compiled : runtime.bytecode.CompiledFunction) :
-    StatefulProjection (Cumulative.emission compiled) compiled.indirect.val := by
-  unfold Cumulative.emission
-  infer_instance
-end Exec.Interp.StructuredMachine

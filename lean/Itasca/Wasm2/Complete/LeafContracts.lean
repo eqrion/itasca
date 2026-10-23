@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-theorem EnvironmentWithinLimits.resolve_bound {env} (h : EnvironmentWithinLimits env)
+theorem _root_.Itasca.Profile.EnvironmentWithinLimits.resolve_bound {env} (h : Profile.EnvironmentWithinLimits env)
     (view : signature.ResultType) (ts : List types.ValueType) (ht : resolve env view = some ts) :
     ts.length ≤ 1000 := by
   cases view with
@@ -31,8 +31,8 @@ theorem EnvironmentWithinLimits.resolve_bound {env} (h : EnvironmentWithinLimits
     | some ft =>
       have hm : ft ∈ env.types.val := List.mem_of_getElem? hi
       cases part <;> simp [resolve, hi] at ht <;> subst ts
-      · exact (h.types ft hm).1
-      · exact (h.types ft hm).2
+      · exact (h.types ft hm).bounds.1
+      · exact (h.types ft hm).bounds.2
 
 theorem Labels.lookup {env st C} (hl : Labels env st C) (depth : U32)
     (hi : depth.val < C.LABELS.length) :
@@ -55,24 +55,25 @@ namespace Completeness
 
 /-- Conclusion of a leaf contract: `Wasm2.step` accepts, ends at `next` with output `out`, and
 grows the operand stack by at most 500 per encoded byte. -/
-def LeafResult {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (opcode : U8) (bytes : List U8) (next : Usize) (out : List valtype) : Prop :=
-  ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+def LeafResult {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+    (profile : ValidationProfile) (ctx : code.Context) (index : U32) (opcode : U8)
+    (bytes : List U8) (next : Usize) (out : List valtype) : Prop :=
+  ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
     f.Output out s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 500 * (bytes.length + 1)
 
 private theorem encoding_nonempty {bytes n} (h : Leb128.Encoding bytes n) : 1 ≤ bytes.length := by
   obtain ⟨bs, hb, _, _⟩ := h
   cases bs <;> simp_all
 
-theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
-    (henv : EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
+    (henv : Profile.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL (.mk_uN idx.val)) (.mk_functype (.mk_list input) (.mk_list output)))
     (hcap : st.core.vals.val.length + 1000 < Usize.max) :
-    LeafResult f data env ctx index 0x10#u8 bytes next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x10#u8 bytes next (front ++ output) := by
   cases ht with
   | call _ _ params results hi ht _ _ =>
     obtain ⟨ft, hi, ht, hv⟩ := hmatch.func_lookup idx _ hi ht
@@ -80,9 +81,9 @@ theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
       list.mk_list.inj (functype.mk_functype.inj hv).1
     have hresults : ft.results.val.map Translate.valueType = output :=
       list.mk_list.inj (functype.mk_functype.inj hv).2
-    have hlimits := henv.funcs ft (ht ▸ List.getElem_mem hi)
+    have hlimits := (henv.funcs ft (ht ▸ List.getElem_mem hi)).bounds
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
-      (code.call.direct_complete st data env idx next ft ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
+      (code.call.direct_complete st data env profile idx next ft ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
         hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front f.core.vals f.core.base_eq
         (by omega) (by simpa [f.core.poly_eq, hparams] using hr))
     dsimp only at hc hblocks hp hvals hlen hreal
@@ -92,17 +93,18 @@ theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
-    (henv : EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
+    (henv : Profile.EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hte : Leb128.Encoding tableBytes table.val)
     (hb : Wasm1.BytesAt data st.core.pos (bytes ++ tableBytes) next)
+    (hzero : profile = .Wasm1 → tableBytes = [0#u8])
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))
       (.mk_functype (.mk_list input) (.mk_list output)))
     (hcap : st.core.vals.val.length + 1000 < Usize.max) :
-    LeafResult f data env ctx index 0x11#u8 (bytes ++ tableBytes) next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x11#u8 (bytes ++ tableBytes) next (front ++ output) := by
   cases ht with
   | call_indirect _ _ _ params results lim htable htabletype hi ht _ _ _ =>
     obtain ⟨ft, hi, ht, hv⟩ := hmatch.type_lookup idx _ hi ht
@@ -110,13 +112,19 @@ theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env :
       list.mk_list.inj (functype.mk_functype.inj hv).1
     have hresults : ft.results.val.map Translate.valueType = output :=
       list.mk_list.inj (functype.mk_functype.inj hv).2
-    have hlimits := henv.types ft (ht ▸ List.getElem_mem hi)
-    obtain ⟨middle, hindex, hzero⟩ := hb.split
+    have hlimits := (henv.types ft (ht ▸ List.getElem_mem hi)).bounds
+    obtain ⟨middle, hindex, htablespan⟩ := hb.split
     obtain ⟨htableenv, hfun⟩ := hmatch.table_funcref table lim htable htabletype
+    have hbyte : profile = .Wasm1 → ∃ h : middle.val < data.length, data.val[middle.val] = 0#u8 := by
+      intro hp
+      have hs := htablespan
+      rw [hzero hp] at hs
+      obtain ⟨hm, hz, _⟩ := hs.single
+      exact ⟨hm, hz⟩
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
-      (code.call.indirect_complete st data env idx table middle next ft
-        ⟨bytes, hindex.suffix, hindex.length, hindex.bound, he⟩
-        ⟨tableBytes, hzero.suffix, hzero.length, hzero.bound, hte⟩ htableenv hfun hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front
+      (code.call.indirect_complete st data env profile idx table middle next ft
+        ⟨bytes, hindex.suffix, hindex.length, hindex.bound, he⟩ hbyte
+        ⟨tableBytes, htablespan.suffix, htablespan.length, htablespan.bound, hte⟩ htableenv hfun hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front
         f.core.vals f.core.base_eq (by omega) (by simpa [f.core.poly_eq, hparams] using hr))
     dsimp only at hc hblocks hp hvals hlen hreal
     refine ⟨s, by simpa [step] using hrun, hp,
@@ -126,28 +134,28 @@ theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env :
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call_indirect {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
-    (henv : EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
+    (henv : Profile.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos (bytes ++ [0#u8]) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
       (.mk_functype (.mk_list input) (.mk_list output)))
     (hcap : st.core.vals.val.length + 1000 < Usize.max) :
-    LeafResult f data env ctx index 0x11#u8 (bytes ++ [0#u8]) next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x11#u8 (bytes ++ [0#u8]) next (front ++ output) := by
   apply f.call_indirect_indexed data env ctx index C hmatch henv idx 0#u32 bytes [0#u8]
-    next he _ hb front input output hr ht hcap
+    next he _ hb (fun _ => rfl) front input output hr ht hcap
   exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Leb128.payload]⟩
 
-theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.branch {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.BR (.mk_uN depth.val)) (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index 0x0C#u8 bytes next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x0C#u8 bytes next (front ++ output) := by
   cases ht with
   | br _ _ before args after hi ht _ _ =>
     obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup depth hi
@@ -164,15 +172,15 @@ theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : module.Env) (c
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (index : U32) (C : context) (hlabels : Labels env st C) (henv : EnvironmentWithinLimits env)
+theorem Frame.branch_if {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (index : U32) (C : context) (hlabels : Labels env st C) (henv : Profile.EnvironmentWithinLimits env)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.BR_IF (.mk_uN depth.val)) (.mk_functype (.mk_list input) (.mk_list output)))
     (hcap : st.core.vals.val.length + 1000 < Usize.max) :
-    LeafResult f data env ctx index 0x0D#u8 bytes next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x0D#u8 bytes next (front ++ output) := by
   cases ht with
   | br_if _ _ args hi ht _ _ =>
     obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup depth hi
@@ -191,14 +199,14 @@ theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.return_ {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (next : Usize) (hb : Wasm1.BytesAt data st.core.pos [] next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C .RETURN (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index 0x0F#u8 [] next (front ++ output) := by
+    LeafResult f data env profile ctx index 0x0F#u8 [] next (front ++ output) := by
   cases ht with
   | «return» _ before args after hreturn _ _ =>
     have hargs : ctx.results.val.map Translate.valueType = args := by
@@ -212,7 +220,7 @@ theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : module.Env) (
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depths : List U32) (default : U32) (count entries final : List U8) (next : Usize)
     (hcount : Leb128.Encoding count depths.length) (hentries : Wasm1.IndicesEncoding depths entries)
@@ -220,8 +228,9 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
     (hb : Wasm1.BytesAt data st.core.pos (count ++ entries ++ final) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C (BrTable.instruction depths default) (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index 0x0E#u8 (count ++ entries ++ final) next (front ++ output) := by
+    (ht : Instr_ok C (BrTable.instruction depths default) (.mk_functype (.mk_list input) (.mk_list output)))
+    (hprofile : profile = .Wasm1 → Wasm1.Instruction C (BrTable.instruction depths default)) :
+    LeafResult f data env profile ctx index 0x0E#u8 (count ++ entries ++ final) next (front ++ output) := by
   cases ht with
   | br_table _ _ _ before common after hbound hsub hdefaultbound hdefaultsub _ _ =>
     have htargets : ∀ d ∈ depths ++ [default], ∃ view ts,
@@ -236,10 +245,25 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
         subst d
         obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup default hdefaultbound
         exact ⟨view, ts, hl, hts, by simpa [proj_uN_0, hlookup] using hdefaultsub⟩
-    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch_table.complete st data env
+    have hsame : profile = .Wasm1 → ∃ us, ∀ d ∈ depths ++ [default], ∃ view,
+        labelAt st d.val = some view ∧ resolve env view = some us := by
+      intro hp
+      have hst := Wasm1.Instruction.br_table_iff.mp (hprofile hp)
+      obtain ⟨dview, us, hdl, hdts, hdlookup⟩ := hlabels.lookup default hdefaultbound
+      refine ⟨us, fun d hd => ?_⟩
+      rcases List.mem_append.mp hd with hd | hd
+      · have hm : uN.mk_uN d.val ∈ depths.map (fun d => uN.mk_uN d.val) := List.mem_map.mpr ⟨d, hd, rfl⟩
+        obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup d (hbound _ hm)
+        have he := hst _ hm
+        simp only [proj_uN_0, hlookup, hdlookup, list.mk_list.injEq] at he
+        exact ⟨view, hl, by rw [hts, List.map_injective_iff.mpr Translate.valueType_injective he]⟩
+      · have he : d = default := by simpa using hd
+        subst d
+        exact ⟨dview, hdl, hdts⟩
+    obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch_table.complete st data env profile
       f.core.parents f.core.current f.core.outer f.core.operands (front ++ before) common depths default next
       f.core.ctrls f.core.vals f.core.base
-      (hb.br_table_decoded depths default hcount hentries hdefault) htargets
+      (hb.br_table_decoded depths default hcount hentries hdefault) htargets hsame
       (by simpa [f.core.poly_eq, List.append_assoc] using hr)
     refine ⟨s, by simpa [step] using hrun, hp,
       ⟨⟨true, [], hc, by simpa using hv, Sequence.realizes_polymorphic_empty _⟩, hblocks⟩, ?_⟩
@@ -248,8 +272,9 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : module.E
 
 /-- All control leaves satisfy the shared byte-weighted execution
 contract directly from independent encodings and generated primitive rules. -/
-theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (henv : EnvironmentWithinLimits env)
+theorem control_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
+    (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -257,22 +282,24 @@ theorem control_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
     (hi : ControlImmediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index opcode bytes next (front ++ output) := by
+    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
+    (hprofile : profile = .Wasm1 → Wasm1.Instruction C op) :
+    LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
   cases hi with
   | br depth he => exact f.branch data env ctx index C hlabels depth _ next he hb front input output hr ht
   | brIf depth he => exact f.branch_if data env ctx index C hlabels henv depth _ next he hb front input output hr ht hcap
   | brTable depths default hc he hd =>
     exact f.branch_table data env ctx index C hlabels
-      depths default _ _ _ next hc he hd hb front input output hr ht
+      depths default _ _ _ next hc he hd hb front input output hr ht hprofile
   | return_ => exact f.return_ data env ctx index C hmatch hroot next hb front input output hr ht
   | call idx he => exact f.call data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
   | callIndirect idx he => exact f.call_indirect data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
 
 /-- Reference immediates use ordinary generated typing together with the
 independent declaration condition for `ref.func`. -/
-theorem reference_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (henv : EnvironmentWithinLimits env)
+theorem reference_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
+    (henv : Profile.EnvironmentWithinLimits env)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C)
@@ -280,8 +307,9 @@ theorem reference_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (hi : ReferencesBinary.Immediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
-    (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op) :
-    LeafResult f data env ctx index opcode bytes next (front ++ output) := by
+    (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
+    (hwasm2 : profile ≠ .Wasm1) :
+    LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
   cases hi with
   | refNull rt =>
     cases ht with
@@ -323,7 +351,7 @@ theorem reference_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context)
       exact ⟨s, hs, hp, by simpa [Simd.outputTypes] using ho, by omega⟩
   | callIndirect idx table he hte =>
     exact f.call_indirect_indexed data env ctx index C hmatch henv idx table _ _ next he hte hb
-      front input output hr ht hcap
+      (fun hp => absurd hp hwasm2) front input output hr ht hcap
 
 private theorem reference_type_injective {a b : types.ElemType}
     (h : Translate.valueType (ModuleConstants.referenceValueType a) =
@@ -332,7 +360,8 @@ private theorem reference_type_injective {a b : types.ElemType}
 
 /-- Bulk memory and table instructions are complete for the Wasm 2.0
 reserved-byte grammar and the actual segment and table contexts. -/
-theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+theorem bulk_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (subopcode : U32)
     (op : instr) (prefixBytes bytes : List U8) (next : Usize) (front input output : List valtype)
     (hmatch : EnvTranslation.Matches env ctx C)
@@ -342,7 +371,7 @@ theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (ind
     (hb : Wasm1.BytesAt data st.core.pos (prefixBytes ++ bytes) next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index 252#u8 (prefixBytes ++ bytes) next (front ++ output) := by
+    LeafResult f data env profile ctx index 252#u8 (prefixBytes ++ bytes) next (front ++ output) := by
   obtain ⟨middle, hprefixSpan, hpayload⟩ := hb.split
   have hprefix := hprefixSpan.u32_decoded subopcode he
   cases hi with
@@ -421,21 +450,40 @@ theorem bulk_leaf (data : Slice U8) (env : module.Env) (ctx : code.Context) (ind
 
 /-- Every plain instruction of the independent Wasm 2.0 grammar has a
 complete actual dispatch contract, including all shared scalar instructions. -/
-theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (henv : EnvironmentWithinLimits env)
+theorem plain_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
+    (hroot : resolve env (.Type index .Results) = some ctx.results.val)
+    (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
+    (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
+    (hmatch : EnvTranslation.Matches env ctx C) (hlabels : Labels env st C)
+    (hcap : st.core.vals.val.length + 1000 < Usize.max)
+    (hi : Wasm1.Immediate opcode (.plain op) bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
+    (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
+    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
+    (hprofile : profile = .Wasm1 → Wasm1.Instruction C op) :
+    LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
+  rcases classify_plain hi with hscalar | hcontrol
+  · exact scalar_leaf data env profile ctx index C st f opcode op bytes next front input output
+      hmatch hcap hscalar hi hb hr ht
+  · exact control_leaf data env profile ctx index henv hroot C st f opcode op bytes next front
+      input output hmatch hlabels hcap hcontrol hb hr ht hprofile
+
+theorem leaf_contract (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val) :
-    LeafContract data env ctx index := by
-  intro C st f opcode op bytes next front input output hmatch hlabels hcap hi hb hr ht hdecl
+    LeafContract data env profile ctx index := by
+  intro C st f opcode op bytes next front input output hmatch hlabels hcap hi hb hr ht hdecl hw1
+  by_cases hp : profile = .Wasm1
+  · obtain ⟨hi1, hinstr⟩ := hw1 hp
+    exact plain_leaf data env profile ctx index henv hroot C st f opcode op bytes next front input
+      output hmatch hlabels hcap hi1 hb hr ht (fun _ => hinstr)
   cases hi with
   | plain hi =>
-    rcases classify_plain hi with hscalar | hcontrol
-    · exact scalar_leaf data env ctx index C st f opcode op bytes next front input output
-        hmatch hcap hscalar hi hb hr ht
-    · exact control_leaf data env ctx index henv hroot C st f opcode op bytes next front input output
-        hmatch hlabels hcap hcontrol hb hr ht
+    exact plain_leaf data env profile ctx index henv hroot C st f opcode op bytes next front input
+      output hmatch hlabels hcap hi hb hr ht (fun h => absurd h hp)
   | reference hi =>
-    exact reference_leaf data env ctx index henv C st f opcode op bytes next front input output
-      hmatch hcap hi hb hr ht hdecl
+    exact reference_leaf data env profile ctx index henv C st f opcode op bytes next front input
+      output hmatch hcap hi hb hr ht hdecl hp
   | signExtension opcode operation hmap =>
     obtain ⟨s, hs, hp, ho, hl⟩ := f.sign_extension data env ctx index opcode operation next C
       front input output hmap hb (by omega) ht hr
@@ -445,7 +493,7 @@ theorem leaf_contract (data : Slice U8) (env : module.Env) (ctx : code.Context) 
       front input output hmap he hb (by omega) ht hr
     exact ⟨s, hs, hp, ho, by omega⟩
   | bulk subopcode he hi =>
-    exact bulk_leaf data env ctx index C st f subopcode op _ _ next front input output
+    exact bulk_leaf data env profile ctx index C st f subopcode op _ _ next front input output
       hmatch hcap he hi hb hr ht
   | simd subopcode he hi =>
     obtain ⟨s, hs, hp, ho, hl⟩ := f.simd data env ctx ctx index subopcode op _ _ next C

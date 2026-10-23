@@ -1,5 +1,31 @@
 import Exec.Theorems.Composition.Certified.CertifiedExecutable
-import Exec.Theorems.Instantiation.StartExecutableResolved
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Theorems.Invocation.InvokeSupported
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
+import Exec.Theorems.Instantiation.StartResolution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
@@ -41,7 +67,7 @@ theorem instantiate_tail_executable_cases {M P F A : Type}
       CertifiedExecutableStore view code initialized ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view code initialized) ∧
       Store.SegmentObjectMetadata view store initialized ∧
-      ((∃ result, Store.instantiate_tail memory hooks floats allocator identity store platform =
+      ((∃ result, runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (result, initialized, platform, true) ∧
           (∀ returned, result = .Ok returned → returned = identity) ∧
           TailExecutableSourceResult view code inst initialized initialized identity status result) ∨
@@ -51,7 +77,7 @@ theorem instantiate_tail_executable_cases {M P F A : Type}
          address.store = initialized.id ∧ initialized.funcs.val[address.index.val]? = some function ∧
          initialized.types.val[function.signature.val]? = some signature ∧
          signature.params.val = [] ∧ signature.results.val = [] ∧
-         Store.instantiate_tail memory hooks floats allocator identity store platform =
+         runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
            Store.instantiate_start memory hooks floats allocator identity address initialized platform) := by
   have bindings := certified.shape.initializer_bindings (List.mem_of_getElem? found)
   obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
@@ -68,7 +94,7 @@ theorem instantiate_tail_executable_cases {M P F A : Type}
   | Err error =>
     apply Or.inl
     refine ⟨.Err error, ?_, by simp, rfl⟩
-    simp [Store.instantiate_tail, initRun, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [runtime.store.instantiate.Store.commit_instance, initRun, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, core.convert.FromSame.from]
   | Ok value =>
     cases value
@@ -80,7 +106,7 @@ theorem instantiate_tail_executable_cases {M P F A : Type}
     | none =>
       apply Or.inl
       refine ⟨.Ok identity, ?_, by simp, Or.inl ⟨start, rfl⟩⟩
-      simp [Store.instantiate_tail, initRun, core.result.Result.Insts.CoreOpsTry.branch, alloc.vec.Vec.index_slice_index,
+      simp [runtime.store.instantiate.Store.commit_instance, initRun, core.result.Result.Insts.CoreOpsTry.branch, alloc.vec.Vec.index_slice_index,
         read, runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env,
         Exec.module.Env.start, Itasca.module.Env.impl.start, start]
     | some index =>
@@ -92,7 +118,7 @@ theorem instantiate_tail_executable_cases {M P F A : Type}
       obtain ⟨actual, addressRun, same⟩ := WP.spec_imp_exists (Interp.vec_index_given inst.funcs slot address mappedSlot)
       subst actual
       dsimp only [slot] at addressRun
-      simp only [Store.instantiate_tail, Store.instantiate_start, initRun, lift, bind_ok, uncurry_apply_pair,
+      simp only [runtime.store.instantiate.Store.commit_instance, Store.instantiate_start, initRun, lift, bind_ok, uncurry_apply_pair,
         core.result.Result.Insts.CoreOpsTry.branch, runtime.compiler.ExecutableModule.env,
         Exec.module.Module.env, Itasca.module.Module.impl.env, Exec.module.Env.start, Itasca.module.Env.impl.start,
         alloc.vec.Vec.index_slice_index, read, start, bind_tc_ok, addressRun]

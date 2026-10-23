@@ -1,4 +1,7 @@
-import Exec.Code.Local.Lowering.Common.LoweringTransfer
+import Exec.Code.Local.Lowering.Common.Copy
+import Exec.Code.Local.Relations.Control.BranchCertificates
+import Exec.Code.Local.Initializer.InitializerExpression
+import Exec.Code.Local.Callbacks.Common.Observe
 /-! Actual forward BR emission for every non-loop label kind and arbitrary
 label depth. Covers all transfer widths and both copy-elision cases, retaining
 typed branch holes and exact fixup-list extensions for the closing callback. -/
@@ -229,43 +232,4 @@ set_option maxRecDepth 4096 in
     · simpa [branchInstructions, elided] using code
     · exact ⟨site, by simpa [elided] using position, appended⟩
 
-@[step] theorem callback_branch_forward {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (resultType : Itasca.signature.ResultType)
-    (reachable : compiler.reachable = true)
-    (frame : runtime.compiler.Frame) (index : Usize) (depth source : U32)
-    (lookup : compiler.frames.val[index.val]? = some frame)
-    (position : index.val + depth.val + 1 = compiler.frames.val.length)
-    (forward : frame.kind ≠ .Loop)
-    (sourcePosition : source.val + frame.results.val = compiler.height.val)
-    (fixupsFit : frame.fixups.val.length < Usize.max)
-    (codeFits : compiler.function.code.val.length + 2 ≤ Usize.max)
-    (offsetsFit : compiler.function.source_offsets.val.length + 2 ≤ Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth resultType ⦃ out =>
-      out.1 = .Ok () → out.2.reachable = false ∧ ∃ fixups,
-        out.2.frames.val = compiler.frames.val.set index.val { frame with end_reachable := true, fixups } ∧
-        BranchHole out.2.function.code.val fixups.val compiler.function.code.val.length
-          frame.height source frame.results ∧
-        out.2.function.code.val = compiler.function.code.val ++
-          branchInstructions frame.height source frame.results core.num.U32.MAX ∧
-        ∃ site, site.val = compiler.function.code.val.length +
-          (if frame.results = 0#u32 ∨ source = frame.height then 0 else 1) ∧
-          fixups.val = frame.fixups.val ++ [site] ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-  rw [if_pos reachable]
-  step with compiler_branch_forward ops law compiler frame index depth source lookup position forward
-    sourcePosition fixupsFit codeFits offsetsFit coordinateFits as ⟨result, changed, effect⟩
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    cases value
-    obtain ⟨fixups, frames, hole, code, site⟩ := effect rfl
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with compiler_observe ops law { changed with reachable := false } state
-      as ⟨out, observed, accepted⟩
-    obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-    exact ⟨hr, fixups, by simpa [hframes] using frames, by simpa [hcode] using hole,
-      by simpa [hcode] using code, site⟩
 end Exec.Code

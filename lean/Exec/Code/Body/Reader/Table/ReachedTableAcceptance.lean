@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Table.CompilerTableBoundary
 import Exec.Code.Body.Reader.Table.TableLoopAvailability
 import Exec.Code.Body.Reader.Table.ReaderTableInputsWasm2
-import Exec.Code.Body.Control.Table.StructuredBranchIfLayoutWithTables
+import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Wasm2.Trace.TableBytes
 
 namespace Exec.Code
@@ -12,13 +12,13 @@ set_option maxRecDepth 4096
 retained frame/operand geometry, and explicit numeric resource bounds. Both
 live and dead tables include every label and the separately decoded fallback. -/
 theorem reached_profile_br_table_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A V : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables (jumpTables := jumpTables) emit initial compiler
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial compiler
       types functions returns locals parents current st.core.vals.val p.start.val)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))

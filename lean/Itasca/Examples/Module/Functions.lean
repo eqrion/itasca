@@ -1,6 +1,6 @@
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Module.Completeness
-import Itasca.Stream.SliceLayout
+import Itasca.Examples.Module.SliceLayout
 import Itasca.Examples.Module.Support
 
 /-!

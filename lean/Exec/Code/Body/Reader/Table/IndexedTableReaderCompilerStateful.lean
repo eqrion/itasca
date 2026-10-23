@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderExtendedCodeMonotone
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Body.Reader.Common.ReaderPostDeclared
 import Exec.Code.Local.Callbacks.Table.CompilerPairTableAppend
-import Exec.Code.Body.Reader.Table.StatefulReaderPrefixGenericWithTables
+import Exec.Code.Body.Reader.Table.StatefulReaderPrefixGeneric
 import Exec.Code.Body.Reader.Common.StatefulReaderBase
 import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 namespace Exec.Code
@@ -14,14 +14,14 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
     {initial before after : runtime.compiler.FunctionCompiler A}
     {C types functions returns locals data env sourceLocals index ft st}
     {emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop}
-    (embedding : ∀ tables, CumulativeEmbedding tables.indirect C (emit tables))
+    (embedding : ∀ tables, OrdinaryEmbedding tables.indirect C (emit tables))
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env sourceLocals index ft st)
     (matched : EnvTranslation.Matches env ⟨sourceLocals,ft.results⟩ C) (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
-    (read : ∀ p : Wasm2.Pending data env sourceLocals index {core := {st.core with pos := next}},
+    (read : ∀ p : Wasm2.Pending data env .Wasm2 sourceLocals index {core := {st.core with pos := next}},
       p.start = st.core.pos → ∃ op a b, StatefulArguments op a b ∧
         runtime.compiler.lower.FunctionCompiler.op ops before out.core (statefulOpcode op) a b 0#u128 = .ok (.Ok (),after) ∧
         StatefulReaderPost p out.core op) :
@@ -29,7 +29,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
   obtain ⟨op,a,b,arguments,callback,post⟩ := read p rfl
-  obtain ⟨extra,pairs⟩ := post.indirect_prefix_with_tables ops law initial before after C state.compiled
+  obtain ⟨extra,pairs⟩ := post.indirect_prefix ops law initial before after C state.compiled
     state.reach.current matched contextLocals a b arguments callback sourceBound bodyBound
   have auxiliary := compiler_stateful_auxiliary_tables ops law before after out.core op a b (.Ok ()) callback
   have tables := compiler_tables_pair_append before.function after.function extra pairs auxiliary
@@ -46,9 +46,9 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
   let p := state.boundary.pending next advance inbounds
   obtain ⟨op,a,b,arguments,callback,post⟩ := read p rfl
-  letI : CumulativeEmbedding (after.function.indirect.val ++ future.indirect) C
+  letI : OrdinaryEmbedding (after.function.indirect.val ++ future.indirect) C
       (emit ((CompilerTables.ofFunction after.function).append future)) := embedding ((CompilerTables.ofFunction after.function).append future)
-  obtain ⟨values,reader,compiled,reachable⟩ := post.future_prefix_with_tables_generic ops law initial before after C future.indirect state.compiled
+  obtain ⟨values,reader,compiled,reachable⟩ := post.future_prefix_generic ops law initial before after C future.indirect state.compiled
     state.reach.current matched contextLocals a b arguments callback sourceBound bodyBound
   exact (state.advance next advance inbounds reader reader.declared compiled
     (fun live => state.reach.current (reachable ▸ live))).point
@@ -58,7 +58,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_base {A : Type}
     {initial before after : runtime.compiler.FunctionCompiler A}
     {C types functions returns locals data env ctx index ft st}
     {emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop}
-    (embedding : ∀ tables, CumulativeEmbedding tables.indirect C (emit tables))
+    (embedding : ∀ tables, OrdinaryEmbedding tables.indirect C (emit tables))
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st)
     (matched : EnvTranslation.Matches env ⟨ctx.locals,ft.results⟩ C) (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
@@ -82,7 +82,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk {A : Type}
     {initial before after : runtime.compiler.FunctionCompiler A}
     {C types functions returns locals data env ctx index ft st}
     {emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop}
-    (embedding : ∀ tables, CumulativeEmbedding tables.indirect C (emit tables))
+    (embedding : ∀ tables, OrdinaryEmbedding tables.indirect C (emit tables))
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st)
     (matched : EnvTranslation.Matches env ⟨ctx.locals,ft.results⟩ C) (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)

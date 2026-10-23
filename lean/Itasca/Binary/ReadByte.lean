@@ -31,15 +31,4 @@ theorem reader.read_byte.eof (data : Slice U8) (pos : Usize)
   have hb : pos ≥ Slice.len data := by scalar_tac
   simp only [hb, ↓reduceIte]
 
-/-- Opcode decoding changes only the cursor and returns the byte at that cursor. -/
-theorem code.read_op_success (st : code.OpIterState) (data : Slice U8)
-    (h : st.pos.val < data.length) :
-    ∃ next, code.read_op st data =
-      .ok (.Ok (data.val[st.pos.val]), { st with pos := next }) ∧
-      next.val = st.pos.val + 1 := by
-  obtain ⟨r, hr, next, rfl, hnext⟩ := WP.spec_imp_exists (reader.read_byte.spec data st.pos h)
-  refine ⟨next, ?_, hnext⟩
-  rw [code.read_op, hr]
-  simp [core.result.Result.Insts.CoreOpsTry.branch]
-
 end Itasca

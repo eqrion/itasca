@@ -2,14 +2,13 @@ import Itasca.Stream.Batch
 import Itasca.Stream.Retirement
 import Itasca.Module.Custom.Invariant
 import Itasca.Support.Result
+import Itasca.Contracts
 
 /-!
-# Scheduler contracts
+# Scheduler soundness
 
-Premises on a `stream.StreamingVisitor` acting as the scheduler of code batches.
-`StreamScheduler.CallbacksTotal` says its callbacks return, which suffices for termination.
-`StreamScheduler.Provenance` says polled workers come from issued batches through actual batch
-operations, which suffices for soundness. Both are obligations on the embedding. `retire_sound`
+Consequences of the scheduler premises `StreamScheduler.CallbacksTotal` and
+`StreamScheduler.Provenance`, defined in `Itasca/Contracts`. `retire_sound`
 and `drain_sound` show that successful retirement and draining produce `StreamScheduler.Completed`
 certificates (exact byte coverage and typed entries) for every pending issued batch.
 -/
@@ -19,48 +18,6 @@ open Aeneas Aeneas.Std
 namespace Itasca.StreamScheduler
 
 variable {profile : ValidationProfile}
-
-/-- Every callback of the visitor returns an ordinary result. Submission is only required to
-return for seeds of bounded issued batches of the selected profile. Rust errors and malformed
-returned worker records are allowed. This is independent of the soundness provenance contract. -/
-structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
-    (profile : ValidationProfile := .Wasm1) : Prop where
-  custom : ModuleTail.HooksTotal visitor.moduleModuleVisitorInst
-  region : ∀ v region, ∃ v', visitor.custom_region v region = .ok v'
-  environment : ∀ v env, ∃ r, visitor.environment_ready v env = .ok r
-  submit : ∀ v (issued : StreamBatch.Issued), issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
-    ∃ r, visitor.submit_code_batch v issued.seed = .ok r
-  poll : StreamRetirement.PollTotal visitor
-  code_end : ∀ v, ∃ r, visitor.code_end v = .ok r
-  tail_ready : ∀ v tail, ∃ r, visitor.tail_ready v tail = .ok r
-
-/-- A scheduler tracks the history of issued batches across every callback. A polled batch whose
-module and batch IDs match a historical issued batch is reachable from it through actual batch
-operations, which does not mean the worker succeeded. Unknown, foreign, unfinished and replayed
-batches are permitted. The driver checks pending IDs and finish. -/
-structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (profile : ValidationProfile := .Wasm1) : Prop where
-  custom : ∀ id history, ModuleTail.PreservesInvariant
-    visitor.moduleModuleVisitorInst (Tracks id history)
-  region : ∀ id history v region v', Tracks id history v →
-    visitor.custom_region v region = .ok v' → Tracks id history v'
-  environment : ∀ id history v env config v', Tracks id history v →
-    visitor.environment_ready v env = .ok (.Ok config, v') → Tracks id history v'
-  submit : ∀ id history issued v v', Tracks id history v →
-    issued.module_id = id → issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
-    (∀ old ∈ history, old.batch_id ≠ issued.batch_id) →
-    visitor.submit_code_batch v issued.seed = .ok (.Ok (), v') →
-    Tracks id (history ++ [issued]) v'
-  poll : ∀ id history v batch v', Tracks id history v →
-    visitor.poll_code_batch v = .ok (.Ok batch, v') →
-    Tracks id history v' ∧ ∀ issued ∈ history,
-      issued.module_id = batch.module_id → issued.batch_id = batch.batch_id →
-      StreamBatch.Reachable issued batch
-  code_end : ∀ id history v v', Tracks id history v →
-    visitor.code_end v = .ok (.Ok (), v') → Tracks id history v'
-  tail_ready : ∀ id history v tail v', Tracks id history v →
-    visitor.tail_ready v tail = .ok (.Ok (), v') → Tracks id history v'
 
 /-- A completed batch has exact byte coverage and ordered entry certificates. This is derived at
 successful retirement and is never a premise on polls. -/

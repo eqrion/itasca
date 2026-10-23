@@ -30,11 +30,11 @@ theorem staging_segment_bounds {M P F A : Type}
     (elementBounds : ∀ element ∈ inst.module.module.env.elements.val, element.init.length < 2^32)
     (dataBounds : ∀ data ∈ inst.module.module.tail.data.val, data.init.length < 2^32)
     (globalStore elementStore after : runtime.store.Store M)
-    (globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize index =
+    (globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize index =
       .ok (storeParts globalStore platform (.Ok ())))
-    (elementRun : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize index =
+    (elementRun : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize index =
       .ok (storeParts elementStore platform (.Ok ())))
-    (dataRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator elementStore (.Ok ()) 0#usize index =
+    (dataRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator elementStore (.Ok ()) 0#usize index =
       .ok (storeStateParts after (.Ok ()))) :
     SegmentBounds after := by
   have globals := global_content_staging_loop memory hooks floats allocator law before store platform index 0#usize inst (.Ok ())

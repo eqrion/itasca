@@ -12,13 +12,13 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
-theorem Frame.memory_fill {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_fill {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 11#u32 middle)
     (hb : Wasm1.BytesAt data middle [0#u8] next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hmeta : code.read_bulk_memory {st.core with pos := middle} data env =
       .ok (.Ok (), {st.core with pos := next}) := by
@@ -31,13 +31,13 @@ theorem Frame.memory_fill {st} (f : Frame st) (data : Slice U8) (env : module.En
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 11#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.memory_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 10#u32 middle)
     (hb : Wasm1.BytesAt data middle [0#u8, 0#u8] next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hmeta : memoryCopyMetadata {st.core with pos := middle} data env =
       .ok (.Ok (), {st.core with pos := next}) := by
@@ -52,7 +52,7 @@ theorem Frame.memory_copy {st} (f : Frame st) (data : Slice U8) (env : module.En
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 10#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.memory_init {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (idx count : U32) (dataBytes : List U8)
     (he : Leb128.Encoding dataBytes idx.val) (hcount : env.data_count = some count) (hidx : idx.val < count.val)
@@ -60,7 +60,7 @@ theorem Frame.memory_init {st} (f : Frame st) (data : Slice U8) (env : module.En
     (hb : Wasm1.BytesAt data middle (dataBytes ++ [0#u8]) next) (hmem : 0 < env.mem_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hmeta : memoryInitMetadata {st.core with pos := middle} data env =
       .ok (.Ok idx, {st.core with pos := next}) := by
@@ -76,14 +76,14 @@ theorem Frame.memory_init {st} (f : Frame st) (data : Slice U8) (env : module.En
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 8#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.data_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.data_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index idx : U32) (middle next : Usize) (front : List valtype)
     (count : U32) (hcount : env.data_count = some count) (hidx : idx.val < count.val)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 middle)
     (hd : Leb128.Decoded data middle idx next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands front) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_data_index {st.core with pos := middle} data env)
     idx next (fun _ => []) (fun _ => none) id front
@@ -93,14 +93,14 @@ theorem Frame.data_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 9#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.elem_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.elem_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index idx : U32) (middle next : Usize) (front : List valtype)
     (hidx : idx.val < env.elements.val.length)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 middle)
     (hd : Leb128.Decoded data middle idx next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands front) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_element {st.core with pos := middle} data env)
     (idx, ModuleConstants.referenceValueType env.elements.val[idx.val].elem) next (fun _ => []) (fun _ => none) id front
@@ -110,7 +110,7 @@ theorem Frame.elem_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 13#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.table_init {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index i j : U32) (middle next : Usize) (front : List valtype)
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)
@@ -120,7 +120,7 @@ theorem Frame.table_init {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (helem : env.elements.val[i.val].elem = env.table_types.val[j.val].elem)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨between, hfirstSpan, hsecondSpan⟩ := hb.split
   have hfirstRead := code.take_element.complete {st.core with pos := middle} data env i between
@@ -141,7 +141,7 @@ theorem Frame.table_init {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 12#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.table_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index i j : U32) (middle next : Usize) (front : List valtype)
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)
@@ -151,7 +151,7 @@ theorem Frame.table_copy {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (helem : env.table_types.val[i.val].elem = env.table_types.val[j.val].elem)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ [.I32, .I32, .I32])) :
-    ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output front s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨between, hfirstSpan, hsecondSpan⟩ := hb.split
   have hfirstRead := code.take_table.complete {st.core with pos := middle} data env i between

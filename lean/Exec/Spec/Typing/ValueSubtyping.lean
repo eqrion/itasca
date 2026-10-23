@@ -94,11 +94,5 @@ theorem resultsTyped_types_unique {s : store} {left right : List valtype} {value
     cases second with
     | cons other rest => exact congrArg₂ List.cons (val_ok_type_unique head other) (ih rest)
 
-/-- Subtyping of actual returned values cannot introduce bottom types or
-change their represented scalar/reference kinds. -/
-theorem resultsTyped_subtype_eq {s : store} {types target : List valtype} {values : List val}
-    (typed : ResultsTyped s types values) (sub : Resulttype_sub (.mk_list types) (.mk_list target)) : types = target :=
-  resultsTyped_types_unique typed (resultsTyped_subtype typed sub)
-
 end Exec.Spec
 

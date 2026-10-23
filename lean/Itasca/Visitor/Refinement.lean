@@ -31,13 +31,6 @@ theorem instrument_refines {V : Type} (visitor : code.OpVisitor V)
   exact ⟨(v', initial ++ added ++ [⟨event, reply⟩]), by simp [h],
     rfl, added ++ [⟨event, reply⟩], by simp⟩
 
-/-- `visitor` refines `instrument visitor`, with states related by the first component. -/
-theorem instrument_refines_back {V : Type} (visitor : code.OpVisitor V) :
-    Refines (instrument visitor) visitor (fun w v => w.1 = v) := by
-  rintro ⟨v, log⟩ w event reply ⟨v', log'⟩ rfl h
-  have hi := (record_ok_iff log event _ reply v' log').mp (by simpa using h)
-  exact ⟨v', hi.1, rfl⟩
-
 end Itasca.VisitorTrace
 
 namespace Itasca.CoreVisitor

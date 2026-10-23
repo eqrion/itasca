@@ -36,19 +36,4 @@ theorem compare_pure (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_
   integer_relop_pure ty op a.toNat b.toNat _ (word_bound ty a) (word_bound ty b)
     (compare_bound ty op a b) (compare_relation ty op a b)
 
-theorem compare_simulation (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (baseValues : List val)
-    (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_Inn ty)))
-    (hs : wf_store s) (ha : wf_frame ambient) (hf : wf_frame f.toFrame)
-    (hl : LabelsWf f.labels) (hv : Forall wf_val baseValues)
-    (hc : Forall wf_instr after) (hr : Forall FrameWf rest)
-    (heights : ∀ label ∈ f.labels, label.height ≤ baseValues.length) :
-    StepH (decode ⟨s, ambient,
-      { f with code := .RELOP (numtype_Inn ty) (.mk_relop__0 ty op) :: after, vals := baseValues ++ [integerVal ty a.toNat, integerVal ty b.toNat] } :: rest, []⟩) []
-      (decode ⟨s, ambient,
-      { f with code := after, vals := baseValues ++ [integerVal .I32 (compare ty op a b)] } :: rest, []⟩) := by
-  exact integer_relop_simulation s ambient f rest after baseValues ty op _ _ _
-    (word_bound ty a) (word_bound ty b) (compare_bound ty op a b) (compare_relation ty op a b)
-    hs ha hf hl hv hc hr heights
-
 end Exec.Abs.Numeric

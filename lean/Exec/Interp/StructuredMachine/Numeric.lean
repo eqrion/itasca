@@ -12,8 +12,6 @@ import Exec.Abs.Numeric.TransitionSimulation
 
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem step_numeric {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -30,7 +28,7 @@ theorem step_numeric {M P F A : Type}
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := op.source :: after }
+    (point : FramePoint s raw { f with code := op.source :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
@@ -39,7 +37,7 @@ theorem step_numeric {M P F A : Type}
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        FramePoint emission s { raw with pc := pc } g compiled C targets next output ∧
+        FramePoint s { raw with pc := pc } g compiled C targets next output ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SourceClosure { f with code := op.source :: after } g ∧
@@ -56,9 +54,9 @@ theorem step_numeric {M P F A : Type}
           ⟨⟨s, ambient⟩, [.TRAP]⟩)) ⦄ := by
   have linear : linearSource op.source = true := by
     cases op <;> (try casesm* Conversion) <;> rfl
-  rcases structuredCodeWithTables_linear_inv linear point.code.current with skip | branch
+  rcases structuredCode_linear_inv linear point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := op.source :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -117,7 +115,7 @@ theorem step_numeric {M P F A : Type}
         simp only [finish, operation, Abs.advance] at h
         simpa only [← split] using h
       have nextTyped := Abs.instruction_preservation s ambient f rest _ after _ (.numeric op) typed.typed sourceStep
-      have nextPoint : FramePoint emission s { raw with pc := pc }
+      have nextPoint : FramePoint s { raw with pc := pc }
           { f with code := after, vals := front ++ [Abs.integerVal op.output value.toNat] }
           compiled C targets next output := by
         apply linear_continuation point pc f.locals

@@ -20,7 +20,7 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
       (fun counter => issued.first_func.val*functionDemandRate bodyBytes localCount counter))
     (slots : FunctionSlotPrefix issued.env.func_type_indices.val.length issued.first_func.val before.functions.val)
     (bounds : CodeEntry.Bounds issued.env) (environment : Profile.Environment issued.profile issued.env)
-    (limits : Profile.EnvironmentWithinLimits issued.profile issued.env)
+    (limits : Profile.EnvironmentWithinLimits issued.env)
     (signatures : SignatureSequence before.signatures.val issued.env.types.val)
     (functionSlots : before.func_param_slots.val.map (fun word => word.val) =
       issued.env.func_types.val.map (fun ty => signatureSlots ty.params.val))

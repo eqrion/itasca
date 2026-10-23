@@ -5,14 +5,13 @@ import Exec.Interp.Relations.PrefixDispatch
 
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission}
 
 /-- Ordinary bytecode changes only the active source's live values and code.
 Its observed prefix law preserves all suspended frames at once. -/
 theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store M}
     {sourceStore nextSourceStore : _root_.store}
     {exec after : runtime.interp.Execution} {source updatedSource : Abs.AFrame} {rest : List Abs.AFrame}
-    (relation : FrameStackRel emission store sourceStore exec (source :: rest))
+    (relation : FrameStackRel store sourceStore exec (source :: rest))
     (stores : FrameStoreMetadata store nextStore) (extension : Extend_store sourceStore nextSourceStore)
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val + 1 = exec.frames.length)
@@ -20,13 +19,13 @@ theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store
     (binding : FrameBinding store exec raw source)
     {compiled C targets next output pending}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : ControlPoint emission nextSourceStore { raw with pc := pc } updatedSource compiled C targets next output pending)
+    (point : ControlPoint nextSourceStore { raw with pc := pc } updatedSource compiled C targets next output pending)
     (slots : FrameSlots after { raw with pc := pc } updatedSource)
     (metadata : FrameMetadata source updatedSource)
     (effect : { after with slots := exec.slots } =
       { exec with frames := exec.frames.set index { raw with pc := pc } })
     (preserved : SlotPrefix raw.base.val exec.slots.val after.slots.val) :
-    FrameStackRel emission nextStore nextSourceStore after (updatedSource :: rest) := by
+    FrameStackRel nextStore nextSourceStore after (updatedSource :: rest) := by
   have frames : after.frames = exec.frames.set index { raw with pc := pc } :=
     congrArg runtime.interp.Execution.frames effect
   have identity : after.store = exec.store := by

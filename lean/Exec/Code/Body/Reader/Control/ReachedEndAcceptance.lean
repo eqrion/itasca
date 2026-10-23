@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Acceptance.BodyReaderAcceptance
 import Exec.Code.Local.Capacity.ReaderAcceptance
 import Exec.Code.Local.Capacity.EndDispatchAvailability
-import Exec.Code.Body.Control.Table.StructuredPrefixDeadWithTables
+import Exec.Code.Body.Control.Table.StructuredPrefixDead
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
@@ -9,10 +9,10 @@ set_option maxRecDepth 4096
 
 /-- Retained scope ownership discharges every end-callback patch and map
 lookup, including root epilogues, guarded blocks, and dead scopes. -/
-theorem StructuredCompilerPrefixWithTables.end_available {A : Type}
+theorem StructuredCompilerPrefix.end_available {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     {jumpTables emit initial compiler types functions returns locals parents current raw position}
-    (invariant : @StructuredCompilerPrefixWithTables jumpTables emit A initial compiler types functions returns locals
+    (invariant : @StructuredCompilerPrefix jumpTables emit A initial compiler types functions returns locals
       parents current raw position)
     (state : code.OpIterState) (capacity : CallbackCapacity compiler state bound 1)
     (coordinate : compiler.function.body_start.val+state.pos.val ≤ Usize.max)
@@ -42,7 +42,7 @@ callback, retaining its exact source state and instruction allowance. -/
 theorem reached_profile_end_available_wasm2 {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     {jumpTables emit initial compiler types functions returns locals parents current raw position}
-    (invariant : @StructuredCompilerPrefixWithTables jumpTables emit A initial compiler types functions returns locals
+    (invariant : @StructuredCompilerPrefix jumpTables emit A initial compiler types functions returns locals
       parents current raw position)
     (source : code.OpVisitor V) (before after : V) (st out : code.BodyState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
@@ -60,30 +60,5 @@ theorem reached_profile_end_available_wasm2 {A V : Type}
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   rintro ⟨kind,bt⟩ _ _
   exact invariant.end_available ops bound available out.core capacity coordinate kind bt
-
-/-- Wasm 1 end dispatch uses the same retained-scope acceptance proof. -/
-theorem reached_reader_end_available_wasm1 {A V : Type}
-    (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    {jumpTables emit initial compiler types functions returns locals parents current raw position}
-    (invariant : @StructuredCompilerPrefixWithTables jumpTables emit A initial compiler types functions returns locals
-      parents current raw position)
-    (source : code.OpVisitor V) (before after : V) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (capacity : CallbackCapacity compiler out bound 1)
-    (coordinate : compiler.function.body_start.val+out.pos.val ≤ Usize.max)
-    (reference : code.step source st data env ctx code.OP_END before = .ok (.Ok (),out,after)) :
-    code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx code.OP_END compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
-        CompilationBudgetEffect compiler.budget result.2.2.budget
-          (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  rw [OpDispatch.dispatch_end] at reference ⊢
-  refine CoreVisitor.run.accepted_lift_on (code.read_end st)
-    (fun v state arg => source.on_end v state arg.1 (Control.signature arg.2))
-    (fun v state arg => (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_end v state arg.1
-      (Control.signature arg.2)) before after compiler out
-    (fun after => CompilationBudgetEffect compiler.budget after.budget
-      (fun counter => if counter = .instructions then 1 else 0)) reference ?_
-  rintro ⟨kind,bt⟩ _ _
-  exact invariant.end_available ops bound available out capacity coordinate kind (Control.signature bt)
 
 end Exec.Code

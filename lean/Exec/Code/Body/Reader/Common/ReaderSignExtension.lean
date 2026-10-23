@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Exact sign-extension reading advances the supplied source zipper and
 retains both the physical conversion and actual visitor callback. -/
 theorem reader_sign_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (ctx : code.Context) (opcode : U8)
     (operation : Numeric.Operation)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -94,7 +94,7 @@ theorem integer_sign_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
 /-- Successful profile dispatch for any of the five sign extensions supplies
 all reader capacity, hook identity and exact source-position facts internally. -/
 theorem reader_integer_sign_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (op : Abs.Numeric.Instruction)
@@ -130,30 +130,4 @@ theorem reader_integer_sign_wasm2 {data env locals index st}
   exact ⟨operation, instruction, inputs, output, callback, read, converted, controls, position,
     values, numeric, instruction ▸ post⟩
 
-/-- The base Wasm1 reader rejects every sign-extension opcode before invoking
-any visitor callback. -/
-theorem sign_wasm1_impossible {V : Type} (visitor : code.OpVisitor V)
-    (before after : V) (st out : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (opcode : U8) (operation : Numeric.Operation)
-    (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation)
-    (accepted : code.step visitor st data env ctx opcode before = .ok (.Ok (), out, after)) : False := by
-  have bounds := (Wasm2.NumericExtensions.sign_properties meaning).2.2
-  have absent : Numeric.opcodeMeaning opcode = none := by
-    rcases opcode with ⟨⟨n, fits⟩⟩
-    change 192 ≤ n ∧ n ≤ 196 at bounds
-    obtain ⟨low, high⟩ := bounds
-    interval_cases n <;> rfl
-  rw [code.step.numeric_dispatch visitor st data env ctx opcode before (by omega),
-    code.step_numeric.unrecognized visitor st opcode before absent] at accepted
-  simp at accepted
-
-theorem reader_integer_sign_wasm1_impossible {A : Type} (ops : runtime.platform.Alloc A)
-    (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (op : Abs.Numeric.Instruction)
-    (extension : 192 ≤ (integerOpcode op).val)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) : False := by
-  obtain ⟨operation, hook, meaning, rest⟩ := integer_sign_reader_facts ops before out op extension
-  exact sign_wasm1_impossible (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-    before after st out data env ctx _ operation meaning accepted
 end Exec.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Global.GlobalLowering
 import Exec.Code.Local.Lowering.Local.LoweringLocal
-import Exec.Code.Local.Relations.Common.CoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas Aeneas.Std
 

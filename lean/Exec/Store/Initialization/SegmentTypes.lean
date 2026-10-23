@@ -66,23 +66,4 @@ structure SegmentTypeBindings {M : Type} (store : runtime.store.Store M) (inst :
     inst.module.module.env.elements.val[index]? = some source → inst.elems.val[index]? = some address →
     store.elems.val[address.val]? = some segment → segment.ty = source.elem
 
-private theorem tags_lookup {T U : Type} {before after : List T} {tag : T → U}
-    (same : after.map tag = before.map tag) {index : Nat} {value : T}
-    (found : after[index]? = some value) : ∃ old, before[index]? = some old ∧ tag old = tag value := by
-  have read := congrArg (fun values : List U => values[index]?) same
-  simp only [List.getElem?_map, found, Option.map_some] at read
-  cases previous : before[index]? with
-  | none => simp [previous] at read
-  | some old => exact ⟨old, rfl, by simpa [previous] using read.symm⟩
-
-theorem SegmentTypeBindings.transport {M : Type} {store after : runtime.store.Store M} {inst : runtime.store.ModuleInst}
-    (bindings : SegmentTypeBindings store inst) (types : SegmentTypes store after) : SegmentTypeBindings after inst := by
-  constructor
-  · intro index source address table sourceFound mapped found
-    obtain ⟨old, oldFound, typeEq⟩ := tags_lookup types.tables found
-    exact typeEq.symm.trans (bindings.tables index source address old sourceFound mapped oldFound)
-  · intro index source address segment sourceFound mapped found
-    obtain ⟨old, oldFound, typeEq⟩ := tags_lookup types.elements found
-    exact typeEq.symm.trans (bindings.elements index source address old sourceFound mapped oldFound)
-
 end Exec.Store

@@ -123,13 +123,6 @@ theorem ExportsAdded.unchanged {env entries result} (h : ExportsAdded env entrie
   | nil => cases env; rfl
   | snoc _ ha ih => rw [ha.1, ih]
 
-/-- The declared functions gain the references of every added export. -/
-theorem ExportsAdded.references {env entries result} (h : ExportsAdded env entries result) :
-    result.declared_funcs.val = env.declared_funcs.val ++ entries.flatMap ModuleReferences.exportIndices := by
-  induction h with
-  | nil => simp
-  | snoc _ ha ih => simpa [ih, List.append_assoc] using ha.2.2.2.2
-
 /-- The binary kind byte of an export descriptor. -/
 def descByte : module.ExportDesc → U8
   | .Func _ => 0#u8 | .Table _ => 1#u8 | .Memory _ => 2#u8 | .Global _ => 3#u8

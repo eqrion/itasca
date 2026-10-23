@@ -1,12 +1,10 @@
 import Exec.Interp.StructuredMachine.LinearContinuation
-import Exec.Interp.StructuredMachine.FloatHeads
+import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Interp.Numeric.Float.FloatFetch
 import Exec.Abs.Float.Transition
 import Exec.Interp.Relations.ControlPoint
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Float
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem step_float_frame {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -24,13 +22,13 @@ theorem step_float_frame {M P F A : Type}
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := op.source :: after } compiled C targets next output)
+    (point : FramePoint s raw { f with code := op.source :: after } compiled C targets next output)
     (split : f.vals = front ++ op.operands a b)
     (first : a < 2^sizenn op.input) (second : b < 2^sizenn op.input)
     (leftPos : left.val = Code.slots ((f.locals ++ front).map Code.valueType))
     (rightPos : right.val = left.val + (op.arity - 1))
     (fetched : compiled.code.val[raw.pc.val]? = some (Code.floatInstruction op left left right))
-    (continuation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType ++ [valtype_numtype op.output]) after
       (raw.pc.val + 1) next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -39,7 +37,7 @@ theorem step_float_frame {M P F A : Type}
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        FramePoint emission s { raw with pc := pc } g compiled C targets next output ∧
+        FramePoint s { raw with pc := pc } g compiled C targets next output ∧
         Abs.ATyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false
           ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ ⟨s, ambient, g :: rest, []⟩ ∧
@@ -67,7 +65,7 @@ theorem step_float_frame {M P F A : Type}
         (.next ⟨s,ambient,{f with code := after, vals := front ++ [.CONST op.output (numberOfBits op.output bits)]}::rest,[]⟩) :=
       .next front a b bits split first second semantic
     have nextTyped := transition_preservation s ambient f rest after op _ typed sourceStep
-    have nextPoint : FramePoint emission s {raw with pc := pc}
+    have nextPoint : FramePoint s {raw with pc := pc}
         {f with code := after, vals := front ++ [.CONST op.output (numberOfBits op.output bits)]}
         compiled C targets next output := by
       apply linear_continuation point pc f.locals

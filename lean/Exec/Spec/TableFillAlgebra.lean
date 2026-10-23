@@ -6,12 +6,6 @@ def fillInto {T : Type} (before : List T) (destination : Nat) (value : T) : Nat 
   | 0 => before
   | count+1 => fillInto (before.set destination value) (destination+1) value count
 
-theorem fillInto_length {T : Type} (before : List T) (destination count : Nat) (value : T) :
-    (fillInto before destination value count).length = before.length := by
-  induction count generalizing before destination with
-  | zero => rfl
-  | succ count ih => simp only [fillInto,ih,List.length_set]
-
 theorem fillInto_map {T U : Type} (decode : T → U) (before : List T) (destination count : Nat) (value : T) :
     (fillInto before destination value count).map decode =
       fillInto (before.map decode) destination (decode value) count := by

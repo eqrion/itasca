@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.IndexedEmpty
 import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Interp.Core.EmptyInversion
-import Exec.Code.Local.Control.Table.StructuredCodeWithTablesLabels
+import Exec.Code.Local.Control.Table.StructuredCodeLabels
 import Exec.Interp.Relations.Epilogue
 
 namespace Exec.Interp.StructuredMachine
@@ -10,14 +10,14 @@ open Aeneas Aeneas.Std
 /-- An empty outer source continuation either skips forward administratively
 or fetches the compiler's exact final Return. Root alignment rules out falling
 past the bytecode vector. -/
-theorem function_end {M : Type} {emission : FunctionEmission} {store : runtime.store.Store M}
+theorem function_end {M : Type} {store : runtime.store.Store M}
     {raw : runtime.interp.Frame} {source : Abs.AFrame}
     {compiled : runtime.bytecode.CompiledFunction} {C : context} {s : _root_.store} {targets next output}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : FramePoint emission s raw { source with code := [], labels := [] }
+    (point : FramePoint s raw { source with code := [], labels := [] }
       compiled C targets next output) :
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission s { raw with pc := target } { source with code := [], labels := [] }
+      FramePoint s { raw with pc := target } { source with code := [], labels := [] }
         compiled C targets next output) ∨
     (∃ count : U32, compiled.code.val[raw.pc.val]? = some (.Return compiled.local_slots count) ∧
       compiled.local_slots.val = Code.slots (source.locals.map Code.valueType) ∧
@@ -27,7 +27,7 @@ theorem function_end {M : Type} {emission : FunctionEmission} {store : runtime.s
     cases targets with
     | nil => rfl
     | cons head tail => simp at empty
-  rcases structuredCodeWithTables_empty_inv point.code.current with skip | done
+  rcases structuredCode_empty_inv point.code.current with skip | done
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     exact Or.inl ⟨target, forward, fetched,
       point.bindings,point.locals,point.labels, continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩

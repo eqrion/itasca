@@ -4,10 +4,10 @@ import Exec.Abs.SupportedState
 namespace Exec.Abs.Indirect
 
 theorem invoke_supported {s : AState} {f : AFrame} {rest : List AFrame} {address after next}
-    (functions : FunctionsSupported allowed s.store) (tail : Forall allowed after)
-    (labels : Forall (fun label => Forall allowed label.cont ∧ Forall allowed label.after) f.labels)
-    (frames : Forall (FrameSupported allowed) rest)
-    (stepped : invoke s f rest address after=.next next) : SupportedState allowed next := by
+    (functions : FunctionsSupported s.store) (tail : Forall BinaryInstr after)
+    (labels : Forall (fun label => Forall BinaryInstr label.cont ∧ Forall BinaryInstr label.after) f.labels)
+    (frames : Forall (FrameSupported) rest)
+    (stepped : invoke s f rest address after=.next next) : SupportedState next := by
   cases lookup : s.store.FUNCS[address]? with
   | none => simp [invoke,lookup] at stepped
   | some fn =>
@@ -36,8 +36,8 @@ theorem invoke_supported {s : AState} {f : AFrame} {rest : List AFrame} {address
               · exact frames frame member
 
 theorem step_supported {s ambient f rest table type after next}
-    (covered : SupportedState allowed ⟨s,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
-    (stepped : step ⟨s,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ f rest table type after=.next next) : SupportedState allowed next := by
+    (covered : SupportedState ⟨s,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
+    (stepped : step ⟨s,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ f rest table type after=.next next) : SupportedState next := by
   have frame := covered.active {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} (List.mem_cons_self ..)
   unfold step at stepped
   repeat' first | split at stepped | contradiction

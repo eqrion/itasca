@@ -39,44 +39,4 @@ theorem float_instruction_accepts (function : runtime.bytecode.CompiledFunction)
   apply scalar_instruction_accepts function _ (floatOpcode op) left left right (floatInstruction_scalar op left left right)
   all_goals omega
 
-/-- The actual float lowering's emitted instruction passes the local checker.
-Its operands come from the independent source stack layout; later observation
-can only enlarge the retained slot capacity. -/
-theorem float_instruction_valid_after {A : Type}
-    {before after : runtime.compiler.FunctionCompiler A} {front : List valtype}
-    (op : Instruction) (left right : U32)
-    (layout : CompilerLayout before (front ++ List.replicate op.arity (valtype_numtype op.input)))
-    (live : before.reachable = true)
-    (leftPosition : left.val = slots (compilerLocals before)+slots front)
-    (rightPosition : right.val = left.val+(op.arity-1))
-    (capacity : before.function.slot_count.val ≤ after.function.slot_count.val) :
-    runtime.bytecode.CompiledFunction.instruction_valid after.function (floatInstruction op left left right) = .ok true := by
-  have inputBound := layout.live_slots_fit live
-  rw [slots_append,slots_numeric_replicate] at inputBound
-  have positive : 0 < op.arity := by rcases op.arity_valid with one | two <;> omega
-  apply scalar_instruction_accepts after.function _ (floatOpcode op) left left right (floatInstruction_scalar op left left right)
-  all_goals omega
-
-/-- Successful actual float callbacks construct both the executable lowering
-record and checking of the newly stored instruction. -/
-@[step] theorem compiler_float_lowered_checked {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (front : List valtype) (op : Instruction)
-    (layout : CompilerLayout compiler (front ++ List.replicate op.arity (valtype_numtype op.input)))
-    (reachable : compiler.reachable = true)
-    (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ [valtype_numtype op.output])
-    (codeFits : compiler.function.code.val.length < Usize.max)
-    (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
-    (coordinateFits : compiler.function.body_start.val+compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.lower.FunctionCompiler.op ops compiler state (floatOpcode op) 0#u32 0#u32 0#u128
-      ⦃ out => out.1 = .Ok () → ∃ left right : U32,
-        Lowered compiler out.2 (floatInstruction op left left right) (front ++ [valtype_numtype op.output]) ∧
-        runtime.bytecode.CompiledFunction.instruction_valid out.2.function (floatInstruction op left left right) = .ok true ⦄ := by
-  apply WP.spec_mono (compiler_float_lowered ops law compiler state types front op layout reachable concrete typed codeFits sourceFits coordinateFits)
-  intro out held accepted
-  obtain ⟨left,right,leftPosition,rightPosition,lowered⟩ := held accepted
-  exact ⟨left,right,lowered,float_instruction_valid_after op left right layout reachable leftPosition rightPosition lowered.2.2.2.2⟩
-
 end Exec.Code

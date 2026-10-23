@@ -1,5 +1,5 @@
 import Exec.Abs.Float.Descriptor
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 namespace Exec.Code
 open Aeneas Aeneas.Std
 
@@ -78,17 +78,6 @@ def floatInstruction (op : Abs.Float.Instruction) (dst a b : U32) : runtime.byte
   | .reinterpretInt .I64 => .F64ReinterpretI64 dst a b
   | .promote => .F64PromoteF32 dst a b
   | .demote => .F32DemoteF64 dst a b
-
-theorem floatOpcode_value (op : Abs.Float.Instruction) : (floatOpcode op).val = op.opcode := by
-  cases op with
-  | unary ty operator => cases ty <;> cases operator <;> rfl
-  | binary ty operator => cases ty <;> cases operator <;> rfl
-  | compare ty operator => cases ty <;> cases operator <;> rfl
-  | convert source target sign => cases source <;> cases target <;> cases sign <;> rfl
-  | truncate source target sign saturating => cases source <;> cases target <;> cases sign <;> cases saturating <;> rfl
-  | reinterpretFloat source => cases source <;> rfl
-  | reinterpretInt source => cases source <;> rfl
-  | promote | demote => rfl
 
 theorem floatInstruction_make (op : Abs.Float.Instruction) (dst a b : U32) :
     runtime.bytecode.Instr.make_scalar (floatOpcode op) dst a b =

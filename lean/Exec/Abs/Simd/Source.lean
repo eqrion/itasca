@@ -16,10 +16,6 @@ theorem MemorySignature.principal {source inputs outputs C signature}
     signature = .mk_functype (.mk_list inputs) (.mk_list outputs) := by
   cases shape <;> cases typed <;> rfl
 
-theorem MemorySignature.arity {source inputs outputs}
-    (shape : MemorySignature source inputs outputs) : inputs.length ≤ 2 := by
-  cases shape <;> simp
-
 end Exec.Abs.Simd
 
 namespace Exec.Abs
@@ -30,23 +26,5 @@ inductive SimdInstr : instr → Prop where
   | pure {source inputs output} (signature : Simd.PureSignature source inputs output) : SimdInstr source
   | constant value : SimdInstr (.VCONST .V128 value)
   | memory {source inputs outputs} (signature : Simd.MemorySignature source inputs outputs) : SimdInstr source
-
-theorem SimdInstr.not_block {type body} : ¬ SimdInstr (.BLOCK type body) := by
-  intro allowed
-  cases allowed with
-  | pure signature => cases signature
-  | memory signature => cases signature
-
-theorem SimdInstr.not_loop {type body} : ¬ SimdInstr (.LOOP type body) := by
-  intro allowed
-  cases allowed with
-  | pure signature => cases signature
-  | memory signature => cases signature
-
-theorem SimdInstr.not_if {type yes no} : ¬ SimdInstr (.IFELSE type yes no) := by
-  intro allowed
-  cases allowed with
-  | pure signature => cases signature
-  | memory signature => cases signature
 
 end Exec.Abs

@@ -2,20 +2,19 @@ import Exec.Theorems.Composition.World.ChosenWorldHistory
 import Exec.Theorems.Composition.Eventful.EventfulWorldLoop
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 def ChosenWorldLoopInvariant (choices : Spec.SourceChoices) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : ChosenWorld emission allowed M P view expected) (state : ExecutionState M P) : Prop :=
+    (initial : ChosenWorld M P view expected) (state : ExecutionState M P) : Prop :=
   match state.2.2.2 with
-  | .Ok _ => ∃ current : ChosenWorld emission allowed M P view expected,
+  | .Ok _ => ∃ current : ChosenWorld M P view expected,
       Inv current.code current.machine.store ∧ ∃ count events,
       Spec.Iterations (ChosenWorldTransition choices memory hooks floats allocator) count initial events current ∧
       state.1=current.machine.exec ∧ state.2.1=current.machine.store ∧ state.2.2.1=current.machine.platform
-  | .Err error => ∃ current : ChosenWorld emission allowed M P view expected,
+  | .Err error => ∃ current : ChosenWorld M P view expected,
       Inv current.code current.machine.store ∧ ∃ count events,
       Spec.Iterations (ChosenWorldTransition choices memory hooks floats allocator) count initial events current ∧
       runtime.interp.step memory hooks floats allocator current.machine.exec current.machine.store current.machine.platform=
@@ -27,8 +26,8 @@ theorem chosen_world_loop_invariant_step {choices : Spec.SourceChoices} {M P F A
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : ChosenWorldStepOutcomes choices (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : ChosenWorld emission allowed M P view expected)
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv)
+    (initial : ChosenWorld M P view expected)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (invariant : ChosenWorldLoopInvariant choices memory hooks floats allocator Inv initial (exec,store,platform,.Ok ()))
     (active : 0<exec.frames.length) :
@@ -59,8 +58,8 @@ theorem chosen_world_loop_stops {choices : Spec.SourceChoices} {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : ChosenWorldStepOutcomes choices (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : ChosenWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv)
+    (initial : ChosenWorld M P view expected) (valid : Inv initial.code initial.machine.store) :
     runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => ∃state,ChosenWorldLoopInvariant choices memory hooks floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by

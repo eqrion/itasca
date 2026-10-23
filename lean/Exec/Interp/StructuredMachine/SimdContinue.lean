@@ -1,23 +1,28 @@
 import Exec.Interp.StructuredMachine.Point
-import Exec.Interp.Core.Point
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
 
 namespace Exec.Interp.StructuredMachine.Simd
 open Aeneas.Std
 
 /-- Reuse the retained SIMD continuation after the exact operand suffix has
 been replaced. The store may change only through a checked source extension. -/
-theorem framePoint_continue {emission : FunctionEmission}
+theorem framePoint_continue
     {before afterStore raw f compiled C targets next output}
-    (point : FramePoint emission before raw f compiled C targets next output)
+    (point : FramePoint before raw f compiled C targets next output)
     (extension : Extend_store before afterStore)
     (front operands results : List val) (after : List instr)
     (values : f.vals = front ++ operands)
     (heights : ∀ label ∈ f.labels, label.height ≤ front.length)
-    (tail : Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (tail : Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType ++ results.map Code.valueType)
       after (raw.pc.val+1) next output)
     (pc : U32) (pcNext : pc.val = raw.pc.val+1) :
-    FramePoint emission afterStore {raw with pc := pc} {f with code := after,vals := front ++ results}
+    FramePoint afterStore {raw with pc := pc} {f with code := after,vals := front ++ results}
       compiled C targets next output := by
   refine ⟨point.bindings.extend extension,point.locals,?_,?_⟩
   · have labels := point.labels

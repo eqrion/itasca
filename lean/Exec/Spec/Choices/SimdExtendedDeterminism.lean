@@ -25,14 +25,6 @@ theorem list_add_words_unique (width : Nat) {inputs others left right : List uN}
   forall3_functional_left (fun result a b => fun_iadd_ width a b result)
     (fun _ _ _ _ first second => add_words_unique first second) inputs others left right leftLength rightLength otherLength first second
 
-theorem list_multiply_words_unique (width : Nat) {inputs others left right : List uN}
-    (leftLength : left.length=inputs.length) (rightLength : right.length=inputs.length)
-    (otherLength : others.length=inputs.length)
-    (first : Forall₃ (fun result a b => fun_imul_ width a b result) left inputs others)
-    (second : Forall₃ (fun result a b => fun_imul_ width a b result) right inputs others) : left=right :=
-  forall3_functional_left (fun result a b => fun_imul_ width a b result)
-    (fun _ _ _ _ first second => multiply_words_unique first second) inputs others left right leftLength rightLength otherLength first second
-
 theorem add_interleaved_lists_unique (width : Nat) {left right a b c d : List uN}
     (first : Forall₃ (fun result x y => fun_iadd_ width x y result) left a b)
     (second : Forall₃ (fun result x y => fun_iadd_ width x y result) right c d)

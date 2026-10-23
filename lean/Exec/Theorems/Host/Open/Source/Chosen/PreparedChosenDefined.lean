@@ -22,7 +22,7 @@ theorem source_prepared_chosen_defined {M F A : Type} (memory : runtime.platform
     (metadata : RootMetadata native.store address signature)
     (arguments : ResultsTyped (Store.decodeStore view code native.store) (signature.params.val.map sourceType) (args.val.map sourceValue))
     (status : answer.1=.Ok ()) (sameStore : answer.2.2.1=native.store)
-    (machine : StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr) view code native.store
+    (machine : StructuredMachine.Execution view code native.store
       answer.2.1 entry (signature.results.val.map sourceType) 0 false)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds native.store) entry)
     (step : StepH ⟨⟨Store.decodeStore view code native.store,Spec.invocationFrame⟩,
@@ -51,7 +51,7 @@ theorem source_prepared_chosen_defined {M F A : Type} (memory : runtime.platform
   obtain ⟨bound,typeEq⟩:=inputTyped
   have entryTyped:=Spec.stepH_config_preserved step
     (Spec.invocation_config_ok guard.invariant.source_typed _ _ _ _ bound typeEq arguments)
-  let world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType):=
+  let world : EventfulWorld M Unit view (signature.results.val.map sourceType):=
     ⟨code,⟨native.store,answer.2.1,(),entry,0,false,machine,guard.invariant.toCertifiedApiStore.toCertifiedSupportedStore,owned⟩⟩
   let next : State M:={native with mode:=.wasm answer.2.1 (.Ok ()) address results}
   let nextSource : Spec.OpenExecution.State SourceControl:=⟨Store.decodeStore view code native.store,

@@ -19,17 +19,6 @@ theorem transfer_instruction_accepts (function : runtime.bytecode.CompiledFuncti
       exact (CoreInstructionBounds.copy2 (by omega) (by omega)).accepts
     · exact (CoreInstructionBounds.copyN (by omega) source order).accepts
 
-/-- Typed branch geometry bounds the whole transfer suffix and places its
-source at or above its destination. -/
-theorem BranchLayout.slot_bounds {locals stack label dst src count}
-    (layout : BranchLayout locals stack label dst src count) (capacity : Nat)
-    (fits : slots locals+slots stack ≤ capacity) :
-    dst.val ≤ src.val ∧ src.val+count.val ≤ capacity := by
-  obtain ⟨discarded,stackEq,dstEq,srcEq,countEq⟩ := layout
-  rw [stackEq,slots_append,slots_append] at fits
-  rw [slots_append] at srcEq
-  omega
-
 /-- Every word in an unconditional branch fragment checks, with only the final
 jump allowed to wait for its recorded control-frame owner. -/
 theorem branchInstructions_open_checks (function : runtime.bytecode.CompiledFunction)

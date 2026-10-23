@@ -14,7 +14,6 @@ structure Label where
   height : Nat
   /-- Enclosing code that resumes after this label exits. -/
   after : List instr
-  deriving Inhabited
 
 structure AFrame where
   fa : funcaddr
@@ -34,7 +33,6 @@ structure AState where
   frames : List AFrame
   /-- Values returned when the final frame exits; empty while frames remain. -/
   results : List val
-  deriving Inhabited
 
 def Label.arity (label : Label) : Nat := label.branchTypes.length
 

@@ -2,13 +2,12 @@ import Exec.Theorems.Composition.World.ChosenWorldLoopResult
 import Exec.Theorems.Composition.World.ChosenWorldResourceBounds
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 theorem ChosenWorldLoopInvariant.only_trap_error {choices : SourceChoices} {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A} {view : M → Slice U8} {expected : List valtype}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop}
-    {initial : ChosenWorld emission allowed M P view expected} {state : ExecutionState M P} {error : runtime.ExecError}
+    {initial : ChosenWorld M P view expected} {state : ExecutionState M P} {error : runtime.ExecError}
     (capacities : ∀ code store,Inv code store → Store.FunctionCapacities code store)
     {valueLimit frameLimit : Nat}
     (floors : ∀ code store,Inv code store → valueLimit≤store.limits.max_values.val ∧ frameLimit≤store.limits.max_frames.val)
@@ -48,8 +47,8 @@ theorem chosen_world_loop_no_boundary {choices : SourceChoices} {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A) {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : ChosenWorldStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view expected Inv)
-    (initial : ChosenWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store)
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv)
+    (initial : ChosenWorld M P view expected) (valid : Inv initial.code initial.machine.store)
     (capacities : ∀ code store,Inv code store → Store.FunctionCapacities code store) {valueLimit frameLimit : Nat}
     (floors : ∀ code store,Inv code store → valueLimit≤store.limits.max_values.val ∧ frameLimit≤store.limits.max_frames.val)
     (resources : ChosenWorldResources choices initial.occurrence (Abs.decode initial.machine.source) valueLimit frameLimit)

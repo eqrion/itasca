@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
 theorem reader_stateful_base_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)

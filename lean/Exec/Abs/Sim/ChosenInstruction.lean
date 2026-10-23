@@ -15,7 +15,7 @@ source simulation; only moving a constant is an administrative stutter. -/
 theorem chosen_instruction_simulation {choices : SourceChoices} (admissible : choices.Admissible)
     (vector : choices.vector=firstVectorChoice) (occurrence : Nat) (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (slice : SliceInstr op)
+    (slice : PureHead op)
     (typed : ATyped ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (step : astep ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ = .next next) :
     ChosenNextSim choices occurrence ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ next := by
@@ -45,13 +45,8 @@ theorem chosen_instruction_simulation {choices : SourceChoices} (admissible : ch
       exact Or.inl ⟨decode_const s ambient f rest _ _ after hheights,
         const_measure_decreases s ambient f rest _ _ after⟩
     · contradiction
-  | add ty => exact ChosenNextSim.single admissible (Numeric.chosen_astep_simulation admissible s ambient f rest after (.binary ty .ADD) next typed step)
-  | sub ty => exact ChosenNextSim.single admissible (Numeric.chosen_astep_simulation admissible s ambient f rest after (.binary ty .SUB) next typed step)
-  | eqz ty => exact ChosenNextSim.single admissible (Numeric.chosen_astep_simulation admissible s ambient f rest after (.eqz ty) next typed step)
-  | eq ty => exact ChosenNextSim.single admissible (Numeric.chosen_astep_simulation admissible s ambient f rest after (.compare ty .EQ) next typed step)
-  | lt_u ty => exact ChosenNextSim.single admissible (Numeric.chosen_astep_simulation admissible s ambient f rest after (.compare ty (.LT .U)) next typed step)
-  | block bt body _ => exact ChosenNextSim.single admissible (chosen_typed_block_simulation admissible vector occurrence s ambient f rest after bt body next typed step)
-  | loop bt body _ => exact ChosenNextSim.single admissible (chosen_typed_loop_simulation admissible vector occurrence s ambient f rest after bt body next typed step)
+  | block bt body => exact ChosenNextSim.single admissible (chosen_typed_block_simulation admissible vector occurrence s ambient f rest after bt body next typed step)
+  | loop bt body => exact ChosenNextSim.single admissible (chosen_typed_loop_simulation admissible vector occurrence s ambient f rest after bt body next typed step)
   | br index =>
     cases index with
     | mk_uN i => exact ChosenNextSim.counted (chosen_typed_branch_simulation admissible vector occurrence s ambient f rest after i next typed step) (by omega)
@@ -149,7 +144,7 @@ theorem chosen_instruction_simulation {choices : SourceChoices} (admissible : ch
             simpa only [← hsplit] using result
           · contradiction
         · contradiction
-  | ifelse bt yes no _ _ =>
+  | ifelse bt yes no =>
     obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop
     obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands

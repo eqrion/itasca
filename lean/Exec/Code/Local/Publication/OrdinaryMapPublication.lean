@@ -39,16 +39,4 @@ theorem compiler_observe_map_publication {A : Type} (ops : runtime.platform.Allo
   rw [compiler_observe_cursor ops law before after state (.Ok ()) called rfl]
   exact forward
 
-/-- Ordinary instruction emission and its final observation preserve map bounds together. -/
-theorem compiler_finish_op_map_publication {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
-    (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val)
-    (called : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (),after)) :
-    ControlMapPublication after := by
-  apply held.ordinary (compiler_finish_op_ordinary_result ops law before after state instruction (.Ok ()) called)
-    (compiler_finish_op_code_mono ops law before after state instruction (.Ok ()) called)
-  rw [compiler_finish_op_cursor ops law before after state instruction (.Ok ()) called rfl]
-  exact forward
-
 end Exec.Code

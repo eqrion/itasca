@@ -1,13 +1,18 @@
-import Exec.Code.Body.Reader.Control.ReaderControlScratch
-import Exec.Code.Body.Reader.Control.ReaderControlCodeMonotone
+import Exec.Code.Body.Reader.Control.ReaderControlEffects
+import Exec.Code.Local.Callbacks.Table.CompilerTableScratchCallbacks
+import Exec.Code.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
+import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
+import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
+import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
+import Exec.Code.Body.Reader.Control.ReaderCompilerScopes
 import Exec.Code.Body.Control.Control.CumulativePointControl
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPreserved
-import Exec.Code.Body.Control.Common.CumulativeEmbedding
-import Exec.Code.Body.Reader.Table.ReaderControlTables
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerScopesWithTables
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerElseWithTables
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEndWasm2WithTables
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerRootWithTables
+import Exec.Code.Body.Control.Common.OrdinaryEmbedding
+import Exec.Code.Local.Callbacks.Table.CallbackTables
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerScopes
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerElse
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEndWasm2
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerRoot
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -27,9 +32,10 @@ theorem IndexedTableReaderCompilerPointWasm2.scope_step {A : Type}
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
-  have pairs := reader_scope_tables_wasm2 p ops law before after out ctx opcode supported byte accepted
-  have depths := reader_scope_depths_wasm2 p ops law before after out ctx opcode supported byte accepted
-  have growth := reader_scope_code_mono_wasm2 p ops law before after out ctx opcode supported byte accepted
+  have effects := reader_control_effects_wasm2 ops law before after _ out data env ctx _ opcode (.inl supported) accepted
+  have pairs := effects.tables
+  have depths := effects.depths
+  have growth := effects.code_mono
   apply point.preserved_step pairs depths growth
   intro future old
   exact old.scope_step ops law next advance inbounds out sourceBound signatures opcode supported byte accepted
@@ -48,9 +54,10 @@ theorem IndexedTableReaderCompilerPointWasm2.else_ {A : Type}
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
-  have pairs := reader_else_tables_wasm2 p ops law before after out ctx byte accepted
-  have depths := reader_else_depths_wasm2 p ops law before after out ctx byte accepted
-  have growth := reader_else_code_mono_wasm2 p ops law before after out ctx byte accepted
+  have effects := reader_else_effects_wasm2 ops law before after _ out data env ctx _ (by simpa only [global_simps] using accepted)
+  have pairs := effects.tables
+  have depths := effects.depths
+  have growth := effects.code_mono
   apply point.preserved_step pairs depths growth
   intro future old
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
@@ -73,9 +80,10 @@ theorem IndexedTableReaderCompilerPointWasm2.end_nested {A : Type}
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
-  have pairs := reader_end_tables_wasm2 p ops law before after out ctx byte accepted
-  have depths := reader_end_depths_wasm2 p ops law before after out ctx byte accepted
-  have growth := reader_end_code_mono_wasm2 p ops law before after out ctx byte accepted
+  have effects := reader_end_effects_wasm2 ops law before after _ out data env ctx _ (by simpa only [global_simps] using accepted)
+  have pairs := effects.tables
+  have depths := effects.depths
+  have growth := effects.code_mono
   apply point.preserved_step pairs depths growth
   intro future old
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old

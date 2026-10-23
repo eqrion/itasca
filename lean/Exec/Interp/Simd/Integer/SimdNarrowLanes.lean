@@ -10,8 +10,6 @@ def narrowOpcode (ty : NarrowWidth) (signed : Bool) : U32 :=
   | .i8,true => 101#u32 | .i8,false => 102#u32
   | .i16,true => 133#u32 | .i16,false => 134#u32
 
-theorem narrowWidth_val (ty : NarrowWidth) : (narrowWidth ty).val = ty.width := by cases ty <;> rfl
-
 theorem narrow_dispatch_eq (ty : NarrowWidth) (signed : Bool) (x y : U128) :
     runtime.interp.simd.narrow_lanes (narrowOpcode ty signed) x y =
       (runtime.interp.simd.narrow_lanes_loop x y (narrowWidth ty) signed 0#u128 0#u32) := by

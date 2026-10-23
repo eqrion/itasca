@@ -1,5 +1,6 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdPure
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
+import Itasca.Binary.Wasm1.EncodingUnique
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca

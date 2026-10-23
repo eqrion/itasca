@@ -2,7 +2,6 @@ import Exec.Interp.StructuredMachine.CallCertificate
 import Exec.Interp.StructuredMachine.CallStack
 
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 /-- Actual defined-function entry preserves the complete prepared caller stack
@@ -20,7 +19,7 @@ theorem call_wasm_stack {M P F A : Type}
     (s : _root_.store) (C : context) (bindings : Abs.ModuleBindings s (Store.decodeInstance store inst) C)
     (declared : List valtype) (body : List instr)
     (args defaults : List val)
-    (certificate : FunctionCode emission C
+    (certificate : FunctionCode C
       (signature.params.val.map sourceType) declared (signature.results.val.map sourceType) body compiled epilogue)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
@@ -34,14 +33,14 @@ theorem call_wasm_stack {M P F A : Type}
     (default : Abs.defaultLocals (declared.map local.LOCAL) = some defaults)
     (raws : List runtime.interp.Frame) (sources : List Abs.AFrame)
     (frames : exec.frames.val = raws.reverse)
-    (saved : SavedFrames emission store s exec raws sources (signature.results.val.map sourceType) base.val) :
+    (saved : SavedFrames store s exec raws sources (signature.results.val.map sourceType) base.val) :
     runtime.interp.call memory hooks floats allocator exec store platform address base ⦃ out =>
       out.2.2.1 = store ∧ (out.1 = .Ok () →
-        FrameStackRel emission store s out.2.1
+        FrameStackRel store s out.2.1
           (callCallee address.index.val (Store.decodeInstance store inst)
             (signature.results.val.map sourceType) args defaults body :: sources) ∧
         out.2.1.frames.val.getLast? = some ⟨instanceIndex, functionIndex, 0#u32, base⟩ ∧
-        ReadyTop emission store s out.2.1 (callCallee address.index.val (Store.decodeInstance store inst)
+        ReadyTop store s out.2.1 (callCallee address.index.val (Store.decodeInstance store inst)
           (signature.results.val.map sourceType) args defaults body)) ⦄ := by
   apply WP.spec_mono (call_wasm_certified memory hooks floats allocator allocation interrupts
     exec store platform address base function signature instanceIndex functionIndex inst compiled epilogue

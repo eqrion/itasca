@@ -46,20 +46,20 @@ set_option maxHeartbeats 1500000 in
 including a rejecting label or a label preceding a suffix error. -/
 theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
-    (count i : U32) (arity : Option Usize) (hi : i.val ≤ count.val)
+    (count i : U32) (arity : Option Usize) (first : signature.ResultType) (hi : i.val ≤ count.val)
     (v : V) (result : BodyResult) (final : code.BodyState) (v' : V)
-    (run : code.branch_table_with_loop visitor st.core data env v count arity i =
+    (run : code.branch_table_with_loop visitor st.core data env profile v count arity first i =
       .ok (result, final, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       TableSuffix data st.core.pos (count.val - i.val) observations result final.core := by
   generalize hn : count.val - i.val = n
-  induction n using Nat.strong_induction_on generalizing st i arity v with
+  induction n using Nat.strong_induction_on generalizing st i arity first v with
   | h n ih =>
     unfold code.branch_table_with_loop at run
     rw [loop] at run
-    simp only [Visitor.tableBody_eq visitor data env count st v arity i] at run
+    simp only [Visitor.tableBody_eq visitor data env profile count st v arity first i] at run
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ run
     unfold Visitor.tableBody at hb
     obtain ⟨⟨r, s⟩, hr, hv, hc, hbytes⟩ := WP.spec_imp_exists (code.read_label_info.bytes st data ha)
@@ -79,6 +79,17 @@ theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
         ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
       have ha' : s.blocks.val.length = s.core.ctrls.val.length := by simp [code.BodyState.blocks]
       simp only [bind_ok, Std.uncurry] at hb
+      obtain ⟨rc, hrc, hb⟩ := ResultFacts.bind_ok_inv _ _ _ hb
+      cases rc with
+      | Err e =>
+        simp only [ok.injEq] at hb
+        subst cf
+        simp only [ok.injEq, Prod.mk.injEq] at ht
+        obtain ⟨rfl, rfl, rfl⟩ := ht
+        exact ⟨[], by simp, .failed e (.nil _) (by simp) (.empty _)⟩
+      | Ok u =>
+      cases u
+      simp only [bind_ok] at hb
       by_cases he : i = count
       · simp only [he, bne_self_eq_false, Bool.false_eq_true, if_false] at hb
         unfold tableRest at hb
@@ -138,10 +149,10 @@ theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
               (UScalar.add_spec (x := i) (y := 1#u32) (by scalar_tac))
             simp only [hj, bind_ok, ok.injEq] at hb
             subst cf
-            have hrec : code.branch_table_with_loop visitor s.core data env w count nextArity j =
-                .ok (result, final, v') := ht
+            have hrec : code.branch_table_with_loop visitor s.core data env profile w count
+                nextArity (if i = 0#u32 then ts else first) j = .ok (result, final, v') := ht
             obtain ⟨observations, hobs, htrace⟩ := ih (count.val - j.val) (by scalar_tac)
-              s hs' ha' j nextArity (by scalar_tac) w hrec rfl
+              s hs' ha' j nextArity _ (by scalar_tac) w hrec rfl
             refine ⟨⟨.op s.core (.br_table_label depth), .Ok ()⟩ :: observations, ?_, ?_⟩
             · simpa [List.append_assoc] using hobs.trans (congrArg (· ++ observations) hlog)
             · have hn' : count.val - j.val + 1 = n := by scalar_tac
@@ -162,12 +173,12 @@ theorem labels_decoded {data pos observations depths last}
 
 /-- Table decoding includes its count, every observed vector label, and the
 separately decoded default. Operand failures before the loop emit no callbacks. -/
-theorem table_records {data env locals index st} (p : Pending data env locals index st)
+theorem table_records {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe)
     (byte : data.val[p.start.val]'p.inbounds = 0x0e#u8)
     (v : V) (result : BodyResult) (final : code.BodyState) (v' : V)
-    (run : code.branch_table_with visitor st data env v = .ok (result, final, v')) :
+    (run : code.branch_table_with visitor st data env profile v = .ok (result, final, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result final.core := by
   unfold code.branch_table_with at run
@@ -196,7 +207,7 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
     | Ok value =>
       simp only [bind_ok, Std.uncurry] at run
       obtain ⟨observations, log, trace⟩ := table_loop_records visitor observe records
-        ⟨s⟩ data env hs (by simp) count 0#u32 none (by simp) v result final v' run
+        ⟨s⟩ data env profile hs (by simp) count 0#u32 none .Empty (by simp) v result final v' run
       have hop : Wasm1.BytesAt data p.start [0x0E#u8] st.core.pos :=
         .byte data p.start st.core.pos 0x0E#u8 p.inbounds byte p.pos
       have hpos : s.pos = first := hp
@@ -215,13 +226,15 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
 /-- The table arm of the profile dispatcher returns its handler's exact result. -/
 theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index .Wasm2 0x0e#u8 v =
-      code.branch_table_with visitor st data env v := by
-  simp [code.step_profile, global_simps,
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
+    code.step_profile visitor st data env ctx index profile 0x0e#u8 v =
+      code.branch_table_with visitor st data env profile v := by
+  have hc : code.check_opcode profile 0x0e#u8 = .ok (.Ok ()) :=
+    code.check_opcode.complete profile _ (by decide)
+  simp [code.step_profile, hc, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  conv => rhs; rw [← Std.bind_pure (code.branch_table_with visitor st data env v)]
+  conv => rhs; rw [← Std.bind_pure (code.branch_table_with visitor st data env profile v)]
   congr 1
   funext pair
   obtain ⟨r, s, w⟩ := pair
@@ -233,7 +246,7 @@ namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-theorem step_br_table {data env locals index st} (p : Pending data env locals index st)
+theorem step_br_table {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0e#u8) :

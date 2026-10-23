@@ -32,20 +32,20 @@ theorem instruction_operands {s : store} {f : Abs.AFrame} {after : List instr}
     exact List.mem_append_right _ member
   · simpa only [equal] using heights
 
-theorem framePoint_head {emission : FunctionEmission}
+theorem framePoint_head
     {s : store} {raw : runtime.interp.Frame} {f : Abs.AFrame}
     {compiled : runtime.bytecode.CompiledFunction} {C : context} {targets : List Code.LabelTarget}
     {next : Nat} {output : List valtype} (source : instr) (after : List instr)
     (allowed : Abs.SimdInstr source)
     (project : ∀ before emitted result, emission compiled C before source emitted result →
       Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
-    (point : FramePoint emission s raw {f with code := source :: after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := source :: after} compiled C targets next output) :
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission s {raw with pc := target} {f with code := source :: after} compiled C targets next output) ∨
+      FramePoint s {raw with pc := target} {f with code := source :: after} compiled C targets next output) ∨
     (∃ instruction result,
       Code.SimdEmission compiled.simd.val compiled.v128_pool.val C (f.vals.map Code.valueType) source [instruction] result ∧
       compiled.code.val[raw.pc.val]? = some instruction ∧
-      Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+      Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
         compiled.code.val compiled.jump_tables.val targets result after (raw.pc.val+1) next output) := by
   rcases simd_point_head source after allowed project point.code with jump | head
   · obtain ⟨target,forward,fetch,tail⟩ := jump

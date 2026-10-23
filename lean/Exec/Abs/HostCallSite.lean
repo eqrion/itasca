@@ -87,51 +87,5 @@ theorem HostPending.finish_typed {state : AState} {types : List valtype}
   obtain ⟨f,rest,frames,valid⟩ := pending.resume extension functions typed
   simpa only [finishHost,frames,pending.values] using valid
 
-/-- A typed abstract host result resumes its exact saved continuation and
-performs two labeled source steps, without assumptions about host result types
-before the runtime check or restrictions on newly added functions. -/
-theorem host_call_return_correct (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (index address : Nat)
-    (args : List val) (results : List valtype) (resume : AState)
-    (typed : ATyped ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩)
-    (step : astep ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩ =
-      .host address args results resume)
-    (fresh : store) (extension : Extend_store s fresh) (sourceTyped : Store_ok fresh) (functions : FunctionsTyped fresh)
-    (returned : List val) (checked : ResultsTyped fresh results returned) :
-    ATyped (finishHost resume fresh returned) ∧
-      StepsHN 2 (decode ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩)
-        [.call address args (some returned)] (decode (finishHost resume fresh returned)) := by
-  obtain ⟨pending,identity,params,host,arguments⟩ :=
-    host_call_preparation s ambient f rest after index address args results resume typed step
-  obtain ⟨front,split,resumeEq,resolve,bound,frameWf,labels,frontWf,tail,callers,heights⟩ :=
-    host_call_site s ambient f rest after index address args results resume typed step
-  refine ⟨pending.finish_typed (by simpa only [resumeEq] using extension) functions checked,?_⟩
-  have atomic := host_return_step host arguments extension sourceTyped checked frameWf
-  have source := host_return_simulation s fresh ambient f rest after index address front args returned
-    _ typed.store typed.ambient frameWf labels frontWf tail callers heights resolve bound
-    (resultsTyped_wf arguments) atomic
-  simpa only [finishHost,resumeEq,← split] using source
-
-/-- A host rejection traps after its completed store effects, then unwinds
-all source frames without adding events. -/
-theorem host_call_trap_correct (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (index address : Nat)
-    (args : List val) (results : List valtype) (resume : AState)
-    (typed : ATyped ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩)
-    (step : astep ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩ =
-      .host address args results resume)
-    (fresh : store) (extension : Extend_store s fresh) (sourceTyped : Store_ok fresh) :
-    ∃ n, 2 ≤ n ∧ StepsHN n
-      (decode ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after} :: rest,[]⟩)
-      [.call address args none] ⟨⟨fresh,ambient⟩,[.TRAP]⟩ := by
-  obtain ⟨pending,identity,params,host,arguments⟩ :=
-    host_call_preparation s ambient f rest after index address args results resume typed step
-  obtain ⟨front,split,resumeEq,resolve,bound,frameWf,labels,frontWf,tail,callers,heights⟩ :=
-    host_call_site s ambient f rest after index address args results resume typed step
-  have atomic := host_trap_step host arguments extension sourceTyped frameWf
-  have source := host_trap_simulation s fresh ambient f rest after index address front args _
-    typed.store (extend_store_wf extension).2 typed.ambient frameWf labels frontWf tail callers heights
-    resolve bound (resultsTyped_wf arguments) atomic
-  simpa only [← split] using source
 end Exec.Abs
 

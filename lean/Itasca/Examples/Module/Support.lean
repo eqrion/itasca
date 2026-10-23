@@ -1,4 +1,4 @@
-import Itasca.Binary.Module
+import Itasca.Main
 
 /-!
 # Shared helpers for module examples

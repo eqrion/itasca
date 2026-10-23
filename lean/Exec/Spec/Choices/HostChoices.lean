@@ -53,15 +53,6 @@ theorem host_choice_erases (choices : HostChoices) (admissible : choices.Admissi
     | none => exact host_trap_step host arguments extension typed typedFrame
     | some values => exact host_return_step host arguments extension typed (returned values rfl) typedFrame
 
-/-- Once the reply is fixed, its output store, values or trap, and event are
-fixed. This is local determinism, not determinism of arbitrary source runs. -/
-theorem host_choice_deterministic {choices : HostChoices} {occurrence : Nat} {before : store}
-    {address : funcaddr} {identity : Nat} {params results : List valtype} {args : List val}
-    {first second : HostReply}
-    (left : choices occurrence before address identity params results args = first)
-    (right : choices occurrence before address identity params results args = second) : first = second :=
-  left.symm.trans right
-
 /-- A trapping callback without effects is an inhabited source policy for
 every typed host request. Arbitrary native callbacks still need refinement. -/
 def trappingHostChoice : HostChoices := fun _ before _ _ _ _ _ => ⟨before,none⟩

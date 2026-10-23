@@ -8,12 +8,6 @@ structure Bounds.Extends (before after : Bounds) : Prop where
   functions : before.functions ≤ after.functions
   externs : before.externs ≤ after.externs
 
-theorem Bounds.Extends.refl (bound : Bounds) : bound.Extends bound := ⟨le_rfl,le_rfl⟩
-
-theorem Bounds.Extends.trans {first middle last : Bounds}
-    (left : first.Extends middle) (right : middle.Extends last) : first.Extends last :=
-  ⟨left.functions.trans right.functions,left.externs.trans right.externs⟩
-
 theorem ValueOwned.extend {before after value} (extension : before.Extends after)
     (owned : ValueOwned before value) : ValueOwned after value := by
   cases value <;> try trivial

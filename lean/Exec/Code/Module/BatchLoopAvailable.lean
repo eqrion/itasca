@@ -32,7 +32,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     (count : batch.num_validated.val+entries.length = batch.num_funcs.val)
     (range : batch.first_func.val+batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
     (bounds : CodeEntry.Bounds batch.env) (environment : Profile.Environment batch.profile batch.env)
-    (limits : Profile.EnvironmentWithinLimits batch.profile batch.env)
+    (limits : Profile.EnvironmentWithinLimits batch.env)
     (signatures : SignatureSequence before.signatures.val batch.env.types.val)
     (functionSlots : before.func_param_slots.val.map (fun word => word.val) =
       batch.env.func_types.val.map (fun ty => signatureSlots ty.params.val))

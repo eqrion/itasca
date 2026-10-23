@@ -210,19 +210,4 @@ theorem looping_platform_diverges {M F A : Type} (memory : runtime.platform.Memo
     (platform memory floats allocator (fun _ _=>[.jump 0])).call_host () store identity args defaults=.div := by
   simp only [platform,host_loop_diverges,bind_div]
 
-/-- Root host returns retain the expanded history, including the initial
-pending call and the exit. The ordinary platform wrapper erases this history. -/
-theorem literal_return {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (identity : U64) (args : Slice runtime.Value)
-    (values : Slice PureCallbacks.Literal) :
-    run memory floats allocator (fun _ _=>[.returned values])
-      (initialHost (fun _ _=>[.returned values]) store identity args)=
-      .ok (.host (.Ok (),store,OpenHostControl.literalValues values)
-        [.hostEnter none identity args,.hostExit (.Ok ()) (OpenHostControl.literalValues values)]) := by
-  unfold run
-  rw [loop.eq_def]
-  simp only [tick,initialHost,List.getElem?_cons_zero,bind_ok]
-  rw [loop.eq_def]
-  simp only [tick,List.nil_append,List.cons_append,List.append_nil,bind_ok]
 end Exec.Theorems.OpenReentrantControl

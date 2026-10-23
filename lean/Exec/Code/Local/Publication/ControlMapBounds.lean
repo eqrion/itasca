@@ -42,22 +42,6 @@ def OpenControlMapBounds (compiler : runtime.compiler.FunctionCompiler A)
     compiler.function.body_start.val ≤ entry.source_start.val ∧
     entry.source_start.val ≤ compiler.function.body_start.val+compiler.next_source.val
 
-/-- Reader progress makes the closing source interval strictly positive;
-current code length supplies the closed target without assuming a check result. -/
-theorem OpenControlMapBounds.close {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
-    {entry closed : runtime.compiler.ControlMap} (held : OpenControlMapBounds compiler entry)
-    (target : Usize) (position : target.val = compiler.function.code.length)
-    (endSource : Usize) (progress : compiler.function.body_start.val+compiler.next_source.val < endSource.val)
-    (endBound : endSource.val ≤ compiler.function.body_end.val)
-    (updated : closed = {entry with end_pc := target,source_end := endSource}) :
-    ClosedControlMapBounds compiler.function closed := by
-  obtain ⟨pc,lower,prior⟩ := held
-  rw [updated]
-  change entry.start_pc.val ≤ target.val ∧ target.val ≤ compiler.function.code.length ∧
-    compiler.function.body_start.val ≤ entry.source_start.val ∧ endSource.val ≤ compiler.function.body_end.val ∧
-    entry.source_start.val < endSource.val
-  exact ⟨by omega,by omega,lower,endBound,by omega⟩
-
 /-- Closing bounds depend on the preserved entry fields and computed exit
 coordinates, so callback effects need not expose a record representation. -/
 theorem OpenControlMapBounds.close_fields {A : Type} {compiler : runtime.compiler.FunctionCompiler A}

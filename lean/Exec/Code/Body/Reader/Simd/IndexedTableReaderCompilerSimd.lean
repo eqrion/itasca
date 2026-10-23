@@ -1,9 +1,9 @@
 import Exec.Code.Body.Reader.Common.ReaderExtendedScratch
 import Exec.Code.Body.Reader.Common.ReaderExtendedCodeMonotone
 import Exec.Code.Local.Lowering.Simd.SimdStaticTables
-import Exec.Code.Body.Reader.Simd.StructuredReaderCompilerSimdWithTables
+import Exec.Code.Body.Reader.Simd.StructuredReaderCompilerSimd
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
-import Exec.Code.Body.Reader.Simd.ReaderSimdEventTablesWithTables
+import Exec.Code.Body.Reader.Simd.ReaderSimdEventTables
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -29,7 +29,7 @@ theorem IndexedTableReaderCompilerPointWasm2.simd {A : Type}
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
   obtain ⟨event⟩ := reader_simd_event_wasm2 p ops before after out ctx C contextMemories byte accepted
-  obtain ⟨extra,tables⟩ := event.tables_with_tables law contextLocals state.compiled state.reach.current sourceBound bodyBound
+  obtain ⟨extra,tables⟩ := event.tables law contextLocals state.compiled state.reach.current sourceBound bodyBound
   have depths := event.depths law
   have growth := event.code_mono law
   have bound := event.meaning.opcode_bound

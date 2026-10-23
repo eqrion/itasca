@@ -12,7 +12,7 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
     {data env index start profile} (w : CodeEntry.Prepared data env index start profile)
     (before started after : V)
     (begun : visitor.on_function_start before w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started))
-    (body : CodeEntry.runBody visitor profile w.body env w.ctx w.typeIdx started = .ok (.Ok (),after)) :
+    (body : code.validate_body_with visitor w.body env w.ctx w.typeIdx profile started = .ok (.Ok (),after)) :
     module.validate_code_entry_with visitor data start env index profile before
       ⦃ result => result = (.Ok w.finish,after) ⦄ := by
   have read := reader.read_u32_leb.complete data start w.size w.content w.header
@@ -61,16 +61,12 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
   have contextEq : (⟨locals,results⟩ : code.Context) = w.ctx := by rw [localsEq,resultsEq]
   rw [contextEq,typeEq,endEq,begun]
   simp only [bind_ok]
-  cases profile
-  all_goals
-    simp only [CodeEntry.runBody] at body
-    simp only [Std.bind_assoc]
-    step as ⟨actual,actualSpec⟩
-    have bytes := ModuleBinary.slice_bytes (by have length := w.body_bytes.length; scalar_tac)
-      w.body_bytes.bound actualSpec
-    have bodyEq : actual = w.body := Slice.ext _ _ (by
-      exact List.append_cancel_right (bytes.suffix.symm.trans w.body_bytes.suffix))
-    rw [bodyEq,body]
-    simp
+  step as ⟨actual,actualSpec⟩
+  have bytes := ModuleBinary.slice_bytes (by have length := w.body_bytes.length; scalar_tac)
+    w.body_bytes.bound actualSpec
+  have bodyEq : actual = w.body := Slice.ext _ _ (by
+    exact List.append_cancel_right (bytes.suffix.symm.trans w.body_bytes.suffix))
+  rw [bodyEq,body]
+  simp
 
 end Exec.Code

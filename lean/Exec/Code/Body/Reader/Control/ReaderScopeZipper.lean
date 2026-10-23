@@ -1,4 +1,3 @@
-import Exec.Code.Body.Reader.Control.ReaderScopeWasm1
 import Exec.Code.Body.Reader.Control.ReaderScopeWasm2
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
@@ -24,52 +23,6 @@ private theorem matched_last {α β : Type} {R : α → β → Prop} {left right
     | cons head tail => cases tail; exact ⟨_, rfl, head⟩
   obtain ⟨item, rest, related⟩ := singleton ending
   exact ⟨left.take right.length, item, by rw [← rest, List.take_append_drop], beginning, related⟩
-
-/-- Compiler source scopes and the canonical validator zipper retain the same source syntax. -/
-structure ReaderScopeZipperWasm1 (parents : List SourceScope) (current : SourceScope)
-    (savedParents : List Wasm1.Frames.Saved) (savedCurrent : Wasm1.Frames.Saved) : Prop where
-  parents : List.Forall₂ SourceScopeMatchesWasm1 parents savedParents
-  current : SourceScopeMatchesWasm1 current savedCurrent
-
-theorem ReaderScopeZipperWasm1.advance {parents current savedParents savedCurrent}
-    (same : ReaderScopeZipperWasm1 parents current savedParents savedCurrent)
-    (token : Wasm1.Token) (instruction : instr) (poly : Bool) (values : List code.StackType) :
-    ReaderScopeZipperWasm1 parents (current.advance instruction) savedParents
-      (savedCurrent.advance token instruction poly values) :=
-  ⟨same.parents, (SourceScopeMatchesWasm1.advance_iff _ _ _ _).mpr same.current⟩
-
-theorem ReaderScopeZipperWasm1.enter {parents current savedParents savedCurrent}
-    (same : ReaderScopeZipperWasm1 parents current savedParents savedCurrent)
-    (child : SourceScope) (savedChild : Wasm1.Frames.Saved)
-    (fresh : SourceScopeMatchesWasm1 child savedChild) (remaining : List code.StackType) :
-    ReaderScopeZipperWasm1 (parents ++ [current]) child
-      (savedParents ++ [{savedCurrent with vals := remaining}]) savedChild :=
-  ⟨List.rel_append same.parents (.cons (same.current.suspend remaining) .nil), fresh⟩
-
-theorem ReaderScopeZipperWasm1.begin_else {parents current savedParents savedCurrent}
-    (same : ReaderScopeZipperWasm1 parents current savedParents savedCurrent)
-    (type : blocktype) (condition : U32) (form : current.form = .then_ type condition)
-    (yesExit : Nat) (noEntry : U32) (normal : Bool) :
-    ReaderScopeZipperWasm1 parents (current.begin_else type condition yesExit noEntry normal)
-      savedParents savedCurrent.nextElse :=
-  ⟨same.parents, same.current.begin_else type condition form yesExit noEntry normal⟩
-
-theorem ReaderScopeZipperWasm1.lookup {parents current savedParents savedCurrent}
-    (same : ReaderScopeZipperWasm1 parents current savedParents savedCurrent)
-    (depth : Nat) (saved : Wasm1.Frames.Saved)
-    (found : (savedCurrent :: savedParents.reverse)[depth]? = some saved) :
-    ∃ scope, (current :: parents.reverse)[depth]? = some scope ∧ SourceScopeMatchesWasm1 scope saved :=
-  matched_at (.cons same.current (List.rel_reverse same.parents)) depth saved found
-
-theorem ReaderScopeZipperWasm1.close {parents current savedParents savedCurrent}
-    (same : ReaderScopeZipperWasm1 parents current savedParents savedCurrent)
-    (grandparents : List Wasm1.Frames.Saved) (parent : Wasm1.Frames.Saved)
-    (split : savedParents = grandparents ++ [parent]) (instruction : instr) :
-    ∃ outer scope, parents = outer ++ [scope] ∧
-      ReaderScopeZipperWasm1 outer (scope.advance instruction) grandparents
-        (resumedSourceWasm1 parent savedCurrent instruction) := by
-  obtain ⟨outer, scope, shape, paired, last⟩ := matched_last (split ▸ same.parents)
-  exact ⟨outer, scope, shape, paired, last.resume⟩
 
 /-- Compiler source scopes and the canonical validator zipper retain the same source syntax. -/
 structure ReaderScopeZipperWasm2 (parents : List SourceScope) (current : SourceScope)

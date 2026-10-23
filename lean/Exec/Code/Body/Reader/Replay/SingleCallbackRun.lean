@@ -1,5 +1,4 @@
 import Exec.Code.Body.Reader.Publication.NonScopeCallbackPublication
-import Exec.Code.Body.Reader.Common.ReaderWasm1
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

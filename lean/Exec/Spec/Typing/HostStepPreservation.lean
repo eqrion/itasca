@@ -45,12 +45,6 @@ theorem stepH_config_preserved {before after : config} {events : List HostEvent}
     (source : StepH before events after) {types : resulttype} (typed : Config_ok before types) :
     Config_ok after types := state_typing_replacement_preserves (stepH_typing_replacement source) typed
 
-theorem steps_config_preserved {before after : config} (source : Steps before after) {types : resulttype}
-    (typed : Config_ok before types) : Config_ok after types := by
-  induction source with
-  | refl => exact typed
-  | trans => solve_by_elim [step_config_preserved]
-
 theorem stepsH_config_preserved {before after : config} {events : List HostEvent}
     (source : StepsH before events after) {types : resulttype} (typed : Config_ok before types) :
     Config_ok after types := by

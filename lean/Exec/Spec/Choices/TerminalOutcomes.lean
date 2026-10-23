@@ -23,17 +23,4 @@ theorem terminal_no_infinite {initial : config}
   | refl => omega
   | cons head tail => exact terminal _ _ head
 
-theorem values_stepsH_absorbing {state : _root_.state} {values : List val} {events : List HostEvent} {after : config}
-    (source : StepsH ⟨state,vals values⟩ events after) : events=[] ∧ after=⟨state,vals values⟩ :=
-  terminal_stepsH (fun _ _ => stepH_no_values) source
-
-theorem trap_stepsH_absorbing {state : _root_.state} {events : List HostEvent} {after : config}
-    (source : StepsH ⟨state,[.TRAP]⟩ events after) : events=[] ∧ after=⟨state,[.TRAP]⟩ :=
-  terminal_stepsH (fun _ _ => stepH_no_trap) source
-
-theorem values_no_infinite (state : _root_.state) (values : List val) :
-    ¬InfiniteSourceWithEvents ⟨state,vals values⟩ := terminal_no_infinite (fun _ _ => stepH_no_values)
-
-theorem trap_no_infinite (state : _root_.state) :
-    ¬InfiniteSourceWithEvents ⟨state,[.TRAP]⟩ := terminal_no_infinite (fun _ _ => stepH_no_trap)
 end Exec.Spec

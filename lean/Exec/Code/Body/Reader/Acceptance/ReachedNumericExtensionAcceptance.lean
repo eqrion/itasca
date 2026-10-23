@@ -10,7 +10,7 @@ set_option maxRecDepth 4096
 /-- Every Wasm 2 sign extension accepts from the independently validated
 reader effect and source-paid numeric demand. -/
 theorem reached_profile_sign_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -57,7 +57,7 @@ theorem reached_profile_sign_available_wasm2 {data env locals index st}
 /-- Every saturating conversion accepts through its real prefix decoder and
 source-validated conversion reader. Compilation assumes no native FP law. -/
 theorem reached_profile_saturating_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)

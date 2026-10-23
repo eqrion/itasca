@@ -90,40 +90,4 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
       · simpa [hinst'] using haddresses
       · simp [hback, hinst']
 
-/-- Updating a newly staged instance cannot alter an earlier instance's map.
-The copied bytes and appended data address likewise retain every old prefix. -/
-theorem add_instance_data_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (before s : runtime.store.Store M) (hprefix : StagedPrefix before s)
-    (instanceIndex i : Usize) (hfresh : before.instances.length ≤ instanceIndex.val)
-    (hinstance : instanceIndex.val < s.instances.length)
-    (hi : i.val < (s.instances.val[instanceIndex.val]).module.module.tail.data.length)
-    (hroom : s.datas.length < Usize.max)
-    (hmaproom : (s.instances.val[instanceIndex.val]).datas.length < Usize.max) :
-    runtime.store.instantiate.Store.add_instance_data ops allocator s instanceIndex i
-      ⦃ _ after => StagedPrefix before after ⦄ := by
-  apply WP.spec_mono (add_instance_data_effect ops allocator ha s instanceIndex i hinstance hi hroom hmaproom)
-  intro result heffect
-  rcases heffect with ⟨error, herr⟩ | ⟨bytes, datas, addresses, hbytes, hdatas, haddresses, hresult⟩
-  · simpa [herr] using hprefix
-  · rw [hresult]
-    constructor
-    · exact hprefix.identity
-    · exact hprefix.limits
-    · exact hprefix.funcs
-    · exact hprefix.types
-    · exact hprefix.tables
-    · exact hprefix.memories
-    · exact hprefix.globals
-    · simpa [alloc.vec.Vec.set_val_eq, List.take_set_of_le hfresh] using hprefix.instances
-    · exact hprefix.elems
-    · have hlen : before.datas.length ≤ s.datas.length := by
-        have h := congrArg List.length hprefix.datas
-        simp only [List.length_take] at h
-        change Nat.min before.datas.length s.datas.length = before.datas.length at h
-        exact h ▸ Nat.min_le_right _ _
-      simpa only [hdatas, List.take_append_of_le_length hlen] using hprefix.datas
-    · exact hprefix.externs
-    · exact hprefix.instanceItems
-
 end Exec.Store

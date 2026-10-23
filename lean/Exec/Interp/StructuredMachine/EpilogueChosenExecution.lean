@@ -11,8 +11,7 @@ namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_function_end_chosen_execution {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {supported owned}
-    (semantics : ReturnSemantics supported owned)
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -26,16 +25,16 @@ theorem step_function_end_chosen_execution {choices : Spec.SourceChoices} (admis
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := [],labels := []} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := [],labels := []} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := [],labels := []}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := [],labels := []}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ pc source, Execution emission supported view code store out.2.1 source expected pc false ∧
+      ∃ pc source, Execution view code store out.2.1 source expected pc false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc false false initial source ∧
-        (∀ bounds, owned bounds initial → owned bounds source) ∧ source.ambient = ambient ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds source) ∧ source.ambient = ambient ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound source) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
@@ -64,8 +63,8 @@ theorem step_function_end_chosen_execution {choices : Spec.SourceChoices} (admis
     intro out effect
     obtain ⟨success,returned,represented,sameStore,samePlatform,preserved,nextState⟩ := effect
     have result := function_end_invocation_result (Store.decodeStore view code store) ambient f rest machine.typed.typed types expected machine.result
-    obtain ⟨pc,fresh⟩ := Execution.return_complete semantics view code ambient {f with code := [],labels := []} rest expected raw.pc.val false machine raw top
+    obtain ⟨pc,fresh⟩ := Execution.return_complete view code ambient {f with code := [],labels := []} rest expected raw.pc.val false machine raw top
       compiled.local_slots.val count.val returned f.vals original codeTypes actualWidth bounds nextTyped result
     exact ⟨success,sameStore,samePlatform,pc,_,fresh,ChosenConcreteSim.of_source _ _ _ _ _ simulation,
-      semantics.ownership f.vals (fun _ member => member),by cases rest <;> rfl,(fun _ bounded => returnedState_codeBound bounded f.vals)⟩
+      StructuredMachine.return_owned f.vals (fun _ member => member),by cases rest <;> rfl,(fun _ bounded => returnedState_codeBound bounded f.vals)⟩
 end Exec.Interp.StructuredMachine

@@ -6,31 +6,12 @@ import Itasca.Binary.ModuleUniqueSegments
 
 `ModuleEncodingWith.unique` shows that two raw modules with the same encoding are equal, for
 either profile and any prefix-unique code entry grammar. Custom section placement and omitted
-empty sections introduce no ambiguity. `ModuleEncoding.unique` specializes it to `CodeEncoding`.
+empty sections introduce no ambiguity. `Itasca/Results/Unique` specializes it to the profiles.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
-
-/-- The data count section determines its value: absence and an explicit zero count have
-distinct encodings. -/
-theorem DataCountSectionEncoding.unique {profile x y bytes}
-    (hx : DataCountSectionEncoding profile x bytes)
-    (hy : DataCountSectionEncoding profile y bytes) : x = y := by
-  cases profile with
-  | Wasm1 => exact hx.1.trans hy.1.symm
-  | Wasm2 =>
-    obtain ⟨xs, xp, hxs, hx, hxl⟩ := PaddedEncoding.frames hx
-    obtain ⟨ys, yp, hys, hy, hyl⟩ := PaddedEncoding.frames hy
-    have he := SectionDecode.unique hxs hys
-    subst ys
-    have hp : xp = yp := by
-      have hx := hxl 12#u8 (by decide)
-      have hy := hyl 12#u8 (by decide)
-      simpa using hx.symm.trans hy
-    subst yp
-    exact SectionDecode.Field.unique start_prefix_unique.unique hx hy
 
 /-- The data count section frames like other optional fields. Wasm 1.0 forces its absence. -/
 theorem DataCountSectionEncoding.frames {profile value bytes}
@@ -144,16 +125,5 @@ theorem ModuleEncodingWith.unique {profile codeRel x y bytes}
   have h_codes := SectionDecode.Field.unique hcode.vec.unique hxf.codes hyf.codes
   have h_data := SectionDecode.Field.unique (dataFor_prefix_unique profile).vec.unique hxf.data hyf.data
   cases x; cases y; simp_all
-
-/-- `ModuleEncodingWith.sections` for `ModuleEncoding`. -/
-theorem ModuleEncoding.sections {raw bytes} (h : ModuleEncoding raw bytes) :
-    ∃ sections, Rep SectionDecode.Encoding sections (bytes.drop magicVersion.length) ∧
-      SectionDecode.Fields raw sections :=
-  ModuleEncodingWith.sections h
-
-/-- A byte string encodes at most one raw module under `ModuleEncoding` (Wasm 1.0). -/
-theorem ModuleEncoding.unique {x y bytes}
-    (hx : ModuleEncoding x bytes) (hy : ModuleEncoding y bytes) : x = y :=
-  ModuleEncodingWith.unique code_prefix_unique hx hy
 
 end Itasca.ModuleBinary

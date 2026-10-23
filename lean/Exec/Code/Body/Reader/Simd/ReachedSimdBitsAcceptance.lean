@@ -7,7 +7,7 @@ set_option maxRecDepth 4096
 /-- The actual sixteen-byte vector constant reader accepts under independently
 bounded pool/observer demand, including dead code. -/
 theorem reached_profile_simd_constant_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (next : Usize)
@@ -36,7 +36,7 @@ theorem reached_profile_simd_constant_available_wasm2 {data env locals index st}
 /-- Shuffle acceptance preserves its actual packed lane bytes and derives
 live operand/output layouts from the independent fixed source effect. -/
 theorem reached_profile_simd_shuffle_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context) (next : Usize)

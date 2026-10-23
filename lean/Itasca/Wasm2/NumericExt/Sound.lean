@@ -15,14 +15,15 @@ namespace Itasca.Wasm2
 
 /-- A unary numeric extension preserves the control zipper while recording
 its independently encoded instruction, including any consumed prefix bytes. -/
-theorem Pending.extended_numeric {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (v : V)
+theorem Pending.extended_numeric {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (v : V)
     (operation : Numeric.Operation) (hunary : operation.binary = false)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction)
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)
     (hook : V → code.OpIterState → Unit → Result (core.result.Result Unit error.VisitError × V))
     (hhook : ∀ s a, ∃ reply v', hook v s a = .ok (reply, v'))
-    (hencoded : At data p.start (.plain operation.instruction) pos) :
+    (hencoded : At data p.start (.plain operation.instruction) pos)
+    (hwasm2 : profile ≠ .Wasm1) :
     CoreVisitor.run (code.read_conversion {st.core with pos := pos} operation.input operation.output)
       hook v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
@@ -49,12 +50,12 @@ theorem Pending.extended_numeric {data env locals index st}
       (by simpa [hpoly] using typed) operation.wellFormed (operation.typed _ hC)
     apply p.append_result C outer spine header base {st with core := s} operation.instruction
       p.current.ctrl.polymorphic_base after operation.wellFormed
-      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv hdecl
+      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv (fun hp => absurd hp hwasm2) hdecl
     · simpa [hc, decoded] using ctrls
     · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
 
 /-- Scalar extensions and the base dispatcher share the same successful-step certificate. -/
-theorem Pending.extended_scalar {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.extended_scalar {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
@@ -65,7 +66,8 @@ theorem Pending.extended_scalar {data env locals index st} (p : Pending data env
   cases hm : NumericExtensions.signMeaning opcode with
   | some operation =>
     rw [code.step_extended.sign visitor st.core data env ctx opcode operation v hm]
-    apply p.extended_numeric v operation (NumericExtensions.sign_properties hm).1 (NumericExtensions.sign_declared hm _) st.core.pos hsize
+    apply p.extended_numeric (hwasm2 := p.not_wasm1 hbyte (Wasm1.signMeaning_extension hm)) v
+      operation (NumericExtensions.sign_properties hm).1 (NumericExtensions.sign_declared hm _) st.core.pos hsize
       _ (fun s _ => hv.visit_sign_extension v s opcode)
     exact At.of_immediate p.inbounds hbyte p.pos (.signExtension opcode operation hm)
       (Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
@@ -86,7 +88,8 @@ theorem Pending.extended_scalar {data env locals index st} (p : Pending data env
         | none => simp [hm]
         | some operation =>
           simp only [hm]
-          apply p.extended_numeric v operation (NumericExtensions.saturating_unary hm) (NumericExtensions.saturating_declared hm _) next hsize
+          apply p.extended_numeric (hwasm2 := p.not_wasm1 hbyte (by decide)) v
+            operation (NumericExtensions.saturating_unary hm) (NumericExtensions.saturating_declared hm _) next hsize
             _ (fun s _ => hv.visit_saturating v s subopcode)
           obtain ⟨bytes, hs, hn, hb, he⟩ := hd
           exact At.of_immediate p.inbounds hbyte p.pos (.saturating subopcode operation hm he)

@@ -55,30 +55,4 @@ def Store.operation : Store → Option sz
 def Store.source (op : Store) (argument : memarg) : instr :=
   .STORE op.type op.operation argument
 
-theorem PackedWidth.well_formed {ty} (width : PackedWidth ty) : wf_sz width.size := by
-  cases width <;> exact .sz_case_0 _ (by simp [PackedWidth.bits])
-
-theorem PackedWidth.lt_width {ty} (width : PackedWidth ty) : width.bits < sizenn (numtype_Inn ty) := by
-  cases ty <;> cases width <;> decide
-
-theorem Load.operation_wf (op : Load) (packed : loadop_) (found : op.operation = some packed) :
-    wf_loadop_ op.type packed := by
-  cases op with
-  | full ty => simp [Load.operation] at found
-  | packed ty width signed =>
-    simp only [Load.operation, Option.some.injEq] at found
-    subst packed
-    exact .loadop__case_0 _ ty _ (.loadop_Inn_case_0 ty width.size signed
-      width.well_formed width.lt_width) rfl
-
-theorem Load.bytes_positive (op : Load) : 0 < op.bytes := by
-  cases op with
-  | full ty => cases ty <;> decide
-  | packed ty width signed => cases width <;> simp [Load.bytes, PackedWidth.bits]
-
-theorem Store.bytes_positive (op : Store) : 0 < op.bytes := by
-  cases op with
-  | full ty => cases ty <;> decide
-  | packed ty width => cases width <;> simp [Store.bytes, PackedWidth.bits]
-
 end Exec.Abs.Memory

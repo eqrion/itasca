@@ -1,16 +1,9 @@
-import Exec.Code.Body.Reader.Common.ReaderCompilerState
+import Exec.Code.Body.Callbacks.Common.CompilerPrefix
+import Exec.Code.Body.Reader.Common.ReaderBoundary
+import Exec.Code.Body.Reader.Control.ReaderScopeFronts
+import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
-
-/-- The validator's canonical body-size invariant supplies the weaker module
-byte cap used by instruction-emission bounds. -/
-theorem ReaderBoundaryWasm1.source_bound {data env ctx bt st parents current}
-    (boundary : ReaderBoundaryWasm1 data env ctx bt st parents current) :
-    data.length ≤ limits.MAX_MODULE_BYTES.val := by
-  have bound := boundary.bounds.size
-  have cap : limits.MAX_FUNCTION_BYTES.val ≤ limits.MAX_MODULE_BYTES.val := by
-    norm_num [limits.MAX_FUNCTION_BYTES, limits.MAX_MODULE_BYTES]
-  exact bound.trans cap
 
 theorem ReaderBoundaryWasm2.source_bound {data env locals index ft st parents current}
     (boundary : ReaderBoundaryWasm2 data env locals index ft st parents current) :

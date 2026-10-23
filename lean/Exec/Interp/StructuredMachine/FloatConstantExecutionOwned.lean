@@ -1,13 +1,10 @@
-import Exec.Interp.StructuredMachine.ControlSemantics
+import Exec.Interp.StructuredMachine.SupportedControlSemantics
 import Exec.Interp.Machines.Core.CoreOwnership
-import Exec.Interp.Machines.Core.CoreBound
+import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.FloatConstantBounded
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
 namespace Exec.Interp.StructuredMachine.FloatConstant
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-variable {allowed supported owned} (semantics : ControlSemantics allowed supported owned)
-include semantics
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 theorem step_float32_execution_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -23,18 +20,18 @@ theorem step_float32_execution_owned_forward {M P F A : Type}
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .CONST .F32 (.mk_num__1 .F32 value) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .CONST .F32 (.mk_num__1 .F32 value) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : Abs.AFrame), raw.pc.val < pc.val ∧
-        Execution emission supported view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
+        Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
-        (∀ bounds, owned bounds initial → owned bounds {initial with frames := g::rest}) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
@@ -52,23 +49,23 @@ theorem step_float32_execution_owned_forward {M P F A : Type}
     (Store.decodeStore view code store) ambient f rest value after last frameFound instanceFound codeFound program.fetchBound slots program.checked allocated point machine.typed)
   intro out effect
   obtain ⟨success,sameStore,samePlatform,pc,g,forward,fields,represented,retained,fresh,metadata,shape,simulation,footprint⟩ := effect
-  have covered : supported ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+  have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
     rcases shape with same | changed
     · rw [same]; exact machine.core
-    · apply semantics.next_covered machine.typed machine.core
+    · apply StructuredMachine.core_step_supported machine.typed machine.core
       rw [changed]
       rfl
-  have ownership : ∀ bounds, owned bounds
+  have ownership : ∀ bounds, Abs.Ownership.StatefulOwned bounds
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩ →
-      owned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-    apply semantics.owned_transition machine.typed machine.core
+      Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+    apply StructuredMachine.owned_transition machine.typed machine.core
     rcases shape with same | changed
     · exact Or.inl (by rw [same])
     · exact Or.inr (by rw [changed]; rfl)
   have bounded : ∀ bounds, Abs.CodeBound bounds
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩ →
       Abs.CodeBound bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-    apply semantics.bound_transition machine.typed machine.core
+    apply StructuredMachine.bound_transition machine.typed machine.core
     rcases shape with same | changed
     · exact Or.inl (by rw [same])
     · exact Or.inr (by rw [changed]; rfl)
@@ -80,7 +77,6 @@ theorem step_float32_execution_owned_forward {M P F A : Type}
     Execution.ordinary view code ambient {f with code := .CONST .F32 (.mk_num__1 .F32 value)::after} g rest expected raw.pc.val false machine
       (.refl store) (extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,ownership,bounded⟩
-
 
 theorem step_float32_execution_owned {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -96,20 +92,20 @@ theorem step_float32_execution_owned {M P F A : Type}
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .CONST .F32 (.mk_num__1 .F32 value) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .CONST .F32 (.mk_num__1 .F32 value) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F32 (.mk_num__1 .F32 value)::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : Abs.AFrame),
-        Execution emission supported view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
+        Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
-        (∀ bounds, owned bounds initial → owned bounds {initial with frames := g::rest}) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
-  apply WP.spec_mono (step_float32_execution_owned_forward semantics memory hooks floats allocator exec store platform index raw inst compiled C targets next output view code ambient f rest value after last frameFound instanceFound codeFound slots point expected machine program)
+  apply WP.spec_mono (step_float32_execution_owned_forward memory hooks floats allocator exec store platform index raw inst compiled C targets next output view code ambient f rest value after last frameFound instanceFound codeFound slots point expected machine program)
   rintro out ⟨success,sameStore,samePlatform,pc,g,forward,rest⟩
   exact ⟨success,sameStore,samePlatform,pc,g,rest⟩
 
@@ -127,18 +123,18 @@ theorem step_float64_execution_owned_forward {M P F A : Type}
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .CONST .F64 (.mk_num__1 .F64 value) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .CONST .F64 (.mk_num__1 .F64 value) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : Abs.AFrame), raw.pc.val < pc.val ∧
-        Execution emission supported view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
+        Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
-        (∀ bounds, owned bounds initial → owned bounds {initial with frames := g::rest}) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
@@ -156,23 +152,23 @@ theorem step_float64_execution_owned_forward {M P F A : Type}
     (Store.decodeStore view code store) ambient f rest value after last frameFound instanceFound codeFound program.fetchBound slots program.checked allocated point machine.typed)
   intro out effect
   obtain ⟨success,sameStore,samePlatform,pc,g,forward,fields,represented,retained,fresh,metadata,shape,simulation,footprint⟩ := effect
-  have covered : supported ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+  have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
     rcases shape with same | changed
     · rw [same]; exact machine.core
-    · apply semantics.next_covered machine.typed machine.core
+    · apply StructuredMachine.core_step_supported machine.typed machine.core
       rw [changed]
       rfl
-  have ownership : ∀ bounds, owned bounds
+  have ownership : ∀ bounds, Abs.Ownership.StatefulOwned bounds
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩ →
-      owned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-    apply semantics.owned_transition machine.typed machine.core
+      Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+    apply StructuredMachine.owned_transition machine.typed machine.core
     rcases shape with same | changed
     · exact Or.inl (by rw [same])
     · exact Or.inr (by rw [changed]; rfl)
   have bounded : ∀ bounds, Abs.CodeBound bounds
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩ →
       Abs.CodeBound bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-    apply semantics.bound_transition machine.typed machine.core
+    apply StructuredMachine.bound_transition machine.typed machine.core
     rcases shape with same | changed
     · exact Or.inl (by rw [same])
     · exact Or.inr (by rw [changed]; rfl)
@@ -199,22 +195,21 @@ theorem step_float64_execution_owned {M P F A : Type}
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .CONST .F64 (.mk_num__1 .F64 value) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .CONST .F64 (.mk_num__1 .F64 value) :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CONST .F64 (.mk_num__1 .F64 value)::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : Abs.AFrame),
-        Execution emission supported view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
+        Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
-        (∀ bounds, owned bounds initial → owned bounds {initial with frames := g::rest}) ∧
+        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
-  apply WP.spec_mono (step_float64_execution_owned_forward semantics memory hooks floats allocator exec store platform index raw inst compiled C targets next output view code ambient f rest value after last frameFound instanceFound codeFound slots point expected machine program)
+  apply WP.spec_mono (step_float64_execution_owned_forward memory hooks floats allocator exec store platform index raw inst compiled C targets next output view code ambient f rest value after last frameFound instanceFound codeFound slots point expected machine program)
   rintro out ⟨success,sameStore,samePlatform,pc,g,forward,rest⟩
   exact ⟨success,sameStore,samePlatform,pc,g,rest⟩
-
 
 end Exec.Interp.StructuredMachine.FloatConstant

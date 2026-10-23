@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Exact successful decoder and fixed-stack effect, with the original source zipper. -/
 abbrev MetadataReaderPost {data env locals index st}
-    (p : Pending data env locals index st) {A B : Type}
+    (p : Pending data env .Wasm2 locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)
     (metadata : A → B) (operation : A → instr) (value : B) (out : code.OpIterState) : Prop :=
@@ -22,7 +22,7 @@ abbrev MetadataReaderPost {data env locals index st}
 /-- Metadata readers preserve the supplied source zipper, retaining the exact
 decoded immediate and fixed stack effect needed by compilation. -/
 theorem reader_metadata_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {A B : Type}
+    (p : Pending data env .Wasm2 locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)
     (metadata : A → B) (operation : A → instr)
@@ -76,11 +76,11 @@ theorem reader_metadata_wasm2 {data env locals index st}
       refine ⟨a,middle,values,read,valuesEq,controlsEq,rfl,readFixed,controls.trans controlsEq,position,?_,?_,typing a ⟨middle,read⟩⟩
       · simpa only [poly] using effect rfl
       · refine ⟨sourceEncoding,?_,?_⟩
-        · exact ⟨C,outer,spine,⟨header.kind,header.placeholder,header.inputs,header.outputs,
+        · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
           header.prior,.simple header.emits (.plain (operation a) (wellFormed a))⟩,
           base,finalTyped,controlEq,newBlocks,afterValues⟩
         · exact p.append_result C outer spine header base {st with core := final} (operation a)
             p.current.ctrl.polymorphic_base values (wellFormed a) sourceEncoding finalTyped
-            controlEq newBlocks afterValues (declared a ⟨middle,read⟩)
+            controlEq newBlocks afterValues (fun h => nomatch h) (declared a ⟨middle,read⟩)
 
 end Exec.Code

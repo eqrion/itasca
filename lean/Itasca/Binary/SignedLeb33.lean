@@ -44,11 +44,6 @@ theorem Decoded.range (data : Slice U8) (start : Usize) (value : Int) (next : Us
     (h : Decoded data start value next) : -4294967296 ≤ value ∧ value ≤ 4294967295 :=
   SignedLeb.Decoded.range format data start value next h
 
-/-- Rejections are `UnexpectedEof` or `LebTooLong`. -/
-theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
-    (h : Rejected data start e) : e = .UnexpectedEof ∨ e = .LebTooLong :=
-  SignedLeb.Rejected.kind format h
-
 /-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail : List U8}
     (hx : Encoding xs x) (hy : Encoding ys y) (he : xs ++ leftTail = ys ++ rightTail) :
@@ -89,34 +84,6 @@ theorem reader.read_s33_leb.spec (data : Slice U8) (start : Usize) :
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     step with IScalar.cast_inBounds_spec .I64 v (by scalar_tac) as ⟨x, hx⟩
     simpa [SignedLeb.Post, hx] using hp
-
-/-- `reader.read_s33_leb` never panics. -/
-theorem reader.read_s33_leb.total (data : Slice U8) (start : Usize) :
-    ∃ r, reader.read_s33_leb data start = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_s33_leb.spec data start)
-  exact ⟨r, hr⟩
-
-/-- A successful `reader.read_s33_leb` result is a `Decoded` span. -/
-theorem reader.read_s33_leb.sound (data : Slice U8) (start : Usize)
-    (value : I64) (next : Usize)
-    (h : reader.read_s33_leb data start = .ok (.Ok (value, next))) :
-    SignedLeb33.Decoded data start value.val next := by
-  have hs := reader.read_s33_leb.spec data start
-  simpa [h, SignedLeb.Post] using hs
-
-/-- A successful `reader.read_s33_leb` consumes between one and 5 bytes within the input. -/
-theorem reader.read_s33_leb.success_span (data : Slice U8) (start : Usize)
-    (value : I64) (next : Usize)
-    (h : reader.read_s33_leb data start = .ok (.Ok (value, next))) :
-    start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length :=
-  SignedLeb33.Decoded.span data start value.val next (reader.read_s33_leb.sound data start value next h)
-
-/-- A rejected `reader.read_s33_leb` result satisfies `Rejected`. -/
-theorem reader.read_s33_leb.rejected (data : Slice U8) (start : Usize)
-    (e : error.OpError) (h : reader.read_s33_leb data start = .ok (.Err e)) :
-    SignedLeb33.Rejected data start e := by
-  have hs := reader.read_s33_leb.spec data start
-  simpa [h, SignedLeb.Post] using hs
 
 end Itasca
 

@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Every accepted SIMD-prefixed reader is one of the independently classified
 families and retains a complete canonical reader/callback witness. -/
 theorem reader_simd_event_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (before after : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)

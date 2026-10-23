@@ -24,10 +24,6 @@ theorem FixupBudget.push {frames codeLength} (budget : FixupBudget frames codeLe
     subst f
     simp [fresh]
 
-theorem FixupBudget.pop {frames frame codeLength}
-    (budget : FixupBudget (frames ++ [frame]) codeLength) : FixupBudget frames codeLength :=
-  fun f member => budget f (List.mem_append_left _ member)
-
 theorem FixupBudget.set {frames codeLength} (budget : FixupBudget frames codeLength)
     (index : Nat) (replacement : runtime.compiler.Frame)
     (bound : replacement.fixups.val.length ≤ codeLength) :

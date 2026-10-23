@@ -1,5 +1,5 @@
 import Exec.Abs.Numeric.Effect
-import Exec.Abs.SliceSafety
+import Exec.Abs.StepSafety
 import Exec.Abs.Measure
 
 namespace Exec.Abs
@@ -22,49 +22,6 @@ theorem list_size_append {α : Type} [SizeOf α] (xs ys : List α) :
   induction xs with
   | nil => simp; omega
   | cons x xs ih => simp_all; omega
-
-theorem list_length_le_size {α : Type} [SizeOf α] (xs : List α) : xs.length ≤ sizeOf xs := by
-  induction xs with
-  | nil => simp
-  | cons x xs ih => simp; omega
-
-theorem CodeBound.measure {bound : Nat} {s : AState} (h : CodeBound bound s) :
-    administrativeMeasure s ≤ bound := by
-  cases hf : s.frames with
-  | nil => simp [administrativeMeasure, hf]
-  | cons f rest =>
-    have hb := (h.frames f (by simp [hf])).1
-    have hl := list_length_le_size f.code
-    simp only [administrativeMeasure, hf]
-    omega
-
-/-- Every finite starting state has a finite syntactic bound. The transition
-invariant below retains this same bound after recursive calls and branches. -/
-theorem codeBound_initial (s : AState) : CodeBound (sizeOf s) s := by
-  have hstore : sizeOf s.store < sizeOf s := by cases s; simp; omega
-  have hframes : sizeOf s.frames < sizeOf s := by cases s; simp; omega
-  have hfuncs : sizeOf s.store.FUNCS < sizeOf s.store := by cases s.store; simp; omega
-  refine ⟨by cases s; simp; omega, ?_, ?_⟩
-  · intro f hf
-    have hfs := List.sizeOf_lt_of_mem hf
-    have hcode : sizeOf f.code < sizeOf f := by cases f; simp; omega
-    have hlabels : sizeOf f.labels < sizeOf f := by cases f; simp; omega
-    refine ⟨by omega, ?_⟩
-    intro label hl
-    have hls := List.sizeOf_lt_of_mem hl
-    have happ := list_size_append label.cont label.after
-    have hlabel : sizeOf label.cont + sizeOf label.after ≤ sizeOf label := by cases label; simp; omega
-    omega
-  · intro fn hfn
-    have hfs := List.sizeOf_lt_of_mem hfn
-    cases fn with
-    | MKfuncinst type module code =>
-      cases code with
-      | HOST host => trivial
-      | FUNC index locals body =>
-        change sizeOf body ≤ sizeOf s
-        have hb : sizeOf body < sizeOf (funcinst.MKfuncinst type module (.FUNC index locals body)) := by simp; omega
-        omega
 
 theorem bound_replace_frame {bound : Nat} {s : store} {ambient : frame} {f f' : AFrame}
     {rest : List AFrame} (h : CodeBound bound ⟨s, ambient, f :: rest, []⟩)
@@ -157,12 +114,11 @@ theorem call_bound {bound : Nat} {s : store} {ambient : frame} {f : AFrame}
               · exact ⟨ha, (h.frames f (by simp)).2⟩
               · exact h.frames frame (by simp [hm])
 
-
 /-- The source instruction families are closed under each successful abstract
 transition, including code introduced by structured control. -/
 theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (allowed : SliceInstr op)
+    (allowed : PureHead op)
     (bounded : CodeBound bound ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (step : astep ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ = .next next) :
     CodeBound bound next := by
@@ -183,26 +139,6 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
     simp only [astep, integerBinary] at step
     repeat' first | split at step | contradiction
     all_goals exact advance_bound bounded step ⟨ha, hl⟩
-  | add ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_bound bounded step ⟨ha, hl⟩
-  | sub ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_bound bounded step ⟨ha, hl⟩
-  | eqz ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_bound bounded step ⟨ha, hl⟩
-  | eq ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_bound bounded step ⟨ha, hl⟩
-  | lt_u ty =>
-    simp only [astep, integerBinary] at step
-    repeat' first | split at step | contradiction
-    all_goals exact advance_bound bounded step ⟨ha, hl⟩
   | local_get index =>
     simp only [astep, integerBinary] at step
     repeat' first | split at step | contradiction
@@ -218,7 +154,7 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
   | br index => cases index with | mk_uN i => exact branch_bound bounded step
   | call index => cases index with | mk_uN i => exact call_bound bounded ha step
   | ret => exact returnFrame_bound bounded step
-  | block bt body hb =>
+  | block bt body =>
     simp only [astep, enterLabel, Bool.false_eq_true, ite_false] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -229,7 +165,7 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
       rcases hm with rfl | hm
       · exact ha
       · exact hl label hm
-  | loop bt body hb =>
+  | loop bt body =>
     simp only [astep, enterLabel, ite_true] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -240,7 +176,7 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
       rcases hm with rfl | hm
       · simpa using hf.1
       · exact hl label hm
-  | ifelse bt yes no hy hn =>
+  | ifelse bt yes no =>
     simp only [astep] at step
     repeat' first | split at step | contradiction
     all_goals
@@ -261,35 +197,4 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
         simp at hh ⊢
         omega
 
-/-- The supported source slice is invariant along all successful steps. -/
-theorem astep_bound (bound : Nat) (s next : AState) (typed : ATyped s) (slice : SliceState s) (bounded : CodeBound bound s)
-    (step : astep s = .next next) : CodeBound bound next := by
-  rcases s with ⟨store, ambient, frames, results⟩
-  cases frames with
-  | nil => simp [astep] at step
-  | cons frame rest =>
-    have hresults := typed.activeResults (by simp)
-    change results = [] at hresults
-    subst results
-    have hslice := slice.active frame (by simp)
-    have hbounded := bounded.frames frame (by simp)
-    cases frame with
-    | mk addr rts locals m labels code values =>
-      let f : AFrame := ⟨addr, rts, locals, m, labels, code, values⟩
-      cases code with
-      | cons op after => exact instruction_bound bound store ambient f rest op after next (hslice.1 op (by simp)) bounded step
-      | nil =>
-        cases labels with
-        | nil => exact returnFrame_bound bounded step
-        | cons label labels =>
-          simp only [astep] at step
-          split at step
-          · apply advance_bound bounded step
-            refine ⟨?_, fun l hm => hbounded.2 l (by simp [hm])⟩
-            have hh := hbounded.2 label (by simp)
-            have hp := list_size_append label.cont label.after
-            have hpos : 1 ≤ sizeOf label.cont := by cases label.cont <;> simp <;> omega
-            change sizeOf label.after ≤ bound
-            omega
-          · contradiction
 end Exec.Abs

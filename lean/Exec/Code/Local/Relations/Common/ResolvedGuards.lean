@@ -65,29 +65,4 @@ theorem FramePlans.away_guard {length locals frames labels groups code}
       · exact current.branches.not_guard found site atSite
     · exact rest group remaining site atSite
 
-/-- The innermost IF guard resolves to its planned ELSE/END coordinate.
-Forward branch fixups cannot overwrite it, even when some lists have duplicate
-branch sites. Only distinctness from the other active guards is needed. -/
-theorem FramePlans.top_guard {length locals frames labels groups code}
-    (plans : FramePlans length locals frames labels groups)
-    (sitesOk : ∀ frame ∈ frames, FrameSites code frame)
-    (frame : runtime.compiler.Frame) (current : FrameSites code frame)
-    (label : LabelTarget) (target : U32) (guard : Usize)
-    (guardEq : frame.if_pc = some guard)
-    (distinct : ∀ other ∈ frames, other.if_pc ≠ some guard) :
-    ∃ condition, (resolvedCode code (frameGroups frame label target ++ groups))[guard.val]? =
-      some (.JumpIfZero condition target) := by
-  obtain ⟨condition, old, found⟩ := current.guard guard guardEq
-  refine ⟨condition, ?_⟩
-  have rest := plans.away_guard sitesOk found distinct
-  have branch := current.branches.not_guard found
-  have resolved := resolvedCode_guard code [] (⟨frame.fixups.val, label.target⟩ :: groups)
-    guard condition old target found (by
-      intro group member site atSite
-      simp only [List.nil_append, List.mem_cons] at member
-      rcases member with rfl | member
-      · exact branch site atSite
-      · exact rest group member site atSite)
-  simpa [frameGroups, guardEq] using resolved
-
 end Exec.Code

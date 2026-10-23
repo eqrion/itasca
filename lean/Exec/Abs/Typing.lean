@@ -38,21 +38,6 @@ theorem integer_accepts (ty : Inn) (bits : Nat) (h : bits < 2 ^ integerWidth ty)
     integer (numtype_Inn ty) (integerVal ty bits) = some bits := by
   cases ty <;> simp_all [integer, integerVal, numtype_Inn, integerWidth]
 
-/-- Each supported arithmetic result fits the selected format. -/
-theorem integerBinary_bound {op : binop_Inn} {width a b bits : Nat}
-    (h : integerBinary op width a b = some bits) : bits < 2 ^ width := by
-  cases op <;> simp only [integerBinary, Option.some.injEq] at h
-  all_goals first
-    | contradiction
-    | (subst bits; exact Nat.mod_lt _ (by positivity))
-
-/-- Constant typing includes the source syntax's well-formedness condition. -/
-theorem integer_const_typed (C : context) (hC : wf_context C) (ty : Inn)
-    (bits : Nat) (h : bits < 2 ^ integerWidth ty) :
-    Instr_ok C (.CONST (numtype_Inn ty) (.mk_num__0 ty (.mk_uN bits)))
-      ⟨.mk_list [], .mk_list [valtype_numtype (numtype_Inn ty)]⟩ :=
-  .const C _ _ hC (.instr_case_13 _ _ (integer_num_wf ty bits h))
-
 /-- Runtime module bindings describe the source typing context through checked
 addresses. This avoids the generated Moduleinst_ok's unrelated export-membership
 side condition, and admits genuine host functions by their declared type. -/

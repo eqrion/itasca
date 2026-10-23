@@ -106,9 +106,14 @@ prove: audit-coverage
 	lake build
 
 prove-exec: audit-coverage
-	lake build SpecExt.Audit Exec.Audit
+	lake build SpecExt.Audit Exec.Audit Exec.Main
+	mkdir -p .build
+	lake env lean --run scripts/reachability.lean --check .build/dead.txt
 
+# Headline theorems first, then every validator declaration.
 trust: prove
+	lake build Exec.Main
+	lake env lean --run scripts/trust.lean
 	ITASCA_AUDIT_VERBOSE=1 lake env lean Itasca/Audit.lean
 
 # Preserve dependency caches; remove only this project's compiled artifacts.

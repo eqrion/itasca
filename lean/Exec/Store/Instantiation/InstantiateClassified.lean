@@ -1,4 +1,4 @@
-import Exec.Store.Instantiation.InstantiateAtTailClassified
+import Exec.Store.Instantiation.PrepareInstanceClassified
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
@@ -24,10 +24,19 @@ theorem instantiate_inner_classified_decomposition {M P F A : Type}
     ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id, before.instances.len⟩ ready platform =
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         outcome := by
-  exact instantiate_at_tail_classified_decomposition memory hooks floats allocator law view laws
-    before module imports platform shape accounted cache valid dataValid compiled handles
-    Result.ok (instantiate_tail memory hooks floats allocator) outcome
-    ((instantiateInnerAtTail_original memory hooks floats allocator before module imports platform false).trans run)
+  unfold runtime.store.instantiate.Store.instantiate_inner at run
+  rcases prepare_instance_classified memory hooks floats allocator law view laws before module imports
+      platform shape accounted cache valid dataValid compiled handles _ rfl with
+    ⟨error, staged, prepared, rest⟩ | ⟨staged, items, charged, ready, inst, charge, rfl, rest⟩
+  · rw [prepared] at run
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, bind_ok, bind_tc_ok, uncurry_apply_pair] at run
+    exact Or.inl ⟨error, staged, run.symm, rest⟩
+  · obtain ⟨shaped, found, source, imported, types, accounting, code, linked, prepared⟩ := rest
+    rw [prepared] at run
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair, charge] at run
+    exact Or.inr ⟨_, inst, shaped, found, source, imported, types, accounting, code, linked, run⟩
 end Exec.Store

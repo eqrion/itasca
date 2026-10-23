@@ -24,18 +24,6 @@ namespace Itasca.VisitorTrace
     MemoryHook.ofOpcode hook.opcode = some hook := by
   cases hook <;> rfl
 
-/-- The hook mnemonic's instruction agrees with the independent binary opcode map. -/
-theorem NumericHook.opcode_meaning (hook : NumericHook) :
-    (Numeric.opcodeMeaning hook.opcode).map Numeric.Operation.instruction =
-      some hook.instruction := by
-  cases hook <;> rfl
-
-/-- A memory callback with a memarg denotes the instruction of its binary opcode row. -/
-theorem MemoryHook.opcode_meaning (hook : MemoryHook) (arg : code.MemArg) :
-    (MemoryMeaning.opcodeMeaning hook.opcode).map (fun op => op.op arg) =
-      some (hook.instruction arg) := by
-  cases hook <;> rfl
-
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 theorem NumericHook.ofOpcode_meaning (opcode : U8) :
@@ -129,12 +117,6 @@ theorem visit_memory {V : Type} (visitor : code.OpVisitor V) (v : V)
   change n < 256 at hn
   interval_cases n <;> with_unfolding_all rfl
 
-theorem NumericHook.dispatch {V : Type} (visitor : code.OpVisitor V) (v : V)
-    (st : code.OpIterState) (hook : NumericHook) :
-    code.visit_numeric visitor v st hook.opcode =
-      invoke visitor v (.op st (.numeric hook)) := by
-  simp only [visit_numeric, NumericHook.ofOpcode_opcode]
-
 theorem MemoryHook.dispatch {V : Type} (visitor : code.OpVisitor V) (v : V)
     (st : code.OpIterState) (hook : MemoryHook) (arg : code.MemArg) :
     code.visit_memory visitor v st hook.opcode arg =
@@ -144,17 +126,6 @@ theorem MemoryHook.dispatch {V : Type} (visitor : code.OpVisitor V) (v : V)
 end Itasca.VisitorTrace
 
 namespace Itasca.VisitorTrace
-
-/-- Each Wasm 2.0 scalar callback denotes the instruction of its binary row. -/
-theorem ExtendedNumericHook.meaning (hook : ExtendedNumericHook) :
-    match hook.encoding.2 with
-    | none => ∃ operation,
-        Wasm2.NumericExtensions.signMeaning hook.encoding.1 = some operation ∧
-        operation.instruction = hook.instruction
-    | some subopcode => ∃ operation,
-        Wasm2.NumericExtensions.saturatingMeaning subopcode = some operation ∧
-        operation.instruction = hook.instruction := by
-  cases hook <;> exact ⟨_, rfl, rfl⟩
 
 /-- The extracted sign-extension and saturating-truncation dispatch calls the callback that
 `ExtendedNumericHook.encoding` names. -/

@@ -89,14 +89,14 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
     module.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
           At (Rep FuncTypeEncoding) data start added next ∧
-          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits ft) ∧
             ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   unfold module.decode_type_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       TypesAdded env s.1 added ∧ At (Rep FuncTypeEncoding) data start added s.2.1 ∧
-      (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+      (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits ft) ∧
             ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ s.1.types.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize⟩
     dsimp only at hi hlen henv hbytes hvalid hsize
@@ -145,7 +145,7 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
     module.decode_type_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
           At (VecEncoding FuncTypeEncoding) data pos added next ∧
-          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits profile ft) ∧
+          (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits ft) ∧
             ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
@@ -165,44 +165,5 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
     | Ok next =>
       obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
       exact ⟨added, henv, At.vector hc hb hlen, by simpa only [and_assoc, List.mem_append] using ht, hsize⟩
-
-
-/-- Wasm 1.0 form of `module.decode_type_section_loop.profile_spec` with the single-result
-bound. -/
-@[step]
-theorem module.decode_type_section_loop.spec (data : Slice U8) (env : module.Env)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hsize : env.types.val.length ≤ start.val) :
-    module.decode_type_section_loop data env .Wasm1 count start 0#u32 ⦃ r => match r.1 with
-      | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
-          At (Rep FuncTypeEncoding) data start added next ∧
-          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
-      | .Err _ => True ⦄ := by
-  obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
-    (module.decode_type_section_loop.profile_spec data env .Wasm1 count start hstart hsize)
-  rw [hr]
-  cases r with
-  | Err _ => simp
-  | Ok next =>
-    obtain ⟨added, hlen, henv, hb, ht, hsize⟩ := hp
-    exact ⟨added, hlen, henv, hb, fun ft hm => (ht ft hm).1.1, hsize⟩
-
-/-- Wasm 1.0 form of `module.decode_type_section.profile_spec` with the single-result bound. -/
-@[step]
-theorem module.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
-    (hsize : env.types.val.length ≤ pos.val) :
-    module.decode_type_section data pos env .Wasm1 ⦃ r => match r.1 with
-      | .Ok next => ∃ added, TypesAdded env r.2 added ∧
-          At (VecEncoding FuncTypeEncoding) data pos added next ∧
-          (∀ ft ∈ added, ft.results.val.length ≤ 1) ∧ r.2.types.val.length ≤ next.val
-      | .Err _ => True ⦄ := by
-  obtain ⟨⟨r, result⟩, hr, hp⟩ := WP.spec_imp_exists
-    (module.decode_type_section.profile_spec data pos env .Wasm1 hsize)
-  rw [hr]
-  cases r with
-  | Err _ => simp
-  | Ok next =>
-    obtain ⟨added, henv, hb, ht, hsize⟩ := hp
-    exact ⟨added, henv, hb, fun ft hm => (ht ft hm).1.1, hsize⟩
 
 end Itasca

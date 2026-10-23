@@ -1,5 +1,5 @@
 import Itasca.Binary.PrefixUnique
-import Itasca.Binary.Wasm1.SyntaxUnique
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Binary.Wasm1.Encoding
 
 /-!
@@ -16,14 +16,6 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm1
 
 open ModuleBinary
-
-private theorem blockByte_injective : Function.Injective Control.blockByte := by
-  intro a b h
-  cases a <;> cases b
-  all_goals first
-    | rfl
-    | rename_i x y; cases x <;> cases y <;> simp_all [Control.blockByte]
-    | rename_i x; cases x <;> simp_all [Control.blockByte]
 
 /-- An index vector is a sequence of `IndexEncoding`s. -/
 theorem IndicesEncoding.rep {indices bytes} (h : IndicesEncoding indices bytes) :
@@ -47,8 +39,9 @@ theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) 
   all_goals try { contradiction }
   all_goals try { exact ⟨rfl, rfl, heq⟩ }
   case block.block | loop.loop | if_.if_ =>
+    rename_i _ _ hx _ _ hy
     obtain ⟨hbt, rfl⟩ := List.cons.inj heq
-    obtain rfl := blockByte_injective hbt
+    obtain ⟨rfl, rfl⟩ := hx.unique hy (.inl hbt)
     exact ⟨rfl, rfl, rfl⟩
   case br.br | brIf.brIf | call.call | localGet.localGet | localSet.localSet |
       localTee.localTee | globalGet.globalGet | globalSet.globalSet =>

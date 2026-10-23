@@ -3,23 +3,22 @@ import Exec.Theorems.Composition.ExecutionCode
 
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- A change of ghost world at the same raw store preserves the source state,
 program counters and saved frames exactly. -/
 def EventfulMachine.change_code {M P view before expected}
-    (machine : EventfulMachine emission allowed M P view before expected)
+    (machine : EventfulMachine M P view before expected)
     (after : Store.CodeInterpretation) (agrees : Store.CodeAgreesOn machine.store before after) :
-    EventfulMachine emission allowed M P view after expected :=
+    EventfulMachine M P view after expected :=
   ⟨machine.store,machine.exec,machine.platform,machine.source,machine.pc,machine.pending,
     machine.invariant.change_code agrees,machine.certified.change_code agrees,machine.owned⟩
 
 /-- The current source interpretation is ghost state. In particular it need
 not assign the eventual source bodies of future reentrant publications. -/
-structure EventfulWorld (emission : StructuredMachine.FunctionEmission) (allowed : instr → Prop)
+structure EventfulWorld
     (M P : Type) (view : M → Slice U8) (expected : List valtype) where
   code : Store.CodeInterpretation
-  machine : EventfulMachine emission allowed M P view code expected
+  machine : EventfulMachine M P view code expected
 
 /-- A cross-world edge keeps the actual dispatch and labeled source evidence.
 It does not assert that host dispatch supplies such an edge: that obligation
@@ -28,8 +27,8 @@ structure EventfulWorldTransition {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
-    (before : EventfulWorld emission allowed M P view expected) (events : List SpecExt.HostEvent)
-    (after : EventfulWorld emission allowed M P view expected) : Prop where
+    (before : EventfulWorld M P view expected) (events : List SpecExt.HostEvent)
+    (after : EventfulWorld M P view expected) : Prop where
   actual : runtime.interp.step memory hooks floats allocator before.machine.exec
     before.machine.store before.machine.platform =
     .ok (.Ok (),after.machine.exec,after.machine.store,after.machine.platform)
@@ -46,7 +45,7 @@ theorem EventfulTransition.world {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    {before after : EventfulMachine emission allowed M P view code expected}
+    {before after : EventfulMachine M P view code expected}
     {events : List SpecExt.HostEvent}
     (edge : EventfulTransition memory hooks floats allocator before events after) :
     EventfulWorldTransition memory hooks floats allocator ⟨code,before⟩ events ⟨code,after⟩ :=
@@ -57,7 +56,7 @@ theorem EventfulWorld.history_source {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {expected : List valtype}
-    {before after : EventfulWorld emission allowed M P view expected} {n : Nat}
+    {before after : EventfulWorld M P view expected} {n : Nat}
     {events : List SpecExt.HostEvent}
     (history : Spec.Iterations (EventfulWorldTransition memory hooks floats allocator) n before events after) :
     ∃ count, Spec.StepsHN count (Exec.Abs.decode before.machine.source) events
@@ -76,7 +75,7 @@ theorem EventfulWorld.history_metadata {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {expected : List valtype}
-    {before after : EventfulWorld emission allowed M P view expected} {n : Nat}
+    {before after : EventfulWorld M P view expected} {n : Nat}
     {events : List SpecExt.HostEvent}
     (history : Spec.Iterations (EventfulWorldTransition memory hooks floats allocator) n before events after) :
     Extend_store (Store.decodeStore view before.code before.machine.store)

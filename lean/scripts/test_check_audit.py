@@ -60,6 +60,52 @@ class AuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'above the Binary'):
             self.check('Itasca')
 
+    def test_headline_results_and_examples_stay_on_top(self):
+        self.put('Itasca.Contracts', '')
+        self.put('Itasca.Results.A', 'import Itasca.Contracts\n')
+        self.put('Itasca.Main', 'import Itasca.Results.A\n')
+        self.put('Itasca.Examples.A', 'import Itasca.Main\n')
+        self.put('Itasca.Examples.B', 'import Itasca.Examples.A\nimport Aeneas\n')
+        self.refresh('Itasca')
+        self.check('Itasca')
+        for source, dependency, message in [
+            ('Itasca.Stream.A', 'Itasca.Results.A', 'only Main and Examples'),
+            ('Itasca.Results.B', 'Itasca.Main', 'only Main and Examples'),
+            ('Itasca.Contracts', 'Itasca.Stream.A', 'above the Contracts'),
+            ('Itasca.Main', 'Itasca.Stream.A', 'above the Main'),
+            ('Itasca.Examples.C', 'Itasca.Stream.A', 'examples import only Itasca.Main'),
+        ]:
+            with self.subTest(source=source, dependency=dependency):
+                with self.assertRaisesRegex(ValueError, message):
+                    audit.check_layer(source, dependency, 'Itasca')
+        for source, dependency in audit.EXAMPLE_IMPORTS:
+            audit.check_layer(source, dependency, source.split('.')[0])
+
+    def test_execution_results_and_examples_stay_on_top(self):
+        for source, dependency, message in [
+            ('Exec.Contracts', 'Exec.Platform.Alloc', None),
+            ('Exec.Contracts', 'Exec.Theorems.Api.ExecutableInv', None),
+            ('Exec.Results.Invoke', 'Exec.Theorems.Invocation.A', None),
+            ('Exec.Results.Invoke', 'Exec.Contracts', None),
+            ('Exec.Main', 'Exec.Results.Invoke', None),
+            ('Exec.Examples.Host.A', 'Exec.Main', None),
+            ('Exec.Examples.Host.B', 'Exec.Examples.Host.A', None),
+            ('Exec.Examples.Host.B', 'Aeneas', None),
+            ('Exec.Theorems.Invocation.A', 'Exec.Results.Invoke', 'only Main and Examples'),
+            ('Exec.Theorems.Invocation.A', 'Exec.Main', 'only Main and Examples'),
+            ('Exec.Results.Host', 'Exec.Results.Invoke', 'only Main and Examples'),
+            ('Exec.Contracts', 'Exec.Theorems.Invocation.A', 'outside the Exec.Contracts'),
+            ('Exec.Contracts', 'Exec.Code.Module.A', 'outside the Exec.Contracts'),
+            ('Exec.Main', 'Exec.Theorems.Invocation.A', 'outside the Exec.Main'),
+            ('Exec.Examples.Host.A', 'Exec.Theorems.Host.A', 'examples import only Exec.Main'),
+        ]:
+            with self.subTest(source=source, dependency=dependency):
+                if message is None:
+                    audit.check_layer(source, dependency, 'Exec')
+                else:
+                    with self.assertRaisesRegex(ValueError, message):
+                        audit.check_layer(source, dependency, 'Exec')
+
     def test_execution_layers(self):
         for source, dependency, accepted in [
             ('Exec.Abs.State', 'Exec.Generated.Types', False),

@@ -1,11 +1,9 @@
-import Exec.Interp.StructuredMachine.FloatHeads
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.StructuredMachine.MemoryCertifiedChosenStep
 import Exec.Interp.Relations.ChosenControlPoint
 import Exec.Interp.StructuredMachine.ForwardJump
 import Exec.Spec.Extend
 namespace Exec.Interp.StructuredMachine.Memory
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 theorem step_memory_load_core_chosen {choices : SourceChoices} (admissible : choices.Admissible)
@@ -25,7 +23,7 @@ theorem step_memory_load_core_chosen {choices : SourceChoices} (admissible : cho
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -33,7 +31,7 @@ theorem step_memory_load_core_chosen {choices : SourceChoices} (admissible : cho
       ((out.1 = .Ok () ∧ ∃ (pc : U32) (g : Abs.AFrame),
         {out.2.1 with slots := exec.slots} = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
         FrameSlots out.2.1 {raw with pc := pc} g ∧
-        FramePoint emission (Store.decodeStore view code store) {raw with pc := pc} g compiled C targets next output ∧
+        FramePoint (Store.decodeStore view code store) {raw with pc := pc} g compiled C targets next output ∧
         Abs.CoreTyped {initial with frames := g::rest} ∧ FrameMetadata f g ∧
         (initial = {initial with frames := g::rest} ∨ Abs.Core.step initial = .next {initial with frames := g::rest}) ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
@@ -79,7 +77,7 @@ theorem step_memory_store_core_chosen {choices : SourceChoices} (admissible : ch
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -90,7 +88,7 @@ theorem step_memory_store_core_chosen {choices : SourceChoices} (admissible : ch
       ∃ pc : U32, out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
       ((out.1 = .Ok () ∧ ∃ g : Abs.AFrame,
         FrameSlots out.2.1 {raw with pc := pc} g ∧
-        FramePoint emission (Store.decodeStore view code out.2.2.1) {raw with pc := pc} g compiled C targets next output ∧
+        FramePoint (Store.decodeStore view code out.2.2.1) {raw with pc := pc} g compiled C targets next output ∧
         Abs.CoreTyped {initial with store := Store.decodeStore view code out.2.2.1,frames := g::rest} ∧ FrameMetadata f g ∧
         (initial = {initial with store := Store.decodeStore view code out.2.2.1,frames := g::rest} ∨
           Abs.Core.step initial = .next {initial with store := Store.decodeStore view code out.2.2.1,frames := g::rest}) ∧

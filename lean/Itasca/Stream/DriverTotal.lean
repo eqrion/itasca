@@ -5,11 +5,11 @@ import Itasca.Module.Custom.Visitor
 /-!
 # Streaming driver termination
 
-`stream.validate_streaming.profile_total`: on arbitrary bytes, `stream.validate_streaming`
+`stream.validate_streaming.total`: on arbitrary bytes, `stream.validate_streaming`
 returns success or an error whenever the source and scheduler callbacks return
 (`StreamSource.CallbacksTotal`, `StreamScheduler.CallbacksTotal`). Coherence, availability and
 worker provenance are not premises. `stream.validate_remaining.total_spec` covers the phases after
-the environment, and `stream.validate_streaming.wasm_total` is the Wasm 1.0 instance.
+the environment. `Itasca/Results/Stream` states the public `profile_total` and `wasm_total`.
 -/
 
 open Aeneas Aeneas.Std
@@ -131,7 +131,7 @@ theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
 /-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
 is a termination premise. -/
-theorem stream.validate_streaming.profile_total {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : module.Env)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile) :
@@ -174,13 +174,5 @@ theorem stream.validate_streaming.profile_total {S V : Type} (source : stream.So
           · simp
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists hspec
   exact ⟨r, hr⟩
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_total`. -/
-theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor) :
-    ∃ r, stream.validate_streaming source visitor moduleId .Wasm1 state v storage = .ok r :=
-  stream.validate_streaming.profile_total source visitor moduleId state v storage hs hv
 
 end Itasca

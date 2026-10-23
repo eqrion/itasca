@@ -2,15 +2,6 @@ import Exec.Code.Local.Relations.Calls.IndirectCallEmission
 namespace Exec.Code
 open Aeneas.Std
 
-theorem IndirectCallEmission.map_pairs {pairs other : List (U32 × U32)} {C before instruction emitted after}
-    (emission : IndirectCallEmission pairs C before instruction emitted after)
-    (preserved : ∀ (index : Nat) pair, pairs[index]? = some pair → other[index]? = some pair) :
-    IndirectCallEmission other C before instruction emitted after := by
-  cases emission with
-  | call front params results typeIndex tableIndex entry index base bounds signature table pair basePosition indexPosition =>
-    exact .call front params results typeIndex tableIndex entry index base bounds signature table
-      (preserved _ _ pair) basePosition indexPosition
-
 theorem IndirectCallEmission.context {pairs C D before instruction emitted after}
     (types : D.TYPES = C.TYPES) (locals : D.LOCALS = C.LOCALS) (tables : D.TABLES = C.TABLES)
     (emission : IndirectCallEmission pairs C before instruction emitted after) :

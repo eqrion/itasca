@@ -2,7 +2,6 @@ import Exec.Interp.StructuredMachine.IndexedEmpty
 import Exec.Interp.StructuredMachine.IndexedLinear
 import Exec.Interp.Relations.Normalization
 import Exec.Interp.StructuredMachine.ControlInversion
-import Exec.Interp.StructuredMachine.ErasedHeads
 import Exec.Interp.StructuredMachine.LabelCompletion
 import Exec.Interp.Relations.ValueLookup
 
@@ -11,30 +10,30 @@ open Aeneas.Std
 
 /-- A retained forward administrative instruction must execute before the
 source operation at its target can be normalized. -/
-def ForwardSkip (emission : FunctionEmission) (s : store) (raw : runtime.interp.Frame) (f : Abs.AFrame)
+def ForwardSkip (s : store) (raw : runtime.interp.Frame) (f : Abs.AFrame)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype) : Prop :=
   ∃ target, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-    FramePoint emission s { raw with pc := target } f compiled C targets next output
+    FramePoint s { raw with pc := target } f compiled C targets next output
 
 /-- A source-only transition retains the actual PC and live slot relation.
 Its semantic preservation and finite chaining follow from ErasedStep. -/
-def NormalizedPoint (emission : FunctionEmission) (s : store) (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+def NormalizedPoint (s : store) (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (before : Abs.AFrame) : Prop :=
   ∃ after targets next output,
     ErasedStep before after ∧ FrameSlots exec raw after ∧
-    FramePoint emission s raw after compiled C targets next output
+    FramePoint s raw after compiled C targets next output
 
-theorem structured_nop_normalizes {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem structured_nop_normalizes (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (f : Abs.AFrame) (after : List instr)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .NOP :: after } compiled C targets next output) :
-    ForwardSkip emission s raw { f with code := .NOP :: after } compiled C targets next output ∨
-    NormalizedPoint emission s exec raw compiled C { f with code := .NOP :: after } := by
-  rcases structuredCodeWithTables_linear_inv (by rfl) point.code.current with skip | linear
+    (point : FramePoint s raw { f with code := .NOP :: after } compiled C targets next output) :
+    ForwardSkip s raw { f with code := .NOP :: after } compiled C targets next output ∨
+    NormalizedPoint s exec raw compiled C { f with code := .NOP :: after } := by
+  rcases structuredCode_linear_inv (by rfl) point.code.current with skip | linear
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     exact Or.inl ⟨target, forward, fetched, point.bindings,point.locals,point.labels, continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
   · obtain ⟨middle, emitted, tail, head, fragment, continuation⟩ := linear
@@ -43,16 +42,16 @@ theorem structured_nop_normalizes {emission : FunctionEmission} (exec : runtime.
     exact Or.inr ⟨{ f with code := after }, targets, next, output, .nop f after, slots,
       point.bindings,point.locals,point.labels, by simpa only [endpoint] using continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
 
-theorem structured_drop_normalizes {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem structured_drop_normalizes (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (f : Abs.AFrame) (after : List instr)
     (typed : Abs.FrameTyped s { f with code := .DROP :: after } [])
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .DROP :: after } compiled C targets next output) :
-    ForwardSkip emission s raw { f with code := .DROP :: after } compiled C targets next output ∨
-    NormalizedPoint emission s exec raw compiled C { f with code := .DROP :: after } := by
-  rcases structuredCodeWithTables_linear_inv (by rfl) point.code.current with skip | linear
+    (point : FramePoint s raw { f with code := .DROP :: after } compiled C targets next output) :
+    ForwardSkip s raw { f with code := .DROP :: after } compiled C targets next output ∨
+    NormalizedPoint s exec raw compiled C { f with code := .DROP :: after } := by
+  rcases structuredCode_linear_inv (by rfl) point.code.current with skip | linear
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     exact Or.inl ⟨target, forward, fetched, point.bindings,point.locals,point.labels, continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
   · obtain ⟨middle, emitted, tail, head, fragment, continuation⟩ := linear
@@ -72,16 +71,16 @@ theorem structured_drop_normalizes {emission : FunctionEmission} (exec : runtime
     · simpa only [← split] using ErasedStep.drop f after front value
     · simpa only [middleEq, endpoint, frontTypes] using continuation
 
-theorem structured_block_normalizes {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem structured_block_normalizes (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (bt : blocktype) (body after : List instr)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := .BLOCK bt body :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .BLOCK bt body :: after } compiled C targets next output) :
-    ForwardSkip emission s raw { f with code := .BLOCK bt body :: after } compiled C targets next output ∨
-    NormalizedPoint emission s exec raw compiled C { f with code := .BLOCK bt body :: after } := by
+    (point : FramePoint s raw { f with code := .BLOCK bt body :: after } compiled C targets next output) :
+    ForwardSkip s raw { f with code := .BLOCK bt body :: after } compiled C targets next output ∨
+    NormalizedPoint s exec raw compiled C { f with code := .BLOCK bt body :: after } := by
   rcases codeRel_block_inv point.code.current with skip | block
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     exact Or.inl ⟨target, forward, fetched, point.bindings,point.locals,point.labels, continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
@@ -90,20 +89,20 @@ theorem structured_block_normalizes {emission : FunctionEmission} (exec : runtim
       simpa only [point.bindings.types] using signature
     refine Or.inr ⟨_,⟨front,results,results,branchExit,normalExit,[],after,normalLive,branchLive⟩::targets,normalExit,front++results,.block f bt body after front params results sourceSignature shape,slots,?_⟩
     refine ⟨point.bindings,point.locals,point.labels.enter front params results results branchExit normalExit [] after shape,?_⟩
-    simpa only [shape] using Code.StructuredCodeWithTables.Point.block_body bodyCode normal branch
+    simpa only [shape] using Code.StructuredCode.Point.block_body bodyCode normal branch
       point.code.targets point.code.normal point.code.exit point.code.root
 
-theorem structured_label_normalizes {emission : FunctionEmission} (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
+theorem structured_label_normalizes (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (label : Abs.Label) (labels : List Abs.Label)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := [], labels := label :: labels } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := [], labels := label :: labels } compiled C targets next output) :
-    ForwardSkip emission s raw { f with code := [], labels := label :: labels } compiled C targets next output ∨
-    NormalizedPoint emission s exec raw compiled C { f with code := [], labels := label :: labels } := by
-  rcases structuredCodeWithTables_empty_inv point.code.current with skip | empty
+    (point : FramePoint s raw { f with code := [], labels := label :: labels } compiled C targets next output) :
+    ForwardSkip s raw { f with code := [], labels := label :: labels } compiled C targets next output ∨
+    NormalizedPoint s exec raw compiled C { f with code := [], labels := label :: labels } := by
+  rcases structuredCode_empty_inv point.code.current with skip | empty
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     exact Or.inl ⟨target, forward, fetched, point.bindings,point.locals,point.labels, continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
   · obtain ⟨next', output', represented, continuation, _, _⟩ :=

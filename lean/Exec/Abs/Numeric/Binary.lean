@@ -78,14 +78,5 @@ theorem binary_relation (ty : Inn) (op : binop_Inn)
     | S => exact integer_shrs_relation ty a b.toNat
   | ROTL => exact integer_rotleft_relation ty a b.toNat
   | ROTR => exact integer_rotright_relation ty a b.toNat
-/-- Exactly the WebAssembly integer divide-by-zero and signed-overflow cases trap. -/
-theorem binary_trap_iff (ty : Inn) (op : binop_Inn)
-    (a b : BitVec (sizenn (numtype_Inn ty))) :
-    binary ty op a b = none ↔
-      ((op = .DIV .U ∨ op = .DIV .S ∨ op = .REM .U ∨ op = .REM .S) ∧ b.toNat = 0) ∨
-      (op = .DIV .S ∧ a = BitVec.intMin _ ∧ b = -1) := by
-  cases op <;> simp only [binary]
-  all_goals first | constructor <;> simp_all | skip
-  all_goals split <;> simp_all <;> tauto
 
 end Exec.Abs.Numeric

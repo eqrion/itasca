@@ -1,4 +1,3 @@
-import Exec.Interp.StructuredMachine.ControlSemantics
 import Exec.Interp.Cumulative.Erased
 import Exec.Interp.Core.Erased
 import Exec.Interp.Core.OwnershipClosure
@@ -6,27 +5,29 @@ import Exec.Abs.Stateful.OwnershipStore
 import Exec.Interp.StructuredMachine.SyntaxClosure
 import Exec.Abs.Supported.PureCoverage
 import Exec.Abs.Supported.CumulativeStep
+import Exec.Interp.Core.BoundClosure
+import Exec.Abs.SupportedState
 namespace Exec.Interp
 
 theorem StructuredMachine.SyntaxClosure.supported {before after}
-    (closure : StructuredMachine.SyntaxClosure allowed before after)
+    (closure : StructuredMachine.SyntaxClosure before after)
     {s : store} {ambient : frame} {rest : List Abs.AFrame}
-    (covered : Abs.SupportedState allowed ⟨s,ambient,before::rest,[]⟩) :
-    Abs.SupportedState allowed ⟨s,ambient,after::rest,[]⟩ :=
+    (covered : Abs.SupportedState ⟨s,ambient,before::rest,[]⟩) :
+    Abs.SupportedState ⟨s,ambient,after::rest,[]⟩ :=
   Abs.Supported.replace_frame covered (closure (covered.active _ (List.mem_cons_self ..)))
 
 theorem ErasedStep.supported {before after : Abs.AFrame} (step : ErasedStep before after)
-    (language : Abs.Supported.Language allowed)
+
     {s : store} {ambient : frame} {rest : List Abs.AFrame}
-    (covered : Abs.SupportedState allowed ⟨s,ambient,before::rest,[]⟩) :
-    Abs.SupportedState allowed ⟨s,ambient,after::rest,[]⟩ := by
+    (covered : Abs.SupportedState ⟨s,ambient,before::rest,[]⟩) :
+    Abs.SupportedState ⟨s,ambient,after::rest,[]⟩ := by
   cases step with
   | nop f after => exact (StructuredMachine.SyntaxClosure.tail f .NOP after f.locals f.vals).supported covered
   | drop f after front value =>
     exact (StructuredMachine.SyntaxClosure.tail {f with vals := front++[value]} .DROP after f.locals front).supported covered
   | block f bt body after front params results signature shape =>
     have current := covered.active _ (List.mem_cons_self ..)
-    have bodyCovered := language.block_body (current.1 _ (List.mem_cons_self ..))
+    have bodyCovered := Abs.BinaryInstr.block_body (current.1 _ (List.mem_cons_self ..))
     apply Abs.Supported.replace_frame covered
     refine ⟨bodyCovered,?_⟩
     intro label member
@@ -38,29 +39,43 @@ theorem ErasedStep.supported {before after : Abs.AFrame} (step : ErasedStep befo
     apply Abs.Supported.replace_frame covered
     exact ⟨(current.2 label (List.mem_cons_self ..)).2,fun outer member => current.2 outer (List.mem_cons_of_mem _ member)⟩
 
-theorem ErasedSteps.supported {count before after} (steps : ErasedSteps count before after)
-    (language : Abs.Supported.Language allowed)
-    {s : store} {ambient : frame} {rest : List Abs.AFrame}
-    (covered : Abs.SupportedState allowed ⟨s,ambient,before::rest,[]⟩) :
-    Abs.SupportedState allowed ⟨s,ambient,after::rest,[]⟩ := by
-  induction steps with
-  | nil => exact covered
-  | cons step tail ih => exact ih (step.supported language covered)
 end Exec.Interp
 
 namespace Exec.Interp.StructuredMachine
 
-def supportedControlSemantics {allowed : instr → Prop} (language : Abs.Supported.Language allowed) :
-    ControlSemantics allowed (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned where
-  branch depth := language.cumulative (.of_core (.slice (.br (.mk_uN depth))))
-  next_covered typed covered step :=
-    (Abs.Cumulative.Step.core step (by intro h; cases h)).next_covered_supported language typed covered
-  next_owned typed covered step bounds owned :=
-    (Abs.Cumulative.Step.core step (by intro h; cases h)).next_owned_supported language typed covered owned
-  next_bound typed covered step bound bounded :=
-    (Abs.Cumulative.Step.core step (by intro h; cases h)).next_bound_supported language typed covered bounded
-  syntax_preserved closure covered := closure.supported covered
-  erased step covered := step.supported language covered
-  ownership closure owned := closure.stateful owned
+/-- A non-erased core step of a typed supported state stays supported. -/
+theorem core_step_supported {before next} (typed : Abs.CoreTyped before) (covered : Abs.SupportedState before)
+    (step : Abs.Core.step before = .next next) : Abs.SupportedState next :=
+  (Abs.Cumulative.Step.core step (by intro h; cases h)).next_covered_supported typed covered
 
+/-- A core step of a typed supported state preserves stateful reference ownership. -/
+theorem core_step_owned {before next} (typed : Abs.CoreTyped before) (covered : Abs.SupportedState before)
+    (step : Abs.Core.step before = .next next) :
+    ∀ bounds, Abs.Ownership.StatefulOwned bounds before → Abs.Ownership.StatefulOwned bounds next :=
+  fun _ owned => (Abs.Cumulative.Step.core step (by intro h; cases h)).next_owned_supported typed covered owned
+
+/-- A core step of a typed supported state preserves source code bounds. -/
+theorem core_step_bound {before next} (typed : Abs.CoreTyped before) (covered : Abs.SupportedState before)
+    (step : Abs.Core.step before = .next next) : ∀ bound, Abs.CodeBound bound before → Abs.CodeBound bound next :=
+  fun _ bounded => (Abs.Cumulative.Step.core step (by intro h; cases h)).next_bound_supported typed covered bounded
+
+theorem erased_steps_supported {count before after s ambient rest} (steps : ErasedSteps count before after)
+    (covered : Abs.SupportedState ⟨s,ambient,before::rest,[]⟩) : Abs.SupportedState ⟨s,ambient,after::rest,[]⟩ := by
+  induction steps with
+  | nil => exact covered
+  | cons step tail ih => exact ih (step.supported covered)
+
+theorem owned_transition {initial next} (typed : Abs.CoreTyped initial) (covered : Abs.SupportedState initial)
+    (transition : initial = next ∨ Abs.Core.step initial = .next next) :
+    ∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds next := by
+  rcases transition with same | step
+  · exact fun _ h => same ▸ h
+  · exact core_step_owned typed covered step
+
+theorem bound_transition {initial next} (typed : Abs.CoreTyped initial) (covered : Abs.SupportedState initial)
+    (transition : initial = next ∨ Abs.Core.step initial = .next next) :
+    ∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound next := by
+  rcases transition with same | step
+  · exact fun _ h => same ▸ h
+  · exact core_step_bound typed covered step
 end Exec.Interp.StructuredMachine

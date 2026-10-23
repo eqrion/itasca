@@ -2,15 +2,14 @@ import Exec.Theorems.Composition.World.ChosenWorld
 import Exec.Interp.Invocation.InvokeDivergence
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 theorem chosen_world_divergent_next {choices : SourceChoices} {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : ChosenWorldStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view expected Inv)
-    (before : ChosenWorld emission allowed M P view expected)
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv)
+    (before : ChosenWorld M P view expected)
     (valid : Inv before.code before.machine.store)
     (divergent : loop (executionBody memory hooks floats allocator) (before.machine.exec,before.machine.store,before.machine.platform,.Ok ())=.div) :
     ∃ after, Inv after.code after.machine.store ∧ ChosenWorldTransition choices memory hooks floats allocator before (stepHostEvents before.machine.exec before.machine.store (.Ok (),after.machine.exec,after.machine.store,after.machine.platform)) after ∧
@@ -35,12 +34,12 @@ theorem chosen_world_loop_infinite {choices : SourceChoices} {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : ChosenWorldStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view expected Inv)
-    (initial : ChosenWorld emission allowed M P view expected)
+    (steps : ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv)
+    (initial : ChosenWorld M P view expected)
     (valid : Inv initial.code initial.machine.store)
     (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     InfiniteChosenSource choices initial.occurrence (Abs.decode initial.machine.source) := by
-  let Running := {before : ChosenWorld emission allowed M P view expected //
+  let Running := {before : ChosenWorld M P view expected //
     Inv before.code before.machine.store ∧ runtime.interp.invoke_with_loop1 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div}
   let edge := fun (before : Running) (events : List HostEvent) (after : Running) =>
     ChosenWorldTransition choices memory hooks floats allocator before.val events after.val

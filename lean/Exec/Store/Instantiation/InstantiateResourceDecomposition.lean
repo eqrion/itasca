@@ -1,17 +1,17 @@
 import Exec.Store.Instantiation.PreparationResourcePath
 import Exec.Store.Linking.LinkNonresource
 import Exec.Store.Instantiation.LinkedPreparedRun
-import Exec.Store.Instantiation.InstantiateTail
 import Exec.Store.Invariant.NormalResult
 import Exec.Store.Linking.LinkLoop
 import Exec.Store.Preparation.PreparationSuccess
 import Exec.Store.Instantiation.PublishInstance
-import Exec.Store.Invariant.ReserveMaps
+import Exec.Store.Invariant.InvalidWrite
+import Exec.Platform.Alloc
 import Exec.Store.Invariant.InstanceItems
-import Exec.Store.Initialization.ElementStagingLoop
+import Exec.Store.Initialization.InitializerMetadata
+import Exec.Store.Initialization.ElementEffects
 import Exec.Store.Initialization.DataStagingLoop
-import Exec.Store.Initialization.PrecheckCertified
-
+import Exec.Store.Initialization.InitializerCertificates
 import Exec.Store.Invariant.ItemErrors
 import Exec.Store.Linking.LinkErrorLoop
 import Exec.Store.Preparation.PreparationErrorLoops
@@ -64,11 +64,11 @@ private theorem index_mut_given {T : Type} (values : alloc.vec.Vec T) (index : U
   subst actual
   rw [read, bind_tc_ok]
 
-/-- Every actual instantiation computation either returns an ordinary precommit
-rejection retaining the old store prefix, or reaches a fully shaped committed
-store and executes exactly the segment/start tail. This decomposition imposes
-no normal-return or termination premise on the computation. -/
-theorem instantiate_inner_resource_decomposition {M P F A : Type}
+/-- Every actual preparation either returns an ordinary precommit rejection
+retaining the old store prefix, with its resource evidence, or a staged
+instance whose item charge yields a fully shaped store. This decomposition
+imposes no normal-return or termination premise on the computation. -/
+theorem prepare_instance_resource_decomposition {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
@@ -80,14 +80,15 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
     (compiled : Code.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (outcome : Result (core.result.Result runtime.InstanceAddr runtime.ExecError × runtime.store.Store M × P × Bool))
-    (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false = outcome) :
-    (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged ∧ PrecommitResourceEvidence memory hooks floats allocator before module imports platform error) ∨
-    ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
+    (outcome : Result (core.result.Result (runtime.InstanceAddr × Usize) runtime.ExecError × runtime.store.Store M × P))
+    (run : runtime.store.instantiate.Store.prepare_instance memory hooks floats allocator before module imports platform = outcome) :
+    (∃ error staged, outcome = .ok (.Err error, staged, platform) ∧ StagedPrefix before staged ∧ PrecommitResourceEvidence memory hooks floats allocator before module imports platform error) ∨
+    ∃ staged items charged ready inst, staged.instance_items + items = .ok charged ∧
+      ready = {staged with instance_items := charged} ∧
+      Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id, before.instances.len⟩ ready platform =
-        outcome := by
+      outcome = .ok (.Ok (⟨before.id, before.instances.len⟩, items), staged, platform) := by
   have tableLimits : ∀ ty ∈ module.module.env.table_types.val, LimitsFit ty.limits core.num.U32.MAX := by
     intro ty member
     have canonical := valid.tables ty member
@@ -102,7 +103,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
     cases maximum : ty.limits.max with
     | none => trivial
     | some high => simpa [maximum] using canonical.2 high (by simp [maximum])
-  unfold runtime.store.instantiate.Store.instantiate_inner at run
+  unfold runtime.store.instantiate.Store.prepare_instance at run
   simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env,
     Exec.module.Env.imports, Itasca.module.Env.impl.imports, bind_ok, ] at run
   split at run
@@ -136,7 +137,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
         simp only [bind_ok, bind_tc_ok, core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
           core.convert.FromSame.from, bind_ok, bind_tc_ok, uncurry_apply_pair] at run
-        change Result.ok (.Err error, before, platform, false) = outcome at run
+        change Result.ok (.Err error, before, platform) = outcome at run
         exact Or.inl ⟨_, _, run.symm, .refl _, by
           apply PrecommitResourceEvidence.at_phase PreparationResourcePath.initial
           dsimp only [ItemSumOutcome] at countsCause
@@ -159,7 +160,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
           simp only [core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-          change Result.ok (.Err error, before, platform, false) = outcome at run
+          change Result.ok (.Err error, before, platform) = outcome at run
           exact Or.inl ⟨_, _, run.symm, .refl _, by
             apply PrecommitResourceEvidence.at_phase PreparationResourcePath.initial
             dsimp only [ItemSumOutcome] at itemsCause
@@ -201,7 +202,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
               simp only [Bool.false_eq_true, ↓reduceIte, 
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-              change Result.ok (.Err (.Exhausted .Allocation), before, platform, false) =
+              change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
                 outcome at run
               exact Or.inl ⟨_, _, run.symm, .refl _, by exact PrecommitResourceEvidence.at_phase PreparationResourcePath.initial (Or.inr ⟨rfl,Or.inl funcsCause⟩)⟩
             | true =>
@@ -215,7 +216,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                 simp only [Bool.false_eq_true, ↓reduceIte, 
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                   core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                change Result.ok (.Err (.Exhausted .Allocation), before, platform, false) =
+                change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
                   outcome at run
                 exact Or.inl ⟨_, _, run.symm, .refl _, by exact PrecommitResourceEvidence.at_phase PreparationResourcePath.initial (Or.inr ⟨rfl,Or.inr (Or.inl tablesCause)⟩)⟩
               | true =>
@@ -229,7 +230,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                   simp only [Bool.false_eq_true, ↓reduceIte, 
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                     core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                  change Result.ok (.Err (.Exhausted .Allocation), before, platform, false) =
+                  change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
                     outcome at run
                   exact Or.inl ⟨_, _, run.symm, .refl _, by exact PrecommitResourceEvidence.at_phase PreparationResourcePath.initial (Or.inr ⟨rfl,Or.inr (Or.inr (Or.inl memoriesCause))⟩)⟩
                 | true =>
@@ -243,7 +244,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                     simp only [Bool.false_eq_true, ↓reduceIte, 
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                       core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                    change Result.ok (.Err (.Exhausted .Allocation), before, platform, false) =
+                    change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
                       outcome at run
                     exact Or.inl ⟨_, _, run.symm, .refl _, by exact PrecommitResourceEvidence.at_phase PreparationResourcePath.initial (Or.inr ⟨rfl,Or.inr (Or.inr (Or.inr globalsCause))⟩)⟩
                   | true =>
@@ -642,7 +643,6 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                 exact itemFits.trans (usize_limit _)
                                               obtain ⟨charged, chargeRun, chargeSpec⟩ := WP.spec_imp_exists
                                                 (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
-                                              rw [chargeRun, bind_ok] at run
                                               have counted : charged.val = before.instance_items.val + moduleItems inst.module := by
                                                 simpa only [dataPrefix.instanceItems, exactItems, source] using chargeSpec
                                               have limited : charged.val ≤ before.limits.max_instance_items.val := by
@@ -658,7 +658,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                   typedRun functionRun tableRun memoryRun publishedInstances publishedRun
                                                   globalStore elementStore dataStore globalRun elementStageRun dataStageRun
                                               let ready := {dataStore with instance_items := charged}
-                                              refine Or.inr ⟨ready, next, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
+                                              refine Or.inr ⟨dataStore, total, charged, ready, next, chargeRun, rfl, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
                                               · have same : next = dataInst := Option.some.inj (nextFound.symm.trans dataFound)
                                                 subst next
                                                 exact ⟨dataImports.funcs, dataImports.globals⟩
@@ -677,8 +677,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                   globalStore := globalStore, elementStore := elementStore, dataStore := dataStore,
                                                   globalRun := globalRun, elementRun := elementStageRun, dataRun := dataStageRun,
                                                   charged := charged, counted := counted, limited := limited, committed := rfl }⟩
-                                              · convert run using 1 <;> simp only [instantiate_tail, ready, core.result.Result.Insts.CoreOpsTry.branch,
-                                                  runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env, bind_ok] <;> congr 1
+                                              · exact run.symm
                                             | Wasm1 =>
                                               simp only [runtime.store.wasm1, profile, bind_ok, ↓reduceIte] at run
                                               have chargeBound : dataStore.instance_items.val + total.val ≤ Usize.max := by
@@ -757,7 +756,6 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                     exact itemFits.trans (usize_limit _)
                                                   obtain ⟨charged, chargeRun, chargeSpec⟩ := WP.spec_imp_exists
                                                     (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
-                                                  rw [chargeRun, bind_ok] at run
                                                   have counted : charged.val = before.instance_items.val + moduleItems inst.module := by
                                                     simpa only [dataPrefix.instanceItems, exactItems, source] using chargeSpec
                                                   have limited : charged.val ≤ before.limits.max_instance_items.val := by
@@ -773,7 +771,7 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                       typedRun functionRun tableRun memoryRun publishedInstances publishedRun
                                                       globalStore elementStore dataStore globalRun elementStageRun dataStageRun
                                                   let ready := {dataStore with instance_items := charged}
-                                                  refine Or.inr ⟨ready, next, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
+                                                  refine Or.inr ⟨dataStore, total, charged, ready, next, chargeRun, rfl, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
                                                   · have same : next = dataInst := Option.some.inj (nextFound.symm.trans dataFound)
                                                     subst next
                                                     exact ⟨dataImports.funcs, dataImports.globals⟩
@@ -792,7 +790,44 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                                       globalStore := globalStore, elementStore := elementStore, dataStore := dataStore,
                                                       globalRun := globalRun, elementRun := elementStageRun, dataRun := dataStageRun,
                                                       charged := charged, counted := counted, limited := limited, committed := rfl }⟩
-                                                  · convert run using 1 <;> simp only [instantiate_tail, ready, core.result.Result.Insts.CoreOpsTry.branch,
-                                                      runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env, bind_ok] <;> congr 1
+                                                  · exact run.symm
+
+/-- Every actual instantiation computation either returns an ordinary precommit
+rejection retaining the old store prefix, or reaches a fully shaped committed
+store and executes exactly the segment/start tail. This decomposition imposes
+no normal-return or termination premise on the computation. -/
+theorem instantiate_inner_resource_decomposition {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
+    (imports : Slice runtime.Extern) (platform : P)
+    (shape : Shape view before) (accounted : SegmentAccounting before)
+    {tables memories} (cache : Cache module.module.env tables memories)
+    (valid : Valid module.module.env module.profile)
+    (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
+    (compiled : Code.InitializerMappings module)
+    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
+    (outcome : Result (core.result.Result runtime.InstanceAddr runtime.ExecError × runtime.store.Store M × P × Bool))
+    (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false = outcome) :
+    (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged ∧ PrecommitResourceEvidence memory hooks floats allocator before module imports platform error) ∨
+    ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
+      inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
+      Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
+        outcome := by
+  unfold runtime.store.instantiate.Store.instantiate_inner at run
+  rcases prepare_instance_resource_decomposition memory hooks floats allocator law view laws before module
+      imports platform shape accounted cache valid dataValid compiled handles _ rfl with
+    ⟨error, staged, prepared, rest⟩ | ⟨staged, items, charged, ready, inst, charge, rfl, rest⟩
+  · rw [prepared] at run
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, bind_ok, bind_tc_ok, uncurry_apply_pair] at run
+    exact Or.inl ⟨error, staged, run.symm, rest⟩
+  · obtain ⟨shaped, found, source, imported, types, accounting, code, linked, prepared⟩ := rest
+    rw [prepared] at run
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair, charge] at run
+    exact Or.inr ⟨_, inst, shaped, found, source, imported, types, accounting, code, linked, run⟩
 
 end Exec.Store

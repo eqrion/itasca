@@ -1,4 +1,3 @@
-import Exec.Code.Body.Capacity.ExecutableCapacityFoldWasm1
 import Exec.Code.Body.Capacity.ExecutableCapacityFoldWasm2
 import Exec.Code.Body.Relations.Common.EntryCompilerInitial
 import Exec.Code.Local.Callbacks.Common.Finish
@@ -16,7 +15,7 @@ theorem witness_compiler_executable_capacity {A : Type} (ops : runtime.platform.
     {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (budget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, budget)) :
-    ∃ samples, ProfileValidatedStacks profile w.body env w.ctx w.typeIdx samples ∧
+    ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
       compiled.slot_count.val ≤
         slots (w.ft.params.val.map Translate.valueType ++ (ModuleLocals.declared w.groups).map Translate.valueType) +
           maximumStackWords samples := by
@@ -26,17 +25,10 @@ theorem witness_compiler_executable_capacity {A : Type} (ops : runtime.platform.
     simpa only [compilerLocals, facts.locals, w.context_locals, List.map_append] using facts.localLayout.slots
   have same := (compiler_finish_accepted ops final (.Ok ()) compiled budget finished).2.1
   subst compiled
-  cases profile with
-  | Wasm1 =>
-    obtain ⟨samples, trace, locals, bound⟩ := run.executable_capacity_bound ops law encoded
-    refine ⟨samples, trace, ?_⟩
-    rw [facts.capacity, width] at bound
-    exact bound.trans (max_le (Nat.le_add_right _ _) (Nat.le_refl _))
-  | Wasm2 =>
-    obtain ⟨samples, trace, locals, bound⟩ := run.executable_capacity_bound ops law encoded
-    refine ⟨samples, trace, ?_⟩
-    rw [facts.capacity, width] at bound
-    exact bound.trans (max_le (Nat.le_add_right _ _) (Nat.le_refl _))
+  obtain ⟨samples, trace, locals, bound⟩ := run.executable_capacity_bound ops law encoded.to_wasm2
+  refine ⟨samples, trace, ?_⟩
+  rw [facts.capacity, width] at bound
+  exact bound.trans (max_le (Nat.le_add_right _ _) (Nat.le_refl _))
 
 /-- The static capacity certificate needs no assumed compiler bound: initial
 local layout and capacity follow from actual construction and function start. -/
@@ -55,7 +47,7 @@ theorem witness_compile_executable_capacity {A : Type} (ops : runtime.platform.A
     {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, finalBudget)) :
-    ∃ samples, ProfileValidatedStacks profile w.body env w.ctx w.typeIdx samples ∧
+    ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
       compiled.slot_count.val ≤
         slots (w.ft.params.val.map Translate.valueType ++ (ModuleLocals.declared w.groups).map Translate.valueType) +
           maximumStackWords samples := by

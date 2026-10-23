@@ -50,7 +50,7 @@ def enterArgs (st : code.BodyState) (env : module.Env)
 
 /-- The validity check of an indexed block type: the index is in range and the function type is
 within the limits. -/
-def checkBlock (env : module.Env) (bt : signature.BlockType) :
+def checkIndex (env : module.Env) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) := do
   match bt with
   | .TypeIndex index =>
@@ -61,14 +61,26 @@ def checkBlock (env : module.Env) (bt : signature.BlockType) :
       code.check_func_type ft
   | _ => .ok (.Ok ())
 
+/-- The block type checks of `code.enter`: the profile filter, then `checkIndex`. -/
+def checkBlock (env : module.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
+    Result (core.result.Result Unit error.OpError) := do
+  let r ← code.check_block_type profile bt
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | .Continue _ => checkIndex env bt
+  | .Break residual =>
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      Unit (core.convert.FromSame error.OpError) residual
+
 /-- `code.enter` unfolds to the block type read, `checkBlock` and `enterArgs`. -/
 theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (kind : code.LabelKind) : code.enter st data env kind = (do
+    (profile : ValidationProfile) (kind : code.LabelKind) :
+    code.enter st data env profile kind = (do
       let r ← signature.read_block_type data st.core.pos
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | .Continue (bt, next) =>
-        let r ← checkBlock env bt
+        let r ← checkBlock env profile bt
         let cf ← core.result.Result.Insts.CoreOpsTry.branch r
         match cf with
         | .Continue _ => enterArgs { st with core := { st.core with pos := next } } env kind bt
@@ -90,7 +102,7 @@ theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
     obtain ⟨bt, next⟩ := pair
     cases bt <;> cases kind
     all_goals
-      simp only [checkBlock, enterArgs, enterParams,
+      simp only [checkBlock, checkIndex, enterArgs, enterParams,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         signature.BlockType.params, Std.uncurry, Std.bind_assoc, bind_ok]
@@ -105,15 +117,15 @@ theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
     all_goals first | contradiction | simp_all [bind_ok]
 
 @[step]
-theorem checkBlock.spec (env : module.Env) (bt : signature.BlockType) :
-    checkBlock env bt ⦃ r => r = .Ok () → ∃ ins outs,
+theorem checkIndex.spec (env : module.Env) (bt : signature.BlockType) :
+    checkIndex env bt ⦃ r => r = .Ok () → ∃ ins outs,
       resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
   cases bt with
-  | Empty => simp [checkBlock, resolve, inputs, outputs]
-  | Value t => simp [checkBlock, resolve, inputs, outputs]
+  | Empty => simp [checkIndex, resolve, inputs, outputs]
+  | Value t => simp [checkIndex, resolve, inputs, outputs]
   | TypeIndex index =>
-    unfold checkBlock
+    unfold checkIndex
     step
     split
     · simp
@@ -124,6 +136,21 @@ theorem checkBlock.spec (env : module.Env) (bt : signature.BlockType) :
       have hi : index.val < env.types.val.length := by scalar_tac
       exact ⟨ft.params.val, ft.results.val, by simp [resolve, inputs, hi, hft, r_post],
         by simp [resolve, outputs, hi, hft, r_post], hr⟩
+
+@[step]
+theorem checkBlock.spec (env : module.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
+    checkBlock env profile bt ⦃ r => r = .Ok () → (profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) ∧
+      ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
+      ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
+  unfold checkBlock
+  obtain ⟨r, hr, hscalar⟩ := WP.spec_imp_exists (code.check_block_type.spec profile bt)
+  rw [hr]
+  cases r with
+  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Ok u =>
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    exact WP.spec_mono (checkIndex.spec env bt) fun r h hok => ⟨hscalar (by cases u; rfl), h hok⟩
 
 /-- Exact semantic effect of opening a structured frame. -/
 def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
@@ -217,12 +244,13 @@ namespace Itasca
 /-- A successful `code.enter` decodes a block type whose signature resolves within the limits and
 opens the frame with effect `EnterEffect`. -/
 theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (form : Wasm2.Frames.Form) (initial : form.Initial)
+    (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
-    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
+    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
+      (profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) ∧
       Wasm2.resolve env (Wasm2.inputs bt) = some ins ∧
       Wasm2.resolve env (Wasm2.outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ∧
@@ -235,16 +263,16 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.E
   | Ok pair =>
     obtain ⟨bt, next⟩ := pair
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with Wasm2.checkBlock.spec env bt as ⟨r, hcheck⟩
+    step with Wasm2.checkBlock.spec env profile bt as ⟨r, hcheck⟩
     cases r with
     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
-      obtain ⟨ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
+      obtain ⟨hscalar, ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
       simp only [bind_ok]
       apply WP.spec_mono (Wasm2.enterArgs.sound { st with core := { st.core with pos := next } }
         env form bt ins outs outer segment initial hin hv hb ⟨hs.ordered, hs.bounded⟩ hcap)
       intro result hresult hok
       obtain ⟨hpos, heffect⟩ := hresult hok
-      exact ⟨bt, ins, outs, hpos ▸ hdecoded, hin, hout, hip, hop, heffect⟩
+      exact ⟨bt, ins, outs, hpos ▸ hdecoded, hscalar, hin, hout, hip, hop, heffect⟩
 
 end Itasca

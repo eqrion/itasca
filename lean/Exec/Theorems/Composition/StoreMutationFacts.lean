@@ -9,7 +9,20 @@ import Exec.Store.Api.TableFillMutation
 import Exec.Store.Api.MemoryCopyMutation
 import Exec.Store.Api.TableCopyPreservation
 import Exec.Store.Initialization.SegmentObjectEffects
-import Exec.Theorems.Composition.Core.CoreMutationCertified
+import Exec.Store.Api.GlobalWriteExtension
+import Exec.Interp.Core.Mutation
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.Core
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Theorems.Composition.GlobalMutationShape
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Spec.Mutation
 import Exec.Store.Initialization.SegmentExtension
 import Exec.Store.Invariant.SourceSyntax
 import Exec.Store.Initialization.SegmentInitializeMetadata
@@ -94,8 +107,6 @@ theorem segment_mutation_cumulative_of_shape {M : Type} {view : M → Slice U8}
     by rw [metadata.space.frozen],shape,metadata.segment_bounds bounds,extension,
     ⟨metadata.space.elements,metadata.space.datas⟩,by rw [metadata.space.frozen]⟩
 
-
-
 /-- The exact growth footprint supplies raw invariants; the chosen typed source
 transition supplies store extension at the execution join. -/
 theorem memory_growth_cumulative_mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
@@ -122,7 +133,6 @@ theorem table_growth_cumulative_mutation_of_shape {M : Type} {view : M → Slice
   exact ⟨metadata,externs,effect.shape view before shaped index delta value issued owned out,
     ⟨by simpa only [elements] using bounds.elements,
      by simpa only [datas] using bounds.data⟩,extension,⟨by rw [elements],by rw [datas]⟩,effect.limits⟩
-
 
 theorem memory_fill_cumulative_mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
     {store : runtime.store.Store M} {address : runtime.MemoryAddr} {object destination count value out}

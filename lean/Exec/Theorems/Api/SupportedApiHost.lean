@@ -6,15 +6,14 @@ import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Invariant.CapacityHost
 namespace Exec.Theorems
 open Aeneas Aeneas.Std
-variable {emission : Interp.StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Publishing host metadata extends the static executable certificate. This
 lemma asserts no behavioral property of the eventual host callback. -/
 theorem CertifiedSupportedStore.host_definition {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {before after : runtime.store.Store M}
-    (certified : CertifiedSupportedStore emission allowed view code before)
+    (certified : CertifiedSupportedStore view code before)
     (shape : Store.Shape view after) (effect : Store.HostDefinitionEffect before after) :
-    CertifiedSupportedStore emission allowed view code after ∧
+    CertifiedSupportedStore view code after ∧
       Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
   have sourceSyntax : Store.StoreSyntax code after := by
     simpa only [Store.StoreSyntax,effect.instances] using certified.storeSyntax
@@ -46,25 +45,5 @@ theorem CertifiedSupportedStore.host_definition {M : Type} {view : M → Slice U
       by simpa only [effect.datas] using certified.segmentBounds.data⟩
 
 namespace SupportedApi
-/-- The public host-definition operation preserves the complete static store
-certificate and canonical frame-capacity ledger on success and rejection. -/
-theorem define_host_certified {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (certified : CertifiedSupportedStore emission allowed view code store)
-    (capacities : Store.FunctionCapacities code store) (ty : Itasca.types.FuncType) (identity : U64) :
-    runtime.store.Store.define_host_with memory allocator store ty identity ⦃ result =>
-      CertifiedSupportedStore emission allowed view code result.2 ∧ Store.FunctionCapacities code result.2 ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view code result.2) ⦄ := by
-  have bound : Store.objectCount store ≤ Usize.max := by
-    have h := certified.shape.object_count_bound
-    scalar_tac
-  obtain ⟨result,returned,shape⟩ := WP.spec_imp_exists
-    (Store.define_host_preserves_shape memory allocator allocation view store certified.shape ty identity)
-  have effect := Store.define_host_effect memory allocator allocation store bound ty identity
-  have ledger := Store.define_host_capacities memory allocator allocation view store certified.shape code capacities ty identity
-  rw [returned,WP.spec_ok] at effect ledger ⊢
-  have fresh := certified.host_definition shape effect
-  exact ⟨fresh.1,ledger,fresh.2⟩
 end SupportedApi
 end Exec.Theorems

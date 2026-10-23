@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std SpecExt
 
 /-- A real defined-function call establishes the complete mutable-machine entry
 from checked arguments and retained source/compiler certificates. -/
-theorem call_defined_supported_entry {emission : Interp.StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M P F A : Type}
+theorem call_defined_supported_entry {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
@@ -20,8 +20,8 @@ theorem call_defined_supported_entry {emission : Interp.StructuredMachine.Functi
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
     (functionTyping : Interp.CoreFunctionsTyped view code store)
-    (coveredFunctions : Abs.FunctionsSupported allowed (Store.decodeStore view code store))
-    (compiledFunctions : Interp.StructuredMachine.CompiledFunctions emission code store)
+    (coveredFunctions : Abs.FunctionsSupported (Store.decodeStore view code store))
+    (compiledFunctions : Interp.StructuredMachine.CompiledFunctions code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
@@ -35,7 +35,7 @@ theorem call_defined_supported_entry {emission : Interp.StructuredMachine.Functi
     (hw : function.code = .Wasm instanceIndex functionIndex) :
     runtime.interp.call memory hooks floats allocator before store platform address 0#usize ⦃ out =>
       out.2.2.1 = store ∧ (out.1 = .Ok () → ∃ entry,
-        Interp.StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store out.2.1 entry
+        Interp.StructuredMachine.Execution view code store out.2.1 entry
           (signature.results.val.map Interp.sourceType) 0 false ∧
         Abs.Ownership.StatefulOwned (Store.ownershipBounds store) entry ∧
         entry.ambient = ambient ∧
@@ -53,7 +53,7 @@ theorem call_defined_supported_entry {emission : Interp.StructuredMachine.Functi
     (signature.results.val.map Interp.sourceType) (declared.map local.LOCAL) body
     (args.val.map Interp.sourceValue) storeWf ambientWf functionTyping.functions_typed coveredFunctions lookup argumentTypes
   have tags := checked_argument_type_tags memory store args signature.params accepted
-  apply WP.spec_mono (Interp.StructuredMachine.call_wasm_stack (emission:=emission) memory hooks floats allocator allocation interrupts
+  apply WP.spec_mono (Interp.StructuredMachine.call_wasm_stack memory hooks floats allocator allocation interrupts
     before store platform address 0#usize function signature instanceIndex functionIndex inst compiled epilogue
     (Store.decodeStore view code store)
     (Code.moduleFunctionContext inst.module (signature.params.val.map Interp.sourceType++declared)

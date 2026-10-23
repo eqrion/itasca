@@ -1,5 +1,5 @@
 import Exec.Abs.Float.Decode
-import Exec.Code.Local.Lowering.Float.FloatCoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas.Std
 
@@ -17,18 +17,9 @@ theorem LinearEmission.float_decode_none {locals before instruction emitted afte
     | conversion operator => cases operator <;> rfl
   | _ => rfl
 
-theorem CoreEmission.float_decode_none {C before instruction emitted after}
-    (emission : CoreEmission C before instruction emitted after) :
-    Abs.Float.decodeInstruction instruction = none := by
-  cases emission with
-  | pure h => exact h.float_decode_none
-  | load stack op => cases op <;> rfl
-  | store stack op => cases op <;> rfl
-  | _ => rfl
-
-theorem FloatCoreEmission.float_inv {C before emitted after}
+theorem ScalarEmission.float_inv {C before emitted after}
     (op : Abs.Float.Instruction)
-    (emission : FloatCoreEmission C before op.source emitted after) :
+    (emission : ScalarEmission C before op.source emitted after) :
     ∃ stack left right,
       before = stack ++ List.replicate op.arity (valtype_numtype op.input) ∧
       after = stack ++ [valtype_numtype op.output] ∧
@@ -37,12 +28,16 @@ theorem FloatCoreEmission.float_inv {C before emitted after}
       right.val = left.val + (op.arity - 1) := by
   generalize sourceEq : op.source = instruction at emission
   cases emission with
-  | core h =>
+  | linear h =>
     have impossible := h.float_decode_none
     rw [← sourceEq, Abs.Float.decodeInstruction_source] at impossible
     contradiction
-  | scalar stack selected left right leftSlot rightSlot =>
+  | float stack selected left right leftSlot rightSlot =>
     have same : op = selected := Abs.Float.Instruction.source_injective sourceEq
     subst selected
     exact ⟨stack,left,right,rfl,rfl,rfl,leftSlot,rightSlot⟩
+  | _ =>
+    have decoded := congrArg Abs.Float.decodeInstruction sourceEq
+    rw [Abs.Float.decodeInstruction_source] at decoded
+    simp [Abs.Float.decodeInstruction,Abs.Memory.Load.source,Abs.Memory.Store.source] at decoded
 end Exec.Code

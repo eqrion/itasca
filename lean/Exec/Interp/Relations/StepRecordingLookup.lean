@@ -22,23 +22,6 @@ theorem hostInstructionAddress_direct {M : Type} (exec : runtime.interp.Executio
     hostInstructionAddress exec store raw inst compiled (.Call index offset)=some address := by
   simp [hostInstructionAddress,addressAt,Bind.bind,Option.bind,functionAt,hostCode]
 
-theorem hostInstructionAddress_defined {M : Type} (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (index offset : U32)
-    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
-    (addressAt : inst.funcs.val[index.val]?=some address)
-    (functionAt : store.funcs.val[address.index.val]?=some function) (defined : function.code=.Wasm instanceIndex functionIndex) :
-    hostInstructionAddress exec store raw inst compiled (.Call index offset)=none := by
-  simp [hostInstructionAddress,addressAt,Bind.bind,Option.bind,functionAt,defined]
-
-theorem hostInstructionAddress_noncall {M : Type} (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
-    (direct : ∀index offset,instruction≠.Call index offset)
-    (indirect : ∀entry index offset,instruction≠.CallIndirect entry index offset) :
-    hostInstructionAddress exec store raw inst compiled instruction=none := by
-  cases instruction <;> first | exact (direct _ _ rfl).elim | exact (indirect _ _ _ rfl).elim | rfl
-
 theorem hostInstructionAddress_indirect {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (entry selector offset table type : U32)

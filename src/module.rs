@@ -465,14 +465,13 @@ pub(crate) fn decode_value_type(
 fn decode_value_types(
     data: &[u8],
     pos: usize,
-    bound: Option<(usize, OpError)>,
+    limit: usize,
+    error: OpError,
     profile: ValidationProfile,
 ) -> Result<(Vec<ValueType>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
-    if let Some((limit, error)) = bound {
-        if count as usize > limit {
-            return Err(Error::Read(error));
-        }
+    if count as usize > limit {
+        return Err(Error::Read(error));
     }
     let mut out = Vec::new();
     let mut q = p;
@@ -488,7 +487,8 @@ fn decode_value_types(
     }
 }
 
-/// Decodes a function type and enforces the selected profile's signature limits.
+/// Decodes a function type within the multi-value limits; Wasm 1.0 also allows
+/// at most one result.
 fn decode_func_type(
     data: &[u8],
     pos: usize,
@@ -498,21 +498,20 @@ fn decode_func_type(
     if tag != 0x60 {
         return Err(Error::InvalidType(tag));
     }
-    let (params_bound, results_bound) = match profile {
-        ValidationProfile::Wasm1 => (None, None),
-        ValidationProfile::Wasm2 => (
-            Some((
-                crate::limits::MAX_MULTI_VALUE_PARAMS,
-                OpError::TooManyParams,
-            )),
-            Some((
-                crate::limits::MAX_MULTI_VALUE_RESULTS,
-                OpError::TooManyResults,
-            )),
-        ),
-    };
-    let (params, p1) = decode_value_types(data, p, params_bound, profile)?;
-    let (results, p2) = decode_value_types(data, p1, results_bound, profile)?;
+    let (params, p1) = decode_value_types(
+        data,
+        p,
+        crate::limits::MAX_MULTI_VALUE_PARAMS,
+        OpError::TooManyParams,
+        profile,
+    )?;
+    let (results, p2) = decode_value_types(
+        data,
+        p1,
+        crate::limits::MAX_MULTI_VALUE_RESULTS,
+        OpError::TooManyResults,
+        profile,
+    )?;
     match profile {
         ValidationProfile::Wasm1 => {
             if results.len() > MAX_RESULTS {
@@ -1539,13 +1538,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
 
     // `validate_body_with` takes the body's own bytes and nothing else: it is
     // what decides that the last byte is the terminating `end`.
-    let body_result = match profile {
-        ValidationProfile::Wasm1 => code::validate_body_with(&data[p1..end], env, &ctx, v),
-        ValidationProfile::Wasm2 => {
-            code::validate_multi_value_body_with(&data[p1..end], env, &ctx, type_idx, v)
-        }
-    };
-    match body_result {
+    match code::validate_body_with(&data[p1..end], env, &ctx, type_idx, profile, v) {
         Ok(()) => Ok(end),
         Err(e) => Err(Error::Body(e)),
     }

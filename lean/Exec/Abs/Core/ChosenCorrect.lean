@@ -1,5 +1,5 @@
+import Exec.Abs.Sim.ChosenBasic
 import Exec.Abs.Core.Correct
-import Exec.Abs.Core.ChosenControl
 import Exec.Abs.Sim.ChosenStep
 namespace Exec.Abs.Core
 open SpecExt Exec.Spec
@@ -9,17 +9,17 @@ control reductions and ordinary scalar memory reads and writes. -/
 theorem instruction_chosen_simulation {choices : SourceChoices} (admissible : choices.Admissible)
     (vector : choices.vector=firstVectorChoice) (occurrence : Nat)
     (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
-    (op : instr) (after : List instr) (next : AState) (covered : CoreInstr op)
+    (op : instr) (after : List instr) (next : AState) (covered : CoreHead op)
     (typed : CoreTyped ⟨s,ambient,{f with code := op :: after}::rest,[]⟩)
     (equation : instruction s ambient f rest op after = .next next) :
     ChosenNextSim choices occurrence ⟨s,ambient,{f with code := op :: after}::rest,[]⟩ next := by
   have frameTyped : FrameTyped s {f with code := op :: after} [] := by
     cases typed.typed.frames with | cons head _ => exact head
   cases covered with
-  | slice allowed =>
+  | pure allowed =>
     rw [instruction_slice s ambient f rest _ after allowed frameTyped] at equation
     exact chosen_instruction_simulation admissible vector occurrence s ambient f rest _ after next allowed typed.typed equation
-  | constant ty value =>
+  | const ty value =>
     simp only [instruction,advance,AResult.next.injEq] at equation
     rw [←equation]
     exact .inl ⟨decode_const s ambient f rest ty value after (by simpa only [FrameHeights] using frameTyped_heights frameTyped),
@@ -64,12 +64,6 @@ theorem instruction_chosen_simulation {choices : SourceChoices} (admissible : ch
       exact ChosenNextSim.neutral admissible vector occurrence simulation (by simp only [List.map_cons,Memory.Store.source,admininstr_instr,neutralActive])
     · rw [actualEq] at equation
       contradiction
-  | block bt body _ =>
-    exact ChosenNextSim.single admissible (chosen_typed_block_simulation admissible vector occurrence s ambient f rest after bt body next typed.typed equation)
-  | loop bt body _ =>
-    exact ChosenNextSim.single admissible (chosen_typed_loop_simulation admissible vector occurrence s ambient f rest after bt body next typed.typed equation)
-  | ifelse bt yes no _ _ =>
-    exact chosen_core_if_simulation admissible vector occurrence s ambient f rest bt yes no after next typed.typed equation
 
 theorem empty_chosen_simulation {choices : SourceChoices} (admissible : choices.Admissible)
     (vector : choices.vector=firstVectorChoice) (occurrence : Nat)
@@ -88,22 +82,4 @@ theorem empty_chosen_simulation {choices : SourceChoices} (admissible : choices.
     | cons label labels =>
       exact chosen_typed_label_end_simulation admissible vector occurrence s ambient frame rest label labels next typed.typed equation
 
-theorem step_chosen_simulation {choices : SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=firstVectorChoice) (occurrence : Nat) (s next : AState)
-    (typed : CoreTyped s) (covered : CoreState s) (equation : step s = .next next) :
-    ChosenNextSim choices occurrence s next := by
-  rcases s with ⟨source,ambient,frames,results⟩
-  cases frames with
-  | nil => simp [step] at equation
-  | cons frame rest =>
-    have noResults := typed.typed.activeResults (by simp)
-    change results=[] at noResults
-    subst results
-    have body := (covered.active frame (by simp)).1
-    cases frame with
-    | mk address resultTypes locals module labels code values =>
-      let frame : AFrame := ⟨address,resultTypes,locals,module,labels,code,values⟩
-      cases code with
-      | nil => exact empty_chosen_simulation admissible vector occurrence source ambient frame rest next typed equation
-      | cons op after => exact instruction_chosen_simulation admissible vector occurrence source ambient frame rest op after next (body op (by simp)) typed equation
 end Exec.Abs.Core

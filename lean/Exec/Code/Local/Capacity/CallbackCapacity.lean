@@ -58,18 +58,6 @@ theorem CallbackCapacity.after_emission {A : Type} {before after : runtime.compi
     rw [limits]
     omega
 
-/-- An elided or single-instruction copy leaves enough room for the remaining
-branch sequence and preserves the independently bounded observer request. -/
-theorem CallbackCapacity.after_copy {A : Type} {before after : runtime.compiler.FunctionCompiler A}
-    {state bound count} (capacity : CallbackCapacity before state bound (count+1))
-    (shape : after = before ∨ ∃ instruction, Emitted before after instruction)
-    (effect : CompilationBudgetEffect before.budget after.budget
-      (fun counter => if counter = .instructions then 1 else 0)) :
-    CallbackCapacity after state bound count := by
-  rcases shape with rfl | ⟨instruction,emitted⟩
-  · exact capacity.mono (by omega)
-  · exact capacity.after_emission emitted effect
-
 /-- Replacing control frames leaves the emission and observation demand
 unchanged. Label updates do not alter code, slots, or resource counters. -/
 theorem CallbackCapacity.with_frames {A : Type} {compiler : runtime.compiler.FunctionCompiler A}

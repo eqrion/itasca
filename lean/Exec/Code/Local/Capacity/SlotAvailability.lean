@@ -34,7 +34,7 @@ theorem initial_instruction_capacity_accepts (function : runtime.bytecode.Compil
     apply slots_fit_accepts
     simpa [same,initializerWidth] using capacity
   cases lowered <;>
-    simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
       runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
   all_goals first | exact scalar | exact wide rfl | skip
   rename_i lo hi pool embedded

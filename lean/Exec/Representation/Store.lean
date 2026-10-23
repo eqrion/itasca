@@ -11,8 +11,6 @@ open Aeneas Aeneas.Std
 
 abbrev CodeInterpretation := Nat → runtime.compiler.ExecutableModule → Nat → funccode
 
-def decodeVal : runtime.Value → val := Interp.sourceValue
-
 def decodeFuncType (ty : Itasca.types.FuncType) : functype :=
   .mk_functype (.mk_list (ty.params.val.map Interp.sourceType)) (.mk_list (ty.results.val.map Interp.sourceType))
 
@@ -85,7 +83,6 @@ def decodeNameChars : List U8 → List char
                         .mk_char (262144 * (a.val - 240) + 4096 * (b.val - 128) +
                           64 * (c.val - 128) + (d.val - 128)) :: decodeNameChars rest
 
-
 def decodeName (bytes : List U8) : «name» := .mk_name (decodeNameChars bytes)
 
 def decodeExport (inst : runtime.store.ModuleInst) (e : Itasca.module.Export) : exportinst :=
@@ -118,15 +115,6 @@ def decodeStore {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     s.tables.val.map decodeTable, s.memories.val.map (decodeMemory view),
     s.elems.val.map decodeElement, s.datas.val.map decodeData⟩
 
-theorem decodeStore_lengths {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (s : runtime.store.Store M) :
-    (decodeStore view code s).FUNCS.length = s.funcs.length ∧
-    (decodeStore view code s).GLOBALS.length = s.globals.length ∧
-    (decodeStore view code s).TABLES.length = s.tables.length ∧
-    (decodeStore view code s).MEMS.length = s.memories.length ∧
-    (decodeStore view code s).ELEMS.length = s.elems.length ∧
-    (decodeStore view code s).DATAS.length = s.datas.length := by simp [decodeStore]
-
 /-- Replacing the concrete memory vector changes only the decoded memory
 component; function and module decoding do not depend on its opaque buffers. -/
 theorem decodeStore_memory_update {M : Type} (view : M → Slice U8)
@@ -135,6 +123,5 @@ theorem decodeStore_memory_update {M : Type} (view : M → Slice U8)
     decodeStore view code {s with memories := memories} =
       {decodeStore view code s with MEMS := memories.val.map (decodeMemory view)} := by
   rfl
-
 
 end Exec.Store

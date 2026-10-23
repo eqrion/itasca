@@ -121,8 +121,8 @@ theorem Valid.environment {profile env tables memories} (hv : Valid env profile)
 /-- In a valid cached environment, the stored and cached signatures also respect the completeness
 limits. -/
 theorem Valid.environmentWithinLimits {profile env tables memories} (hv : Valid env profile)
-    (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits profile env := by
-  have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits profile ft := by
+    (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits env := by
+  have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits ft := by
     intro ft hm
     exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).2
   exact ⟨ht, hc.func_property ht⟩

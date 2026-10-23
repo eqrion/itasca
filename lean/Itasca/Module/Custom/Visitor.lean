@@ -1,5 +1,6 @@
 import Itasca.Module.Env.Parser
 import Itasca.Support.Result
+import Itasca.Contracts
 
 /-!
 # Custom section hooks across visitors
@@ -14,18 +15,6 @@ whose custom section hooks always accept (`HooksAccept`). `accepted_transfer` st
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleTail
-
-/-- The custom section hooks always return normally and accept. -/
-def HooksAccept {V : Type} (visitor : module.ModuleVisitor V) : Prop :=
-  ∀ (v : V) (chunk : types.CustomSection),
-    ∃ v', visitor.on_custom_section v chunk = .ok (.Ok (), v')
-
-/-- Accepting hooks are total. -/
-theorem HooksAccept.total {V : Type} {visitor : module.ModuleVisitor V}
-    (h : HooksAccept visitor) : HooksTotal visitor := by
-  intro v chunk
-  obtain ⟨v', hv⟩ := h v chunk
-  exact ⟨(.Ok (), v'), hv⟩
 
 /-- The empty module visitor accepts every custom section. -/
 theorem empty_hooks_accept : HooksAccept module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor := by

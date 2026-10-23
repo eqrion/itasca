@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Typed labels and a source-paid stub budget discharge the actual complete
 table callback, including the fallback, scratch clearing, and observation. -/
-theorem StructuredCompilerPrefixWithTables.br_table_scratch_open_instructions
+theorem StructuredCompilerPrefix.br_table_scratch_open_instructions
     {jumpTables : List U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (budget0 : runtime.compiler.Budget A) (buffer : alloc.vec.Vec U32)

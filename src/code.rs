@@ -6,7 +6,7 @@
 
 use crate::error::{OpError, VisitError};
 use crate::limits::{
-    MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS, MAX_RESULTS,
+    MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS,
 };
 use crate::module::Env;
 use crate::reader::{
@@ -15,26 +15,6 @@ use crate::reader::{
 use crate::signature::{self, BlockType as BlockSignature, ResultType, TypePart};
 use crate::types::{ElemType, FuncType, GlobalType, Mut, ValueType};
 use alloc::vec::Vec;
-
-/// The Wasm 1.0 block immediate: zero or one result type.
-#[cfg_attr(not(charon), derive(Debug))]
-#[derive(Clone, Copy)]
-pub(crate) enum BlockType {
-    Empty,
-    Value(ValueType),
-}
-
-impl PartialEq for BlockType {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (BlockType::Empty, BlockType::Empty) => true,
-            (BlockType::Value(a), BlockType::Value(b)) => a == b,
-            _ => false,
-        }
-    }
-}
-
-impl Eq for BlockType {}
 
 /// The alignment exponent and byte offset of a memory instruction.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
@@ -90,7 +70,6 @@ pub enum LabelKind {
 #[derive(Clone, Copy)]
 pub struct Ctrl {
     pub kind: LabelKind,
-    pub(crate) block_type: BlockType,
     /// The complete parameter and result signature of this frame.
     pub signature: crate::signature::BlockType,
     /// The operand stack height below this frame.
@@ -306,18 +285,6 @@ pub const OP_I64_REINTERPRET_F64: u8 = 0xbd;
 pub const OP_F32_REINTERPRET_I32: u8 = 0xbe;
 pub const OP_F64_REINTERPRET_I64: u8 = 0xbf;
 
-fn read_block_type(data: &[u8], pos: usize) -> Result<(BlockType, usize)> {
-    let (b, p) = read_byte(data, pos)?;
-    match b {
-        0x40 => Ok((BlockType::Empty, p)),
-        0x7f => Ok((BlockType::Value(ValueType::I32), p)),
-        0x7e => Ok((BlockType::Value(ValueType::I64), p)),
-        0x7d => Ok((BlockType::Value(ValueType::F32), p)),
-        0x7c => Ok((BlockType::Value(ValueType::F64), p)),
-        _ => Err(OpError::InvalidBlockType),
-    }
-}
-
 // --- Operand and control stack ---
 
 pub(crate) fn cur_base(st: &OpIterState) -> usize {
@@ -393,59 +360,6 @@ pub(crate) fn push_types(st: &mut OpIterState, types: &[ValueType]) {
     }
 }
 
-/// Converts a Wasm 1.0 block immediate into a visitor signature.
-fn visitor_block_type(bt: BlockType) -> crate::signature::BlockType {
-    match bt {
-        BlockType::Empty => crate::signature::BlockType::Empty,
-        BlockType::Value(t) => crate::signature::BlockType::Value(t),
-    }
-}
-
-fn visitor_result_type(bt: BlockType) -> crate::signature::ResultType {
-    match bt {
-        BlockType::Empty => crate::signature::ResultType::Empty,
-        BlockType::Value(t) => crate::signature::ResultType::One(t),
-    }
-}
-
-/// Returns the zero or one result types of a Wasm 1.0 block.
-fn block_results(bt: &BlockType) -> Vec<ValueType> {
-    match bt {
-        BlockType::Empty => Vec::new(),
-        BlockType::Value(vt) => {
-            let mut v = Vec::new();
-            v.push(*vt);
-            v
-        }
-    }
-}
-
-/// Returns the target signature of a Wasm 1.0 frame.
-///
-/// Loop labels have no parameters; other labels use the frame's results. The
-/// descriptor avoids allocating a vector for each branch-table target.
-fn branch_target_bt(c: &Ctrl) -> BlockType {
-    match c.kind {
-        LabelKind::Loop => BlockType::Empty,
-        _ => c.block_type,
-    }
-}
-
-fn branch_target_types(c: &Ctrl) -> Vec<ValueType> {
-    block_results(&branch_target_bt(c))
-}
-
-pub(crate) fn push_ctrl(st: &mut OpIterState, kind: LabelKind, bt: BlockType) {
-    let base = st.vals.len();
-    st.ctrls.push(Ctrl {
-        kind,
-        block_type: bt,
-        signature: visitor_block_type(bt),
-        value_stack_base: base,
-        polymorphic_base: false,
-    });
-}
-
 /// Discards the current frame's operands and marks it unreachable.
 pub(crate) fn mark_unreachable(st: &mut OpIterState) {
     let base = cur_base(st);
@@ -463,20 +377,6 @@ pub(crate) fn mark_unreachable(st: &mut OpIterState) {
 }
 
 // --- Driving one body ---
-
-pub(crate) fn start_function(results: &[ValueType]) -> OpIterState {
-    let mut st = OpIterState {
-        vals: Vec::new(),
-        ctrls: Vec::new(),
-        pos: 0,
-    };
-    let mut bt = BlockType::Empty;
-    if results.len() == 1 {
-        bt = BlockType::Value(results[0]);
-    }
-    push_ctrl(&mut st, LabelKind::Body, bt);
-    st
-}
 
 #[allow(dead_code)]
 fn control_stack_empty(st: &OpIterState) -> bool {
@@ -692,229 +592,10 @@ fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> 
     Ok(())
 }
 
-fn read_block(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    let (bt, p) = read_block_type(data, st.pos)?;
-    st.pos = p;
-    push_ctrl(st, LabelKind::Block, bt);
-    Ok(bt)
-}
-
-fn read_loop(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    let (bt, p) = read_block_type(data, st.pos)?;
-    st.pos = p;
-    push_ctrl(st, LabelKind::Loop, bt);
-    Ok(bt)
-}
-
-/// Returns whether the frame represents an open then arm.
-fn is_then(kind: LabelKind) -> bool {
-    match kind {
-        LabelKind::Then => true,
-        LabelKind::Body => false,
-        LabelKind::Block => false,
-        LabelKind::Loop => false,
-        LabelKind::Else => false,
-    }
-}
-
-/// Validates a Wasm 1.0 `if` and opens its then frame.
-fn read_if(st: &mut OpIterState, data: &[u8]) -> Result<BlockType> {
-    let (bt, p) = read_block_type(data, st.pos)?;
-    st.pos = p;
-    pop_with_type(st, ValueType::I32)?;
-    push_ctrl(st, LabelKind::Then, bt);
-    Ok(bt)
-}
-
-/// Checks the then arm's results and resets its frame for the else arm.
-fn read_else(st: &mut OpIterState) -> Result<BlockType> {
-    let n = st.ctrls.len();
-    if n == 0 {
-        return Err(OpError::StackMismatch);
-    }
-    let frame = st.ctrls[n - 1];
-    if !is_then(frame.kind) {
-        return Err(OpError::StackMismatch);
-    }
-    let results = block_results(&frame.block_type);
-    pop_types(st, &results)?;
-    if st.vals.len() != frame.value_stack_base {
-        return Err(OpError::StackMismatch);
-    }
-    st.ctrls[n - 1].kind = LabelKind::Else;
-    st.ctrls[n - 1].polymorphic_base = false;
-    Ok(frame.block_type)
-}
-
-/// Checks and closes the current frame, leaving its results on the enclosing
-/// stack.
-///
-/// A Wasm 1.0 then arm without an else must have no results.
-fn read_end(st: &mut OpIterState) -> Result<(LabelKind, BlockType)> {
-    let n = st.ctrls.len();
-    if n == 0 {
-        return Err(OpError::StackMismatch);
-    }
-    let frame = st.ctrls[n - 1];
-    let results = block_results(&frame.block_type);
-    if is_then(frame.kind) && !results.is_empty() {
-        return Err(OpError::StackMismatch);
-    }
-    pop_types(st, &results)?;
-    if st.vals.len() != frame.value_stack_base {
-        return Err(OpError::StackMismatch);
-    }
-    let _ = st.ctrls.pop();
-    push_types(st, &results);
-    Ok((frame.kind, frame.block_type))
-}
-
-/// Reads a label depth and resolves its frame, counting from the innermost frame.
-fn read_label(st: &mut OpIterState, data: &[u8]) -> Result<(u32, Ctrl)> {
-    let (depth, p) = read_u32_leb(data, st.pos)?;
-    st.pos = p;
-    let n = st.ctrls.len();
-    let d = depth as usize;
-    if d >= n {
-        return Err(OpError::UnknownLabel);
-    }
-    Ok((depth, st.ctrls[n - 1 - d]))
-}
-
-/// Validates an unconditional branch and marks the remaining code unreachable.
-fn read_br(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
-    let (depth, target) = read_label(st, data)?;
-    let types = branch_target_types(&target);
-    pop_types(st, &types)?;
-    mark_unreachable(st);
-    Ok((depth, branch_target_bt(&target)))
-}
-
-/// Checks the function results and marks the remaining code unreachable.
-fn read_return(st: &mut OpIterState, ctx: &Context) -> Result<()> {
-    pop_types(st, &ctx.results)?;
-    mark_unreachable(st);
-    Ok(())
-}
-
-/// Validates a conditional branch while retaining target operands for
-/// fall-through.
-fn read_br_if(st: &mut OpIterState, data: &[u8]) -> Result<(u32, BlockType)> {
-    let (depth, target) = read_label(st, data)?;
-    let types = branch_target_types(&target);
-    pop_with_type(st, ValueType::I32)?;
-    pop_types(st, &types)?;
-    push_types(st, &types);
-    Ok((depth, branch_target_bt(&target)))
-}
-
-/// Checks that a branch-table target agrees with the previously resolved
-/// signature.
-fn merge_target(expect: Option<BlockType>, bt: BlockType) -> Result<BlockType> {
-    match expect {
-        None => Ok(bt),
-        Some(e) => {
-            if bt == e {
-                Ok(bt)
-            } else {
-                Err(OpError::TypeMismatch)
-            }
-        }
-    }
-}
-
-/// Reads and checks the non-default branch-table targets in encoded order.
-fn read_table_labels<V: OpVisitor>(
-    st: &mut OpIterState,
-    data: &[u8],
-    count: u32,
-    v: &mut V,
-) -> Result<Option<BlockType>> {
-    let mut expect: Option<BlockType> = None;
-    let mut i: u32 = 0;
-    loop {
-        if i == count {
-            return Ok(expect);
-        }
-        let (depth, target) = read_label(st, data)?;
-        // The one hook inside a reader. The depths cannot be handed over in a
-        // `Vec`, whose only bound would be the byte count, so they are handed
-        // over one at a time as they are read.
-        visit(v.on_br_table_label(st, depth))?;
-        let bt = merge_target(expect, branch_target_bt(&target))?;
-        expect = Some(bt);
-        i += 1;
-    }
-}
-
-/// Validates a Wasm 1.0 branch table with identical target signatures.
-///
-/// Targets are reported individually to the visitor instead of being collected in
-/// a vector. The default target is reported by the closing callback.
-fn read_br_table<V: OpVisitor>(
-    st: &mut OpIterState,
-    data: &[u8],
-    v: &mut V,
-) -> Result<(u32, BlockType)> {
-    let (count, p) = read_u32_leb(data, st.pos)?;
-    st.pos = p;
-    let expect = read_table_labels(st, data, count, v)?;
-    let (default, target) = read_label(st, data)?;
-    let common = merge_target(expect, branch_target_bt(&target))?;
-    pop_with_type(st, ValueType::I32)?;
-    let types = block_results(&common);
-    pop_types(st, &types)?;
-    mark_unreachable(st);
-    Ok((default, common))
-}
-
 /// Reads an index immediate and advances the body cursor.
 fn take_index(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
-    Ok(idx)
-}
-
-/// Checks the Wasm 1.0 result limit before a call can grow the operand stack.
-fn require_single_result(results: &[ValueType]) -> Result<()> {
-    if results.len() > MAX_RESULTS {
-        return Err(OpError::TooManyResults);
-    }
-    Ok(())
-}
-
-/// Validates a direct call using its cached parameter and result types.
-fn read_call(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
-    let idx = take_index(st, data)?;
-    let i = idx as usize;
-    if i >= env.func_types.len() {
-        return Err(OpError::UnknownFunc);
-    }
-    require_single_result(&env.func_types[i].results)?;
-    pop_types(st, &env.func_types[i].params)?;
-    push_types(st, &env.func_types[i].results);
-    Ok(idx)
-}
-
-/// Validates an indirect call using the selected type and the reserved table-zero
-/// byte.
-fn read_call_indirect(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
-    let idx = take_index(st, data)?;
-    read_reserved_zero(st, data)?;
-    if env.table_types.is_empty() {
-        return Err(OpError::UnknownTable);
-    }
-    if env.table_types[0].elem.value_type() != ValueType::FuncRef {
-        return Err(OpError::TypeMismatch);
-    }
-    let i = idx as usize;
-    if i >= env.types.len() {
-        return Err(OpError::UnknownType);
-    }
-    require_single_result(&env.types[i].results)?;
-    pop_with_type(st, ValueType::I32)?;
-    pop_types(st, &env.types[i].params)?;
-    push_types(st, &env.types[i].results);
     Ok(idx)
 }
 
@@ -1097,61 +778,6 @@ pub(crate) fn step<V: OpVisitor>(
         OP_SELECT => {
             let ty = read_select(st)?;
             visit(v.on_select(st, ty))?;
-            Ok(())
-        }
-        OP_BLOCK => {
-            let bt = read_block(st, data)?;
-            visit(v.on_block(st, visitor_block_type(bt)))?;
-            Ok(())
-        }
-        OP_LOOP => {
-            let bt = read_loop(st, data)?;
-            visit(v.on_loop(st, visitor_block_type(bt)))?;
-            Ok(())
-        }
-        OP_IF => {
-            let bt = read_if(st, data)?;
-            visit(v.on_if(st, visitor_block_type(bt)))?;
-            Ok(())
-        }
-        OP_ELSE => {
-            let bt = read_else(st)?;
-            visit(v.on_else(st, visitor_block_type(bt)))?;
-            Ok(())
-        }
-        OP_END => {
-            let (kind, bt) = read_end(st)?;
-            visit(v.on_end(st, kind, visitor_block_type(bt)))?;
-            Ok(())
-        }
-        OP_BR => {
-            let (depth, bt) = read_br(st, data)?;
-            visit(v.on_br(st, depth, visitor_result_type(bt)))?;
-            Ok(())
-        }
-        OP_BR_IF => {
-            let (depth, bt) = read_br_if(st, data)?;
-            visit(v.on_br_if(st, depth, visitor_result_type(bt)))?;
-            Ok(())
-        }
-        OP_BR_TABLE => {
-            let (default, common) = read_br_table(st, data, v)?;
-            visit(v.on_br_table(st, default, visitor_result_type(common)))?;
-            Ok(())
-        }
-        OP_RETURN => {
-            read_return(st, ctx)?;
-            visit(v.on_return(st))?;
-            Ok(())
-        }
-        OP_CALL => {
-            let idx = read_call(st, data, env)?;
-            visit(v.on_call(st, idx))?;
-            Ok(())
-        }
-        OP_CALL_INDIRECT => {
-            let idx = read_call_indirect(st, data, env)?;
-            visit(v.on_call_indirect(st, idx, 0))?;
             Ok(())
         }
         OP_LOCAL_GET => {
@@ -1909,6 +1535,72 @@ fn step_wasm2<V: OpVisitor>(
 
 // --- Multi-value control and signature handling ---
 
+// --- Wasm 1.0 profile filters ---
+//
+// Wasm 1.0 runs the Wasm 2.0 rules after these checks. Each accepts everything
+// under Wasm 2.0.
+
+/// Rejects opcodes outside the Wasm 1.0 instruction grammar.
+fn check_opcode(profile: crate::ValidationProfile, op: u8) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => match op {
+            0x1c | 0x25 | 0x26 | 0xc0 | 0xc1 | 0xc2 | 0xc3 | 0xc4 | 0xd0 | 0xd1 | 0xd2 | 0xfc
+            | 0xfd => Err(OpError::UnrecognizedOpcode),
+            _ => Ok(()),
+        },
+        crate::ValidationProfile::Wasm2 => Ok(()),
+    }
+}
+
+/// Rejects block types other than empty or one number type under Wasm 1.0.
+fn check_block_type(profile: crate::ValidationProfile, bt: BlockSignature) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => match bt {
+            BlockSignature::Empty => Ok(()),
+            BlockSignature::Value(t) => match t {
+                ValueType::I32 | ValueType::I64 | ValueType::F32 | ValueType::F64 => Ok(()),
+                _ => Err(OpError::InvalidBlockType),
+            },
+            BlockSignature::TypeIndex(_) => Err(OpError::InvalidBlockType),
+        },
+        crate::ValidationProfile::Wasm2 => Ok(()),
+    }
+}
+
+/// Under Wasm 1.0, requires the `call_indirect` table immediate at `pos` to be
+/// the reserved zero byte.
+fn check_table_byte(profile: crate::ValidationProfile, data: &[u8], pos: usize) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => {
+            let (b, _) = read_byte(data, pos)?;
+            if b != 0 {
+                return Err(OpError::ReservedByteNotZero);
+            }
+            Ok(())
+        }
+        crate::ValidationProfile::Wasm2 => Ok(()),
+    }
+}
+
+/// Under Wasm 1.0, requires every branch-table target to have the first
+/// target's exact types.
+fn check_table_target(
+    profile: crate::ValidationProfile,
+    env: &Env,
+    first: ResultType,
+    ts: ResultType,
+) -> Result<()> {
+    match profile {
+        crate::ValidationProfile::Wasm1 => {
+            if !same_types(env, first, ts)? {
+                return Err(OpError::TypeMismatch);
+            }
+            Ok(())
+        }
+        crate::ValidationProfile::Wasm2 => Ok(()),
+    }
+}
+
 fn check_func_type(ft: &FuncType) -> Result<()> {
     if ft.params.len() > MAX_MULTI_VALUE_PARAMS {
         return Err(OpError::TooManyParams);
@@ -1986,7 +1678,6 @@ fn same_types(env: &Env, a: ResultType, b: ResultType) -> Result<bool> {
 fn push_frame(st: &mut BodyState, kind: LabelKind, bt: BlockSignature) {
     st.core.ctrls.push(Ctrl {
         kind,
-        block_type: BlockType::Empty,
         signature: bt,
         value_stack_base: st.core.vals.len(),
         polymorphic_base: false,
@@ -1997,10 +1688,12 @@ fn enter_info(
     st: &mut BodyState,
     data: &[u8],
     env: &Env,
+    profile: crate::ValidationProfile,
     kind: LabelKind,
 ) -> Result<BlockSignature> {
     let (bt, end) = signature::read_block_type(data, st.core.pos)?;
     st.core.pos = end;
+    check_block_type(profile, bt)?;
     if let BlockSignature::TypeIndex(index) = bt {
         let i = index as usize;
         if i >= env.types.len() {
@@ -2020,8 +1713,14 @@ fn enter_info(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn enter(st: &mut BodyState, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> {
-    enter_info(st, data, env, kind)?;
+fn enter(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    profile: crate::ValidationProfile,
+    kind: LabelKind,
+) -> Result<()> {
+    enter_info(st, data, env, profile, kind)?;
     Ok(())
 }
 
@@ -2161,15 +1860,21 @@ fn branch_table_with<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],
     env: &Env,
+    profile: crate::ValidationProfile,
     visitor: &mut V,
 ) -> Result<()> {
     let (count, end) = read_u32_leb(data, st.core.pos)?;
     st.core.pos = end;
     pop_with_type(&mut st.core, ValueType::I32)?;
     let mut arity = None;
+    let mut first = ResultType::Empty;
     let mut i = 0;
     loop {
         let (depth, ts) = read_label_info(st, data)?;
+        if i == 0 {
+            first = ts;
+        }
+        check_table_target(profile, env, first, ts)?;
         if i != count {
             visit(visitor.on_br_table_label(&st.core, depth))?;
         }
@@ -2195,9 +1900,14 @@ fn branch_table_with<V: OpVisitor>(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn branch_table(st: &mut BodyState, data: &[u8], env: &Env) -> Result<()> {
+fn branch_table(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    profile: crate::ValidationProfile,
+) -> Result<()> {
     let mut visitor = EmptyOpVisitor;
-    branch_table_with(st, data, env, &mut visitor)
+    branch_table_with(st, data, env, profile, &mut visitor)
 }
 
 fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
@@ -2220,8 +1930,14 @@ fn call_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<u32> {
     Ok(index)
 }
 
-fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+fn call_indirect_info(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    profile: crate::ValidationProfile,
+) -> Result<(u32, u32)> {
     let index = take_index(&mut st.core, data)?;
+    check_table_byte(profile, data, st.core.pos)?;
     let table = take_index(&mut st.core, data)?;
     let t = table as usize;
     if t >= env.table_types.len() {
@@ -2241,9 +1957,15 @@ fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<(u32
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
+fn call(
+    st: &mut BodyState,
+    data: &[u8],
+    env: &Env,
+    profile: crate::ValidationProfile,
+    indirect: bool,
+) -> Result<()> {
     if indirect {
-        call_indirect_info(st, data, env)?;
+        call_indirect_info(st, data, env, profile)?;
     } else {
         call_info(st, data, env)?;
     }
@@ -2252,38 +1974,26 @@ fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()
 
 // --- Shared body execution and profile entry points ---
 
-/// Initializes the shared state from the selected profile and function signature.
-fn initial_state(
-    env: &Env,
-    ctx: &Context,
-    type_index: u32,
-    profile: crate::ValidationProfile,
-) -> Result<BodyState> {
-    match profile {
-        crate::ValidationProfile::Wasm1 => Ok(BodyState {
-            core: start_function(&ctx.results),
-        }),
-        crate::ValidationProfile::Wasm2 => {
-            let i = type_index as usize;
-            if i >= env.types.len() {
-                return Err(OpError::UnknownType);
-            }
-            check_func_type(&env.types[i])?;
-            let mut st = BodyState {
-                core: OpIterState {
-                    vals: Vec::new(),
-                    ctrls: Vec::new(),
-                    pos: 0,
-                },
-            };
-            push_frame(
-                &mut st,
-                LabelKind::Body,
-                BlockSignature::TypeIndex(type_index),
-            );
-            Ok(st)
-        }
+/// Opens the function-body frame with the signature of `type_index`.
+fn initial_state(env: &Env, type_index: u32) -> Result<BodyState> {
+    let i = type_index as usize;
+    if i >= env.types.len() {
+        return Err(OpError::UnknownType);
     }
+    check_func_type(&env.types[i])?;
+    let mut st = BodyState {
+        core: OpIterState {
+            vals: Vec::new(),
+            ctrls: Vec::new(),
+            pos: 0,
+        },
+    };
+    push_frame(
+        &mut st,
+        LabelKind::Body,
+        BlockSignature::TypeIndex(type_index),
+    );
+    Ok(st)
 }
 
 /// Runs the shared body loop with the selected profile's control rules.
@@ -2309,7 +2019,9 @@ fn body_loop<V: OpVisitor>(
     }
 }
 
-/// Selects profile-specific control handling or shared scalar dispatch.
+/// Dispatches one opcode. Wasm 1.0 runs the Wasm 2.0 rules after rejecting the
+/// opcodes, block types, table immediates and branch tables outside its grammar
+/// and typing profile.
 fn step_profile<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],
@@ -2320,74 +2032,78 @@ fn step_profile<V: OpVisitor>(
     op: u8,
     visitor: &mut V,
 ) -> Result<()> {
-    match profile {
-        crate::ValidationProfile::Wasm1 => step(&mut st.core, data, env, ctx, op, visitor),
-        crate::ValidationProfile::Wasm2 => {
-            match op {
-                OP_BLOCK => {
-                    let bt = enter_info(st, data, env, LabelKind::Block)?;
-                    visit(visitor.on_block(&st.core, bt))?;
-                }
-                OP_LOOP => {
-                    let bt = enter_info(st, data, env, LabelKind::Loop)?;
-                    visit(visitor.on_loop(&st.core, bt))?;
-                }
-                OP_IF => {
-                    let bt = enter_info(st, data, env, LabelKind::Then)?;
-                    visit(visitor.on_if(&st.core, bt))?;
-                }
-                OP_ELSE => {
-                    let (_, bt) = end_frame_info(st, env, true)?;
-                    visit(visitor.on_else(&st.core, bt))?;
-                }
-                OP_END => {
-                    let (kind, bt) = end_frame_info(st, env, false)?;
-                    visit(visitor.on_end(&st.core, kind, bt))?;
-                }
-                OP_BR => {
-                    let (depth, ts) = branch_info(st, data, env, false)?;
-                    visit(visitor.on_br(&st.core, depth, ts))?;
-                }
-                OP_BR_IF => {
-                    let (depth, ts) = branch_info(st, data, env, true)?;
-                    visit(visitor.on_br_if(&st.core, depth, ts))?;
-                }
-                OP_BR_TABLE => branch_table_with(st, data, env, visitor)?,
-                OP_RETURN => {
-                    pop_results(
-                        &mut st.core,
-                        env,
-                        ResultType::Type {
-                            index: type_index,
-                            part: TypePart::Results,
-                        },
-                    )?;
-                    mark_unreachable(&mut st.core);
-                    visit(visitor.on_return(&st.core))?;
-                }
-                OP_CALL => {
-                    let idx = call_info(st, data, env)?;
-                    visit(visitor.on_call(&st.core, idx))?;
-                }
-                OP_CALL_INDIRECT => {
-                    let (idx, table) = call_indirect_info(st, data, env)?;
-                    visit(visitor.on_call_indirect(&st.core, idx, table))?;
-                }
-                _ => {
-                    // Every scalar instruction pushes at most one value.
-                    if st.core.vals.len() == usize::MAX {
-                        return Err(OpError::StackTooLarge);
-                    }
-                    step_wasm2(&mut st.core, data, env, ctx, op, visitor)?;
-                }
+    check_opcode(profile, op)?;
+    match op {
+        OP_BLOCK => {
+            let bt = enter_info(st, data, env, profile, LabelKind::Block)?;
+            visit(visitor.on_block(&st.core, bt))?;
+        }
+        OP_LOOP => {
+            let bt = enter_info(st, data, env, profile, LabelKind::Loop)?;
+            visit(visitor.on_loop(&st.core, bt))?;
+        }
+        OP_IF => {
+            let bt = enter_info(st, data, env, profile, LabelKind::Then)?;
+            visit(visitor.on_if(&st.core, bt))?;
+        }
+        OP_ELSE => {
+            let (_, bt) = end_frame_info(st, env, true)?;
+            visit(visitor.on_else(&st.core, bt))?;
+        }
+        OP_END => {
+            let (kind, bt) = end_frame_info(st, env, false)?;
+            visit(visitor.on_end(&st.core, kind, bt))?;
+        }
+        OP_BR => {
+            let (depth, ts) = branch_info(st, data, env, false)?;
+            visit(visitor.on_br(&st.core, depth, ts))?;
+        }
+        OP_BR_IF => {
+            let (depth, ts) = branch_info(st, data, env, true)?;
+            visit(visitor.on_br_if(&st.core, depth, ts))?;
+        }
+        OP_BR_TABLE => branch_table_with(st, data, env, profile, visitor)?,
+        OP_RETURN => {
+            pop_results(
+                &mut st.core,
+                env,
+                ResultType::Type {
+                    index: type_index,
+                    part: TypePart::Results,
+                },
+            )?;
+            mark_unreachable(&mut st.core);
+            visit(visitor.on_return(&st.core))?;
+        }
+        OP_CALL => {
+            let idx = call_info(st, data, env)?;
+            visit(visitor.on_call(&st.core, idx))?;
+        }
+        OP_CALL_INDIRECT => {
+            let (idx, table) = call_indirect_info(st, data, env, profile)?;
+            visit(visitor.on_call_indirect(&st.core, idx, table))?;
+        }
+        _ => {
+            // Every scalar instruction pushes at most one value.
+            if st.core.vals.len() == usize::MAX {
+                return Err(OpError::StackTooLarge);
             }
-            Ok(())
+            step_wasm2(&mut st.core, data, env, ctx, op, visitor)?;
         }
     }
+    Ok(())
 }
 
-/// Validates a body through the common worker under the selected profile.
-pub(crate) fn validate_body_with_profile<V: OpVisitor>(
+/// Validates a function body with operator callbacks under the selected
+/// profile.
+///
+/// `data` contains exactly the instruction bytes, including the final `end` and
+/// excluding local declarations. `ctx.locals` contains the parameters followed by
+/// the declared locals, and `type_index` selects the function's signature from
+/// `env`. Parameters enter the local space, not the operand stack. The module
+/// entry validator establishes these conditions and reports the function-start
+/// callback.
+pub(crate) fn validate_body_with<V: OpVisitor>(
     data: &[u8],
     env: &Env,
     ctx: &Context,
@@ -2398,71 +2114,8 @@ pub(crate) fn validate_body_with_profile<V: OpVisitor>(
     if data.len() > MAX_FUNCTION_BYTES {
         return Err(OpError::BodyTooLarge);
     }
-    let st = initial_state(env, ctx, type_index, profile)?;
+    let st = initial_state(env, type_index)?;
     body_loop(data, env, ctx, type_index, profile, visitor, st)
-}
-
-/// Validates a Wasm 2.0 body with operator callbacks.
-///
-/// `ctx.locals` contains the parameters followed by declared locals; `type_index`
-/// selects the function's results from `env`. Parameters enter the local space,
-/// not the operand stack. The enclosing entry validator reports the
-/// function-start callback. Full control signatures are stored in
-/// `Ctrl.signature`.
-pub(crate) fn validate_multi_value_body_with<V: OpVisitor>(
-    data: &[u8],
-    env: &Env,
-    ctx: &Context,
-    type_index: u32,
-    visitor: &mut V,
-) -> Result<()> {
-    validate_body_with_profile(
-        data,
-        env,
-        ctx,
-        type_index,
-        crate::ValidationProfile::Wasm2,
-        visitor,
-    )
-}
-
-/// Validates a Wasm 2.0 body with accepting operator callbacks.
-#[allow(dead_code)] // Retained as an extracted proof entry point.
-pub(crate) fn validate_multi_value_body(
-    data: &[u8],
-    env: &Env,
-    locals: Vec<ValueType>,
-    type_index: u32,
-) -> Result<()> {
-    let ctx = Context {
-        locals,
-        results: Vec::new(),
-    };
-    let mut visitor = EmptyOpVisitor;
-    validate_multi_value_body_with(data, env, &ctx, type_index, &mut visitor)
-}
-
-/// Validates a Wasm 1.0 instruction body with operator callbacks.
-///
-/// `data` contains exactly the instruction bytes, including the final `end` and
-/// excluding local declarations. `ctx` contains the actual parameters, declared
-/// locals, and zero or one function results. `env` is the decoded environment of
-/// that module. The module entry validator establishes these conditions.
-pub(crate) fn validate_body_with<V: OpVisitor>(
-    data: &[u8],
-    env: &Env,
-    ctx: &Context,
-    v: &mut V,
-) -> Result<()> {
-    validate_body_with_profile(data, env, ctx, 0, crate::ValidationProfile::Wasm1, v)
-}
-
-/// Validates a Wasm 1.0 body with accepting callbacks and the same component
-/// preconditions.
-#[allow(dead_code)] // Retained as an extracted proof entry point.
-pub(crate) fn validate_body(data: &[u8], env: &Env, ctx: &Context) -> Result<()> {
-    let mut nop = EmptyOpVisitor;
-    validate_body_with(data, env, ctx, &mut nop)
 }
 
 // --- Operator visitors and dispatch tables ---

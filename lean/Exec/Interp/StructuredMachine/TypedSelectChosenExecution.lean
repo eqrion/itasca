@@ -1,13 +1,11 @@
-import Exec.Interp.StructuredMachine.ControlSemantics
+import Exec.Interp.StructuredMachine.SupportedControlSemantics
 import Exec.Interp.Machines.Core.CoreOwnership
-import Exec.Interp.Machines.Core.CoreBound
+import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.TypedSelectChosenStep
 import Exec.Abs.TypedSelect.Step
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
 namespace Exec.Interp.StructuredMachine.TypedSelect
-variable {emission : FunctionEmission} [∀ compiled, TypedSelectHeads (emission compiled)]
-variable {allowed : instr → Prop}
 open Aeneas Aeneas.Std
 theorem step_execution_chosen {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
@@ -22,16 +20,16 @@ theorem step_execution_chosen {choices : Spec.SourceChoices} (admissible : choic
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : Abs.AFrame),
-        Execution emission (Abs.SupportedState allowed) view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
+        Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
         (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
         (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
@@ -48,7 +46,7 @@ theorem step_execution_chosen {choices : Spec.SourceChoices} (admissible : choic
     (Store.decodeStore view code store) ambient f rest declared after last frameFound instanceFound codeFound pcBound slots point machine.typed)
   intro out effect
   obtain ⟨success,sameStore,samePlatform,pc,g,fields,represented,retained,fresh,metadata,transition,simulation,preserved⟩ := effect
-  have covered : Abs.SupportedState allowed ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+  have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
     rcases transition with same | step
     · rw [← same]; exact machine.core
     · exact (Abs.TypedSelect.Step.next step).next_supported machine.core

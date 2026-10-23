@@ -109,8 +109,9 @@ theorem CompileEntryWitness.typed {A : Type} {allocator : runtime.platform.Alloc
       ∃ entry : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor allocator)
           w.dispatched.code w.dispatched.env w.entry.index w.dispatched.validated_end finish
           w.initial w.final w.dispatched.profile,
-        ProfileTypedBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor allocator)
-          w.dispatched.profile entry.body w.dispatched.env entry.ctx entry.typeIdx entry.startedState w.final := by
+        TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor allocator)
+          entry.body w.dispatched.env entry.ctx entry.typeIdx (Wasm2.initial entry.typeIdx) entry.startedState
+          w.final := by
   obtain ⟨finish, index, entry, typed⟩ := batch_typed_steps _ w.dispatched finalBatch w.entry.index
     w.initial w.final (by simpa only [w.metadata.1] using bounds) w.validated
   exact ⟨finish, by simpa only [w.metadata.2.2.1, w.metadata.2.2.2.1] using index, entry, typed⟩

@@ -10,28 +10,6 @@ inductive ContinuingTrace {α β : Type} (body : α → Result (ControlFlow α �
   | next {count state next last} (step : body state = .ok (.cont next))
       (tail : ContinuingTrace body count next last) : ContinuingTrace body (count + 1) state last
 
-/-- With a normally returning body, divergence supplies an exact continuing
-prefix of any requested length, and the remaining loop still diverges. -/
-theorem loop_divergent_prefix {α β : Type} (body : α → Result (ControlFlow α β))
-    (invariant : α → Prop)
-    (bodyTotal : ∀ state, invariant state → body state ⦃ out =>
-      match out with
-      | .cont next => invariant next
-      | .done _ => True ⦄)
-    (count : Nat) (state : α) (initial : invariant state)
-    (divergent : loop body state = .div) :
-    ∃ last, ContinuingTrace body count state last ∧ invariant last ∧ loop body last = .div := by
-  induction count generalizing state with
-  | zero => exact ⟨state, .nil state, initial, divergent⟩
-  | succ count ih =>
-    obtain ⟨out, step, nextInvariant⟩ := WP.spec_imp_exists (bodyTotal state initial)
-    rw [loop.eq_def] at divergent
-    cases out with
-    | done result => simp [step] at divergent
-    | cont next =>
-      have nextDivergent : loop body next = .div := by simpa [step] using divergent
-      obtain ⟨last, trace, lastInvariant, lastDivergent⟩ := ih next nextInvariant nextDivergent
-      exact ⟨last, .next step trace, lastInvariant, lastDivergent⟩
 /-- Divergence also supplies one coherent infinite stream of actual body
 transitions, rather than unrelated finite prefixes. -/
 theorem loop_divergent_stream {α β : Type} (body : α → Result (ControlFlow α β))

@@ -6,8 +6,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 
 Conversions between the streaming byte provenance used by the extracted code-entry reader
 (`Wasm1.Consumed`, `Wasm1.BytesAt`, `Wasm1.BodyEncoding`) and the independent module grammar
-(`At`, `Rep`, `BodyEncoding`, `CodeEncoding`). `codeEncoding_of_parts` assembles a `CodeEncoding`
-of the interval a parser returns from its size, locals and body.
+(`At`, `Rep`, `BodyEncoding`), and `slice_bytes` for the body slice a parser returns.
 -/
 
 open Aeneas Aeneas.Std
@@ -48,27 +47,6 @@ theorem slice_bytes {data : Slice U8} {first last : Usize} {body : Slice U8}
   · rw [hbody, List.slice_length]
     simp only [Slice.length] at hlast
     omega
-
-/-- The declared size, grouped locals and complete body bytes combine into one `CodeEncoding` of
-exactly the interval the parser returns. -/
-theorem codeEncoding_of_parts {data start content localEnd last size groups body ops}
-    (hsize : Leb128.Decoded data start size content)
-    (hlength : last.val = content.val + size.val)
-    (hlocals : At (VecEncoding LocalEncoding) data content groups localEnd)
-    (hbodybytes : Wasm1.BytesAt data localEnd body.val last)
-    (hbody : Wasm1.BodyEncoding body ops) :
-    At CodeEncoding data start ⟨groups, ops⟩ last := by
-  obtain ⟨header, hh, hn, hb, he⟩ := hsize
-  obtain ⟨localBytes, hl, hls⟩ := hlocals
-  have hlen : size.val = localBytes.length + body.val.length := by
-    have := hls.length
-    have := hbodybytes.length
-    omega
-  refine ⟨header ++ localBytes ++ body.val,
-    ⟨header, localBytes, body.val, ?_, hl, bodyEncoding_of_body hbody, rfl⟩, ?_⟩
-  · simpa [hlen] using he
-  · exact ((⟨hh, hn, hb⟩ : Wasm1.BytesAt data start header content).append hls).append hbodybytes
-
 
 /-- A token repetition with matching bytes gives streaming provenance. -/
 theorem rep_consumed {data start next tokens bytes}

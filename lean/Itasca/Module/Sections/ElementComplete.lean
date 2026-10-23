@@ -14,67 +14,9 @@ vectors. Soundness is in `Module/Sections/Element`.
 
 open Aeneas Aeneas.Std
 
-
-
 namespace Itasca
 
 open ModuleBinary ModuleSections
-
-/-- The index loop accepts the remaining in-range indices of a repetition span and appends them to
-`out`. -/
-theorem module.decode_func_indices_loop.complete (data : Slice U8) (env : module.Env)
-    (count : U32) (out : alloc.vec.Vec U32) (pos : Usize) (i : U32)
-    (indices : List U32) (next : Usize)
-    (hb : At (Rep IndexEncoding) data pos indices next)
-    (hc : i.val + indices.length = count.val)
-    (hv : ∀ idx ∈ indices, idx.val < env.func_types.val.length)
-    (hcap : out.val.length + indices.length ≤ Usize.max) :
-    ∃ result, module.decode_func_indices_loop data env count out pos i = .ok (.Ok (result, next)) ∧
-      result.val = out.val ++ indices := by
-  induction indices generalizing out pos i with
-  | nil =>
-    have he := hb.rep_nil
-    have hstop : i ≥ count := by simp only [List.length_nil, Nat.add_zero] at hc; scalar_tac
-    refine ⟨out, ?_, by simp⟩
-    unfold module.decode_func_indices_loop
-    rw [loop]
-    simp [module.decode_func_indices_loop.body, hstop, he]
-  | cons idx indices ih =>
-    obtain ⟨middle, hidx, hrest⟩ := hb.rep_cons
-    have hread := hidx.read_index
-    have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hnidx : ¬ env.func_types.val.length ≤ idx.val := Nat.not_le.mpr (hv idx (by simp))
-    have hvalid : ¬ UScalar.cast .Usize idx ≥ alloc.vec.Vec.len env.func_types := by
-      have := hv idx (by simp); scalar_tac
-    obtain ⟨updated, hpush, hvals⟩ := WP.spec_imp_exists
-      (alloc.vec.Vec.push_spec out idx (by simp only [List.length_cons] at hcap; omega))
-    obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
-      (U32.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-    obtain ⟨result, hloop, hresult⟩ := ih updated middle j hrest
-      (by simp only [List.length_cons] at hc; scalar_tac)
-      (by intro ix hx; exact hv ix (by simp [hx]))
-      (by simp only [hvals, List.length_append, List.length_singleton]; simp only [List.length_cons] at hcap; omega)
-    refine ⟨result, ?_, by simpa [hvals, List.append_assoc] using hresult⟩
-    unfold module.decode_func_indices_loop at hloop ⊢
-    rw [loop]
-    simpa [module.decode_func_indices_loop.body, hmore, hread, hnidx,
-      hpush, hj, core.result.Result.Insts.CoreOpsTry.branch, lift] using hloop
-
-/-- `module.decode_func_indices` accepts a vector span of in-range function indices. -/
-theorem module.decode_func_indices.complete (data : Slice U8) (pos : Usize)
-    (env : module.Env) (indices : List U32) (next : Usize)
-    (hb : At (VecEncoding IndexEncoding) data pos indices next)
-    (hv : ∀ idx ∈ indices, idx.val < env.func_types.val.length) :
-    ∃ result, module.decode_func_indices data pos env = .ok (.Ok (result, next)) ∧
-      result.val = indices := by
-  obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
-  obtain ⟨result, hr, hp⟩ := module.decode_func_indices_loop.complete
-    data env count (alloc.vec.Vec.new _) middle 0#u32 indices next hentries
-    (by simpa using hc.symm) hv (by simp; scalar_tac)
-  refine ⟨result, ?_, by simpa using hp⟩
-  simp [module.decode_func_indices, reader.read_u32_leb.complete data pos count middle hcount,
-    core.result.Result.Insts.CoreOpsTry.branch, hr]
-
 
 private theorem element_raw_valid_caches {env result entry}
     (h : ElementValidRaw env entry)
@@ -162,27 +104,5 @@ theorem module.decode_element_section.profile_complete (data : Slice U8) (pos : 
   refine ⟨result, actual, ?_, hp⟩
   simp [module.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
     core.result.Result.Insts.CoreOpsTry.branch, hr]
-
-/-- Wasm 1.0 form of `module.decode_element_section_loop.profile_complete`. -/
-theorem module.decode_element_section_loop.complete
-    (data : Slice U8) (env : module.Env) (count : U32) (pos : Usize) (i : U32)
-    (entries : List ModuleBinary.Element) (next : Usize)
-    (hb : At (Rep ElementEncoding) data pos entries next)
-    (hc : i.val + entries.length = count.val)
-    (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
-    (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section_loop data env .Wasm1 count pos i = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
-  exact module.decode_element_section_loop.profile_complete data env .Wasm1 count pos i entries next hb hc hv hsize hrefs
-
-/-- Wasm 1.0 form of `module.decode_element_section.profile_complete`. -/
-theorem module.decode_element_section.complete (data : Slice U8) (pos : Usize)
-    (env : module.Env) (entries : List ModuleBinary.Element) (next : Usize)
-    (hb : At (VecEncoding ElementEncoding) data pos entries next)
-    (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
-    (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section data pos env .Wasm1 = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
-  exact module.decode_element_section.profile_complete data pos env .Wasm1 entries next hb hv hsize hrefs
 
 end Itasca

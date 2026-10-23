@@ -33,13 +33,6 @@ def PostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Resul
       Wasm1.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
       Run (profile := profile) data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
 
-/-- `LoopPostWith` for Wasm 1.0. -/
-abbrev LoopPost (data : Slice U8) (initial : module.Env) (decls : Declarations)
-    (start : Usize) (initialId : U8) := LoopPostWith .Wasm1 data initial decls start initialId
-
-/-- `PostWith` for Wasm 1.0. -/
-abbrev Post (data : Slice U8) := PostWith .Wasm1 data
-
 end Itasca.ModuleEnv
 
 namespace Itasca
@@ -154,26 +147,5 @@ theorem module.validate_env.profile_spec (data : Slice U8) (profile : Validation
     (module.validate_env_with.profile_spec module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor
       ModuleTail.empty_hooks_total data profile ())
   simpa [module.validate_env, hr] using hp
-
-/-- `module.validate_env_with_loop.profile_spec` for Wasm 1.0. -/
-theorem module.validate_env_with_loop.spec {V : Type} (visitor : module.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V)
-    (env : module.Env) (decls : Declarations) (start : Usize) (initialId : U8)
-    (hstart : start.val ≤ data.length) (hbound : Bounded env start.val) :
-    module.validate_env_with_loop visitor data .Wasm1 v env start initialId ⦃ r =>
-      LoopPost data env decls start initialId r.1 ⦄ := by
-  exact module.validate_env_with_loop.profile_spec visitor htotal data .Wasm1 v env decls
-    start initialId hstart hbound
-
-/-- `module.validate_env_with.profile_spec` for Wasm 1.0. -/
-theorem module.validate_env_with.spec {V : Type} (visitor : module.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V) :
-    module.validate_env_with visitor data .Wasm1 v ⦃ r => ModuleEnv.Post data r.1 ⦄ := by
-  exact module.validate_env_with.profile_spec visitor htotal data .Wasm1 v
-
-/-- `module.validate_env.profile_spec` for Wasm 1.0. -/
-theorem module.validate_env.spec (data : Slice U8) :
-    module.validate_env data .Wasm1 ⦃ ModuleEnv.Post data ⦄ := by
-  exact module.validate_env.profile_spec data .Wasm1
 
 end Itasca

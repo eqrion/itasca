@@ -30,12 +30,4 @@ def frameDepth : config → Nat
 @[simp] theorem instrsDepth_singleton (ai : admininstr) :
     instrsDepth [ai] = instrDepth ai := by simp [instrsDepth]
 
-@[simp] theorem frameDepth_frame (z : state) (arity : Nat) (f : frame) (body : List admininstr) :
-    frameDepth (.mk_config z [.FRAME_ arity f body]) = instrsDepth body + 1 := by
-  simp [frameDepth, instrDepth]
-
-@[simp] theorem frameDepth_label (z : state) (arity : Nat) (cont : List instr) (body : List admininstr) :
-    frameDepth (.mk_config z [.LABEL_ arity cont body]) = instrsDepth body := by
-  simp [frameDepth, instrDepth]
-
 end Exec.Spec

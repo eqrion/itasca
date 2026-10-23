@@ -10,7 +10,7 @@ theorem completed_store_limits {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (out : Answer M Unit)
     (completed : prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform=
@@ -27,7 +27,7 @@ theorem completed_store_limits {M F A : Type}
     intro code before valid token identity args defaults
     exact WP.spec.ret ⟨code,(by intro index inst found fn; rfl),valid,
       Spec.extend_store_refl _ valid.1.well_formed,valid.1.source_typed⟩
-  have post := world_step_outcomes Abs.executable_language memory (inert memory) floats allocator correct allocation
+  have post := world_step_outcomes memory (inert memory) floats allocator correct allocation
     (fun _=>WP.spec.ret trivial) view laws Inv
     (fun _ _ valid=>valid.1.toCertifiedApiStore.toCertifiedSupportedStore)
     (fun _ _ _ valid mutation=>⟨valid.1.update mutation,mutation.limits.trans valid.2⟩) sound

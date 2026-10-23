@@ -25,7 +25,7 @@ theorem ElementProgram.instruction_accepts {function index segment instructions}
   | declarative mode word encoded =>
     simp only [List.mem_singleton] at present
     subst instruction
-    simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
   | active table offset mode word length entry encoded count descriptor constantInstruction constant =>
     have slots := capacity rfl
@@ -33,18 +33,18 @@ theorem ElementProgram.instruction_accepts {function index segment instructions}
     rcases present with rfl | rfl | rfl | rfl | rfl
     · exact initial_instruction_capacity_accepts function offset .I32 _ constant
         (by simp [initializerWidth,slots]) (offset_vector_width (typed table offset mode))
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       exact slots_fit_accepts function 1#u32 1#u32 (by simp [slots])
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       exact slots_fit_accepts function 2#u32 1#u32 (by simp [slots])
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       rw [slots_fit_accepts function 0#u32 3#u32 (by simp [slots]),bind_ok]
       have inside := (List.getElem?_eq_some_iff.mp descriptor).1
       simpa [lift] using inside
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
 
 /-- Data segment programs need the same three slots and no pair descriptor. -/
@@ -63,16 +63,16 @@ theorem DataProgram.instruction_accepts {function index segment instructions}
     rcases present with rfl | rfl | rfl | rfl | rfl
     · exact initial_instruction_capacity_accepts function offset .I32 _ constant
         (by simp [initializerWidth,slots]) (offset_vector_width (typed memory offset mode))
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       exact slots_fit_accepts function 1#u32 1#u32 (by simp [slots])
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       exact slots_fit_accepts function 2#u32 1#u32 (by simp [slots])
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
       exact slots_fit_accepts function 0#u32 3#u32 (by simp [slots])
-    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+    · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
         runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
 
 /-- Every retained segment instruction satisfies its independent slot and
@@ -121,7 +121,7 @@ theorem SegmentProgram.instructions_accept {module function} (program : SegmentP
     apply emitted.instruction_accepts (datasTyped segment (List.mem_of_getElem? found)) _ instruction inBlock
     intro five
     exact body.activeCapacity (.inr ⟨index,block,by rw [List.getElem?_eq_getElem bound,equal],five⟩)
-  · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
+  · simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,
       runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
     exact slots_fit_accepts function 0#u32 0#u32 (by scalar_tac)
 

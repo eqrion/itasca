@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
-import Exec.Code.Local.Control.Table.StructuredFunctionBodyCloseWithTables
-import Exec.Code.Local.Control.Table.StructuredFunctionWithTables
+import Exec.Code.Local.Control.Table.StructuredFunctionBodyClose
+import Exec.Code.Local.Control.Table.StructuredFunction
 namespace Exec.Code
 open Aeneas Aeneas.Std
 
@@ -21,13 +21,13 @@ theorem indexed_compiler_finish_certificate {A : Type} (ops : runtime.platform.A
     (localSlots : initial.function.local_slots.val = slots (params ++ declared))
     (capacity : initial.function.local_slots.val ≤ initial.function.slot_count.val)
     (fetchBound : final.function.code.val.length ≤ U32.max)
-    (bodyCode : StructuredCodeWithTables emit types functions results (params ++ declared) final.function.code.val final.function.jump_tables.val
+    (bodyCode : StructuredCode emit types functions results (params ++ declared) final.function.code.val final.function.jump_tables.val
       [functionRootLabel results final.function epilogue] [] body 0 epilogue.val results)
     (returnCode : ∃ count, final.function.code.val[epilogue.val]? =
       some (.Return initial.function.local_slots count))
     (endPosition : final.function.code.val.length = epilogue.val + 1)
     (accepted : runtime.compiler.FunctionCompiler.finish ops final validated = .ok (.Ok compiled, budget)) :
-    StructuredFunctionCodeWithTables emit types functions params declared results body compiled epilogue := by
+    StructuredFunctionCode emit types functions params declared results body compiled epilogue := by
   obtain ⟨_, rfl, _, _, checked⟩ := compiler_finish_accepted ops final validated compiled budget accepted
   obtain ⟨_, _, _, typeEq, localsEq, paramsEq, slotsEq, _, _, _⟩ := stable.fields
   refine ⟨?_, ?_, ?_, ?_, ?_, fetchBound, checked, bodyCode, ?_, endPosition⟩

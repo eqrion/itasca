@@ -1,7 +1,5 @@
-import Itasca.Module.Env.Semantics
-import Itasca.Module.Validation
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Module.Readers.NamesComplete
 import Itasca.Examples.Module.Support
 
 /-!

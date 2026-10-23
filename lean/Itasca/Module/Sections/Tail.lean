@@ -1,6 +1,7 @@
 import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Sections.Data
 import Itasca.Module.Readers.Names
+import Itasca.Contracts
 
 /-!
 # Module tail parser
@@ -112,11 +113,6 @@ theorem append_data {profile old segments data start pos next}
   have he := (hp.not_seen rfl).1
   subst old
   exact ⟨before ++ bytes, .data hp hd, hs.append ht⟩
-
-/-- The visitor's custom-section hook returns normally for every state and chunk. It may still
-reject; totality excludes only panics and divergence. -/
-def HooksTotal {V : Type} (visitor : module.ModuleVisitor V) : Prop :=
-  ∀ (v : V) (chunk : types.CustomSection), ∃ r, visitor.on_custom_section v chunk = .ok r
 
 /-- The empty module visitor has total hooks. -/
 theorem empty_hooks_total : HooksTotal module.EmptyModuleVisitor.Insts.ItascaModuleModuleVisitor := by

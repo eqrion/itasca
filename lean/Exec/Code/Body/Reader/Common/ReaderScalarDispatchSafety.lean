@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderNumericSafety
 import Exec.Code.Body.Reader.Memory.ReaderMemorySafety
 import Exec.Code.Local.Lowering.Common.NumericEncoding
-import Exec.Code.Local.Lowering.Float.FloatCoreOpcodes
+import Exec.Code.Local.Relations.Common.ReaderOpcode
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 8000000

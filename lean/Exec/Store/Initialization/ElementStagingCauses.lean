@@ -43,7 +43,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     (startBound : start.val ≤ inst.module.module.env.elements.val.length)
     (storeCapacity : store.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
     (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max) :
-    runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator store platform (.Ok ()) start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator store platform (.Ok ()) start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧
         (∀ error, finalStatus = .Err error → ElementStagingCause memory hooks floats allocator store platform instIndex start error) ∧ ErrorAllowed ResourceError finalStatus ∧ StagedPrefix before after ∧
@@ -52,7 +52,7 @@ theorem element_staging_resource_loop {M P F A : Type}
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
           after.datas = store.datas ∧ next.datas = inst.datas ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop8
+  unfold runtime.store.instantiate.Store.prepare_instance_loop8
   apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧
       (state.2.2.1 = .Ok () → PreparationCalls (elementStageCall memory hooks floats allocator instIndex) (store,platform) start (state.1,state.2.1) state.2.2.2) ∧
@@ -69,7 +69,7 @@ theorem element_staging_resource_loop {M P F A : Type}
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, hstoreCapacity, hdatas, hmapData⟩
     dsimp only at hhost errors hstaged hobjects haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity hstoreCapacity hdatas hmapData ⊢
     subst host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop8.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env,

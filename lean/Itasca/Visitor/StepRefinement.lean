@@ -14,31 +14,9 @@ return the same result and validator state. Covers the Wasm 1.0 step `code.step`
 
 open Aeneas Aeneas.Std
 
-
-
 namespace Itasca
 
 open VisitorTrace
-
-/-- A refinement of hooks lifts to the `br_table` step, through its label hooks and its final
-hook. -/
-theorem code.step_br_table.refines {V W : Type}
-    (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (v : V) (w : W) (hrelated : related v w)
-    (res : core.result.Result Unit error.OpError) (st' : code.OpIterState) (v' : V)
-    (h : code.step visitor st data env ctx code.OP_BR_TABLE v = .ok (res, st', v')) :
-    ∃ w', code.step replacement st data env ctx code.OP_BR_TABLE w =
-      .ok (res, st', w') ∧ related v' w' := by
-  rw [code.step_br_table.dispatch] at h ⊢
-  obtain ⟨⟨args, s, v1⟩, hr, hh⟩ := ResultFacts.bind_ok_inv _ _ _ h
-  obtain ⟨w1, hw, hr1⟩ := code.read_br_table.refines visitor replacement related hrefines
-    st data v w hrelated args s v1 hr
-  rw [hw]
-  simp only [bind_ok]
-  exact CoreVisitor.run.refines (.ok (args, s)) visitor replacement related hrefines
-    (fun st a => .op st (.br_table a.1 (Control.resultView a.2))) v1 w1 hr1 res st' v' hh
 
 /-- A refinement of hooks lifts to `code.step` for every opcode. Every normal return, including
 rejections and malformed instructions, is reproduced with the same result and validator state. -/
@@ -105,59 +83,6 @@ theorem code.step.refines {V W : Type}
         rw [dispatch_select visitor st data env ctx v] at h
         rw [dispatch_select replacement st data env ctx w]
         exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_block : opcode = code.OP_BLOCK
-      · subst opcode
-        rw [dispatch_block visitor st data env ctx v] at h
-        rw [dispatch_block replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_loop : opcode = code.OP_LOOP
-      · subst opcode
-        rw [dispatch_loop visitor st data env ctx v] at h
-        rw [dispatch_loop replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_if : opcode = code.OP_IF
-      · subst opcode
-        rw [dispatch_if visitor st data env ctx v] at h
-        rw [dispatch_if replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_else : opcode = code.OP_ELSE
-      · subst opcode
-        rw [dispatch_else visitor st data env ctx v] at h
-        rw [dispatch_else replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_end : opcode = code.OP_END
-      · subst opcode
-        rw [dispatch_end visitor st data env ctx v] at h
-        rw [dispatch_end replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_br : opcode = code.OP_BR
-      · subst opcode
-        rw [dispatch_br visitor st data env ctx v] at h
-        rw [dispatch_br replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_br_if : opcode = code.OP_BR_IF
-      · subst opcode
-        rw [dispatch_br_if visitor st data env ctx v] at h
-        rw [dispatch_br_if replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_br_table : opcode = code.OP_BR_TABLE
-      · subst opcode
-        exact code.step_br_table.refines visitor replacement related hrefines st data env ctx v w hrelated res st' v' h
-      by_cases h_return : opcode = code.OP_RETURN
-      · subst opcode
-        rw [dispatch_return visitor st data env ctx v] at h
-        rw [dispatch_return replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_call : opcode = code.OP_CALL
-      · subst opcode
-        rw [dispatch_call visitor st data env ctx v] at h
-        rw [dispatch_call replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
-      by_cases h_call_indirect : opcode = code.OP_CALL_INDIRECT
-      · subst opcode
-        rw [dispatch_call_indirect visitor st data env ctx v] at h
-        rw [dispatch_call_indirect replacement st data env ctx w]
-        exact CoreVisitor.run.refines _ visitor replacement related hrefines _ v w hrelated res st' v' h
       by_cases h_local_get : opcode = code.OP_LOCAL_GET
       · subst opcode
         rw [dispatch_local_get visitor st data env ctx v] at h
@@ -208,37 +133,5 @@ theorem code.step.refines {V W : Type}
       simp only [Result.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, rfl, rfl⟩ := h
       exact ⟨w, rfl, hrelated⟩
-
-/-- Instrumenting the visitor preserves every normal return of `code.step`, including validation
-errors, and appends observations to the log. -/
-theorem code.step.instrument_forward {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (opcode : U8) (v : V) (log : List Observation)
-    (res : core.result.Result Unit error.OpError) (st' : code.OpIterState) (v' : V)
-    (h : code.step visitor st data env ctx opcode v = .ok (res, st', v')) :
-    ∃ added, code.step (instrument visitor) st data env ctx opcode (v, log) =
-      .ok (res, st', (v', log ++ added)) := by
-  obtain ⟨⟨w, log'⟩, hw, heq, added, hlog⟩ := code.step.refines visitor (instrument visitor)
-    _ (instrument_refines visitor log) st data env ctx opcode v (v, log)
-    ⟨rfl, [], by simp⟩ res st' v' h
-  dsimp only at heq hlog
-  subst w
-  subst log'
-  exact ⟨added, hw⟩
-
-/-- A normal return of `code.step` with an instrumented visitor is also a normal return with the
-wrapped visitor. -/
-theorem code.step.instrument_backward {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (opcode : U8) (v : V) (log : List Observation)
-    (res : core.result.Result Unit error.OpError) (st' : code.OpIterState) (v' : V)
-    (log' : List Observation)
-    (h : code.step (instrument visitor) st data env ctx opcode (v, log) =
-      .ok (res, st', (v', log'))) :
-    code.step visitor st data env ctx opcode v = .ok (res, st', v') := by
-  obtain ⟨w, hw, heq⟩ := code.step.refines (instrument visitor) visitor
-    _ (instrument_refines_back visitor) st data env ctx opcode (v, log) v rfl
-    res st' (v', log') h
-  simpa only [← heq] using hw
 
 end Itasca

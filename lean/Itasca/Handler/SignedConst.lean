@@ -1,7 +1,7 @@
-import Itasca.Handler.Numeric
 import Itasca.Binary.SignedLeb32
 import Itasca.Spec.Instr
 import Itasca.Handler.Sequence
+import Itasca.Handler.Stack
 
 /-!
 # `i32.const` handler
@@ -60,26 +60,6 @@ theorem code.read_i32_const.spec (st : code.OpIterState) (data : Slice U8)
     simp only [WP.spec_ok, hok, hpos]
     exact ⟨hc, hp, hv⟩
 
-/-- `code.step` on `i32.const` calls the visitor with the signed value and the updated state. -/
-theorem code.step_i32_const {V : Type} (visitor : code.OpVisitor V)
-    (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (value : I32) (v v' : V)
-    (hread : code.read_i32_const st data = .ok (.Ok value, st'))
-    (hvisit : visitor.on_i32_const v st' value = .ok (.Ok (), v')) :
-    code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Ok (), st', v') := by
-  simp [hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
-
-/-- An invalid immediate makes `code.step` on `i32.const` fail before calling the visitor. -/
-theorem code.step_i32_const.failed_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (e : error.OpError) (v : V)
-    (hread : reader.read_s32_leb data st.pos = .ok (.Err e)) :
-    code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Err e, st, v) := by
-  have hr := code.read_i32_const.failed_read st data e hread
-  simp [hr,
-    core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
 end Itasca
 
 namespace Itasca.Sequence
@@ -123,38 +103,5 @@ theorem TypedPrefix.i32Const {C : context} {ops : List instr} {poly : Bool}
 end Itasca.Sequence
 
 namespace Itasca
-
-/-- A rejecting visitor gives a `Visitor` error and keeps the decoded constant's stack and cursor
-effects. -/
-theorem code.step_i32_const.visitor_rejected {V : Type} (visitor : code.OpVisitor V)
-    (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (value : I32) (v v' : V) (e : error.VisitError)
-    (hread : code.read_i32_const st data = .ok (.Ok value, st'))
-    (hvisit : visitor.on_i32_const v st' value = .ok (.Err e, v')) :
-    code.step visitor st data env ctx code.OP_I32_CONST v = .ok (.Err (.Visitor e), st', v') := by
-  simp [hread, hvisit, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
-/-- `code.step` on `i32.const` terminates when the push fits and the visitor hook returns. -/
-theorem code.step_i32_const.total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : ∀ s value, ∃ r, visitor.on_i32_const v s value = .ok r) :
-    ∃ r, code.step visitor st data env ctx code.OP_I32_CONST v = .ok r := by
-  obtain ⟨⟨r, st'⟩, hr, _⟩ := WP.spec_imp_exists (code.read_i32_const.spec st data hsize)
-  cases r with
-  | Err e =>
-    refine ⟨(.Err e, st', v), ?_⟩
-    simp [hr,
-      core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    obtain ⟨⟨r, v'⟩, hv⟩ := hvisit st' value
-    cases r with
-    | Ok u =>
-      cases u
-      exact ⟨_, code.step_i32_const visitor st st' data env ctx value v v' hr hv⟩
-    | Err e =>
-      exact ⟨_, code.step_i32_const.visitor_rejected visitor st st' data env ctx value v v' e hr hv⟩
 
 end Itasca

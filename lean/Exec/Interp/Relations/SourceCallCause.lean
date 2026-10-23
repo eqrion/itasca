@@ -10,25 +10,6 @@ def suspendedSourceWords : List Abs.AFrame → Nat
   | [] => 0
   | f :: rest => Code.slots ((f.locals ++ f.vals).map Code.valueType) + suspendedSourceWords rest
 
-theorem SavedFrames.source_base {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raws sources waiting base}
-    (saved : SavedFrames store exec raws sources waiting base) :
-    base = suspendedSourceWords sources := by
-  induction saved with
-  | nil => rfl
-  | cons head tail ih => simp only [suspendedSourceWords, head.destination, ih, Nat.add_comm]
-
-theorem FrameStackRel.source_base {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {f : Abs.AFrame} {rest : List Abs.AFrame}
-    (stack : FrameStackRel store exec (f :: rest))
-    (raw : runtime.interp.Frame) (top : exec.frames.val.getLast? = some raw) :
-    raw.base.val = suspendedSourceWords rest := by
-  cases stack with
-  | @active actual _ raws _ frames active saved =>
-    have same : actual = raw := by simpa only [frames, List.getLast?_concat, Option.some.injEq] using top
-    subst actual
-    exact saved.source_base
-
 /-- A reachable source call identifies its callee and shared argument position.
 This predicate uses only source configurations, values, and addresses. -/
 def SourceCallSite (initial : Abs.AState) (address : funcaddr) (base : Nat) : Prop :=

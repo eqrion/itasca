@@ -8,8 +8,8 @@ import Exec.Theorems.Composition.Stateful.StatefulTableInitStep
 import Exec.Interp.StructuredMachine.JumpExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
-theorem stateful_table_fill_execution_supported_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_table_fill_execution_supported_uniform
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -21,14 +21,14 @@ theorem stateful_table_fill_execution_supported_uniform {emission : StructuredMa
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after}::rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_table_fill_point_step memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
     ambient f rest after tableIndex last frameFound found codeFound program.fetchBound moduleEq slots point machine.typed with jump | actual
@@ -46,16 +46,16 @@ theorem stateful_table_fill_execution_supported_uniform {emission : StructuredMa
       have reference := Store.owned_reference_shape store object.ty source ((owned.values.2 _ (List.mem_cons_self ..)).2 _ member)
       have mutation := table_fill_cumulative_mutation_of_shape shaped sourceSyntax bounds issued reference effect
       apply UniformSupportedStepOutcome.success mutation success
-      exact StructuredMachine.ordinary_cumulative_step_forward language view code ambient {f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
+      exact StructuredMachine.ordinary_cumulative_step_forward view code ambient {f with code:=(Abs.Stateful.Instruction.tableFill tableIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
         machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
         (by rw [exactState]) (by rw [exactState]; exact .refl _ _) transition (by omega)
     · apply UniformSupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) error (by rw [sameStore])
-      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported language machine.typed machine.core⟩
+      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported machine.typed machine.core⟩
 
 
 
-theorem stateful_table_copy_execution_supported_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_table_copy_execution_supported_uniform
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -67,13 +67,13 @@ theorem stateful_table_copy_execution_supported_uniform {emission : StructuredMa
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_table_copy_point_step memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
     ambient f rest after tableIndex sourceIndex last frameFound found codeFound program.fetchBound moduleEq slots point machine.typed with jump | actual
@@ -90,16 +90,16 @@ theorem stateful_table_copy_execution_supported_uniform {emission : StructuredMa
     · obtain ⟨address,sourceAddress,object,segment,destination,source,count,issued,sourceFound,sameType,effect⟩ := rawEffect
       have mutation := table_copy_cumulative_mutation_of_shape shaped sourceSyntax bounds issued sourceFound sameType effect
       apply UniformSupportedStepOutcome.success mutation success
-      exact StructuredMachine.ordinary_cumulative_step_forward language view code ambient {f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
+      exact StructuredMachine.ordinary_cumulative_step_forward view code ambient {f with code:=(Abs.Stateful.Instruction.tableCopy tableIndex sourceIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
         machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
         (by rw [exactState]) (by rw [exactState]; exact .refl _ _) transition (by omega)
     · apply UniformSupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) error (by rw [sameStore])
-      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported language machine.typed machine.core⟩
+      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported machine.typed machine.core⟩
 
 
 
-theorem stateful_table_init_execution_supported_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_table_init_execution_supported_uniform
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -111,13 +111,13 @@ theorem stateful_table_init_execution_supported_uniform {emission : StructuredMa
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_table_init_point_step memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
     ambient f rest after tableIndex sourceIndex last frameFound found codeFound program.fetchBound moduleEq slots point machine.typed with jump | actual
@@ -134,11 +134,11 @@ theorem stateful_table_init_execution_supported_uniform {emission : StructuredMa
     · obtain ⟨address,sourceAddress,object,segment,destination,source,count,issued,sourceFound,sameType,effect⟩ := rawEffect
       have mutation := table_init_cumulative_mutation_of_shape shaped sourceSyntax bounds issued sourceFound sameType effect
       apply UniformSupportedStepOutcome.success mutation success
-      exact StructuredMachine.ordinary_cumulative_step_forward language view code ambient {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
+      exact StructuredMachine.ordinary_cumulative_step_forward view code ambient {f with code:=(Abs.Stateful.Instruction.tableInit tableIndex sourceIndex).source::after} {f with code:=after,vals:=front} rest expected raw.pc.val
         machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
         (by rw [exactState]) (by rw [exactState]; exact .refl _ _) transition (by omega)
     · apply UniformSupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) error (by rw [sameStore])
-      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported language machine.typed machine.core⟩
+      exact Or.inl ⟨⟨.TableOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported machine.typed machine.core⟩
 
 
 

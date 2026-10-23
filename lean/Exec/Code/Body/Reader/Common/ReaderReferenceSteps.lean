@@ -3,7 +3,7 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_ref_func_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (idx : U32) (out : code.OpIterState)
+    (p : Pending data env .Wasm2 locals index st) (idx : U32) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 210#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_func st.core data env = .ok (.Ok idx,out)) :
@@ -40,13 +40,13 @@ theorem reader_ref_func_wasm2 {data env locals index st}
   have newValues : out.vals.val = outer ++ (p.current.vals ++ [.Val .FuncRef]) := by
     simpa [stack,List.append_assoc] using values
   refine ⟨encoded,?_,?_⟩
-  · exact ⟨C,outer,spine,⟨header.kind,header.placeholder,header.inputs,header.outputs,
+  · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
       header.prior,.simple header.emits (.plain _ wf)⟩,base,newTyped,newControls,newBlocks,newValues⟩
   · exact p.append_result C outer spine header base {st with core := out} _
-      p.current.ctrl.polymorphic_base _ wf encoded newTyped newControls newBlocks newValues declared
+      p.current.ctrl.polymorphic_base _ wf encoded newTyped newControls newBlocks newValues (fun h => nomatch h) declared
 
 theorem reader_ref_is_null_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (out : code.OpIterState)
+    (p : Pending data env .Wasm2 locals index st) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 209#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_is_null st.core = .ok (.Ok (),out)) :
@@ -79,11 +79,11 @@ theorem reader_ref_is_null_wasm2 {data env locals index st}
       p.parents.map Frames.Saved.bt ++ [p.current.bt] := by
     simpa [code.BodyState.blocks_eq_of_ctrls controls] using blocks
   refine ⟨controls,position,rt,values,effect,encoded,?_,?_⟩
-  · exact ⟨C,outer,spine,⟨header.kind,header.placeholder,header.inputs,header.outputs,
+  · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
       header.prior,.simple header.emits (.plain .REF_IS_NULL .instr_case_42)⟩,
       base,newTyped,newControls,newBlocks,newValues⟩
   · exact p.append_result C outer spine header base {st with core := out} .REF_IS_NULL
       p.current.ctrl.polymorphic_base values .instr_case_42 encoded newTyped newControls newBlocks newValues
-      (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices])
+      (fun h => nomatch h) (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices])
 
 end Exec.Code

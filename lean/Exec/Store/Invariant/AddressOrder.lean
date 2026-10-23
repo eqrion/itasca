@@ -26,16 +26,6 @@ theorem AddressOrder.complete {start total count : Nat} {initial addresses : Lis
   have same : actual = count := by simp only [values, List.length_append, List.length_range'] at lengths; omega
   simpa only [same] using And.intro totalEq values
 
-theorem AddressOrder.trans {a b c : Nat} {initial middle final : List Nat}
-    (first : AddressOrder a initial b middle) (second : AddressOrder b middle c final) :
-    AddressOrder a initial c final := by
-  obtain ⟨n, rfl, rfl⟩ := first
-  obtain ⟨m, rfl, rfl⟩ := second
-  refine ⟨n + m, by omega, ?_⟩
-  rw [List.append_assoc]
-  congr 1
-  simpa only [Nat.one_mul] using (List.range'_append (s := a) (m := n) (n := m) (step := 1))
-
 theorem FunctionStageEffect.address_order {M : Type} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} {instanceIndex index signature out} {start initial}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)

@@ -11,10 +11,6 @@ def initializerWidth : Itasca.types.ValueType → U32
   | .V128 => 2#u32
   | _ => 1#u32
 
-theorem initializerWidth_value (ty : Itasca.types.ValueType) :
-    (initializerWidth ty).val = width (Itasca.Translate.valueType ty) := by
-  cases ty <;> rfl
-
 theorem compiler_width_eq (ty : Itasca.types.ValueType) :
     runtime.value.width ty = .ok (initializerWidth ty) := by
   cases ty <;> rfl

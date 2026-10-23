@@ -94,25 +94,6 @@ def CodeAgreesOn {M : Type} (store : runtime.store.Store M)
   ∀ index inst, store.instances.val[index]? = some inst →
     ∀ function, after index inst.module function = before index inst.module function
 
-/-- Existing compiled functions retain their lookup, source, and compiler
-certificates when store vectors and the ghost code interpretation extend. -/
-theorem function_compiled_prefix {M : Type} {view : M → Slice U8}
-    {before after : runtime.store.Store M} {oldCode newCode : CodeInterpretation}
-    (shape : Shape view before) (retained : StagedPrefix before after)
-    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.FuncInst}
-    (compiled : Interp.FunctionCompiled oldCode before function) :
-    Interp.FunctionCompiled newCode after function := by
-  intro instanceIndex functionIndex defined
-  obtain ⟨inst, code, signature, functions, declared, body, epilogue,
-    found, functionFound, signatureFound, source, table, certificate⟩ := compiled instanceIndex functionIndex defined
-  refine ⟨inst, code, signature, functions, declared, body, epilogue,
-    Exec.Representation.lookup_prefix _ _ retained.instances found, functionFound,
-    Exec.Representation.lookup_prefix _ _ retained.types signatureFound, ?_, function_table_prefix retained table, ?_⟩
-  · rw [agrees instanceIndex.val inst found functionIndex.val]
-    exact source
-  · rw [decodeInstance_prefix before after retained inst (shape.instances inst (List.mem_of_getElem? found))]
-    exact certificate
-
 /-- Install the source code for a fresh instance. Existing instance keys retain
 their previous interpretation even when their compiled modules coincide. -/
 def installCode (before : CodeInterpretation) (fresh : Nat) (source : List funccode) : CodeInterpretation :=
@@ -130,26 +111,5 @@ theorem installCode_lookup (before : CodeInterpretation) (fresh : Nat)
     (index : Nat) (function : funccode) (found : source[index]? = some function) :
     installCode before fresh source fresh module index = function := by
   simp only [installCode, ↓reduceIte, List.getD_eq_getElem?_getD, found, Option.getD_some]
-
-/-- Aggregate preservation for all old function entries. Fresh defined entries
-are discharged separately from their source-index and compiler certificates. -/
-theorem compiled_functions_retained {M : Type} {view : M → Slice U8}
-    {before after : runtime.store.Store M} {oldCode newCode : CodeInterpretation}
-    (shape : Shape view before) (retained : StagedPrefix before after)
-    (agrees : CodeAgreesOn before oldCode newCode)
-    (compiled : Interp.CompiledFunctions oldCode before) :
-    ∀ function ∈ before.funcs.val, Interp.FunctionCompiled newCode after function := by
-  intro function present
-  exact function_compiled_prefix shape retained agrees (compiled function present)
-
-/-- Compiler coverage depends only on function/signature/instance metadata.
-Memory, table, and global content changes therefore preserve it. -/
-theorem compiled_functions_metadata {M : Type} {before after : runtime.store.Store M}
-    (code : CodeInterpretation) (identity : after.id = before.id)
-    (functions : after.funcs = before.funcs) (types : after.types = before.types)
-    (instances : after.instances = before.instances)
-    (compiled : Interp.CompiledFunctions code before) : Interp.CompiledFunctions code after := by
-  simpa only [Interp.CompiledFunctions, Interp.FunctionCompiled, Interp.FunctionTable,
-    decodeInstance, identity, functions, types, instances] using compiled
 
 end Exec.Store

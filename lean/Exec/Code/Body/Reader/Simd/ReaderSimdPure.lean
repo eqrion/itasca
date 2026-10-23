@@ -28,7 +28,7 @@ theorem simd_prefix_success {V : Type} (visitor : code.OpVisitor V)
 
 /-- Pure SIMD readers retain the exact supplied source prefix and callback. -/
 theorem reader_simd_pure_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.Operation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)

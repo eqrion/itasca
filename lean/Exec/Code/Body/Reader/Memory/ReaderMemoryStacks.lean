@@ -1,5 +1,4 @@
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
-import Itasca.Handler.EnvMemory
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca

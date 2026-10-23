@@ -1,42 +1,15 @@
 import Exec.Code.Body.Reader.Checking.ReaderTargetBounds
 import Exec.Code.Body.Reader.Checking.NonScopeTargetBounds
 import Exec.Code.Body.Reader.Replay.SingleCallbackProfileWasm2
-import Exec.Code.Body.Reader.Replay.SingleCallbackWasm1
 import Itasca.Wasm2.Trace.TableBytes
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 
-/-- Every accepted Wasm 1 step retains jump targets; no additional code-prefix,
-stack-layout, or completed publication certificate premise is needed. -/
-theorem reader_jump_targets_wasm1 {data env ctx bodyBt st}
-    (p : Wasm1.Pending data env ctx bodyBt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (held : JumpTableBounds before)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) : JumpTableBounds after := by
-  let opcode := data.val[p.start.val]'p.inbounds
-  by_cases opening : opcode = code.OP_BLOCK ∨ opcode = code.OP_LOOP ∨ opcode = code.OP_IF
-  · exact reader_enter_target_bounds_wasm1 p ops law before after out held opcode opening rfl accepted
-  by_cases ending : opcode = code.OP_END
-  · have call : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        st data env ctx code.OP_END before = .ok (.Ok (),out,after) := by simpa only [← ending] using accepted
-    exact reader_end_target_bounds_wasm1 p ops law before after out held ending call
-  by_cases table : opcode = code.OP_BR_TABLE
-  · have call : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        st data env ctx code.OP_BR_TABLE before = .ok (.Ok (),out,after) := by simpa only [← table] using accepted
-    exact reader_table_target_bounds_wasm1 ops law before after st out data env ctx held call
-  have blocked : opcode ≠ code.OP_BLOCK ∧ opcode ≠ code.OP_LOOP ∧ opcode ≠ code.OP_IF ∧
-      opcode ≠ code.OP_END ∧ opcode ≠ code.OP_BR_TABLE := by tauto
-  obtain ⟨action,ordinary,range,callback⟩ := reader_single_callback_wasm1
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx opcode before after out blocked accepted
-  exact compiler_non_scope_hook_target_bounds ops law before after out (.of_range action range ordinary) held callback
-
 /-- Every accepted complete-profile Wasm 2 reader step retains bounded jump
 targets, including SIMD, dead bodies, branches, references and streamed tables. -/
 theorem reader_jump_targets_wasm2 {data env localTypes index st}
-    (p : Wasm2.Pending data env localTypes index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 localTypes index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (held : JumpTableBounds before)

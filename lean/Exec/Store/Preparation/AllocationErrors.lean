@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.PrecommitError
-import Exec.Store.Invariant.NormalLoop
+import Exec.Store.Invariant.NormalResult
 import Exec.Store.Api.Define
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename

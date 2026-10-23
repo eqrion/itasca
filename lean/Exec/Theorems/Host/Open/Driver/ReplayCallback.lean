@@ -36,27 +36,6 @@ def replay {M : Type} (memory : runtime.platform.MemoryBuffer M) (before after :
     call_host token store _ _ _:=if store=before then .ok (status,token,after,values)
       else .ok (.Err .Trap,token,store,Slice.new _) }
 
-theorem replay_sound {M : Type} (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8)
-    (before after : runtime.store.Store M) (oldCode afterCode : Store.CodeInterpretation)
-    (status : core.result.Result Unit runtime.platform.HostError) (values : Slice runtime.Value)
-    (effect : ReturnedWorldEffect view (ExecutableInv view) oldCode before afterCode after)
-    (externs : before.externs.length≤after.externs.length) :
-    HostWorldSound (replay memory before after status values) view (ReplayInv view oldCode before) := by
-  classical
-  intro code store held token identity args defaults
-  by_cases same : store=before
-  · subst store
-    have agrees : Store.CodeAgreesOn before code afterCode := by
-      intro index inst found fn
-      exact (effect.agrees index inst found fn).trans (held.agrees index inst found fn).symm
-    have extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode after) := by
-      rw [Store.decodeStore_code_agrees view held.agrees]
-      exact effect.extension
-    simpa only [replay,if_pos rfl,ite_true] using WP.spec.ret
-      ⟨afterCode,agrees,⟨effect.invariant,effect.metadata,effect.agrees,externs⟩,extension,effect.invariant.source_typed⟩
-  · simpa only [replay,if_neg same] using WP.spec.ret
-      ⟨code,(by intro index inst found fn; rfl),held,Spec.extend_store_refl _ held.executable.well_formed,held.executable.source_typed⟩
-
 theorem replay_retained {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (before after : runtime.store.Store M)
     (status : core.result.Result Unit runtime.platform.HostError) (values : Slice runtime.Value)

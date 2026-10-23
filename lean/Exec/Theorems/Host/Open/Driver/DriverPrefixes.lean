@@ -33,25 +33,6 @@ theorem tick_accumulated {M F A : Type} (memory : runtime.platform.MemoryBuffer 
     obtain ⟨afterCode,more,fresh⟩ := post
     exact ⟨afterCode,effect.trans more,fresh⟩
 
-/-- All finite actual continuing prefixes retain checked world effects and
-source store typing. The remaining execution need not terminate. -/
-theorem continuing_guard {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (select : Selector)
-    {count : Nat} {first last : State M}
-    (trace : Interp.ContinuingTrace (tick memory floats allocator select) count first last)
-    (code : Store.CodeInterpretation) (guard : StateGuard memory view code first) :
-    ∃afterCode,ReentrantCallbacks.Effect view code first.store afterCode last.store ∧ StateGuard memory view afterCode last := by
-  induction trace generalizing code with
-  | nil state => exact ⟨code,.refl guard.1,guard⟩
-  | next step tail ih =>
-    have post := tick_guard memory floats allocator correct allocation view laws select code _ guard
-    rw [step,WP.spec_ok] at post
-    obtain ⟨middleCode,effect,fresh⟩ := post
-    obtain ⟨afterCode,more,final⟩ := ih middleCode fresh
-    exact ⟨afterCode,effect.trans more,final⟩
-
 /-- The synchronous loop is safe without any callback-normality premise.
 Every ordinary return has an exact finite trace and a checked cumulative effect. -/
 theorem run_safe {M F A : Type} (memory : runtime.platform.MemoryBuffer M)

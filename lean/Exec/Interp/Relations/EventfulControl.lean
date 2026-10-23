@@ -19,16 +19,6 @@ theorem ConcreteSim.eventful {codeLength beforePC afterPC beforePending afterPen
   · exact Or.inl ⟨same,rfl,decrease⟩
   · exact Or.inr reductions
 
-theorem EventfulConcreteSim.empty_iff {codeLength beforePC afterPC beforePending afterPending before after} :
-    EventfulConcreteSim codeLength beforePC afterPC beforePending afterPending before after [] ↔
-      ConcreteSim codeLength beforePC afterPC beforePending afterPending before after := by
-  constructor
-  · intro simulation
-    rcases simulation with ⟨same,_,decrease⟩ | reductions
-    · exact Or.inl ⟨same,decrease⟩
-    · exact Or.inr reductions
-  · exact ConcreteSim.eventful
-
 theorem EventfulConcreteSim.of_steps {codeLength beforePC afterPC beforePending afterPending before after events n}
     (positive : 0 < n) (steps : Spec.StepsHN n (Abs.decode before) events (Abs.decode after)) :
     EventfulConcreteSim codeLength beforePC afterPC beforePending afterPending before after events :=

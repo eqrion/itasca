@@ -17,7 +17,7 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (indexBound : frame.index.val < dispatched.env.func_type_indices.val.length)
     (typed : Profile.EntryTyped dispatched.profile dispatched.env dispatched.env.func_type_indices.val[frame.index.val] entry)
     (bounds : CodeEntry.Bounds dispatched.env) (environment : Profile.Environment dispatched.profile dispatched.env)
-    (limits : Profile.EnvironmentWithinLimits dispatched.profile dispatched.env)
+    (limits : Profile.EnvironmentWithinLimits dispatched.env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits dispatched.profile)
       dispatched.code dispatched.validated_end entry finish)
     (signaturesMatch : SignatureSequence before.signatures.val dispatched.env.types.val)

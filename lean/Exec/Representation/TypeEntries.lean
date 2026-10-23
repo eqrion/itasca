@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 

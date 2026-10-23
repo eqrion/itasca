@@ -70,17 +70,17 @@ theorem code.body_loop_loop.total_on {V : Type} (visitor : code.OpVisitor V)
 
 /-- The outer size guard and initialization preserve the reached-state loop
 contract. Initialization errors and oversized bodies return without callbacks. -/
-theorem code.validate_body_with_profile.total_on {V : Type} (visitor : code.OpVisitor V)
+theorem code.validate_body_with.total_on {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (inv : V → code.BodyState → Prop) (post : V → Prop)
     (v : V)
-    (initialization : code.initial_state env ctx typeIndex profile ⦃ result =>
+    (initialization : code.initial_state env typeIndex ⦃ result =>
       ∀ st, result = .Ok st → inv v st ⦄)
     (steps : ReachedBody.StepTotalOn visitor data env ctx typeIndex profile inv)
     (closed : ∀ st v, inv v st → st.core.ctrls.val = [] → st.core.pos.val = data.length → post v) :
-    code.validate_body_with_profile visitor data env ctx typeIndex profile v ⦃ out =>
+    code.validate_body_with visitor data env ctx typeIndex profile v ⦃ out =>
       out.1 = .Ok () → post out.2 ⦄ := by
-  unfold code.validate_body_with_profile
+  unfold code.validate_body_with
   dsimp only
   split
   · simp

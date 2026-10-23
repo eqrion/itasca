@@ -2,7 +2,6 @@ import Exec.Theorems.Composition.Uniform.UniformWorldHistory
 import Exec.Interp.Machines.Slice.SliceFinite
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- The local contract for quantitative progress is normality and a checked
 uniform source edge on each successful actual dispatch. -/
@@ -11,7 +10,7 @@ def UniformWorldStepTotal {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (expected : List valtype)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
-  ∀ machine : EventfulWorld emission allowed M P view expected, Inv machine.code machine.machine.store → 0<machine.machine.exec.frames.length →
+  ∀ machine : EventfulWorld M P view expected, Inv machine.code machine.machine.store → 0<machine.machine.exec.frames.length →
     runtime.interp.step memory hooks floats allocator machine.machine.exec machine.machine.store machine.machine.platform ⦃ out =>
       out.1=.Ok () → ∃events next, Inv next.code next.machine.store ∧ out=(.Ok (),next.machine.exec,next.machine.store,next.machine.platform) ∧
         UniformWorldTransition memory hooks floats allocator machine events next ⦄
@@ -22,7 +21,7 @@ def UniformWorldPrefix {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
-    (initial : EventfulWorld emission allowed M P view expected) (dispatches : Nat) (last : ExecutionState M P) : Prop :=
+    (initial : EventfulWorld M P view expected) (dispatches : Nat) (last : ExecutionState M P) : Prop :=
   ∃previous successes events,
     Spec.Iterations (UniformWorldTransition memory hooks floats allocator) successes initial events previous ∧
     ((successes=dispatches ∧ last=(previous.machine.exec,previous.machine.store,previous.machine.platform,.Ok ())) ∨
@@ -36,8 +35,8 @@ theorem uniform_world_continuing_history {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : UniformWorldStepTotal (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (dispatches : Nat) (initial : EventfulWorld emission allowed M P view expected)
+    (steps : UniformWorldStepTotal memory hooks floats allocator view expected Inv)
+    (dispatches : Nat) (initial : EventfulWorld M P view expected)
     (valid : Inv initial.code initial.machine.store) (last : ExecutionState M P)
     (trace : ContinuingTrace (executionBody memory hooks floats allocator) dispatches
       (initial.machine.exec,initial.machine.store,initial.machine.platform,.Ok ()) last) :
@@ -82,8 +81,8 @@ theorem uniform_world_finite_progress {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : UniformWorldStepTotal (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (dispatches : Nat) (initial : EventfulWorld emission allowed M P view expected)
+    (steps : UniformWorldStepTotal memory hooks floats allocator view expected Inv)
+    (dispatches : Nat) (initial : EventfulWorld M P view expected)
     (valid : Inv initial.code initial.machine.store) (last : ExecutionState M P)
     (trace : ContinuingTrace (executionBody memory hooks floats allocator) dispatches
       (initial.machine.exec,initial.machine.store,initial.machine.platform,.Ok ()) last) :

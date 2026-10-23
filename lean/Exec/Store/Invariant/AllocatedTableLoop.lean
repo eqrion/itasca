@@ -23,7 +23,7 @@ theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffe
     (owners : ∀ address ∈ inst.tables.val, address.store = store.id)
     (count : inst.tables.length = start.val)
     (matching : TableTypeMap store (seed.module.module.env.table_types.val.take start.val) inst.tables.val) :
-    runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator store (.Ok ()) start inst
+    runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator store (.Ok ()) start inst
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with tables := after.tables, table_elements := after.table_elements} ∧ next = {seed with tables := next.tables} ∧
         StagedPrefix before after ∧ objectCount after ≤ Usize.max ∧ AllocationShape view after ∧
@@ -32,7 +32,7 @@ theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffe
         (status = .Ok () → next.tables.length = seed.module.module.env.table_types.val.length) ∧
         (status = .Ok () → TableTypeMap after seed.module.module.env.table_types.val next.tables.val) ⦄ := by
   have capacity := seed.module.module.env.table_types.property
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop5
+  unfold runtime.store.instantiate.Store.prepare_instance_loop5
   apply loop.spec_decr_nat (fun state => seed.module.module.env.table_types.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with tables := state.1.tables, table_elements := state.1.table_elements} ∧
       state.2.2.2 = {seed with tables := state.2.2.2.tables} ∧ StagedPrefix before state.1 ∧
@@ -47,7 +47,7 @@ theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffe
     have source : currentInst.module = seed.module := by
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop5.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.table_types, Itasca.module.Env.impl.table_types, source, bind_ok]
     split

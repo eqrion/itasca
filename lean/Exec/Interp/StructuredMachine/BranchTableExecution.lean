@@ -6,8 +6,8 @@ open Aeneas Aeneas.Std
 
 /-- The actual table jump consumes its selector, then reuses the checked branch
 fragment inside the same active and suspended machine. -/
-theorem step_brTable_execution {emission : FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem step_brTable_execution
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -22,16 +22,16 @@ theorem step_brTable_execution {emission : FunctionEmission} {allowed : instr �
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.BR_TABLE depths fallback::after} compiled C targets next output)
     (values : f.vals=front++[Abs.integerVal .I32 value]) (bound : value<2^32)
     (table : Code.BranchTableCode (Code.CompilerTables.ofFunction compiled) C.LOCALS targets
       (front.map Code.valueType) compiled.code.val depths fallback raw.pc.val next selector start len)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.BR_TABLE depths fallback::after}::rest,[]⟩ expected raw.pc.val false) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧
-      Advance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store out.2.1 expected compiled.code.length raw.pc.val false
+      Advance view code store out.2.1 expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=.BR_TABLE depths fallback::after}::rest,[]⟩ ⦄ := by
   have transition : Abs.BrTable.Transition
       ⟨Store.decodeStore view code store,ambient,{f with code:=.BR_TABLE depths fallback::after}::rest,[]⟩
@@ -48,7 +48,7 @@ theorem step_brTable_execution {emission : FunctionEmission} {allowed : instr �
       {f with code:=.BR (Abs.BrTable.select depths fallback value)::after,vals:=front} rest expected raw.pc.val false machine
       (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index target last hf program (.ready retained)
       represented ⟨rfl,rfl,rfl,rfl⟩ (by rw [effect]) (by rw [effect]; exact .refl _ _) typed
-      (transition.next_supported language machine.core)
+      (transition.next_supported machine.core)
   · exact ConcreteSim.of_source _ _ _ _ _ (transition.correct machine.typed).2
   · exact fun _ owned => transition.next_owned owned
   · exact fun _ bounded => transition.next_bound bounded

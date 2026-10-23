@@ -25,8 +25,8 @@ private theorem lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
   scalar_tac
 
 /-- A fixed operand effect extends the independently typed prefix in the active frame. -/
-theorem Pending.fixed {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (v : V)
+theorem Pending.fixed {data env profile locals index st}
+    (p : Pending data env profile locals index st) {V : Type} (v : V)
     (inputs : List types.ValueType) (output : Option types.ValueType) (op : instr)
     (hw : wf_instr op)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
@@ -35,7 +35,7 @@ theorem Pending.fixed {data env locals index st}
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)
     (hook : V → code.OpIterState → Unit → Result (core.result.Result Unit error.VisitError × V))
     (hhook : ∀ s a, ∃ reply v', hook v s a = .ok (reply, v'))
-    (hencoded : At data p.start (.plain op) pos) :
+    (hencoded : At data p.start (.plain op) pos) (hwasm2 : profile ≠ .Wasm1) :
     CoreVisitor.run (Simd.readFixed {st.core with pos := pos} inputs output) hook v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
@@ -64,12 +64,12 @@ theorem Pending.fixed {data env locals index st}
       (by simpa [hpoly] using typed) hw (ht _ hC hmatches)
     apply p.append_result C outer spine header base {st with core := s} op
       p.current.ctrl.polymorphic_base after hw
-      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv hdecl
+      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv (fun hp => absurd hp hwasm2) hdecl
     · simpa [hc, decoded] using ctrls
     · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
 
-theorem Pending.simd_pure {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_pure {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.Operation)
     (hmap : Simd.pureMeaning subopcode.val = some op) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -78,12 +78,12 @@ theorem Pending.simd_pure {data env locals index st}
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   simp only [Simd.subStep, Simd.pure_table, hmap, Option.map_some, bind_ok]
   rw [Simd.signature_fixed]
-  apply p.fixed v op.signature.popTypes (some op.signature.output) op.instruction op.wellFormed (op.declared _)
+  apply p.fixed (hwasm2 := hwasm2) v op.signature.popTypes (some op.signature.output) op.instruction op.wellFormed (op.declared _)
     (fun C hC _ => by simpa [Simd.Signature.inputs_pop, Simd.Signature.outputs_pop] using op.typed C hC)
     pos hsize _ (fun s _ => hv.on_simd v s subopcode) hencoded
 
-theorem Pending.simd_lane {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_lane {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.LaneOperation)
     (hmap : Simd.laneMeaning subopcode.val = some op) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -105,7 +105,7 @@ theorem Pending.simd_lane {data env locals index st}
   | Ok lane =>
     obtain ⟨hbound, hbytes⟩ := hlane lane rfl
     rw [hstate, Simd.carryFixed.run]
-    apply p.fixed v (Simd.laneInputs op.runtime.1 op.replace)
+    apply p.fixed (hwasm2 := hwasm2) v (Simd.laneInputs op.runtime.1 op.replace)
       (Simd.laneOutput op.runtime.1 op.replace) (op.instruction (.mk_uN lane.val))
       (op.wellFormed _ (lane_wf lane)) (op.declared _ _)
       (fun C hC _ => ?_) decoded.pos hsize _ (fun s _ => hv.on_simd_lane v s subopcode lane)
@@ -115,8 +115,8 @@ theorem Pending.simd_lane {data env locals index st}
         (by simpa [Simd.LaneOperation.runtime, proj_uN_0] using hbound)
 
 
-theorem Pending.simd_const {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_const {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
@@ -135,15 +135,15 @@ theorem Pending.simd_const {data env locals index st}
   | Ok pair =>
     obtain ⟨low, high⟩ := pair
     rw [hstate, Simd.carryFixed.run]
-    apply p.fixed v [] (some .V128) (Simd.vectorConstant low high)
+    apply p.fixed (hwasm2 := hwasm2) v [] (some .V128) (Simd.vectorConstant low high)
       (Simd.vectorConstant_wf low high) (Simd.vectorConstant_declared _ low high)
       (fun C hC _ => Simd.vectorConstant_typed C low high hC)
       decoded.pos hsize _ (fun s _ => hv.on_simd_const v s low high)
       (hencoded low high decoded.pos (hbits low high rfl))
 
 
-theorem Pending.simd_memory {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_memory {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hfull : op.laneCount = 0) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -173,7 +173,7 @@ theorem Pending.simd_memory {data env locals index st}
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok _ =>
       rw [hstate, Simd.carryFixed.run]
-      apply p.fixed v (Simd.fullMemoryInputs op.store) (Simd.memoryOutput op.store)
+      apply p.fixed (hwasm2 := hwasm2) v (Simd.fullMemoryInputs op.store) (Simd.memoryOutput op.store)
         (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
         (op.wellFormed _ _ (MemoryMeaning.memArg_wf arg) (by constructor; decide)) (op.declared _ _ _)
         (fun C hC hm => ?_) decoded.pos hsize _ (fun s _ => hv.on_simd_memory v s subopcode arg)
@@ -182,8 +182,8 @@ theorem Pending.simd_memory {data env locals index st}
         op.typed_runtime C env ⟨locals, p.ft.results⟩ hC hm arg 0#u8 hc.1
           (by simpa [Simd.MemoryOperation.runtime] using hc.2) (by simp [hfull])
 
-theorem Pending.simd_memory_lane {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_memory_lane {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hlaned : op.laneCount ≠ 0) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -220,7 +220,7 @@ theorem Pending.simd_memory_lane {data env locals index st}
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok _ =>
         rw [hstate, Simd.carryFixed.run]
-        apply p.fixed v [.V128, .I32] (Simd.memoryOutput op.store)
+        apply p.fixed (hwasm2 := hwasm2) v [.V128, .I32] (Simd.memoryOutput op.store)
           (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
           (op.wellFormed _ _ (MemoryMeaning.memArg_wf arg) (lane_wf lane)) (op.declared _ _ _)
           (fun C hC hm => ?_) laned.pos hsize _ (fun s _ => hv.on_simd_memory_lane v s subopcode arg lane)
@@ -232,8 +232,8 @@ theorem Pending.simd_memory_lane {data env locals index st}
 
 
 /-- A shuffle's scanner proves the lane limits before its fixed binary stack effect. -/
-theorem Pending.simd_shuffle {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_shuffle {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (pos : Usize) (hpos : pos.val ≤ data.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
@@ -264,17 +264,18 @@ theorem Pending.simd_shuffle {data env locals index st}
     apply p.append_result C outer spine header base {st with core := s} (Simd.shuffle low high)
       p.current.ctrl.polymorphic_base after (Simd.shuffle_wf low high)
       (hencoded low high s.pos hbits) (by simpa [hpoly] using htyped) ?_ ?_ hvals
-      (Simd.shuffle_declared _ low high)
+      (fun hp => absurd hp hwasm2) (Simd.shuffle_declared _ low high)
     · simpa [hc, decoded] using ctrls
     · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
 
 /-- The complete SIMD prefix dispatcher preserves the independently encoded typed body. -/
-theorem Pending.simd {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.simd {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = 0xFD#u8) :
     code.step_simd visitor st.core data env v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
+  have hwasm2 := p.not_wasm1 hbyte (by decide)
   rw [code.step_simd.eq_runs]
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   simp only [Simd.prefixStep, hr, bind_ok]
@@ -290,37 +291,37 @@ theorem Pending.simd {data env locals index st} (p : Pending data env locals ind
       exact At.of_immediate p.inbounds hbyte p.pos (.simd subopcode he hi) (hprefix.append hbytes)
     by_cases hconstant : subopcode = 12#u32
     · subst subopcode
-      apply p.simd_const visitor v hv next hsize
+      apply p.simd_const (hwasm2 := hwasm2) visitor v hv next hsize
       intro low high ending hbits
       obtain ⟨lower, upper, hlo, hhi, hspan⟩ := hbits
       exact henc _ _ _ (.constant low high hlo hhi) hspan
     by_cases hshuffle : subopcode = 13#u32
     · subst subopcode
-      apply p.simd_shuffle visitor v hv next hb hsize
+      apply p.simd_shuffle (hwasm2 := hwasm2) visitor v hv next hb hsize
       intro low high ending hbits
       obtain ⟨lower, upper, hlo, hhi, hspan⟩ := hbits
       exact henc _ _ _ (.shuffle low high hlo hhi) hspan
     cases hp : Simd.pureMeaning subopcode.val with
     | some op =>
-      exact p.simd_pure visitor v hv subopcode op hp next hsize
+      exact p.simd_pure (hwasm2 := hwasm2) visitor v hv subopcode op hp next hsize
         (henc _ _ _ (.pure subopcode op hp) (Wasm1.BytesAt.nil data next hb))
     | none =>
       cases hl : Simd.laneMeaning subopcode.val with
       | some op =>
-        apply p.simd_lane visitor v hv subopcode op hl next hsize
+        apply p.simd_lane (hwasm2 := hwasm2) visitor v hv subopcode op hl next hsize
         intro lane ending hspan
         exact henc _ _ _ (.lane subopcode op lane hl) hspan
       | none =>
         cases hm : Simd.memoryMeaning subopcode.val with
         | some op =>
           by_cases hfull : op.laneCount = 0
-          · apply p.simd_memory visitor v hv subopcode op hm hfull next hsize
+          · apply p.simd_memory (hwasm2 := hwasm2) visitor v hv subopcode op hm hfull next hsize
             intro arg middle ending halign hoffset
             obtain ⟨alignment, ha1, ha2, ha3, ha4⟩ := halign
             obtain ⟨offset, ho1, ho2, ho3, ho4⟩ := hoffset
             exact henc _ _ _ (.memory subopcode op arg hm hfull ha4 ho4)
               ((show Wasm1.BytesAt data next alignment middle from ⟨ha1, ha2, ha3⟩).append ⟨ho1, ho2, ho3⟩)
-          · apply p.simd_memory_lane visitor v hv subopcode op hm hfull next hsize
+          · apply p.simd_memory_lane (hwasm2 := hwasm2) visitor v hv subopcode op hm hfull next hsize
             intro arg middle ending lane final halign hoffset hspan
             obtain ⟨alignment, ha1, ha2, ha3, ha4⟩ := halign
             obtain ⟨offset, ho1, ho2, ho3, ho4⟩ := hoffset

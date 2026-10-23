@@ -9,7 +9,6 @@ structure ObservationDemand where
   operands : Nat
   controls : Nat
   locals : Nat
-  deriving DecidableEq
 
 def eventDemand : Event → ObservationDemand
   | .functionStart ctx _ _ _ => ⟨0,0,ctx.locals.length⟩
@@ -38,13 +37,6 @@ theorem observationDemand.member {log : List Observation} {observation : Observa
     · obtain ⟨values,controls,locals⟩ := ih member
       exact ⟨values.trans (Nat.le_max_right _ _),controls.trans (Nat.le_max_right _ _),
         locals.trans (Nat.le_max_right _ _)⟩
-
-theorem observationDemand.append (first rest : List Observation) :
-    observationDemand (first ++ rest) = (observationDemand first).join (observationDemand rest) := by
-  induction first with
-  | nil => simp [observationDemand,ObservationDemand.join]
-  | cons head tail ih =>
-    simp [observationDemand,ih,ObservationDemand.join,Nat.max_assoc]
 
 /-- Any source observation retained in the final reference log has bounded
 operand and control vectors. An already recorded prefix can be discarded. -/

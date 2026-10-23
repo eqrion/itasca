@@ -30,20 +30,4 @@ theorem reader_return_stack_wasm2 (st out : code.BodyState) (env : module.Env) (
     rw [mono] at effect
     exact return_stack_suffix values known effect
 
-theorem reader_return_stack_wasm1 (st out : code.OpIterState) (ctx : code.Context)
-    (outer segment : List code.StackType)
-    (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
-    (known : ConcreteStack st.vals.val) (mono : Control.polymorphic st = false)
-    (accepted : code.read_return st ctx = .ok (.Ok (), out)) :
-    ∃ front, Sequence.stackTypes st.vals.val = front ++ ctx.results.val.map Translate.valueType := by
-  obtain ⟨⟨result, middle⟩, popped, _, _, rest, _, _, transfer⟩ := WP.spec_imp_exists
-    (code.pop_types.realizes st outer segment (alloc.vec.Vec.deref ctx.results) values base)
-  cases result with
-  | Err error => simp [code.read_return, popped, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
-  | Ok unit =>
-    dsimp only at transfer
-    rw [mono] at transfer
-    apply return_stack_suffix (rest := rest) values known
-    simpa [alloc.vec.Vec.deref] using transfer
 end Exec.Code

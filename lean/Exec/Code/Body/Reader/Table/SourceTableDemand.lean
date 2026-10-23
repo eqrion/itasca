@@ -21,13 +21,13 @@ theorem source_table_loop_demand
     (before after final : List Observation) (st : code.OpIterState) (out : code.BodyState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (shape : Control.Shape st) (count : U32)
-    (reference : code.branch_table_with_loop recorder st data env before count none 0#u32 =
+    (reference : code.branch_table_with_loop recorder st data env profile before count none .Empty 0#u32 =
       .ok (.Ok (),out,after))
     (tail : code.body_loop_loop recorder data env ctx index profile after out = .ok (.Ok (),final)) :
     out.core.vals.length ≤ (observationDemand final).operands ∧
     out.core.ctrls.length ≤ (observationDemand final).controls := by
   obtain ⟨observations,recorded,trace⟩ := Wasm2.CallbackTrace.table_loop_records recorder id recorder_records
-    ⟨st⟩ data env shape (by simp) count 0#u32 none (by simp) before (.Ok ()) out after reference
+    ⟨st⟩ data env profile shape (by simp) count 0#u32 none .Empty (by simp) before (.Ok ()) out after reference
   obtain ⟨suffix,retained⟩ := source_body_recorded_prefix after final out data env ctx index profile (.Ok ()) tail
   obtain ⟨prior,action,reply,events⟩ := table_suffix_final_observation trace rfl
   apply observationDemand.recorded_op (prior := before ++ prior) (suffix := suffix) (action := action) (reply := reply)

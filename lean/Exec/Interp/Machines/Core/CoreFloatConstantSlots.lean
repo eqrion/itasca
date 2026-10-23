@@ -1,4 +1,6 @@
-import Exec.Interp.Relations.Const
+import Exec.Interp.Relations.Execute
+import Exec.Interp.Relations.Regions
+import Exec.Abs.Sim.Instruction
 namespace Exec.Interp.FloatConstant
 open Aeneas Aeneas.Std SpecExt
 

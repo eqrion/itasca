@@ -10,8 +10,7 @@ import Itasca.Spec.DeclaredReferences
 `ModuleContext` and `SegmentContext` describe the module-level typing context a code entry is
 checked in. `bodyContext` is the context a function body is typed in, `Typed` is the declarative
 certificate for one code entry, and `typed_func_ok` and `Typed.func_ok` turn it into the generated
-`Func_ok` in the full module context. `body_context` identifies the extracted frame with
-`bodyContext`.
+`Func_ok` in the full module context.
 -/
 
 open Aeneas Aeneas.Std
@@ -148,19 +147,5 @@ theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
   typed_func_ok h.type_lt h.typed C hc hsegments
-
-/-- The body frame of the extracted context is `bodyContext` when its locals and results are the
-vectors that the code-entry validator builds. -/
-theorem body_context {env : module.Env} {ctx : code.Context} {bt : code.BlockType}
-    {params declared results : List types.ValueType}
-    (hl : ctx.locals.val = params ++ declared) (hr : ctx.results.val = results)
-    (hbt : results = Control.results bt) :
-    Wasm1.Frames.enter (EnvTranslation.context env ctx) .body bt =
-      bodyContext env params declared results := by
-  cases env
-  cases ctx
-  simp_all [Wasm1.Frames.enter, Wasm1.Frames.Form.label, Control.labelContext,
-    EnvTranslation.context, bodyContext, Control.resultTypes]
-  rfl
 
 end Itasca.CodeEntry

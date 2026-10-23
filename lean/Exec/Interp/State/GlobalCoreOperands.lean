@@ -1,4 +1,4 @@
-import Exec.Interp.State.GlobalCorePoint
+import Exec.Interp.State.GlobalCoreEmission
 import Exec.Abs.Core.Globals
 
 namespace Exec.Interp

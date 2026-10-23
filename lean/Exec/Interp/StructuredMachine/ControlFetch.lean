@@ -3,12 +3,11 @@ import Exec.Interp.StructuredMachine.BranchPoint
 import Exec.Interp.StructuredMachine.ControlInversion
 import Exec.Interp.Relations.PrefixDispatch
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 theorem loop_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [OrdinaryHeads (emission compiled)]
     (bt : blocktype) (body after : List instr)
-    (point : FramePoint emission s raw {f with code := .LOOP bt body::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := .LOOP bt body::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
   rcases codeRel_loop_inv point.code.current with ⟨target,forward,fetch,tail⟩ | branch
   · exact ⟨_,fetch,.jump target⟩
@@ -17,7 +16,7 @@ theorem loop_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [Ordi
 
 theorem if_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [OrdinaryHeads (emission compiled)]
     (bt : blocktype) (yes no after : List instr)
-    (point : FramePoint emission s raw {f with code := .IFELSE bt yes no::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := .IFELSE bt yes no::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
   rcases codeRel_if_inv point.code.current with ⟨target,forward,fetch,tail⟩ | branch
   · exact ⟨_,fetch,.jump target⟩
@@ -34,7 +33,7 @@ theorem transfer_prefix (dst src count : U32) : PrefixInstruction (Code.transfer
 
 theorem branch_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [OrdinaryHeads (emission compiled)]
     (depth : Nat) (after : List instr)
-    (point : FramePoint emission s raw {f with code := .BR (.mk_uN depth)::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := .BR (.mk_uN depth)::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
   rcases codeRel_branch_inv point.code.current with ⟨target,forward,fetch,tail⟩ | branch
   · exact ⟨_,fetch,.jump target⟩
@@ -47,7 +46,7 @@ theorem branch_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [Or
 
 theorem branchIf_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [OrdinaryHeads (emission compiled)]
     (depth : Nat) (after : List instr)
-    (point : FramePoint emission s raw {f with code := .BR_IF (.mk_uN depth)::after} compiled C targets next output) :
+    (point : FramePoint s raw {f with code := .BR_IF (.mk_uN depth)::after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction ∧ PrefixInstruction instruction := by
   rcases codeRel_branchIf_inv point.code.current with ⟨target,forward,fetch,tail⟩ | branch
   · exact ⟨_,fetch,.jump target⟩

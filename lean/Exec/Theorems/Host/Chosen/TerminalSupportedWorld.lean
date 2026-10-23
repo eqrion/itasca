@@ -5,14 +5,14 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 /-- Root host resumption needs the checked supported store and source typing,
 without requiring unrelated public instantiation ledgers in its continuation. -/
 theorem terminal_supported_execution {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (certified : CertifiedSupportedStore Executable.emission Abs.ExecutableInstr view code store)
+    (store : runtime.store.Store M) (certified : CertifiedSupportedStore view code store)
     (sourceTyped : Store_ok (Store.decodeStore view code store))
     (exec : runtime.interp.Execution) (ambient : frame) (ambientWf : wf_frame ambient)
     (expected : List valtype) (values : List val)
     (empty : exec.frames.val=[]) (typed : ResultsTyped (Store.decodeStore view code store) expected values)
     (owned : Abs.Ownership.ValuesOwned (Store.ownershipBounds store) values)
     (words : ValuesAt exec.slots.val 0 values) :
-    StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+    StructuredMachine.Execution
       view code store exec ⟨Store.decodeStore view code store,ambient,[],values⟩ expected 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,[],values⟩ := by
   have sourceWf : wf_store (Store.decodeStore view code store) := by cases sourceTyped; assumption

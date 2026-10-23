@@ -8,10 +8,11 @@ open Aeneas Aeneas.Std Itasca
 single final unreachable transformation. This describes the source reader,
 without any compiler-success or target callback assumption. -/
 theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (count index : U32) (arity : Option Usize)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count index : U32)
+    (arity : Option Usize) (first : signature.ResultType)
     (st : code.OpIterState) (out : code.BodyState) (before after : V)
     (bounded : index.val ≤ count.val)
-    (reference : code.branch_table_with_loop source st data env before count arity index =
+    (reference : code.branch_table_with_loop source st data env profile before count arity first index =
       .ok (.Ok (),out,after)) :
     ∃ last, last.vals = st.vals ∧ last.ctrls = st.ctrls ∧ code.mark_unreachable last = .ok out.core := by
   let related := fun (_ : Nat) (state : code.OpIterState) (left right : V) =>
@@ -30,7 +31,7 @@ theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
     obtain ⟨values,controls,_,_⟩ := actual depth ts rfl
     exact ⟨values.trans held.1,controls.trans held.2.1,held.2.2⟩
   obtain ⟨targetAfter,_,retained⟩ := table_loop_reader_accepted_replay source source related readRelated post
-    data env count readMoves
+    data env profile count readMoves
     (by
       intro i state left right depth ts next _ held called
       obtain ⟨values,controls,rfl⟩ := held
@@ -41,21 +42,22 @@ theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
       obtain ⟨values,controls,rfl⟩ := held
       rw [called,WP.spec_ok]
       exact ⟨rfl,state.core,values,controls,mark⟩)
-    index bounded arity st out before after before ⟨rfl,rfl,rfl⟩ reference
+    index bounded arity first st out before after before ⟨rfl,rfl,rfl⟩ reference
   exact retained
 
 /-- Source frame preservation and the independently decoded final cursor fix
 the final marked state uniquely, including unreachable operand truncation. -/
 theorem source_table_loop_marked {V : Type} (source : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (count index : U32) (arity : Option Usize)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count index : U32)
+    (arity : Option Usize) (first : signature.ResultType)
     (st : code.OpIterState) (out : code.BodyState) (before after : V)
     (bounded : index.val ≤ count.val) (shape : Control.Shape st)
-    (reference : code.branch_table_with_loop source st data env before count arity index =
+    (reference : code.branch_table_with_loop source st data env profile before count arity first index =
       .ok (.Ok (),out,after))
     (state marked : code.OpIterState) (values : state.vals = st.vals) (controls : state.ctrls = st.ctrls)
     (position : state.pos = out.core.pos) (mark : code.mark_unreachable state = .ok marked) :
     marked = out.core := by
-  obtain ⟨last,lastValues,lastControls,lastMark⟩ := source_table_loop_frame source data env count index arity
+  obtain ⟨last,lastValues,lastControls,lastMark⟩ := source_table_loop_frame source data env profile count index arity first
     st out before after bounded reference
   have lastShape : Control.Shape last :=
     ⟨by simpa only [lastControls] using shape.ordered,

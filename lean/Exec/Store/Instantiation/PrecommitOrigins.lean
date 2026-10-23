@@ -10,7 +10,7 @@ def PrecommitLinkEvidence {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (imports : Slice runtime.Extern) (error : runtime.ExecError) : Prop :=
   ∀ link, error = .Link link →
     (link = .MissingImport ∧ imports.length ≠ module.module.env.imports.length) ∨
-    ∃ inst, runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
+    ∃ inst, runtime.store.instantiate.Store.prepare_instance_loop2 memory before imports
       (.Ok ()) 0#usize (emptyInstance module) = .ok (before, .Err (.Link link), inst)
 
 /-- A completed preflight state is structurally valid after charging its already
@@ -42,18 +42,10 @@ theorem PrecommitOrigins.resource {M : Type} {memory : runtime.platform.MemoryBu
   · intro link impossible; cases impossible
   · intro trap impossible; cases impossible
 
-theorem PrecommitOrigins.wrong_store {M : Type} {memory : runtime.platform.MemoryBuffer M}
-    {view : M → Slice U8} {before staged : runtime.store.Store M} {module imports} :
-    PrecommitOrigins memory view before staged module imports .WrongStore := by
-  constructor
-  · intro trap impossible; cases impossible
-  · intro link impossible; cases impossible
-  · intro trap impossible; cases impossible
-
 theorem PrecommitOrigins.linked {M : Type} {memory : runtime.platform.MemoryBuffer M}
     {view : M → Slice U8} {before staged : runtime.store.Store M} {module imports error}
     (inst : runtime.store.ModuleInst)
-    (linked : runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
+    (linked : runtime.store.instantiate.Store.prepare_instance_loop2 memory before imports
       (.Ok ()) 0#usize (emptyInstance module) = .ok (before, .Err error, inst))
     (cause : PrecommitError .Wasm2 error) :
     PrecommitOrigins memory view before staged module imports error := by

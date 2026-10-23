@@ -11,11 +11,11 @@ set_option maxRecDepth 4096
 /-- Actual Wasm 2 label collection and the complete table callback preserve
 instruction checks and recorded exit-slot bounds from independently typed labels. -/
 theorem reader_table_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (final : code.BodyState)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
@@ -26,11 +26,11 @@ theorem reader_table_open_instructions_wasm2 {jumpTables : List U32} {data env s
     (fixups : FixupBudget before.frames.val before.function.code.val.length)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env before = .ok (.Ok (),final,after)) :
+      st data env .Wasm2 before = .ok (.Ok (),final,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨count,first,selector,popped,depths,fallback,view,last,readState,budget,buffer,
       countDecoded,popCall,bufferEq,labelsDecoded,defaultDecoded,countEq,marked,callback⟩ :=
-    compiler_read_br_table_wasm2 ops law before after st final data env accepted
+    compiler_read_br_table ops law before after st final data env _ accepted
   have popFacts := code.pop_with_type.total {st.core with pos := first} .I32
     (show Control.Shape {st.core with pos := first} from ⟨p.opened.shape.core.ordered,p.opened.shape.core.bounded⟩)
   rw [popCall,WP.spec_ok] at popFacts

@@ -1,16 +1,16 @@
-import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPointWithTables
+import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Body.Reader.Common.ReaderTypedSelectEmission
-import Exec.Code.Body.Reader.Table.ReaderStructuredDeadWithTables
+import Exec.Code.Body.Reader.Table.ReaderStructuredDead
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
-theorem StructuredReaderCompilerStateWithTablesWasm2.typed_select {jumpTables : List U32} {A : Type}
+theorem StructuredReaderCompilerStateWasm2.typed_select {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {types functions returns locals data env ctx index ft st parents current savedParents savedCurrent}
     (C : context) {emit}
     (embedding : ∀ {input instruction code output}, TypedSelectEmission C input instruction code output → emit input instruction code output)
-    (state : StructuredReaderCompilerStateWithTablesWasm2 jumpTables emit initial before types functions returns locals data env ctx.locals index ft st parents current savedParents savedCurrent)
+    (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial before types functions returns locals data env ctx.locals index ft st parents current savedParents savedCurrent)
     (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -18,7 +18,7 @@ theorem StructuredReaderCompilerStateWithTablesWasm2.typed_select {jumpTables : 
     (byte : data.val[st.core.pos.val]'inbounds = 28#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index .Wasm2 28#u8 before = .ok (.Ok (),out,after)) :
-    StructuredReaderCompilerPointWithTablesWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
+    StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
   cases live : before.reachable with
   | true =>
@@ -40,7 +40,7 @@ theorem StructuredReaderCompilerStateWithTablesWasm2.typed_select {jumpTables : 
     obtain ⟨ty,position,callback,read,controls,cursor,values,effect,post⟩ := reader_typed_select_wasm2 p
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
     change runtime.compiler.lower.FunctionCompiler.op ops before out.core 28#u16 0#u32 0#u32 0#u128 = _ at callback
-    obtain ⟨compiled,dead⟩ := post.structured_skip_with_tables ops law state.compiled live
+    obtain ⟨compiled,dead⟩ := post.structured_skip ops law state.compiled live
       (compiler_core_ordinary_result ops law before after out.core (.select true) (.Ok ()) callback)
       (compiler_core_sources ops law before after out.core (.select true) callback)
       (compiler_core_cursor ops law before after out.core (.select true) callback)

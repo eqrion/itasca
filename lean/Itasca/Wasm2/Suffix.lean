@@ -151,14 +151,4 @@ theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
     intro res hs
     simpa [hts, hn, Wasm2.Suffix] using hs
 
-/-- A signature that is independently compatible with the operand suffix is accepted. -/
-theorem code.check_suffix.complete (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (ts : List types.ValueType)
-    (hshape : Control.Shape st) (hts : Wasm2.resolve env view = some ts)
-    (hfits : Wasm2.Suffix st ts) :
-    code.check_suffix st env view = .ok (.Ok ()) := by
-  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.check_suffix.spec st env view hshape)
-  rw [hs.mpr ⟨ts, hts, hfits⟩] at hr
-  exact hr
-
 end Itasca

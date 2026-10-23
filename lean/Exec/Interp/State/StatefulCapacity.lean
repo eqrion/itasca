@@ -1,4 +1,4 @@
-import Exec.Interp.State.StatefulPoint
+import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Abs.Stateful.Transition
 import Exec.Code.Local.Capacity.OperandBounds
 namespace Exec.Interp.Stateful
@@ -18,7 +18,7 @@ theorem read_valid_capacity (compiled : runtime.bytecode.CompiledFunction)
     first.val<compiled.slot_count.val := by
   cases op <;> simp only [Abs.Stateful.Instruction.readOnly,Bool.false_eq_true] at readOnly
   all_goals
-    simp only [Code.statefulInstruction,runtime.bytecode.CompiledFunction.instruction_valid,
+    simp only [Code.statefulInstruction,runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,
       runtime.bytecode.Instr.scalar,runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,
       runtime.bytecode.Instr.simd,bind_ok] at checked
   all_goals first

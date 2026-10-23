@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Checking.ReaderTypedSelectInstructionPrefix
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Checking.DeadInstructionPrefix
 
 namespace Exec.Code
@@ -8,11 +8,11 @@ open Aeneas Aeneas.Std Itasca
 /-- Typed select preserves both invariants for either source reachability bit;
 only live source code emits the selected-width instruction. -/
 theorem reader_typed_select_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (C : context) (contextLocals : C.LOCALS = locals)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)

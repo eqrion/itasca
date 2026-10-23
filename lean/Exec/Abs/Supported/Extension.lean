@@ -1,32 +1,13 @@
-import Exec.Abs.Cumulative.Extension
-import Exec.Abs.Supported.Language
+import Exec.Abs.Core.Extension
+import Exec.Abs.Supported.CoreStuck
 namespace Exec.Abs.Supported
 open Exec.Abs.Core
 open SpecExt Exec.Spec
 
-theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (covered : CoreHead op)
-    (typed : CoreTyped ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩)
-    (equation : instruction s ambient f rest op after = .next next) : Extend_store s next.store := by
-  have unchanged (same : next.store = s) : Extend_store s next.store := by
-    rw [same]
-    exact extend_store_refl s typed.typed.store
-  cases covered with
-  | cumulative allowed => exact Cumulative.instruction_extends s ambient f rest op after next allowed typed equation
-  | external impossible => rw [impossible] at equation; contradiction
-  | block bt body =>
-    exact unchanged (astep_store (s := ⟨s,ambient,{f with code := .BLOCK bt body :: after} :: rest,[]⟩) equation)
-  | loop bt body =>
-    exact unchanged (astep_store (s := ⟨s,ambient,{f with code := .LOOP bt body :: after} :: rest,[]⟩) equation)
-  | ifelse bt yes no =>
-    exact unchanged (astep_store (s := ⟨s,ambient,{f with code := .IFELSE bt yes no :: after} :: rest,[]⟩) equation)
-
 /-- The mutable machine preserves issued source objects by the generated store
 extension relation at every successful transition. -/
 
-theorem step_extends (s next : AState) (typed : CoreTyped s) (covered : SupportedState allowed s)
-    (heads : ∀ {op}, allowed op → CoreHead op)
+theorem step_extends (s next : AState) (typed : CoreTyped s) (covered : SupportedState s)
     (equation : step s = .next next) : Extend_store s.store next.store := by
   rcases s with ⟨source,ambient,frames,results⟩
   cases frames with
@@ -40,7 +21,10 @@ theorem step_extends (s next : AState) (typed : CoreTyped s) (covered : Supporte
     | mk address resultTypes locals module labels code values =>
       let frame : AFrame := ⟨address,resultTypes,locals,module,labels,code,values⟩
       cases code with
-      | cons op after => exact instruction_extends source ambient frame rest op after next (heads (body op (by simp))) typed equation
+      | cons op after =>
+        rcases BinaryInstr.core_head (body op (by simp)) with head | stuck
+        · exact Core.instruction_extends source ambient frame rest op after next head typed equation
+        · exact nomatch (stuck _ _ _ _ _).symm.trans equation
       | nil =>
         have same := astep_store (s := ⟨source,ambient,frame :: rest,[]⟩) equation
         rw [same]

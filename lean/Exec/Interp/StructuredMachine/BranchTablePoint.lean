@@ -4,10 +4,10 @@ namespace Exec.Interp.StructuredMachine
 open Aeneas.Std
 
 theorem branchTable_point_head {emit types functions returns locals code jumpTables labels stack pc next output depths fallback after}
-    (point : Code.StructuredCodeWithTables.Point emit types functions returns locals code jumpTables labels stack
+    (point : Code.StructuredCode.Point emit types functions returns locals code jumpTables labels stack
       (.BR_TABLE depths fallback::after) pc next output) :
     (∃ target : U32, pc<target.val ∧ code[pc]?=some (.Jump target) ∧
-      Code.StructuredCodeWithTables.Point emit types functions returns locals code jumpTables labels stack
+      Code.StructuredCode.Point emit types functions returns locals code jumpTables labels stack
         (.BR_TABLE depths fallback::after) target.val next output) ∨
     (∃ front selector start len, stack=front++[.I32] ∧
       Code.BranchTableLayout jumpTables locals labels front code depths fallback pc next selector start len) := by
@@ -26,7 +26,7 @@ theorem BranchTableEntry.structured_indexed {locals labels stack code depth entr
     (emission : List valtype → instr → List Bytecode → List valtype → Prop)
     (types functions : List functype) (returns : List valtype) (jumpTables : List U32)
     (after : List instr) (output : List valtype) :
-    StructuredCodeWithTables emission types functions returns locals code jumpTables labels stack
+    StructuredCode emission types functions returns locals code jumpTables labels stack
       (.BR depth :: after) entry.val next output := by
   obtain ⟨label,dst,src,count,fragmentEnd,lookup,live,layout,fragment,remaining,scope⟩ := entryCode
   cases depth with

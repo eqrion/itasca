@@ -1,4 +1,5 @@
-import Exec.Store.Invariant.CompiledDefinitions
+import Exec.Store.Invariant.FunctionSignatures
+import Exec.Code.Local.Relations.Common.Function
 
 namespace Exec.Store
 open Aeneas Aeneas.Std
@@ -33,21 +34,5 @@ theorem InstantiationCode.function_table {M : Type} {before ready : runtime.stor
     Interp.FunctionTable ready inst (inst.module.module.env.func_types.val.map decodeFuncType) := by
   obtain ⟨staged, count, rfl, _, _, table, _⟩ := code
   exact table
-
-/-- The compiler's syntactic module certificate supplies fresh function bodies;
-existing bodies keep their old certificate. Charging instance items changes no
-field involved in code interpretation or function lookup. -/
-theorem InstantiationCode.compiled {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
-    (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
-    (shape : Shape view before) (oldCompiled : Interp.CompiledFunctions oldCode before)
-    (found : ready.instances.val[before.instances.len.val]? = some inst)
-    (sources : List funccode) (certificate : Code.ModuleFunctions inst.module sources)
-    {tables memories} (cache : Cache inst.module.module.env tables memories) :
-    Interp.CompiledFunctions (installCode oldCode before.instances.len.val sources) ready := by
-  obtain ⟨staged, count, rfl, retained, entries, table, signatures⟩ := code
-  have compiled := compiled_functions_publish before staged oldCode shape retained oldCompiled inst sources
-    found certificate cache entries table signatures
-  exact compiled
 
 end Exec.Store

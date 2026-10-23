@@ -19,7 +19,7 @@ theorem source_wasm_chosen_pending {M F A : Type} (memory : runtime.platform.Mem
     (choices : SourceOperationChoices) (admissible : choices.wasm.Admissible)
     (vectorChoice : choices.wasm.vector=Spec.firstVectorChoice) (occurrence : Nat)
     (signature : Itasca.types.FuncType)
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+    (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
     (native : State M) (source : Spec.OpenExecution.State SourceControl)
     (guard : SourceStateGuard memory allocator view world.code native source
       (2+dispatchMeasure world.machine.pending U32.max world.machine.pc world.machine.source))

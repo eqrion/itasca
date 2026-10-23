@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 /-- The actual compiler callback and exact reader post determine an emitted
 stateful instruction and the complete append to its function-local pair table. -/
 theorem StatefulReaderPost.emission {data env locals index st}
-    {p : Pending data env locals index st} {out : code.OpIterState} {op : Abs.Stateful.Instruction}
+    {p : Pending data env .Wasm2 locals index st} {out : code.OpIterState} {op : Abs.Stateful.Instruction}
     (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (C : context) (a b : U32)

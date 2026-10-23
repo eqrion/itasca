@@ -9,18 +9,6 @@ def ChosenEventfulInvocationError (choices : SourceChoices) (occurrence : Nat) (
   | .Exhausted _ | .Terminated => ∃ body count,ChosenStepsN choices occurrence count initial events ⟨⟨store,ambient⟩,body⟩
   | _ => False
 
-theorem ChosenEventfulInvocationError.erases {choices : SourceChoices} (admissible : choices.Admissible)
-    {occurrence initial events store ambient error}
-    (outcome : ChosenEventfulInvocationError choices occurrence initial events store ambient error) :
-    EventfulInvocationError initial events store ambient error := by
-  cases error <;> simp only [ChosenEventfulInvocationError,EventfulInvocationError] at outcome ⊢
-  · obtain ⟨count,steps⟩ := outcome
-    exact (steps.erases admissible).erase
-  · obtain ⟨body,count,steps⟩ := outcome
-    exact ⟨body,(steps.erases admissible).erase⟩
-  · obtain ⟨body,count,steps⟩ := outcome
-    exact ⟨body,(steps.erases admissible).erase⟩
-
 theorem ChosenEventfulInvocationError.prepend {choices : SourceChoices} {occurrence count : Nat}
     {initial middle : config} {events rest : List HostEvent} {store : _root_.store} {ambient : frame} {error : runtime.ExecError}
     (outcome : ChosenEventfulInvocationError choices (occurrence+count) middle rest store ambient error)

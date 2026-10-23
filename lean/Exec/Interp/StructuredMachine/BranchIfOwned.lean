@@ -9,15 +9,17 @@ import Exec.Interp.Relations.SourceClosure
 import Exec.Interp.StructuredMachine.Point
 import Exec.Interp.StructuredMachine.SuspendedPoint
 import Exec.Abs.Core.Typing
-import Exec.Interp.Control.StructuredBranch
-import Exec.Interp.Control.BranchIfInversion
+import Exec.Interp.Relations.ControlPoint
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Control.BranchNoCopy
 import Exec.Interp.Control.BranchConditionStep
 import Exec.Interp.Relations.TypedOperands
 
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
-theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem step_branchIf_owned_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -25,7 +27,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (depth : Nat) (after : List instr) (branchAllowed : allowed (.BR (.mk_uN depth)))
+    (depth : Nat) (after : List instr) (branchAllowed : Abs.BinaryInstr (.BR (.mk_uN depth)))
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
@@ -33,7 +35,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .BR_IF (.mk_uN depth) :: after }
+    (point : FramePoint s raw { f with code := .BR_IF (.mk_uN depth) :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
@@ -42,10 +44,10 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
+        ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
-        SyntaxClosure allowed { f with code := .BR_IF (.mk_uN depth) :: after } g ∧
+        SyntaxClosure { f with code := .BR_IF (.mk_uN depth) :: after } g ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false pending
           ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩
           ⟨s, ambient, g :: rest, []⟩ ∧
@@ -56,7 +58,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
         FrameBoundClosure {f with code := .BR_IF (.mk_uN depth) :: after} g ⦄ := by
   rcases codeRel_branchIf_inv point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .BR_IF (.mk_uN depth) :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -150,7 +152,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
       · have pcResume : pc = resume := UScalar.eq_of_val_eq (hpc.trans resumePc.symm)
         subst pc
         simp only [if_pos zero] at exactState
-        have nextPoint : FramePoint emission s { raw with pc := resume } { f with code := after, vals := values }
+        have nextPoint : FramePoint s { raw with pc := resume } { f with code := after, vals := values }
             compiled C targets next output :=
           ⟨point.bindings,point.locals,labelsAfter, ⟨by simpa only [valueTypes] using continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
         refine ⟨success, sameStore, samePlatform, resume, { f with code := after, vals := values }, targets,
@@ -188,14 +190,14 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
         fetched bitsBound position typed' slots')
       intro out effect
       obtain ⟨success, sameStore, samePlatform, represented, ⟨pc, hpc, exactState⟩, simulation⟩ := effect
-      have branchPoint : FramePoint emission s { raw with pc := pc }
+      have branchPoint : FramePoint s { raw with pc := pc }
           { f with code := .BR (.mk_uN depth) :: after, vals := values } compiled C targets next output := by
         refine ⟨point.bindings,point.locals,labelsAfter, ⟨?_, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
-        apply Code.StructuredCodeWithTables.branch staticLookup live (by simpa only [point.locals] using layout')
+        apply Code.StructuredCode.branch staticLookup live (by simpa only [point.locals] using layout')
         · simpa only [hpc, List.length_singleton] using branchFragment
         · exact continuation.pc_le_next
         · exact continuation.next_le_length
-      have resumePoint : FramePoint emission s { raw with pc := resume }
+      have resumePoint : FramePoint s { raw with pc := resume }
           { f with code := after, vals := values } compiled C targets next output :=
         ⟨point.bindings,point.locals,labelsAfter, ⟨by simpa only [valueTypes] using continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
       refine ⟨success, sameStore, samePlatform, (if bits = 0 then resume else pc),
@@ -213,43 +215,5 @@ theorem step_branchIf_owned_uniform {M P F A : Type} {emission : FunctionEmissio
       · by_cases zero : bits = 0
         · simpa only [if_pos zero] using FrameBoundClosure.tail f (.BR_IF (.mk_uN depth)) after f.locals values
         · simpa only [if_neg zero] using FrameBoundClosure.replace f (.BR_IF (.mk_uN depth)) (.BR (.mk_uN depth)) after f.locals values (by simp)
-
-theorem step_branchIf_owned {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (depth : Nat) (after : List instr) (branchAllowed : allowed (.BR (.mk_uN depth)))
-    (last : index.val + 1 = exec.frames.length)
-    (hf : exec.frames.val[index.val]? = some raw)
-    (hi : store.instances.val[raw.instance.val]? = some inst)
-    (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩)
-    (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .BR_IF (.mk_uN depth) :: after }
-      compiled C targets next output) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame) (targets' : List Code.LabelTarget) (next' : Nat)
-        (output' : List valtype) (pending : Bool),
-        { out.2.1 with slots := exec.slots } =
-          { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
-        FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
-        Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
-        FrameMetadata f g ∧
-        SyntaxClosure allowed { f with code := .BR_IF (.mk_uN depth) :: after } g ∧
-        ConcreteSim compiled.code.length raw.pc.val pc.val false pending
-          ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩
-          ⟨s, ambient, g :: rest, []⟩ ∧
-        FrameOwnershipClosure {f with code := .BR_IF (.mk_uN depth) :: after} g ∧
-        FrameBoundClosure {f with code := .BR_IF (.mk_uN depth) :: after} g ⦄ := by
-  apply WP.spec_mono (step_branchIf_owned_uniform memory hooks floats allocator exec store platform index raw inst compiled C targets next output s ambient f rest depth after branchAllowed last hf hi hc pcBound typed slots point)
-  rintro out ⟨success,storeSame,platformSame,pc,g,targets',next',output',pending,unchanged,slots,point,typed,metadata,closure,simulation,uniform,ownership,bounded⟩
-  exact ⟨success,storeSame,platformSame,pc,g,targets',next',output',pending,unchanged,slots,point,typed,metadata,closure,simulation,ownership,bounded⟩
 
 end Exec.Interp.StructuredMachine

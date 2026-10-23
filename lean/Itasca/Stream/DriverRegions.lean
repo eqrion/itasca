@@ -7,6 +7,7 @@ import Itasca.Module.Layout
 import Itasca.Module.Sections.DataMaterialize
 import Itasca.Module.Sections.TailComplete
 import Itasca.Module.Code.EntryOfEnv
+import Itasca.Contracts
 
 /-!
 # Region certificates for streaming completeness
@@ -77,18 +78,6 @@ namespace Itasca.StreamCompleteRegions
 
 open ModuleBinary ModuleElaboration
 
-/-- `stream.find_code_region` and the slice operations on `data` produce the environment, code and
-tail regions of `source`. -/
-def Split (data : Slice U8) (source : stream.SliceSource) : Prop :=
-  ∃ codePos tailPos,
-    stream.find_code_region data = .ok (codePos, tailPos) ∧
-    core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-      data ⟨0#usize, codePos⟩ = .ok source.env ∧
-    core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-      data ⟨codePos, tailPos⟩ = .ok source.code ∧
-    core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-      data ⟨tailPos, Slice.len data⟩ = .ok source.tail
-
 /-- Region certificates are derived from independent encoding and typing. They give the results
 of the shared environment and tail validators and the encoded, typed code entries. Body checking
 is later obtained from the typed, bounded encodings by the streaming driver. -/
@@ -102,7 +91,7 @@ structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
   ready : ∃ decls, ModuleEnv.Ready raw 10 decls env
   entry_bounds : CodeEntry.Bounds env
   profile : Itasca.Profile.Environment validationProfile env
-  signature_limits : Itasca.Profile.EnvironmentWithinLimits validationProfile env
+  signature_limits : Itasca.Profile.EnvironmentWithinLimits env
   code : ∃ entries, StreamFraming.HeaderAt source.code env entries ∧
     At (Rep (Itasca.Profile.CodeEncodingWithinLimits validationProfile)) source.code entries raw.codes (Slice.len source.code)
   typed : ModuleCode.EntriesTyped (profile := validationProfile) env 0 raw.codes
@@ -123,7 +112,7 @@ private theorem slice_spec (data : Slice U8) (first last : Usize)
 elaborated, typed module. No assumption of parser or body success is made. -/
 theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
-    (hsignatures : ModuleSignaturesWithinLimits raw profile)
+    (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
     (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
     ∃ source env tail, Certificate data raw source env tail profile := by

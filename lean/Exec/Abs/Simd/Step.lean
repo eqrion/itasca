@@ -59,20 +59,6 @@ theorem Step.next_extension {before next} (step : Step before (.next next))
   | constant => exact extend_store_refl _ typed.typed.store
   | memory signature transition => exact (memory_transition_preservation signature typed transition).2
 
-theorem Step.next_ambient {before next} (step : Step before (.next next)) :
-    next.ambient = before.ambient := by
-  cases step with
-  | pure signature transition => cases transition; rfl
-  | constant => rfl
-  | memory signature transition => cases transition; rfl
-
-theorem Step.next_functions {before next} (step : Step before (.next next)) :
-    next.store.FUNCS = before.store.FUNCS := by
-  cases step with
-  | pure signature transition => cases transition; rfl
-  | constant => rfl
-  | memory signature transition => cases transition with | next _ _ _ _ _ _ _ change _ => exact change.functions
-
 theorem Step.trap_simulation {before} (step : Step before .trap) (typed : CoreTyped before) :
     ∃ n, 0 < n ∧ StepsHN n (decode before) [] ⟨⟨before.store,before.ambient⟩,[.TRAP]⟩ := by
   cases step with

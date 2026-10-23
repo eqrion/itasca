@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Eventful.EventfulSourceResources
 import Exec.Theorems.Api.InvocationResourcesAdequate
+import Exec.Contracts
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Source storage demand at a selected point, including defined and host
 callees and suspended callers. No native success or trace appears here. -/
@@ -18,16 +18,9 @@ def ChosenWorldResources (choices : SourceChoices) (occurrence : Nat) (initial :
   ∀ count events source,ChosenStepsN choices occurrence count initial events (Abs.decode source) →
     SourceWorldResources valueLimit frameLimit source
 
-/-- Explicitly rule out callback-reported stack exhaustion. Normal host traps
-and invalid dynamically checked results remain source trap outcomes. -/
-def NoHostStackOverflow {M P : Type} (hooks : runtime.platform.Platform P M)
-    (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
-  ∀ code store,Inv code store → ∀ p identity args defaults nextPlatform after returned,
-    hooks.call_host p store identity args defaults≠.ok (.Err .StackOverflow,nextPlatform,after,returned)
-
 theorem EventfulSourceResourceCause.excludes_boundary {M P A : Type} {hooks : runtime.platform.Platform P M}
     {allocator : runtime.platform.Alloc A} {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    {machine : EventfulMachine emission allowed M P view code expected} {out : EventfulDispatchResult M P} {error : runtime.ExecError}
+    {machine : EventfulMachine M P view code expected} {out : EventfulDispatchResult M P} {error : runtime.ExecError}
     {valueLimit frameLimit : Nat}
     (resources : SourceWorldResources valueLimit frameLimit machine.source)
     (valueFloor : valueLimit≤machine.store.limits.max_values.val) (frameFloor : frameLimit≤machine.store.limits.max_frames.val)

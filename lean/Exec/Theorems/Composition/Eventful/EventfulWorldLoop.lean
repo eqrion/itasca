@@ -1,20 +1,19 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldStep
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 def WorldLoopInvariant {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected) (state : ExecutionState M P) : Prop :=
+    (initial : EventfulWorld M P view expected) (state : ExecutionState M P) : Prop :=
   match state.2.2.2 with
-  | .Ok _ => ∃ current : EventfulWorld emission allowed M P view expected,
+  | .Ok _ => ∃ current : EventfulWorld M P view expected,
       Inv current.code current.machine.store ∧ ∃ count events,
       Spec.Iterations (WorldRecordedTransition memory hooks floats allocator) count initial events current ∧
       state.1=current.machine.exec ∧ state.2.1=current.machine.store ∧ state.2.2.1=current.machine.platform
-  | .Err error => ∃ current : EventfulWorld emission allowed M P view expected,
+  | .Err error => ∃ current : EventfulWorld M P view expected,
       Inv current.code current.machine.store ∧ ∃ count events,
       Spec.Iterations (WorldRecordedTransition memory hooks floats allocator) count initial events current ∧
       runtime.interp.step memory hooks floats allocator current.machine.exec current.machine.store current.machine.platform=
@@ -26,8 +25,8 @@ theorem world_loop_invariant_step {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected)
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (invariant : WorldLoopInvariant memory hooks floats allocator Inv initial (exec,store,platform,.Ok ()))
     (active : 0<exec.frames.length) :
@@ -59,8 +58,8 @@ theorem world_loop_stops {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store) :
     runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => ∃state,WorldLoopInvariant memory hooks floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
@@ -72,10 +71,10 @@ theorem world_loop_stops {M P F A : Type}
 
 def WorldLoopResult {M P : Type} {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected) (result : ExecutionResult M P) : Prop :=
+    (initial : EventfulWorld M P view expected) (result : ExecutionResult M P) : Prop :=
   let finalStore := result.2.2.2.2.2.1
   let status := result.2.2.2.2.2.2.2
-  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore emission allowed view finalCode finalStore ∧
+  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore view finalCode finalStore ∧
     FrameStorePrefix initial.machine.store finalStore ∧ Store.CodeAgreesOn initial.machine.store initial.code finalCode ∧
     Extend_store (Store.decodeStore view initial.code initial.machine.store) (Store.decodeStore view finalCode finalStore) ∧
     (status=.Ok () → ∃values events,
@@ -91,7 +90,7 @@ theorem world_loop_finished {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected) (state : ExecutionState M P)
+    (initial : EventfulWorld M P view expected) (state : ExecutionState M P)
     (invariant : WorldLoopInvariant memory hooks floats allocator Inv initial state)
     (stopped : ¬ActiveExecution state) : WorldLoopResult Inv initial (finishExecution state) := by
   rcases state with ⟨exec,store,platform,status⟩
@@ -139,8 +138,8 @@ theorem world_loop_results {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store) :
     runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => WorldLoopResult Inv initial result ∧
         ∃state,WorldLoopInvariant memory hooks floats allocator Inv initial state ∧ ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by

@@ -144,16 +144,6 @@ theorem code.require_memory.spec (env : module.Env) :
   all_goals simp_all
   exact List.length_pos_iff.mpr (by assumption)
 
-/-- `code.require_single_result` succeeds exactly when there is at most one result. -/
-theorem code.require_single_result.spec (ts : Slice types.ValueType) :
-    code.require_single_result ts ⦃ r =>
-      match r with
-      | .Ok _ => ts.val.length ≤ 1
-      | .Err e => e = .TooManyResults ∧ 1 < ts.val.length ⦄ := by
-  unfold code.require_single_result
-  simp only [limits.MAX_RESULTS]
-  step*
-
 /-- `code.read_memarg` decodes the alignment and offset together. A malformed offset leaves the
 state unchanged, even after a successfully decoded alignment. -/
 theorem code.read_memarg.spec (st : code.OpIterState) (data : Slice U8) :

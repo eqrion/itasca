@@ -7,11 +7,11 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 trace, runtime result check, fresh certificate and raw namespace preservation
 are supplied by the host dispatch lemmas; no host behavior is postulated here. -/
 theorem eventful_host_return {M P F A : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    (before : EventfulMachine emission allowed M P view code expected)
+    (before : EventfulMachine M P view code expected)
     (afterStore : runtime.store.Store M) (afterExec : runtime.interp.Execution) (afterPlatform : P)
     (ambient : frame) (caller : Abs.AFrame) (rest : List Abs.AFrame)
     (front consumed returned : List val) (continuation : List instr) (pc : Nat)
@@ -22,15 +22,15 @@ theorem eventful_host_return {M P F A : Type}
     (retained : FrameStorePrefix before.store afterStore)
     (externs : before.store.externs.length≤afterStore.externs.length)
     (extension : Extend_store (Store.decodeStore view code before.store) (Store.decodeStore view code afterStore))
-    (fresh : CertifiedSupportedStore emission allowed view code afterStore)
+    (fresh : CertifiedSupportedStore view code afterStore)
     (checked : Abs.Ownership.ValuesOwned (Store.ownershipBounds afterStore) returned)
-    (resumed : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code afterStore afterExec
+    (resumed : StructuredMachine.Execution view code afterStore afterExec
       ⟨Store.decodeStore view code afterStore,ambient,{caller with code:=continuation,vals:=front++returned}::rest,[]⟩ expected pc false)
     (events : List HostEvent) (count : Nat) (positive : 0<count)
     (trace : Spec.StepsHN count (Abs.decode before.source) events
       (Abs.decode ⟨Store.decodeStore view code afterStore,ambient,
         {caller with code:=continuation,vals:=front++returned}::rest,[]⟩)) :
-    ∃ after : EventfulMachine emission allowed M P view code expected,
+    ∃ after : EventfulMachine M P view code expected,
       after.exec=afterExec ∧ after.store=afterStore ∧ after.platform=afterPlatform ∧
       after.source=⟨Store.decodeStore view code afterStore,ambient,
         {caller with code:=continuation,vals:=front++returned}::rest,[]⟩ ∧
@@ -39,7 +39,7 @@ theorem eventful_host_return {M P F A : Type}
       ⟨Store.decodeStore view code before.store,ambient,caller::rest,[]⟩ := by
     simpa only [source] using before.owned.values
   have owned := host_return_stateful_owned (continuation:=continuation) retained externs fresh.shape oldOwned split checked
-  let after : EventfulMachine emission allowed M P view code expected :=
+  let after : EventfulMachine M P view code expected :=
     ⟨afterStore,afterExec,afterPlatform,_,pc,false,resumed,fresh,owned⟩
   refine ⟨after,rfl,rfl,rfl,rfl,actual,EventfulConcreteSim.of_steps positive trace,extension,retained,?_⟩
   change ambient=before.source.ambient

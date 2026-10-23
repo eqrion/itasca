@@ -16,39 +16,6 @@ theorem copyWords_length (words : List U64) (dst src n : Nat) :
   | zero => rfl
   | succ n ih => simp only [copyWords, ih, List.length_set]
 
-/-- Downward transfers observe the original source words and preserve every
-slot outside the destination interval, including when the ranges overlap. -/
-theorem copyWords_downward (words : List U64) (dst src n : Nat)
-    (order : dst ≤ src) (source : src + n ≤ words.length) :
-    (∀ j, j < n → (copyWords words dst src n)[dst + j]? = words[src + j]?) ∧
-    (∀ j, j < dst ∨ dst + n ≤ j → (copyWords words dst src n)[j]? = words[j]?) := by
-  induction n generalizing words dst src with
-  | zero => simp [copyWords]
-  | succ n ih =>
-    have hs : src < words.length := by omega
-    have hd : dst < words.length := by omega
-    have hnext := ih (words.set dst words[src]!) (dst + 1) (src + 1)
-      (by omega) (by simp only [List.length_set]; omega)
-    simp only [copyWords]
-    constructor
-    · intro j hj
-      cases j with
-      | zero =>
-        have hset : (words.set dst words[src]!)[dst]? = words[src]? := by simp [hd, hs]
-        simpa using (hnext.2 dst (Or.inl (by omega))).trans hset
-      | succ j =>
-        have hjn : j < n := by omega
-        have he : dst + (j + 1) = dst + 1 + j := by omega
-        rw [he, hnext.1 j hjn]
-        have hne : src + 1 + j ≠ dst := by omega
-        have hne' : dst ≠ src + 1 + j := Ne.symm hne
-        simp only [List.getElem?_set, hne', if_false]
-        congr 1 <;> omega
-    · intro j hj
-      rw [hnext.2 j (by omega)]
-      have hne : j ≠ dst := by omega
-      simp [List.getElem?_set, hne]
-
 @[step] theorem copy_loop_effect (words : Slice U64) (dst src n i : Usize)
     (hs : src.val + n.val ≤ words.length)
     (hd : dst.val + n.val ≤ words.length)

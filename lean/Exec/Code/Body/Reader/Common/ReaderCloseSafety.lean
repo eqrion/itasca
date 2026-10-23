@@ -6,11 +6,11 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
-theorem StructuredCompilerPrefixWithTables.close_reader_total {jumpTables : List U32} {A}
+theorem StructuredCompilerPrefix.close_reader_total {jumpTables : List U32} {A}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial compiler types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current raw position)
     (bounded : position ≤ limits.MAX_MODULE_BYTES.val)
     (state : code.BodyState) (env : module.Env) (isElse : Bool)
     (shape : Control.Shape state.core)

@@ -98,17 +98,6 @@ theorem integer_remu_relation (ty : Inn) (a b : Nat)
     · simpa [Forall, size, valtype_Inn, sizenn, numtype_Inn, valtype_numtype] using hw
     · simpa [Forall] using hn
 
-/-- Source guards make division by zero unambiguously trapping, for both signs. -/
-theorem division_zero_only (width : Nat) (sign : sx) (a : uN) (result : Option iN)
-    (h : fun_idiv_ width sign a (.mk_uN 0) result) : result = none := by
-  cases h <;> simp_all [proj_uN_0]
-
-/-- Source guards make remainder by zero unambiguously trapping, for both signs. -/
-theorem remainder_zero_only (width : Nat) (sign : sx) (a : uN) (result : Option iN)
-    (h : fun_irem_ width sign a (.mk_uN 0) result) : result = none := by
-  cases h <;> simp_all [proj_uN_0]
-
-
 /-- A zero divisor yields the empty result list that triggers the trap rule. -/
 theorem integer_divu_zero_relation (ty : Inn) (a : Nat) :
     fun_binop_ (numtype_Inn ty) (.mk_binop__0 ty (.DIV .U))

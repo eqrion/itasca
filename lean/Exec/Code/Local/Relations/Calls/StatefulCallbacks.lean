@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.StatefulOpcode
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 

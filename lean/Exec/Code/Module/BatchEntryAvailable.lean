@@ -15,7 +15,7 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
     (indexBound : index.val < batch.env.func_type_indices.val.length)
     (typed : Profile.EntryTyped batch.profile batch.env batch.env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds batch.env) (environment : Profile.Environment batch.profile batch.env)
-    (limits : Profile.EnvironmentWithinLimits batch.profile batch.env)
+    (limits : Profile.EnvironmentWithinLimits batch.env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits batch.profile) batch.code batch.validated_end entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)

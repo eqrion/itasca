@@ -106,21 +106,6 @@ inductive Immediate : U32 → instr → List U8 → Prop where
       FloatBits.Encoding 8 lower low.val → FloatBits.Encoding 8 upper high.val →
       Immediate 13#u32 (Simd.shuffle low high) (lower ++ upper)
 
-private theorem memoryArg_wf (arg : code.MemArg) : wf_memarg (MemoryMeaning.memArg arg) := by
-  constructor <;> constructor <;> scalar_tac
-
-/-- Every SIMD instruction spelled by `Immediate` is well formed. -/
-theorem Immediate.wellFormed {opcode instruction bytes} (h : Immediate opcode instruction bytes) :
-    wf_instr instruction := by
-  cases h with
-  | pure _ op _ => exact op.wellFormed
-  | lane _ op lane _ => exact op.wellFormed _ (by constructor; scalar_tac)
-  | memory _ op arg _ _ _ _ => exact op.wellFormed _ _ (memoryArg_wf arg) (by constructor; decide)
-  | memoryLane _ op arg lane _ _ _ _ =>
-      exact op.wellFormed _ _ (memoryArg_wf arg) (by constructor; scalar_tac)
-  | constant low high _ _ => exact vectorConstant_wf low high
-  | shuffle low high _ _ => exact shuffle_wf low high
-
 end Itasca.Wasm2.Simd
 
 open Aeneas Aeneas.Std

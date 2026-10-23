@@ -2,11 +2,6 @@ import Exec.Code.Local.Callbacks.Common.ObserveFrame
 namespace Exec.Code
 open Aeneas Aeneas.Std
 
-theorem ObserveFrame.trans {A : Type} {a b c : runtime.compiler.FunctionCompiler A}
-    (ab : ObserveFrame a b) (bc : ObserveFrame b c) : ObserveFrame a c := by
-  unfold ObserveFrame at *
-  rw [bc, ab]
-
 theorem ObserveFrame.code {A : Type} {a b : runtime.compiler.FunctionCompiler A}
     (frame : ObserveFrame a b) : b.function.code = a.function.code := by rw [frame]
 
@@ -24,16 +19,6 @@ validator state, preserving code, labels, immutable metadata and deadness. -/
       ObserveFrame compiler out.2 ⦄ := by
   unfold runtime.compiler.lower.FunctionCompiler.op
   rw [if_neg (by simp [dead])]
-  exact compiler_observe_frame ops law compiler state
-
-@[step] theorem callback_br_dead {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (depth : U32) (types : Itasca.signature.ResultType)
-    (dead : compiler.reachable = false) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth types ⦃ out =>
-      ObserveFrame compiler out.2 ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-  simp only [dead, Bool.false_eq_true, ite_false]
   exact compiler_observe_frame ops law compiler state
 
 @[step] theorem callback_return_dead {A : Type} (ops : runtime.platform.Alloc A)

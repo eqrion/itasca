@@ -1,4 +1,4 @@
-import Exec.Store.Instantiation.InstantiateAtTailClassified
+import Exec.Store.Instantiation.PrepareInstanceClassified
 import Exec.Store.Instantiation.InstantiateRecording
 import Exec.Store.Instantiation.PreparedRunBounds
 namespace Exec.Store
@@ -34,11 +34,17 @@ theorem instantiate_recorded_linked_bounded_decomposition {M P F A : Type}
   have actualValid : Itasca.ModuleEnv.Valid module.module.env module.profile := by
     rw [certificates.2.1]
     exact valid
-  have decomposition := instantiate_at_tail_classified_decomposition memory hooks floats allocator law view laws
-    before module imports platform shape accounted cache actualValid dataValid certificates.2.2.2 handles (fun out => .ok (out,([] : List SpecExt.HostEvent)))
-    (fun identity ready platform => recordedInstantiateTail memory hooks floats allocator identity ready platform []) (recordedInstantiateInner memory hooks floats allocator before module imports platform false []) rfl
-  rcases decomposition with ⟨error,staged,returned,retained,_,_⟩ | ⟨ready, inst, readyShape, found, source, initializers, types, counts, code, ⟨trace⟩, tail⟩
-  · exact Or.inl ⟨error,staged,returned,retained⟩
-  · exact Or.inr ⟨ready, inst, readyShape, found, source, initializers, types, counts, code,
-      trace.toPreparedRun.compiled_segment_bounds laws law shape accounted bounded bytes profile limits accepted, ⟨trace⟩, tail⟩
+  rcases prepare_instance_classified memory hooks floats allocator law view laws before module imports
+      platform shape accounted cache actualValid dataValid certificates.2.2.2 handles _ rfl with
+    ⟨error, staged, prepared, retained, _, _⟩ |
+      ⟨staged, items, charged, ready, inst, charge, rfl, readyShape, found, source, initializers, types, counts,
+        code, ⟨trace⟩, prepared⟩
+  · refine Or.inl ⟨error, staged, ?_, retained⟩
+    simp [recordedInstantiateInner, prepared, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, core.convert.FromSame.from]
+  · refine Or.inr ⟨_, inst, readyShape, found, source, initializers, types, counts, code,
+      trace.toPreparedRun.compiled_segment_bounds laws law shape accounted bounded bytes profile limits accepted,
+      ⟨trace⟩, ?_⟩
+    simp only [recordedInstantiateInner, prepared, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
+      uncurry_apply_pair, charge]
 end Exec.Store

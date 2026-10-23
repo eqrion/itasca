@@ -1,10 +1,9 @@
 import Exec.Theorems.Composition.Supported.ChosenSupportedOutcome
 import Exec.Interp.StructuredMachine.SimdChosenExecution
-import Exec.Interp.StructuredMachine.SimdProjection
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 theorem step_simd_supported_chosen_execution {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M P F A : Type}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
@@ -20,15 +19,15 @@ theorem step_simd_supported_chosen_execution {choices : Spec.SourceChoices} (adm
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view interpretation store) raw
+    (point : StructuredMachine.FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
     (simd : Abs.SimdInstr source)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view interpretation store exec
+    (machine : StructuredMachine.Execution view interpretation store exec
       ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ expected raw.pc.val false)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax interpretation store)
     (bounds : Store.SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      ChosenSupportedStepOutcome choices occurrence emission allowed allocator hooks view interpretation exec store platform expected compiled.code.length raw.pc.val false
+      ChosenSupportedStepOutcome choices occurrence allocator hooks view interpretation exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ out ⦄ := by
   apply WP.spec_mono (StructuredMachine.Simd.step_execution_chosen admissible vector occurrence memory hooks floats allocator view interpretation memoryLaws floatLaws
     exec store platform raw index inst compiled C targets next output ambient f rest source after expected last hf hi hc program slots point simd

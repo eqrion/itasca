@@ -37,7 +37,6 @@ inductive MemoryOperation where
   | store64Lane
   | load32Zero
   | load64Zero
-  deriving DecidableEq
 
 /-- The natural alignment exponent of a memory operation. -/
 def MemoryOperation.naturalAlign : MemoryOperation → Nat

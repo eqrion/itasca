@@ -11,12 +11,6 @@ theorem SegmentAddressSpace.function_table {M : Type} {before after : runtime.st
     (table : Interp.FunctionTable before inst types) : Interp.FunctionTable after inst types := by
   simpa only [Interp.FunctionTable, metadata.identity, metadata.functions, metadata.signatures] using table
 
-theorem SegmentAddressSpace.compiled {M : Type} {before after : runtime.store.Store M}
-    (metadata : SegmentAddressSpace before after) (code : CodeInterpretation)
-    (compiled : Interp.CompiledFunctions code before) : Interp.CompiledFunctions code after := by
-  simpa only [Interp.CompiledFunctions, Interp.FunctionCompiled, Interp.FunctionTable,
-    decodeInstance, metadata.identity, metadata.functions, metadata.signatures, metadata.instances] using compiled
-
 /-- Source start validation and the constructed instance function table resolve
 the start function to an owned actual function with no parameters or results. -/
 theorem start_function_resolves {M : Type} {store : runtime.store.Store M}

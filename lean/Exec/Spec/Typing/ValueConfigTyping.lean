@@ -43,30 +43,4 @@ theorem values_instrs_ok {s : store} {context : _root_.context}
       [] (type::types) [type] first rest storeWf contextWf
       (by simpa [Forall] using headWf) tailWf
 
-theorem values_config_ok {s : store} {frame : _root_.frame} {context : _root_.context}
-    (stateTyped : State_ok ⟨s,frame⟩ context) {types : List valtype} {values : List val}
-    (typed : ResultsTyped s types values) : Config_ok ⟨⟨s,frame⟩,vals values⟩ (.mk_list types) := by
-  have stateWf : wf_state ⟨s,frame⟩ := by cases stateTyped; assumption
-  have contextWf : wf_context context := by cases stateTyped; assumption
-  have parts := wf_state_parts stateWf
-  have valuesWf := wf_vals (resultsTyped_wf typed)
-  exact .mk_Config_ok _ _ _ _ context stateTyped
-    (.mk_Expr_ok2 _ _ _ _ (values_instrs_ok parts.1 contextWf typed) parts.1 contextWf valuesWf)
-    contextWf (wf_config_make parts.1 parts.2 valuesWf) stateWf
-
-/-- The stronger host postcondition and extension preserve semantic typing on
-return, including the retained ambient frame. -/
-theorem host_return_config_ok {s t : store} {frame : _root_.frame} {context : _root_.context}
-    (stateTyped : State_ok ⟨s,frame⟩ context) (extension : Extend_store s t)
-    (storeTyped : Store_ok t) {types : List valtype} {values : List val}
-    (typed : ResultsTyped t types values) : Config_ok ⟨⟨t,frame⟩,vals values⟩ (.mk_list types) :=
-  values_config_ok (state_ok_extend extension storeTyped stateTyped) typed
-
-/-- Trapping callbacks retain semantic typing even after committing effects. -/
-theorem host_trap_config_ok {s t : store} {frame : _root_.frame} {context : _root_.context}
-    (stateTyped : State_ok ⟨s,frame⟩ context) (extension : Extend_store s t)
-    (storeTyped : Store_ok t) (types : List valtype) :
-    Config_ok ⟨⟨t,frame⟩,[.TRAP]⟩ (.mk_list types) :=
-  trap_config_ok (state_ok_extend extension storeTyped stateTyped) types
-
 end Exec.Spec

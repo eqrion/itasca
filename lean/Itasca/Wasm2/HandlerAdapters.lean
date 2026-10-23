@@ -78,10 +78,10 @@ def Wasm2.branchCore
 /-- `code.call` with `code.call_info` and `code.call_indirect_info` unfolded, so it returns only
 the result and state. -/
 def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (indirect : Bool) :
+    (env : module.Env) (profile : ValidationProfile) (indirect : Bool) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   if indirect then
-    let (r, out) ← code.call_indirect_info st data env
+    let (r, out) ← code.call_indirect_info st data env profile
     match r with
     | .Err e => .ok (.Err e, out)
     | .Ok _ => .ok (.Ok (), out)
@@ -134,8 +134,8 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
 
 /-- The extracted `code.call` equals `Wasm2.callCore`. -/
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (indirect : Bool) :
-    code.call st data env indirect = Wasm2.callCore st data env indirect := by
+    (env : module.Env) (profile : ValidationProfile) (indirect : Bool) :
+    code.call st data env profile indirect = Wasm2.callCore st data env profile indirect := by
   cases indirect with
   | true =>
     simp only [code.call, Wasm2.callCore, ↓reduceIte]

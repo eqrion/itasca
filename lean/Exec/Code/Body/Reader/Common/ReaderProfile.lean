@@ -19,7 +19,9 @@ theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
           let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
             (core.convert.FromSame error.OpError) residual
           .ok (error, {core := state}, after)) := by
-  simp only [code.step_profile]
+  have hok : core.result.Result.Insts.CoreOpsTry.branch
+      (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
+  simp only [code.step_profile, code.check_opcode, bind_ok, hok]
   split <;> try rfl
   all_goals exact False.elim (ordinary (by decide))
 

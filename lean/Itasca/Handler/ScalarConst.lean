@@ -10,7 +10,7 @@ import Itasca.Spec.ScalarConst
 Lemmas about `code.read_i64_const`, `code.read_f32_const` and `code.read_f64_const`: the effect
 on the operand stack, the exact byte provenance of the decoded immediate or its rejection, and
 `code.step_*_const.of_read`, which lifts these facts through `code.step` and the visitor hook.
-`Sequence.TypedPrefix.i64Const`, `.f32Const` and `.f64Const` extend a typed prefix by the constant.
+`Sequence.TypedPrefix.i64Const` extends a typed prefix by an `i64` constant.
 -/
 
 open Aeneas Aeneas.Std
@@ -152,7 +152,6 @@ theorem code.read_f64_const.spec (st : code.OpIterState) (data : Slice U8)
     simp only [WP.spec_ok, hok, hpos]
     exact ⟨hc, hp, hv⟩
 
-
 end Itasca
 
 namespace Itasca.Sequence
@@ -166,26 +165,6 @@ theorem TypedPrefix.i64Const {C : context} {ops : List instr} {poly : Bool}
   intro out hout
   obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .I64 hout
   exact ⟨before, hb, ScalarConst.i64_framed C hC value before⟩
-
-/-- Pushing a `f32` operand extends a typed prefix by `f32.const`. -/
-theorem TypedPrefix.f32Const {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
-    (hC : wf_context C) (value : U32) :
-    TypedPrefix C (ops ++ [ScalarConst.f32 value]) poly (vals ++ [.Val .F32]) := by
-  apply h.append hC _ (ScalarConst.f32_wf value)
-  intro out hout
-  obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .F32 hout
-  exact ⟨before, hb, ScalarConst.f32_framed C hC value before⟩
-
-/-- Pushing a `f64` operand extends a typed prefix by `f64.const`. -/
-theorem TypedPrefix.f64Const {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
-    (hC : wf_context C) (value : U64) :
-    TypedPrefix C (ops ++ [ScalarConst.f64 value]) poly (vals ++ [.Val .F64]) := by
-  apply h.append hC _ (ScalarConst.f64_wf value)
-  intro out hout
-  obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .F64 hout
-  exact ⟨before, hb, ScalarConst.f64_framed C hC value before⟩
 
 end Itasca.Sequence
 
@@ -261,6 +240,5 @@ theorem code.step_f64_const.of_read {V : Type} (visitor : code.OpVisitor V)
       Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
   rw [f64_const_dispatch]
   exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
-
 
 end Itasca

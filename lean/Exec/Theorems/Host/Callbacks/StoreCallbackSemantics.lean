@@ -137,45 +137,4 @@ theorem Returns.actual {M : Type} (memory : runtime.platform.MemoryBuffer M)
   obtain ⟨rfl,rfl,same⟩ := source.deterministic refined
   exact ⟨actualValues,actual,same.symm⟩
 
-theorem world_sound {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8) :
-    HostWorldSound (platform memory select) view (ExecutableInv view) :=
-  HostWorldSound.of_fixed (sound memory select view)
-
-/-- Exact raw retention and result issuance are implementation conclusions. -/
-theorem retained {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8)
-    (code : Store.CodeInterpretation) (token : Unit) (store : runtime.store.Store M)
-    (held : ExecutableInv view code store) (identity : U64) (args results : Slice runtime.Value) :
-    (platform memory select).call_host token store identity args results ⦃ answer =>
-      Interp.FrameStorePrefix store answer.2.2.1 ∧
-      store.externs.length = answer.2.2.1.externs.length ∧
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value ⦄ := by
-  unfold platform
-  step with (select identity args).correct memory view code store held as ⟨answer,_,prefixHeld,_,externs,issued⟩
-  exact ⟨prefixHeld,by rw [externs],issued⟩
-
-/-- The supported finite implementation returns normally on every store;
-semantic invariants remain necessary for its source-store safety theorem. -/
-theorem total {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) : Platform.HooksTotal (platform memory select) := by
-  constructor
-  · intro token; exact WP.spec.ret trivial
-  · intro token store identity args results
-    unfold platform
-    step with (select identity args).refines memory store as ⟨answer,_⟩
-
-/-- This checked example commits an allowed mutation before trapping. -/
-theorem mutation_then_trap {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (index : Usize) (value : U32)
-    (inside : index.val < store.globals.length)
-    (mutable : (store.globals.val[index.val]).ty.mutability = .Var)
-    (typed : (store.globals.val[index.val]).ty.valtype = .I32) :
-    ∃ returned : Slice runtime.Value,
-      (Program.writeI32 index value (.terminal .trapped)).run memory store =
-        .ok (.Err .Trap,{store with globals := (store.globals.set index
-          {store.globals.val[index.val] with lo := UScalar.cast .U64 value,hi := 0#u64})},returned) ∧
-      returned.val = [] :=
-  Returns.actual memory (.write (.accepted inside mutable typed) (.terminal .trapped _))
-
 end Exec.Theorems.StoreCallbacks

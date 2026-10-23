@@ -17,16 +17,6 @@ inductive Transition (s : AState) (f : AFrame) (rest : List AFrame)
       (first : a < 2^sizenn op.input) (second : b < 2^sizenn op.input)
       (effect : op.Result a b none) : Transition s f rest after op .trap
 
-theorem transition_progress (s : AState) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (op : Instruction)
-    (typed : FrameTyped s.store { f with code := op.source :: after } []) :
-    ∃ result, Transition s f rest after op result ∧ result ≠ .stuck := by
-  obtain ⟨front, a, b, values, first, second, _⟩ := op.typed_operands typed
-  obtain ⟨result, effect⟩ := op.progress a b first
-  cases result with
-  | none => exact ⟨.trap, .trap front a b values first second effect, by simp⟩
-  | some bits => exact ⟨_, .next front a b bits values first second effect, by simp [advance]⟩
-
 theorem transition_preservation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
     (typed : ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
@@ -40,7 +30,6 @@ theorem transition_preservation (s : store) (ambient : frame) (f : AFrame)
     apply active_frame_preservation typed (op.frame_preservation front a b bits typed.store effect.1 ?_) rfl
     change f.vals = front ++ op.operands a b at values
     simpa only [values] using hf
-
 
 theorem Instruction.operands_length (op : Instruction) (a b : Nat) :
     (op.operands a b).length = op.arity := by cases op <;> rfl

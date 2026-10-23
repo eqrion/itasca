@@ -18,10 +18,4 @@ theorem trapping_chosen_sound {M : Type} (memory : runtime.platform.MemoryBuffer
   intro address function signature hf kind hs
   simp [selected,Spec.trappingHostChoice,checkedHostReply,Program.evaluate]
 
-/-- The executable trapping callback cannot report host stack exhaustion. -/
-theorem trapping_no_stack_overflow {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) :
-    NoHostStackOverflow (platform memory (fun _ _=>.trapped)) Inv := by
-  intro code store held token identity args defaults nextToken after results
-  simp [platform,Program.evaluate]
 end Exec.Theorems.PureCallbacks

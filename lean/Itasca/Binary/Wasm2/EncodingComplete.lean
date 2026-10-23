@@ -6,8 +6,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 # Reading Wasm 2.0 encodings
 
 Splitting lemmas for the Wasm 2.0 `At` and `Consumed` relations, as in
-`Binary/Wasm1/EncodingComplete`. `At.read_op` splits a token into the opcode that
-`code.read_op` returns and its immediate span.
+`Binary/Wasm1/EncodingComplete`.
 -/
 
 open Aeneas Aeneas.Std
@@ -29,21 +28,6 @@ theorem At.immediate {data start token next} (h : At data start token next)
   rw [List.drop_eq_getElem_cons hp] at heq
   refine ⟨opcode, imm, hi, ⟨hp, (List.cons.inj heq).1⟩, ?_⟩
   exact ⟨by simpa [hpos] using (List.cons.inj heq).2, by omega, hb⟩
-
-/-- `code.read_op` reads the opcode of a token and leaves the cursor at its immediate. -/
-theorem At.read_op {data start token next} (h : At data start token next)
-    (st : code.OpIterState) (hpos : st.pos = start) :
-    ∃ opcode pos immediate,
-      code.read_op st data = .ok (.Ok opcode, { st with pos := pos }) ∧
-      pos.val = start.val + 1 ∧ Immediate opcode token immediate ∧
-      Wasm1.BytesAt data pos immediate next := by
-  have hp : st.pos.val < data.length := by
-    have := h.span
-    simpa [hpos] using Nat.lt_of_lt_of_le this.1 this.2
-  obtain ⟨pos, hr, hn⟩ := code.read_op_success st data hp
-  have hn' : pos.val = start.val + 1 := by simpa [hpos] using hn
-  obtain ⟨opcode, imm, hi, ⟨_, hb⟩, hs⟩ := h.immediate pos hn'
-  exact ⟨opcode, pos, imm, by simpa [hpos, hb] using hr, hn', hi, hs⟩
 
 /-- A consumed span splits at any token boundary. -/
 theorem Consumed.split_eq {data start tokens next} (h : Consumed data start tokens next)
@@ -109,6 +93,5 @@ theorem Consumed.cons_iff {data start next token tokens} :
   · rintro ⟨middle, hh, ht⟩
     have hb : start.val ≤ data.length := by have := hh.span; omega
     exact Consumed.append (.snoc (.nil start hb) hh) ht
-
 
 end Itasca.Wasm2

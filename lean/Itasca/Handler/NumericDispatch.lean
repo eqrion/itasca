@@ -9,16 +9,12 @@ import Mathlib.Tactic.IntervalCases
 Connects the extracted scalar numeric dispatch to the Wasm 1.0 opcode meaning
 (`Numeric.opcodeMeaning`). `Numeric.tables` shows `code.convert_types` and `code.binary_types`
 agree with it, `Numeric.read.segment` and `read.total` describe the operand handler, and
-`code.step_numeric.prefix` and `code.step.numeric_prefix` extend a `Sequence.TypedPrefix` by the
-operation's instruction for every mapped opcode, with `code.step_numeric.total` for termination.
+`code.step_numeric.total` gives termination.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Numeric
-
-private theorem scalar_eq {a b : U8} : a = b ↔ a.val = b.val :=
-  ⟨congrArg UScalar.val, UScalar.eq_of_val_eq⟩
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
@@ -120,46 +116,6 @@ theorem code.step_numeric.unrecognized {V : Type} (visitor : code.OpVisitor V)
   simp [hmap] at hc hb
   simp [code.step_numeric, hc, hb]
 
-/-- `code.step_numeric` terminates on every operand stack, and an accepted operation extends the
-typed prefix by its instruction. -/
-theorem code.step_numeric.prefix {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Sequence.TypedPrefix C ops (Control.polymorphic st) segment)
-    (hmap : Numeric.NumericOp opcode op)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step_numeric visitor st opcode v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Sequence.TypedPrefix C (ops ++ [op.instruction])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step_numeric.dispatch visitor st opcode op v hmap]
-  obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=
-    WP.spec_imp_exists (Numeric.read.segment op st outer segment hvals hbase hsize)
-  dsimp only at hc hp hv hlen hout
-  cases res with
-  | Err e =>
-    rw [WP.spec_equiv_exists]
-    refine ⟨(.Err e, s, v), ?_, hc, hp, after, hv, hlen, by simp⟩
-    simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok u =>
-    have hprefix := hout.prefix C hC ops op.instruction htyped op.wellFormed (op.typed C hC)
-    obtain ⟨vis, v', hvst⟩ := hvisit.visit_numeric v s opcode
-    cases vis with
-    | Ok u =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (), s, v'), ?_, hc, hp, after, hv, hlen, fun _ => hprefix⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
-    | Err e =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, after, hv, hlen, by simp⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- `code.step` sends every opcode from `0x45` up to `code.step_numeric`. -/
@@ -171,27 +127,6 @@ theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
   change n < 256 at hn
   change 0x45 ≤ n at hlow
   interval_cases n <;> with_unfolding_all rfl
-
-/-- `code.step` terminates on every mapped scalar opcode, and an accepted operation extends the
-typed prefix by its instruction. Hook rejections surface as `OpError`. -/
-theorem code.step.numeric_prefix {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (opcode : U8) (op : Numeric.Operation)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Sequence.TypedPrefix C ops (Control.polymorphic st) segment)
-    (hmap : Numeric.NumericOp opcode op)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step visitor st data env ctx opcode v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Sequence.TypedPrefix C (ops ++ [op.instruction])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step.numeric_dispatch visitor st data env ctx opcode v hmap.bounds.1]
-  exact code.step_numeric.prefix visitor st opcode op outer segment v C hC ops htyped
-    hmap hvals hbase hsize hvisit
 
 /-- `code.step_numeric` terminates on every byte, including unknown opcodes and visitor
 rejections, and preserves `Control.Shape`. -/
@@ -218,5 +153,28 @@ theorem code.step_numeric.total {V : Type} (visitor : code.OpVisitor V)
     apply WP.spec_mono lifted
     intro r h
     exact h.1
+
+end Itasca
+
+namespace Itasca
+
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
+/-- Reserved opcode bytes below the numeric range are rejected before any reader or visitor hook
+runs. -/
+theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (opcode : U8) (v : V)
+    (hreserved : (0x06 ≤ opcode.val ∧ opcode.val ≤ 0x0A) ∨
+      (0x12 ≤ opcode.val ∧ opcode.val ≤ 0x19) ∨
+      (0x1C ≤ opcode.val ∧ opcode.val ≤ 0x1F) ∨
+      (0x25 ≤ opcode.val ∧ opcode.val ≤ 0x27)) :
+    code.step visitor st data env ctx opcode v = .ok (.Err .UnrecognizedOpcode, st, v) := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change (6 ≤ n ∧ n ≤ 10) ∨ (18 ≤ n ∧ n ≤ 25) ∨
+    (28 ≤ n ∧ n ≤ 31) ∨ (37 ≤ n ∧ n ≤ 39) at hreserved
+  rcases hreserved with ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ <;>
+    interval_cases n <;>
+      simp [code.step_numeric, global_simps]
 
 end Itasca

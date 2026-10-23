@@ -17,29 +17,6 @@ theorem copySegment_length (before source : List U64) (dst src count : Nat) :
   | zero => rfl
   | succ n ih => simp only [copySegment, List.length_set, ih]
 
-theorem copySegment_effect (before source : List U64) (dst src count : Nat)
-    (sourceBound : src + count ≤ source.length) (targetBound : dst + count ≤ before.length) :
-    (∀ j, j < count → (copySegment before source dst src count)[dst + j]? = source[src + j]?) ∧
-    (∀ j, j < dst ∨ dst + count ≤ j → (copySegment before source dst src count)[j]? = before[j]?) := by
-  induction count with
-  | zero => simp [copySegment]
-  | succ n ih =>
-    obtain ⟨copied, outside⟩ := ih (by omega) (by omega)
-    constructor
-    · intro j bound
-      by_cases last : j = n
-      · subst j
-        have targetInside : dst + n < (copySegment before source dst src n).length := by
-          rw [copySegment_length]; omega
-        have sourceInside : src + n < source.length := by omega
-        simp [copySegment, targetInside, sourceInside]
-      · have previous : j < n := by omega
-        have different : dst + n ≠ dst + j := by omega
-        simpa only [copySegment, List.getElem?_set, different, if_false] using copied j previous
-    · intro j bound
-      have different : dst + n ≠ j := by omega
-      simpa only [copySegment, List.getElem?_set, different, if_false] using outside j (by omega)
-
 theorem table_init_loop (tables : alloc.vec.Vec runtime.store.TableInst)
     (instances : alloc.vec.Vec runtime.store.ModuleInst)
     (elements : alloc.vec.Vec runtime.store.ElemInst)

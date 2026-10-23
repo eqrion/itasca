@@ -1,6 +1,8 @@
 import Exec.Abs.Core.ChosenMemoryLoad
 import Exec.Abs.Core.ChosenMemoryStore
-import Exec.Interp.Memory.MemoryCoreSimulation
+import Exec.Interp.Memory.MemoryCoreStore
+import Exec.Abs.Core.MemoryLoad
+import Exec.Abs.Core.MemoryStore
 namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt Exec.Spec
  theorem execute_load_core_simulation_exact_chosen {choices : SourceChoices} (admissible : choices.Admissible)

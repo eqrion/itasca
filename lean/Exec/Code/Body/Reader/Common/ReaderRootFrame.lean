@@ -20,7 +20,7 @@ private theorem head_member {α : Type} {items : List α} {item}
   | cons first rest => simp only [List.head?_cons, Option.some.injEq] at found; subst item; simp
 
 theorem reader_root_frame_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (compiler : runtime.compiler.FunctionCompiler A) {locals parents current}
     (physical : ScopeFrameStack locals compiler parents current)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current) :
@@ -49,19 +49,4 @@ theorem reader_root_frame_wasm2 {data env sourceLocals index st}
   · simpa only [List.head?_eq_getElem?] using frameHead
   · rw [framed.results, matched.results, outputs]
 
-theorem reader_root_frame_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (compiler : runtime.compiler.FunctionCompiler A) {locals parents current}
-    (physical : ScopeFrameStack locals compiler parents current)
-    (same : ReaderScopeZipperWasm1 parents current p.parents p.current) :
-    ∃ frame, compiler.frames.val[0]? = some frame ∧ frame.results.val = slots (Control.resultTypes bt) := by
-  have bodyType := p.bodyType
-  unfold Wasm1.Frames.bodyType at bodyType
-  obtain ⟨saved, savedHead, savedType⟩ := Option.map_eq_some_iff.mp bodyType
-  have sources := List.rel_append same.parents (.cons same.current .nil)
-  obtain ⟨scope, scopeHead, matched⟩ := paired_head_right sources saved savedHead
-  obtain ⟨frame, frameHead, framed⟩ := paired_head_right (List.Forall₂.flip physical.frames) scope scopeHead
-  refine ⟨frame, ?_, ?_⟩
-  · simpa only [List.head?_eq_getElem?] using frameHead
-  · rw [framed.results, matched.results, savedType]
 end Exec.Code

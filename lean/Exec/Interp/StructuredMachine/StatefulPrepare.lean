@@ -7,10 +7,10 @@ theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C ret
     [StructuredMachine.StatefulProjection emission pairs]
     (s : store) (f : Abs.AFrame) (op : Abs.Stateful.Instruction) (after : List instr)
     (typed : Abs.FrameTyped s {f with code:=op.source::after} [])
-    (point : Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
       code jumpTables labels (f.vals.map Code.valueType) (op.source::after) pc next output) :
     (∃ target : U32, pc<target.val ∧ code[pc]?=some (.Jump target) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels (f.vals.map Code.valueType) (op.source::after) target.val next output) ∨
     (∃ front operands input result first second a b entry,
       f.vals=front++operands ∧ operands.map Code.valueType=input ∧
@@ -20,7 +20,7 @@ theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C ret
       first.val=Code.slots C.LOCALS+Code.slots (front.map Code.valueType) ∧
       (op.arity≥2 → second.val=first.val+1) ∧ Code.StatefulArguments op a b ∧
       Code.StatefulPair pairs op a b entry ∧ code[pc]?=some (Code.statefulInstruction op first second a entry) ∧
-      Code.StructuredCodeWithTables.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels (front.map Code.valueType++result) after (pc+1) next output) := by
   rcases point_head (pairs:=pairs) op after point with jump | operation
   · exact Or.inl jump

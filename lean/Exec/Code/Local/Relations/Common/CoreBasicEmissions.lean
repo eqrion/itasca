@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SelectOperands
 import Exec.Code.Local.Relations.Global.GlobalOperands
-import Exec.Code.Local.Relations.Common.CoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas Aeneas.Std
 
@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 27#u16 0#u32 0#u32 0#u128
       ⦃ out => out.1 = .Ok () → ∃ emitted,
         Lowered compiler out.2 emitted (front ++ [ty]) ∧
-        CoreEmission C (front ++ [ty, ty, .I32]) (.SELECT none) [emitted] (front ++ [ty]) ⦄ := by
+        ScalarEmission C (front ++ [ty, ty, .I32]) (.SELECT none) [emitted] (front ++ [ty]) ⦄ := by
   apply WP.spec_mono (compiler_select_lowered ops law compiler state types front ty layout reachable concrete typed
     codeFits sourceFits coordinateFits)
   intro out result success
@@ -41,14 +41,14 @@ open Aeneas Aeneas.Std
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 35#u16 index 0#u32 0#u128
       ⦃ out => out.1 = .Ok () → ∃ emitted,
         Lowered compiler out.2 emitted ((front ++ [ty]).map Itasca.Translate.valueType) ∧
-        CoreEmission C (front.map Itasca.Translate.valueType) (.GLOBAL_GET (.mk_uN index.val)) [emitted]
+        ScalarEmission C (front.map Itasca.Translate.valueType) (.GLOBAL_GET (.mk_uN index.val)) [emitted]
           ((front ++ [ty]).map Itasca.Translate.valueType) ⦄ := by
   apply WP.spec_mono (compiler_global_get_lowered ops law compiler state front ty index layout reachable concrete
     codeFits sourceFits coordinateFits)
   intro out result success
   refine ⟨_, result success, ?_⟩
   simpa only [List.map_append, List.map_cons, List.map_nil] using
-    CoreEmission.globalGet (C := C) (front.map Itasca.Translate.valueType) mutability
+    ScalarEmission.globalGet (C := C) (front.map Itasca.Translate.valueType) mutability
       (Itasca.Translate.valueType ty) index compiler.height globalType (by simpa only [locals] using layout.height)
 
 @[step] theorem compiler_global_set_emission {A : Type} (ops : runtime.platform.Alloc A)
@@ -67,7 +67,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 36#u16 index 0#u32 0#u128
       ⦃ out => out.1 = .Ok () → ∃ emitted,
         Lowered compiler out.2 emitted front ∧
-        CoreEmission C (front ++ [ty]) (.GLOBAL_SET (.mk_uN index.val)) [emitted] front ⦄ := by
+        ScalarEmission C (front ++ [ty]) (.GLOBAL_SET (.mk_uN index.val)) [emitted] front ⦄ := by
   apply WP.spec_mono (compiler_global_set_lowered ops law compiler state types front ty index layout reachable concrete typed
     codeFits sourceFits coordinateFits)
   intro out result success

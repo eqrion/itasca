@@ -22,12 +22,4 @@ theorem InfiniteChosenSource.erases {choices : SourceChoices} (admissible : choi
   have edge := (edges n).erases admissible
   exact ⟨1,by decide,by simpa using StepsHN.cons edge (StepsHN.refl (stepH_wf edge).2)⟩
 
-/-- Absence of all source divergence implies absence of divergence under every
-admissible fixed policy. The converse is not claimed for one selected policy. -/
-theorem no_chosen_infinite_of_no_source {initial : config}
-    (finite : ¬ InfiniteSourceWithEvents initial)
-    (choices : SourceChoices) (admissible : choices.Admissible) (occurrence : Nat) :
-    ¬ InfiniteChosenSource choices occurrence initial :=
-  fun infinite => finite (infinite.erases admissible)
-
 end Exec.Spec

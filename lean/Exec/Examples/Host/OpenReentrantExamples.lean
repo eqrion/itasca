@@ -1,4 +1,4 @@
-import Exec.Theorems.Host.Open.Driver.ReentrantControl
+import Exec.Main
 import Exec.Examples.Host.OpenHostControlExamples
 namespace Exec.Theorems.OpenReentrantControl
 open Aeneas Aeneas.Std

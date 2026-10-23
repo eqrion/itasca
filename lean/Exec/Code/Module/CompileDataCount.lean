@@ -38,12 +38,4 @@ theorem CompileWitness.data_count {A : Type} {allocator : runtime.platform.Alloc
   rw [(w.initializers law).1]
   exact w.data_count_input
 
-theorem compile_data_count {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (bytes : Slice U8) (profile : ValidationProfile)
-    (limits : runtime.compiler.CompileLimits) (executable : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok executable)) :
-    ∀ count, executable.module.env.data_count = some count →
-      count.val = executable.module.tail.data.val.length := by
-  obtain ⟨w⟩ := compile_accepted allocator bytes profile limits executable accepted
-  exact w.data_count law
 end Exec.Code

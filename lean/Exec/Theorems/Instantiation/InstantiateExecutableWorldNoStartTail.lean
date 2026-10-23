@@ -1,4 +1,34 @@
-import Exec.Theorems.Instantiation.StartExecutableWorldResolved
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Theorems.Invocation.InvokeWorld
+import Exec.Theorems.Invocation.InvokeHostWorld
+import Exec.Theorems.Api.ExecutableInv
+import Exec.Theorems.Host.HostSegmentPublication
+import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
+import Exec.Theorems.Instantiation.StartResolution
 import Exec.Theorems.Composition.Eventful.EventfulInstantiationResult
 import Exec.Theorems.Composition.FrameStorePrefixStaged
 import Exec.Theorems.Instantiation.InstantiateSourceOrigin
@@ -29,7 +59,7 @@ theorem instantiate_tail_executable_world_no_start {M P F A : Type}
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
     (noStart : inst.module.module.env.start=none)
     (initialWf : wf_config (sourceInstantiationConfiguration view code store inst raw)) :
-    instantiate_tail memory hooks floats allocator identity store platform
+    runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false
       ⦃ out => ∃ afterCode, CodeAgreesOn store code afterCode ∧ out.2.2.2 = true ∧ ExecutableInv view afterCode out.2.1 ∧
         Extend_store (decodeStore view code store) (decodeStore view afterCode out.2.1) ∧
         Interp.FrameStorePrefix store out.2.1 ∧ SegmentPublication store out.2.1 ∧

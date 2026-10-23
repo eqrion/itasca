@@ -1,26 +1,16 @@
-import Exec.Code.Body.Reader.Common.ReaderWasm1
 import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Exec.Code.Body.Reader.Common.ReaderStacks
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.values {data env locals index st out instruction poly values}
-    {p : Wasm2.Pending data env locals index st} (post : ReaderPostWasm2 p out instruction poly values) :
+    {p : Wasm2.Pending data env .Wasm2 locals index st} (post : ReaderPostWasm2 p out instruction poly values) :
     st.core.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ p.current.vals ∧
     out.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ values := by
   obtain ⟨_, outer, spine, _, _, _, _, _, old⟩ := p.opened
   obtain ⟨_, outer', spine', _, _, _, _, _, new⟩ := post.opened
   exact ⟨by simpa only [wasm2_spine_values spine] using old,
     by simpa only [wasm2_spine_values spine', Wasm2.Frames.Saved.advance] using new⟩
-
-theorem ReaderPostWasm1.values {data env ctx bt st out instruction poly values}
-    {p : Wasm1.Pending data env ctx bt st} (post : ReaderPostWasm1 p out instruction poly values) :
-    st.vals.val = p.parents.flatMap Wasm1.Frames.Saved.vals ++ p.current.vals ∧
-    out.vals.val = p.parents.flatMap Wasm1.Frames.Saved.vals ++ values := by
-  obtain ⟨_, outer, spine, _, _, _, _, old⟩ := p.opened
-  obtain ⟨_, outer', spine', _, _, _, _, new⟩ := post.opened
-  exact ⟨by simpa only [wasm1_spine_values spine] using old,
-    by simpa only [wasm1_spine_values spine', Wasm1.Frames.Saved.advance] using new⟩
 
 /-- A numeric reader's live current segment determines the complete physical
 stack before and after the instruction, including all suspended source prefixes. -/

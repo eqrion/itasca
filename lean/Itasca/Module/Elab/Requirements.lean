@@ -50,7 +50,7 @@ theorem external_index_valid {env : module.Env} {C : context} {desc : module.Exp
 semantic prerequisite of the environment parser at every declaration prefix. -/
 theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : ModuleBinary.Module}
     (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : ModuleConditions raw profile)
-    (hl : ∀ ft ∈ raw.types, Itasca.Profile.FuncTypeWithinLimits profile ft) :
+    (hl : ∀ ft ∈ raw.types, Itasca.Profile.FuncTypeWithinLimits ft) :
     ModuleEnv.Requirements raw profile := by
   intro id decls env hlo hhi hr
   interval_cases id
@@ -106,11 +106,5 @@ theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : Modu
       (by simpa [ModuleConstants.FunctionContext, initializerContextOf] using hr.funcs_context (by decide))
       (by simpa [initializerContextOf] using hr.tables_context (by decide)) (hs.elements e hm)
   · trivial
-
-/-- `profile_requirements_of_typing` for Wasm 1.0. -/
-theorem requirements_of_typing {raw : ModuleBinary.Module}
-    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : Profile raw) :
-    ModuleEnv.Requirements raw := by
-  exact profile_requirements_of_typing he hs hp.toModuleConditions (by simp [Itasca.Profile.FuncTypeWithinLimits])
 
 end Itasca.ModuleElaboration

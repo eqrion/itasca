@@ -14,7 +14,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
-    (limits : Profile.EnvironmentWithinLimits profile env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)
@@ -31,7 +31,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ⦄ := by
   obtain ⟨w,ending,body⟩ := source_entry_prepared data env index start finish profile entry indexBound typed bounds
     environment limits encoded
-  obtain ⟨started,begun,bodyAvailable⟩ := prepared_function_checked_available ops law bound allocation w environment limits body
+  obtain ⟨started,begun,bodyAvailable⟩ := prepared_function_checked_available ops law bound allocation w limits body
     signaturesMatch slotsMatch batchBound created (demand w)
   obtain ⟨⟨reply,after⟩,bodyCalled,accepted,effect,ranges,instructions⟩ := WP.spec_imp_exists bodyAvailable
   dsimp only at accepted effect ranges instructions

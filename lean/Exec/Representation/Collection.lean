@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 
 /-! Shared slice lookup and list transport lemmas for concrete representations. -/
 namespace Exec.Representation

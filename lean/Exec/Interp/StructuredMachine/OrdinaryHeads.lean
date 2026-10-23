@@ -1,14 +1,6 @@
-import Exec.Interp.StructuredMachine.Point
+import Exec.Interp.StructuredMachine.Heads
 import Exec.Interp.StructuredMachine.IndexedLinear
 namespace Exec.Interp.StructuredMachine
-def ordinarySource : instr → Bool
-  | .BLOCK .. | .LOOP .. | .IFELSE .. | .BR .. | .BR_IF .. | .CALL .. | .RETURN | .UNREACHABLE => false
-  | _ => true
-
-/-- Emitted ordinary heads cannot impersonate structured control syntax. -/
-class OrdinaryHeads (emission : ContextEmission) : Prop where
-  ordinary : ∀ {C before instruction emitted after}, emission C before instruction emitted after → ordinarySource instruction = true
-
 variable {emission : ContextEmission} [OrdinaryHeads emission]
 
 theorem emission_not_block {C before after emitted bt body}

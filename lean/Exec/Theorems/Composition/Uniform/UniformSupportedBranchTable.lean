@@ -4,8 +4,8 @@ import Exec.Interp.StructuredMachine.JumpExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 
-theorem step_branch_table_supported_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem step_branch_table_supported_uniform
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -19,17 +19,17 @@ theorem step_branch_table_supported_uniform {emission : StructuredMachine.Functi
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw
       {f with code:=.BR_TABLE depths fallback::after} compiled C targets next output)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.BR_TABLE depths fallback::after}::rest,[]⟩ expected raw.pc.val false)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=.BR_TABLE depths fallback::after}::rest,[]⟩ out ⦄ := by
   rcases StructuredMachine.branchTable_point_head point.code with jump | operation
   · obtain ⟨target,forward,fetch,tail⟩ := jump
-    have retained : StructuredMachine.FramePoint emission (Store.decodeStore view code store) {raw with pc:=target}
+    have retained : StructuredMachine.FramePoint (Store.decodeStore view code store) {raw with pc:=target}
         {f with code:=.BR_TABLE depths fallback::after} compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels,tail⟩
     apply WP.spec_mono (StructuredMachine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled
@@ -46,7 +46,7 @@ theorem step_branch_table_supported_uniform {emission : StructuredMachine.Functi
         simpa only [values,List.map_append,List.map_cons,List.map_nil,Abs.integerVal,Code.valueType,numtype_Inn,valtype_numtype] using shape
       exact List.append_cancel_right equal
     rw [←frontTypes] at table
-    apply WP.spec_mono (StructuredMachine.step_brTable_execution_uniform language memory hooks floats allocator view code exec store platform
+    apply WP.spec_mono (StructuredMachine.step_brTable_execution_uniform memory hooks floats allocator view code exec store platform
       index raw inst compiled C targets next output ambient f rest after depths fallback front value selector start len expected
       last hf hi hc program slots point values bound table machine)
     rintro out ⟨success,sameStore,samePlatform,advance⟩

@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Explicit-select source typing supplies the full live operand layout.
 The actual profile reader and callback accept with one instruction of room. -/
 theorem reached_profile_typed_select_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (demand : CallbackDemand compiler out.core bound)

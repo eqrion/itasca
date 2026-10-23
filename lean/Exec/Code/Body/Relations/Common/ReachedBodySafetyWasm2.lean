@@ -41,11 +41,11 @@ theorem compiler_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Pl
   intro accepted
   dsimp only at accepted
   subst reply
-  have fresh := ledger.reader_wasm2 ops law pending out ⟨sourceLocals,ft.results⟩ rfl (observed rfl) (by simpa only [pending,ReaderBoundaryWasm2.pending] using run)
+  have fresh := ledger.reader_wasm2 ops law pending out ⟨sourceLocals,ft.results⟩ (observed rfl) (by simpa only [pending,ReaderBoundaryWasm2.pending] using run)
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out run
-  have cursor := code.step_profile.accepted_progress_wasm2
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
+  have cursor := code.step_profile.accepted_progress
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance run
   refine ⟨?_,cursor⟩
@@ -67,15 +67,15 @@ theorem compiler_body_wasm2_total {A} (ops : runtime.platform.Alloc A) (law : Pl
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (ledger : ReachedCompilerLedger initial [])
     (bodyBound : initial.function.body_start.val+data.length≤Usize.max) :
-    code.validate_body_with_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       data env ⟨sourceLocals,ft.results⟩ index .Wasm2 initial ⦃ _ => True ⦄ := by
-  apply WP.spec_mono (code.validate_body_with_profile.total_on
+  apply WP.spec_mono (code.validate_body_with.total_on
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
     (ReachedBodyWasm2 initial C locals data env sourceLocals index ft) (fun _ => True) initial ?_
     (compiler_body_steps_wasm2 ops law initial C locals data env sourceLocals index ft layout localsMatch metadata
       matched contextLocals signatures bodyBound) (by intros; trivial))
   · intros; trivial
-  · obtain ⟨result,run,held⟩ := WP.spec_imp_exists (code.initial_state.wasm2_start env ⟨sourceLocals,ft.results⟩ index)
+  · obtain ⟨result,run,held⟩ := WP.spec_imp_exists (code.initial_state.start env index)
     rw [run,WP.spec_ok]
     intro st accepted
     subst result

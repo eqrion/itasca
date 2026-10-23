@@ -24,7 +24,7 @@ inductive SourceMode {M A : Type} (memory : runtime.platform.MemoryBuffer M) (al
         (.invokeRequest address.index.val (args.val.map sourceValue)
           (signature.params.val.map sourceType) (signature.results.val.map sourceType)) 0
   | wasm (signature : Itasca.types.FuncType)
-      (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+      (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
       (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value)
       (metadata : RootMetadata world.machine.store root signature)
       (typed : Config_ok (Abs.decode world.machine.source) (.mk_list (signature.results.val.map sourceType))) :

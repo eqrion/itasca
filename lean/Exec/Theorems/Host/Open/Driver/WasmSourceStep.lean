@@ -37,24 +37,4 @@ inductive WasmSourceStep (choices : SourceOperationChoices) (occurrence : Nat) (
       (historyEq : sourceHistory afterHistory=sourceHistory beforeHistory++visibleSourceHistory events) :
       WasmSourceStep choices occurrence select owner expected stack before beforeHistory afterSource afterHistory
 
-theorem WasmSourceStep.trace {M : Type} (view : M → Slice U8) (publication : SourcePublication)
-    (stop : Spec.OpenExecution.StopReason → config → Prop)
-    {choices occurrence select owner expected stack before beforeHistory afterSource afterHistory}
-    (step : WasmSourceStep choices occurrence select owner expected stack before beforeHistory afterSource afterHistory) :
-    ∃count events,Spec.OpenExecution.ChoiceTrace (sourceModel view publication select owner stop) (sourceControlChoices choices)
-      occurrence count ⟨before.1.1,.wasm before.1.2 before.2 expected,stack⟩ events afterSource ∧
-      sourceHistory afterHistory=sourceHistory beforeHistory++visibleSourceHistory events := by
-  cases step with
-  | @wasm count afterConfig afterSource afterHistory prefixSteps sourceEq historyEq =>
-    subst afterSource
-    exact ⟨count,List.replicate count .wasm,
-      Spec.OpenExecution.ChoiceTrace.wasmCounted _ _ prefixSteps expected stack,
-      by simp only [historyEq,visibleSourceHistory_wasm,List.append_nil]⟩
-  | @arrive count afterConfig events afterSource afterHistory prefixSteps arrival historyEq =>
-    have head:=Spec.OpenExecution.ChoiceTrace.wasmCounted (sourceModel view publication select owner stop)
-      (sourceControlChoices choices) prefixSteps expected stack
-    have edge:=arrival.transition view publication stop choices (occurrence+count)
-    refine ⟨count+1,List.replicate count .wasm++events,?_,?_⟩
-    · simpa only [List.append_nil] using head.trans (Spec.OpenExecution.ChoiceTrace.next edge (.nil _ _))
-    · simpa only [visibleSourceHistory_append,visibleSourceHistory_wasm,List.nil_append] using historyEq
 end Exec.Theorems.OpenReentrantControl

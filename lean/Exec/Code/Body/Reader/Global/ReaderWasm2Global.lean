@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Local.ReaderWasm2Local
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 theorem reader_global_get_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
@@ -26,7 +26,7 @@ theorem reader_global_get_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_global_set_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_SET before =

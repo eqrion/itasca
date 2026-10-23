@@ -23,12 +23,6 @@ def topTypes : List code.StackType → Nat → List valtype
   | [], n + 1 => .BOT :: topTypes [] n
   | v :: vs, n + 1 => StackSemantics.selectedType v :: topTypes vs n
 
-@[simp] theorem topTypes.length (vs : List code.StackType) (n : Nat) :
-    (topTypes vs n).length = n := by
-  induction n generalizing vs with
-  | zero => simp [topTypes]
-  | succ n ih => cases vs <;> simp [topTypes, ih]
-
 theorem Fits.subtypes {poly : Bool} {vs : List code.StackType} {ts : List types.ValueType}
     (h : Fits poly vs ts) :
     List.Forall₂ Valtype_sub (topTypes vs ts.length) (ts.map Translate.valueType) := by
@@ -119,43 +113,5 @@ theorem Suffix.of_realizes {st : code.OpIterState} {ts : List types.ValueType}
 end Itasca.Wasm2
 
 namespace Itasca
-
-/-- Exact declarative contract for the suffix checker. The witnesses use
-SpecTec's generated subtyping judgment and the independent stack realization;
-they do not mention a validator execution. -/
-theorem code.check_suffix.wasm_spec (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (hshape : Control.Shape st) :
-    code.check_suffix st env view ⦃ r =>
-      r = .Ok () ↔ ∃ ts front common,
-        Wasm2.resolve env view = some ts ∧
-        Sequence.Realizes (Control.polymorphic st)
-          (st.vals.val.drop (Control.base st).val) (front ++ common) ∧
-        Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)) ⦄ := by
-  apply WP.spec_mono (code.check_suffix.spec st env view hshape)
-  intro r hr
-  constructor
-  · intro hok
-    obtain ⟨ts, ht, hs⟩ := hr.mp hok
-    obtain ⟨hsub, front, hreal⟩ := hs.common_subtype
-    exact ⟨ts, front, _, ht, hreal, hsub⟩
-  · rintro ⟨ts, front, common, ht, hreal, hsub⟩
-    apply hr.mpr
-    refine ⟨ts, ht, Wasm2.Suffix.of_realizes front ?_⟩
-    exact DeclarativeComplete.realizes_mono hreal
-      (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
-
-/-- The generated common-subtype premise of a branch table suffices for each
-actual suffix check, without requiring equality of the target signatures. -/
-theorem code.check_suffix.complete_of_subtype (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (ts : List types.ValueType) (front common : List valtype)
-    (hshape : Control.Shape st) (hts : Wasm2.resolve env view = some ts)
-    (hr : Sequence.Realizes (Control.polymorphic st)
-      (st.vals.val.drop (Control.base st).val) (front ++ common))
-    (hsub : Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType))) :
-    code.check_suffix st env view = .ok (.Ok ()) := by
-  apply code.check_suffix.complete st env view ts hshape hts
-  apply Wasm2.Suffix.of_realizes front
-  exact DeclarativeComplete.realizes_mono hr
-    (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
 
 end Itasca

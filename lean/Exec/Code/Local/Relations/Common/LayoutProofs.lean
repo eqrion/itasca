@@ -1,5 +1,5 @@
 import Exec.Representation.StackLayout
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Exec.Representation.Layout
 import Exec.Platform.Alloc
 import Itasca.Support.TypeTranslation

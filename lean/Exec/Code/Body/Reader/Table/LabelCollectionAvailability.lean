@@ -1,4 +1,5 @@
-import Exec.Code.Body.Reader.Table.LabelReaderReplay
+import Exec.Code.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReachedTableLabels
 import Exec.Code.Local.Capacity.BranchLabelAvailability
 import Exec.Code.Local.Relations.Table.BranchTableCallback
 
@@ -62,29 +63,5 @@ theorem LabelCollectionPrefix.collect_available {A : Type}
   apply WP.exists_imp_spec
   refine ⟨(.Ok (),after),called,rfl,nextBudget,nextDepths,?_,counts,nextEffect⟩
   rw [nextFrame,frame]
-
-/-- The complete Wasm 1 label collector accepts every independently accepted
-reference collection under source-count scratch and branch bounds. -/
-theorem compiler_read_table_labels_available {A V : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (source : code.OpVisitor V) (before after : V)
-    (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (count : U32) (common : Option code.BlockType)
-    (branches : compiler.budget.branches.val+count.val ≤ compiler.budget.limits.max_branch_table_entries.val)
-    (capacity : compiler.table_depths.length+count.val ≤ Usize.max)
-    (reserve : compiler.table_depths.length+count.val ≤ bound)
-    (reference : code.read_table_labels_loop source st data count before none 0#u32 =
-      .ok (.Ok common,final,after)) :
-    code.read_table_labels_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data count compiler none 0#u32 ⦃ out => out.1 = .Ok common ∧ out.2.1 = final ∧
-        LabelCollectionPrefix compiler out.2.2 count.val ⦄ := by
-  exact code.read_table_labels_loop.accepted_replay_on source
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data count
-    (fun index _ _ after => LabelCollectionPrefix compiler after index)
-    (fun _ _ current index depth _ next _ remaining held _ _ =>
-      held.collect_available ops law bound available compiler current next depth index count.val remaining
-        branches capacity reserve)
-    st final before after compiler none common 0#u32 (by scalar_tac) (LabelCollectionPrefix.initial compiler) reference
 
 end Exec.Code

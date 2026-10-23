@@ -21,12 +21,12 @@ theorem InitialHostInvocationCause.no_objects {M P F A : Type}
 /-- A failed actual dispatch has no object-limit refusal branch. Store growth
 instructions report their specified numeric failure result instead. -/
 theorem EventfulDispatchCause.no_objects
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    {machine : EventfulMachine emission allowed M P view code expected} {out}
+    {machine : EventfulMachine M P view code expected} {out}
     (cause : EventfulDispatchCause memory hooks floats allocator machine out (.Exhausted .Objects)) : False := by
   rcases cause with ordinary | host
   · have impossible := ordinary.1.kind

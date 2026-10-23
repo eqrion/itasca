@@ -33,15 +33,4 @@ theorem invocation_config_ok {s : store} (storeTyped : Store_ok s)
     empty_context_wf (wf_config_make storeWf empty_frame_wf (forall_append valuesWf callWf))
     (.state_case_0 _ _ storeWf empty_frame_wf)
 
-/-- This theorem attaches semantic typing to the actual initial configuration
-selected by the generated invocation relation. -/
-theorem invoked_config_ok {s : store} (storeTyped : Store_ok s)
-    {address : funcaddr} {params results : List valtype} {args : List val} {initial : config}
-    (bound : address < s.FUNCS.length)
-    (signature : s.FUNCS[address]!.TYPE = .mk_functype (.mk_list params) (.mk_list results))
-    (arguments : ResultsTyped s params args) (invoked : fun_invoke s address args initial) :
-    Config_ok initial (.mk_list results) := by
-  rw [invocation_config invoked]
-  exact invocation_config_ok storeTyped address params results args bound signature arguments
-
 end Exec.Spec

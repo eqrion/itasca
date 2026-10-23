@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Itasca.Stream.Source
 
 namespace Exec.Code

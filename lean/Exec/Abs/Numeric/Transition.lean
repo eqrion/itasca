@@ -24,31 +24,4 @@ namespace Exec.Abs.Numeric
     simp only [hb, BitVec.ofNat_toNat, pop_append, ha]
     simp [finish]
 
- theorem transition_success (s : AState) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (front : List val) (op : Instruction)
-    (a b : BitVec (sizenn (numtype_Inn op.input)))
-    (result : BitVec (sizenn (numtype_Inn op.output)))
-    (success : op.apply a b = some result) :
-    transition s { f with vals := front ++ op.operands a b } rest after op =
-      advance s { f with code := after, vals := front ++ [integerVal op.output result.toNat] } rest := by
-  rw [transition_operands, finish, success]
-
- theorem transition_trap (s : AState) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (front : List val) (op : Instruction)
-    (a b : BitVec (sizenn (numtype_Inn op.input)))
-    (trap : op.apply a b = none) :
-    transition s { f with vals := front ++ op.operands a b } rest after op = .trap := by
-  rw [transition_operands, finish, trap]
-
-theorem transition_progress (s : AState) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (op : Instruction)
-    (typed : FrameTyped s.store { f with code := op.source :: after } []) :
-    transition s f rest after op ≠ .stuck := by
-  obtain ⟨front, a, b, values⟩ := op.typed_operands typed
-  have same : f = { f with vals := front ++ op.operands a b } := by
-    cases f; simp_all
-  conv_lhs => rw [same, transition_operands]
-  unfold finish
-  cases op.apply a b <;> simp [advance]
-
 end Exec.Abs.Numeric

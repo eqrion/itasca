@@ -44,22 +44,4 @@ theorem encoding {profile : ValidationProfile} {codeRel : Code → List U8 → P
     padded_prepend_custom hcustoms hcode, hdatas, htrailing, ?_, hallowed, hcount⟩
   simp only [he, ht, List.append_assoc]
 
-/-- Adjacent spans for the environment, code section and tail, with the tail ending at EOF,
-make the input exactly one module encoding. -/
-theorem whole_bytes {profile : ValidationProfile} {codeRel : Code → List U8 → Prop} {data : Slice U8} {codePos tailPos decls codes segments}
-    (henv : At (fun decls bytes => ModuleEnv.PrefixEncoding decls bytes profile) data 0#usize decls codePos)
-    (hcode : At (PaddedEncoding 10#u8 (VecEncoding codeRel) []) data codePos codes tailPos)
-    (htail : At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data tailPos segments (Slice.len data))
-    (hallowed : ModuleTypesAllowed profile (decls.module codes segments))
-    (hcount : DataCountValid (decls.module codes segments)) :
-    ModuleEncodingWith codeRel (decls.module codes segments) data.val profile := by
-  obtain ⟨before, he, hs⟩ := henv
-  obtain ⟨codeBytes, hc, hcs⟩ := hcode
-  obtain ⟨tailBytes, ht, hts⟩ := htail
-  have hspan := (hs.append hcs).append hts
-  have hbytes : data.val = before ++ codeBytes ++ tailBytes := by
-    simpa using hspan.suffix
-  rw [hbytes]
-  exact encoding he hc ht hallowed hcount
-
 end Itasca.ModuleComposition

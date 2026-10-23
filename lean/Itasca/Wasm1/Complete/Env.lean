@@ -134,61 +134,6 @@ theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx 
         code.OpVisitor.on_global_set.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_GLOBAL_SET] using result
 
-theorem call {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (C : context) (hc : EnvTranslation.Matches env ctx C) (henv : Wasm1.Environment env)
-    (idx : U32) (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
-    (ht : Instr_ok C (.CALL (.mk_uN idx.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
-    (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
-    (hsize : st.vals.val.length < Usize.max) :
-    StepResult f data env ctx 0x10#u8 next (front ++ outs) := by
-  cases ht with
-  | call _ _ params results hi ht _ _ =>
-    obtain ⟨ft, hi, ht, hv⟩ := hc.func_lookup idx _ hi ht
-    have hparams : ft.params.val.map Translate.valueType = ins :=
-      list.mk_list.inj (functype.mk_functype.inj hv).1
-    have hresults : ft.results.val.map Translate.valueType = outs :=
-      list.mk_list.inj (functype.mk_functype.inj hv).2
-    have ha : ft.results.val.length ≤ 1 := henv.funcs ft (ht ▸ List.getElem_mem hi)
-    obtain ⟨⟨_, s⟩, hread, hpost⟩ := WP.spec_imp_exists
-      (code.read_call.complete st data env idx next ft (hb.read_u32 idx he) hi ht ha
-        f.outer f.operands front f.vals f.base_eq hsize
-        (by simpa [f.poly_eq, hparams] using hr))
-    obtain ⟨rfl, hp⟩ := hpost
-    have result := finish f data env ctx code.OP_CALL front ft.results.val next idx s ⟨rfl, hp⟩
-      ha (by simp [hread, code.visit,
-        code.OpVisitor.on_call.default, core.result.Result.Insts.CoreOpsTry.branch])
-    simpa [code.OP_CALL, hresults] using result
-
-theorem callIndirect {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (C : context) (hc : EnvTranslation.Matches env ctx C) (henv : Wasm1.Environment env)
-    (idx : U32) (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
-    (hb : Wasm1.BytesAt data st.pos (bytes ++ [0#u8]) next) (front ins outs : List valtype)
-    (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val))
-      (.mk_functype (.mk_list ins) (.mk_list outs)))
-    (hr : Sequence.Realizes f.current.polymorphic_base f.operands (front ++ ins))
-    (hsize : st.vals.val.length < Usize.max) :
-    StepResult f data env ctx 0x11#u8 next (front ++ outs) := by
-  cases ht with
-  | call_indirect _ _ _ params results lim htable htabletype hi ht _ _ _ =>
-    obtain ⟨htableenv, hfun⟩ := hc.table_funcref 0#u32 lim htable htabletype
-    obtain ⟨ft, hi, ht, hv⟩ := hc.type_lookup idx _ hi ht
-    have hparams : ft.params.val.map Translate.valueType = params :=
-      list.mk_list.inj (functype.mk_functype.inj hv).1
-    have hresults : ft.results.val.map Translate.valueType = outs :=
-      list.mk_list.inj (functype.mk_functype.inj hv).2
-    have ha : ft.results.val.length ≤ 1 := henv.types ft (ht ▸ List.getElem_mem hi)
-    obtain ⟨middle, hd, hz, _⟩ := hb.index_zero idx he
-    obtain ⟨⟨_, s⟩, hread, hpost⟩ := WP.spec_imp_exists
-      (code.read_call_indirect.complete st data env idx middle next ft hd hz
-        htableenv hfun hi ht ha f.outer f.operands front f.vals f.base_eq hsize
-        (by simpa [f.poly_eq, hparams] using hr))
-    obtain ⟨rfl, hp⟩ := hpost
-    have result := finish f data env ctx code.OP_CALL_INDIRECT front ft.results.val next idx s ⟨rfl, hp⟩
-      ha (by simp [hread, code.visit,
-        code.OpVisitor.on_call_indirect.default, core.result.Result.Insts.CoreOpsTry.branch])
-    simpa [code.OP_CALL_INDIRECT, hresults] using result
-
 theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
     (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)

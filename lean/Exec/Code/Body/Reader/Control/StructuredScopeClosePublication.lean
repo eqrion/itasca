@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredPrefixDeadWithTables
+import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Publication.ScopeClosePublication
 
 namespace Exec.Code
@@ -12,7 +12,7 @@ theorem structured_scope_close_publication {jumpTables : List U32}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals parents current raw position)
     (sourceBound : position ≤ limits.MAX_MODULE_BYTES.val)
     (state : code.OpIterState) (kind : code.LabelKind) (bt : signature.BlockType)
     (coordinates : SourceCoordinates before) (maps : ControlMapPublication before)

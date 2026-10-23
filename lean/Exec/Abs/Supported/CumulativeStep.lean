@@ -10,9 +10,9 @@ namespace Exec.Abs.Cumulative
 open SpecExt Exec.Spec Exec.Abs.Ownership
 
 theorem Step.next_typed_supported {before next : AState} (step : Step before (.next next))
-    (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before) : CoreTyped next := by
+ (typed : CoreTyped before) (covered : SupportedState before) : CoreTyped next := by
   cases step with
-  | core equation executable => exact (Supported.step_correct before next typed covered language.head equation).1
+  | core equation executable => exact (Supported.step_correct before next typed covered equation).1
   | scalar transition =>
     have fresh := Float.transition_preservation _ _ _ _ _ _ _ typed.typed transition
     cases transition
@@ -22,9 +22,9 @@ theorem Step.next_typed_supported {before next : AState} (step : Step before (.n
   | stateful transition _ => exact (Stateful.transition_next _ _ _ _ _ _ _ typed transition).1
 
 theorem Step.next_covered_supported {before next : AState} (step : Step before (.next next))
-    (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before) : SupportedState allowed next := by
+ (typed : CoreTyped before) (covered : SupportedState before) : SupportedState next := by
   cases step with
-  | core equation executable => exact Supported.step_covered language before next typed.typed covered equation
+  | core equation executable => exact Supported.step_covered before next typed.typed covered equation
   | scalar transition =>
     cases transition with
     | next front a b bits values first second effect =>
@@ -45,20 +45,20 @@ theorem Step.next_covered_supported {before next : AState} (step : Step before (
     · exact covered.active item (List.mem_cons_of_mem _ member)
 
 theorem Step.next_simulation_supported {before next : AState} (step : Step before (.next next))
-    (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before) : NextSim before next := by
+ (typed : CoreTyped before) (covered : SupportedState before) : NextSim before next := by
   cases step with
-  | core equation executable => exact (Supported.step_correct before next typed covered language.head equation).2
+  | core equation executable => exact (Supported.step_correct before next typed covered equation).2
   | scalar transition => exact Float.transition_simulation _ _ _ _ _ _ _ typed.typed transition
 
   | indirect equation _ => exact NextSim.counted (Indirect.next_simulation _ _ _ _ _ _ _ _ typed equation) (by decide)
   | stateful transition _ => exact (Stateful.transition_next _ _ _ _ _ _ _ typed transition).2.2
 
 theorem Step.next_owned_supported {bounds : Bounds} {before next : AState}
-    (step : Step before (.next next)) (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before)
+    (step : Step before (.next next)) (typed : CoreTyped before) (covered : SupportedState before)
     (owned : StatefulOwned bounds before) : StatefulOwned bounds next := by
   cases step with
   | core equation executable =>
-    have fresh := Supported.step_owned typed covered language.head owned.core equation
+    have fresh := Supported.step_owned typed covered owned.core equation
     exact ⟨fresh.values,core_heap_owned owned.heap fresh.globals equation⟩
   | @scalar s ambient f rest after op result transition =>
     cases transition with
@@ -81,10 +81,10 @@ theorem Step.next_owned_supported {bounds : Bounds} {before next : AState}
   | stateful transition _ => exact stateful_transition_owned _ _ _ _ _ _ _ _ typed owned transition
 
 theorem Step.next_bound_supported {bound : Nat} {before next : AState}
-    (step : Step before (.next next)) (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before)
+    (step : Step before (.next next)) (typed : CoreTyped before) (covered : SupportedState before)
     (bounded : CodeBound bound before) : CodeBound bound next := by
   cases step with
-  | core equation executable => exact Supported.step_bound bound before next typed covered language.head bounded equation
+  | core equation executable => exact Supported.step_bound bound before next typed covered bounded equation
   | scalar transition =>
     cases transition with
     | next front a b bits values first second effect =>
@@ -99,19 +99,19 @@ theorem Step.next_bound_supported {bound : Nat} {before next : AState}
   | stateful transition _ => exact Stateful.transition_bound _ _ _ _ _ _ _ _ bounded transition
 
 theorem Step.next_extends_supported {before next : AState} (step : Step before (.next next))
-    (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before) : Extend_store before.store next.store := by
+ (typed : CoreTyped before) (covered : SupportedState before) : Extend_store before.store next.store := by
   cases step with
-  | core equation executable => exact Supported.step_extends before next typed covered language.head equation
+  | core equation executable => exact Supported.step_extends before next typed covered equation
   | scalar transition => cases transition; exact extend_store_refl _ typed.typed.store
 
   | indirect equation _ => rw [(Indirect.step_metadata equation).1]; exact extend_store_refl _ typed.typed.store
   | stateful transition _ => exact (Stateful.transition_next _ _ _ _ _ _ _ typed transition).2.1
 
 theorem Step.trap_simulation_supported {before : AState} (step : Step before .trap)
-    (language : Supported.Language allowed) (typed : CoreTyped before) (covered : SupportedState allowed before) :
+ (typed : CoreTyped before) (covered : SupportedState before) :
     ∃ n, 0 < n ∧ StepsHN n (decode before) [] ⟨⟨before.store,before.ambient⟩,[.TRAP]⟩ := by
   cases step with
-  | core equation executable => exact Supported.step_trap before typed covered language.head equation
+  | core equation executable => exact Supported.step_trap before typed covered equation
   | scalar transition => exact Float.transition_trap_simulation _ _ _ _ _ _ typed.typed transition
 
   | indirect equation _ => exact Indirect.trap_simulation _ _ _ _ _ _ _ typed equation

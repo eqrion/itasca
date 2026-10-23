@@ -43,7 +43,6 @@ theorem module.decode_name.from_utf8 (data : Slice U8) (pos : Usize)
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-
 /-- `module.decode_name` accepts a `NameEncoding` span and returns the name and cursor. -/
 theorem module.decode_name.complete (data : Slice U8) (pos : Usize)
     (nm : alloc.vec.Vec U8) (next : Usize) (h : At NameEncoding data pos nm.val next) :
@@ -64,16 +63,6 @@ theorem module.decode_name.complete_raw (data : Slice U8) (pos : Usize)
     scalar_tac
   let value := alloc.vec.Vec.from nm hsize
   exact ⟨value, module.decode_name.complete data pos value next (by simpa [value] using h), by simp [value]⟩
-
-/-- `module.decode_custom_section` accepts a name span ending before `last`. -/
-theorem module.decode_custom_section.complete (data : Slice U8) (pos next last : Usize)
-    (nm : alloc.vec.Vec U8) (h : At NameEncoding data pos nm.val next)
-    (hbefore : next.val ≤ last.val) :
-    module.decode_custom_section data pos last = .ok (.Ok
-      ⟨alloc.vec.Vec.len nm, next, last⟩) := by
-  have hread := module.decode_name.complete data pos nm next h
-  simp [module.decode_custom_section, hread, hbefore, core.result.Result.Insts.CoreOpsTry.branch]
-
 
 /-- `module.decode_custom_section.complete` for a name given as a list. -/
 theorem module.decode_custom_section.complete_raw (data : Slice U8) (pos next last : Usize)

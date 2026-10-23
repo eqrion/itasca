@@ -40,7 +40,7 @@ theorem global_staging_resource_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.globals.val.length)
     (mapCapacity : inst.globals.length + (inst.module.module.env.globals.val.length - start.val) ≤ Usize.max) :
-    runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator store platform (.Ok ()) start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform (.Ok ()) start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧
         (∀ error, finalStatus = .Err error → GlobalStagingCause memory hooks floats allocator store platform instIndex start error) ∧
@@ -50,7 +50,7 @@ theorem global_staging_resource_loop {M P F A : Type}
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
           after.elems = store.elems ∧ after.datas = store.datas ∧ next.elems = inst.elems ∧ next.datas = inst.datas ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop7
+  unfold runtime.store.instantiate.Store.prepare_instance_loop7
   apply loop.spec_decr_nat (fun state => inst.module.module.env.globals.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧
       (state.2.2.1 = .Ok () → PreparationCalls (globalStageCall memory hooks floats allocator instIndex) (store,platform) start (state.1,state.2.1) state.2.2.2) ∧
@@ -66,7 +66,7 @@ theorem global_staging_resource_loop {M P F A : Type}
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, helements, hdatas, hmapElements, hmapData⟩
     dsimp only at hhost errors hstaged hobjects haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity helements hdatas hmapElements hmapData ⊢
     subst host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop7.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env,

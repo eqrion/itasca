@@ -7,7 +7,7 @@ Run with `lake env lean --run scripts/reachability.lean [--check] [OUT]`. Import
 `Itasca` and `Exec` audits and walks the constants used by every declaration of the
 root modules of both libraries; the execution proofs keep validator facts alive.
 Reports the source declarations of each library that no root reaches, grouped by module.
-`OUT` receives the full report and standard output a summary. With `--check`, the run
+`OUT` receives the full report, with source lines, and standard output a summary. With `--check`, the run
 fails if a module outside `allowlist` has no reachable declaration. Generated and
 audit modules are not reported.
 -/
@@ -18,23 +18,18 @@ def libraries : Array Name := #[`Itasca, `Exec]
 
 /-- The reachability roots besides `Examples/`. -/
 def roots : Array Name := #[
-  `Itasca.Module.Validation, `Itasca.Module.Completeness,
-  `Itasca.Stream.DriverSound, `Itasca.Stream.DriverTotal, `Itasca.Stream.DriverComplete,
-  `Itasca.Stream.BatchTotal, `Itasca.Stream.BatchComplete,
-  `Exec.Theorems.Compilation, `Exec.Theorems.CompilationComplete,
-  `Exec.Theorems.Invocation.PublicExecutableWorldInvocation,
-  `Exec.Theorems.Invocation.PublicExecutableWorldResources,
-  `Exec.Theorems.Invocation.PublicExecutableWorldDivergence,
-  `Exec.Theorems.Invocation.PublicWorldChosenMatches,
-  `Exec.Theorems.Progress.ExecutableWorldFinite,
-  `Exec.Theorems.Instantiation.InstantiateExecutableWorldSource,
-  `Exec.Theorems.Instantiation.InstantiateExecutableWorldRecordingResources,
-  `Exec.Theorems.Host.Open.Completeness.ChosenSourceCompleteness,
-  `Exec.Theorems.Host.Open.Completeness.ReturningRecovery,
-  `Exec.Theorems.Host.Open.Native.NativeChosenSourceInvocation]
+  `Itasca.Main, `Itasca.Results.Validate, `Itasca.Results.Stream, `Itasca.Results.Batch,
+  `Itasca.Results.Trace, `Itasca.Results.Unique,
+  `Exec.Main, `Exec.Results.Compile, `Exec.Results.Instantiate, `Exec.Results.Invoke,
+  `Exec.Results.Host]
 
 /-- Modules kept without a reachable declaration, each with its reason. -/
-def allowlist : Array Name := #[]
+def allowlist : Array Name := #[
+  -- Specification sanity checks, built by `make checkpoint` and `spec-check`.
+  `Itasca.Spec.Checks,
+  -- Characterize the generated judgments changed by the SpecTec host-typing and
+  -- export-membership patches; cited by the patch descriptions in `README.md`.
+  `Exec.Spec.Typing.HostTyping, `Exec.Spec.ModuleMembership]
 
 def isRoot (mod : Name) : Bool :=
   roots.contains mod || libraries.any fun lib => (lib ++ `Examples).isPrefixOf mod
@@ -43,14 +38,30 @@ def libraryOf (mod : Name) : Option Name :=
   libraries.find? fun lib =>
     lib.isPrefixOf mod && !(lib ++ `Generated).isPrefixOf mod && mod != lib ++ `Audit
 
+/-- Syntax, macros, simprocs and other metaprograms run during elaboration, so proof terms
+never mention them. Their modules count as used. -/
+def isMeta (c : ConstantInfo) : Bool :=
+  match c.type.getForallBody.getAppFn.constName? with
+  | some head => (`Lean).isPrefixOf head
+  | none => false
+
 /-- Declarations a user writes, as opposed to compiler-generated companions. -/
 def isSource (env : Environment) (n : Name) (c : ConstantInfo) : Bool :=
+  let range? := declRangeExt.find? env n
+  range?.isSome &&
+  -- Attributes and `where` clauses add declarations inside their owner's range.
+  !(match range?, declRangeExt.find? env n.getPrefix with
+    | some r, some p => env.getModuleIdxFor? n == env.getModuleIdxFor? n.getPrefix &&
+        p.range.pos.line ≤ r.range.pos.line && r.range.endPos.line ≤ p.range.endPos.line
+    | _, _ => false) &&
+  let n := (privateToUserName? n).getD n
   !n.isInternalDetail && !c.isCtor && !(c matches .recInfo _ | .quotInfo _) &&
   !isAuxRecursor env n && !isNoConfusion env n && !(env.isProjectionFn n) &&
   !Meta.isMatcherCore env n &&
+  !n.components.any (fun | .str _ s => s.startsWith "match_" || s == "splitter" | _ => false) &&
   match n with
   | .str _ s => !((s.startsWith "eq_" && (s.drop 3).all Char.isDigit) ||
-      s ∈ ["eq_def", "eq_unfold", "injEq", "inj", "sizeOf_spec", "induct",
+      s ∈ ["eq_def", "eq_unfold", "mvcgen_spec", "injEq", "inj", "sizeOf_spec", "induct",
         "induct_unfolding", "mutual_induct", "fun_cases"])
   | _ => true
 
@@ -92,7 +103,7 @@ def main (args : List String) : IO UInt32 := do
     let some m := modOf n | continue
     unless (libraryOf m).isSome && !isRoot m && isSource env n c do continue
     total := total.insert m (total.getD m 0 + 1)
-    unless seen.contains n do
+    unless seen.contains n || isMeta c do
       unused := unused.insert m ((unused.getD m #[]).push (kind c, n))
   let sorted := unused.toArray.qsort (fun a b => a.1.toString < b.1.toString)
   let isDead (m : Name) (ds : Array (String × Name)) := ds.size == total.getD m 0
@@ -100,7 +111,9 @@ def main (args : List String) : IO UInt32 := do
   for (m, ds) in sorted do
     out := out ++ s!"{m}{if isDead m ds then " (unused)" else ""}\n"
     for (k, n) in ds.qsort (fun a b => a.2.toString < b.2.toString) do
-      out := out ++ s!"  {k} {n}\n"
+      let lines := (declRangeExt.find? env n).elim "" fun r =>
+        s!" {r.range.pos.line}-{r.range.endPos.line}"
+      out := out ++ s!"  {k} {n}{lines}\n"
   if let some (path : String) := out? then IO.FS.writeFile path out
   let mut failed := false
   for lib in libraries do

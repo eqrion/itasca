@@ -5,9 +5,8 @@ import Itasca.Visitor.StepLift
 /-!
 # Visitor transfer for one Wasm 2.0 step
 
-`step_transfer` shows that a successful `code.step_profile` at `.Wasm2` under one visitor
-succeeds under any replacement visitor with accepting callbacks, ending in the same validator
-state.
+`step_transfer` shows that a successful `code.step_profile` under one visitor succeeds under any
+replacement visitor with accepting callbacks, ending in the same validator state.
 -/
 
 open Aeneas Aeneas.Std Result ControlFlow
@@ -20,15 +19,26 @@ validator state. Scalar steps depend on locals, not the context result vector. -
 theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
     (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
-    (hlocals : ctx.locals = ctx'.locals) (index : U32) (opcode : U8)
+    (hlocals : ctx.locals = ctx'.locals) (index : U32) (profile : ValidationProfile) (opcode : U8)
     (st final : code.BodyState) (v : V) (w : W) (v' : V)
-    (h : code.step_profile visitor st data env ctx index .Wasm2 opcode v =
+    (h : code.step_profile visitor st data env ctx index profile opcode v =
       .ok (.Ok (), final, v')) :
-    ∃ w', code.step_profile replacement st data env ctx' index .Wasm2 opcode w =
+    ∃ w', code.step_profile replacement st data env ctx' index profile opcode w =
       .ok (.Ok (), final, w') := by
   unfold code.step_profile at h ⊢
-  conv at h => lhs; whnf
-  conv => arg 1; ext w'; lhs; whnf
+  obtain ⟨rc, hrc, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
+  rw [hrc]
+  cases rc with
+  | Err e =>
+    simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+  | Ok u =>
+  cases u
+  have hok : core.result.Result.Insts.CoreOpsTry.branch
+      (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
+  simp only [bind_ok] at h ⊢
+  rw [hok] at h ⊢
+  simp only [bind_ok] at h ⊢
   split at h
   case h_1 | h_2 | h_3 | h_4 | h_5 | h_6 | h_7 | h_10 | h_11 =>
     try simp_all only [↓reduceIte]
@@ -88,7 +98,7 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
       simp [core.result.Result.Insts.CoreOpsTry.branch] at h
       obtain ⟨rfl, rfl⟩ := h
       obtain ⟨w', hw⟩ := code.branch_table_with.accepted_transfer visitor replacement ha
-        st data env v w s v' hs
+        st data env v w s v' profile hs
       exact ⟨w', by simp [hw, core.result.Result.Insts.CoreOpsTry.branch]⟩
   case h_9 =>
     try simp_all only [↓reduceIte]

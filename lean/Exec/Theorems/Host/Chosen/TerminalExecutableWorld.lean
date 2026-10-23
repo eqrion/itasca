@@ -13,7 +13,7 @@ theorem terminal_execution {M : Type} (view : M → Slice U8) (code : Store.Code
     (empty : exec.frames.val=[]) (typed : ResultsTyped (Store.decodeStore view code store) expected values)
     (owned : Abs.Ownership.ValuesOwned (Store.ownershipBounds store) values)
     (words : ValuesAt exec.slots.val 0 values) :
-    StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+    StructuredMachine.Execution
       view code store exec ⟨Store.decodeStore view code store,ambient,[],values⟩ expected 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,[],values⟩ := by
   let certified := held.toCertifiedApiStore.toCertifiedSupportedStore

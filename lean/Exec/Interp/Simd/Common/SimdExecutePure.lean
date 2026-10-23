@@ -82,28 +82,4 @@ theorem execute_simd_no_memory_bounded {M F : Type}
     have notTwo : wr ≠ 2#u32 := by scalar_tac
     simp [notTwo,SlotsEffect,simdResultSlots,zeroNat]
 
-theorem execute_simd_no_memory {M F : Type}
-    (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instIndex function base : Usize) (op dst a entry : U32)
-    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (imm : runtime.bytecode.SimdImmediate) (wa wb wc wr : U32)
-    (value : U128)
-    (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : inst.module.functions.val[function.val]? = some code)
-    (immediate : code.simd.val[entry.val]? = some imm)
-    (shape : runtime.bytecode.simd_shape op = .ok (some (wa,wb,wc,wr)))
-    (empty : inst.memories.val = [])
-    (space : base.val + a.val + wa.val + wb.val + 1 ≤ Usize.max)
-    (capacity : base.val + dst.val + wr.val ≤ exec.slots.length)
-    (numeric : runtime.interp.simd.simd floats op imm.offset imm.lane imm.bits
-      (simdInput exec.slots.val (base.val+a.val) wa)
-      (simdInput exec.slots.val (base.val+a.val+wa.val) wb)
-      (simdInput exec.slots.val (base.val+a.val+wa.val+wb.val) wc) none =
-        .ok (.Ok value,none)) :
-    runtime.interp.execute_simd memory floats exec store instIndex function base op dst a entry
-      ⦃ out => out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
-        (simdResultSlots exec.slots.val (base.val+dst.val) wr value) ⦄ := by
-  exact execute_simd_no_memory_bounded memory floats exec store instIndex function base op dst a entry inst code imm wa wb wc wr value found compiled immediate shape empty (by omega) (by intro _; omega) capacity numeric
-
 end Exec.Interp

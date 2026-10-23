@@ -1,4 +1,7 @@
-import Exec.Code.Local.Lowering.Common.LoweringTransfer
+import Exec.Code.Local.Lowering.Common.Copy
+import Exec.Code.Local.Relations.Control.BranchCertificates
+import Exec.Code.Local.Initializer.InitializerExpression
+import Exec.Code.Local.Callbacks.Common.Observe
 /-! Exact backward loop-branch emission for arbitrary label depth, including
 zero-arity and identity-copy elision. Loop targets are already resolved and
 construct a source branch certificate without a forward-fixup assumption. -/
@@ -187,70 +190,4 @@ set_option maxRecDepth 4096 in
     intro out effect accepted
     simpa [branchInstructions, elided] using effect accepted
 
-@[step] theorem callback_branch_loop {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (resultType : Itasca.signature.ResultType)
-    (reachable : compiler.reachable = true)
-    (frame : runtime.compiler.Frame) (index : Usize) (depth source : U32)
-    (lookup : compiler.frames.val[index.val]? = some frame)
-    (position : index.val + depth.val + 1 = compiler.frames.val.length)
-    (kind : frame.kind = .Loop)
-    (sourcePosition : source.val + frame.params.val = compiler.height.val)
-    (codeFits : compiler.function.code.val.length + 2 ≤ Usize.max)
-    (offsetsFit : compiler.function.source_offsets.val.length + 2 ≤ Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth resultType ⦃ out =>
-      out.1 = .Ok () → out.2.reachable = false ∧
-        out.2.function.code.val = compiler.function.code.val ++
-          branchInstructions frame.height source frame.params frame.start_pc ∧
-        out.2.frames = compiler.frames ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-  rw [if_pos reachable]
-  step with compiler_branch_loop ops law compiler frame index depth source lookup position kind
-    sourcePosition codeFits offsetsFit coordinateFits as ⟨result, changed, effect⟩
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    cases value
-    obtain ⟨code, frames⟩ := effect rfl
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with compiler_observe ops law { changed with reachable := false } state
-      as ⟨out, observed, accepted⟩
-    obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-    exact ⟨hr, by simpa [hcode] using code, by simpa [hframes] using frames⟩
-
-/-- A loop branch needs no future fixup: its retained backward target already
-constructs the complete source/bytecode branch certificate. -/
-@[step] theorem callback_branch_loop_certificate {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (resultType : Itasca.signature.ResultType)
-    (reachable : compiler.reachable = true)
-    (frame : runtime.compiler.Frame) (index : Usize) (depth source : U32)
-    (lookup : compiler.frames.val[index.val]? = some frame)
-    (position : index.val + depth.val + 1 = compiler.frames.val.length)
-    (kind : frame.kind = .Loop)
-    (sourcePosition : source.val + frame.params.val = compiler.height.val)
-    (codeFits : compiler.function.code.val.length + 2 ≤ Usize.max)
-    (offsetsFit : compiler.function.source_offsets.val.length + 2 ≤ Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max)
-    (types functions : List functype) (returns locals stack final : List valtype)
-    (labels : List LabelTarget) (label : LabelTarget) (tail : List instr)
-    (labelLookup : labels[depth.val]? = some label)
-    (live : label.branchLive = true)
-    (layout : BranchLayout locals stack label frame.height source frame.params)
-    (target : label.target = frame.start_pc) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth resultType ⦃ out =>
-      out.1 = .Ok () → out.2.reachable = false ∧ out.2.frames = compiler.frames ∧
-        CodeRel types functions returns locals out.2.function.code.val labels stack
-          (.BR (.mk_uN depth.val) :: tail) compiler.function.code.val.length
-          out.2.function.code.val.length final ⦄ := by
-  apply WP.spec_mono (callback_branch_loop ops law compiler state resultType reachable frame index depth source
-    lookup position kind sourcePosition codeFits offsetsFit coordinateFits)
-  intro out effect accepted
-  obtain ⟨dead, appended, frames⟩ := effect accepted
-  refine ⟨dead, frames, CodeRel.branch labelLookup live layout ?_ (Nat.le_refl _) (Nat.le_refl _)⟩
-  refine ⟨compiler.function.code.val, [], ?_, rfl, ?_⟩
-  · simpa [target] using appended
-  · simp [appended, target]
 end Exec.Code

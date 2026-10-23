@@ -44,7 +44,4 @@ theorem Instruction.source_injective : Function.Injective Instruction.source := 
   have := congrArg decodeInstruction same
   simpa only [decodeInstruction_source,Option.some.injEq] using this
 
-@[simp] theorem Instruction.source_eq_iff (left right : Instruction) :
-    left.source = right.source ↔ left = right :=
-  ⟨fun same => source_injective same,congrArg Instruction.source⟩
 end Exec.Abs.Float

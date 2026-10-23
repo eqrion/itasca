@@ -104,12 +104,6 @@ theorem Emitted.layout {A : Type} {before after : runtime.compiler.FunctionCompi
   exact ⟨layout.localSlots, layout.localOffsets, layout.operandOffsets,
     layout.height, layout.capacity⟩
 
-theorem Emitted.code_length {A : Type} {before after : runtime.compiler.FunctionCompiler A}
-    {instruction} (emitted : Emitted before after instruction) :
-    after.function.code.val.length = before.function.code.val.length + 1 := by
-  obtain ⟨budget, code, sources, rfl, hcode, _⟩ := emitted
-  simp [hcode]
-
 theorem Emitted.old_instruction {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {instruction old} {index : Nat} (emitted : Emitted before after instruction)
     (previous : before.function.code.val[index]? = some old) :

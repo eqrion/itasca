@@ -1,5 +1,5 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
-import Exec.Code.Local.Lowering.Float.FloatCoreInstructionAcceptance
+import Exec.Code.Local.Relations.Common.ScalarEmissionAcceptance
 
 namespace Exec.Code
 open Aeneas Aeneas.Std
@@ -20,7 +20,7 @@ theorem Lowered.floatCoreInstructionPrefix {A : Type}
     {before after : runtime.compiler.FunctionCompiler A} {instruction input output source C}
     (lowered : Lowered before after instruction output) (layout : CompilerLayout before input)
     (live : before.reachable = true) (locals : C.LOCALS = compilerLocals before)
-    (emission : FloatCoreEmission C input source [instruction] output)
+    (emission : ScalarEmission C input source [instruction] output)
     (tables : CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function)
     (held : CompilerInstructionPrefix before) (frames : after.frames = before.frames) :
     CompilerInstructionPrefix after := by

@@ -37,24 +37,7 @@ theorem SourceCodeBudget.fetch_bound {A : Type} {compiler : runtime.compiler.Fun
   unfold SourceCodeBudget at budget
   norm_num [limits.MAX_MODULE_BYTES, U32.max_eq] at *
   omega
-/-- The accepted entry's instruction slice is bounded by its source batch. -/
-theorem entry_body_length_le {V : Type} {visitor : code.OpVisitor V}
-    {data env index start finish before after profile}
-    (w : CodeEntry.Witness visitor data env index start finish before after profile) :
-    w.body.val.length ≤ data.val.length := by
-  have length := w.body_bytes.length
-  have bound := w.body_bytes.bound
-  change finish.val ≤ data.val.length at bound
-  omega
 
-theorem entry_body_fetch_bound {A : Type} {ops : runtime.platform.Alloc A}
-    {data env index start finish before after profile}
-    (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish before after profile)
-    (budget : SourceCodeBudget after w.body.val.length)
-    (sourceBound : data.val.length ≤ limits.MAX_MODULE_BYTES.val) :
-    after.function.code.val.length < U32.max :=
-  budget.fetch_bound ((entry_body_length_le w).trans sourceBound)
 /-- The same source budget discharges the extracted vector append capacity. -/
 theorem SourceCodeBudget.code_capacity {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {position : Nat} (budget : SourceCodeBudget compiler position)

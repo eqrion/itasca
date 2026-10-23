@@ -19,10 +19,6 @@ theorem source_pack_lane_kind_injective {left right : packtype}
     (same : lanetype_packtype left=lanetype_packtype right) : left=right := by
   cases left <;> cases right <;> simp_all [lanetype_packtype]
 
-theorem source_scalar_pack_lane_disjoint (type : numtype) (packed : packtype) :
-    lanetype_numtype type≠lanetype_packtype packed := by
-  cases type <;> cases packed <;> simp [lanetype_numtype,lanetype_packtype]
-
 theorem source_num_lane_kind_injective {left right : numtype}
     (same : lanetype_numtype left=lanetype_numtype right) : left=right := by
   cases left <;> cases right <;> simp_all [lanetype_numtype]

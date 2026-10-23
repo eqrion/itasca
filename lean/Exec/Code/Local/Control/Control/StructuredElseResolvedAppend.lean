@@ -1,14 +1,14 @@
-import Exec.Code.Local.Control.Table.StructuredElseEvidenceWithTables
+import Exec.Code.Local.Control.Table.StructuredElseEvidence
 namespace Exec.Code
 open Aeneas.Std
 
 /-- A callback may change relocation lists while preserving the resolved
 prefix under the corresponding previous plans. Completed ELSE arms follow
 that same syntactic prefix, independent of the newly emitted fragments. -/
-theorem StructuredUniversalElseWithTables.resolved_append
+theorem StructuredUniversalElse.resolved_append
     {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {jumpTables : List U32} {emit types functions returns locals parents current}
-    (invariant : StructuredUniversalElseWithTables jumpTables emit before types functions returns locals parents current)
+    (invariant : StructuredUniversalElse jumpTables emit before types functions returns locals parents current)
     (instruction : instr)
     (completion : ∀ label labels groups,
       FramePlans after.function.code.val.length locals after.frames.val (label :: labels) groups →
@@ -16,7 +16,7 @@ theorem StructuredUniversalElseWithTables.resolved_append
       ∃ previous suffix,
         FramePlans before.function.code.val.length locals before.frames.val (label :: labels) previous ∧
         resolvedCode after.function.code.val groups = resolvedCode before.function.code.val previous ++ suffix) :
-    StructuredUniversalElseWithTables jumpTables emit after types functions returns locals parents
+    StructuredUniversalElse jumpTables emit after types functions returns locals parents
       (current.advance instruction) := by
   intro label labels groups plans shape parentShapes
   have oldShape : ScopeLabel current label :=

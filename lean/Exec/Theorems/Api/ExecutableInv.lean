@@ -1,4 +1,8 @@
-import Exec.Theorems.Api.NewCertifiedApi
+import Exec.Theorems.Api.CertifiedApi
+import Exec.Theorems.Composition.Certified.CertifiedSupported
+import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Store.Initialization.SegmentAccounting
+import Exec.Store.Invariant.CapacityHost
 import Exec.Store.Initialization.SegmentCounts
 namespace Exec.Theorems
 open Aeneas Aeneas.Std
@@ -52,12 +56,5 @@ theorem host_definition {M : Type} {view : M → Slice U8} {code : Store.CodeInt
   have fresh := held.toCertifiedApiStore.host_definition shape effect
   exact ⟨⟨fresh.1,held.segmentAccounting.preserve effect.elements effect.datas effect.instances,capacities⟩,fresh.2⟩
 
-theorem new {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (id : Usize) (limits : runtime.store.StoreLimits) (identity : 0 < id.val) :
-    runtime.store.Store.with_identity memory id limits ⦃ store => ExecutableInv view code store ⦄ := by
-  apply WP.spec_mono (new_certified_executable_api memory view code id limits identity)
-  rintro store ⟨certified,accounted,capacities⟩
-  exact ⟨certified,accounted,capacities⟩
 end ExecutableInv
 end Exec.Theorems

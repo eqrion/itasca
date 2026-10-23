@@ -1,3 +1,4 @@
+import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Simd.ReaderPrefixSimd
 import Exec.Code.Body.Reader.Simd.ReaderSimdCallbackEmission
 namespace Exec.Code
@@ -5,8 +6,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The complete SIMD prefix step handles live emission and polymorphic dead
 code, retaining an exact append witness for all function tables. -/
-theorem ReaderPostWasm2.simd_callback_prefix {data env sourceLocals index st source values position inputs output}
-    {p : Wasm2.Pending data env sourceLocals index st} {A : Type}
+theorem ReaderPostWasm2.simd_callback_prefix {jumpTables : List U32} {data env sourceLocals index st source values position inputs output}
+    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     (C : context) {emit} [SimdEmbedding after.function.simd.val after.function.v128_pool.val C emit]
@@ -16,7 +17,7 @@ theorem ReaderPostWasm2.simd_callback_prefix {data env sourceLocals index st sou
     (read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out))
     (capacity : st.core.vals.val.length < Usize.max)
     (contextLocals : C.LOCALS = locals)
-    (invariant : StructuredCompilerPrefix emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (opcode : U16) (sub a b : U32) (bits : U128)
     (number : opcode.val = 512 + sub.val)
@@ -25,7 +26,7 @@ theorem ReaderPostWasm2.simd_callback_prefix {data env sourceLocals index st sou
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before out opcode a b bits = .ok (.Ok (),after)) :
     ∃ extra, CompilerTables.ofFunction after.function = (CompilerTables.ofFunction before.function).append extra ∧
-      StructuredCompilerPrefix emit initial after types functions returns locals parents (current.advance source)
+      StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance source)
         out.vals.val out.pos.val ∧
       (after.reachable = true → p.current.ctrl.polymorphic_base = false) := by
   cases reachable : before.reachable with
@@ -49,6 +50,6 @@ theorem ReaderPostWasm2.simd_callback_prefix {data env sourceLocals index st sou
         retained.layout reachable codeFits sourceFits coordinateFits accepted
     have consumed : p.start.val < out.pos.val := by have pos := p.pos; have span := post.span; omega
     refine ⟨extra,tables,?_,fun _ => monomorphic reachable⟩
-    apply invariant.ordinary reachable ordinary lowered _ sources consumed (by rw [cursor])
+    apply invariant.ordinary reachable ordinary lowered _ sources consumed (by rw [cursor]) emission.not_branchTable
     simpa only [oldTypes] using (SimdEmbedding.lift (emit := emit) emission)
 end Exec.Code

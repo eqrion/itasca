@@ -1,4 +1,9 @@
-import Exec.Interp.Core.Point
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
 import Exec.Abs.Numeric.Decode
 namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
@@ -53,33 +58,35 @@ theorem linearEmission_not_store {locals before after emitted ty packed argument
     simp [Abs.Numeric.decodeInstruction] at decoded
   | _ => cases equality
 
-theorem coreEmission_load_inv {C before after emitted} (op : Abs.Memory.Load) (argument : memarg)
-    (emission : Code.CoreEmission C before (op.source argument) emitted after) :
+theorem scalarEmission_load_inv {C before after emitted} (op : Abs.Memory.Load) (argument : memarg)
+    (emission : Code.ScalarEmission C before (op.source argument) emitted after) :
     ∃ stack address offset, before = stack ++ [.I32] ∧
       emitted = [Code.memoryLoadInstruction op address address offset] ∧ after = stack ++ [valtype_numtype op.type] ∧
       argument.OFFSET = .mk_uN offset.val ∧ address.val = Code.slots C.LOCALS + Code.slots stack := by
   generalize equality : op.source argument = instruction at emission
   cases emission with
-  | pure pure =>
+  | linear pure =>
     rw [←equality] at pure
     exact False.elim (linearEmission_not_load pure)
   | load stack other arg address offset memory available sourceOffset position =>
     obtain ⟨rfl,rfl⟩ := load_source_injective op other argument arg equality
     exact ⟨stack,address,offset,rfl,rfl,rfl,sourceOffset,position⟩
+  | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
 
-theorem coreEmission_store_inv {C before after emitted} (op : Abs.Memory.Store) (argument : memarg)
-    (emission : Code.CoreEmission C before (op.source argument) emitted after) :
+theorem scalarEmission_store_inv {C before after emitted} (op : Abs.Memory.Store) (argument : memarg)
+    (emission : Code.ScalarEmission C before (op.source argument) emitted after) :
     ∃ stack address value offset, before = stack ++ [.I32,valtype_numtype op.type] ∧
       emitted = [Code.memoryStoreInstruction op address value offset] ∧ after = stack ∧
       argument.OFFSET = .mk_uN offset.val ∧ address.val = Code.slots C.LOCALS + Code.slots stack ∧ value.val = address.val+1 := by
   generalize equality : op.source argument = instruction at emission
   cases emission with
-  | pure pure =>
+  | linear pure =>
     rw [←equality] at pure
     exact False.elim (linearEmission_not_store pure)
   | store stack other arg address value offset memory available sourceOffset addressPosition valuePosition =>
     obtain ⟨rfl,rfl⟩ := store_source_injective op other argument arg equality
     exact ⟨_,address,value,offset,rfl,rfl,rfl,sourceOffset,addressPosition,valuePosition⟩
+  | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
 end Exec.Interp.MemoryDescriptor

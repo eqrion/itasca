@@ -1,3 +1,4 @@
+import Exec.Code.Body.Reader.Control.ReaderControlEffects
 import Exec.Code.Body.Control.Table.IndexedTablePointControl
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
@@ -18,13 +19,14 @@ theorem IndexedTableReaderCompilerPointWasm2.finish_root {A : Type}
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after))
     (rest : TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out after final) :
-    StructuredCompiledBodyWithTables final.function.jump_tables.val (emit (CompilerTables.ofFunction final.function)) initial final types functions
+    StructuredCompiledBody final.function.jump_tables.val (emit (CompilerTables.ofFunction final.function)) initial final types functions
       (ft.results.val.map Translate.valueType) locals source := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   have rootForm := state.boundary.root_iff.mpr root
   obtain ⟨rfl,rfl⟩ := state.root_scopes rootForm
   let p := state.boundary.pending next advance inbounds
-  have pairs := reader_end_tables_wasm2 p ops law before after out ctx byte accepted
+  have effects := reader_end_effects_wasm2 ops law before after _ out data env ctx _ (by simpa only [global_simps] using accepted)
+  have pairs := effects.tables
   obtain ⟨callback,read,encoded,realizes,zipper,afterState⟩ := reader_end_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   obtain ⟨sourceC,outer,spine,header,base,typed,controls,blocks,vals⟩ := state.boundary.opened
@@ -42,7 +44,7 @@ theorem IndexedTableReaderCompilerPointWasm2.finish_root {A : Type}
     exact (generic rfl).2.2.2.2.1
   obtain ⟨rfl,finished⟩ := rest.closed closed
   have complete := state.finish_root ops law rootForm next advance inbounds out sourceBound bodyBound encodedBody byte accepted rest
-  change StructuredCompiledBodyWithTables (CompilerTables.ofFunction final.function).jumpTables
+  change StructuredCompiledBody (CompilerTables.ofFunction final.function).jumpTables
     (emit (CompilerTables.ofFunction final.function)) initial final types functions
     (ft.results.val.map Translate.valueType) locals source
   simpa only [pairs,CompilerTables.append_empty] using complete

@@ -18,16 +18,6 @@ namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-/-- Embeds a Wasm 1.0 token into the Wasm 2.0 token type without changing its SpecTec
-instruction. -/
-def liftToken : Wasm1.Token → Token
-  | .plain op => .plain op
-  | .block bt => .block (Control.signature bt)
-  | .loop bt => .loop (Control.signature bt)
-  | .if_ bt => .if_ (Control.signature bt)
-  | .else_ => .else_
-  | .end_ => .end_
-
 /-- The Wasm 2.0 token of an operator callback. Block, loop and if tokens keep their indexed
 parameter and result signatures. -/
 def actionToken (action : Action) (pending : List U32) : Option Token :=
@@ -35,7 +25,7 @@ def actionToken (action : Action) (pending : List U32) : Option Token :=
   | .block bt => some (.block bt)
   | .loop bt => some (.loop bt)
   | .if_ bt => some (.if_ bt)
-  | _ => (action.token pending).map liftToken
+  | _ => action.token pending
 
 /-- Exactly the callbacks for one fully decoded instruction. The table case
 separates vector entries from its default target, which has no label callback.

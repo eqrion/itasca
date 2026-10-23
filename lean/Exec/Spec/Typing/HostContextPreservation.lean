@@ -49,35 +49,4 @@ theorem completed_host_replacement {before after : config} {events : List HostEv
         subst g
         exact ⟨extension,storeTyped,rfl,context_typing_replacement extension replacement (vals front) tail⟩
 
-theorem configuration_replacement_preserves {before after : config}
-    (replacement : ConfigurationReplacement before after) {types : resulttype}
-    (typed : Config_ok before types) : Config_ok after types := by
-  cases before with
-  | mk_config state before =>
-    cases state with
-    | mk_state s f =>
-      cases after with
-      | mk_config state after =>
-        cases state with
-        | mk_state t g =>
-          obtain ⟨extension,storeTyped,rfl,transform⟩ := replacement
-          cases typed with
-          | mk_Config_ok _ _ _ types context state expression contextWf _ _ =>
-            have fresh := (extend_store_wf extension).2
-            have updatedState := state_ok_extend extension storeTyped state
-            have body : Instrs_ok2 s context before (.mk_functype (.mk_list []) (.mk_list types)) := by
-              cases expression
-              assumption
-            have updated := transform context [] types body
-            have bodyWf := (instrs_ok2_wf updated).2.2
-            have frameWf : wf_frame g := by cases state; casesm* wf_state _; assumption
-            exact .mk_Config_ok _ _ _ _ context updatedState
-              (.mk_Expr_ok2 _ _ _ _ updated fresh contextWf bodyWf) contextWf
-              (wf_config_make fresh frameWf bodyWf) (.state_case_0 _ _ fresh frameWf)
-
-theorem completed_host_config_preserved {before after : config} {events : List HostEvent}
-    (source : StepH before events after) (completed : events ≠ []) {types : resulttype}
-    (typed : Config_ok before types) : Config_ok after types :=
-  configuration_replacement_preserves (completed_host_replacement source completed) typed
-
 end Exec.Spec

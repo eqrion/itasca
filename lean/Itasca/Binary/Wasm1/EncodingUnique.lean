@@ -4,8 +4,8 @@ import Itasca.Binary.Wasm1.EncodingComplete
 /-!
 # Uniqueness of Wasm 1.0 decoding at a cursor
 
-Shows that the byte relations of `Binary/Wasm1/Encoding` determine their result: `At.unique` for
-one token, `Consumed.unique` for a token sequence and `BodyEncoding.unique` for a complete body.
+Shows that LEB128 indices and `br_table` label vectors determine their decoded values
+(`Leb128.Decoded.unique`, `BrTable.LabelsDecoded.unique`, `BrTable.Decoded.unique`).
 -/
 
 open Aeneas Aeneas.Std
@@ -57,60 +57,5 @@ theorem BrTable.Decoded.unique {data start xs ys x y next last}
 end Itasca
 
 namespace Itasca.Wasm1
-
-/-- An immediate span with the same opcode determines its token and end cursor. -/
-theorem Immediate.unique {data start opcode t u bs cs next last}
-    (ht : Immediate opcode t bs) (hu : Immediate opcode u cs)
-    (hb : BytesAt data start bs next) (hc : BytesAt data start cs last) :
-    t = u ∧ next = last := by
-  obtain ⟨rfl, rfl, _⟩ := Immediate.prefix_unique opcode ht hu (hb.suffix.symm.trans hc.suffix)
-  exact ⟨rfl, UScalar.eq_of_val_eq (hb.length.trans hc.length.symm)⟩
-
-/-- The token read at a cursor and its end cursor are determined by `data` and `start`. -/
-theorem At.unique {data start t u next last}
-    (ht : At data start t next) (hu : At data start u last) : t = u ∧ next = last := by
-  obtain ⟨bs, ht, hb⟩ := ht
-  obtain ⟨cs, hu, hc⟩ := hu
-  obtain ⟨rfl, rfl, _⟩ := token_prefix_unique ht hu (hb.suffix.symm.trans hc.suffix)
-  exact ⟨rfl, UScalar.eq_of_val_eq (hb.length.trans hc.length.symm)⟩
-
-/-- A consumed span that ends where it starts has no tokens. -/
-theorem Consumed.nil_of_equal_cursor {data start tokens next}
-    (h : Consumed data start tokens next) (hp : start = next) : tokens = [] := by
-  cases h with
-  | nil => rfl
-  | snoc hs ht => have := hs.span; have := ht.span; subst next; omega
-
-/-- Two consumed spans over the same interval have the same tokens. -/
-theorem Consumed.unique {data start xs ys next}
-    (hx : Consumed data start xs next) (hy : Consumed data start ys next) : xs = ys := by
-  induction xs generalizing start ys with
-  | nil =>
-      have hn := hx.empty_eq rfl
-      exact (hy.nil_of_equal_cursor hn.symm).symm
-  | cons x xs ih =>
-      obtain ⟨p, hp, hxs⟩ := Consumed.cons_iff.mp hx
-      cases ys with
-      | nil =>
-          have hn := hy.empty_eq rfl
-          have := hp.span
-          have := hxs.span
-          subst next
-          omega
-      | cons y ys =>
-          obtain ⟨q, hq, hys⟩ := Consumed.cons_iff.mp hy
-          obtain ⟨rfl, rfl⟩ := hp.unique hq
-          rw [ih hxs hys]
-
-/-- A complete body encoding determines one instruction tree, regardless of typing. -/
-theorem BodyEncoding.unique {data xs ys}
-    (hx : BodyEncoding data xs) (hy : BodyEncoding data ys) : xs = ys := by
-  obtain ⟨xt, xp, hx, hxp, hxs⟩ := hx
-  obtain ⟨yt, yp, hy, hyp, hys⟩ := hy
-  have hp : xp = yp := UScalar.eq_of_val_eq (hxp.trans hyp.symm)
-  subst yp
-  have ht := hx.unique hy
-  subst yt
-  exact hxs.unique hys
 
 end Itasca.Wasm1

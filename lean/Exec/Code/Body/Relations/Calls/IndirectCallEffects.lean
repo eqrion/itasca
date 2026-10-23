@@ -9,7 +9,7 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
     (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length) :
-    code.call st data env true ⦃ r => r.1 = .Ok () →
+    code.call st data env .Wasm2 true ⦃ r => r.1 = .Ok () →
       ∃ (idx table : U32) (middle : Usize) (ft : types.FuncType) (tt : types.TableType) (rest : List code.StackType),
         Leb128.Decoded data st.core.pos idx middle ∧ Leb128.Decoded data middle table r.2.core.pos ∧
         env.types.val[idx.val]? = some ft ∧ env.table_types.val[table.val]? = some tt ∧ tt.elem = .FuncRef ∧
@@ -19,14 +19,14 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
             (ts ++ (ft.params.val.map Translate.valueType ++ [.I32]))) ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
   cases r with
-  | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr,
+  | Err e => simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨idx, middle⟩ := pair
     obtain ⟨rtable, hreadtable, hdtable⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data middle)
     cases rtable with
-    | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable,
+    | Err e => simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
@@ -39,7 +39,7 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
         have htablesmall := Nat.not_le_of_gt htable
         cases helem : tt.elem with
         | ExternRef =>
-          simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+          simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
             htablesmall, hget, helem, Itasca.types.ElemType.value_type,
             core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
             Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
@@ -58,7 +58,7 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
             dsimp only at hcc hpc hvc htc
             cases rc with
             | Err e =>
-              simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+              simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
                 htablesmall, hget, helem, Itasca.types.ElemType.value_type,
                 core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                 Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
@@ -70,7 +70,7 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
                   (by simpa [Control.base, hcc] using hbase))
               cases res with
               | Err e =>
-                simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+                simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
                   htablesmall, hget, helem, Itasca.types.ElemType.value_type,
                   core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
@@ -88,7 +88,7 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
                   simpa [Translate.valueType, List.append_assoc, Control.polymorphic] using hargs
                 rw [WP.spec_equiv_exists]
                 refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-                · simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+                · simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
                     htablesmall, hget, helem, Itasca.types.ElemType.value_type,
                     core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                     Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
@@ -99,14 +99,14 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
                   · simpa [List.getElem?_eq_getElem hi] using congrArg some htype
                   · simpa [List.getElem?_eq_getElem htable] using congrArg some htt
           · have hlarge := Nat.le_of_not_gt hi
-            simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+            simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
               htablesmall, hget, helem, Itasca.types.ElemType.value_type,
               core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
               Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · have hlarge := Nat.le_of_not_gt htable
-        simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
+        simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
           hlarge, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
@@ -117,18 +117,18 @@ theorem reader_indirect_call_stack_wasm2 (st out : code.BodyState) (data : Slice
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (known : ConcreteStack st.core.vals.val) (monomorphic : Control.polymorphic st.core = false)
     (shape : Control.Shape st.core)
-    (accepted : code.call_indirect_info st data env = .ok (.Ok (index,table),out)) :
+    (accepted : code.call_indirect_info st data env .Wasm2 = .ok (.Ok (index,table),out)) :
     ∃ (ft : types.FuncType) (tt : types.TableType) (front : List types.ValueType),
       env.types.val[index.val]? = some ft ∧ env.table_types.val[table.val]? = some tt ∧ tt.elem = .FuncRef ∧
       Sequence.stackTypes st.core.vals.val = (front.map Translate.valueType ++ ft.params.val.map Translate.valueType) ++ [.I32] ∧
       out.core.vals.val = (front ++ ft.results.val).map code.StackType.Val := by
-  have erased : code.call st data env true = .ok (.Ok (),out) := by
+  have erased : code.call st data env .Wasm2 true = .ok (.Ok (),out) := by
     simp [code.call,accepted,core.result.Result.Insts.CoreOpsTry.branch]
   have effect := indirect_call_effect st data env outer segment values base
   rw [erased,WP.spec_ok] at effect
   obtain ⟨idx,tab,middle,ft,tt,rest,decoded,decodedTable,typeFound,tableFound,elem,afterValues,transfer⟩ := effect rfl
   dsimp only at decoded decodedTable afterValues
-  have info := code.call_indirect_info.bytes st data env shape
+  have info := code.call_indirect_info.bytes st data env .Wasm2 shape
   rw [accepted,WP.spec_ok] at info
   obtain ⟨middle',indexBytes,tableBytes⟩ := info index table rfl
   obtain ⟨rfl,rfl⟩ := Leb128.Decoded.deterministic data st.core.pos index idx middle' middle indexBytes decoded

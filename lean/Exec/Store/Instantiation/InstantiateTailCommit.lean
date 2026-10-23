@@ -1,4 +1,4 @@
-import Exec.Store.Instantiation.InstantiateTail
+import Exec.Generated.Equations
 import Exec.Store.Invariant.NormalResult
 
 namespace Exec.Store
@@ -12,9 +12,9 @@ theorem instantiate_tail_committed {M P F A : Type}
     (identity : runtime.InstanceAddr) (store : runtime.store.Store M) (platform : P)
     (result : core.result.Result runtime.InstanceAddr runtime.ExecError)
     (after : runtime.store.Store M) (host : P) (committed : Bool)
-    (run : instantiate_tail memory hooks floats allocator identity store platform =
+    (run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
       .ok (result, after, host, committed)) : committed = true := by
-  unfold instantiate_tail at run
+  unfold runtime.store.instantiate.Store.commit_instance at run
   obtain ⟨⟨status, state, context⟩, initRun, run⟩ := normal_bind_exists _ _ _ run
   simp only [uncurry_apply_pair] at run
   cases status with

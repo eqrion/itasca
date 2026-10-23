@@ -40,9 +40,8 @@ theorem module.validate_code_entry_with.profile_sound {V : Type} (visitor : code
   obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile visitor data pos env index finish v v'
     hbound profile h
   apply w.profile_validated
-  apply CodeEntry.runBody.sound visitor profile w.body env w.ctx w.typeIdx w.ft w.startedState v'
+  apply code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile w.ft w.startedState v'
   · rw [List.getElem?_eq_getElem w.type_lt, w.function_type]
-  · exact w.context_results
   · apply hresults
     rw [← w.function_type]
     exact List.getElem_mem _

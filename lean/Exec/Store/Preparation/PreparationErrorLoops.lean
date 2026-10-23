@@ -10,14 +10,14 @@ theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
-    {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator store status index inst = .ok out) :
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator store status index inst = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop3 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop3 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop3.body,
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop3.body,
       runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.types, Itasca.module.Env.impl.types, bind_ok] at run
     split at run
@@ -38,8 +38,8 @@ theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < count := by scalar_tac
         have nextAllowed := add_type_errors memory allocator law store inst index _ called
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop3, runtime.store.instantiate.Store.instantiate_inner_loop3.body,
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop3, runtime.store.instantiate.Store.prepare_instance_loop3.body,
             runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
             module.Env.types, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl
@@ -51,14 +51,14 @@ theorem function_staging_errors {M A : Type} (memory : runtime.platform.MemoryBu
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
-    {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store status index inst instanceIndex = .ok out) :
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator store status index inst instanceIndex = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop4 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop4 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop4.body,
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop4.body,
       runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, bind_ok] at run
     split at run
@@ -79,8 +79,8 @@ theorem function_staging_errors {M A : Type} (memory : runtime.platform.MemoryBu
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < count := by scalar_tac
         have nextAllowed := add_function_errors memory allocator law store inst instanceIndex index _ called
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator nextStore nextStatus nextIndex nextInst instanceIndex = .ok out := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop4, runtime.store.instantiate.Store.instantiate_inner_loop4.body,
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator nextStore nextStatus nextIndex nextInst instanceIndex = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop4, runtime.store.instantiate.Store.prepare_instance_loop4.body,
             runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
             module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl

@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
-theorem memory_init_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem memory_init_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 8#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -30,7 +30,7 @@ theorem memory_init_bytes {data env locals index st} (p : Pending data env local
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 8#u32 hpe (.memoryInit idx he))
     ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
-theorem data_drop_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem data_drop_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -48,7 +48,7 @@ theorem data_drop_bytes {data env locals index st} (p : Pending data env locals 
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 9#u32 hpe (.dataDrop idx hencoding))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
-theorem memory_copy_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem memory_copy_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 10#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -67,7 +67,7 @@ theorem memory_copy_bytes {data env locals index st} (p : Pending data env local
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 10#u32 hpe .memoryCopy)
     ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
-theorem memory_fill_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem memory_fill_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 11#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -86,7 +86,7 @@ theorem memory_fill_bytes {data env locals index st} (p : Pending data env local
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 11#u32 hpe .memoryFill)
     ((Wasm1.BytesAt.mk hp hpl hpb).append hb)
 
-theorem table_init_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem table_init_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 12#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -112,7 +112,7 @@ theorem table_init_bytes {data env locals index st} (p : Pending data env locals
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 12#u32 hpe (.tableInit i j hie hje))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
 
-theorem elem_drop_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem elem_drop_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -130,7 +130,7 @@ theorem elem_drop_bytes {data env locals index st} (p : Pending data env locals 
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 13#u32 hpe (.elemDrop idx hencoding))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
-theorem table_copy_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem table_copy_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 14#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -156,7 +156,7 @@ theorem table_copy_bytes {data env locals index st} (p : Pending data env locals
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 14#u32 hpe (.tableCopy i j hie hje))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ((Wasm1.BytesAt.mk his hil hib).append ⟨hjs, hjl, hjb⟩))
 
-theorem table_grow_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem table_grow_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 15#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -175,7 +175,7 @@ theorem table_grow_bytes {data env locals index st} (p : Pending data env locals
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 15#u32 hpe (.tableGrow idx hencoding))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
-theorem table_size_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem table_size_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 16#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -194,7 +194,7 @@ theorem table_size_bytes {data env locals index st} (p : Pending data env locals
   exact At.of_immediate p.inbounds hbyte p.pos (.bulk 16#u32 hpe (.tableSize idx hencoding))
     ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
-theorem table_fill_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem table_fill_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 17#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -214,7 +214,7 @@ theorem table_fill_bytes {data env locals index st} (p : Pending data env locals
     ((Wasm1.BytesAt.mk hp hpl hpb).append ⟨hbytes, hlen, hbound⟩)
 
 /-- Exact bulk dispatch trace includes reader rejection and callback rejection. -/
-theorem bulk {data env locals index st} (p : Pending data env locals index st)
+theorem bulk {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)

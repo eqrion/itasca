@@ -1,4 +1,4 @@
-import Exec.Spec.InfiniteSource
+import Exec.Spec.Counted
 
 namespace Exec.Spec
 open SpecExt
@@ -9,11 +9,6 @@ def InfiniteSourceWithEvents (initial : config) : Prop :=
   ∃ states : Nat → config, ∃ events : Nat → List HostEvent,
     states 0 = initial ∧ ∀ n, ∃ count, 0 < count ∧
       StepsHN count (states n) (events n) (states (n+1))
-
-theorem InfiniteSource.with_events {initial : config} (infinite : InfiniteSource initial) :
-    InfiniteSourceWithEvents initial := by
-  obtain ⟨states,first,edges⟩ := infinite
-  exact ⟨states,fun _ => [],first,edges⟩
 
 theorem InfiniteSourceWithEvents.prepend {initial next : config} {events : List HostEvent}
     (infinite : InfiniteSourceWithEvents next) (steps : StepsH initial events next) :

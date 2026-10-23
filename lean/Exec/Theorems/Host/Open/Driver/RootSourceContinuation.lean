@@ -25,7 +25,7 @@ theorem root_source_continuation {M : Type} (memory : runtime.platform.MemoryBuf
     (ambient : frame) (ambientWf : wf_frame ambient) (arguments : List val)
     (typed : ResultsTyped (Store.decodeStore view code store) (signature.params.val.map sourceType) arguments)
     (capacity : Code.slots (signature.results.val.map sourceType)≤ready.slots.length) :
-    SourceContinuation Executable.emission Abs.ExecutableInstr memory view code store ready address 0#usize
+    SourceContinuation memory view code store ready address 0#usize
       (rootSourcePending view code store ambient ambientWf address identity signature arguments
         (Store.decode_host_function view code store address function identity signature functionAt hostCode signatureAt) typed)
       (signature.results.val.map sourceType) := by

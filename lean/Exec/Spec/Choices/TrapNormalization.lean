@@ -1,4 +1,7 @@
-import Exec.Spec.Choices.TrapAdministrative
+import Exec.Spec.Choices.Steps
+import Exec.Spec.PureWf
+import Exec.Spec.Typing.ValueConfigTyping
+import Exec.Spec.Typing.EmptyFrameTyping
 import Exec.Spec.EventfulInfinite
 
 /-! Active traps admit only administrative cleanup: syntax strictly decreases,
@@ -12,7 +15,6 @@ def trapCode : config → List admininstr
 
 def trapState : config → state
   | ⟨state,_⟩ => state
-
 
 def activeTrap : List admininstr → Bool
   | [] => false
@@ -257,22 +259,5 @@ theorem active_trap_no_infinite {initial : config} (active : activeTrap (trapCod
       exact ⟨result.2.2.1,by omega⟩
   have impossible := (every (sizeOf (trapCode initial)+1)).2
   omega
-
-/-- Every completed cleanup run has the same trap state and no host events. -/
-theorem active_trap_outcome {initial : config} {state : _root_.state} {events : List HostEvent}
-    (active : activeTrap (trapCode initial)=true) (run : StepsH initial events ⟨state,[.TRAP]⟩) :
-    state=trapState initial ∧ events=[] := by
-  obtain ⟨count,counted⟩ := stepsH_count run
-  have result := counted.active_trap active
-  exact ⟨result.2.1,result.1⟩
-
-theorem active_trap_no_values {initial : config} {state : _root_.state} {events : List HostEvent} {values : List val}
-    (active : activeTrap (trapCode initial)=true) : ¬ StepsH initial events ⟨state,vals values⟩ := by
-  intro run
-  obtain ⟨count,counted⟩ := stepsH_count run
-  have result := counted.active_trap active
-  have impossible := result.2.2.1
-  simp only [trapCode,activeTrap_values] at impossible
-  contradiction
 
 end Exec.Spec

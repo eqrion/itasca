@@ -44,13 +44,6 @@ theorem offset_lt_slots {ts : List valtype} {index : Nat} {ty : valtype}
   have := width_positive ty
   omega
 
-/-- Local transfers cannot be elided as a self-copy: operand slots begin
-strictly after every local's starting slot. -/
-theorem local_before_stack {locals stack : List valtype} {index : Nat} {ty : valtype}
-    (h : locals[index]? = some ty) : offset locals index < slots locals + slots stack := by
-  have := offset_lt_slots h
-  omega
-
 /-- Every source value has at least one slot, including references. -/
 theorem length_le_slots (ts : List valtype) : ts.length ≤ slots ts := by
   induction ts with

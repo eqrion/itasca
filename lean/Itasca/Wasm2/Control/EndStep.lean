@@ -19,7 +19,7 @@ private theorem empty_spine_form {env root parents C outer form ins}
   | push => simp at he
 
 /-- The actual closing handlers preserve the independent typed zipper. -/
-theorem Pending.end_after {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.end_after {data env profile locals index st} (p : Pending data env profile locals index st)
     (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
     code.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
@@ -45,7 +45,7 @@ theorem Pending.end_after {data env locals index st} (p : Pending data env local
     cases hf : p.current.form with
     | body =>
       have hp : p.parents = [] := (p.opened.finish_body hf hres).1
-      exact p.finish_body r.2 encoded hf hres (by simpa [hp] using hc) (by simpa [hp] using hb)
+      exact p.finish_body r.2 encoded (by simpa [hop] using hbyte) hf hres (by simpa [hp] using hc) (by simpa [hp] using hb)
     | block | loop | then_ | else_ thenTokens thenOps =>
       all_goals
         have closed : ∃ op, Frames.Closed p.current.form p.current.bt p.current.ops op := by
@@ -58,7 +58,11 @@ theorem Pending.end_after {data env locals index st} (p : Pending data env local
           simp_all
         obtain ⟨gps, parent, he, ho, htrace⟩ := p.opened.close hroot htypes op closed hres hthen hc hb
           (by simpa [htake, List.map_eq_nil_iff, hn] using hv)
+        have hframes := p.profileFrames
+        rw [he] at hframes
         refine p.running_after r.2 gps _ .end_ encoded ho ?_ htrace ?_
+          (hframes.close closed header.inputs header.outputs _ _)
+          (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
         · simpa [List.append_assoc] using (Frames.bodyType_close gps parent p.current op).trans
             (by simpa [← he] using p.bodyType)
         · simp [hb, blocks]; omega
@@ -73,6 +77,7 @@ theorem Pending.end_after {data env locals index st} (p : Pending data env local
     obtain ⟨ho, ht⟩ := p.opened.else_ hroot hform hres (by simpa [Frames.Saved.nextElse] using hc)
       hb (by simpa [htake] using hv)
     refine p.running_after r.2 p.parents p.current.nextElse .else_ encoded ho ?_ ht ?_
+      (p.profileFrames.else_ hform) (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
     · simpa [Frames.bodyType_else] using p.bodyType
     · simp [hb]
 

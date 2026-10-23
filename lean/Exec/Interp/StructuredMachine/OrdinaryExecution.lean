@@ -1,8 +1,10 @@
 import Exec.Interp.StructuredMachine.OrdinaryStack
-import Exec.Abs.Core.StatePreservation
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Pure
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission} {supported : Abs.AState → Prop}
 
 /-- Checked local effects assemble into the mutable whole-machine invariant.
 Typing and syntax facts here are supplied by the independent abstract step
@@ -11,21 +13,21 @@ theorem Execution.ordinary {M : Type} (view : M → Slice U8) (code : Store.Code
     {store nextStore : runtime.store.Store M} {exec after : runtime.interp.Execution}
     (ambient : frame) (source updatedSource : Abs.AFrame) (rest : List Abs.AFrame)
     (expected : List valtype) (beforePC : Nat) (beforePending : Bool)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ expected beforePC beforePending)
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ expected beforePC beforePending)
     (stores : FrameStoreMetadata store nextStore)
     (extension : Extend_store (Store.decodeStore view code store) (Store.decodeStore view code nextStore))
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val+1 = exec.frames.length) (lookup : exec.frames.val[index.val]? = some raw)
     {compiled C targets next output pending}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : ControlPoint emission (Store.decodeStore view code nextStore) {raw with pc := pc} updatedSource compiled C targets next output pending)
+    (point : ControlPoint (Store.decodeStore view code nextStore) {raw with pc := pc} updatedSource compiled C targets next output pending)
     (slots : FrameSlots after {raw with pc := pc} updatedSource)
     (metadata : FrameMetadata source updatedSource)
     (effect : {after with slots := exec.slots} = {exec with frames := exec.frames.set index {raw with pc := pc}})
     (preserved : SlotPrefix raw.base.val exec.slots.val after.slots.val)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩)
-    (covered : supported ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩) :
-    Execution emission supported view code nextStore after ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩ expected pc.val pending := by
+    (covered : Abs.SupportedState ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩) :
+    Execution view code nextStore after ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩ expected pc.val pending := by
   have top : exec.frames.val.getLast? = some raw := by
     rw [List.getLast?_eq_getElem?]
     have position : exec.frames.val.length-1 = index.val := by change exec.frames.length-1 = index.val; omega

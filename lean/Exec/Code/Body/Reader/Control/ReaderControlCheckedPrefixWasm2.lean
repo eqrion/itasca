@@ -19,11 +19,11 @@ set_option maxRecDepth 4096
 /-- All control-reader forms preserve instruction and exit-slot checking at
 an actual Wasm 2 source boundary. Root END additionally checks the completed
 code before the final compiler publication check is called. -/
-theorem StructuredReaderCompilerStateWithTablesWasm2.control_checked_prefix
+theorem StructuredReaderCompilerStateWasm2.control_checked_prefix
     {jumpTables : List U32} {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions locals data env sourceLocals index ft st parents current savedParents savedCurrent}
-    (state : StructuredReaderCompilerStateWithTablesWasm2 jumpTables emit initial before types functions
+    (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial before types functions
       (ft.results.val.map Translate.valueType) locals data env sourceLocals index ft st
       parents current savedParents savedCurrent)
     (ctx : code.Context) (contextSource : ctx.locals = sourceLocals) (C : context)

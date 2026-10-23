@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Full SIMD memory readers retain both encoded immediates, validated memory
 availability and alignment, the exact callback, and the source prefix. -/
 theorem reader_simd_memory_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.MemoryOperation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)

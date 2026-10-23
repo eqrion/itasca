@@ -32,13 +32,6 @@ theorem instance_syntax_source (oldCode : CodeInterpretation) (fresh : Nat)
     rw [installCode_lookup oldCode fresh _ inst.module function source found]
     exact Code.source_functions_wf elaborates typed source (List.mem_of_getElem? found)
 
-/-- Changing instance maps leaves its source syntax unchanged. -/
-theorem InstanceSyntax.module_eq {code : CodeInterpretation} {index : Nat}
-    {before after : runtime.store.ModuleInst} (hsyntax : InstanceSyntax code index before)
-    (same : after.module = before.module) : InstanceSyntax code index after := by
-  exact ⟨by simpa only [same] using hsyntax.exportNames,
-    by simpa only [same] using hsyntax.functionCodes⟩
-
 /-- Reinterpreting only fresh instance keys preserves all old syntax. -/
 theorem StoreSyntax.code_agrees {M : Type} {store : runtime.store.Store M}
     {before after : CodeInterpretation} (hsyntax : StoreSyntax before store)
@@ -47,30 +40,6 @@ theorem StoreSyntax.code_agrees {M : Type} {store : runtime.store.Store M}
   exact ⟨(hsyntax index inst found).exportNames, fun function bound => by
     rw [agrees index inst found function]
     exact (hsyntax index inst found).functionCodes function bound⟩
-
-/-- Publishing one instance preserves the syntax of every existing instance. -/
-theorem StoreSyntax.publish {M : Type} {before after : runtime.store.Store M}
-    {oldCode newCode : CodeInterpretation} (prior : StoreSyntax oldCode before)
-    (agrees : CodeAgreesOn before oldCode newCode) (inst : runtime.store.ModuleInst)
-    (appended : after.instances.val = before.instances.val ++ [inst])
-    (fresh : InstanceSyntax newCode before.instances.length inst) :
-    StoreSyntax newCode after := by
-  have old := prior.code_agrees agrees
-  intro index value found
-  by_cases bound : index < before.instances.length
-  · have retained : before.instances.val[index]? = some value := by
-      simpa only [appended, List.getElem?_append_left bound] using found
-    exact old index value retained
-  · have selected : index = before.instances.length := by
-      have inbounds := (List.getElem?_eq_some_iff.mp found).1
-      simp only [appended, List.length_append, List.length_singleton] at inbounds
-      change index < before.instances.length + 1 at inbounds
-      omega
-    subst index
-    have equal : value = inst := by
-      simpa [appended] using found.symm
-    subst value
-    exact fresh
 
 /-- Store content updates do not affect the retained source syntax. -/
 theorem StoreSyntax.instances_eq {M : Type} {before after : runtime.store.Store M}

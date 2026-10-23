@@ -8,7 +8,7 @@ theorem integer32_point_capacity (compiled : runtime.bytecode.CompiledFunction)
     (checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true)
     (C : context) (returns stack : List valtype) (labels : List Code.LabelTarget)
     (value : U32) (after : List instr) (next : Nat) (output : List valtype) :
-    ∀ pc, Code.StructuredCodeWithTables.Point (family C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
+    ∀ pc, Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
       (.CONST .I32 (.mk_num__0 .I32 (.mk_uN value.val))::after) pc next output →
       Code.slots C.LOCALS + Code.slots stack < compiled.slot_count.val := by
   intro pc point
@@ -25,7 +25,7 @@ theorem integer64_point_capacity (compiled : runtime.bytecode.CompiledFunction)
     (checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true)
     (C : context) (returns stack : List valtype) (labels : List Code.LabelTarget)
     (value : U64) (after : List instr) (next : Nat) (output : List valtype) :
-    ∀ pc, Code.StructuredCodeWithTables.Point (family C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
+    ∀ pc, Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS compiled.code.val compiled.jump_tables.val labels stack
       (.CONST .I64 (.mk_num__0 .I64 (.mk_uN value.val))::after) pc next output →
       Code.slots C.LOCALS + Code.slots stack < compiled.slot_count.val := by
   intro pc point

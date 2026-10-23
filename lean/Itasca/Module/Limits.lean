@@ -25,15 +25,6 @@ def CodeEncodingWithinLimits (entry : Code) (bytes : List U8) : Prop :=
     VecEncoding LocalEncoding entry.locals locals ∧ BodyEncoding entry.body body ∧
     body.length ≤ limits.MAX_FUNCTION_BYTES.val ∧ bytes = size ++ locals ++ body
 
-/-- Forgetting the caps leaves a plain `CodeEncoding`. -/
-theorem CodeEncodingWithinLimits.encoding {entry bytes} (h : CodeEncodingWithinLimits entry bytes) :
-    CodeEncoding entry bytes := by
-  obtain ⟨_, size, locals, body, hs, hl, hb, _, he⟩ := h
-  exact ⟨size, locals, body, hs, hl, hb, he⟩
-
-theorem CodeEncodingWithinLimits.local_bound {entry bytes} (h : CodeEncodingWithinLimits entry bytes) :
-    entry.declared.length ≤ limits.MAX_LOCALS.val := h.1
-
 end Itasca.ModuleBinary
 
 open Aeneas Aeneas.Std
@@ -93,9 +84,9 @@ theorem ModuleEncodingWithinLimits.encoding {profile raw bytes}
   h.2.imp (fun _ _ hc => hc.encoding)
 
 /-- Every signature in the type section satisfies `Profile.FuncTypeWithinLimits`. This is an
-implementation cap on parameters and results, required for completeness only. It is trivial
-for Wasm 1.0 and bounds both counts for Wasm 2.0. -/
-def ModuleSignaturesWithinLimits (raw : Module) (profile : ValidationProfile) : Prop :=
-  ∀ ft ∈ raw.types, Profile.FuncTypeWithinLimits profile ft
+implementation cap on parameters and results, shared by both profiles and required for
+completeness only. -/
+def ModuleSignaturesWithinLimits (raw : Module) : Prop :=
+  ∀ ft ∈ raw.types, Profile.FuncTypeWithinLimits ft
 
 end Itasca.ModuleBinary

@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Typed source label selection supplies every transfer and target premise
 needed by the actual unconditional branch callback. -/
-theorem StructuredCompilerPrefixWithTables.br_exit_slots
+theorem StructuredCompilerPrefix.br_exit_slots
     {jumpTables : List U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (state : code.OpIterState) (depth : U32) (view : signature.ResultType)
@@ -35,10 +35,10 @@ theorem StructuredCompilerPrefixWithTables.br_exit_slots
 
 /-- Conditional source label selection additionally bounds the consumed i32
 selector and the local continuation around an actual transfer. -/
-theorem StructuredCompilerPrefixWithTables.br_if_exit_slots
+theorem StructuredCompilerPrefix.br_if_exit_slots
     {jumpTables : List U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current raw position)
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (state : code.OpIterState) (depth : U32) (view : signature.ResultType)

@@ -1,10 +1,150 @@
 import Exec.Theorems.Composition.Supported.SupportedEntryOutcomes
-import Exec.Theorems.Composition.Supported.SupportedLoopReadback
-import Exec.Theorems.Composition.Supported.SupportedErrors
-import Exec.Interp.Invocation.InvokeMutable
+import Exec.Theorems.Composition.Certified.CertifiedSupported
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Interp.Relations.SuspendedPoint
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Abs.Core.Typing
+import Exec.Abs.Core
+import Exec.Abs.Ownership.Core
+import Exec.Interp.Core.Mutation
+import Exec.Interp.Relations.SourceCallCause
+import Exec.Interp.State.GlobalMutationStep
+import Exec.Interp.Control.PendingJump
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.Relations.ReferenceTransfers
+import Exec.Interp.Relations.SourceClosure
+import Exec.Interp.Core.Linear
+import Exec.Interp.Relations.PrefixDispatch
+import Exec.Abs.Core.Correct
+import Exec.Interp.Relations.ControlPoint
+import Exec.Interp.Numeric.Integer.NumericFetch
+import Exec.Interp.Numeric.Integer.NumericCodePoint
+import Exec.Abs.Numeric.TransitionSimulation
+import Exec.Abs.Core.Bound
+import Exec.Code.Local.Control.Table.StructuredCodeTableExclusion
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Interp.StructuredMachine.OrdinaryExecution
+import Exec.Interp.StructuredMachine.OrdinaryStack
+import Exec.Interp.StructuredMachine.StackPreservation
+import Exec.Interp.Relations.StackPreservation
+import Exec.Interp.Relations.PrefixEffect
+import Exec.Interp.Control.SkipStack
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Pure
+import Exec.Spec.Extend
+import Exec.Interp.Core.OwnershipClosure
+import Exec.Interp.Core.LocalInversion
+import Exec.Interp.Relations.LocalCodePoint
+import Exec.Interp.Relations.Fetch
+import Exec.Interp.Relations.ValueLookup
+import Exec.Interp.Relations.LocalCapacity
+import Exec.Interp.Relations.Capacity
+import Exec.Interp.Core.LocalPrefix
+import Exec.Interp.Machines.Core.CoreOwnership
+import Exec.Interp.Core.BoundClosure
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.BranchNoCopy
+import Exec.Interp.Control.BranchConditionStep
+import Exec.Interp.Relations.TypedOperands
+import Exec.Interp.Relations.ControlEntry
+import Exec.Interp.Control.LoopHead
+import Exec.Interp.Machines.Core.CoreIntegerConstantPoint
+import Exec.Interp.Machines.Core.CoreIntegerConstantSlots
+import Exec.Interp.Machines.Slice.SliceOpcode
+import Exec.Interp.State.GlobalCoreStep
+import Exec.Interp.State.GlobalCoreOperands
+import Exec.Code.Local.Capacity.GlobalCapacity
+import Exec.Interp.Machines.Core.CoreFloatConstantPoint
+import Exec.Interp.Machines.Core.CoreFloatConstantSlots
+import Exec.Interp.Relations.SelectSlots
+import Exec.Interp.Machines.Core.CoreSelectOperands
+import Exec.Interp.Memory.MemoryCoreTransition
+import Exec.Interp.Memory.MemoryCoreOperandBounds
+import Exec.Interp.Memory.MemoryCoreEmission
+import Exec.Interp.Memory.MemoryCoreStep
+import Exec.Interp.Memory.MemoryCoreResult
+import Exec.Interp.Memory.MemoryLoadStepFootprint
+import Exec.Abs.Bound
+import Exec.Abs.Numeric.Transition
+import Exec.Abs.ReferenceBounds
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.CallSafety
+import Exec.Interp.Calls.CallStack
+import Exec.Code.Local.Relations.Common.CoreFunction
+import Exec.Interp.Calls.CallRefinement
+import Exec.Abs.Results
+import Exec.Interp.Calls.ReturnRefinement
+import Exec.Interp.Calls.ReturnResult
+import Exec.Interp.Machines.Core.CoreUnreachableExecution
+import Exec.Interp.Relations.StackRelation
+import Exec.Interp.Relations.Epilogue
+import Exec.Interp.Relations.Normalization
+import Exec.Interp.Core.EmptyInversion
+import Exec.Interp.Control.LabelCompletion
+import Exec.Interp.Core.Erased
+import Exec.Interp.Control.NormalizeClosure
+import Exec.Interp.Control.NormalizeCompose
+import Exec.Interp.Machines.Slice.SliceMeasure
+import Exec.Store.Api.GlobalWriteExtension
+import Exec.Interp.Memory.MemoryMutation
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Store.Invariant.ObjectExtension
+import Exec.Theorems.Composition.GlobalMutationShape
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Spec.Mutation
+import Exec.Store.Invariant.InstantiationCode
+import Exec.Store.Initialization.SegmentObjectMetadata
+import Exec.Interp.StructuredMachine.Finished
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Theorems.Composition.Supported.SupportedBranchTableExecution
+import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
+import Exec.Theorems.Composition.StoreMutationFacts
+import Exec.Interp.StructuredMachine.GlobalMutation
+import Exec.Interp.StructuredMachine.OrdinaryAdvance
+import Exec.Interp.StructuredMachine.NumericExecutionOwned
+import Exec.Interp.StructuredMachine.GlobalExecutionOwned
+import Exec.Interp.StructuredMachine.FloatConstantExecutionOwned
+import Exec.Interp.StructuredMachine.SelectExecutionOwned
+import Exec.Interp.StructuredMachine.MemoryExecutionOwned
+import Exec.Interp.StructuredMachine.CallExecution
+import Exec.Interp.StructuredMachine.ReturnExecution
+import Exec.Interp.StructuredMachine.UnreachableExecution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
+import Exec.Code.Local.Control.Common.CumulativeFunctionContext
+import Exec.Interp.StructuredMachine.CompiledFunctions
+import Exec.Code.Body.Control.Table.CumulativeTableExclusion
+import Exec.Code.Local.Control.Table.StructuredCodePoint
+import Exec.Interp.StructuredMachine.SupportedControlSemantics
+import Exec.Interp.StructuredMachine.SupportedBoundarySemantics
+import Exec.Theorems.Composition.Supported.SupportedScalarExecution
+import Exec.Theorems.Composition.Supported.SupportedStatefulExecution
+import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
+import Exec.Theorems.Composition.Supported.SupportedSimdExecution
+import Exec.Theorems.Composition.Supported.SupportedTypedSelectExecution
+import Exec.Interp.StructuredMachine.EpilogueExecution
+import Exec.Theorems.Composition.Supported.SupportedNormalizeOutcome
+import Exec.Interp.StructuredMachine.NormalizeExecution
+import Exec.Interp.StructuredMachine.PendingExecution
+import Exec.Theorems.Composition.Supported.SupportedMeasure
+import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
+import Exec.Interp.Invocation.InvokeMutableCauses
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Source meaning of the error classes reachable after accepting owned Core
 arguments. Stronger local theorems retain exact resource and hook witnesses. -/
@@ -13,92 +153,4 @@ def SupportedInvocationError (initial : config) (s : _root_.store) (ambient : fr
   | .Exhausted _ | .Terminated => True
   | _ => False
 
-/-- Actual invocation uses the common supported machine. Results and traps
-retain source execution, the updated store, and segment counts. -/
-theorem invoke_defined_supported_outcomes
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (certified : CertifiedSupportedStore emission allowed view code store) (hostFree : CoreHostFree store)
-    (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
-    (owner : address.store = store.id)
-    (owned : ∀ value ∈ args.val, Store.ValueInStore store value)
-    (hf : store.funcs.val[address.index.val]? = some function)
-    (hs : store.types.val[function.signature.val]? = some signature)
-    (hw : function.code = .Wasm instanceIndex functionIndex)
-    (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref signature.params) = .ok (.Ok ())) :
-    runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out =>
-        (CertifiedSupportedStore emission allowed view code out.2.2.1 ∧ Interp.FrameStoreMetadata store out.2.2.1 ∧
-          Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.2.1) ∧
-          Store.SegmentCounts store out.2.2.1) ∧
-        (out.1 = .Ok () →
-          signature.results.val.map Interp.sourceType = (out.2.2.2.2.val.map Interp.sourceValue).map Code.valueType ∧
-          StepsH ⟨⟨Store.decodeStore view code store,ambient⟩,
-            vals (args.val.map Interp.sourceValue) ++ [admininstr.CALL_ADDR address.index.val]⟩ []
-            ⟨⟨Store.decodeStore view code out.2.2.1,ambient⟩,vals (out.2.2.2.2.val.map Interp.sourceValue)⟩) ∧
-        (∀ error, out.1 = .Err error → SupportedInvocationError
-          ⟨⟨Store.decodeStore view code store,ambient⟩,
-            vals (args.val.map Interp.sourceValue) ++ [admininstr.CALL_ADDR address.index.val]⟩
-          (Store.decodeStore view code out.2.2.1) ambient error) ⦄div := by
-  let entry (prepared : runtime.interp.Execution) : Prop := ∃ source,
-    Interp.StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store prepared source (signature.results.val.map Interp.sourceType) 0 false ∧
-    Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient = ambient ∧
-    StepH ⟨⟨Store.decodeStore view code store,ambient⟩,
-      vals (args.val.map Interp.sourceValue) ++ [admininstr.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
-  apply Interp.invoke_with_mutable_error_composition memory hooks floats allocator allocation exec store platform
-    address function signature args results owner hf hs accepted (fun value member => (owned value member).1) entry
-    (fun after => CertifiedSupportedStore emission allowed view code after ∧ Interp.FrameStoreMetadata store after ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view code after) ∧ Store.SegmentCounts store after)
-    ⟨certified,.refl _,Spec.extend_store_refl _ (Store.decodeStore_wf view code store certified.shape certified.storeSyntax),.refl store⟩
-    (fun after values => signature.results.val.map Interp.sourceType = values.map Code.valueType ∧
-      StepsH ⟨⟨Store.decodeStore view code store,ambient⟩,
-        vals (args.val.map Interp.sourceValue) ++ [admininstr.CALL_ADDR address.index.val]⟩ []
-        ⟨⟨Store.decodeStore view code after,ambient⟩,vals values⟩)
-    (fun after => SupportedInvocationError ⟨⟨Store.decodeStore view code store,ambient⟩,
-      vals (args.val.map Interp.sourceValue) ++ [admininstr.CALL_ADDR address.index.val]⟩
-      (Store.decodeStore view code after) ambient) (by intro after reason; trivial)
-  · intro prepared p identity empty arguments
-    apply WP.spec_mono (call_defined_supported_entry_outcomes memory hooks floats allocator allocation interrupts view code
-      prepared store p certified.shape certified.storeSyntax certified.segmentBounds certified.typed certified.supported certified.compiled ambient ambientWf address function signature instanceIndex functionIndex
-      args empty identity arguments accepted owned hf hs hw)
-    intro out post
-    refine ⟨post.1,post.2.1,?_⟩
-    intro error rejected
-    obtain ⟨inst,compiled,hi,hc,cause⟩ := post.2.2 error rejected
-    rcases cause.kind with rfl | rfl | rfl | rfl <;> trivial
-  · intro prepared p entered
-    obtain ⟨source,invariant,ownedSource,ambientEq,sourceStep⟩ := entered
-    let machine : SupportedMachine emission allowed M P view code (signature.results.val.map Interp.sourceType) :=
-      ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource,hostFree⟩
-    apply WP.dspec_mono (supported_loop language memory hooks floats allocator correct allocation interrupts view laws code machine)
-    intro out outcome
-    obtain ⟨fresh,metadata,extension,segments,readback⟩ := outcome.readback
-    refine ⟨metadata.identity,metadata.functions,metadata.types,⟨fresh,metadata,extension,segments⟩,?_,?_⟩
-    · intro success
-      obtain ⟨values,tags,wellFormed,fits,represented,reductions⟩ := readback success
-      refine ⟨values,tags,wellFormed,fits,represented,tags,?_⟩
-      simpa only [machine,ambientEq,List.nil_append] using StepsH.cons sourceStep reductions
-    · intro error rejected
-      rcases outcome.error_kind rejected with ⟨trap,rfl,allowed⟩ | rfl | rfl | rfl | rfl
-      · obtain ⟨_,count,positive,trapped⟩ := outcome.trap rejected
-        refine ⟨allowed,?_⟩
-        simpa only [machine,ambientEq,List.nil_append] using StepsH.cons sourceStep trapped.erase
-      all_goals trivial
 end Exec.Theorems

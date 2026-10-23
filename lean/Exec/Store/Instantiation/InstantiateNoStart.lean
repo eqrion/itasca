@@ -1,4 +1,4 @@
-import Exec.Store.Instantiation.InstantiateTail
+import Exec.Generated.Equations
 import Exec.Store.Initialization.SegmentInitializeShape
 
 namespace Exec.Store
@@ -30,7 +30,7 @@ theorem instantiate_tail_no_start {M P F A : Type}
     (found : store.instances.val[identity.index.val]? = some inst)
     (shape : Shape view store) (imports : InitializerImports store inst)
     (types : SegmentTypeBindings store inst) (noStart : inst.module.module.env.start = none) :
-    instantiate_tail memory hooks floats allocator identity store platform
+    runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false
       ⦃ out => Shape view out.2.1 ∧ SegmentAddressSpace store out.2.1 ∧
         out.2.2.1 = platform ∧ out.2.2.2 = true ∧
         (∀ address, out.1 = .Ok address → address = identity) ⦄ := by
@@ -41,7 +41,7 @@ theorem instantiate_tail_no_start {M P F A : Type}
   have valid := initialize_segments_compiled_shape memory hooks floats allocator view laws law
     store platform identity.index inst bytes profile limits accepted found shape imports bindings types
   have combined := segment_specs_and total valid
-  unfold instantiate_tail
+  unfold runtime.store.instantiate.Store.commit_instance
   step with combined as ⟨result, after, host, metadata, sameHost, afterShape, segmentTypes⟩
   subst host
   cases result with

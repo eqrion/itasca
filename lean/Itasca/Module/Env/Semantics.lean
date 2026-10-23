@@ -54,10 +54,6 @@ theorem PostWith.semantic {profile data result} (h : PostWith profile data resul
 /-- `SemanticPostWith` for Wasm 1.0. -/
 abbrev SemanticPost (data : Slice U8) := SemanticPostWith .Wasm1 data
 
-/-- `PostWith.semantic` for Wasm 1.0. -/
-theorem Post.semantic {data result} (h : Post data result) : SemanticPost data result :=
-  PostWith.semantic h
-
 end Itasca.ModuleEnv
 
 namespace Itasca
@@ -70,24 +66,9 @@ theorem module.validate_env.profile_semantic_spec (data : Slice U8) (profile : V
   rw [hr]
   simpa only [WP.spec_ok] using ModuleEnv.PostWith.semantic hp
 
-/-- Custom-section hooks may reject. Every successful result of `module.validate_env_with` still
-satisfies the same binary and semantic contract. -/
-theorem module.validate_env_with.profile_semantic_spec {V : Type} (visitor : module.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (profile : ValidationProfile) (v : V) :
-    module.validate_env_with visitor data profile v ⦃ r => ModuleEnv.SemanticPostWith profile data r.1 ⦄ := by
-  obtain ⟨result, hr, hp⟩ := WP.spec_imp_exists (module.validate_env_with.profile_spec visitor htotal data profile v)
-  rw [hr]
-  simpa only [WP.spec_ok] using ModuleEnv.PostWith.semantic hp
-
 /-- `module.validate_env.profile_semantic_spec` for Wasm 1.0. -/
 theorem module.validate_env.semantic_spec (data : Slice U8) :
     module.validate_env data .Wasm1 ⦃ ModuleEnv.SemanticPost data ⦄ := by
   exact module.validate_env.profile_semantic_spec data .Wasm1
-
-/-- `module.validate_env_with.profile_semantic_spec` for Wasm 1.0. -/
-theorem module.validate_env_with.semantic_spec {V : Type} (visitor : module.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V) :
-    module.validate_env_with visitor data .Wasm1 v ⦃ r => ModuleEnv.SemanticPost data r.1 ⦄ := by
-  exact module.validate_env_with.profile_semantic_spec visitor htotal data .Wasm1 v
 
 end Itasca

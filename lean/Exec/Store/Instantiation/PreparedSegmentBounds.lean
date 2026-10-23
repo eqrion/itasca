@@ -30,23 +30,23 @@ theorem prepared_commit_segment_bounds {M P F A : Type}
     (dataCapacity : before.datas.length + seed.module.module.tail.data.val.length ≤ Usize.max)
     (typed functions tabled prepared : runtime.store.Store M)
     (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
-    (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
+    (typeRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
-    (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
+    (functionRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
       .ok (typeParts functions (.Ok ()) funcInst))
-    (tableRun : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
+    (tableRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
       .ok (typeParts tabled (.Ok ()) tableInst))
-    (memoryRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
+    (memoryRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
       .ok (typeParts prepared (.Ok ()) inst))
     (publishedInstances : alloc.vec.Vec runtime.store.ModuleInst)
     (publicationRun : alloc.vec.Vec.push prepared.instances inst = .ok publishedInstances)
     (globalStore elementStore after : runtime.store.Store M)
-    (globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator
+    (globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator
       {prepared with instances := publishedInstances} platform (.Ok ()) 0#usize before.instances.len =
       .ok (storeParts globalStore platform (.Ok ())))
-    (elementRun : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
+    (elementRun : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
       .ok (storeParts elementStore platform (.Ok ())))
-    (dataRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
+    (dataRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
       .ok (storeStateParts after (.Ok ()))) :
     SegmentBounds after := by
   obtain ⟨preparedPrefix, preparedBound, preparedSource, preparedGlobals, preparedInstances,

@@ -36,28 +36,6 @@ theorem binary_trap_pure (ty : Inn) (op : binop_Inn)
   · exact wf_admininstr_instr (.instr_case_15 _ _ (.binop__case_0 _ _ _ rfl))
   · exact .admininstr_case_73
 
-theorem binary_simulation (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (baseValues : List val)
-    (ty : Inn) (op : binop_Inn) (a b result : BitVec (sizenn (numtype_Inn ty)))
-    (success : binary ty op a b = some result)
-    (hs : wf_store s) (ha : wf_frame ambient) (hf : wf_frame f.toFrame)
-    (hl : LabelsWf f.labels) (hv : Forall wf_val baseValues)
-    (hc : Forall wf_instr after) (hr : Forall FrameWf rest)
-    (heights : ∀ label ∈ f.labels, label.height ≤ baseValues.length) :
-    StepH (decode ⟨s, ambient,
-      { f with code := .BINOP (numtype_Inn ty) (.mk_binop__0 ty op) :: after, vals := baseValues ++ [integerVal ty a.toNat, integerVal ty b.toNat] } :: rest, []⟩) []
-      (decode ⟨s, ambient,
-      { f with code := after, vals := baseValues ++ [integerVal ty result.toNat] } :: rest, []⟩) := by
-  apply pure_stack_simulation s ambient f rest _ after baseValues _ _ hs ha hf hl hv hc hr heights
-  · intro value h; simp only [List.mem_cons, List.not_mem_nil, or_false] at h
-    rcases h with rfl | rfl
-    · exact integer_val_wf ty _ (word_bound ty a)
-    · exact integer_val_wf ty _ (word_bound ty b)
-  · intro value h; simp only [List.mem_singleton] at h; subst value
-    exact integer_val_wf ty _ (word_bound ty result)
-  · exact .instr_case_15 _ _ (.binop__case_0 _ _ _ rfl)
-  · exact binary_pure ty op a b result success
-
 /-- Numeric traps unwind all labels and suspended calls in finitely many real
 source reductions. The operands remain bounded source words throughout. -/
 theorem binary_trap_simulation (s : store) (ambient : frame) (f : AFrame)

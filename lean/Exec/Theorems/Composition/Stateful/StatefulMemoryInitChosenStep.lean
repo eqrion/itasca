@@ -3,10 +3,11 @@ import Exec.Abs.Stateful.ChosenSelection
 import Exec.Theorems.Composition.Stateful.StatefulMemoryInitDispatch
 import Exec.Interp.State.StatefulContinue
 import Exec.Interp.StructuredMachine.StatefulPrepare
-import Exec.Interp.Cumulative.Machine
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp Exec.Interp.Stateful
-variable {emission : Exec.Interp.StructuredMachine.FunctionEmission}
 
 theorem stateful_memory_init_point_step_chosen {choices : SourceChoices} (occurrence : Nat) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -23,18 +24,18 @@ theorem stateful_memory_init_point_step_chosen {choices : SourceChoices} (occurr
     (fetchBound : compiled.code.length≤U32.max)
     (shapes : ∀ object∈store.memories.val,MemoryShape view object) (bounds : SegmentBounds store)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after}::rest,[]⟩) :
     let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after}::rest,[]⟩
     (∃ target : U32,raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      StructuredMachine.FramePoint emission (decodeStore view code store) {raw with pc:=target} {f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after} compiled C targets next output) ∨
+      StructuredMachine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after} compiled C targets next output) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       ((∃ pc : U32,∃ front : List val,
         out.1=.Ok () ∧ pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}} ∧
         (∃ address : runtime.MemoryAddr,∃ object segment destination source count,store.memories.val[address.index.val]?=some object ∧ MemoryInitializationEffect view store address.index object segment destination source count (out.1,out.2.2.1)) ∧
         FrameSlots out.2.1 {raw with pc:=pc} {f with code:=after,vals:=front} ∧
-        StructuredMachine.FramePoint emission (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
+        StructuredMachine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
         Abs.Cumulative.ChosenStep choices occurrence initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩)) ∨
       (out.1=.Err (.Trap .MemoryOutOfBounds) ∧ out.2.2.1=store ∧
         (∃ pc : U32,pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}}) ∧
@@ -82,7 +83,7 @@ theorem stateful_memory_init_point_step_chosen {choices : SourceChoices} (occurr
       refine Or.inl ⟨pc,front,success,pcNext,same,⟨address,object,segment,destination,source,count,issued,effect⟩,represented,?_,?_⟩
       · have safe := Abs.Stateful.transition_next (.memoryInit dataIndex) (decodeStore view code store) ambient {f with code:=(Abs.Stateful.Instruction.memoryInit dataIndex).source::after} rest after
           ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩ typed sourceStep
-        have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,Cumulative.emission,List.map_nil] using tail) pc pcNext
+        have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,List.map_nil] using tail) pc pcNext
         simpa only [List.append_nil] using continued
       · exact .stateful (sourceStep.chosen_of_no_growth (by rfl)) (by intro impossible;cases impossible)
     · change out.1=.Err (.Trap .MemoryOutOfBounds) at error

@@ -53,7 +53,7 @@ theorem stream.CodeBatch.validate_func.prepared_total {V : Type} (visitor : code
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
     (bodyTotal : ∀ (prepared : CodeEntry.Prepared batch.code batch.env index batch.validated_end batch.profile) started,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-      CodeEntry.runBody visitor batch.profile prepared.body batch.env prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄) :
+      code.validate_body_with visitor prepared.body batch.env prepared.ctx prepared.typeIdx batch.profile started ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_func visitor batch index v ⦃ _ => True ⦄ := by
   exact stream.CodeBatch.validate_func.total_on visitor batch index v range
     (module.validate_code_entry_with.total_on visitor batch.code batch.validated_end batch.env index v

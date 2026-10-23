@@ -65,17 +65,6 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
       exact (module.validate_env_with_loop.complete_section data env updated afterCustoms payloadStart middle last id
         hh hlo (by omega) (by omega) hread).trans hrun
 
-/-- `Chain.profile_complete` for Wasm 1.0. -/
-theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
-    (data : Slice U8) (env : module.Env) (decls : Declarations) (pos next : Usize) (last : U8)
-    (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
-    (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
-    (hlast : last.val ≤ n) (hreq : Requirements raw)
-    (hallowed : ModuleTypesAllowed .Wasm1 {raw with codes := [], data := []}) :
-    ∃ result finalDecls, parseLoop data env pos last = .ok (.Ok (result, next), ()) ∧
-      Ready raw 10 finalDecls result := by
-  exact h.profile_complete data env decls pos next last hb hstop hready hbound hlast hreq hallowed
-
 end Itasca.ModuleEnv
 
 namespace Itasca

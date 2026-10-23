@@ -43,11 +43,11 @@ theorem staging_commit_shape {M P F A : Type}
     (count : Usize) (counted : count.val = before.instance_items.val + moduleItems inst.module)
     (limited : count.val ≤ before.limits.max_instance_items.val)
     (globalStore elementStore after : runtime.store.Store M)
-    (globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize index =
+    (globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize index =
       .ok (storeParts globalStore platform (.Ok ())))
-    (elementRun : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize index =
+    (elementRun : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize index =
       .ok (storeParts elementStore platform (.Ok ())))
-    (dataRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator elementStore (.Ok ()) 0#usize index =
+    (dataRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator elementStore (.Ok ()) 0#usize index =
       .ok (storeStateParts after (.Ok ()))) :
     ∃ next, after.instances.val[index.val]? = some next ∧ next.module = inst.module ∧
       Shape view {after with instance_items := count} ∧ SegmentTypeBindings after next ∧

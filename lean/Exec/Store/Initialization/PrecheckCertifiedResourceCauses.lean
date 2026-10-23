@@ -21,7 +21,7 @@ theorem element_precheck_certified_resource_causes (law : Platform.AllocCorrect 
       Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst) :
-    runtime.store.instantiate.Store.instantiate_inner_loop10 memory hooks floats allocator store platform status 0#usize instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop10 memory hooks floats allocator store platform status 0#usize instIndex
       ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) finalStatus ⦄ := by
   apply element_precheck_loop_resource_causes memory hooks floats allocator law view store platform instIndex 0#usize inst status
     allowed found bindings ?_ (by simp)
@@ -42,7 +42,7 @@ theorem data_precheck_certified_resource_causes (law : Platform.AllocCorrect all
       Itasca.ModuleData.Valid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst) :
-    runtime.store.instantiate.Store.instantiate_inner_loop11 memory hooks floats allocator store platform status 0#usize instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop11 memory hooks floats allocator store platform status 0#usize instIndex
       ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) finalStatus ⦄ := by
   apply data_precheck_loop_resource_causes memory hooks floats allocator law view memoryLaws store platform instIndex 0#usize inst status
     allowed found bindings ?_ (by simp)

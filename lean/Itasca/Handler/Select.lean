@@ -5,10 +5,9 @@ import Itasca.Visitor.Total
 # Select handler
 
 Lemmas about the extracted untyped `select`: `code.join_stack_type.spec`, the effect predicate
-`StackSemantics.SelectEffect` with its prefix lemma, and `code.read_select.segment` for the
-operand segment. `code.step_select.prefix` extends a `Sequence.TypedPrefix` by `select`
-(`StackSemantics.selectedType_typed`), which accepts numeric and bottom operands and rejects
-references.
+`StackSemantics.SelectEffect`, and `code.read_select.segment` for the operand segment.
+`StackSemantics.selectedType_typed` types the selected operand, which accepts numeric and bottom
+operands and rejects references.
 -/
 
 open Aeneas Aeneas.Std
@@ -108,23 +107,6 @@ def SelectEffect (poly : Bool) (before : List code.StackType) (t : code.StackTyp
     (after : List code.StackType) : Prop :=
   Selectable t ∧ ∃ rest, after = rest ++ [t] ∧ ∀ ts, Sequence.Realizes poly rest ts →
     Sequence.Realizes poly before (ts ++ [selectedType t, selectedType t, .I32])
-
-/-- A `SelectEffect` extends a typed prefix by `select`. -/
-theorem SelectEffect.prefix {poly before t after} (h : SelectEffect poly before t after)
-    (C : context) (hC : wf_context C) (ops : List instr)
-    (htyped : Sequence.TypedPrefix C ops poly before) :
-    Sequence.TypedPrefix C (ops ++ [.SELECT none]) poly after := by
-  obtain ⟨hselect, rest, rfl, htransfer⟩ := h
-  apply htyped.append hC (.SELECT none) (.instr_case_3 _)
-  intro out hout
-  obtain ⟨front, u, rfl, hf, hu⟩ := hout.snoc_inv
-  refine ⟨front ++ [selectedType t, selectedType t, .I32], htransfer front hf, ?_⟩
-  apply Instrs_ok.frame C [.SELECT none] front _ _ _ hC (by simp [Forall]; exact .instr_case_3 _)
-  apply Instrs_ok.sub C [.SELECT none] _ _ _ _
-    (.instr C _ _ _ (selectedType_typed C hC t hselect) hC (.instr_case_3 _))
-    _ _ hC (by simp [Forall]; exact .instr_case_3 _)
-  · exact .mk_Resulttype_sub _ _ rfl (by simp [Forall₂, Valtype_sub.refl])
-  · exact .mk_Resulttype_sub _ _ rfl (by simpa [Forall₂] using selectedType_sub hu)
 
 end StackSemantics
 
@@ -232,43 +214,5 @@ theorem code.step_select.dispatch {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨res, s⟩ := x
   cases res <;> simp
   congr 1
-
-/-- `code.step` on `select` terminates, and acceptance extends the typed prefix by `select`. -/
-theorem code.step_select.prefix {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Sequence.TypedPrefix C ops (Control.polymorphic st) segment)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step visitor st data env ctx code.OP_SELECT v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Sequence.TypedPrefix C (ops ++ [.SELECT none])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step_select.dispatch]
-  obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=
-    WP.spec_imp_exists (code.read_select.segment st outer segment hvals hbase hsize)
-  dsimp only at hc hp hv hlen hout
-  cases res with
-  | Err e =>
-    rw [WP.spec_equiv_exists]
-    refine ⟨(.Err e, s, v), ?_, hc, hp, after, hv, hlen, by simp⟩
-    simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok t =>
-    have hprefix := hout.prefix C hC ops htyped
-    obtain ⟨vis, v', hvst⟩ := hvisit.on_select v s t
-    cases vis with
-    | Ok u =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (), s, v'), ?_, hc, hp, after, hv, hlen, fun _ => hprefix⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
-    | Err e =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, after, hv, hlen, by simp⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 end Itasca

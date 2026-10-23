@@ -1,4 +1,4 @@
-import Exec.Spec.Events
+import Exec.Spec.Steps
 import Exec.Spec.Context
 import Mathlib.Tactic
 
@@ -29,15 +29,6 @@ theorem StepsHN.trans {n m : Nat} {c c' c'' : config} {events rest : List HostEv
   | refl _ => simpa using h'
   | cons h _ ih => simpa [Nat.add_assoc, Nat.add_comm, Nat.add_left_comm,
       List.append_assoc] using StepsHN.cons h (ih h')
-
-theorem StepsHN.event_length {n : Nat} {c c' : config} {events : List HostEvent}
-    (h : StepsHN n c events c') : events.length ≤ n := by
-  induction h with
-  | refl _ => simp
-  | cons h _ ih =>
-    have he := stepH_event_length h
-    simp only [List.length_append]
-    omega
 
 theorem StepsHN.map {wrap : config → config}
     (hw : ∀ c, wf_config c → wf_config (wrap c))

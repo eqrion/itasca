@@ -51,44 +51,6 @@ theorem branch_source_step (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     omega
   simp only [Abs.astep, Abs.branch, lookup, bound, drop, types, and_self, ↓reduceIte, take, Abs.advance]
 
-/-- A branch with zero result slots or an identical result position emits only
-the jump. Dead discarded words need no physical erasure. -/
-theorem dispatch_branchNoCopy_refines {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (frameIndex : Usize) (raw : runtime.interp.Frame) (targetPC : U32)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (after : List instr) (depth : Nat) (target : Abs.Label) (front discarded results : List val)
-    (frameLookup : exec.frames.val[frameIndex.val]? = some raw)
-    (lookup : f.labels[depth]? = some target) (height : target.height = front.length)
-    (arity : target.arity = results.length) (types : results.map Abs.valueType = target.branchTypes)
-    (noCopy : Code.slots (results.map Code.valueType) = 0 ∨ Code.slots (discarded.map Code.valueType) = 0)
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results } :: rest, []⟩)
-    (slots : FrameSlots exec raw { f with vals := front ++ discarded ++ results }) :
-    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
-      raw.instance raw.function raw.base (.Jump targetPC) ⦃ out => out.1 = .Ok () ∧
-      out.2.1 = { exec with frames := exec.frames.set frameIndex { raw with pc := targetPC } } ∧
-      FrameSlots out.2.1 { raw with pc := targetPC }
-        { f with code := target.cont ++ target.after, labels := f.labels.drop (depth + 1), vals := front ++ results } ∧
-      out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      Abs.NextSim
-        ⟨s, ambient, { f with code := .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results } :: rest, []⟩
-        ⟨s, ambient, { f with code := target.cont ++ target.after, labels := f.labels.drop (depth + 1), vals := front ++ results } :: rest, []⟩ ⦄ := by
-  have allValues : ValuesAt exec.slots.val raw.base.val ((f.locals ++ front) ++ discarded ++ results) := by
-    simpa only [FrameSlots, List.append_assoc] using slots
-  have represented := allValues.elide_transfer noCopy
-  have step := branch_source_step s ambient f rest after depth target front discarded results lookup height arity types
-  have simulation := Abs.instruction_simulation s ambient { f with vals := front ++ discarded ++ results } rest
-    (.BR (.mk_uN depth)) after _ (.br _) typed step
-  apply WP.spec_mono (dispatch_jump_exact memory hooks floats allocator exec store platform
-    frameIndex raw.instance raw.function raw.base raw targetPC frameLookup)
-  intro out effect
-  obtain ⟨success, exactState, sameStore, samePlatform⟩ := effect
-  refine ⟨success, exactState, ?_, sameStore, samePlatform, simulation⟩
-  rw [exactState]
-  simpa only [FrameSlots, List.append_assoc] using represented
-
 theorem step_branchNoCopy_refines {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)

@@ -77,18 +77,6 @@ theorem ErasedSteps.bound {count before after} (steps : ErasedSteps count before
   | nil => omega
   | cons step tail ih => have decrease := step.decreases; omega
 
-/-- There is no infinite source-only normalization run. This is independent of
-runtime iteration fuel and does not impose termination on executing loops. -/
-theorem erasedSteps_finite {run : Nat → Abs.AFrame}
-    (steps : ∀ n, ErasedStep (run n) (run (n + 1))) : False := by
-  have decreasing : ∀ n, normalizationMeasure (run n) + n ≤ normalizationMeasure (run 0) := by
-    intro n
-    induction n with
-    | zero => omega
-    | succ n ih => have h := (steps n).decreases; omega
-  have impossible := decreasing (normalizationMeasure (run 0) + 1)
-  omega
-
 /-- Typed normalization chains compose their checked source simulations. The
 empty chain is represented explicitly rather than inventing a positive step. -/
 theorem ErasedSteps.sound {count before after} (steps : ErasedSteps count before after)

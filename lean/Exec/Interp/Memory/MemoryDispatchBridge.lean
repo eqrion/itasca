@@ -4,16 +4,6 @@ import Exec.Code.Local.Relations.Memory.MemoryOpcode
 namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
-theorem load_opcode_eq (op : Abs.Memory.Load) : loadOpcode op = Code.memoryLoadOpcode op := by
-  cases op with
-  | full ty => cases ty <;> rfl
-  | packed ty width sign => cases ty <;> cases width <;> cases sign <;> rfl
-
-theorem store_opcode_eq (op : Abs.Memory.Store) : storeOpcode op = Code.memoryStoreOpcode op := by
-  cases op with
-  | full ty => cases ty <;> rfl
-  | packed ty width => cases ty <;> cases width <;> rfl
-
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)

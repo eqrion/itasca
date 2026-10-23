@@ -1,12 +1,13 @@
 import Exec.Code.Local.Lowering.Common.LiteralSources
-import Exec.Code.Local.Lowering.Integer.IntegerSources
+import Exec.Code.Local.Source.SourceLengthsTactic
+import Exec.Code.Local.Lowering.Common.LoweringArithmetic
+import Exec.Code.Local.Lowering.Local.LoweringLocal
 import Exec.Code.Local.Lowering.Common.LiteralCursor
-import Exec.Code.Local.Lowering.Integer.IntegerCursor
+import Exec.Code.Local.Source.SourceCursorTactic
 import Exec.Code.Body.Source.TypedLowering
 import Exec.Code.Local.Callbacks.Common.CompilerLiteralMetadata
-import Exec.Code.Local.Callbacks.Integer.CompilerIntegerMetadata
+import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
 import Exec.Code.Body.Reader.Common.ReaderWasm2Drop
-import Exec.Code.Body.Reader.Common.ReaderWasm1Drop
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
@@ -14,7 +15,7 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_nop_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -59,7 +60,7 @@ theorem popped_concrete_exact {segment rest : List code.StackType} {value}
     | Val raw => exact ⟨raw, rfl, rfl⟩
 
 theorem reader_emit_drop_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -99,76 +100,6 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
   have cursor := compiler_op26_cursor ops law before after out.core 0#u32 0#u32 0#u128 callback
   refine ⟨ordinary, sources, cursor, ?_⟩
   have lowerEq := lower_empty_eq ops before out.core true
-  simp only [Bool.false_eq_true, ite_false, ite_true] at lowerEq
-  rw [lowerEq] at callback
-  rw [callback, WP.spec_ok] at lowered
-  exact ⟨types.map Translate.valueType, ty, values, beforeTypes, post, ⟨lowered rfl, SourceStack.of_map types concrete rfl⟩, .drop _ _⟩
-
-theorem reader_emit_nop_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (types : List types.ValueType) (concrete : st.vals.val = types.map code.StackType.Val)
-    (layout : CompilerLayout before (types.map Translate.valueType))
-    (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx code.OP_NOP before = .ok (.Ok (), out, after)) :
-    CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
-    after.next_source = out.pos ∧
-    (ReaderPostWasm1 p out .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
-      TypedLoweredEmpty before after out.vals.val (types.map Translate.valueType) ∧
-      LinearEmission (compilerLocals before) (types.map Translate.valueType) .NOP [] (types.map Translate.valueType)) := by
-  obtain ⟨callback, post⟩ := reader_nop_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out byte accepted
-  have vals : out.vals.val = st.vals.val := post.values.2.trans post.values.1.symm
-  have postConcrete : out.vals.val = types.map code.StackType.Val := vals.trans concrete
-  have lowered := compiler_observe_empty ops law before out types _ layout postConcrete
-  change runtime.compiler.lower.FunctionCompiler.op ops before out 1#u16 0#u32 0#u32 0#u128 = _ at callback
-  have ordinary := compiler_op1_ordinary_result ops law before after out 0#u32 0#u32 0#u128 (.Ok ()) callback
-  have sources := compiler_op1_sources ops law before after out 0#u32 0#u32 0#u128 callback
-  have cursor := compiler_op1_cursor ops law before after out 0#u32 0#u32 0#u128 callback
-  refine ⟨ordinary, sources, cursor, ?_⟩
-  have lowerEq := lower_empty_eq ops before out false
-  simp only [Bool.false_eq_true, ite_false, ite_true] at lowerEq
-  rw [lowerEq] at callback
-  rw [callback, WP.spec_ok] at lowered
-  exact ⟨post, ⟨lowered rfl, SourceStack.of_map types postConcrete rfl⟩, .nop _⟩
-
-theorem reader_emit_drop_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (known : ConcreteStack st.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (layout : CompilerLayout before (Sequence.stackTypes st.vals.val))
-    (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx code.OP_DROP before = .ok (.Ok (), out, after)) :
-    CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
-    after.next_source = out.pos ∧
-    (∃ (front : List valtype) (ty : types.ValueType) (values : List code.StackType),
-      Sequence.stackTypes st.vals.val = front ++ [Translate.valueType ty] ∧
-      ReaderPostWasm1 p out .DROP p.current.ctrl.polymorphic_base values ∧
-      TypedLoweredEmpty before after out.vals.val front ∧
-      LinearEmission (compilerLocals before) (front ++ [Translate.valueType ty]) .DROP [] front) := by
-  obtain ⟨value, values, callback, _, popped, post⟩ := reader_drop_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out byte accepted
-  obtain ⟨old, new⟩ := post.values
-  have currentKnown := (concreteStack_append.mp (old ▸ known)).2
-  rw [monomorphic] at popped
-  obtain ⟨ty, valueType, segmentShape⟩ := popped_concrete_exact currentKnown popped
-  have shape : st.vals.val = out.vals.val ++ [.Val ty] := by
-    rw [old, new, segmentShape, List.append_assoc]
-  have afterKnown : ConcreteStack out.vals.val := (concreteStack_append.mp (shape ▸ known)).1
-  obtain ⟨types, concrete⟩ := (concreteStack_iff out.vals.val).mp afterKnown
-  have beforeTypes : Sequence.stackTypes st.vals.val = types.map Translate.valueType ++ [Translate.valueType ty] := by
-    simp [shape, concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
-  have lowered := compiler_observe_empty ops law before out types _ layout concrete
-  change runtime.compiler.lower.FunctionCompiler.op ops before out 26#u16 0#u32 0#u32 0#u128 = _ at callback
-  have ordinary := compiler_op26_ordinary_result ops law before after out 0#u32 0#u32 0#u128 (.Ok ()) callback
-  have sources := compiler_op26_sources ops law before after out 0#u32 0#u32 0#u128 callback
-  have cursor := compiler_op26_cursor ops law before after out 0#u32 0#u32 0#u128 callback
-  refine ⟨ordinary, sources, cursor, ?_⟩
-  have lowerEq := lower_empty_eq ops before out true
   simp only [Bool.false_eq_true, ite_false, ite_true] at lowerEq
   rw [lowerEq] at callback
   rw [callback, WP.spec_ok] at lowered

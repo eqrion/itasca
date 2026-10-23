@@ -7,14 +7,14 @@ theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (fits : ∀ ty ∈ inst.module.module.env.table_types.val, LimitsFit ty.limits core.num.U32.MAX)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
-    {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator store status index inst = .ok out) :
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator store status index inst = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop5 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop5 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop5.body,
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop5.body,
       runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.table_types, Itasca.module.Env.impl.table_types, bind_ok] at run
     split at run
@@ -42,8 +42,8 @@ theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
         have ⟨nextAllowed, sameModule⟩ := add_table_errors_metadata memory allocator law store inst index ty found fit _ called
         change nextInst.module = inst.module at sameModule
         have nextFits : ∀ ty ∈ nextInst.module.module.env.table_types.val, LimitsFit ty.limits core.num.U32.MAX := by simpa only [sameModule] using fits
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop5, runtime.store.instantiate.Store.instantiate_inner_loop5.body,
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop5, runtime.store.instantiate.Store.prepare_instance_loop5.body,
             runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
             module.Env.table_types, Itasca.module.Env.impl.table_types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextFits nextStatus nextAllowed nextRun rfl
@@ -57,14 +57,14 @@ theorem memory_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuff
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (fits : ∀ ty ∈ inst.module.module.env.mem_types.val, LimitsFit ty.limits 65536#u32)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
-    {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator store status index inst = .ok out) :
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator store status index inst = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop6 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop6 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop6.body,
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop6.body,
       runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.mem_types, Itasca.module.Env.impl.mem_types, bind_ok] at run
     split at run
@@ -92,8 +92,8 @@ theorem memory_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuff
         have ⟨nextAllowed, sameModule⟩ := add_memory_errors_metadata memory allocator law view laws store inst index ty found fit _ called
         change nextInst.module = inst.module at sameModule
         have nextFits : ∀ ty ∈ nextInst.module.module.env.mem_types.val, LimitsFit ty.limits 65536#u32 := by simpa only [sameModule] using fits
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop6, runtime.store.instantiate.Store.instantiate_inner_loop6.body,
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop6, runtime.store.instantiate.Store.prepare_instance_loop6.body,
             runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
             module.Env.mem_types, Itasca.module.Env.impl.mem_types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextFits nextStatus nextAllowed nextRun rfl

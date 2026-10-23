@@ -1,6 +1,6 @@
-import Itasca.Module.Validation
-import Itasca.Stream.SliceLayout
-import Itasca.Stream.SliceRejection
+import Itasca.Main
+import Itasca.Examples.Module.SliceLayout
+import Itasca.Examples.Module.SliceRejection
 import Itasca.Examples.Module.Support
 
 /-!

@@ -55,29 +55,6 @@ private theorem frame_scopes_of_shapes {A : Type}
       refine .cons ⟨shape, ?_, extended.entryBound, extended.bodyBound, extended.entryCode⟩ (ih shapes maps.2)
       simpa only [maps.1] using extended.mapBound
 
-theorem TableTargetsBuilt.scope_frames {A : Type}
-    {before after : runtime.compiler.FunctionCompiler A} {depths targets : List U32}
-    (built : TableTargetsBuilt before after depths targets) {locals parents current}
-    (prior : ScopeFrameStack locals before parents current)
-    (controls : before.function.controls.val.length ≤ after.function.controls.val.length) :
-    ScopeFrameStack locals after parents current := by
-  obtain ⟨suffix, code, _⟩ := built.code_prefix
-  refine ⟨prior.nested, ?_⟩
-  exact frame_scopes_of_shapes prior.frames
-    (built.scope_shapes locals _ (prior.frames.imp (fun _ _ p => p.toScopeFrameShape)))
-    built.frame_maps suffix code controls
-
-theorem TableTargetsBuilt.dormant_frames {A : Type}
-    {before after : runtime.compiler.FunctionCompiler A} {depths targets : List U32}
-    (built : TableTargetsBuilt before after depths targets) {locals parents current}
-    (prior : ScopeFrameStack locals before parents current)
-    (chain : SourceEntryChain parents current) (entered : current.entered = true)
-    (controls : before.function.controls.val.length ≤ after.function.controls.val.length) :
-    DormantFrames after.frames.val := by
-  have frames := built.scope_frames prior controls
-  intro frame member
-  exact DormantFrame.entered (frames.frame_entered chain entered frame member)
-
 /-- The complete live callback preserves all physical/source scope geometry,
 entry code and clean dormant frames before the source zipper advances once. -/
 theorem compiler_br_table_scope_frames {A : Type} (ops : runtime.platform.Alloc A)

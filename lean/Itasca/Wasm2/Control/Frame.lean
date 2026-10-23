@@ -25,7 +25,7 @@ structure Shape (st : code.BodyState) : Prop where
 
 /-- The control entry that `code.push_frame` creates, with its base at the current stack height. -/
 def frame (st : code.OpIterState) (kind : code.LabelKind) (bt : signature.BlockType) : code.Ctrl :=
-  ⟨kind, .Empty, bt, alloc.vec.Vec.len st.vals, false⟩
+  ⟨kind, bt, alloc.vec.Vec.len st.vals, false⟩
 
 /-- Pushing a frame at the current stack height preserves `Control.Shape`. -/
 theorem shape_push {st st' : code.OpIterState} (h : Control.Shape st)
@@ -112,8 +112,34 @@ theorem code.label.complete (st : code.BodyState) (depth : U32)
     have he : actual = view := by simpa [hs] using hl
     simpa [he] using hr
 
-/-- `code.read_multi_value_label` decodes a LEB128 depth and resolves it with `Wasm2.labelAt`,
-leaving the stack and frames unchanged. -/
+/-- `code.read_label_info` decodes a LEB128 depth and resolves it with `Wasm2.labelAt`, leaving
+the stack and frames unchanged. -/
+@[step]
+theorem code.read_label_info.spec (st : code.BodyState) (data : Slice U8)
+    (ha : st.blocks.val.length = st.core.ctrls.val.length) :
+    code.read_label_info st data ⦃ r =>
+      r.2.core.vals = st.core.vals ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
+      st.core.pos.val ≤ r.2.core.pos.val ∧
+      (∀ depth view, r.1 = .Ok (depth, view) →
+        Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
+        Wasm2.labelAt st depth.val = some view) ⦄ := by
+  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
+  cases r with
+  | Err e => simp [code.read_label_info, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Ok pair =>
+    obtain ⟨depth, next⟩ := pair
+    have hpnext : st.core.pos.val ≤ next.val := (Leb128.Decoded.span _ _ _ _ hs).1.le
+    obtain ⟨r, hl, hp⟩ := WP.spec_imp_exists
+      (code.label.spec { st with core := { st.core with pos := next } } depth ha)
+    cases r with
+    | Err e => simp [code.read_label_info, hr, hl, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, hpnext]
+    | Ok view =>
+      simp [code.read_label_info, hr, hl, core.result.Result.Insts.CoreOpsTry.branch]
+      exact ⟨hpnext, hs, hp⟩
+
+/-- `code.read_multi_value_label` is `code.read_label_info` without the depth. -/
 @[step]
 theorem code.read_multi_value_label.spec (st : code.BodyState) (data : Slice U8)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
@@ -123,20 +149,18 @@ theorem code.read_multi_value_label.spec (st : code.BodyState) (data : Slice U8)
       (∀ view, r.1 = .Ok view → ∃ depth,
         Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
         Wasm2.labelAt st depth.val = some view) ⦄ := by
-  obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
+  obtain ⟨⟨r, s⟩, hr, hv, hc, hb, hp, hl⟩ :=
+    WP.spec_imp_exists (code.read_label_info.spec st data ha)
+  dsimp only at hv hc hb hp hl
   cases r with
-  | Err e => simp [code.read_multi_value_label, code.read_label_info, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e =>
+    simp [code.read_multi_value_label, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    simp_all
   | Ok pair =>
-    obtain ⟨depth, next⟩ := pair
-    have hpnext : st.core.pos.val ≤ next.val := (Leb128.Decoded.span _ _ _ _ hs).1.le
-    obtain ⟨r, hl, hp⟩ := WP.spec_imp_exists
-      (code.label.spec { st with core := { st.core with pos := next } } depth ha)
-    cases r with
-    | Err e => simp [code.read_multi_value_label, code.read_label_info, hr, hl, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, hpnext]
-    | Ok view =>
-      simp [code.read_multi_value_label, code.read_label_info, hr, hl, core.result.Result.Insts.CoreOpsTry.branch]
-      exact ⟨hpnext, depth, hs, hp⟩
+    obtain ⟨depth, view⟩ := pair
+    simp [code.read_multi_value_label, hr, core.result.Result.Insts.CoreOpsTry.branch]
+    simp_all
+    exact ⟨depth, hl⟩
 
 end Itasca

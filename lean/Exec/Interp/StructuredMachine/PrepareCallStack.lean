@@ -3,13 +3,12 @@ import Exec.Interp.Control.SkipStack
 
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission}
 
 /-- Fetch advances the caller PC and removes argument values from its saved
 live prefix, preparing the complete suspended chain for a defined call. -/
 theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s : _root_.store}
     {exec : runtime.interp.Execution} {source : Abs.AFrame} {rest : List Abs.AFrame}
-    (relation : FrameStackRel emission store s exec (source :: rest))
+    (relation : FrameStackRel store s exec (source :: rest))
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val + 1 = exec.frames.length)
     (lookup : exec.frames.val[index.val]? = some raw)
@@ -17,16 +16,16 @@ theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s
     (slots : FrameSlots exec raw source)
     {compiled C targets next output}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : FramePoint emission s raw source compiled C targets next output)
+    (point : FramePoint s raw source compiled C targets next output)
     (front args : List val) (after : List instr) (returns : List valtype) (base : Nat)
     (split : source.vals = front ++ args)
     (destination : base = raw.base.val + Code.slots ((source.locals ++ front).map Code.valueType))
     (heights : ∀ label ∈ source.labels, label.height ≤ front.length)
-    (continuation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+    (continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
       (front.map Code.valueType ++ returns) after pc.val next output) :
     ∃ raws,
       (exec.frames.set index { raw with pc := pc }).val = raws.reverse ∧
-      SavedFrames emission store s { exec with frames := exec.frames.set index { raw with pc := pc } }
+      SavedFrames store s { exec with frames := exec.frames.set index { raw with pc := pc } }
         raws ({ source with vals := front, code := after } :: rest) returns base := by
   have top : exec.frames.val.getLast? = some raw := by
     rw [List.getLast?_eq_getElem?]

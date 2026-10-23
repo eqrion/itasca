@@ -31,9 +31,6 @@ theorem PureSignature.principal {source inputs output C signature}
     signature = .mk_functype (.mk_list inputs) (.mk_list [output]) := by
   cases shape <;> cases typed <;> rfl
 
-theorem PureSignature.arity {source inputs output} (shape : PureSignature source inputs output) :
-    inputs.length ≤ 3 := by cases shape <;> simp
-
 theorem PureSignature.output_numeric {source inputs output} (shape : PureSignature source inputs output) :
     output = .V128 ∨ ∃ ty : numtype, output = valtype_numtype ty := by
   cases shape <;> first | exact Or.inl rfl | exact Or.inr ⟨.I32,rfl⟩ | exact Or.inr ⟨_,rfl⟩

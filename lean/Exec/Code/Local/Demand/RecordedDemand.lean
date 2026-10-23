@@ -29,20 +29,10 @@ theorem source_step_recorded_prefix (prior before after : List Observation)
     (held : ∃ suffix, before = prior ++ suffix)
     (called : code.step_profile recorder st data env ctx index profile opcode before = .ok (result,final,after)) :
     ∃ suffix, after = prior ++ suffix := by
-  cases profile with
-  | Wasm2 =>
-    obtain ⟨_,_,retained⟩ := code.step_profile.wasm2_refines recorder
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor _ (recorder_retains prior)
-      st data env ctx index opcode before () held result final after called
-    exact retained
-  | Wasm1 =>
-    unfold code.step_profile at called
-    obtain ⟨⟨reply,out,log⟩,step,returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ called
-    simp only [Std.uncurry,Result.ok.injEq,Prod.mk.injEq] at returned
-    obtain ⟨rfl,rfl,rfl⟩ := returned
-    obtain ⟨_,_,retained⟩ := code.step.refines recorder code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      _ (recorder_retains prior) st.core data env ctx opcode before () held reply out log step
-    exact retained
+  obtain ⟨_,_,retained⟩ := code.step_profile.refines recorder
+    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor _ (recorder_retains prior)
+    st data env ctx index profile opcode before () held result final after called
+  exact retained
 
 /-- Every normal body-loop result retains all observations already recorded.
 The proof uses the loop's least fixed point and requires no compiler, source

@@ -26,24 +26,4 @@ inductive CoreStoreMutation {M : Type} (view : M → Slice U8) (source : Abs.ASt
   | global {after value} (live : CoreLiveValue source value) (wellFormed : wf_val value)
       (mutation : GlobalMutation before after value) : CoreStoreMutation view source before after
 
-theorem CoreStoreMutation.metadata {M : Type} {view source} {before after : runtime.store.Store M}
-    (mutation : CoreStoreMutation view source before after) : FrameStoreMetadata before after := by
-  cases mutation with
-  | unchanged => exact .refl _
-  | memory issued mutation => exact mutation.frame_metadata
-  | global live wellFormed mutation => exact mutation.frame_metadata
-
-theorem CoreStoreMutation.externs {M : Type} {view source} {before after : runtime.store.Store M}
-    (mutation : CoreStoreMutation view source before after) : after.externs = before.externs := by
-  cases mutation with
-  | unchanged => rfl
-  | memory issued mutation => obtain ⟨buffer,rfl,_⟩ := mutation; rfl
-  | global live wellFormed mutation => obtain ⟨index,old,lo,hi,_,_,_,_,_,rfl⟩ := mutation; rfl
-theorem CoreStoreMutation.segments {M : Type} {view source} {before after : runtime.store.Store M}
-    (mutation : CoreStoreMutation view source before after) :
-    after.elems = before.elems ∧ after.datas = before.datas := by
-  cases mutation with
-  | unchanged => exact ⟨rfl,rfl⟩
-  | memory issued mutation => obtain ⟨buffer,rfl,_⟩ := mutation; exact ⟨rfl,rfl⟩
-  | global live wellFormed mutation => obtain ⟨index,old,lo,hi,_,_,_,_,_,rfl⟩ := mutation; exact ⟨rfl,rfl⟩
 end Exec.Interp

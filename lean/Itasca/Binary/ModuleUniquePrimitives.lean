@@ -20,13 +20,6 @@ theorem elemByte_injective : Function.Injective elemByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [elemByte]
 
-/-- Element type encodings are prefix-unique. -/
-theorem elemType_prefix_unique : PrefixUnique ElemTypeEncoding := by
-  rintro x y a b rest tail rfl rfl he
-  obtain ⟨hv, rfl⟩ := List.cons.inj he
-  obtain rfl := elemByte_injective hv
-  exact ⟨rfl, rfl, rfl⟩
-
 theorem mutByte_injective : Function.Injective mutByte := by
   intro a b h
   cases a <;> cases b <;> simp_all [mutByte]

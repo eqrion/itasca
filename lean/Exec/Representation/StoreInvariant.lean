@@ -89,13 +89,6 @@ theorem MemoryShape.length_bound {M : Type} {view : M → Slice U8}
   rcases h with ⟨halign, hpages, _⟩
   omega
 
-theorem new_shape {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (id : Usize) (limits : runtime.store.StoreLimits)
-    (hid : 0 < id.val) :
-    runtime.store.Store.with_identity ops id limits ⦃ s => Shape view s ⦄ := by
-  simp only [runtime.store.Store.with_identity, WP.spec_ok]
-  constructor <;> simp_all [alloc.vec.Vec.new]
-
 /-- Replacing one buffer by another lawful memory preserves the structural
 store invariant when the aggregate byte counter is updated consistently. -/
 theorem Shape.memory_replace {M : Type} {view : M → Slice U8}
@@ -177,8 +170,6 @@ theorem Shape.table_replace {M : Type} {view : M → Slice U8}
   tableAccounting := hcount
   tableLimit := hlimit
 
-
-
 /-- Replacing a global by a canonical value preserves structural validity. -/
 theorem Shape.global_replace {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
@@ -208,7 +199,6 @@ theorem Shape.global_replace {M : Type} {view : M → Slice U8}
   tableAccounting := h.tableAccounting
   tableLimit := h.tableLimit
 
-
 theorem Shape.table_replace_same_length {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
     (hindex : index.val < s.tables.length) (table : runtime.store.TableInst)
@@ -220,7 +210,6 @@ theorem Shape.table_replace_same_length {M : Type} {view : M → Slice U8}
   have hs := List.set_getElem_self («as» := s.tables.val.map fun t => t.elements.length)
     (i := index.val) (by simpa using hindex)
   simpa using (congrArg List.sum hs).symm
-
 
 /-- Updating one nonnegative accounting contribution by an increment updates
 its aggregate by exactly that increment. -/

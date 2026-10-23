@@ -53,7 +53,4 @@ def MemoryOperationSound (opcode : U32) : Prop :=
     runtime.interp.simd.memory_op opcode offset laneIndex x y bytes
       ⦃ result => MemorySourceEffect op argument laneIndex.val x.bv y.bv z.bv s f bytes result.1 result.2 ⦄
 
-theorem memory_input_scalar (x : U128) :
-    admininstr_val (Spec.Simd.valueOfBits .I32 x.bv) = Spec.Segment.i32 (UScalar.cast .U32 x).val := by
-  rfl
 end Exec.Interp.Simd

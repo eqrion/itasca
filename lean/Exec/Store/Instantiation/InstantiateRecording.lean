@@ -1,4 +1,3 @@
-import Exec.Store.Instantiation.InstantiateAtTailBind
 import Exec.Store.Instantiation.InstantiateStart
 import Exec.Interp.Invocation.InvokeRecordingErasure
 namespace Exec.Store
@@ -51,15 +50,24 @@ def recordedInstantiateTail {M P F A : Type}
       runtime.InstanceAddr (core.convert.FromSame runtime.ExecError) residual
     .ok ((error, store, platform, true),prior)
 
-/-- Preparation is the extracted control flow, with logging attached only at
+/-- Preparation is the extracted computation, with logging attached only at
 its committed tail. Every rejected preparation returns its unchanged log. -/
 def recordedInstantiateInner {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (store : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (imports : Slice runtime.Extern) (platform : P) (committed : Bool) (prior : List HostEvent) :
-    Result (InstantiateInnerResult M P × List HostEvent) :=
-  instantiateInnerAtTail memory hooks floats allocator store module imports platform committed
-    (fun out => .ok (out,prior))
-    (fun identity store platform => recordedInstantiateTail memory hooks floats allocator identity store platform prior)
+    Result (InstantiateInnerResult M P × List HostEvent) := do
+  let (result, staged, platform) ← runtime.store.instantiate.Store.prepare_instance memory hooks floats
+    allocator store module imports platform
+  let branch ← core.result.Result.Insts.CoreOpsTry.branch result
+  match branch with
+  | core.ops.control_flow.ControlFlow.Continue (identity, items) =>
+    let charged ← staged.instance_items + items
+    recordedInstantiateTail memory hooks floats allocator identity
+      {staged with instance_items := charged} platform prior
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+      runtime.InstanceAddr (core.convert.FromSame runtime.ExecError) residual
+    .ok ((error, staged, platform, committed), prior)
 end Exec.Store

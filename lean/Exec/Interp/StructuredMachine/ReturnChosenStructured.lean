@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
 supplies the result suffix and word coordinates; an administrative forward skip
 retains the same source state and decreases the dispatch potential. -/
 theorem step_return_chosen_structured {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -26,13 +26,13 @@ theorem step_return_chosen_structured {choices : Spec.SourceChoices} (admissible
     (typed : Abs.ATyped ⟨s, ambient, { f with code := .RETURN :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (capacity : raw.base.val + Code.slots ((f.locals ++ f.vals).map Code.valueType) ≤ exec.slots.length)
-    (point : FramePoint emission s raw { f with code := .RETURN :: after }
+    (point : FramePoint s raw { f with code := .RETURN :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ((∃ target : U32,
         out.2.1 = { exec with frames := exec.frames.set index { raw with pc := target } } ∧
-        FramePoint emission s { raw with pc := target } { f with code := .RETURN :: after }
+        FramePoint s { raw with pc := target } { f with code := .RETURN :: after }
           compiled C targets next output ∧
         dispatchMeasure false compiled.code.length target.val
           ⟨s, ambient, { f with code := .RETURN :: after } :: rest, []⟩ <

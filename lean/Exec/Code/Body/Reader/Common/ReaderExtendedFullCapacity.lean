@@ -5,7 +5,6 @@ import Exec.Code.Local.Relations.Common.CoreLoweringEffects
 import Exec.Code.Body.Reader.Common.StatefulReaderBase
 import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 import Exec.Code.Body.Reader.Calls.ReaderIndirectCall
-import Exec.Code.Body.Reader.Calls.ReaderIndirectCallWasm1
 import Exec.Code.Body.Reader.Common.ReaderTypedSelect
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
 namespace Exec.Code
@@ -13,7 +12,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Capacity follows the actual scalar/reference callback and canonical reader state. -/
 theorem reader_stateful_base_full_capacity_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (opcode : U8)
@@ -28,7 +27,7 @@ theorem reader_stateful_base_full_capacity_wasm2 {data env locals index st}
   exact compiler_stateful_capacity ops law before after out.core op a b callback
 
 theorem reader_stateful_bulk_full_capacity_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (subopcode : U32) (next : Usize)
@@ -44,7 +43,7 @@ theorem reader_stateful_bulk_full_capacity_wasm2 {data env locals index st}
   exact compiler_stateful_capacity ops law before after out.core op a b callback
 
 theorem reader_indirect_call_full_capacity_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
@@ -57,7 +56,7 @@ theorem reader_indirect_call_full_capacity_wasm2 {data env locals index st}
   exact compiler_indirect_call_capacity ops law before after out.core idx table callback
 
 theorem reader_typed_select_full_capacity_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
@@ -68,51 +67,5 @@ theorem reader_typed_select_full_capacity_wasm2 {data env locals index st}
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact compiler_core_capacity ops law before after out.core (.select true) callback
-
-theorem reader_indirect_call_full_capacity_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx 17#u8 before = .ok (.Ok (),out,after)) :
-    CapacityStep before after out := by
-  have capacity : st.vals.val.length < Usize.max := by have := p.val_capacity; omega
-  have run := accepted
-  obtain ⟨idx,values,callback,rest⟩ := reader_indirect_call_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out capacity byte (by simpa only [global_simps] using run)
-  exact compiler_indirect_call_capacity ops law before after out idx 0#u32 callback
-
-theorem reader_memory_size_full_capacity_wasm1 {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx 63#u8 before = .ok (.Ok (),out,after)) :
-    CapacityStep before after out := by
-  have run := accepted
-  have dispatch := code.step_memory_size.dispatch
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
-  simp only [global_simps] at dispatch
-  rw [dispatch] at run
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
-  cases value
-  exact compiler_stateful_capacity ops law before after out .memorySize 0#u32 0#u32 callback
-
-theorem reader_memory_grow_full_capacity_wasm1 {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx 64#u8 before = .ok (.Ok (),out,after)) :
-    CapacityStep before after out := by
-  have run := accepted
-  have dispatch := code.step_memory_grow.dispatch
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
-  simp only [global_simps] at dispatch
-  rw [dispatch] at run
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
-  cases value
-  exact compiler_stateful_capacity ops law before after out .memoryGrow 0#u32 0#u32 callback
 
 end Exec.Code

@@ -34,7 +34,7 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
     constructor
     · simp
     · simp [initialScheduler]
-  obtain ⟨run, validated, size⟩ := stream.validate_streaming.profile_sound
+  obtain ⟨run, validated, size⟩ := stream.validate_streaming.sound
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     SchedulerTracks (compiler_provenance allocator law profile) 0#u64 source

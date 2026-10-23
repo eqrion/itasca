@@ -148,15 +148,6 @@ theorem compiler_finish_op_sources_result {A : Type} (ops : runtime.platform.All
   intro success
   subst status
   exact compiler_finish_op_sources ops law before after state instruction accepted
-private theorem code_update_sources {A : Type} (before after : runtime.compiler.FunctionCompiler A)
-    (code : alloc.vec.Vec runtime.bytecode.Instr)
-    (result status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : Result.ok (result, {before with function := {before.function with code}}) =
-      Result.ok (status, after)) : after.function.source_offsets = before.function.source_offsets := by
-  have same := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-  subst after
-  rfl
-
 /-- Patching only replaces an instruction; all function and control metadata
 survive every normal return, including a rejected patch site. -/
 theorem compiler_patch_sources_unchanged {A : Type} (ops : runtime.platform.Alloc A)
@@ -164,9 +155,8 @@ theorem compiler_patch_sources_unchanged {A : Type} (ops : runtime.platform.Allo
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.patch ops before pc target = .ok (status, after)) :
     after.function.source_offsets = before.function.source_offsets := by
-  unfold runtime.compiler.control.FunctionCompiler.patch at accepted
-  obtain ⟨⟨instruction, restore⟩, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases instruction <;> exact code_update_sources before after _ _ status rest
+  rcases compiler_patch_cases ops before after pc target status accepted with rfl | ⟨_, _, rfl, _⟩ <;>
+    rfl
 
 
 theorem compiler_patch_sources {A : Type} (ops : runtime.platform.Alloc A)

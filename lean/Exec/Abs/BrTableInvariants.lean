@@ -1,6 +1,6 @@
 import Exec.Abs.BrTable
 import Exec.Abs.Cumulative.Heap
-import Exec.Abs.Supported.Language
+import Exec.Abs.Supported.CoreStuck
 import Exec.Abs.Bound
 namespace Exec.Abs.BrTable
 open Ownership
@@ -28,11 +28,11 @@ theorem bounded {bound : Nat} {s : store} {ambient : frame} {f : AFrame} {rest :
   simp at size ⊢
   omega
 
-theorem covered {allowed : instr → Prop} (language : Supported.Language allowed)
+theorem covered
     {s : store} {ambient : frame} {f : AFrame} {rest : List AFrame}
     {after : List instr} {labels : List labelidx} {fallback : labelidx} {front : List val} {bits : Nat}
-    (before : SupportedState allowed ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after,vals := front ++ [integerVal .I32 bits]}::rest,[]⟩) :
-    SupportedState allowed ⟨s,ambient,{f with code := .BR (select labels fallback bits)::after,vals := front}::rest,[]⟩ := by
+    (before : SupportedState ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after,vals := front ++ [integerVal .I32 bits]}::rest,[]⟩) :
+    SupportedState ⟨s,ambient,{f with code := .BR (select labels fallback bits)::after,vals := front}::rest,[]⟩ := by
   have frame := before.active _ (List.mem_cons_self ..)
   refine ⟨?_,before.functions⟩
   intro item member
@@ -40,7 +40,7 @@ theorem covered {allowed : instr → Prop} (language : Supported.Language allowe
   · refine ⟨?_,frame.2⟩
     intro instruction member
     rcases List.mem_cons.mp member with rfl | member
-    · exact language.cumulative (.core (.core (.slice (.br (select labels fallback bits)))))
+    · exact Abs.BinaryInstr.br _
     · exact frame.1 instruction (List.mem_cons_of_mem _ member)
   · exact before.active item (List.mem_cons_of_mem _ member)
 end Exec.Abs.BrTable

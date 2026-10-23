@@ -1,8 +1,8 @@
 import Exec.Code.Body.Reader.Acceptance.BodyReaderAcceptance
 import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
-import Exec.Code.Body.Reader.Table.StructuredReaderBranchLayoutWithTables
+import Exec.Code.Body.Reader.Table.StructuredReaderBranchLayout
 import Exec.Code.Local.Capacity.ConditionalBranchAvailability
-import Exec.Code.Body.Control.Table.StructuredBranchIfLayoutWithTables
+import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Exec.Code.Body.Reader.Control.ReaderBranchIfLayout
 import Exec.Code.Local.Callbacks.Common.FixupBudget
 
@@ -14,13 +14,13 @@ set_option maxRecDepth 4096
 frame and proves its argument width. Allocation and instruction room then
 establish actual callback acceptance for every depth and label kind. -/
 theorem reached_profile_br_if_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Pending data env sourceLocals index st) {A V : Type}
+    (p : Pending data env .Wasm2 sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables (jumpTables := jumpTables) emit initial compiler
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial compiler
       types functions returns locals parents current st.core.vals.val p.start.val)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Frames.Saved.vals))

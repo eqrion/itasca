@@ -9,32 +9,32 @@ open Aeneas Aeneas.Std
 /-- Exact ordinary runtime footprints and a checked cumulative source step
 preserve the full active/suspended machine and every ownership/code bound. -/
 theorem ordinary_chosen_cumulative_step {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {emission : FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat)
+ {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     {store nextStore : runtime.store.Store M} {exec after : runtime.interp.Execution}
     (ambient : frame) (source updatedSource : Abs.AFrame) (rest : List Abs.AFrame)
     (expected : List valtype) (beforePC : Nat) (beforePending : Bool)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ expected beforePC beforePending)
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ expected beforePC beforePending)
     (stores : FrameStoreMetadata store nextStore)
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val+1=exec.frames.length) (lookup : exec.frames.val[index.val]?=some raw)
     {compiled C targets next output pending}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : ControlPoint emission (Store.decodeStore view code nextStore) {raw with pc:=pc} updatedSource compiled C targets next output pending)
+    (point : ControlPoint (Store.decodeStore view code nextStore) {raw with pc:=pc} updatedSource compiled C targets next output pending)
     (slots : FrameSlots after {raw with pc:=pc} updatedSource)
     (metadata : FrameMetadata source updatedSource)
     (effect : {after with slots:=exec.slots}={exec with frames:=exec.frames.set index {raw with pc:=pc}})
     (preserved : SlotPrefix raw.base.val exec.slots.val after.slots.val)
     (transition : Abs.Cumulative.ChosenStep choices occurrence ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩
       (.next ⟨Store.decodeStore view code nextStore,ambient,updatedSource::rest,[]⟩)) :
-    ChosenAdvance choices occurrence emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code nextStore after expected compiled.code.length beforePC beforePending
+    ChosenAdvance choices occurrence view code nextStore after expected compiled.code.length beforePC beforePending
       ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ := by
-  have typed := (transition.erases admissible).next_typed_supported language machine.typed machine.core
-  have covered := (transition.erases admissible).next_covered_supported language machine.typed machine.core
-  have extension := (transition.erases admissible).next_extends_supported language machine.typed machine.core
-  refine ⟨pc.val,pending,_,?_,ChosenConcreteSim.of_source _ _ _ _ _ (transition.next_simulation admissible vector language machine.typed machine.core),
-    fun _ h => (transition.erases admissible).next_owned_supported language machine.typed machine.core h,rfl,
-    fun _ h => (transition.erases admissible).next_bound_supported language machine.typed machine.core h⟩
+  have typed := (transition.erases admissible).next_typed_supported machine.typed machine.core
+  have covered := (transition.erases admissible).next_covered_supported machine.typed machine.core
+  have extension := (transition.erases admissible).next_extends_supported machine.typed machine.core
+  refine ⟨pc.val,pending,_,?_,ChosenConcreteSim.of_source _ _ _ _ _ (transition.next_simulation admissible vector machine.typed machine.core),
+    fun _ h => (transition.erases admissible).next_owned_supported machine.typed machine.core h,rfl,
+    fun _ h => (transition.erases admissible).next_bound_supported machine.typed machine.core h⟩
   exact StructuredMachine.Execution.ordinary view code ambient source updatedSource rest expected beforePC beforePending machine stores
     extension raw index pc last lookup program point slots metadata effect preserved typed covered
 end Exec.Interp.StructuredMachine

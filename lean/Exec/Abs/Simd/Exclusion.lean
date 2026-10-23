@@ -1,5 +1,5 @@
 import Exec.Abs.Simd.Source
-import Exec.Abs.Cumulative
+import Exec.Abs.Core
 namespace Exec.Abs
 
 /-- Source constructor tag used only to separate scalar/reference/control
@@ -18,32 +18,21 @@ theorem SimdInstr.source_tag {source} (allowed : SimdInstr source) : simdSourceT
   | memory signature => cases signature <;> rfl
   | constant => rfl
 
-theorem SliceInstr.simd_tag {source} (allowed : SliceInstr source) : simdSourceTag source = false := by
+theorem PureHead.simd_tag {source} (allowed : PureHead source) : simdSourceTag source = false := by
   cases allowed with
   | numeric op => cases op <;> rfl
   | _ => rfl
 
-theorem CoreInstr.simd_tag {source} (allowed : CoreInstr source) : simdSourceTag source = false := by
+theorem CoreHead.simd_tag {source} (allowed : CoreHead source) : simdSourceTag source = false := by
   cases allowed with
-  | slice old => exact old.simd_tag
+  | pure old => exact old.simd_tag
   | load op arg => cases op <;> rfl
   | store op arg => cases op <;> rfl
   | _ => rfl
 
-theorem FloatCoreInstr.simd_tag {source} (allowed : FloatCoreInstr source) : simdSourceTag source = false := by
+theorem ScalarHead.simd_tag {source} (allowed : ScalarHead source) : simdSourceTag source = false := by
   cases allowed with
   | core old => exact old.simd_tag
-  | scalar op => cases op <;> rfl
-  | _ => rfl
+  | float op => cases op <;> rfl
 
-theorem CumulativeInstr.simd_tag {source} (allowed : CumulativeInstr source) : simdSourceTag source = false := by
-  cases allowed with
-  | core old => exact old.simd_tag
-  | stateful op => cases op <;> rfl
-  | _ => rfl
-
-theorem SimdInstr.not_cumulative {source} (allowed : SimdInstr source) : ¬ CumulativeInstr source := by
-  intro old
-  have := allowed.source_tag.symm.trans old.simd_tag
-  contradiction
 end Exec.Abs

@@ -43,20 +43,6 @@ theorem patchCode_append_code (code suffix : List Bytecode) (sites : List Usize)
       omega
     simp [before, absent]
 
-theorem patchCode_commute (code : List Bytecode) (left right : List Usize) (a b : U32)
-    (disjoint : ∀ l ∈ left, ∀ r ∈ right, l.val ≠ r.val) :
-    patchCode (patchCode code left a) right b = patchCode (patchCode code right b) left a := by
-  apply List.ext_getElem?
-  intro index
-  simp only [patchCode_get]
-  by_cases l : ∃ site ∈ left, site.val = index
-  · have r : ¬ ∃ site ∈ right, site.val = index := by
-      obtain ⟨site, member, position⟩ := l
-      rintro ⟨other, otherMember, otherPosition⟩
-      exact disjoint site member other otherMember (position.trans otherPosition.symm)
-    simp [l, r]
-  · simp [l]
-
 theorem patchCode_append_sites (code : List Bytecode) (left right : List Usize) (target : U32) :
     patchCode code (left ++ right) target = patchCode (patchCode code left target) right target := by
   induction left generalizing code with

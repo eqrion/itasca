@@ -14,7 +14,7 @@ theorem structured_root_checked_instructions {jumpTables : List U32}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {types functions returns locals current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals [] current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals [] current raw position)
     (rootForm : current.form = .body) (entered : current.entered = true)
     (front : current.front = []) (results : current.results = returns)
     (initialLayout : LocalLayout initial) (initialLocals : compilerLocals initial = locals)

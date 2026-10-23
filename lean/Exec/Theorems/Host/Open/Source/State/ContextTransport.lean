@@ -28,15 +28,15 @@ theorem checked_reply_admissible_typed {M : Type} (memory : runtime.platform.Mem
 
 /-- Native saved-caller refinement is independent of the administrative
 representation of a source context for the same pending host redex. -/
-theorem SourceContinuation.retarget {M : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem SourceContinuation.retarget {M : Type}
     {memory : runtime.platform.MemoryBuffer M} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {ready : runtime.interp.Execution} {address : runtime.FuncAddr} {base : Usize}
     {left right : Spec.OpenHost.Pending} {expected : List valtype}
-    (saved : SourceContinuation emission allowed memory view code store ready address base left expected)
+    (saved : SourceContinuation memory view code store ready address base left expected)
     (typed : Store_ok (Store.decodeStore view code store))
     (beforeEq : left.before=Store.decodeStore view code store) (addressEq : left.address=address.index.val)
     (same : left.initial=right.initial) :
-    SourceContinuation emission allowed memory view code store ready address base right expected := by
+    SourceContinuation memory view code store ready address base right expected := by
   obtain ⟨function,signature,functionAt,signatureAt,resume⟩:=saved
   have resultTypes:=pending_signature_results view code store left address function signature beforeEq addressEq functionAt signatureAt
   have beforeTyped : Store_ok left.before:=by simpa only [beforeEq] using typed

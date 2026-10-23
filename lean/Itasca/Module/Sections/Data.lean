@@ -26,25 +26,6 @@ theorem at_snoc {R : ModuleBinary.Data → List U8 → Prop} {data start pos nex
   obtain ⟨last, he, ht⟩ := h'
   exact ⟨bytes ++ last, hr.snoc he, hs.append ht⟩
 
-/-- A memory index, an offset initializer and a counted byte string form an active
-`DataEncoding`. -/
-theorem encoded {data start p1 p2 p3 next memory offset count init}
-    (hm : Leb128.Decoded data start memory p1)
-    (ho : ModuleBinary.At ModuleBinary.ConstEncoding data p1 offset p2)
-    (hc : Leb128.Decoded data p2 count p3)
-    (hi : Wasm1.BytesAt data p3 init next) (hlen : init.length = count.val) :
-    ModuleBinary.At ModuleBinary.DataEncoding data start
-      ⟨.Active memory offset, init⟩ next := by
-  obtain ⟨mb, hm, hs⟩ := ModuleBinary.At.of_u32 hm
-  obtain ⟨ob, ho, hos⟩ := ho
-  obtain ⟨cb, hcs, hcl, hcb, hc⟩ := hc
-  have hspan : Wasm1.BytesAt data p2 cb p3 := ⟨hcs, hcl, hcb⟩
-  refine ⟨mb ++ ob ++ (cb ++ init), ?_, ?_⟩
-  · refine ⟨memory, offset, mb, ob, cb ++ init, rfl, hm, ho, ?_, rfl⟩
-    apply ModuleBinary.ByteVecEncoding.iff.mpr
-    exact ⟨cb, by simpa [hlen] using hc, rfl⟩
-  · exact (hs.append hos).append (hspan.append hi)
-
 /-- Like `encoded` for a profile: a flag word and the profile's index encoding give an active
 `DataEncodingFor profile`. -/
 theorem profile_encoded {profile data start first p1 p2 p3 next flags memory explicit offset count init}
@@ -308,39 +289,5 @@ theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) 
       have hcspan : Wasm1.BytesAt data pos countBytes start := ⟨hcs, hcl, hcb⟩
       refine ⟨⟨countBytes ++ bytes, ?_, hcspan.append hs⟩, hvalid⟩
       exact ⟨countBytes, bytes, by simpa [hlen] using hce, he, rfl⟩
-
-/-- Wasm 1.0 form of `module.decode_data_segment.profile_spec`. -/
-@[step]
-theorem module.decode_data_segment.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
-    module.decode_data_segment data pos env .Wasm1 ⦃ r => match r with
-      | .Ok (segment, next) =>
-          ModuleBinary.At ModuleBinary.DataEncoding data pos (ModuleData.raw segment) next ∧
-          ModuleData.Valid env segment
-      | .Err _ => True ⦄ := by
-  exact module.decode_data_segment.profile_spec data pos env .Wasm1
-
-/-- Wasm 1.0 form of `module.decode_data_section_loop.profile_spec`. -/
-@[step]
-theorem module.decode_data_section_loop.spec (data : Slice U8) (env : module.Env)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
-    module.decode_data_section_loop data env .Wasm1 count (alloc.vec.Vec.new _) start 0#u32 ⦃ r =>
-      match r with
-      | .Ok (segments, next) => segments.val.length = count.val ∧
-          ModuleBinary.At (ModuleBinary.Rep ModuleBinary.DataEncoding)
-            data start (segments.val.map ModuleData.raw) next ∧
-          ∀ segment ∈ segments.val, ModuleData.Valid env segment
-      | .Err _ => True ⦄ := by
-  exact module.decode_data_section_loop.profile_spec data env .Wasm1 count start hstart
-
-/-- Wasm 1.0 form of `module.decode_data_section.profile_spec`. -/
-@[step]
-theorem module.decode_data_section.spec (data : Slice U8) (pos : Usize) (env : module.Env) :
-    module.decode_data_section data pos env .Wasm1 ⦃ r => match r with
-      | .Ok (segments, next) =>
-          ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.DataEncoding)
-            data pos (segments.val.map ModuleData.raw) next ∧
-          ∀ segment ∈ segments.val, ModuleData.Valid env segment
-      | .Err _ => True ⦄ := by
-  exact module.decode_data_section.profile_spec data pos env .Wasm1
 
 end Itasca

@@ -10,12 +10,6 @@ def vectorStoreBytes (bytes : List U8) (start : Nat) (value : U128) (index : Nat
   | 0 => bytes
   | count + 1 => vectorStoreBytes (bytes.set (start + index) (vectorStoreByte value index)) start value (index + 1) count
 
-theorem vectorStoreBytes_length (bytes : List U8) (start : Nat) (value : U128) (index count : Nat) :
-    (vectorStoreBytes bytes start value index count).length = bytes.length := by
-  induction count generalizing bytes index with
-  | zero => rfl
-  | succ count ih => simp only [vectorStoreBytes, ih, List.length_set]
-
 /-- The complete extracted store loop terminates and writes precisely the
 selected little-endian bytes, without changing the buffer length. -/
 @[step] theorem write_loop_effect (value : U128) (bytes : Slice U8) (width start index : Usize)

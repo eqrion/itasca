@@ -237,14 +237,6 @@ theorem transition_safe (op : Instruction) (s : store) (ambient : frame)
   obtain ⟨choice,allowed,rfl⟩ := step
   exact evaluate_safe choice op s ambient f rest after typed allowed
 
-theorem transition_progress (op : Instruction) (s : store) (ambient : frame)
-    (f : AFrame) (rest : List AFrame) (after : List instr)
-    (typed : CoreTyped ⟨s,ambient,{f with code := op.source::after}::rest,[]⟩) :
-    ∃ result, Transition ⟨s,ambient,{f with code := op.source::after}::rest,[]⟩ f rest after op result ∧
-      ResultSafe ⟨s,ambient,{f with code := op.source::after}::rest,[]⟩ result := by
-  refine ⟨_,⟨{},Selection.refusal_allowed op s f,rfl⟩,?_⟩
-  exact evaluate_safe {} op s ambient f rest after typed (Selection.refusal_allowed op s f)
-
 theorem transition_next (op : Instruction) (s : store) (ambient : frame)
     (f : AFrame) (rest : List AFrame) (after : List instr) (next : AState)
     (typed : CoreTyped ⟨s,ambient,{f with code := op.source::after}::rest,[]⟩)

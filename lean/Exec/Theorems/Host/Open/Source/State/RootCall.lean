@@ -35,7 +35,7 @@ inductive SourceRootCallReady {M A : Type} (allocator : runtime.platform.Alloc A
       SourceRootCallReady allocator hooks exec store token view code ambient address signature arguments (.done answer)
   | defined (answer : Answer M Unit) (entry : Abs.AState)
       (status : answer.1=.Ok ()) (sameStore : answer.2.2.1=store)
-      (machine : StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+      (machine : StructuredMachine.Execution
         view code store answer.2.1 entry (signature.results.val.map sourceType) 0 false)
       (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) entry)
       (ambientEq : entry.ambient=ambient)

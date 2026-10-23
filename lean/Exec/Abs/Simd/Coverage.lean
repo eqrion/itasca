@@ -5,9 +5,9 @@ namespace Exec.Abs.Simd
 
 /-- SIMD consumes its source head without changing any remaining source syntax.
 The argument is independent of the eventual cumulative instruction family. -/
-theorem Step.next_supported {allowed : instr → Prop} {before next}
-    (step : Step before (.next next)) (covered : SupportedState allowed before) :
-    SupportedState allowed next := by
+theorem Step.next_supported {before next}
+    (step : Step before (.next next)) (covered : SupportedState before) :
+    SupportedState next := by
   cases step with
   | pure signature transition =>
     cases transition

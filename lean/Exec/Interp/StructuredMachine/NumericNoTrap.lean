@@ -11,7 +11,6 @@ import Exec.Interp.Numeric.Integer.NumericCodePoint
 import Exec.Abs.Numeric.TransitionSimulation
 
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem step_numeric_no_trap {M P F A : Type}
@@ -31,12 +30,12 @@ theorem step_numeric_no_trap {M P F A : Type}
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := op.source :: after }
+    (point : FramePoint s raw { f with code := op.source :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out => out.1 = .Ok () ⦄ := by
   have linear : linearSource op.source = true := by
     cases op <;> (try casesm* Conversion) <;> rfl
-  rcases structuredCodeWithTables_linear_inv linear point.code.current with skip | branch
+  rcases structuredCode_linear_inv linear point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
       index raw inst compiled target last hf hi hc pcBound fetched)

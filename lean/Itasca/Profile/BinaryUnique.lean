@@ -6,8 +6,9 @@ import Itasca.Binary.ModuleUnique
 /-!
 # Profile binary uniqueness
 
-Lifts the uniqueness of the binary grammars to both profiles: `BodyBytes.unique` for body bytes,
-`code_prefix_unique` for code entries, and `module_unique` for complete modules.
+Lifts the uniqueness of the binary grammars to both profiles: `BodyBytes.unique` for body bytes
+and `code_prefix_unique` for code entries. `Itasca/Results/Unique` gives the complete-module
+result.
 -/
 
 open Aeneas Aeneas.Std
@@ -41,11 +42,5 @@ theorem code_prefix_unique (profile : ValidationProfile) : PrefixUnique (CodeEnc
   have hbv := BodyBytes.unique profile hb hb'
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
-
-/-- A complete module has one decoding under either supported profile. -/
-theorem module_unique {profile x y bytes}
-    (hx : ModuleBinary.ModuleEncodingWith (CodeEncoding profile) x bytes profile)
-    (hy : ModuleBinary.ModuleEncodingWith (CodeEncoding profile) y bytes profile) : x = y :=
-  ModuleBinary.ModuleEncodingWith.unique (code_prefix_unique profile) hx hy
 
 end Itasca.Profile

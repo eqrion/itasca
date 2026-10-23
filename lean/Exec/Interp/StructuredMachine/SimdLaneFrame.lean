@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1200000
 
-theorem step_lane_frame {emission : FunctionEmission} {M P F A : Type}
+theorem step_lane_frame {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
@@ -32,7 +32,7 @@ theorem step_lane_frame {emission : FunctionEmission} {M P F A : Type}
     (typed : Abs.CoreTyped ⟨Store.decodeStore view interpretation store,ambient,
       {f with code:=(op.instruction (.mk_uN lane.val))::after}::rest,[]⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view interpretation store) raw
+    (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=(op.instruction (.mk_uN lane.val))::after} compiled C targets next output)
     (stack : f.vals.map Code.valueType=frontTypes++op.inputs)
     (meaning : laneMeaning opcode.val=some op)
@@ -41,7 +41,7 @@ theorem step_lane_frame {emission : FunctionEmission} {M P F A : Type}
     (made : runtime.bytecode.Instr.make_simd opcode operand operand entry=.ok (some instruction))
     (position : operand.val=Code.slots C.LOCALS+Code.slots frontTypes)
     (fetch : compiled.code.val[raw.pc.val]?=some instruction)
-    (tail : Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (tail : Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (frontTypes++op.outputs) after (raw.pc.val+1) next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1=.Ok () ∧ out.2.2.2=platform ∧ SimdStoreMutation view store out.2.2.1 ∧
@@ -51,7 +51,7 @@ theorem step_lane_frame {emission : FunctionEmission} {M P F A : Type}
       SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ∧
       FrameSlots out.2.1 {raw with pc:=pc} updated ∧
       FrameMetadata {f with code:=(op.instruction (.mk_uN lane.val))::after} updated ∧
-      FramePoint emission (Store.decodeStore view interpretation out.2.2.1) {raw with pc:=pc}
+      FramePoint (Store.decodeStore view interpretation out.2.2.1) {raw with pc:=pc}
         updated compiled C targets next output ∧
       Abs.Simd.Step ⟨Store.decodeStore view interpretation store,ambient,{f with code:=(op.instruction (.mk_uN lane.val))::after}::rest,[]⟩
         (.next ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩) ⦄ := by

@@ -3,58 +3,54 @@ import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
 namespace Exec.Code.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
-def TokenWasm1 : Wasm1.Token → Prop
-  | .plain source => Abs.ExecutableInstr source
-  | _ => True
-
 def TokenWasm2 : Wasm2.Token → Prop
-  | .plain source => Abs.ExecutableInstr source
+  | .plain source => Abs.BinaryInstr source
   | _ => True
 
-theorem stateful (op : Abs.Stateful.Instruction) : Abs.ExecutableInstr op.source :=
-  .base (.cumulative (.stateful op))
+theorem stateful (op : Abs.Stateful.Instruction) : Abs.BinaryInstr op.source :=
+  .stateful op
 
 theorem immediate_wasm1 {opcode token bytes} (encoded : Wasm1.Immediate opcode token bytes) :
-    TokenWasm1 token := by
+    TokenWasm2 token := by
   cases encoded with
-  | unreachable => exact core (.slice .unreachable)
-  | nop => exact core (.slice .nop)
+  | unreachable => exact .unreachable
+  | nop => exact .nop
   | block | loop | if_ | else_ | end_ => trivial
-  | br idx _ => exact core (.slice (.br _))
-  | brIf idx _ => exact core (.slice (.br_if _))
-  | brTable => exact .branchTable _ _
-  | return_ => exact core (.slice .ret)
-  | call idx _ => exact core (.slice (.call _))
-  | callIndirect => exact .base (.cumulative (.indirect_call _ _))
-  | drop => exact core (.slice .drop)
-  | select => exact core .select
-  | localGet => exact core (.slice (.local_get _))
-  | localSet => exact core (.slice (.local_set _))
-  | localTee => exact core (.slice (.local_tee _))
-  | globalGet => exact core (.global_get _)
-  | globalSet => exact core (.global_set _)
+  | br idx _ => exact .br _
+  | brIf idx _ => exact .br_if _
+  | brTable => exact .br_table _ _
+  | return_ => exact .ret
+  | call idx _ => exact .call _
+  | callIndirect => exact .call_indirect _ _
+  | drop => exact .drop
+  | select => exact .select
+  | localGet => exact .local_get _
+  | localSet => exact .local_set _
+  | localTee => exact .local_tee _
+  | globalGet => exact .global_get _
+  | globalSet => exact .global_set _
   | memory opcode op arg meaning _ _ => exact memory arg meaning
   | memorySize => exact stateful .memorySize
   | memoryGrow => exact stateful .memoryGrow
-  | i32Const => exact core (.constant _ _)
-  | i64Const => exact core (.constant _ _)
-  | f32Const => exact core (.constant _ _)
-  | f64Const => exact core (.constant _ _)
+  | i32Const => exact .const _ _
+  | i64Const => exact .const _ _
+  | f32Const => exact .const _ _
+  | f64Const => exact .const _ _
   | numeric opcode operation meaning => exact numeric meaning
 
 theorem reference {opcode source bytes} (encoded : Wasm2.ReferencesBinary.Immediate opcode source bytes) :
-    Abs.ExecutableInstr source := by
+    Abs.BinaryInstr source := by
   cases encoded with
   | refNull type => exact stateful (.refNull _)
   | refIsNull => exact stateful .refIsNull
   | refFunc index _ => exact stateful (.refFunc index.val)
-  | selectTyped => exact .typedSelect _
+  | selectTyped => exact .typed_select _
   | tableGet index _ => exact stateful (.tableGet index.val)
   | tableSet index _ => exact stateful (.tableSet index.val)
-  | callIndirect => exact .base (.cumulative (.indirect_call _ _))
+  | callIndirect => exact .call_indirect _ _
 
 theorem bulk {opcode source bytes} (encoded : Wasm2.BulkBinary.Immediate opcode source bytes) :
-    Abs.ExecutableInstr source := by
+    Abs.BinaryInstr source := by
   cases encoded with
   | memoryInit index _ => exact stateful (.memoryInit index.val)
   | dataDrop index _ => exact stateful (.dataDrop index.val)
@@ -68,9 +64,8 @@ theorem bulk {opcode source bytes} (encoded : Wasm2.BulkBinary.Immediate opcode 
   | tableFill index _ => exact stateful (.tableFill index.val)
 
 theorem simd {opcode source bytes} (encoded : Wasm2.Simd.Immediate opcode source bytes) :
-    Abs.ExecutableInstr source := by
-  apply Abs.ExecutableInstr.base
-  apply Abs.SimdCumulativeInstr.simd
+    Abs.BinaryInstr source := by
+  apply Abs.BinaryInstr.simd
   cases encoded with
   | pure _ _ meaning => exact .pure (pure_source_signature meaning)
   | lane _ op lane _ => exact .pure (lane_source_signature op _)

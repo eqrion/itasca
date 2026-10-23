@@ -1,5 +1,5 @@
 import Exec.Theorems.Api.StatefulGrowthMatching
-import Exec.Theorems.Api.GrowthChoiceMatching
+import Exec.Contracts
 import Exec.Theorems.Api.StatefulGrowthChoice
 import Exec.Interp.State.TableGrow
 import Exec.Store.Api.TableGrowSource

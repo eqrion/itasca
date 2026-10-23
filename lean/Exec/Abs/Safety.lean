@@ -39,11 +39,6 @@ theorem nop_preservation (s : store) (ambient : frame) (f : AFrame)
     exact ⟨hs, functions, ha, .cons (nop_frame_preservation hf) hr, values, (fun _ => active (by simp)),
       replace_frame_heights heights (frameTyped_heights (nop_frame_preservation hf))⟩
 
-theorem astep_nop (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (code : List instr) (results : List val) :
-    astep ⟨s, ambient, { f with code := .NOP :: code } :: rest, results⟩ =
-      .next ⟨s, ambient, { f with code := code } :: rest, results⟩ := rfl
-
 @[simp] theorem pop_append (values : List val) (value : val) :
     pop (values ++ [value]) = some (values, value) := by
   simp [pop]

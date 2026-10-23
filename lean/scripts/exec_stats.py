@@ -3,7 +3,8 @@
 
 `exec_stats.py [LIB]` prints the metrics tracked by `EXEC_PLAN.md`.
 `exec_stats.py timing [LIB]` compares import-only and full elaboration time on a
-fixed file sample. Generated modules are excluded throughout.
+fixed file sample. Extraction outputs are excluded throughout, and so are oleans
+left behind by deleted sources.
 """
 from collections import Counter
 from pathlib import Path
@@ -17,6 +18,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 OLEANS = ROOT / ".lake" / "build" / "lib" / "lean"
 TIMING_SAMPLE = 20
+EXTRACTED = {"Types.lean", "Funs.lean", "FunsExternal_Template.lean"}
 
 DECL = re.compile(
     r"^(?:@\[[^\]]*\]\s*)?(?:(?:private|protected|noncomputable|partial|unsafe)\s+)*"
@@ -31,7 +33,8 @@ PROFILE = re.compile(r"Wasm([12])|wasm([12])")
 
 
 def sources(lib: str) -> list[Path]:
-    return sorted(p for p in (ROOT / lib).rglob("*.lean") if "Generated" not in p.parts)
+    return sorted(p for p in (ROOT / lib).rglob("*.lean")
+                  if not ("Generated" in p.parts and p.name in EXTRACTED))
 
 
 def module(path: Path) -> str:
@@ -69,8 +72,8 @@ def stats(lib: str) -> None:
     definitions = {p: sum(c.values()) - theorems[p] for p, c in kinds.items()}
     single = sum(1 for p in files if theorems[p] == 1 and definitions[p] == 0)
     docs = sum(1 for t in files.values() if "/-!" in t)
-    oleans = [(f.stat().st_size, f) for f in (OLEANS / lib).rglob("*.olean")
-              if "Generated" not in f.parts] if (OLEANS / lib).exists() else []
+    oleans = [(f.stat().st_size, f) for p in files
+              if (f := OLEANS / p.relative_to(ROOT).with_suffix(".olean")).exists()]
     big = sorted((s for s in oleans if s[0] > 10 * 2**20), reverse=True)
     file_pairs, name_pairs = profile_duplicates(files)
     flat = Counter(m.group(1) for t in files.values()

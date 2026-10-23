@@ -24,10 +24,4 @@ def PrecommitError (profile : Itasca.ValidationProfile) : runtime.ExecError → 
 theorem ResourceError.precommit {profile error} (resource : ResourceError error) : PrecommitError profile error := by
   cases error <;> simp_all [ResourceError, PrecommitError]
 
-theorem PrecommitError.kind {profile error} (allowed : PrecommitError profile error) :
-    error = .WrongStore ∨ (∃ link, error = .Link link) ∨ (∃ resource, error = .Exhausted resource) ∨
-      (profile = .Wasm1 ∧ (error = .Trap .MemoryOutOfBounds ∨ error = .Trap .TableOutOfBounds)) := by
-  cases error <;> simp_all [PrecommitError]
-  rename_i trap
-  cases trap <;> simp_all [PrecommitError]
 end Exec.Store

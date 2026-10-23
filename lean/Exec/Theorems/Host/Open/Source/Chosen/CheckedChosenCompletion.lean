@@ -1,6 +1,6 @@
 import Exec.Theorems.Host.Open.Driver.CheckedSourceReply
 import Exec.Theorems.Host.Open.Source.Control.Publication
-import Exec.Spec.Open.ExecutionCompletion
+import Exec.Spec.Open.ExecutionReplies
 import Exec.Theorems.Host.Open.Source.Chosen.ControlChoiceLifting
 namespace Exec.Theorems.OpenReentrantControl
 open Aeneas Aeneas.Std SpecExt Exec.Interp

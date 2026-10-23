@@ -3,21 +3,11 @@ import Exec.Theorems.Host.HostSiteWorld
 import Exec.Theorems.Host.HostWorldSound
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Full actual dispatch under a current-world callback contract. Each ordinary
 case reuses the fixed-world proof; actual host calls choose their post-world. -/
 theorem world_step_outcomes
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.RecordingHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -25,7 +15,7 @@ theorem world_step_outcomes
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ code s,Inv code s → CertifiedSupportedStore emission allowed view code s)
+    (certify : ∀ code s,Inv code s → CertifiedSupportedStore view code s)
     (update : ∀ code before after,Inv code before → CumulativeStoreMutation view code before after → Inv code after)
     (sound : HostWorldSound hooks view Inv)
     (preserve : ∀ code store, Inv code store →
@@ -36,9 +26,9 @@ theorem world_step_outcomes
       ∀ host p args results answer, hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     (expected : List valtype) :
-    WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv := by
+    WorldStepOutcomes memory hooks floats allocator view expected Inv := by
   intro world valid active
-  rcases world_step_or_host language memory hooks floats allocator correct allocation interrupts view laws world.code
+  rcases world_step_or_host memory hooks floats allocator correct allocation interrupts view laws world.code
     Inv update world.machine valid active with site | ordinary
   · obtain ⟨out,actual,result⟩ := WP.spec_imp_exists
       (site.world_outcomes memory hooks floats allocator allocation interrupts view world.code Inv certify

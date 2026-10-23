@@ -58,3 +58,12 @@ theorem code.BodyState.blocks_eq_of_ctrls {st st' : code.BodyState}
     (code.BodyState.mk { st.core with vals }).blocks = st.blocks := rfl
 
 end Itasca
+
+namespace Itasca
+
+/-- Cursor arithmetic just past a body of maximal size does not overflow `Usize`. -/
+theorem limits.MAX_FUNCTION_BYTES.room : limits.MAX_FUNCTION_BYTES.val + 2 < Usize.max := by
+  simp only [limits.MAX_FUNCTION_BYTES]
+  scalar_tac
+
+end Itasca

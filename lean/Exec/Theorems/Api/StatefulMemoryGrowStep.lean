@@ -1,10 +1,11 @@
 import Exec.Theorems.Api.StatefulMemoryGrowDispatch
 import Exec.Interp.State.StatefulContinue
 import Exec.Interp.StructuredMachine.StatefulPrepare
-import Exec.Interp.Cumulative.Machine
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp Exec.Interp.Stateful
-variable {emission : Exec.Interp.StructuredMachine.FunctionEmission}
 
 theorem stateful_memory_grow_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -21,11 +22,11 @@ theorem stateful_memory_grow_point_step {M P F A : Type} (memory : runtime.platf
     (fetchBound : compiled.code.length≤U32.max)
     (shapes : ∀ object∈store.memories.val,MemoryShape view object)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩) :
     let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩
     (∃ target : U32,raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      StructuredMachine.FramePoint emission (decodeStore view code store) {raw with pc:=target} {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output) ∨
+      StructuredMachine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1=.Ok () ∧ out.2.2.2=platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       ∃ pc : U32,∃ front : List val,∃ position : Nat,∃ result : U32,
@@ -33,7 +34,7 @@ theorem stateful_memory_grow_point_step {M P F A : Type} (memory : runtime.platf
         SlotsEffect {exec with frames:=exec.frames.set index {raw with pc:=pc}} out.2.1 (exec.slots.val.set position (UScalar.cast .U64 result)) ∧
         (∃ address delta,address.val<store.memories.length ∧ MemoryGrowth view code store address delta (result,out.2.2.1)) ∧
         FrameSlots out.2.1 {raw with pc:=pc} {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} ∧
-        StructuredMachine.FramePoint emission (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} compiled C targets next output ∧
+        StructuredMachine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} compiled C targets next output ∧
         Abs.Cumulative.Step initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]}::rest,[]⟩) ⦄ := by
   dsimp only
   have frameTyped : Abs.FrameTyped (decodeStore view code store) {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} [] := by
@@ -81,6 +82,6 @@ theorem stateful_memory_grow_point_step {M P F A : Type} (memory : runtime.platf
     · have safe := Abs.Stateful.transition_next .memoryGrow (decodeStore view code store) ambient f rest after
         ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front++[Abs.integerVal .I32 resultValue.val]}::rest,[]⟩ typed transition
       exact point.continue safe.2.1 front operands [Abs.integerVal .I32 resultValue.val] after values heights
-        (by simpa only [resultType,Cumulative.emission,Code.valueType,Abs.integerVal,List.map_cons,List.map_nil,numtype_Inn,valtype_numtype] using tail) pc pcNext
+        (by simpa only [resultType,Code.valueType,Abs.integerVal,List.map_cons,List.map_nil,numtype_Inn,valtype_numtype] using tail) pc pcNext
     · exact .stateful transition (by intro impossible;cases impossible)
 end Exec.Theorems

@@ -2659,8 +2659,451 @@ def runtime.bytecode.Instr.make_simd
     ok (some (runtime.bytecode.Instr.F64x2ConvertLowI32x4U dst a entry))
   | _ => ok none
 
+/-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::retarget]:
+    Source: 'src/runtime/bytecode.rs', lines 120:4-127:5 -/
+def runtime.bytecode.Instr.retarget
+  (self : _root_.Exec.runtime.bytecode.Instr) (target : Std.U32) :
+  Result (Option _root_.Exec.runtime.bytecode.Instr)
+  := do
+  match self with
+  | runtime.bytecode.Instr.Copy _ _ => ok none
+  | runtime.bytecode.Instr.Copy2 _ _ => ok none
+  | runtime.bytecode.Instr.CopyN _ _ _ => ok none
+  | runtime.bytecode.Instr.Const32 _ _ => ok none
+  | runtime.bytecode.Instr.Const64 _ _ => ok none
+  | runtime.bytecode.Instr.ConstV128 _ _ => ok none
+  | runtime.bytecode.Instr.Jump _ =>
+    ok (some (runtime.bytecode.Instr.Jump target))
+  | runtime.bytecode.Instr.JumpIfZero cond _ =>
+    ok (some (runtime.bytecode.Instr.JumpIfZero cond target))
+  | runtime.bytecode.Instr.JumpIfNonZero cond _ =>
+    ok (some (runtime.bytecode.Instr.JumpIfNonZero cond target))
+  | runtime.bytecode.Instr.JumpTable _ _ _ => ok none
+  | runtime.bytecode.Instr.LoopHead => ok none
+  | runtime.bytecode.Instr.Call _ _ => ok none
+  | runtime.bytecode.Instr.CallIndirect _ _ _ => ok none
+  | runtime.bytecode.Instr.Return _ _ => ok none
+  | runtime.bytecode.Instr.Unreachable => ok none
+  | runtime.bytecode.Instr.Select _ _ _ => ok none
+  | runtime.bytecode.Instr.Select2 _ _ _ => ok none
+  | runtime.bytecode.Instr.GlobalGet _ _ => ok none
+  | runtime.bytecode.Instr.GlobalGet2 _ _ => ok none
+  | runtime.bytecode.Instr.GlobalSet _ _ => ok none
+  | runtime.bytecode.Instr.GlobalSet2 _ _ => ok none
+  | runtime.bytecode.Instr.I32Eqz _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I32LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32LtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32GtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32LeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32GeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Eqz _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I64LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64LtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64GtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64LeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64GeU _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Lt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Gt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Le _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Ge _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Lt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Gt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Le _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Ge _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Clz _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Ctz _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Popcnt _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.I32DivS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32DivU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32RemS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32RemU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32And _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Or _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Xor _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I32ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Rotl _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Rotr _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Clz _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Ctz _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Popcnt _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.I64DivS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64DivU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64RemS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64RemU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64And _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Or _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Xor _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I64ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Rotl _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Rotr _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Ceil _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Floor _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Trunc _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Nearest _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Sqrt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Add _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Div _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Min _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Max _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Copysign _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Ceil _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Floor _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Trunc _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Nearest _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Sqrt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Add _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Div _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Min _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Max _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Copysign _ _ _ => ok none
+  | runtime.bytecode.Instr.I32WrapI64 _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncF32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncF32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncF64S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncF64U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64ExtendI32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64ExtendI32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncF32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncF32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncF64S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncF64U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32ConvertI32S _ _ _ => ok none
+  | runtime.bytecode.Instr.F32ConvertI32U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32ConvertI64S _ _ _ => ok none
+  | runtime.bytecode.Instr.F32ConvertI64U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32DemoteF64 _ _ _ => ok none
+  | runtime.bytecode.Instr.F64ConvertI32S _ _ _ => ok none
+  | runtime.bytecode.Instr.F64ConvertI32U _ _ _ => ok none
+  | runtime.bytecode.Instr.F64ConvertI64S _ _ _ => ok none
+  | runtime.bytecode.Instr.F64ConvertI64U _ _ _ => ok none
+  | runtime.bytecode.Instr.F64PromoteF32 _ _ _ => ok none
+  | runtime.bytecode.Instr.I32ReinterpretF32 _ _ _ => ok none
+  | runtime.bytecode.Instr.I64ReinterpretF64 _ _ _ => ok none
+  | runtime.bytecode.Instr.F32ReinterpretI32 _ _ _ => ok none
+  | runtime.bytecode.Instr.F64ReinterpretI64 _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Extend8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Extend16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Extend8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Extend16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Extend32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncSatF32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncSatF32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncSatF64S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32TruncSatF64U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncSatF32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncSatF32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncSatF64S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64TruncSatF64U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Load _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Load _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Load _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Load8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Load8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Load16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Load16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load32S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Load32U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Store _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Store _ _ _ => ok none
+  | runtime.bytecode.Instr.F32Store _ _ _ => ok none
+  | runtime.bytecode.Instr.F64Store _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Store8 _ _ _ => ok none
+  | runtime.bytecode.Instr.I32Store16 _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Store8 _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Store16 _ _ _ => ok none
+  | runtime.bytecode.Instr.I64Store32 _ _ _ => ok none
+  | runtime.bytecode.Instr.MemorySize _ => ok none
+  | runtime.bytecode.Instr.MemoryGrow _ => ok none
+  | runtime.bytecode.Instr.MemoryFill _ => ok none
+  | runtime.bytecode.Instr.MemoryCopy _ => ok none
+  | runtime.bytecode.Instr.MemoryInit _ _ => ok none
+  | runtime.bytecode.Instr.DataDrop _ => ok none
+  | runtime.bytecode.Instr.TableGet _ _ _ => ok none
+  | runtime.bytecode.Instr.TableSet _ _ _ => ok none
+  | runtime.bytecode.Instr.TableSize _ _ => ok none
+  | runtime.bytecode.Instr.TableGrow _ _ => ok none
+  | runtime.bytecode.Instr.TableFill _ _ => ok none
+  | runtime.bytecode.Instr.TableCopy _ _ => ok none
+  | runtime.bytecode.Instr.TableInit _ _ => ok none
+  | runtime.bytecode.Instr.ElemDrop _ => ok none
+  | runtime.bytecode.Instr.RefNull _ => ok none
+  | runtime.bytecode.Instr.RefIsNull _ _ => ok none
+  | runtime.bytecode.Instr.RefFunc _ _ => ok none
+  | runtime.bytecode.Instr.V128Load _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load8x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load8x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load16x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load16x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load32x2S _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load32x2U _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load8Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load16Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load32Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load64Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Store _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Shuffle _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Swizzle _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Splat _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16ExtractLaneS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16ExtractLaneU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtractLaneS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtractLaneU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtractLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtractLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4ExtractLane _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2ExtractLane _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2ReplaceLane _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16LtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16GtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16LeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16GeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8LtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8GtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8LeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8GeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4LtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4GtU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4LeU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4GeU _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Lt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Gt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Le _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Ge _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Lt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Gt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Le _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Ge _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Not _ _ _ => ok none
+  | runtime.bytecode.Instr.V128And _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Andnot _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Or _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Xor _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Bitselect _ _ _ => ok none
+  | runtime.bytecode.Instr.V128AnyTrue _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load8Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load16Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load32Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load64Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Store8Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Store16Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Store32Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Store64Lane _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load32Zero _ _ _ => ok none
+  | runtime.bytecode.Instr.V128Load64Zero _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4DemoteF64x2Zero _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2PromoteLowF32x4 _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Popcnt _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16AllTrue _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Bitmask _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16NarrowI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16NarrowI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Ceil _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Floor _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Trunc _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Nearest _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16AddSatS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16AddSatU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16SubSatS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16SubSatU _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Ceil _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Floor _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16MinS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16MinU _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16MaxS _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16MaxU _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Trunc _ _ _ => ok none
+  | runtime.bytecode.Instr.I8x16AvgrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Q15mulrSatS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8AllTrue _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Bitmask _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8NarrowI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8NarrowI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtendLowI8x16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtendHighI8x16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtendLowI8x16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtendHighI8x16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8AddSatS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8AddSatU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8SubSatS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8SubSatU _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Nearest _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8MinS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8MinU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8MaxS _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8MaxU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8AvgrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16S _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4AllTrue _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Bitmask _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtendLowI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtendHighI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtendLowI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtendHighI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4MinS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4MinU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4MaxS _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4MaxU _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4DotI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2AllTrue _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Bitmask _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtendLowI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtendHighI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtendLowI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtendHighI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Shl _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ShrS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ShrU _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Add _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Eq _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2Ne _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2LtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2GtS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2LeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2GeS _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Sqrt _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Add _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Div _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Min _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Max _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Pmin _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4Pmax _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Abs _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Neg _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Sqrt _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Add _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Sub _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Mul _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Div _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Min _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Max _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Pmin _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2Pmax _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4TruncSatF32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4TruncSatF32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4ConvertI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.F32x4ConvertI32x4U _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4TruncSatF64x2SZero _ _ _ => ok none
+  | runtime.bytecode.Instr.I32x4TruncSatF64x2UZero _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2ConvertLowI32x4S _ _ _ => ok none
+  | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok none
+
 /-- [itasca::runtime::bytecode::simd_shape]:
-    Source: 'src/runtime/bytecode.rs', lines 119:0-147:1 -/
+    Source: 'src/runtime/bytecode.rs', lines 131:0-159:1 -/
 def runtime.bytecode.simd_shape
   (op : Std.U32) :
   Result (Option (Std.U32 × Std.U32 × Std.U32 × Std.U32))
@@ -2904,7 +3347,7 @@ def runtime.bytecode.simd_shape
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::is_return]:
-    Source: 'src/runtime/bytecode.rs', lines 149:0-151:1 -/
+    Source: 'src/runtime/bytecode.rs', lines 161:0-163:1 -/
 def runtime.bytecode.is_return
   (instruction : _root_.Exec.runtime.bytecode.Instr) : Result Bool := do
   match instruction with
@@ -3342,7 +3785,7 @@ def runtime.bytecode.is_return
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::slots_fit]:
-    Source: 'src/runtime/bytecode.rs', lines 154:4-156:5 -/
+    Source: 'src/runtime/bytecode.rs', lines 166:4-168:5 -/
 def runtime.bytecode.CompiledFunction.slots_fit
   (self : _root_.Exec.runtime.bytecode.CompiledFunction) (start : Std.U32)
   (n : Std.U32) :
@@ -3353,14 +3796,577 @@ def runtime.bytecode.CompiledFunction.slots_fit
        ok (n <= i)
   else ok false
 
-/-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::instruction_valid]:
-    Source: 'src/runtime/bytecode.rs', lines 158:4-241:5 -/
-def runtime.bytecode.CompiledFunction.instruction_valid
+/-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::other_valid]:
+    Source: 'src/runtime/bytecode.rs', lines 192:4-258:5 -/
+def runtime.bytecode.CompiledFunction.other_valid
   (self : _root_.Exec.runtime.bytecode.CompiledFunction)
   (instruction : _root_.Exec.runtime.bytecode.Instr) :
   Result Bool
   := do
   let length := alloc.vec.Vec.len self.code
+  match instruction with
+  | runtime.bytecode.Instr.Copy dst src =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+    if b
+    then runtime.bytecode.CompiledFunction.slots_fit self src 1#u32
+    else ok false
+  | runtime.bytecode.Instr.Copy2 dst src =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
+    if b
+    then runtime.bytecode.CompiledFunction.slots_fit self src 2#u32
+    else ok false
+  | runtime.bytecode.Instr.CopyN dst src n =>
+    if dst <= src
+    then
+      let b ← runtime.bytecode.CompiledFunction.slots_fit self dst n
+      if b
+      then runtime.bytecode.CompiledFunction.slots_fit self src n
+      else ok false
+    else ok false
+  | runtime.bytecode.Instr.Const32 dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.Const64 dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.ConstV128 dst pool =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
+    if b
+    then
+      let i ← lift (UScalar.cast .Usize pool)
+      let i1 := alloc.vec.Vec.len self.v128_pool
+      ok (i < i1)
+    else ok false
+  | runtime.bytecode.Instr.Jump target =>
+    let i ← lift (UScalar.cast .Usize target)
+    ok (i < length)
+  | runtime.bytecode.Instr.JumpIfZero cond target =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
+    if b
+    then let i ← lift (UScalar.cast .Usize target)
+         ok (i < length)
+    else ok false
+  | runtime.bytecode.Instr.JumpIfNonZero cond target =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
+    if b
+    then let i ← lift (UScalar.cast .Usize target)
+         ok (i < length)
+    else ok false
+  | runtime.bytecode.Instr.JumpTable index start len =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
+    if b
+    then
+      if len > 0#u32
+      then
+        let i ← lift (UScalar.cast .Usize start)
+        let i1 := alloc.vec.Vec.len self.jump_tables
+        if i <= i1
+        then
+          let i2 ← lift (UScalar.cast .Usize len)
+          let i3 := alloc.vec.Vec.len self.jump_tables
+          let i4 ← lift (UScalar.cast .Usize start)
+          let i5 ← i3 - i4
+          ok (i2 <= i5)
+        else ok false
+      else ok false
+    else ok false
+  | runtime.bytecode.Instr.LoopHead => ok true
+  | runtime.bytecode.Instr.Call _ base =>
+    runtime.bytecode.CompiledFunction.slots_fit self base 0#u32
+  | runtime.bytecode.Instr.CallIndirect entry index base =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self base 0#u32
+    if b
+    then
+      let b1 ← runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
+      if b1
+      then
+        let i ← lift (UScalar.cast .Usize entry)
+        let i1 := alloc.vec.Vec.len self.indirect
+        ok (i < i1)
+      else ok false
+    else ok false
+  | runtime.bytecode.Instr.Return src n =>
+    runtime.bytecode.CompiledFunction.slots_fit self src n
+  | runtime.bytecode.Instr.Unreachable => ok true
+  | runtime.bytecode.Instr.Select a b cond =>
+    let b1 ← runtime.bytecode.CompiledFunction.slots_fit self a 1#u32
+    if b1
+    then
+      let b2 ← runtime.bytecode.CompiledFunction.slots_fit self b 1#u32
+      if b2
+      then runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
+      else ok false
+    else ok false
+  | runtime.bytecode.Instr.Select2 a b cond =>
+    let b1 ← runtime.bytecode.CompiledFunction.slots_fit self a 2#u32
+    if b1
+    then
+      let b2 ← runtime.bytecode.CompiledFunction.slots_fit self b 2#u32
+      if b2
+      then runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
+      else ok false
+    else ok false
+  | runtime.bytecode.Instr.GlobalGet dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.GlobalGet2 dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
+  | runtime.bytecode.Instr.GlobalSet src _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self src 1#u32
+  | runtime.bytecode.Instr.GlobalSet2 src _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self src 2#u32
+  | runtime.bytecode.Instr.I32Eqz _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I32LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32LtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32GtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32LeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32GeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Eqz _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I64LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64LtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64GtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64LeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64GeU _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Lt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Gt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Le _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Ge _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Lt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Gt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Le _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Ge _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Clz _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Ctz _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Popcnt _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.I32DivS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32DivU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32RemS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32RemU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32And _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Or _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Xor _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I32ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Rotl _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Rotr _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Clz _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Ctz _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Popcnt _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.I64DivS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64DivU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64RemS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64RemU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64And _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Or _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Xor _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I64ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Rotl _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Rotr _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Ceil _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Floor _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Trunc _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Nearest _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Sqrt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Add _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Div _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Min _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Max _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Copysign _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Ceil _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Floor _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Trunc _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Nearest _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Sqrt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Add _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Div _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Min _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Max _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Copysign _ _ _ => ok false
+  | runtime.bytecode.Instr.I32WrapI64 _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncF32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncF32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncF64S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncF64U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64ExtendI32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64ExtendI32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncF32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncF32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncF64S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncF64U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32ConvertI32S _ _ _ => ok false
+  | runtime.bytecode.Instr.F32ConvertI32U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32ConvertI64S _ _ _ => ok false
+  | runtime.bytecode.Instr.F32ConvertI64U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32DemoteF64 _ _ _ => ok false
+  | runtime.bytecode.Instr.F64ConvertI32S _ _ _ => ok false
+  | runtime.bytecode.Instr.F64ConvertI32U _ _ _ => ok false
+  | runtime.bytecode.Instr.F64ConvertI64S _ _ _ => ok false
+  | runtime.bytecode.Instr.F64ConvertI64U _ _ _ => ok false
+  | runtime.bytecode.Instr.F64PromoteF32 _ _ _ => ok false
+  | runtime.bytecode.Instr.I32ReinterpretF32 _ _ _ => ok false
+  | runtime.bytecode.Instr.I64ReinterpretF64 _ _ _ => ok false
+  | runtime.bytecode.Instr.F32ReinterpretI32 _ _ _ => ok false
+  | runtime.bytecode.Instr.F64ReinterpretI64 _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Extend8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Extend16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Extend8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Extend16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Extend32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncSatF32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncSatF32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncSatF64S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32TruncSatF64U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncSatF32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncSatF32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncSatF64S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64TruncSatF64U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Load _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Load _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Load _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Load8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Load8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Load16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Load16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load32S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Load32U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Store _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Store _ _ _ => ok false
+  | runtime.bytecode.Instr.F32Store _ _ _ => ok false
+  | runtime.bytecode.Instr.F64Store _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Store8 _ _ _ => ok false
+  | runtime.bytecode.Instr.I32Store16 _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Store8 _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Store16 _ _ _ => ok false
+  | runtime.bytecode.Instr.I64Store32 _ _ _ => ok false
+  | runtime.bytecode.Instr.MemorySize dst =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.MemoryGrow dst =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.MemoryFill d =>
+    runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+  | runtime.bytecode.Instr.MemoryCopy d =>
+    runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+  | runtime.bytecode.Instr.MemoryInit d _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+  | runtime.bytecode.Instr.DataDrop _ => ok true
+  | runtime.bytecode.Instr.TableGet dst index _ =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+    if b
+    then runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
+    else ok false
+  | runtime.bytecode.Instr.TableSet index value _ =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
+    if b
+    then runtime.bytecode.CompiledFunction.slots_fit self value 1#u32
+    else ok false
+  | runtime.bytecode.Instr.TableSize dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.TableGrow dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
+  | runtime.bytecode.Instr.TableFill d _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+  | runtime.bytecode.Instr.TableCopy d entry =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+    if b
+    then
+      let i ← lift (UScalar.cast .Usize entry)
+      let i1 := alloc.vec.Vec.len self.indirect
+      ok (i < i1)
+    else ok false
+  | runtime.bytecode.Instr.TableInit d entry =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
+    if b
+    then
+      let i ← lift (UScalar.cast .Usize entry)
+      let i1 := alloc.vec.Vec.len self.indirect
+      ok (i < i1)
+    else ok false
+  | runtime.bytecode.Instr.ElemDrop _ => ok true
+  | runtime.bytecode.Instr.RefNull dst =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.RefIsNull dst a =>
+    let b ← runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+    if b
+    then runtime.bytecode.CompiledFunction.slots_fit self a 1#u32
+    else ok false
+  | runtime.bytecode.Instr.RefFunc dst _ =>
+    runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
+  | runtime.bytecode.Instr.V128Load _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load8x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load8x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load16x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load16x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load32x2S _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load32x2U _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load8Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load16Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load32Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load64Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Store _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Shuffle _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Swizzle _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Splat _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16ExtractLaneS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16ExtractLaneU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtractLaneS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtractLaneU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtractLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtractLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4ExtractLane _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2ExtractLane _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2ReplaceLane _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16LtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16GtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16LeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16GeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8LtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8GtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8LeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8GeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4LtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4GtU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4LeU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4GeU _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Lt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Gt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Le _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Ge _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Lt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Gt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Le _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Ge _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Not _ _ _ => ok false
+  | runtime.bytecode.Instr.V128And _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Andnot _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Or _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Xor _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Bitselect _ _ _ => ok false
+  | runtime.bytecode.Instr.V128AnyTrue _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load8Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load16Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load32Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load64Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Store8Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Store16Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Store32Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Store64Lane _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load32Zero _ _ _ => ok false
+  | runtime.bytecode.Instr.V128Load64Zero _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4DemoteF64x2Zero _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2PromoteLowF32x4 _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Popcnt _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16AllTrue _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Bitmask _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16NarrowI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16NarrowI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Ceil _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Floor _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Trunc _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Nearest _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16AddSatS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16AddSatU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16SubSatS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16SubSatU _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Ceil _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Floor _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16MinS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16MinU _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16MaxS _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16MaxU _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Trunc _ _ _ => ok false
+  | runtime.bytecode.Instr.I8x16AvgrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Q15mulrSatS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8AllTrue _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Bitmask _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8NarrowI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8NarrowI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtendLowI8x16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtendHighI8x16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtendLowI8x16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtendHighI8x16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8AddSatS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8AddSatU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8SubSatS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8SubSatU _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Nearest _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8MinS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8MinU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8MaxS _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8MaxU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8AvgrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16S _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4AllTrue _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Bitmask _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtendLowI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtendHighI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtendLowI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtendHighI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4MinS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4MinU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4MaxS _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4MaxU _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4DotI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2AllTrue _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Bitmask _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtendLowI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtendHighI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtendLowI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtendHighI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Shl _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ShrS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ShrU _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Add _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Eq _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2Ne _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2LtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2GtS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2LeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2GeS _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Sqrt _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Add _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Div _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Min _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Max _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Pmin _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4Pmax _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Abs _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Neg _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Sqrt _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Add _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Sub _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Mul _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Div _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Min _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Max _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Pmin _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2Pmax _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4TruncSatF32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4TruncSatF32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4ConvertI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.F32x4ConvertI32x4U _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4TruncSatF64x2SZero _ _ _ => ok false
+  | runtime.bytecode.Instr.I32x4TruncSatF64x2UZero _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2ConvertLowI32x4S _ _ _ => ok false
+  | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok false
+
+/-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::instruction_valid]:
+    Source: 'src/runtime/bytecode.rs', lines 170:4-189:5 -/
+def runtime.bytecode.CompiledFunction.instruction_valid
+  (self : _root_.Exec.runtime.bytecode.CompiledFunction)
+  (instruction : _root_.Exec.runtime.bytecode.Instr) :
+  Result Bool
+  := do
   let o ← runtime.bytecode.Instr.scalar instruction
   match o with
   | none =>
@@ -3373,574 +4379,7 @@ def runtime.bytecode.CompiledFunction.instruction_valid
         let o3 ← runtime.bytecode.Instr.simd instruction
         match o3 with
         | none =>
-          match instruction with
-          | runtime.bytecode.Instr.Copy dst src =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-            if b
-            then runtime.bytecode.CompiledFunction.slots_fit self src 1#u32
-            else ok false
-          | runtime.bytecode.Instr.Copy2 dst src =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
-            if b
-            then runtime.bytecode.CompiledFunction.slots_fit self src 2#u32
-            else ok false
-          | runtime.bytecode.Instr.CopyN dst src n =>
-            if dst <= src
-            then
-              let b ← runtime.bytecode.CompiledFunction.slots_fit self dst n
-              if b
-              then runtime.bytecode.CompiledFunction.slots_fit self src n
-              else ok false
-            else ok false
-          | runtime.bytecode.Instr.Const32 dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.Const64 dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.ConstV128 dst pool =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
-            if b
-            then
-              let i ← lift (UScalar.cast .Usize pool)
-              let i1 := alloc.vec.Vec.len self.v128_pool
-              ok (i < i1)
-            else ok false
-          | runtime.bytecode.Instr.Jump target =>
-            let i ← lift (UScalar.cast .Usize target)
-            ok (i < length)
-          | runtime.bytecode.Instr.JumpIfZero cond target =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
-            if b
-            then let i ← lift (UScalar.cast .Usize target)
-                 ok (i < length)
-            else ok false
-          | runtime.bytecode.Instr.JumpIfNonZero cond target =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
-            if b
-            then let i ← lift (UScalar.cast .Usize target)
-                 ok (i < length)
-            else ok false
-          | runtime.bytecode.Instr.JumpTable index start len =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
-            if b
-            then
-              if len > 0#u32
-              then
-                let i ← lift (UScalar.cast .Usize start)
-                let i1 := alloc.vec.Vec.len self.jump_tables
-                if i <= i1
-                then
-                  let i2 ← lift (UScalar.cast .Usize len)
-                  let i3 := alloc.vec.Vec.len self.jump_tables
-                  let i4 ← lift (UScalar.cast .Usize start)
-                  let i5 ← i3 - i4
-                  ok (i2 <= i5)
-                else ok false
-              else ok false
-            else ok false
-          | runtime.bytecode.Instr.LoopHead => ok true
-          | runtime.bytecode.Instr.Call _ base =>
-            runtime.bytecode.CompiledFunction.slots_fit self base 0#u32
-          | runtime.bytecode.Instr.CallIndirect entry index base =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self base 0#u32
-            if b
-            then
-              let b1 ←
-                runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
-              if b1
-              then
-                let i ← lift (UScalar.cast .Usize entry)
-                let i1 := alloc.vec.Vec.len self.indirect
-                ok (i < i1)
-              else ok false
-            else ok false
-          | runtime.bytecode.Instr.Return src n =>
-            runtime.bytecode.CompiledFunction.slots_fit self src n
-          | runtime.bytecode.Instr.Unreachable => ok true
-          | runtime.bytecode.Instr.Select a b cond =>
-            let b1 ← runtime.bytecode.CompiledFunction.slots_fit self a 1#u32
-            if b1
-            then
-              let b2 ←
-                runtime.bytecode.CompiledFunction.slots_fit self b 1#u32
-              if b2
-              then runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
-              else ok false
-            else ok false
-          | runtime.bytecode.Instr.Select2 a b cond =>
-            let b1 ← runtime.bytecode.CompiledFunction.slots_fit self a 2#u32
-            if b1
-            then
-              let b2 ←
-                runtime.bytecode.CompiledFunction.slots_fit self b 2#u32
-              if b2
-              then runtime.bytecode.CompiledFunction.slots_fit self cond 1#u32
-              else ok false
-            else ok false
-          | runtime.bytecode.Instr.GlobalGet dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.GlobalGet2 dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
-          | runtime.bytecode.Instr.GlobalSet src _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self src 1#u32
-          | runtime.bytecode.Instr.GlobalSet2 src _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self src 2#u32
-          | runtime.bytecode.Instr.I32Eqz _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I32LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32LtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32GtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32LeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32GeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Eqz _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I64LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64LtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64GtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64LeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64GeU _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Lt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Gt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Le _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Ge _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Lt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Gt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Le _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Ge _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Clz _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Ctz _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Popcnt _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.I32DivS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32DivU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32RemS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32RemU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32And _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Or _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Xor _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I32ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Rotl _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Rotr _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Clz _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Ctz _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Popcnt _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.I64DivS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64DivU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64RemS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64RemU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64And _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Or _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Xor _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I64ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Rotl _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Rotr _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Ceil _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Floor _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Trunc _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Nearest _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Sqrt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Add _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Div _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Min _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Max _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Copysign _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Ceil _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Floor _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Trunc _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Nearest _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Sqrt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Add _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Div _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Min _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Max _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Copysign _ _ _ => ok false
-          | runtime.bytecode.Instr.I32WrapI64 _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncF32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncF32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncF64S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncF64U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64ExtendI32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64ExtendI32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncF32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncF32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncF64S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncF64U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32ConvertI32S _ _ _ => ok false
-          | runtime.bytecode.Instr.F32ConvertI32U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32ConvertI64S _ _ _ => ok false
-          | runtime.bytecode.Instr.F32ConvertI64U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32DemoteF64 _ _ _ => ok false
-          | runtime.bytecode.Instr.F64ConvertI32S _ _ _ => ok false
-          | runtime.bytecode.Instr.F64ConvertI32U _ _ _ => ok false
-          | runtime.bytecode.Instr.F64ConvertI64S _ _ _ => ok false
-          | runtime.bytecode.Instr.F64ConvertI64U _ _ _ => ok false
-          | runtime.bytecode.Instr.F64PromoteF32 _ _ _ => ok false
-          | runtime.bytecode.Instr.I32ReinterpretF32 _ _ _ => ok false
-          | runtime.bytecode.Instr.I64ReinterpretF64 _ _ _ => ok false
-          | runtime.bytecode.Instr.F32ReinterpretI32 _ _ _ => ok false
-          | runtime.bytecode.Instr.F64ReinterpretI64 _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Extend8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Extend16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Extend8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Extend16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Extend32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncSatF32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncSatF32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncSatF64S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32TruncSatF64U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncSatF32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncSatF32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncSatF64S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64TruncSatF64U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Load _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Load _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Load _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Load8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Load8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Load16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Load16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load32S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Load32U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Store _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Store _ _ _ => ok false
-          | runtime.bytecode.Instr.F32Store _ _ _ => ok false
-          | runtime.bytecode.Instr.F64Store _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Store8 _ _ _ => ok false
-          | runtime.bytecode.Instr.I32Store16 _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Store8 _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Store16 _ _ _ => ok false
-          | runtime.bytecode.Instr.I64Store32 _ _ _ => ok false
-          | runtime.bytecode.Instr.MemorySize dst =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.MemoryGrow dst =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.MemoryFill d =>
-            runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-          | runtime.bytecode.Instr.MemoryCopy d =>
-            runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-          | runtime.bytecode.Instr.MemoryInit d _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-          | runtime.bytecode.Instr.DataDrop _ => ok true
-          | runtime.bytecode.Instr.TableGet dst index _ =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-            if b
-            then runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
-            else ok false
-          | runtime.bytecode.Instr.TableSet index value _ =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self index 1#u32
-            if b
-            then runtime.bytecode.CompiledFunction.slots_fit self value 1#u32
-            else ok false
-          | runtime.bytecode.Instr.TableSize dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.TableGrow dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 2#u32
-          | runtime.bytecode.Instr.TableFill d _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-          | runtime.bytecode.Instr.TableCopy d entry =>
-            let b ← runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-            if b
-            then
-              let i ← lift (UScalar.cast .Usize entry)
-              let i1 := alloc.vec.Vec.len self.indirect
-              ok (i < i1)
-            else ok false
-          | runtime.bytecode.Instr.TableInit d entry =>
-            let b ← runtime.bytecode.CompiledFunction.slots_fit self d 3#u32
-            if b
-            then
-              let i ← lift (UScalar.cast .Usize entry)
-              let i1 := alloc.vec.Vec.len self.indirect
-              ok (i < i1)
-            else ok false
-          | runtime.bytecode.Instr.ElemDrop _ => ok true
-          | runtime.bytecode.Instr.RefNull dst =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.RefIsNull dst a =>
-            let b ←
-              runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-            if b
-            then runtime.bytecode.CompiledFunction.slots_fit self a 1#u32
-            else ok false
-          | runtime.bytecode.Instr.RefFunc dst _ =>
-            runtime.bytecode.CompiledFunction.slots_fit self dst 1#u32
-          | runtime.bytecode.Instr.V128Load _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load8x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load8x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load16x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load16x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load32x2S _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load32x2U _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load8Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load16Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load32Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load64Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Store _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Shuffle _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Swizzle _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Splat _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16ExtractLaneS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16ExtractLaneU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtractLaneS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtractLaneU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtractLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtractLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4ExtractLane _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2ExtractLane _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2ReplaceLane _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16LtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16GtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16LeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16GeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8LtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8GtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8LeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8GeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4LtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4GtU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4LeU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4GeU _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Lt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Gt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Le _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Ge _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Lt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Gt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Le _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Ge _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Not _ _ _ => ok false
-          | runtime.bytecode.Instr.V128And _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Andnot _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Or _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Xor _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Bitselect _ _ _ => ok false
-          | runtime.bytecode.Instr.V128AnyTrue _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load8Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load16Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load32Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load64Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Store8Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Store16Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Store32Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Store64Lane _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load32Zero _ _ _ => ok false
-          | runtime.bytecode.Instr.V128Load64Zero _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4DemoteF64x2Zero _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2PromoteLowF32x4 _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Popcnt _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16AllTrue _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Bitmask _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16NarrowI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16NarrowI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Ceil _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Floor _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Trunc _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Nearest _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16AddSatS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16AddSatU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16SubSatS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16SubSatU _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Ceil _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Floor _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16MinS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16MinU _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16MaxS _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16MaxU _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Trunc _ _ _ => ok false
-          | runtime.bytecode.Instr.I8x16AvgrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Q15mulrSatS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8AllTrue _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Bitmask _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8NarrowI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8NarrowI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtendLowI8x16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtendHighI8x16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtendLowI8x16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtendHighI8x16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8AddSatS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8AddSatU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8SubSatS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8SubSatU _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Nearest _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8MinS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8MinU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8MaxS _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8MaxU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8AvgrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtmulLowI8x16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtmulHighI8x16S _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtmulLowI8x16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I16x8ExtmulHighI8x16U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4AllTrue _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Bitmask _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtendLowI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtendHighI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtendLowI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtendHighI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4MinS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4MinU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4MaxS _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4MaxU _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4DotI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtmulLowI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtmulHighI16x8S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtmulLowI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4ExtmulHighI16x8U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2AllTrue _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Bitmask _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtendLowI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtendHighI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtendLowI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtendHighI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Shl _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ShrS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ShrU _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Add _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Eq _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2Ne _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2LtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2GtS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2LeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2GeS _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtmulLowI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtmulHighI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtmulLowI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.I64x2ExtmulHighI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Sqrt _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Add _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Div _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Min _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Max _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Pmin _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4Pmax _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Abs _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Neg _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Sqrt _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Add _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Sub _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Mul _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Div _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Min _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Max _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Pmin _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2Pmax _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4TruncSatF32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4TruncSatF32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4ConvertI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.F32x4ConvertI32x4U _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4TruncSatF64x2SZero _ _ _ => ok false
-          | runtime.bytecode.Instr.I32x4TruncSatF64x2UZero _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2ConvertLowI32x4S _ _ _ => ok false
-          | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok false
+          runtime.bytecode.CompiledFunction.other_valid self instruction
         | some t =>
           let (op, dst, a, entry) := t
           let o4 ← runtime.bytecode.simd_shape op
@@ -3986,7 +4425,7 @@ def runtime.bytecode.CompiledFunction.instruction_valid
     else ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 0:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop0.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4058,7 +4497,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop0.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 0:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop0
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4080,7 +4519,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop0
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 1:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop1.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4104,7 +4543,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop1.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 1:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop1
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4118,7 +4557,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop1
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 2:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop2.body
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4151,7 +4590,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop2.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 2:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop2
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4165,7 +4604,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop2
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 3:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop3.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4237,7 +4676,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop3.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 3:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop3
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4259,7 +4698,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop3
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 4:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop4.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4283,7 +4722,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop4.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 4:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop4
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4297,7 +4736,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop4
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 5:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop5.body
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4330,7 +4769,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop5.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 5:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop5
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4344,7 +4783,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop5
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 6:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop6.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4416,7 +4855,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop6.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 6:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop6
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4438,7 +4877,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop6
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 7:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop7.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4462,7 +4901,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop7.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 7:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop7
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4476,7 +4915,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop7
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 8:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop8.body
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4509,7 +4948,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop8.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 8:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop8
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4523,7 +4962,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop8
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 9:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop9.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4595,7 +5034,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop9.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 9:
-    Source: 'src/runtime/bytecode.rs', lines 260:8-276:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop9
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType) (i : Std.U32)
@@ -4617,7 +5056,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop9
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 10:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop10.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4641,7 +5080,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop10.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 10:
-    Source: 'src/runtime/bytecode.rs', lines 278:8-283:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop10
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -4655,7 +5094,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop10
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 11:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop11.body
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4688,7 +5127,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop11.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 11:
-    Source: 'src/runtime/bytecode.rs', lines 285:8-296:9 -/
+    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop11
   (v : alloc.vec.Vec _root_.Exec.runtime.compiler.ControlMap) (i : Std.Usize)
@@ -4702,7 +5141,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop11
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]:
-    Source: 'src/runtime/bytecode.rs', lines 244:4-298:5 -/
+    Source: 'src/runtime/bytecode.rs', lines 261:4-315:5 -/
 def runtime.bytecode.CompiledFunction.well_formed
   (self : _root_.Exec.runtime.bytecode.CompiledFunction) : Result Bool := do
   let length := alloc.vec.Vec.len self.code
@@ -4830,7 +5269,7 @@ def runtime.bytecode.CompiledFunction.well_formed
       else ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::synthetic]:
-    Source: 'src/runtime/bytecode.rs', lines 304:4-322:5 -/
+    Source: 'src/runtime/bytecode.rs', lines 321:4-339:5 -/
 def runtime.bytecode.CompiledFunction.synthetic
   (code1 : alloc.vec.Vec _root_.Exec.runtime.bytecode.Instr)
   (slot_count : Std.U32) :
@@ -16426,7 +16865,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::patch]:
-    Source: 'src/runtime/compiler/control.rs', lines 100:4-108:5 -/
+    Source: 'src/runtime/compiler/control.rs', lines 100:4-106:5 -/
 def runtime.compiler.control.FunctionCompiler.patch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : _root_.Exec.runtime.compiler.FunctionCompiler A) (pc : Std.Usize)
@@ -16434,1738 +16873,26 @@ def runtime.compiler.control.FunctionCompiler.patch
   Result ((core.result.Result Unit _root_.Itasca.error.VisitError) ×
     (_root_.Exec.runtime.compiler.FunctionCompiler A))
   := do
-  let (i, index_mut_back) ←
-    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+  let i ←
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
       _root_.Exec.runtime.bytecode.Instr) self.function.code pc
-  match i with
-  | runtime.bytecode.Instr.Copy _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Copy2 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.CopyN _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Const32 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Const64 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.ConstV128 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Jump _ =>
-    let v := index_mut_back (runtime.bytecode.Instr.Jump target)
+  let o ← runtime.bytecode.Instr.retarget i target
+  let r ←
+    core.option.Option.ok_or o _root_.Itasca.error.VisitError.OutOfMemory
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (_, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        _root_.Exec.runtime.bytecode.Instr) self.function.code pc
+    let v := index_mut_back val
     ok (core.result.Result.Ok (),
       { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.JumpIfZero i1 _ =>
-    let v := index_mut_back (runtime.bytecode.Instr.JumpIfZero i1 target)
-    ok (core.result.Result.Ok (),
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.JumpIfNonZero i1 _ =>
-    let v := index_mut_back (runtime.bytecode.Instr.JumpIfNonZero i1 target)
-    ok (core.result.Result.Ok (),
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.JumpTable _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.LoopHead =>
-    let v := index_mut_back runtime.bytecode.Instr.LoopHead
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Call _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.CallIndirect _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Return _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Unreachable =>
-    let v := index_mut_back runtime.bytecode.Instr.Unreachable
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Select _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.Select2 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.GlobalGet _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.GlobalGet2 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.GlobalSet _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.GlobalSet2 _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Eqz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32LtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32GtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32LeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32GeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Eqz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64LtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64GtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64LeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64GeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Lt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Gt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Le _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Ge _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Lt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Gt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Le _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Ge _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Clz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Ctz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Popcnt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32DivS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32DivU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32RemS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32RemU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32And _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Or _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Xor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Rotl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Rotr _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Clz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Ctz _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Popcnt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64DivS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64DivU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64RemS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64RemU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64And _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Or _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Xor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Rotl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Rotr _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Ceil _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Floor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Trunc _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Nearest _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Sqrt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Div _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Min _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Max _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Copysign _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Ceil _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Floor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Trunc _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Nearest _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Sqrt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Div _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Min _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Max _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Copysign _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32WrapI64 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncF32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncF32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncF64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncF64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64ExtendI32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64ExtendI32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncF32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncF32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncF64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncF64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32ConvertI32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32ConvertI32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32ConvertI64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32ConvertI64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32DemoteF64 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64ConvertI32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64ConvertI32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64ConvertI64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64ConvertI64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64PromoteF32 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32ReinterpretF32 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64ReinterpretF64 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32ReinterpretI32 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64ReinterpretI64 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Extend8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Extend16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Extend8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Extend16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Extend32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncSatF32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncSatF32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncSatF64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32TruncSatF64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncSatF32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncSatF32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncSatF64S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64TruncSatF64U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Load _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Load _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Load _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Load8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Load8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Load16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Load16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load32S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Load32U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Store _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Store _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32Store _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64Store _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Store8 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32Store16 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Store8 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Store16 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64Store32 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.MemorySize _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.MemoryGrow _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.MemoryFill _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.MemoryCopy _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.MemoryInit _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.DataDrop _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableGet _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableSet _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableSize _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableGrow _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableFill _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableCopy _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.TableInit _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.ElemDrop _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.RefNull _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.RefIsNull _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.RefFunc _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load8x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load8x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load16x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load16x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load32x2S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load32x2U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load8Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load16Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load32Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load64Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Store _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Shuffle _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Swizzle _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Splat _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16ExtractLaneS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16ExtractLaneU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtractLaneS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtractLaneU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtractLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtractLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4ExtractLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2ExtractLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2ReplaceLane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16LtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16GtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16LeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16GeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8LtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8GtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8LeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8GeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4LtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4GtU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4LeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4GeU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Lt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Gt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Le _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Ge _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Lt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Gt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Le _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Ge _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Not _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128And _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Andnot _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Or _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Xor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Bitselect _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128AnyTrue _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load8Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load16Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load32Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load64Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Store8Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Store16Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Store32Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Store64Lane _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load32Zero _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.V128Load64Zero _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4DemoteF64x2Zero _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2PromoteLowF32x4 _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Popcnt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16AllTrue _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Bitmask _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16NarrowI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16NarrowI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Ceil _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Floor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Trunc _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Nearest _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16AddSatS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16AddSatU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16SubSatS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16SubSatU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Ceil _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Floor _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16MinS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16MinU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16MaxS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16MaxU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Trunc _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I8x16AvgrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtaddPairwiseI8x16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtaddPairwiseI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Q15mulrSatS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8AllTrue _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Bitmask _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8NarrowI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8NarrowI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtendLowI8x16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtendHighI8x16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtendLowI8x16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtendHighI8x16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8AddSatS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8AddSatU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8SubSatS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8SubSatU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Nearest _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8MinS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8MinU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8MaxS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8MaxU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8AvgrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtmulLowI8x16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I16x8ExtmulHighI8x16U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4AllTrue _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Bitmask _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtendLowI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtendHighI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtendLowI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtendHighI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4MinS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4MinU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4MaxS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4MaxU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4DotI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtmulLowI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4ExtmulHighI16x8U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2AllTrue _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Bitmask _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtendLowI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtendHighI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtendLowI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtendHighI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Shl _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ShrS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ShrU _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Eq _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2Ne _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2LtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2GtS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2LeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2GeS _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtmulLowI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I64x2ExtmulHighI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Sqrt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Div _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Min _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Max _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Pmin _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4Pmax _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Abs _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Neg _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Sqrt _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Add _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Sub _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Mul _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Div _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Min _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Max _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Pmin _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2Pmax _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4TruncSatF32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4TruncSatF32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4ConvertI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F32x4ConvertI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4TruncSatF64x2SZero _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.I32x4TruncSatF64x2UZero _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2ConvertLowI32x4S _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
-  | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ =>
-    let v := index_mut_back i
-    ok (core.result.Result.Err _root_.Itasca.error.VisitError.OutOfMemory,
-      { self with function := { self.function with code := v } })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.VisitError) residual
+    ok (r1, self)
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::branch]:
     Source: 'src/runtime/compiler/control.rs', lines 51:4-99:5 -/
@@ -20578,7 +19305,7 @@ def runtime.compiler.control.block_signature
     Slice.index_usize signatures i
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::enter]:
-    Source: 'src/runtime/compiler/control.rs', lines 109:4-171:5 -/
+    Source: 'src/runtime/compiler/control.rs', lines 107:4-169:5 -/
 def runtime.compiler.control.FunctionCompiler.enter
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : _root_.Exec.runtime.compiler.FunctionCompiler A)
@@ -46567,6 +45294,62 @@ def runtime.store.instantiation_failed
   | core.result.Result.Ok _ => ok false
   | core.result.Result.Err _ => ok true
 
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::commit_instance]:
+    Source: 'src/runtime/store/instantiate.rs', lines 202:4-224:5 -/
+def runtime.store.instantiate.Store.commit_instance
+  {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
+  runtime.platform.MemoryBuffer M) (platformPlatformInst :
+  runtime.platform.Platform P M) (platformFloatOpsInst :
+  runtime.platform.FloatOps F) (platformAllocInst : runtime.platform.Alloc A)
+  (self : _root_.Exec.runtime.store.Store M) (platform : P)
+  (identity : _root_.Exec.runtime.InstanceAddr) (committed : Bool) :
+  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
+    _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P
+    × Bool)
+  := do
+  let (r, self1, platform1) ←
+    runtime.interp.initialize_segments platformMemoryBufferInst
+      platformPlatformInst platformFloatOpsInst platformAllocInst self platform
+      identity.index
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    let mi ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        _root_.Exec.runtime.store.ModuleInst) self1.instances identity.index
+    let e ← runtime.compiler.ExecutableModule.env mi.module
+    let o ← module.Env.start e
+    match o with
+    | none => ok (core.result.Result.Ok identity, self1, platform1, true)
+    | some f =>
+      let i ← lift (UScalar.cast .Usize f)
+      let func ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          _root_.Exec.runtime.FuncAddr) mi.funcs i
+      let execution ← runtime.interp.Execution.new
+      let s ←
+        lift (Array.to_slice (Std.Array.empty _root_.Exec.runtime.Value))
+      let (r1, _, self2, platform2, _) ←
+        runtime.interp.invoke_with platformMemoryBufferInst
+          platformPlatformInst platformFloatOpsInst platformAllocInst execution
+          self1 platform1 func s (alloc.vec.Vec.new _root_.Exec.runtime.Value)
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok identity, self2, platform2, true)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
+            _root_.Exec.runtime.ExecError) residual
+        ok (r2, self2, platform2, true)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
+        _root_.Exec.runtime.ExecError) residual
+    ok (r1, self1, platform1, true)
+
 /-- [itasca::runtime::store::add_items]:
     Source: 'src/runtime/store.rs', lines 528:0-536:1 -/
 def runtime.store.add_items
@@ -46589,7 +45372,7 @@ def runtime.store.wasm1
   | _root_.Itasca.ValidationProfile.Wasm2 => ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_data_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 396:4-423:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 419:4-446:5 -/
 def runtime.store.instantiate.Store.check_data_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -46673,7 +45456,7 @@ def runtime.store.instantiate.Store.check_data_bounds
     ok (core.result.Result.Ok (), self, platform)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_element_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 367:4-394:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 390:4-417:5 -/
 def runtime.store.instantiate.Store.check_element_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -46805,7 +45588,7 @@ def runtime.store.copy_bytes
       _root_.Exec.runtime.ExecError) residual
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_data]:
-    Source: 'src/runtime/store/instantiate.rs', lines 357:4-365:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 380:4-388:5 -/
 def runtime.store.instantiate.Store.add_instance_data
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -46852,7 +45635,7 @@ def runtime.store.instantiate.Store.add_instance_data
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 336:8-346:9 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 359:8-369:9 -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.add_instance_element_loop.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -46905,7 +45688,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop.body
   else ok (done (self, platform, values, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 336:8-346:9 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 359:8-369:9 -/
 @[rust_loop]
 def runtime.store.instantiate.Store.add_instance_element_loop
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -46928,7 +45711,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop
     (self, platform, values, j, status)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]:
-    Source: 'src/runtime/store/instantiate.rs', lines 323:4-356:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 346:4-379:5 -/
 def runtime.store.instantiate.Store.add_instance_element
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -47077,7 +45860,7 @@ def runtime.store.Store.define_global_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_global]:
-    Source: 'src/runtime/store/instantiate.rs', lines 310:4-322:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 333:4-345:5 -/
 def runtime.store.instantiate.Store.add_instance_global
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -47213,7 +45996,7 @@ def runtime.store.Store.define_memory_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_memory]:
-    Source: 'src/runtime/store/instantiate.rs', lines 291:4-309:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 314:4-332:5 -/
 def runtime.store.instantiate.Store.add_instance_memory
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -47369,7 +46152,7 @@ def runtime.store.Store.define_table_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_table]:
-    Source: 'src/runtime/store/instantiate.rs', lines 282:4-290:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 305:4-313:5 -/
 def runtime.store.instantiate.Store.add_instance_table
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -47397,7 +46180,7 @@ def runtime.store.instantiate.Store.add_instance_table
     ok (r1, self1, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_function]:
-    Source: 'src/runtime/store/instantiate.rs', lines 260:4-281:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 283:4-304:5 -/
 def runtime.store.instantiate.Store.add_instance_function
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -47814,7 +46597,7 @@ def runtime.store.Store.intern_type
         })
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_type]:
-    Source: 'src/runtime/store/instantiate.rs', lines 251:4-259:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 274:4-282:5 -/
 def runtime.store.instantiate.Store.add_instance_type
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -47868,7 +46651,7 @@ def runtime.store.matches_limits
   else ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::link_import]:
-    Source: 'src/runtime/store/instantiate.rs', lines 202:4-250:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 225:4-273:5 -/
 def runtime.store.instantiate.Store.link_import
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : _root_.Exec.runtime.store.Store M)
@@ -48044,10 +46827,10 @@ def runtime.store.instantiate.Store.link_import
             Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
         ok (r1, self, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 82:8-85:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 0:
+    Source: 'src/runtime/store/instantiate.rs', lines 96:8-99:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop0.body
+def runtime.store.instantiate.Store.prepare_instance_loop0.body
   (counts : Array Std.Usize 7#usize) (items : Std.Usize)
   (status : core.result.Result Unit _root_.Exec.runtime.ExecError)
   (i : Std.Usize) :
@@ -48069,10 +46852,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop0.body
     else ok (done (items, status))
   else ok (done (items, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 82:8-85:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 0:
+    Source: 'src/runtime/store/instantiate.rs', lines 96:8-99:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop0
+def runtime.store.instantiate.Store.prepare_instance_loop0
   (items : Std.Usize)
   (status : core.result.Result Unit _root_.Exec.runtime.ExecError)
   (counts : Array Std.Usize 7#usize) (i : Std.Usize) :
@@ -48080,14 +46863,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop0
   := do
   loop
     (fun (items1, status1, i1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop0.body counts
-      items1 status1 i1)
+      runtime.store.instantiate.Store.prepare_instance_loop0.body counts items1
+      status1 i1)
     (items, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 87:8-91:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 1:
+    Source: 'src/runtime/store/instantiate.rs', lines 101:8-105:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop1.body
+def runtime.store.instantiate.Store.prepare_instance_loop1.body
   (module1 : _root_.Exec.runtime.compiler.ExecutableModule) (items : Std.Usize)
   (status : core.result.Result Unit _root_.Exec.runtime.ExecError)
   (i : Std.Usize) :
@@ -48112,10 +46895,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop1.body
     else ok (done (items, status))
   else ok (done (items, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 87:8-91:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 1:
+    Source: 'src/runtime/store/instantiate.rs', lines 101:8-105:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop1
+def runtime.store.instantiate.Store.prepare_instance_loop1
   (module1 : _root_.Exec.runtime.compiler.ExecutableModule) (items : Std.Usize)
   (status : core.result.Result Unit _root_.Exec.runtime.ExecError)
   (i : Std.Usize) :
@@ -48123,14 +46906,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop1
   := do
   loop
     (fun (items1, status1, i1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop1.body module1
+      runtime.store.instantiate.Store.prepare_instance_loop1.body module1
       items1 status1 i1)
     (items, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 111:8-114:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 2:
+    Source: 'src/runtime/store/instantiate.rs', lines 125:8-128:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop2.body
+def runtime.store.instantiate.Store.prepare_instance_loop2.body
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (imports : Slice _root_.Exec.runtime.Extern)
   (self : _root_.Exec.runtime.store.Store M)
@@ -48157,10 +46940,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop2.body
     else ok (done (self, status, inst))
   else ok (done (self, status, inst))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 111:8-114:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 2:
+    Source: 'src/runtime/store/instantiate.rs', lines 125:8-128:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop2
+def runtime.store.instantiate.Store.prepare_instance_loop2
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : _root_.Exec.runtime.store.Store M)
   (imports : Slice _root_.Exec.runtime.Extern)
@@ -48171,14 +46954,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop2
   := do
   loop
     (fun (self1, status1, i1, inst1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop2.body
+      runtime.store.instantiate.Store.prepare_instance_loop2.body
       platformMemoryBufferInst imports self1 status1 i1 inst1)
     (self, status, i, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 122:8-125:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 3:
+    Source: 'src/runtime/store/instantiate.rs', lines 136:8-139:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop3.body
+def runtime.store.instantiate.Store.prepare_instance_loop3.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48215,10 +46998,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop3.body
     ok (done (self, status, inst.module, inst.types, inst.funcs, inst.tables,
       inst.memories, inst.globals, inst.elems, inst.datas))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 122:8-125:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 3:
+    Source: 'src/runtime/store/instantiate.rs', lines 136:8-139:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop3
+def runtime.store.instantiate.Store.prepare_instance_loop3
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48235,14 +47018,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop3
   := do
   loop
     (fun (self1, status1, i1, inst1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop3.body
+      runtime.store.instantiate.Store.prepare_instance_loop3.body
       platformMemoryBufferInst platformAllocInst self1 status1 i1 inst1)
     (self, status, i, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 128:8-131:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 4:
+    Source: 'src/runtime/store/instantiate.rs', lines 142:8-145:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop4.body
+def runtime.store.instantiate.Store.prepare_instance_loop4.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (i : Std.Usize) (self : _root_.Exec.runtime.store.Store M)
@@ -48279,10 +47062,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop4.body
     ok (done (self, status, inst.module, inst.types, inst.funcs, inst.tables,
       inst.memories, inst.globals, inst.elems, inst.datas))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 128:8-131:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 4:
+    Source: 'src/runtime/store/instantiate.rs', lines 142:8-145:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop4
+def runtime.store.instantiate.Store.prepare_instance_loop4
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48300,14 +47083,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop4
   := do
   loop
     (fun (self1, status1, i2, inst1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop4.body
+      runtime.store.instantiate.Store.prepare_instance_loop4.body
       platformMemoryBufferInst platformAllocInst i1 self1 status1 i2 inst1)
     (self, status, i, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 134:8-137:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 5:
+    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop5.body
+def runtime.store.instantiate.Store.prepare_instance_loop5.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48344,10 +47127,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop5.body
     ok (done (self, status, inst.module, inst.types, inst.funcs, inst.tables,
       inst.memories, inst.globals, inst.elems, inst.datas))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 134:8-137:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 5:
+    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop5
+def runtime.store.instantiate.Store.prepare_instance_loop5
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48364,14 +47147,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop5
   := do
   loop
     (fun (self1, status1, i1, inst1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop5.body
+      runtime.store.instantiate.Store.prepare_instance_loop5.body
       platformMemoryBufferInst platformAllocInst self1 status1 i1 inst1)
     (self, status, i, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 140:8-143:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 6:
+    Source: 'src/runtime/store/instantiate.rs', lines 154:8-157:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop6.body
+def runtime.store.instantiate.Store.prepare_instance_loop6.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48408,10 +47191,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop6.body
     ok (done (self, status, inst.module, inst.types, inst.funcs, inst.tables,
       inst.memories, inst.globals, inst.elems, inst.datas))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 140:8-143:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 6:
+    Source: 'src/runtime/store/instantiate.rs', lines 154:8-157:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop6
+def runtime.store.instantiate.Store.prepare_instance_loop6
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48428,14 +47211,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop6
   := do
   loop
     (fun (self1, status1, i1, inst1) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop6.body
+      runtime.store.instantiate.Store.prepare_instance_loop6.body
       platformMemoryBufferInst platformAllocInst self1 status1 i1 inst1)
     (self, status, i, inst)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 7:
+    Source: 'src/runtime/store/instantiate.rs', lines 162:8-165:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop7.body
+def runtime.store.instantiate.Store.prepare_instance_loop7.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48485,10 +47268,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop7.body
       self.externs, self.instance_items, self.signature_values,
       self.memory_bytes, self.table_elements, platform, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 7:
+    Source: 'src/runtime/store/instantiate.rs', lines 162:8-165:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop7
+def runtime.store.instantiate.Store.prepare_instance_loop7
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48510,15 +47293,15 @@ def runtime.store.instantiate.Store.instantiate_inner_loop7
   := do
   loop
     (fun (self1, platform1, status1, i2) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop7.body
+      runtime.store.instantiate.Store.prepare_instance_loop7.body
       platformMemoryBufferInst platformPlatformInst platformFloatOpsInst
       platformAllocInst i1 self1 platform1 status1 i2)
     (self, platform, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 8:
-    Source: 'src/runtime/store/instantiate.rs', lines 156:8-159:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 8:
+    Source: 'src/runtime/store/instantiate.rs', lines 170:8-173:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop8.body
+def runtime.store.instantiate.Store.prepare_instance_loop8.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48568,10 +47351,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop8.body
       self.externs, self.instance_items, self.signature_values,
       self.memory_bytes, self.table_elements, platform, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 8:
-    Source: 'src/runtime/store/instantiate.rs', lines 156:8-159:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 8:
+    Source: 'src/runtime/store/instantiate.rs', lines 170:8-173:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop8
+def runtime.store.instantiate.Store.prepare_instance_loop8
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48593,15 +47376,15 @@ def runtime.store.instantiate.Store.instantiate_inner_loop8
   := do
   loop
     (fun (self1, platform1, status1, i2) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop8.body
+      runtime.store.instantiate.Store.prepare_instance_loop8.body
       platformMemoryBufferInst platformPlatformInst platformFloatOpsInst
       platformAllocInst i1 self1 platform1 status1 i2)
     (self, platform, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 9:
-    Source: 'src/runtime/store/instantiate.rs', lines 164:8-167:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 9:
+    Source: 'src/runtime/store/instantiate.rs', lines 178:8-181:9 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop9.body
+def runtime.store.instantiate.Store.prepare_instance_loop9.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (i : Std.Usize) (self : _root_.Exec.runtime.store.Store M)
@@ -48647,10 +47430,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop9.body
       self.externs, self.instance_items, self.signature_values,
       self.memory_bytes, self.table_elements, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 9:
-    Source: 'src/runtime/store/instantiate.rs', lines 164:8-167:9 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 9:
+    Source: 'src/runtime/store/instantiate.rs', lines 178:8-181:9 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop9
+def runtime.store.instantiate.Store.prepare_instance_loop9
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
   A) (self : _root_.Exec.runtime.store.Store M)
@@ -48670,14 +47453,14 @@ def runtime.store.instantiate.Store.instantiate_inner_loop9
   := do
   loop
     (fun (self1, status1, i2) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop9.body
+      runtime.store.instantiate.Store.prepare_instance_loop9.body
       platformMemoryBufferInst platformAllocInst i1 self1 status1 i2)
     (self, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 10:
-    Source: 'src/runtime/store/instantiate.rs', lines 171:12-175:13 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 10:
+    Source: 'src/runtime/store/instantiate.rs', lines 185:12-189:13 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop10.body
+def runtime.store.instantiate.Store.prepare_instance_loop10.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48727,10 +47510,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop10.body
       self.externs, self.instance_items, self.signature_values,
       self.memory_bytes, self.table_elements, platform, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 10:
-    Source: 'src/runtime/store/instantiate.rs', lines 171:12-175:13 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 10:
+    Source: 'src/runtime/store/instantiate.rs', lines 185:12-189:13 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop10
+def runtime.store.instantiate.Store.prepare_instance_loop10
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48752,15 +47535,15 @@ def runtime.store.instantiate.Store.instantiate_inner_loop10
   := do
   loop
     (fun (self1, platform1, status1, i2) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop10.body
+      runtime.store.instantiate.Store.prepare_instance_loop10.body
       platformMemoryBufferInst platformPlatformInst platformFloatOpsInst
       platformAllocInst i1 self1 platform1 status1 i2)
     (self, platform, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop body 11:
-    Source: 'src/runtime/store/instantiate.rs', lines 178:12-181:13 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 11:
+    Source: 'src/runtime/store/instantiate.rs', lines 192:12-195:13 -/
 @[rust_loop_body]
-def runtime.store.instantiate.Store.instantiate_inner_loop11.body
+def runtime.store.instantiate.Store.prepare_instance_loop11.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48809,10 +47592,10 @@ def runtime.store.instantiate.Store.instantiate_inner_loop11.body
       self.externs, self.instance_items, self.signature_values,
       self.memory_bytes, self.table_elements, platform, status))
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]: loop 11:
-    Source: 'src/runtime/store/instantiate.rs', lines 178:12-181:13 -/
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 11:
+    Source: 'src/runtime/store/instantiate.rs', lines 192:12-195:13 -/
 @[rust_loop]
-def runtime.store.instantiate.Store.instantiate_inner_loop11
+def runtime.store.instantiate.Store.prepare_instance_loop11
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
@@ -48834,25 +47617,23 @@ def runtime.store.instantiate.Store.instantiate_inner_loop11
   := do
   loop
     (fun (self1, platform1, status1, i2) =>
-      runtime.store.instantiate.Store.instantiate_inner_loop11.body
+      runtime.store.instantiate.Store.prepare_instance_loop11.body
       platformMemoryBufferInst platformPlatformInst platformFloatOpsInst
       platformAllocInst i1 self1 platform1 status1 i2)
     (self, platform, status, i)
 
-/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]:
-    Source: 'src/runtime/store/instantiate.rs', lines 57:4-201:5 -/
-def runtime.store.instantiate.Store.instantiate_inner
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]:
+    Source: 'src/runtime/store/instantiate.rs', lines 72:4-199:5 -/
+def runtime.store.instantiate.Store.prepare_instance
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
   runtime.platform.Platform P M) (platformFloatOpsInst :
   runtime.platform.FloatOps F) (platformAllocInst : runtime.platform.Alloc A)
   (self : _root_.Exec.runtime.store.Store M)
   (module1 : _root_.Exec.runtime.compiler.ExecutableModule)
-  (imports : Slice _root_.Exec.runtime.Extern) (platform : P)
-  (committed : Bool) :
-  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
-    _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P
-    × Bool)
+  (imports : Slice _root_.Exec.runtime.Extern) (platform : P) :
+  Result ((core.result.Result (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+    _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P)
   := do
   let i := Slice.len imports
   let e ← runtime.compiler.ExecutableModule.env module1
@@ -48861,13 +47642,13 @@ def runtime.store.instantiate.Store.instantiate_inner
   if i != i1
   then
     ok (core.result.Result.Err (runtime.ExecError.Link
-      runtime.LinkError.MissingImport), self, platform, committed)
+      runtime.LinkError.MissingImport), self, platform)
   else
     let i2 := alloc.vec.Vec.len self.instances
     if i2 >= self.limits.max_instances
     then
       ok (core.result.Result.Err (runtime.ExecError.Exhausted
-        runtime.ResourceLimit.Objects), self, platform, committed)
+        runtime.ResourceLimit.Objects), self, platform)
     else
       let s1 ← module.Env.types e
       let i3 := Slice.len s1
@@ -48884,11 +47665,11 @@ def runtime.store.instantiate.Store.instantiate_inner
       let t ← runtime.compiler.ExecutableModule.tail module1
       let i9 := alloc.vec.Vec.len t.data
       let (items, status) ←
-        runtime.store.instantiate.Store.instantiate_inner_loop0 0#usize
+        runtime.store.instantiate.Store.prepare_instance_loop0 0#usize
           (core.result.Result.Ok ())
           (Array.make 7#usize [ i3, i4, i5, i6, i7, i8, i9 ]) 0#usize
       let (items1, status1) ←
-        runtime.store.instantiate.Store.instantiate_inner_loop1 module1 items
+        runtime.store.instantiate.Store.prepare_instance_loop1 module1 items
           status 0#usize
       let cf ← core.result.Result.Insts.CoreOpsTry.branch status1
       match cf with
@@ -48932,7 +47713,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                 match cf4 with
                 | core.ops.control_flow.ControlFlow.Continue _ =>
                   let (self1, status2, inst) ←
-                    runtime.store.instantiate.Store.instantiate_inner_loop2
+                    runtime.store.instantiate.Store.prepare_instance_loop2
                       platformMemoryBufferInst self imports status1 0#usize
                       {
                         module := module1,
@@ -48960,7 +47741,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                     | core.ops.control_flow.ControlFlow.Continue _ =>
                       let (self2, status3, em, v5, v6, v7, v8, v9, v10, v11)
                         ←
-                        runtime.store.instantiate.Store.instantiate_inner_loop3
+                        runtime.store.instantiate.Store.prepare_instance_loop3
                           platformMemoryBufferInst platformAllocInst self1
                           status2 0#usize { inst with types := v4 }
                       let cf7 ←
@@ -48969,7 +47750,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                       | core.ops.control_flow.ControlFlow.Continue _ =>
                         let (self3, status4, em1, v12, v13, v14, v15, v16, v17,
                           v18) ←
-                          runtime.store.instantiate.Store.instantiate_inner_loop4
+                          runtime.store.instantiate.Store.prepare_instance_loop4
                             platformMemoryBufferInst platformAllocInst self2
                             status3 0#usize
                             {
@@ -48989,7 +47770,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                           let i16 := alloc.vec.Vec.len v14
                           let (self4, status5, em2, v19, v20, v21, v22, v23,
                             v24, v25) ←
-                            runtime.store.instantiate.Store.instantiate_inner_loop5
+                            runtime.store.instantiate.Store.prepare_instance_loop5
                               platformMemoryBufferInst platformAllocInst self3
                               status4 i16
                               {
@@ -49009,7 +47790,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                             let i17 := alloc.vec.Vec.len v22
                             let (self5, status6, em3, v26, v27, v28, v29, v30,
                               v31, v32) ←
-                              runtime.store.instantiate.Store.instantiate_inner_loop6
+                              runtime.store.instantiate.Store.prepare_instance_loop6
                                 platformMemoryBufferInst platformAllocInst
                                 self4 status5 i17
                                 {
@@ -49049,7 +47830,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                                 let (i18, sl, v35, v36, v37, v38, v39, v40,
                                   v41, v42, v43, i19, i20, i21, i22, platform1,
                                   status7) ←
-                                  runtime.store.instantiate.Store.instantiate_inner_loop7
+                                  runtime.store.instantiate.Store.prepare_instance_loop7
                                     platformMemoryBufferInst
                                     platformPlatformInst platformFloatOpsInst
                                     platformAllocInst
@@ -49090,7 +47871,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                                     let (i23, sl1, v46, v47, v48, v49, v50,
                                       v51, v52, v53, v54, i24, i25, i26, i27,
                                       platform2, status8) ←
-                                      runtime.store.instantiate.Store.instantiate_inner_loop8
+                                      runtime.store.instantiate.Store.prepare_instance_loop8
                                         platformMemoryBufferInst
                                         platformPlatformInst
                                         platformFloatOpsInst platformAllocInst
@@ -49149,7 +47930,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                                         let (i28, sl2, v57, v58, v59, v60, v61,
                                           v62, v63, v64, v65, i29, i30, i31,
                                           i32, status9) ←
-                                          runtime.store.instantiate.Store.instantiate_inner_loop9
+                                          runtime.store.instantiate.Store.prepare_instance_loop9
                                             platformMemoryBufferInst
                                             platformAllocInst
                                             {
@@ -49191,7 +47972,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                                               v70, v71, v72, v73, v74, i34,
                                               i35, i36, i37, platform3,
                                               status10) ←
-                                              runtime.store.instantiate.Store.instantiate_inner_loop10
+                                              runtime.store.instantiate.Store.prepare_instance_loop10
                                                 platformMemoryBufferInst
                                                 platformPlatformInst
                                                 platformFloatOpsInst
@@ -49224,7 +48005,7 @@ def runtime.store.instantiate.Store.instantiate_inner
                                                 v78, v79, v80, v81, v82, v83,
                                                 i39, i40, i41, i42, platform4,
                                                 status11) ←
-                                                runtime.store.instantiate.Store.instantiate_inner_loop11
+                                                runtime.store.instantiate.Store.prepare_instance_loop11
                                                   platformMemoryBufferInst
                                                   platformPlatformInst
                                                   platformFloatOpsInst
@@ -49254,121 +48035,35 @@ def runtime.store.instantiate.Store.instantiate_inner
                                               |
                                                 core.ops.control_flow.ControlFlow.Continue
                                                 _ =>
-                                                let i43 ← i39 + items1
-                                                let (r8, self6, platform5) ←
-                                                  runtime.interp.initialize_segments
-                                                    platformMemoryBufferInst
-                                                    platformPlatformInst
-                                                    platformFloatOpsInst
-                                                    platformAllocInst
-                                                    {
-                                                      id := i38,
-                                                      limits := sl4,
-                                                      funcs := v75,
-                                                      types := v76,
-                                                      tables := v77,
-                                                      memories := v78,
-                                                      globals := v79,
-                                                      instances := v80,
-                                                      elems := v81,
-                                                      datas := v82,
-                                                      externs := v83,
-                                                      instance_items := i43,
-                                                      signature_values := i40,
-                                                      memory_bytes := i41,
-                                                      table_elements := i42
-                                                    } platform4 i14
-                                                let cf19 ←
-                                                  core.result.Result.Insts.CoreOpsTry.branch
-                                                    r8
-                                                match cf19 with
-                                                |
-                                                  core.ops.control_flow.ControlFlow.Continue
-                                                  _ =>
-                                                  let mi5 ←
-                                                    alloc.vec.Vec.index
-                                                      (core.slice.index.SliceIndexUsizeSlice
-                                                      _root_.Exec.runtime.store.ModuleInst)
-                                                      self6.instances i14
-                                                  let e4 ←
-                                                    runtime.compiler.ExecutableModule.env
-                                                      mi5.module
-                                                  let o ← module.Env.start e4
-                                                  match o with
-                                                  | none =>
-                                                    ok (core.result.Result.Ok
-                                                      {
-                                                        store := self1.id,
-                                                        index := i14
-                                                      }, self6, platform5,
-                                                      true)
-                                                  | some f =>
-                                                    let i44 ←
-                                                      lift (UScalar.cast .Usize
-                                                        f)
-                                                    let func ←
-                                                      alloc.vec.Vec.index
-                                                        (core.slice.index.SliceIndexUsizeSlice
-                                                        _root_.Exec.runtime.FuncAddr)
-                                                        mi5.funcs i44
-                                                    let execution ←
-                                                      runtime.interp.Execution.new
-                                                    let s13 ←
-                                                      lift (Array.to_slice
-                                                        (Std.Array.empty
-                                                          _root_.Exec.runtime.Value))
-                                                    let (r9, _, self7,
-                                                      platform6, _) ←
-                                                      runtime.interp.invoke_with
-                                                        platformMemoryBufferInst
-                                                        platformPlatformInst
-                                                        platformFloatOpsInst
-                                                        platformAllocInst
-                                                        execution self6
-                                                        platform5 func s13
-                                                        (alloc.vec.Vec.new
-                                                        _root_.Exec.runtime.Value)
-                                                    let cf20 ←
-                                                      core.result.Result.Insts.CoreOpsTry.branch
-                                                        r9
-                                                    match cf20 with
-                                                    |
-                                                      core.ops.control_flow.ControlFlow.Continue
-                                                      _ =>
-                                                      ok (core.result.Result.Ok
-                                                        {
-                                                          store := self1.id,
-                                                          index := i14
-                                                        }, self7, platform6,
-                                                        true)
-                                                    |
-                                                      core.ops.control_flow.ControlFlow.Break
-                                                      residual =>
-                                                      let r10 ←
-                                                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                          _root_.Exec.runtime.InstanceAddr
-                                                          (core.convert.FromSame
-                                                          _root_.Exec.runtime.ExecError)
-                                                          residual
-                                                      ok (r10, self7,
-                                                        platform6, true)
-                                                |
-                                                  core.ops.control_flow.ControlFlow.Break
-                                                  residual =>
-                                                  let r9 ←
-                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                      _root_.Exec.runtime.InstanceAddr
-                                                      (core.convert.FromSame
-                                                      _root_.Exec.runtime.ExecError)
-                                                      residual
-                                                  ok (r9, self6, platform5,
-                                                    true)
+                                                ok (core.result.Result.Ok
+                                                  ({
+                                                     store := self1.id,
+                                                     index := i14
+                                                   }, items1),
+                                                  {
+                                                    id := i38,
+                                                    limits := sl4,
+                                                    funcs := v75,
+                                                    types := v76,
+                                                    tables := v77,
+                                                    memories := v78,
+                                                    globals := v79,
+                                                    instances := v80,
+                                                    elems := v81,
+                                                    datas := v82,
+                                                    externs := v83,
+                                                    instance_items := i39,
+                                                    signature_values := i40,
+                                                    memory_bytes := i41,
+                                                    table_elements := i42
+                                                  }, platform4)
                                               |
                                                 core.ops.control_flow.ControlFlow.Break
                                                 residual =>
                                                 let r8 ←
                                                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                    _root_.Exec.runtime.InstanceAddr
+                                                    (_root_.Exec.runtime.InstanceAddr
+                                                    × Std.Usize)
                                                     (core.convert.FromSame
                                                     _root_.Exec.runtime.ExecError)
                                                     residual
@@ -49389,13 +48084,14 @@ def runtime.store.instantiate.Store.instantiate_inner
                                                     signature_values := i40,
                                                     memory_bytes := i41,
                                                     table_elements := i42
-                                                  }, platform4, committed)
+                                                  }, platform4)
                                             |
                                               core.ops.control_flow.ControlFlow.Break
                                               residual =>
                                               let r8 ←
                                                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                  _root_.Exec.runtime.InstanceAddr
+                                                  (_root_.Exec.runtime.InstanceAddr
+                                                  × Std.Usize)
                                                   (core.convert.FromSame
                                                   _root_.Exec.runtime.ExecError)
                                                   residual
@@ -49416,118 +48112,37 @@ def runtime.store.instantiate.Store.instantiate_inner
                                                   signature_values := i35,
                                                   memory_bytes := i36,
                                                   table_elements := i37
-                                                }, platform3, committed)
+                                                }, platform3)
                                           else
-                                            let i33 ← i29 + items1
-                                            let (r8, self6, platform3) ←
-                                              runtime.interp.initialize_segments
-                                                platformMemoryBufferInst
-                                                platformPlatformInst
-                                                platformFloatOpsInst
-                                                platformAllocInst
-                                                {
-                                                  id := i28,
-                                                  limits := sl2,
-                                                  funcs := v57,
-                                                  types := v58,
-                                                  tables := v59,
-                                                  memories := v60,
-                                                  globals := v61,
-                                                  instances := v62,
-                                                  elems := v63,
-                                                  datas := v64,
-                                                  externs := v65,
-                                                  instance_items := i33,
-                                                  signature_values := i30,
-                                                  memory_bytes := i31,
-                                                  table_elements := i32
-                                                } platform2 i14
-                                            let cf17 ←
-                                              core.result.Result.Insts.CoreOpsTry.branch
-                                                r8
-                                            match cf17 with
-                                            |
-                                              core.ops.control_flow.ControlFlow.Continue
-                                              _ =>
-                                              let mi5 ←
-                                                alloc.vec.Vec.index
-                                                  (core.slice.index.SliceIndexUsizeSlice
-                                                  _root_.Exec.runtime.store.ModuleInst)
-                                                  self6.instances i14
-                                              let e4 ←
-                                                runtime.compiler.ExecutableModule.env
-                                                  mi5.module
-                                              let o ← module.Env.start e4
-                                              match o with
-                                              | none =>
-                                                ok (core.result.Result.Ok
-                                                  {
-                                                    store := self1.id,
-                                                    index := i14
-                                                  }, self6, platform3, true)
-                                              | some f =>
-                                                let i34 ←
-                                                  lift (UScalar.cast .Usize f)
-                                                let func ←
-                                                  alloc.vec.Vec.index
-                                                    (core.slice.index.SliceIndexUsizeSlice
-                                                    _root_.Exec.runtime.FuncAddr)
-                                                    mi5.funcs i34
-                                                let execution ←
-                                                  runtime.interp.Execution.new
-                                                let s13 ←
-                                                  lift (Array.to_slice
-                                                    (Std.Array.empty
-                                                      _root_.Exec.runtime.Value))
-                                                let (r9, _, self7, platform4,
-                                                  _) ←
-                                                  runtime.interp.invoke_with
-                                                    platformMemoryBufferInst
-                                                    platformPlatformInst
-                                                    platformFloatOpsInst
-                                                    platformAllocInst execution
-                                                    self6 platform3 func s13
-                                                    (alloc.vec.Vec.new
-                                                    _root_.Exec.runtime.Value)
-                                                let cf18 ←
-                                                  core.result.Result.Insts.CoreOpsTry.branch
-                                                    r9
-                                                match cf18 with
-                                                |
-                                                  core.ops.control_flow.ControlFlow.Continue
-                                                  _ =>
-                                                  ok (core.result.Result.Ok
-                                                    {
-                                                      store := self1.id,
-                                                      index := i14
-                                                    }, self7, platform4, true)
-                                                |
-                                                  core.ops.control_flow.ControlFlow.Break
-                                                  residual =>
-                                                  let r10 ←
-                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                      _root_.Exec.runtime.InstanceAddr
-                                                      (core.convert.FromSame
-                                                      _root_.Exec.runtime.ExecError)
-                                                      residual
-                                                  ok (r10, self7, platform4,
-                                                    true)
-                                            |
-                                              core.ops.control_flow.ControlFlow.Break
-                                              residual =>
-                                              let r9 ←
-                                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                                  _root_.Exec.runtime.InstanceAddr
-                                                  (core.convert.FromSame
-                                                  _root_.Exec.runtime.ExecError)
-                                                  residual
-                                              ok (r9, self6, platform3, true)
+                                            ok (core.result.Result.Ok
+                                              ({
+                                                 store := self1.id,
+                                                 index := i14
+                                               }, items1),
+                                              {
+                                                id := i28,
+                                                limits := sl2,
+                                                funcs := v57,
+                                                types := v58,
+                                                tables := v59,
+                                                memories := v60,
+                                                globals := v61,
+                                                instances := v62,
+                                                elems := v63,
+                                                datas := v64,
+                                                externs := v65,
+                                                instance_items := i29,
+                                                signature_values := i30,
+                                                memory_bytes := i31,
+                                                table_elements := i32
+                                              }, platform2)
                                         |
                                           core.ops.control_flow.ControlFlow.Break
                                           residual =>
                                           let r8 ←
                                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                              _root_.Exec.runtime.InstanceAddr
+                                              (_root_.Exec.runtime.InstanceAddr
+                                              × Std.Usize)
                                               (core.convert.FromSame
                                               _root_.Exec.runtime.ExecError)
                                               residual
@@ -49548,12 +48163,13 @@ def runtime.store.instantiate.Store.instantiate_inner
                                               signature_values := i30,
                                               memory_bytes := i31,
                                               table_elements := i32
-                                            }, platform2, committed)
+                                            }, platform2)
                                       | core.ops.control_flow.ControlFlow.Break
                                         residual =>
                                         let r8 ←
                                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                            _root_.Exec.runtime.InstanceAddr
+                                            (_root_.Exec.runtime.InstanceAddr
+                                            × Std.Usize)
                                             (core.convert.FromSame
                                             _root_.Exec.runtime.ExecError)
                                             residual
@@ -49577,13 +48193,13 @@ def runtime.store.instantiate.Store.instantiate_inner
                                             signature_values := i25,
                                             memory_bytes := i26,
                                             table_elements := i27
-                                          }, platform2, committed)
+                                          }, platform2)
                                     | core.ops.control_flow.ControlFlow.Break
                                       residual =>
                                       let r7 ←
                                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                          _root_.Exec.runtime.InstanceAddr
-                                          (core.convert.FromSame
+                                          (_root_.Exec.runtime.InstanceAddr ×
+                                          Std.Usize) (core.convert.FromSame
                                           _root_.Exec.runtime.ExecError)
                                           residual
                                       ok (r7,
@@ -49603,13 +48219,13 @@ def runtime.store.instantiate.Store.instantiate_inner
                                           signature_values := i25,
                                           memory_bytes := i26,
                                           table_elements := i27
-                                        }, platform2, committed)
+                                        }, platform2)
                                   | core.ops.control_flow.ControlFlow.Break
                                     residual =>
                                     let r7 ←
                                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                        _root_.Exec.runtime.InstanceAddr
-                                        (core.convert.FromSame
+                                        (_root_.Exec.runtime.InstanceAddr ×
+                                        Std.Usize) (core.convert.FromSame
                                         _root_.Exec.runtime.ExecError) residual
                                     let v45 :=
                                       index_mut_back { mi1 with elems := v44 }
@@ -49630,13 +48246,13 @@ def runtime.store.instantiate.Store.instantiate_inner
                                         signature_values := i20,
                                         memory_bytes := i21,
                                         table_elements := i22
-                                      }, platform1, committed)
+                                      }, platform1)
                                 | core.ops.control_flow.ControlFlow.Break
                                   residual =>
                                   let r6 ←
                                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                      _root_.Exec.runtime.InstanceAddr
-                                      (core.convert.FromSame
+                                      (_root_.Exec.runtime.InstanceAddr ×
+                                      Std.Usize) (core.convert.FromSame
                                       _root_.Exec.runtime.ExecError) residual
                                   ok (r6,
                                     {
@@ -49655,91 +48271,129 @@ def runtime.store.instantiate.Store.instantiate_inner
                                       signature_values := i20,
                                       memory_bytes := i21,
                                       table_elements := i22
-                                    }, platform1, committed)
+                                    }, platform1)
                               | core.ops.control_flow.ControlFlow.Break
                                 residual =>
                                 let r6 ←
                                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                    _root_.Exec.runtime.InstanceAddr
-                                    (core.convert.FromSame
+                                    (_root_.Exec.runtime.InstanceAddr ×
+                                    Std.Usize) (core.convert.FromSame
                                     _root_.Exec.runtime.ExecError) residual
                                 ok (r6, { self5 with instances := v33 },
-                                  platform, committed)
+                                  platform)
                             | core.ops.control_flow.ControlFlow.Break residual
                               =>
                               let r5 ←
                                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                  _root_.Exec.runtime.InstanceAddr
-                                  (core.convert.FromSame
+                                  (_root_.Exec.runtime.InstanceAddr ×
+                                  Std.Usize) (core.convert.FromSame
                                   _root_.Exec.runtime.ExecError) residual
-                              ok (r5, self5, platform, committed)
+                              ok (r5, self5, platform)
                           | core.ops.control_flow.ControlFlow.Break residual =>
                             let r5 ←
                               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                                _root_.Exec.runtime.InstanceAddr
+                                (_root_.Exec.runtime.InstanceAddr × Std.Usize)
                                 (core.convert.FromSame
                                 _root_.Exec.runtime.ExecError) residual
-                            ok (r5, self4, platform, committed)
+                            ok (r5, self4, platform)
                         | core.ops.control_flow.ControlFlow.Break residual =>
                           let r5 ←
                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                              _root_.Exec.runtime.InstanceAddr
+                              (_root_.Exec.runtime.InstanceAddr × Std.Usize)
                               (core.convert.FromSame
                               _root_.Exec.runtime.ExecError) residual
-                          ok (r5, self3, platform, committed)
+                          ok (r5, self3, platform)
                       | core.ops.control_flow.ControlFlow.Break residual =>
                         let r5 ←
                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                            _root_.Exec.runtime.InstanceAddr
+                            (_root_.Exec.runtime.InstanceAddr × Std.Usize)
                             (core.convert.FromSame
                             _root_.Exec.runtime.ExecError) residual
-                        ok (r5, self2, platform, committed)
+                        ok (r5, self2, platform)
                     | core.ops.control_flow.ControlFlow.Break residual =>
                       let r5 ←
                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          _root_.Exec.runtime.InstanceAddr
+                          (_root_.Exec.runtime.InstanceAddr × Std.Usize)
                           (core.convert.FromSame _root_.Exec.runtime.ExecError)
                           residual
-                      ok (r5, self1, platform, committed)
+                      ok (r5, self1, platform)
                   | core.ops.control_flow.ControlFlow.Break residual =>
                     let r4 ←
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                        _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-                        _root_.Exec.runtime.ExecError) residual
-                    ok (r4, self1, platform, committed)
+                        (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+                        (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                        residual
+                    ok (r4, self1, platform)
                 | core.ops.control_flow.ControlFlow.Break residual =>
                   let r4 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-                      _root_.Exec.runtime.ExecError) residual
-                  ok (r4, self, platform, committed)
+                      (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+                      (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                      residual
+                  ok (r4, self, platform)
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let r3 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-                    _root_.Exec.runtime.ExecError) residual
-                ok (r3, self, platform, committed)
+                    (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+                    (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                    residual
+                ok (r3, self, platform)
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r2 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-                  _root_.Exec.runtime.ExecError) residual
-              ok (r2, self, platform, committed)
+                  (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+                  (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                  residual
+              ok (r2, self, platform)
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r1 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-                _root_.Exec.runtime.ExecError) residual
-            ok (r1, self, platform, committed)
+                (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+                (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
+            ok (r1, self, platform)
         else
           ok (core.result.Result.Err (runtime.ExecError.Exhausted
-            runtime.ResourceLimit.Objects), self, platform, committed)
+            runtime.ResourceLimit.Objects), self, platform)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-            _root_.Exec.runtime.ExecError) residual
-        ok (r, self, platform, committed)
+            (_root_.Exec.runtime.InstanceAddr × Std.Usize)
+            (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
+        ok (r, self, platform)
+
+/-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]:
+    Source: 'src/runtime/store/instantiate.rs', lines 57:4-67:5 -/
+def runtime.store.instantiate.Store.instantiate_inner
+  {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
+  runtime.platform.MemoryBuffer M) (platformPlatformInst :
+  runtime.platform.Platform P M) (platformFloatOpsInst :
+  runtime.platform.FloatOps F) (platformAllocInst : runtime.platform.Alloc A)
+  (self : _root_.Exec.runtime.store.Store M)
+  (module1 : _root_.Exec.runtime.compiler.ExecutableModule)
+  (imports : Slice _root_.Exec.runtime.Extern) (platform : P)
+  (committed : Bool) :
+  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
+    _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P
+    × Bool)
+  := do
+  let (r, self1, platform1) ←
+    runtime.store.instantiate.Store.prepare_instance platformMemoryBufferInst
+      platformPlatformInst platformFloatOpsInst platformAllocInst self module1
+      imports platform
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (identity, items) := val
+    let i ← self1.instance_items + items
+    runtime.store.instantiate.Store.commit_instance platformMemoryBufferInst
+      platformPlatformInst platformFloatOpsInst platformAllocInst
+      { self1 with instance_items := i } platform1 identity committed
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
+        _root_.Exec.runtime.ExecError) residual
+    ok (r1, self1, platform1, committed)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 0:
     Source: 'src/runtime/store/instantiate.rs', lines 27:12-29:13 -/

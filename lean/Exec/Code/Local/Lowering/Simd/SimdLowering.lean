@@ -174,28 +174,4 @@ theorem simd_outputs_eq (sub : U32) :
     (if simdStores sub then Result.ok 0#usize else Result.ok 1#usize) =
       Result.ok (if simdStores sub then 0#usize else 1#usize) := by split <;> rfl
 
-theorem simd_lowering_eq {A : Type} (ops : runtime.platform.Alloc A)
-    (before : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (opcode reduced : U16) (sub a operand entry : U32) (bits : U128)
-    (totalCount operandCount : Usize) (budget : runtime.compiler.Budget A)
-    (immediates : alloc.vec.Vec runtime.bytecode.SimdImmediate)
-    (instruction : runtime.bytecode.Instr)
-    (reducedEq : (opcode - 512#u16) = Result.ok reduced)
-    (subEq : sub = UScalar.cast .U32 reduced)
-    (added : Usize.checked_add (alloc.vec.Vec.len before.before)
-      (if simdStores sub then 0#usize else 1#usize) = some totalCount)
-    (subtracted : Usize.checked_sub totalCount (alloc.vec.Vec.len state.vals) = some operandCount)
-    (operandEq : runtime.compiler.FunctionCompiler.operand ops before operandCount = .ok (.Ok operand))
-    (indexEq : runtime.compiler.bounded_index (alloc.vec.Vec.len before.function.simd) = .ok (.Ok entry))
-    (pushed : runtime.compiler.Budget.push ops before.budget before.function.simd (simdImmediate sub a bits) = .ok (.Ok (),budget,immediates))
-    (constructed : runtime.bytecode.Instr.make_simd sub operand operand entry = .ok (some instruction)) :
-    simdLowering ops before state opcode a bits = runtime.compiler.lower.FunctionCompiler.finish_op ops
-      {before with budget,function := {before.function with simd := immediates}} state instruction := by
-  simp only [simdImmediate] at pushed
-  unfold simdLowering
-  simp only [reducedEq,lift,bind_ok,←subEq,simd_stores_eq,simd_outputs_eq,added,subtracted,operandEq,indexEq,simd_lane_eq,
-    pushed,constructed,uncurry_apply_pair,core.option.Option.ok_or,
-    core.result.Result.Insts.CoreOpsTry.branch]
-  rfl
-
 end Exec.Code

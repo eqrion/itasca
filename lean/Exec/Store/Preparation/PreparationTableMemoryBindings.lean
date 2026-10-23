@@ -19,13 +19,13 @@ theorem preparation_table_memory_bindings {M A : Type} (memory : runtime.platfor
     (instanceIndex : Usize)
     (typed functions tabled after : runtime.store.Store M)
     (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
-    (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
+    (typeRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
-    (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
+    (functionRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
       .ok (typeParts functions (.Ok ()) funcInst))
-    (tableRun : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
+    (tableRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
       .ok (typeParts tabled (.Ok ()) tableInst))
-    (memoryRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
+    (memoryRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
       .ok (typeParts after (.Ok ()) inst)) :
     TableBindings after inst.module.module.env.table_types.val inst.tables.val ∧
     MemoryBindings view after inst.module.module.env.mem_types.val inst.memories.val := by

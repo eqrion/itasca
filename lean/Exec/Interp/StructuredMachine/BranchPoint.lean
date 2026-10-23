@@ -1,16 +1,15 @@
 import Exec.Interp.StructuredMachine.Point
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas.Std
 /-- Target lookup exposes the retained source continuation, with concrete
 label fields obtained from the dynamic/static label correspondence. -/
 theorem FramePoint.target {s raw frame compiled C targets next output}
-    (point : FramePoint emission s raw frame compiled C targets next output)
+    (point : FramePoint s raw frame compiled C targets next output)
     (depth : Nat) (label : Abs.Label) (lookup : frame.labels[depth]? = some label)
     (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
     ∃ target targetNext targetOutput,
       targets[depth]? = some target ∧ LabelMatch frame.vals label target ∧
-      Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS frame.resultTypes
+      Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS frame.resultTypes
         C.LOCALS compiled.code.val compiled.jump_tables.val (targets.drop (depth + 1))
         (target.front ++ label.branchTypes) (label.cont ++ label.after)
         target.target.val targetNext targetOutput := by
@@ -26,14 +25,14 @@ theorem FramePoint.branch {s : _root_.store} {raw : runtime.interp.Frame}
     {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction}
     {C : context} {targets : List Code.LabelTarget} {next : Nat} {output : List valtype}
     (front discarded results : List val)
-    (point : FramePoint emission s raw { f with vals := front ++ discarded ++ results } compiled C targets next output)
+    (point : FramePoint s raw { f with vals := front ++ discarded ++ results } compiled C targets next output)
     (typed : Abs.FrameTyped s { f with vals := front ++ discarded ++ results } [])
     (depth : Nat) (label : Abs.Label) (lookup : f.labels[depth]? = some label)
     (height : label.height = front.length) (types : results.map Abs.valueType = label.branchTypes)
     (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
     ∃ target targetNext targetOutput,
       targets[depth]? = some target ∧ LabelMatch (front ++ discarded ++ results) label target ∧
-      FramePoint emission s { raw with pc := target.target }
+      FramePoint s { raw with pc := target.target }
         { f with code := label.cont ++ label.after, labels := f.labels.drop (depth + 1), vals := front ++ results }
         compiled C (targets.drop (depth + 1)) targetNext targetOutput := by
   obtain ⟨target, targetNext, targetOutput, found, matching, continuation⟩ := point.target depth label lookup live
@@ -52,9 +51,9 @@ theorem branch_target_point {s : _root_.store} {raw : runtime.interp.Frame}
     (front discarded results : List val)
     (bindings : Abs.ModuleBindings s f.module C) (locals : C.LOCALS = f.locals.map Code.valueType)
     (matchingLabels : LabelsMatch (front ++ discarded ++ results) f.labels targets)
-    (continuations : Code.StructuredCodeWithTables.Targets (emission compiled C) C.TYPES C.FUNCS f.resultTypes
+    (continuations : Code.StructuredCode.Targets (emission compiled C) C.TYPES C.FUNCS f.resultTypes
       C.LOCALS compiled.code.val compiled.jump_tables.val targets)
-    (normal : Code.StructuredCodeWithTables.Normals (emission compiled C) C.TYPES C.FUNCS f.resultTypes
+    (normal : Code.StructuredCode.Normals (emission compiled C) C.TYPES C.FUNCS f.resultTypes
       C.LOCALS compiled.code.val compiled.jump_tables.val targets)
     (typed : Abs.FrameTyped s { f with vals := front ++ discarded ++ results } [])
     (depth : Nat) (label : Abs.Label) (lookup : f.labels[depth]? = some label)
@@ -62,12 +61,12 @@ theorem branch_target_point {s : _root_.store} {raw : runtime.interp.Frame}
     (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
     ∃ target targetNext targetOutput,
       targets[depth]? = some target ∧ LabelMatch (front ++ discarded ++ results) label target ∧
-      FramePoint emission s { raw with pc := target.target }
+      FramePoint s { raw with pc := target.target }
         { f with code := label.cont ++ label.after, labels := f.labels.drop (depth + 1), vals := front ++ results }
         compiled C (targets.drop (depth + 1)) targetNext targetOutput := by
   obtain ⟨target, found, matching⟩ := matchingLabels.atIndex depth label lookup
   obtain ⟨targetNext, targetOutput, relation, aligned, root⟩ := continuations depth target found (live target found)
-  have continuation : Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes
+  have continuation : Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes
       C.LOCALS compiled.code.val compiled.jump_tables.val (targets.drop (depth + 1))
       (target.front ++ label.branchTypes) (label.cont ++ label.after) target.target.val targetNext targetOutput :=
     ⟨by simpa only [matching.branchTypes, matching.cont, matching.after] using relation,

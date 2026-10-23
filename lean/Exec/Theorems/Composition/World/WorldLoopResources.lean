@@ -2,7 +2,6 @@ import Exec.Theorems.Composition.World.WorldRecordedLoop
 import Exec.Theorems.Composition.Eventful.EventfulSourceResources
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- A failed dispatch retains its actual reached world and source-sized
 resource request, even when earlier callbacks published new modules. -/
@@ -11,9 +10,9 @@ def WorldLoopResourceCause {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : EventfulWorld emission allowed M P view expected)
+    (initial : EventfulWorld M P view expected)
     (result : ExecutionResult M P) (error : runtime.ExecError) : Prop :=
-  ∃ previous : EventfulWorld emission allowed M P view expected, ∃ count events afterExec afterStore afterPlatform,
+  ∃ previous : EventfulWorld M P view expected, ∃ count events afterExec afterStore afterPlatform,
     Spec.Iterations (WorldRecordedTransition memory hooks floats allocator) count initial events previous ∧
     StepsH (Abs.decode initial.machine.source) events (Abs.decode previous.machine.source) ∧
     Inv previous.code previous.machine.store ∧
@@ -28,7 +27,7 @@ theorem WorldLoopInvariant.source_resources {M P F A : Type}
     {view : M → Slice U8} {expected : List valtype}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop}
     (capacities : ∀c store,Inv c store → Store.FunctionCapacities c store)
-    {initial : EventfulWorld emission allowed M P view expected} {state : ExecutionState M P} {error : runtime.ExecError}
+    {initial : EventfulWorld M P view expected} {state : ExecutionState M P} {error : runtime.ExecError}
     (invariant : WorldLoopInvariant memory hooks floats allocator Inv initial state)
     (failed : state.2.2.2=.Err error) :
     WorldLoopResourceCause memory hooks floats allocator Inv initial (finishExecution state) error := by
@@ -46,8 +45,8 @@ theorem world_recorded_loop_resource_results {M P F A : Type}
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (capacities : ∀c store,Inv c store → Store.FunctionCapacities c store)
-    (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
-    (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
+    (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
+    (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store) :
     recordedInvokeLoop memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) []
       ⦃ (result,events) => WorldRecordedLoopOutcome Inv initial result events ∧
         ∀error,result.2.2.2.2.2.2.2=.Err error → WorldLoopResourceCause memory hooks floats allocator Inv initial result error ⦄div := by

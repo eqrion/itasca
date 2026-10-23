@@ -338,18 +338,4 @@ theorem SegmentProgram.global_types {module function} (program : SegmentProgram 
   · exact dataTypes slot index member
   · cases impossible
 
-/-- The initializer source is the independently decoded module's segment list. -/
-theorem SegmentProgram.source_raw {module function raw} (program : SegmentProgram module function)
-    (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
-    (elementValid : ∀ segment ∈ module.module.env.elements.val,
-      ModuleSegments.elementValid module.module.env segment)
-    (dataValid : ∀ segment ∈ module.module.tail.data.val, ModuleData.Valid module.module.env segment) :
-    segmentSource function function.code.val =
-      (Spec.Segment.elementPrograms (raw.elements.map ModuleElaboration.element)).flatten.map admininstr_instr ++
-      (Spec.Segment.dataPrograms (raw.data.map ModuleData.translate)).flatten.map admininstr_instr := by
-  have elements := congrArg ModuleBinary.Module.elements matched.1
-  have datas := congrArg ModuleBinary.Module.data matched.1
-  rw [elements, datas]
-  simpa only [ModuleElaboration.fromEnv, List.map_map, Function.comp_def] using
-    program.source elementValid dataValid
 end Exec.Code

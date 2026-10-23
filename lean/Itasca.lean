@@ -1,4 +1,4 @@
 import Aeneas
-import Itasca.Generated.Funs
+import Itasca.Main
 import Itasca.Spec.Checks
 import Itasca.Audit

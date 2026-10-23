@@ -28,7 +28,7 @@ theorem root_host_resume {M : Type} (memory : runtime.platform.MemoryBuffer M)
         StepH ⟨⟨Store.decodeStore view beforeCode before,ambient⟩,vals args++[.CALL_ADDR address.index.val]⟩
           [.call address.index.val args (some (values.val.map sourceValue))]
           ⟨⟨Store.decodeStore view afterCode after,ambient⟩,vals (values.val.map sourceValue)⟩ ∧
-        StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+        StructuredMachine.Execution
           view afterCode after out.2 ⟨Store.decodeStore view afterCode after,ambient,[],values.val.map sourceValue⟩
           (signature.results.val.map sourceType) 0 false ∧
         Abs.Ownership.StatefulOwned (Store.ownershipBounds after)

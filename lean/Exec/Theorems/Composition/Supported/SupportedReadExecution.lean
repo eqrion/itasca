@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.StatefulReadExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-theorem stateful_read_execution_supported {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_read_execution_supported
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -16,16 +16,16 @@ theorem stateful_read_execution_supported {emission : StructuredMachine.Function
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      SupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ out ⦄ := by
-  apply WP.spec_mono (Stateful.read_execution_supported language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output
+  apply WP.spec_mono (Stateful.read_execution_supported memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output
     ambient f rest after op readOnly last frameFound found codeFound moduleEq slots point expected machine program)
   intro out result
   obtain ⟨sameStore,samePlatform,operation⟩ := result

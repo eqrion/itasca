@@ -26,7 +26,7 @@ module and its public accessor types. -/
 theorem stream.validate_module_slice.profile_complete_with_metadata
     (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
-    (hsignatures : ModuleSignaturesWithinLimits raw profile)
+    (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
     (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
     ∃ decoded, stream.validate_module_slice data profile = .ok (.Ok decoded) ∧
@@ -39,7 +39,7 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
       regions data :=
     ⟨regions, ⟨first, last, hsplit, henvironment, hcode, htail⟩, stream.SliceSource.available regions⟩
   obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists module.Env.new.spec
-  obtain ⟨env, after, run, hrun, hmatches, hmetadata, _⟩ := stream.validate_streaming.profile_complete
+  obtain ⟨env, after, run, hrun, hmatches, hmetadata, _⟩ := stream.validate_streaming.complete
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } StreamSync.Queued StreamSync.accepts
     0#u64 regions ⟨none, none⟩ storage data raw hb hsignatures he ht hp hcanonical rfl
@@ -55,33 +55,12 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
 theorem stream.validate_module_slice.profile_complete
     (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
-    (hsignatures : ModuleSignaturesWithinLimits raw profile)
+    (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
     (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
     ∃ decoded, stream.validate_module_slice data profile = .ok (.Ok decoded) ∧
       Matches decoded.env decoded.tail raw := by
   obtain ⟨decoded, hr, hm, _⟩ := stream.validate_module_slice.profile_complete_with_metadata data raw profile hb hsignatures he ht hp
   exact ⟨decoded, hr, hm⟩
-
-/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_complete_with_metadata`. -/
-theorem stream.validate_module_slice.wasm_complete_with_metadata
-    (data : Slice U8) (raw : ModuleBinary.Module)
-    (hb : ModuleEncodingWithinLimits raw data.val)
-    (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw) :
-    ∃ decoded, stream.validate_module_slice data .Wasm1 = .ok (.Ok decoded) ∧
-      Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw :=
-  stream.validate_module_slice.profile_complete_with_metadata data raw .Wasm1 hb
-    (fun _ _ => trivial) he ht hp
-
-/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_complete`. -/
-theorem stream.validate_module_slice.wasm_complete
-    (data : Slice U8) (raw : ModuleBinary.Module)
-    (hb : ModuleEncodingWithinLimits raw data.val)
-    (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw) :
-    ∃ decoded, stream.validate_module_slice data .Wasm1 = .ok (.Ok decoded) ∧
-      Matches decoded.env decoded.tail raw :=
-  stream.validate_module_slice.profile_complete data raw .Wasm1 hb (fun _ _ => trivial) he ht hp
 
 end Itasca

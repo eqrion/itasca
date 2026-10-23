@@ -42,7 +42,7 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
       args (alloc.vec.Vec.deref signature.params) argumentIssued accepted
     cases kind : function.code with
     | Wasm ii fi =>
-      have infinite := invoke_defined_world_infinite_source Abs.executable_language memory hooks floats allocator
+      have infinite := invoke_defined_world_infinite_source memory hooks floats allocator
         correct allocation interrupts view laws code (ExecutableInv view)
         (fun _ _ held=>held.toCertifiedApiStore.toCertifiedSupportedStore)
         (fun _ _ _ held mutation=>held.update mutation) sound preserve externs issuedResults

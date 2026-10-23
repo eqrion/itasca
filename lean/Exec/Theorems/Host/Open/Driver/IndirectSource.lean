@@ -11,7 +11,7 @@ private theorem host_identity_equal {s : _root_.store} {address left right : Nat
   obtain ⟨secondModule,secondAt⟩ := second
   exact funccode.HOST.inj (congrArg funcinst.CODE (Option.some.inj (firstAt.symm.trans secondAt)))
 
-theorem prepare_selected_indirect_host_source {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem prepare_selected_indirect_host_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
@@ -33,12 +33,12 @@ theorem prepare_selected_indirect_host_source {M P F A : Type} {emission : Funct
     (heights : ∀label∈f.labels,label.height≤front.length)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
-    (tail : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results) after pc.val next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
@@ -46,7 +46,7 @@ theorem prepare_selected_indirect_host_source {M P F A : Type} {emission : Funct
       (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
       (.mk_list expected)) :
     prepareCall memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base
-      ⦃phase=>PreparedSourceHost emission allowed memory view code store exec
+      ⦃phase=>PreparedSourceHost memory view code store exec
         (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
         (.mk_list expected) phase⦄ := by
   have argumentTypes' := argumentTypes.trans signatureTypes.1.symm
@@ -110,7 +110,7 @@ theorem prepare_selected_indirect_host_source {M P F A : Type} {emission : Funct
       rw [completion,resumeEq]
       rfl
 
-theorem prepare_indirect_host_source {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem prepare_indirect_host_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
@@ -131,10 +131,10 @@ theorem prepare_indirect_host_source {M P F A : Type} {emission : FunctionEmissi
     (moduleEq : f.module=Store.decodeInstance store inst)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
@@ -142,7 +142,7 @@ theorem prepare_indirect_host_source {M P F A : Type} {emission : FunctionEmissi
       (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
       (.mk_list expected)) :
     prepareStep memory hooks floats allocator exec store platform
-      ⦃phase=>PreparedSourceHost emission allowed memory view code store exec
+      ⦃phase=>PreparedSourceHost memory view code store exec
         (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
         (.mk_list expected) phase⦄ := by
   have frameTyped : Abs.FrameTyped (Store.decodeStore view code store)
@@ -216,7 +216,7 @@ theorem prepare_indirect_host_source {M P F A : Type} {emission : FunctionEmissi
       have signatureTypes : actualSignature.params.val.map sourceType=params ∧ actualSignature.results.val.map sourceType=results := by
         have sameSignature := decodedSignature.symm.trans (sameType.trans signatureEq)
         simpa only [Store.decodeFuncType,functype.mk_functype.injEq,list.mk_list.injEq] using sameSignature
-      have continuation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+      have continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
           compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results) after pc.val next output := by
         simpa only [pcEq] using tail.current
       exact prepare_selected_indirect_host_source memory hooks floats allocator allocation interrupts view code exec store platform

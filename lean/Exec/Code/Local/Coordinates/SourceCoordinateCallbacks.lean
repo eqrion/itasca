@@ -113,11 +113,6 @@ theorem SourceCoordinates.retained {A : Type} {before after : runtime.compiler.F
   obtain ⟨_,_,_,_,_,_,_,start,finish,_⟩ := stable.fields
   exact held.advance sources start finish (by rw [cursor])
 
-theorem OnlyCode.sourceCoordinates {A : Type} {before after : runtime.compiler.FunctionCompiler A}
-    (frame : OnlyCode before after) (held : SourceCoordinates before) : SourceCoordinates after := by
-  obtain ⟨code,rfl⟩ := frame
-  exact held
-
 theorem compiler_patch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (pc : Usize) (target : U32)
     (status : core.result.Result Unit Itasca.error.VisitError)
@@ -193,7 +188,6 @@ theorem compiler_pair_source_coordinates {A : Type} (ops : runtime.platform.Allo
       obtain ⟨_, output⟩ := rest
       subst after
       exact held
-
 
 /-- Conditional forms allow composition through extracted result matches. -/
 theorem compiler_emit_source_coordinates_result {A : Type} (ops : runtime.platform.Alloc A)

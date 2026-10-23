@@ -34,13 +34,6 @@ theorem ElementBoundedEffect.bounds {M : Type} {store after : runtime.store.Stor
       · exact bounded
     · exact before.data
 
-theorem ElementBoundedEffect.effect {M : Type} {store after : runtime.store.Store M}
-    {instIndex inst source status} (effect : ElementBoundedEffect store instIndex inst source status after) :
-    ElementStageEffect store instIndex inst after := by
-  cases effect with
-  | failed error => exact .unchanged
-  | appended elements addresses values stored mapped bounded => exact .appended elements addresses _ stored mapped
-
 theorem ElementBoundedEffect.typed {M : Type} {store after : runtime.store.Store M}
     {instIndex inst source status} (effect : ElementBoundedEffect store instIndex inst source status after) :
     ElementTypedEffect store instIndex inst source status after := by
@@ -119,6 +112,5 @@ theorem add_instance_element_bounded_effect {M P F A : Type}
           elements addresses values helements
           (by simpa only [instanceRead] using haddresses) (by have n := segment.init.len_val; omega)
         simpa [hback, instanceRead] using And.intro effect (rfl : platform = platform)
-
 
 end Exec.Store

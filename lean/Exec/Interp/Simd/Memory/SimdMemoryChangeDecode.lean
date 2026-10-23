@@ -3,13 +3,6 @@ import Exec.Interp.Memory.MemoryDecode
 namespace Exec.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 
-theorem MemoryBufferChange.well_formed {s : store} {f : frame} {before after : Slice U8} {sourceAfter : store}
-    (change : MemoryBufferChange s f before after sourceAfter) (storeWf : wf_store s) : wf_store sourceAfter := by
-  cases change with
-  | unchanged => exact storeWf
-  | write start payload after inside payloadWf written =>
-    exact Spec.memoryPayloadWrite_wf s f start payload storeWf payloadWf
-
 /-- The structured byte effect decodes an actual opaque buffer replacement exactly. -/
 theorem MemoryBufferChange.decoded {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)

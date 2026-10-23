@@ -10,7 +10,7 @@ import Exec.Interp.Control.LoopHead
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
-theorem step_loop {M P F A : Type} {emission : FunctionEmission}
+theorem step_loop {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
@@ -27,7 +27,7 @@ theorem step_loop {M P F A : Type} {emission : FunctionEmission}
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .LOOP bt body :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := .LOOP bt body :: after }
+    (point : FramePoint s raw { f with code := .LOOP bt body :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧
@@ -37,7 +37,7 @@ theorem step_loop {M P F A : Type} {emission : FunctionEmission}
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        ControlPoint emission s { raw with pc := pc } g compiled C targets' next' output' pending ∧
+        ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
         Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SourceClosure { f with code := .LOOP bt body :: after } g ∧
@@ -48,7 +48,7 @@ theorem step_loop {M P F A : Type} {emission : FunctionEmission}
       (out.1 = .Err .Terminated ∧ hooks.interrupt platform = .ok (.Terminate, out.2.2.2))) ⦄ := by
   rcases codeRel_loop_inv point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .LOOP bt body :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, ⟨continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -84,7 +84,7 @@ theorem step_loop {M P F A : Type} {emission : FunctionEmission}
       · rw [exactState]
         exact slots
       · refine ⟨point.bindings,point.locals,point.labels.enter front params results params entry exit [.LOOP bt body] after shape, ?_⟩
-        simpa only [shape, hpc, atEntry] using Code.StructuredCodeWithTables.Point.loop_body signature head bodyCode continuation bounds
+        simpa only [shape, hpc, atEntry] using Code.StructuredCode.Point.loop_body signature head bodyCode continuation bounds
           point.code.targets point.code.normal point.code.exit point.code.root
       · apply ConcreteSim.of_source
         exact simulation

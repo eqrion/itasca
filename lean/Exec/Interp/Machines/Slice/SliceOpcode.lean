@@ -1,4 +1,6 @@
-import Exec.Interp.Relations.OrdinaryFetch
+import Exec.Interp.Relations.PrefixDispatch
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Machines.Slice.SliceBinary
 
 namespace Exec.Interp
@@ -24,12 +26,5 @@ def OrdinaryOpcode.source : OrdinaryOpcode → instr
   | .branch depth => .BR (.mk_uN depth)
   | .branchIf depth => .BR_IF (.mk_uN depth)
   | .ifElse bt yes no => .IFELSE bt yes no
-
-theorem OrdinaryOpcode.ordinary (op : OrdinaryOpcode) : OrdinarySource op.source := by
-  cases op with
-  | binary ty op => cases op <;> trivial
-  | localWrite index keep => cases keep <;> trivial
-  | _ => trivial
-
 
 end Exec.Interp

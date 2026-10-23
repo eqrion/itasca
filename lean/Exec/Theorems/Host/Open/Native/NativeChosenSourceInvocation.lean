@@ -66,31 +66,5 @@ theorem native_invoke_chosen_source_diverges
   exact invoke_source_chosen_diverges memory floats allocator correct allocation view laws select
       choices admissible numericChoice vectorChoice growthCompatible apiCompatible publicationCompatible occurrence code store held exec address owner
     function signature functionAt signatureAt args owned results stop resources available driver
-
-/-- Absence of an infinite combined run under this selected policy excludes
-native divergence. Source capacities and primitive compatibility are explicit;
-this theorem does not replace termination by one chosen finite-run premise. -/
-theorem native_invoke_chosen_source_terminates
-    (terminates : ¬Spec.OpenExecution.ChoiceInfinite (sourceModel view (sourcePublication allocator view) select store.id stop)
-      (sourceControlChoices choices) occurrence
-      (sourceInvocationEntry view code store address signature args)) :
-    runtime.interp.invoke_with memory (platform memory floats allocator select) floats allocator exec store () address args results
-      ⦃out=>∃afterCode completed count events,
-        ReentrantCallbacks.Effect view code store afterCode out.2.2.1 ∧
-        Spec.OpenExecution.ChoiceTrace (sourceModel view (sourcePublication allocator view) select store.id stop)
-          (sourceControlChoices choices) occurrence count
-          (sourceInvocationEntry view code store address signature args) events completed ∧
-        completed.Typed ∧ SourceOutcome view afterCode (.invocation out []) completed ∧
-        ∃history,invoke memory floats allocator select exec store address args results=.ok (out,history) ∧
-          sourceHistory history=sourceHistory [Observation.invokeEnter address args]++visibleSourceHistory events⦄ := by
-  have source:=native_invoke_chosen_source_partial memory floats allocator correct allocation view laws select
-      choices admissible numericChoice vectorChoice growthCompatible apiCompatible publicationCompatible occurrence code store held exec address owner
-    function signature functionAt signatureAt args owned results stop resources available
-  generalize actual : runtime.interp.invoke_with memory (platform memory floats allocator select) floats allocator exec store () address args results=result at source ⊢
-  cases source with
-  | ret post=>exact WP.spec.ret post
-  | div=>exact False.elim (terminates (native_invoke_chosen_source_diverges memory floats allocator correct allocation view laws select
-      choices admissible numericChoice vectorChoice growthCompatible apiCompatible publicationCompatible occurrence code store held exec address owner
-      function signature functionAt signatureAt args owned results stop resources available actual))
 end
 end Exec.Theorems.OpenReentrantControl

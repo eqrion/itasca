@@ -2,12 +2,12 @@ import Exec.Code.Local.Lowering.Float.FloatOperands
 import Exec.Code.Local.Lowering.Float.FloatEffects
 import Exec.Code.Body.Reader.Common.ReaderSaturating
 import Exec.Code.Body.Source.TypedLowering
-import Exec.Code.Local.Lowering.Float.FloatCoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_saturating_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -31,7 +31,7 @@ theorem reader_emit_saturating_wasm2 {data env locals index st}
       Sequence.stackTypes st.core.vals.val = front ++ List.replicate op.arity (valtype_numtype op.input) ∧
       ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [valtype_numtype op.output]) ∧
-        FloatCoreEmission C (front ++ List.replicate op.arity (valtype_numtype op.input))
+        ScalarEmission C (front ++ List.replicate op.arity (valtype_numtype op.input))
           op.source [emitted] (front ++ [valtype_numtype op.output])) := by
   obtain ⟨operation,instruction,inputs,output,callback,_,_,_,_,values,effect,post⟩ :=
     reader_float_saturating_wasm2 p ops before after out ctx op extension subopcode next subopcodeEq decoded byte accepted
@@ -50,7 +50,7 @@ theorem reader_emit_saturating_wasm2 {data env locals index st}
   rw [callback, WP.spec_ok] at lowered
   obtain ⟨left, right, leftPosition, rightPosition, lower⟩ := lowered rfl
   refine ⟨front, values, oldTypes, post, _, ⟨lower, SourceStack.of_map types concrete newTypes⟩, ?_⟩
-  exact FloatCoreEmission.scalar front op left right
+  exact ScalarEmission.float front op left right
     (by simpa only [contextLocalsCode] using leftPosition) rightPosition
 
 end Exec.Code

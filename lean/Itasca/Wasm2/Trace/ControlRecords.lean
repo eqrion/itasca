@@ -4,8 +4,7 @@ import Itasca.Wasm2.Control.Return
 /-!
 # Callback byte provenance for control instructions
 
-`ProfileStepRecords` states the exact callback trace of one control step of `code.step_profile`
-at `.Wasm2`. `step_block`, `step_loop`, `step_if`, `step_else`, `step_end`, `step_br`,
+`ProfileStepRecords` states the exact callback trace of one control step of `code.step_profile`. `step_block`, `step_loop`, `step_if`, `step_else`, `step_end`, `step_br`,
 `step_br_if`, `step_return`, `step_call` and `step_call_indirect` prove it for each control
 opcode except `br_table`, which is in `Wasm2/Trace/TableBytes`.
 -/
@@ -29,8 +28,8 @@ theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
 
 /-- Indirect-call callbacks receive both independently decoded indices. -/
 theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (hs : Control.Shape st.core) :
-    code.call_indirect_info st data env ⦃ r => ∀ index table, r.1 = .Ok (index, table) →
+    (env : module.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
+    code.call_indirect_info st data env profile ⦃ r => ∀ index table, r.1 = .Ok (index, table) →
       ∃ middle, Leb128.Decoded data st.core.pos index middle ∧
         Leb128.Decoded data middle table r.2.core.pos ⦄ := by
   unfold code.call_indirect_info
@@ -42,6 +41,12 @@ theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok index =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    obtain ⟨rb, hrb, _⟩ := WP.spec_imp_exists (code.check_table_byte.spec profile data s.pos)
+    rw [hrb]
+    cases rb with
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Ok u =>
+    simp only [bind_ok]
     step with code.take_index.spec s data as ⟨r, s', hv', hc', hd'⟩
     have hs'' : Control.Shape s' :=
       ⟨by simpa [hc'] using hs'.ordered, by simpa [hc', hv'] using hs'.bounded⟩
@@ -51,19 +56,19 @@ theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
       simp only [bind_ok]
       step*
       simp_all
-      cases r2 with
+      cases r3 with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok value =>
         simp only [bind_ok]
         step*
         simp_all
-        cases r3 with
+        cases r4 with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok value =>
           simp only [bind_ok, WP.spec_ok]
           intro idx tab equal
           obtain ⟨rfl, rfl⟩ := (core.result.Result.Ok.inj equal)
-          exact ⟨s.pos, hd, by simpa only [r3_post2] using hd'⟩
+          exact ⟨s.pos, hd, by simpa only [r4_post2] using hd'⟩
 
 end Itasca
 
@@ -72,15 +77,15 @@ namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
 /-- Exact bytes for an actual profile-dispatched control step. -/
-def ProfileStepRecords {data env locals index st} (p : Pending data env locals index st)
+def ProfileStepRecords {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (ctx : code.Context) (opcode : U8) : Prop :=
-  ∀ v result final v', code.step_profile visitor st data env ctx index .Wasm2 opcode v =
+  ∀ v result final v', code.step_profile visitor st data env ctx index profile opcode v =
       .ok (result, final, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result final.core
 
-theorem step_block {data env locals index st} (p : Pending data env locals index st)
+theorem step_block {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x02#u8) :
@@ -92,12 +97,12 @@ theorem step_block {data env locals index st} (p : Pending data env locals index
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Block p.opened.shape.core capacity
+  have spec := code.enter_info.bytes st data env profile .Block p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.block bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .block h) (spec bt rfl)⟩
 
-theorem step_loop {data env locals index st} (p : Pending data env locals index st)
+theorem step_loop {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x03#u8) :
@@ -109,12 +114,12 @@ theorem step_loop {data env locals index st} (p : Pending data env locals index 
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Loop p.opened.shape.core capacity
+  have spec := code.enter_info.bytes st data env profile .Loop p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.loop bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .loop h) (spec bt rfl)⟩
 
-theorem step_if {data env locals index st} (p : Pending data env locals index st)
+theorem step_if {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x04#u8) :
@@ -126,12 +131,12 @@ theorem step_if {data env locals index st} (p : Pending data env locals index st
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have spec := code.enter_info.bytes st data env .Then p.opened.shape.core capacity
+  have spec := code.enter_info.bytes st data env profile .Then p.opened.shape.core capacity
   rw [hr, WP.spec_ok] at spec
   exact ⟨.if_ bt, rfl, by simp [Action.opcode],
     At.of_block_type bt p.inbounds byte p.pos (fun _ h => .if_ h) (spec bt rfl)⟩
 
-theorem step_else {data env locals index st} (p : Pending data env locals index st)
+theorem step_else {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8) :
@@ -147,7 +152,7 @@ theorem step_else {data env locals index st} (p : Pending data env locals index 
   apply At.of_immediate p.inbounds byte p.pos .else_
   simpa [pos] using Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
 
-theorem step_end {data env locals index st} (p : Pending data env locals index st)
+theorem step_end {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0b#u8) :
@@ -163,7 +168,7 @@ theorem step_end {data env locals index st} (p : Pending data env locals index s
   apply At.of_immediate p.inbounds byte p.pos .end_
   simpa [pos] using Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega)
 
-theorem step_br {data env locals index st} (p : Pending data env locals index st)
+theorem step_br {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0c#u8) :
@@ -178,7 +183,7 @@ theorem step_br {data env locals index st} (p : Pending data env locals index st
   exact ⟨.plain (.BR (.mk_uN depth.val)), rfl, by simp [Action.opcode],
     At.plain (Wasm1.At.of_u32 depth p.inbounds byte p.pos (fun _ => .br depth) (spec depth types rfl))⟩
 
-theorem step_br_if {data env locals index st} (p : Pending data env locals index st)
+theorem step_br_if {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0d#u8) :
@@ -193,7 +198,7 @@ theorem step_br_if {data env locals index st} (p : Pending data env locals index
   exact ⟨.plain (.BR_IF (.mk_uN depth.val)), rfl, by simp [Action.opcode],
     At.plain (Wasm1.At.of_u32 depth p.inbounds byte p.pos (fun _ => .brIf depth) (spec depth types rfl))⟩
 
-theorem step_call {data env locals index st} (p : Pending data env locals index st)
+theorem step_call {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
@@ -207,7 +212,7 @@ theorem step_call {data env locals index st} (p : Pending data env locals index 
   exact ⟨.plain (.CALL (.mk_uN idx.val)), rfl, by simp [Action.opcode],
     At.plain (Wasm1.At.of_u32 idx p.inbounds byte p.pos (fun _ => .call idx) (spec idx rfl))⟩
 
-theorem step_call_indirect {data env locals index st} (p : Pending data env locals index st)
+theorem step_call_indirect {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
@@ -217,7 +222,7 @@ theorem step_call_indirect {data env locals index st} (p : Pending data env loca
   apply bodyRun.trace data p.start _ visitor observe records
     (fun a : U32 × U32 => .call_indirect a.1 a.2) ?_ v result final v' run
   rintro state ⟨idx, table⟩ hr
-  have spec := code.call_indirect_info.bytes st data env p.opened.shape.core
+  have spec := code.call_indirect_info.bytes st data env profile p.opened.shape.core
   rw [hr, WP.spec_ok] at spec
   obtain ⟨middle, hidx, htable⟩ := spec idx table rfl
   obtain ⟨typeBytes, hs, hl, hb, he⟩ := hidx
@@ -236,10 +241,12 @@ open VisitorTrace
 /-- Factor the actual return callback after result checking and stack erasure. -/
 theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index .Wasm2 0x0f#u8 v =
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
+    code.step_profile visitor st data env ctx index profile 0x0f#u8 v =
       bodyRun (returnStep st env index) visitor (fun _ => .return_) v := by
-  simp [code.step_profile, global_simps, bodyRun, returnStep, Std.bind_assoc, Std.uncurry,
+  have hc : code.check_opcode profile 0x0f#u8 = .ok (.Ok ()) :=
+    code.check_opcode.complete profile _ (by decide)
+  simp [code.step_profile, hc, global_simps, bodyRun, returnStep, Std.bind_assoc, Std.uncurry,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -274,7 +281,7 @@ theorem return_position (st : code.BodyState) (env : module.Env) (index : U32)
       (code.mark_unreachable_total popped hs)
     simpa [returnStep, hp, hm] using hmark.trans hpos
 
-theorem step_return {data env locals index st} (p : Pending data env locals index st)
+theorem step_return {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0f#u8) :

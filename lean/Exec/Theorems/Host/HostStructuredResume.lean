@@ -1,4 +1,5 @@
-import Exec.Theorems.Host.HostCallStructuredFrames
+import Exec.Theorems.Host.HostCallFrames
+import Exec.Interp.StructuredMachine.HostReturnFrames
 import Exec.Theorems.Composition.Certified.CertifiedSupported
 import Exec.Interp.StructuredMachine.HostCallStack
 import Exec.Abs.HostCallSite
@@ -24,12 +25,12 @@ theorem structured_host_next (s : _root_.store) (ambient : frame) (f : Abs.AFram
 
 /-- Checked host results resume the complete generic machine. Raw metadata
 retention is explicit; newly added functions come from the fresh certificate. -/
-theorem host_structured_resume {M P : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem host_structured_resume {M P : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution}
     {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame} {op : instr} {after : List instr}
     {expected : List valtype} {sourcePC : Nat} {pendingFlag : Bool}
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op::after}::rest,[]⟩ expected sourcePC pendingFlag)
     {raw : runtime.interp.Frame} {frameIndex : Usize} {pc : U32}
     (last : frameIndex.val+1=exec.frames.length)
@@ -37,13 +38,13 @@ theorem host_structured_resume {M P : Type} {emission : FunctionEmission} {allow
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     {compiled C targets next output}
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := op::after} compiled C targets next output)
     {front args consumed : List val} {returns : List valtype} {address : runtime.FuncAddr} {base : Usize}
     (split : f.vals=front++consumed)
     (destination : base.val=raw.base.val+Code.slots ((f.locals++front).map Code.valueType))
     (heights : ∀ label∈f.labels, label.height≤front.length)
-    (continuation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    (continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
       compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++returns) after pc.val next output)
     (pending : Abs.HostPending
       ⟨Store.decodeStore view code store,ambient,{f with code := after,vals := front}::rest,[]⟩ returns)
@@ -54,9 +55,9 @@ theorem host_structured_resume {M P : Type} {emission : FunctionEmission} {allow
     (success : out.1=.Ok ())
     (retained : FrameStorePrefix store out.2.2.1) (bounds : FrameTypeBounds store)
     (extension : Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.2.1))
-    (fresh : CertifiedSupportedStore emission allowed view code out.2.2.1)
+    (fresh : CertifiedSupportedStore view code out.2.2.1)
     (returned : ResultsTyped (Store.decodeStore view code out.2.2.1) returns (out.2.1.host_results.val.map sourceValue)) :
-    ∃ finalPC, Execution emission (Abs.SupportedState allowed) view code out.2.2.1 out.2.1
+    ∃ finalPC, Execution view code out.2.2.1 out.2.1
       ⟨Store.decodeStore view code out.2.2.1,ambient,
         {f with code := after,vals := front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false := by
   have valueTypes : (out.2.1.host_results.val.map sourceValue).map Code.valueType=returns := by

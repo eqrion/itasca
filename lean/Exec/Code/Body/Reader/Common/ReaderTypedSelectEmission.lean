@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Accepted explicit-select bytes and their actual callback produce the typed
 emission and exact complete stack transition used by body compilation. -/
 theorem reader_emit_typed_select_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (localsMatch : compilerLocals before = C.LOCALS)

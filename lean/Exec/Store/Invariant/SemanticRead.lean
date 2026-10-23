@@ -1,5 +1,6 @@
 import Exec.Store.Invariant.ValueRead
-import Exec.Store.Api.Read
+import Exec.Representation.StoreInvariant
+import Exec.Store.Api.Grow
 import Exec.Store.Api.Write
 
 namespace Exec.Store

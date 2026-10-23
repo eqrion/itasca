@@ -85,7 +85,7 @@ theorem call_result {s : store} {ambient : frame} {f : AFrame}
 last frame returns actual values; other steps preserve the outermost frame. -/
 theorem instruction_result (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (expected : List valtype) (allowed : SliceInstr op)
+    (expected : List valtype) (allowed : PureHead op)
     (typed : ATyped ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (h : InvocationResult expected ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (step : astep ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ = .next next) :
@@ -100,95 +100,5 @@ theorem instruction_result (s : store) (ambient : frame) (f : AFrame)
     simp only [astep, integerBinary, branch, enterLabel] at step
     repeat' first | split at step | contradiction
     all_goals exact advance_result h step rfl
-
-theorem astep_result (s next : AState) (expected : List valtype)
-    (typed : ATyped s) (slice : SliceState s) (result : InvocationResult expected s)
-    (step : astep s = .next next) : InvocationResult expected next := by
-  rcases s with ⟨store, ambient, frames, results⟩
-  cases frames with
-  | nil => simp [astep] at step
-  | cons frame rest =>
-    have hresults := typed.activeResults (by simp)
-    change results = [] at hresults
-    subst results
-    have hslice := (slice.active frame (by simp)).1
-    cases frame with
-    | mk addr rts locals m labels code values =>
-      let f : AFrame := ⟨addr, rts, locals, m, labels, code, values⟩
-      cases code with
-      | cons op after => exact instruction_result store ambient f rest op after next expected (hslice op (by simp)) typed result step
-      | nil =>
-        cases labels with
-        | nil => exact returnFrame_result typed result step
-        | cons label labels =>
-          simp only [astep] at step
-          split at step
-          · exact advance_result result step rfl
-          · contradiction
-
-/-- The expected result types follow through every actual successful step. -/
-theorem run_result {n : Nat} {s next : AState} {events : List HostEvent}
-    (run : Iterations SuccessfulStep n s events next) (expected : List valtype)
-    (typed : ATyped s) (slice : SliceState s) (result : InvocationResult expected s) :
-    InvocationResult expected next := by
-  induction run with
-  | refl _ => exact result
-  | cons step _ ih =>
-    obtain ⟨_, step⟩ := step
-    exact ih (astep_preservation _ _ typed slice step) (astep_slice _ _ typed slice step)
-      (astep_result _ _ expected typed slice result step)
-
-theorem run_invariants {n : Nat} {s next : AState} {events : List HostEvent}
-    (run : Iterations SuccessfulStep n s events next) (typed : ATyped s) (slice : SliceState s) :
-    ATyped next ∧ SliceState next := by
-  induction run with
-  | refl _ => exact ⟨typed, slice⟩
-  | cons step _ ih =>
-    obtain ⟨_, step⟩ := step
-    exact ih (astep_preservation _ _ typed slice step) (astep_slice _ _ typed slice step)
-
-theorem done_frames_empty (s : AState) (typed : ATyped s) (slice : SliceState s)
-    (values : List val) (step : astep s = .done values) : s.frames = [] := by
-  rcases s with ⟨store, ambient, frames, results⟩
-  cases frames with
-  | nil => rfl
-  | cons frame rest =>
-    have hresults := typed.activeResults (by simp)
-    change results = [] at hresults
-    subst results
-    have hslice := (slice.active frame (by simp)).1
-    cases frame with
-    | mk addr rts locals m labels code operands =>
-      let f : AFrame := ⟨addr, rts, locals, m, labels, code, operands⟩
-      cases code with
-      | nil =>
-        simp only [astep, returnFrame, advance] at step
-        repeat' first | contradiction | split at step
-      | cons op after => exact False.elim (instruction_not_done store ambient f rest op after (hslice op (by simp)) values step)
-
-/-- Normal return produces values of the external invocation's declared type. -/
-theorem done_results_typed (s : AState) (expected : List valtype) (values : List val)
-    (typed : ATyped s) (slice : SliceState s) (result : InvocationResult expected s)
-    (step : astep s = .done values) : ResultsTyped s.store expected values := by
-  have empty := done_frames_empty s typed slice values step
-  simp only [InvocationResult, empty] at result
-  have same : s.results = values := by simpa only [astep, empty, AResult.done.injEq] using step
-  simpa only [same] using result
-
-/-- A finite successful invocation run followed by normal return has the
-expected results and a quantitative specification execution to those values. -/
-theorem run_done {n : Nat} {s next : AState} {events : List HostEvent}
-    (run : Iterations SuccessfulStep n s events next) (expected : List valtype) (values : List val)
-    (typed : ATyped s) (slice : SliceState s) (result : InvocationResult expected s)
-    (done : astep next = .done values) :
-    ResultsTyped next.store expected values ∧
-      ∃ count, StepsHN count (decode s) events ⟨⟨next.store, next.ambient⟩, vals values⟩ ∧
-        n / (sizeOf s + 1) ≤ count := by
-  obtain ⟨typed', slice'⟩ := run_invariants run typed slice
-  have result' := run_result run expected typed slice result
-  refine ⟨done_results_typed next expected values typed' slice' result' done, ?_⟩
-  obtain ⟨count, reduction, bound⟩ := run_progress run typed slice
-  rw [done_simulation next typed' slice' values done] at reduction
-  exact ⟨count, reduction, bound⟩
 
 end Exec.Abs

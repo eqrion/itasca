@@ -86,41 +86,4 @@ theorem continuing_no_overflow {M F A : Type} (memory : runtime.platform.MemoryB
     obtain ⟨afterCode,effect,fresh⟩:=post
     exact ih afterCode fresh (tick_no_overflow memory floats allocator correct allocation view laws select code _ guard.1 safe _ step)
 
-theorem returned_no_overflow {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (select : Selector)
-    {count : Nat} {state : State M} {answer : Outcome M}
-    (trace : Interp.NormalTrace (tick memory floats allocator select) count state answer)
-    (code : Store.CodeInterpretation) (guard : StateGuard memory view code state) (safe : NoOverflowMode state.mode) :
-    NoOverflowOutput (.done answer) := by
-  induction trace generalizing code with
-  | done step => exact tick_no_overflow memory floats allocator correct allocation view laws select code _ guard.1 safe _ step
-  | next step tail ih =>
-    have post := tick_guard memory floats allocator correct allocation view laws select code _ guard
-    rw [step,WP.spec_ok] at post
-    obtain ⟨afterCode,effect,fresh⟩ := post
-    exact ih afterCode fresh (tick_no_overflow memory floats allocator correct allocation view laws select code _ guard.1 safe _ step)
-
-/-- Unbounded combined control cannot report host stack exhaustion. This is
-derived from all actual returning traces and does not assert normal return. -/
-theorem platform_no_stack_overflow {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (select : Selector) :
-    NoHostStackOverflow (platform memory floats allocator select) (ExecutableInv view) := by
-  intro code store held token identity args defaults nextToken after values actual
-  simp only [platform] at actual
-  obtain ⟨answer,returned,tail⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ actual
-  have guard := initialHost_guard memory view code select store held identity args
-  have safe := run_safe memory floats allocator correct allocation view laws select code _ guard
-  rw [returned,WP.dspec_ok] at safe
-  obtain ⟨count,trace,post⟩ := safe
-  have no := returned_no_overflow memory floats allocator correct allocation view laws select trace code guard (by trivial)
-  cases answer with
-  | host reply history =>
-    rcases reply with ⟨status,after,results⟩
-    simp only [Result.ok.injEq,Prod.mk.injEq] at tail
-    exact no tail.1
-  | invocation reply history => simp at tail
 end Exec.Theorems.OpenReentrantControl

@@ -141,7 +141,6 @@ inductive NumericHook where
   | i64_reinterpret_f64
   | f32_reinterpret_i32
   | f64_reinterpret_i64
-  deriving DecidableEq
 
 /-- Memory callback identities, named by their API mnemonics. -/
 inductive MemoryHook where
@@ -168,7 +167,6 @@ inductive MemoryHook where
   | i64_store8
   | i64_store16
   | i64_store32
-  deriving DecidableEq
 
 /-- Wasm 2.0 scalar callback identities: sign extension and saturating truncation. -/
 inductive ExtendedNumericHook where
@@ -185,7 +183,6 @@ inductive ExtendedNumericHook where
   | i64_trunc_sat_f32_u
   | i64_trunc_sat_f64_s
   | i64_trunc_sat_f64_u
-  deriving DecidableEq
 
 /-- The arguments of an instruction hook. Floating-point constants keep every input bit. -/
 inductive Action where

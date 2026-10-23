@@ -15,14 +15,14 @@ def SelectedSourceHost {M P : Type} (memory : runtime.platform.MemoryBuffer M) (
       pending.identity=identity.val ∧ pending.arguments=args.val.map sourceValue ∧
       StepsH source [] pending.initial ∧ Config_ok pending.initial expected ∧
       Spec.UniversalQuietPrefix source pending.initial ∧
-      SourceContinuation Executable.emission Abs.ExecutableInstr memory view code store ready address base pending
+      SourceContinuation memory view code store ready address base pending
         (match expected with | .mk_list types=>types) ∧
       HostStateRepresents store.id (sourceHostEntry select store.id pending.identity pending.arguments)
         ⟨0,select identity args.slice,identity,args.slice⟩
 
 theorem PreparedSourceHost.select {M P : Type} {memory : runtime.platform.MemoryBuffer M} {exec : runtime.interp.Execution} {view : M → Slice U8} {code : Store.CodeInterpretation}
     (select : Selector) {store : runtime.store.Store M} {source : config} {expected : resulttype} {phase : CallPhase M P}
-    (held : PreparedSourceHost Executable.emission Abs.ExecutableInstr memory view code store exec source expected phase) :
+    (held : PreparedSourceHost memory view code store exec source expected phase) :
     SelectedSourceHost memory view code select store source expected phase := by
   cases phase with
   | done answer=>trivial
@@ -40,7 +40,7 @@ theorem prepare_source_world_step {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (select : Selector) {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (configurationTyped : Config_ok (Abs.decode world.machine.source) (.mk_list expected)) :
     prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform

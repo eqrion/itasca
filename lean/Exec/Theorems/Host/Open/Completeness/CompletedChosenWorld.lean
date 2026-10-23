@@ -16,13 +16,13 @@ theorem completed_chosen_world {choices : Spec.SourceChoices} (admissible : choi
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (typed : Config_ok (Abs.decode world.machine.source) (.mk_list expected)) (out : Answer M Unit)
     (completed : prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform=
       .ok (.done out)) :
     ChosenWorldStepResult choices memory (inert memory) floats allocator
-      (ReentrantCallbacks.FloorInv view world.machine.store.externs.length) (⟨world,occurrence⟩ : ChosenWorld Executable.emission Abs.ExecutableInstr M Unit view expected) out ∧
+      (ReentrantCallbacks.FloorInv view world.machine.store.externs.length) (⟨world,occurrence⟩ : ChosenWorld M Unit view expected) out ∧
       stepHostEvents world.machine.exec world.machine.store out=[] := by
   have raw : ∀before token identity args defaults,
       (inert memory).call_host token before identity args defaults ⦃ answer=>
@@ -33,7 +33,7 @@ theorem completed_chosen_world {choices : Spec.SourceChoices} (admissible : choi
   let Inv := ReentrantCallbacks.FloorInv view world.machine.store.externs.length
   have sound : HostWorldChosenSound memory (inert memory) view Inv choices:=
     PureCallbacks.trapping_chosen_sound memory view Inv (fun _ _ valid=>valid.1.source_typed) choices hostChoice
-  have post := chosen_world_step_outcomes admissible numericChoice vector Abs.executable_language memory (inert memory) floats allocator correct allocation
+  have post := chosen_world_step_outcomes admissible numericChoice vector memory (inert memory) floats allocator correct allocation
     (fun _=>WP.spec.ret trivial) view laws compatible Inv
     (fun _ _ valid=>valid.1.toCertifiedApiStore.toCertifiedSupportedStore)
     (fun _ _ _ valid mutation=>valid.update mutation) (fun _ _ valid=>valid.1.source_typed) sound

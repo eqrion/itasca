@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Canonical SIMD reader effects and the actual accepted callback produce
 exact typed emitted-code evidence, including appended metadata. -/
 theorem reader_simd_fixed_emission {data env locals index st source values position inputs output}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (C : context) (opcode : U16) (sub a b : U32) (bits : U128)

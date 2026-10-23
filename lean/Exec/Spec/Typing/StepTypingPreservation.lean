@@ -78,8 +78,4 @@ theorem step_typing_replacement {before after : config} (source : Step before af
     apply (wf_config_parts (by assumption)).2
     simp
 
-theorem step_config_preserved {before after : config} (source : Step before after) {types : resulttype}
-    (typed : Config_ok before types) : Config_ok after types :=
-  state_typing_replacement_preserves (step_typing_replacement source) typed
-
 end Exec.Spec

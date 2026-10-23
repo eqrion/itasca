@@ -1,5 +1,6 @@
 import Exec.Theorems.Composition.Core.CoreOwnership
-import Exec.Theorems.Host.HostResultCheck
+import Exec.Store.Invariant.CheckedValues
+import Exec.Spec.HostCall
 import Exec.Interp.Host.HostResume
 import Exec.Spec.Choices.ChosenHostStep
 import Exec.Theorems.Host.Chosen.HostChoiceMatching

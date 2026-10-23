@@ -1,5 +1,4 @@
 import Exec.Code.Module.PreparedExecutableSafety
-import Exec.Code.Body.Relations.Common.BodyCheckedWasm1
 import Exec.Code.Body.Relations.Common.BodyCheckedWasm2
 import Exec.Code.Module.PreparedPublicationStart
 import Exec.Code.Local.Checking.FunctionStartExitSlots
@@ -16,7 +15,7 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
     {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
     (w : CodeEntry.Prepared data env index start profile)
-    (environment : Profile.Environment profile env) (limits : Profile.EnvironmentWithinLimits profile env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (body : Profile.Body profile w.body env w.ctx.locals w.typeIdx)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =
@@ -26,9 +25,9 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     (begun : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started))
     (room : BodyResourceRoom started w.body.length
-      (independentBodyDemand profile w.body env w.ctx w.typeIdx).operands bound) :
-    CodeEntry.runBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) profile w.body env
-      w.ctx w.typeIdx started ⦃ result => result.1 = .Ok () ∧
+      (independentBodyDemand w.body env w.ctx w.typeIdx).operands bound) :
+    code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body env w.ctx
+      w.typeIdx profile started ⦃ result => result.1 = .Ok () ∧
         SourceCompilationBudget started.budget result.2.budget bodyResourceRate w.body.length ∧
         FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
@@ -45,36 +44,32 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     w.typeIdx sig w.bodyStart w.finish lookup beginFits endFits created begun
   have exits := compiler_start_exit_slots ops law signatures functionSlots budget batchStart initial started w.ctx
     w.typeIdx sig w.bodyStart w.finish lookup beginFits endFits created begun
-  cases profile with
-  | Wasm1 =>
-    obtain ⟨facts,matched,results,point,observed,indirect,simd,pool,fixups⟩ :=
-      prepared_executable_safety_wasm1 ops law w room.size ⟨environment,limits⟩ signaturesMatch slotsMatch batchBound created begun
-    apply WP.spec_mono (compiler_body_wasm1_checked_available ops law bound allocation started
-      (EnvTranslation.context env w.ctx) w.body env w.ctx w.typeIdx w.ft point facts.localLayout facts.locals
-      facts.functionSlots matched rfl facts.signatures results ⟨observed,indirect,simd,pool,fixups⟩
-      signature w.context_results environment limits body room coordinates maps targets
-      (by simp only [compilerLocals,facts.locals]) (by rw [facts.capacity]) instructions exits extent)
-    intro result held
-    obtain ⟨closed,reached,closedState,finished⟩ := held.2
-    refine ⟨held.1,?_,reached.1.final_ranges closedState,reached.2.2.2 closedState⟩
-    simpa [finished,Slice.len] using reached.1.1.2
-  | Wasm2 =>
-    obtain ⟨facts,matched,point,observed,indirect,simd,pool,fixups⟩ :=
-      prepared_executable_safety_wasm2 ops law w room.size signaturesMatch slotsMatch batchBound created begun
-    have contextEq : w.ctx = ⟨w.ctx.locals,w.ft.results⟩ := by
-      have results : w.ctx.results = w.ft.results := alloc.vec.Vec.ext _ _ w.context_results
-      cases h : w.ctx
-      simp_all
-    have accepted := compiler_body_wasm2_checked_available ops law bound allocation started (EnvTranslation.context env w.ctx)
-      (w.ctx.locals.val.map Translate.valueType) w.body env w.ctx.locals w.typeIdx w.ft point facts.localLayout
-      facts.locals facts.functionSlots matched rfl facts.signatures ⟨observed,indirect,simd,pool,fixups⟩
-      signature environment limits body (by simpa only [← contextEq] using room) coordinates maps targets
-      (by simp only [compilerLocals,facts.locals]) (by rw [facts.capacity]) instructions exits extent
-    rw [contextEq]
+  obtain ⟨facts,matched,point,observed,indirect,simd,pool,fixups⟩ :=
+    prepared_executable_safety_wasm2 ops law w room.size signaturesMatch slotsMatch batchBound created begun
+  have contextEq : w.ctx = ⟨w.ctx.locals,w.ft.results⟩ := by
+    have results : w.ctx.results = w.ft.results := alloc.vec.Vec.ext _ _ w.context_results
+    cases h : w.ctx
+    simp_all
+  have accepted := compiler_body_wasm2_checked_available ops law bound allocation started (EnvTranslation.context env w.ctx)
+    (w.ctx.locals.val.map Translate.valueType) w.body env w.ctx.locals w.typeIdx w.ft point facts.localLayout
+    facts.locals facts.functionSlots matched rfl facts.signatures ⟨observed,indirect,simd,pool,fixups⟩
+    limits body.to_wasm2 (by simpa only [← contextEq] using room) coordinates maps targets
+    (by simp only [compilerLocals,facts.locals]) (by rw [facts.capacity]) instructions exits extent
+  rw [← contextEq] at accepted
+  have checked : code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body
+      env w.ctx w.typeIdx .Wasm2 started ⦃ result => result.1 = .Ok () ∧
+        SourceCompilationBudget started.budget result.2.budget bodyResourceRate w.body.length ∧
+        FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
     apply WP.spec_mono accepted
     intro result held
     obtain ⟨closed,reached,closedState,finished⟩ := held.2
     refine ⟨held.1,?_,reached.1.final_ranges closedState,reached.2.2.2 closedState⟩
     simpa [finished,Slice.len] using reached.1.1.2
+  cases profile with
+  | Wasm2 => exact checked
+  | Wasm1 =>
+    obtain ⟨result,run,post⟩ := WP.spec_imp_exists checked
+    rw [code.validate_body_with.wasm1_of_body _ _ _ _ _ _ result limits room.size body run, WP.spec_ok]
+    exact post
 
 end Exec.Code

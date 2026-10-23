@@ -10,7 +10,7 @@ theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Al
       data env index start finish initial final profile)
     (facts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body)
     {source : List instr}
-    (body : StructuredCompiledBodyWithTables final.function.jump_tables.val (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx)) w.startedState final
+    (body : StructuredCompiledBody final.function.jump_tables.val (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx)) w.startedState final
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType) source)
     (compiled : runtime.bytecode.CompiledFunction) (budget : runtime.compiler.Budget A)
@@ -28,7 +28,7 @@ theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Al
   have localsWidth : w.startedState.function.local_slots.val = slots
       (w.ft.params.val.map Translate.valueType ++ (ModuleLocals.declared w.groups).map Translate.valueType) := by
     simpa only [compilerLocals, localTypes] using facts.localLayout.slots
-  have body' : StructuredCompiledBodyWithTables final.function.jump_tables.val (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx)) w.startedState final
+  have body' : StructuredCompiledBody final.function.jump_tables.val (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx)) w.startedState final
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (w.ft.results.val.map Translate.valueType)
       (w.ft.params.val.map Translate.valueType ++ (ModuleLocals.declared w.groups).map Translate.valueType) source := by

@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 /-- All supported SIMD instructions execute inside the generic compiled stack.
 The only trap is a checked memory bounds failure; opaque buffer writeback is
 retained explicitly even when the source store does not change. -/
-theorem step_execution_forward {emission : FunctionEmission} {allowed : instr → Prop} {M P F A : Type}
+theorem step_execution_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
@@ -22,19 +22,19 @@ theorem step_execution_forward {emission : FunctionEmission} {allowed : instr �
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view interpretation store) raw
+    (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
     (simd : Abs.SimdInstr source)
-    (project : ∀ before emitted result, emission compiled C before source emitted result →
+    (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
       Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
-    (machine : Execution emission (Abs.SupportedState allowed) view interpretation store exec
+    (machine : Execution view interpretation store exec
       ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ SimdStoreMutation view store out.2.2.1 ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store (Store.decodeStore view interpretation store) (Store.decodeStore view interpretation out.2.2.1) ∧
       ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : Abs.AFrame), raw.pc.val < pc.val ∧
-        Execution emission (Abs.SupportedState allowed) view interpretation out.2.2.1 out.2.1
+        Execution view interpretation out.2.2.1 out.2.1
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ ∧
@@ -83,7 +83,7 @@ theorem step_execution_forward {emission : FunctionEmission} {allowed : instr �
         exact sourceTrap.trap_simulation machine.typed
 
 
-theorem step_execution {emission : FunctionEmission} {allowed : instr → Prop} {M P F A : Type}
+theorem step_execution {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
@@ -98,19 +98,19 @@ theorem step_execution {emission : FunctionEmission} {allowed : instr → Prop} 
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view interpretation store) raw
+    (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
     (simd : Abs.SimdInstr source)
-    (project : ∀ before emitted result, emission compiled C before source emitted result →
+    (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
       Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
-    (machine : Execution emission (Abs.SupportedState allowed) view interpretation store exec
+    (machine : Execution view interpretation store exec
       ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ expected raw.pc.val false) :
     let initial : Abs.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ SimdStoreMutation view store out.2.2.1 ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store (Store.decodeStore view interpretation store) (Store.decodeStore view interpretation out.2.2.1) ∧
       ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : Abs.AFrame),
-        Execution emission (Abs.SupportedState allowed) view interpretation out.2.2.1 out.2.1
+        Execution view interpretation out.2.2.1 out.2.1
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ ∧

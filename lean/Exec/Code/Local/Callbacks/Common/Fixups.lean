@@ -122,61 +122,6 @@ theorem patchCode_length (code : List runtime.bytecode.Instr) (sites : List Usiz
     simp only [patchCode]
     split <;> simp [ih]
 
-theorem patchCode_keeps_target (code : List runtime.bytecode.Instr) (sites : List Usize)
-    (target : U32) (pc : Nat) (kind : BranchKind)
-    (atPc : code[pc]? = some (kind.instruction target)) :
-    (patchCode code sites target)[pc]? = some (kind.instruction target) := by
-  induction sites generalizing code with
-  | nil => exact atPc
-  | cons site rest ih =>
-    simp only [patchCode]
-    split
-    · rename_i instruction found
-      apply ih
-      by_cases same : pc = site.val
-      · have eq : instruction = kind.instruction target := by
-          rw [← same, atPc] at found
-          exact Option.some.inj found.symm
-        subst instruction
-        have bound := (List.getElem?_eq_some_iff.mp atPc).1
-        cases kind <;> simp [← same, retarget, BranchKind.instruction, bound]
-      · simpa [Ne.symm same] using atPc
-    · exact ih code atPc
-
-theorem patchCode_target (code : List runtime.bytecode.Instr) (sites : List Usize)
-    (target old : U32) (pc : Usize) (kind : BranchKind)
-    (member : pc ∈ sites) (atPc : code[pc.val]? = some (kind.instruction old)) :
-    (patchCode code sites target)[pc.val]? = some (kind.instruction target) := by
-  induction sites generalizing code with
-  | nil => simp at member
-  | cons site rest ih =>
-    simp only [patchCode]
-    rcases List.mem_cons.mp member with same | member
-    · subst site
-      rw [atPc]
-      apply patchCode_keeps_target
-      have bound := (List.getElem?_eq_some_iff.mp atPc).1
-      cases kind <;> simp [retarget, BranchKind.instruction, bound]
-    · split
-      · rename_i instruction found
-        by_cases same : pc.val = site.val
-        · have eq : instruction = kind.instruction old := by
-            rw [← same, atPc] at found
-            exact Option.some.inj found.symm
-          subst instruction
-          apply patchCode_keeps_target
-          have bound := (List.getElem?_eq_some_iff.mp atPc).1
-          cases kind <;> simp [← same, retarget, BranchKind.instruction, bound]
-        · apply ih _ member
-          simpa [Ne.symm same] using atPc
-      · exact ih code member atPc
-
-theorem OnlyCode.layout {A : Type} {before after : runtime.compiler.FunctionCompiler A}
-    {stack} (changed : OnlyCode before after) (layout : CompilerLayout before stack) :
-    CompilerLayout after stack := by
-  obtain ⟨code, rfl⟩ := changed
-  exact ⟨layout.localSlots, layout.localOffsets, layout.operandOffsets, layout.height, layout.capacity⟩
-
 theorem patchCode_other (code : List runtime.bytecode.Instr) (sites : List Usize)
     (target : U32) (pc : Nat) (separate : ∀ site, site ∈ sites → pc ≠ site.val) :
     (patchCode code sites target)[pc]? = code[pc]? := by
@@ -192,29 +137,5 @@ theorem patchCode_other (code : List runtime.bytecode.Instr) (sites : List Usize
     · rw [ih _ restSeparate]
       simp [Ne.symm different]
     · exact ih code restSeparate
-
-@[step] theorem compiler_fixups_complete {A : Type} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
-    (target : U32) (branches : BranchSites compiler.function.code.val sites.val) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
-      ops compiler sites target 0#usize (.Ok ()) ⦃ out =>
-      ∃ after, out = compilerSnapshot after (.Ok ()) ∧ OnlyCode compiler after ∧
-        after.function.code.val.length = compiler.function.code.val.length ∧
-        (∀ pc kind old, pc ∈ sites.val →
-          compiler.function.code.val[pc.val]? = some (BranchKind.instruction kind old) →
-          after.function.code.val[pc.val]? = some (kind.instruction target)) ∧
-        (∀ pc, (∀ site, site ∈ sites.val → pc ≠ site.val) →
-          after.function.code.val[pc]? = compiler.function.code.val[pc]?) ⦄ := by
-  step with compiler_fixups ops compiler sites target 0#usize (by simp) branches as
-    ⟨out, after, hout, onlyCode, effect⟩
-  simp only [List.drop_zero] at effect
-  refine ⟨after, hout, onlyCode, ?_, ?_, ?_⟩
-  · rw [effect, patchCode_length]
-  · intro pc kind old member atPc
-    rw [effect]
-    exact patchCode_target _ _ _ _ _ _ member atPc
-  · intro pc separate
-    rw [effect]
-    exact patchCode_other _ _ _ _ separate
 
 end Exec.Code

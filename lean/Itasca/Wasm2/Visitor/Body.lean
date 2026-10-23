@@ -1,80 +1,99 @@
 import Itasca.Wasm2.Visitor.Transfer
 
 /-!
-# Visiting body validation against the public validator
+# Visiting body validation against the empty-visitor validator
 
-Relates `code.validate_multi_value_body_with`, the body validator with an arbitrary visitor
-(the extracted name says "multi_value" but it validates all of Wasm 2.0), to the empty-visitor
-validator `code.validate_multi_value_body`. `accepted_erase` and `accepted_lift` give acceptance in
-both directions, `wasm_sound` and `wasm_complete` lift soundness and completeness to arbitrary
-accepting visitors, and `wasm_spec` combines totality with soundness.
+Relates `code.validate_body_with`, the body validator with an arbitrary visitor, to the
+empty-visitor validator `code.bodyCore`. `eq_core` identifies the empty-visitor run with
+`code.bodyCore`, `accepted_erase` and `accepted_lift` give acceptance in both directions, and
+`sound` and `complete` lift soundness and completeness to arbitrary accepting visitors.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An accepted visiting body is accepted by the public empty visitor validator. The source
-visitor needs no totality assumption. -/
-theorem code.validate_multi_value_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
-    (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
-    code.validate_multi_value_body data env ctx.locals index = .ok (.Ok ()) := by
-  obtain ⟨w, hw⟩ := code.validate_multi_value_body_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts data env ctx
-    ⟨ctx.locals, alloc.vec.Vec.new _⟩ rfl index v () v' h
-  cases w
-  simp [code.validate_multi_value_body, hw]
+/-- The empty-visitor run of `code.validate_body_with` is `code.bodyCore`. -/
+theorem code.validate_body_with.eq_core (data : Slice U8) (env : module.Env)
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile) :
+    (do
+      let (r, _) ← code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+        data env ctx index profile ()
+      .ok r) = code.bodyCore data env ctx.locals ctx.results index profile := by
+  unfold code.validate_body_with code.initial_state code.bodyCore
+  simp only [Std.bind_assoc]
+  split
+  · simp
+  · simp only [Std.bind_assoc]
+    congr 1
+    funext i
+    split
+    · simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    · simp only [Std.bind_assoc]
+      congr 1
+      funext ft
+      congr 1
+      funext r
+      cases r with
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Ok u =>
+        cases u
+        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.bind_assoc]
+        rfl
 
-/-- Accepting hooks preserve public acceptance. The scalar context's
+/-- An accepted visiting body is accepted by the empty-visitor validator, for any result vector
+of the scalar context. The source visitor needs no totality assumption. -/
+theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
+    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (profile : ValidationProfile) (results : alloc.vec.Vec types.ValueType) (v v' : V)
+    (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
+    code.bodyCore data env ctx.locals results index profile = .ok (.Ok ()) := by
+  obtain ⟨w, hw⟩ := code.validate_body_with.accepted_transfer visitor
+    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts data env ctx
+    ⟨ctx.locals, results⟩ rfl index profile v () v' h
+  cases w
+  rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩]
+  simp [hw]
+
+/-- Accepting hooks preserve acceptance by the empty-visitor validator. The scalar context's
 result vector does not constrain the signature selected by the type index. -/
-theorem code.validate_multi_value_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
+theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (v : V)
-    (h : code.validate_multi_value_body data env ctx.locals index = .ok (.Ok ())) :
-    ∃ v', code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v') := by
-  unfold code.validate_multi_value_body at h
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (results : alloc.vec.Vec types.ValueType) (v : V)
+    (h : code.bodyCore data env ctx.locals results index profile = .ok (.Ok ())) :
+    ∃ v', code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v') := by
+  rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩] at h
   obtain ⟨⟨r, w⟩, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   cases w
   simp [Std.uncurry] at h
   subst r
-  exact code.validate_multi_value_body_with.accepted_transfer
+  exact code.validate_body_with.accepted_transfer
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor visitor ha data env
-    ⟨ctx.locals, alloc.vec.Vec.new _⟩ ctx rfl index () v () hr
+    ⟨ctx.locals, results⟩ ctx rfl index profile () v () hr
 
-/-- Arbitrary accepted visitors establish independent Wasm 2.0 binary encoding and generated
-typing, without a callback totality premise. -/
-theorem code.validate_multi_value_body_with.wasm_sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v v' : V)
-    (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
-    Wasm2.Validated data env ctx.locals index :=
-  code.validate_multi_value_body.wasm_sound data env ctx.locals index
-    (code.validate_multi_value_body_with.accepted_erase visitor data env ctx index v v' h)
+/-- Arbitrary accepted visitors establish `Wasm2.Validated` for the profile, without a callback
+totality premise. -/
+theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
+    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (profile : ValidationProfile) (v v' : V)
+    (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
+    Wasm2.Validated profile data env ctx.locals index :=
+  code.bodyCore.sound data env ctx.locals ctx.results index profile
+    (code.validate_body_with.accepted_erase visitor data env ctx index profile _ v v' h)
 
-/-- Independent typing and binary encoding imply actual visiting acceptance,
-subject to the implementation limits and accepting callbacks. -/
-theorem code.validate_multi_value_body_with.wasm_complete {V : Type} (visitor : code.OpVisitor V)
+/-- `Wasm2.Validated` bodies are accepted with accepting callbacks, subject to the
+implementation limits. -/
+theorem code.validate_body_with.complete {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32)
-    (henv : Wasm2.EnvironmentWithinLimits env)
+    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (henv : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (hbody : Wasm2.Validated data env ctx.locals index) (v : V) :
-    ∃ v', code.validate_multi_value_body_with visitor data env ctx index v = .ok (.Ok (), v') :=
-  code.validate_multi_value_body_with.accepted_lift visitor ha data env ctx index v
-    (code.validate_multi_value_body.wasm_complete data env ctx.locals index henv hsize hbody)
-
-/-- The visiting body contract combines totality with soundness for its actual
-successful result; rejecting callbacks remain ordinary validation errors. -/
-theorem code.validate_multi_value_body_with.wasm_spec {V : Type} (visitor : code.OpVisitor V)
-    (hv : FullVisitor.Total visitor) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (v : V) :
-    code.validate_multi_value_body_with visitor data env ctx index v ⦃ r =>
-      r.1 = .Ok () → Wasm2.Validated data env ctx.locals index ⦄ := by
-  obtain ⟨⟨r, v'⟩, hr⟩ := code.validate_multi_value_body_with.wasm_total visitor hv data env ctx index v
-  rw [hr, WP.spec_ok]
-  intro hok
-  change r = .Ok () at hok
-  subst r
-  exact code.validate_multi_value_body_with.wasm_sound visitor data env ctx index v v' hr
+    (hbody : Wasm2.Validated profile data env ctx.locals index) (v : V) :
+    ∃ v', code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v') :=
+  code.validate_body_with.accepted_lift visitor ha data env ctx index profile ctx.results v
+    (code.bodyCore.complete data env ctx.locals ctx.results index profile henv hsize hbody)
 
 end Itasca

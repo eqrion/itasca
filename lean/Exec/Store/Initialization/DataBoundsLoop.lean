@@ -23,12 +23,12 @@ theorem data_bounds_staging_loop {M A : Type}
     (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
     (bounded : SegmentBounds store)
     (sourceBounds : ∀ data ∈ inst.module.module.tail.data.val, data.init.length < 2^32) :
-    runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ SegmentBounds after ∧ (SegmentAccounting store → SegmentAccounting after) ∧
         InitializerFunctionMetadataAt store inst after instIndex ∧ InitializerContext after instIndex inst.module ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop9
+  unfold runtime.store.instantiate.Store.prepare_instance_loop9
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.val.length - state.2.2.val)
     (fun state => StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ SegmentBounds state.1 ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
@@ -41,7 +41,7 @@ theorem data_bounds_staging_loop {M A : Type}
   · rintro ⟨current, result, index⟩ ⟨hstaged, hobjects, hbounded, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, hstoreCapacity⟩
     dsimp only at hstaged hobjects hbounded haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity hstoreCapacity ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop9.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,

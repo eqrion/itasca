@@ -1,10 +1,14 @@
 import Exec.Interp.StructuredMachine.Point
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
-import Exec.Interp.Core.Point
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
 import Exec.Interp.Relations.ControlPoint
 import Exec.Abs.Core.Typing
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 /-- A retained forward jump is a source stutter with a strictly decreasing
@@ -26,13 +30,13 @@ theorem step_forward_jump_flat {M P F A : Type}
     (forward : raw.pc.val < target.val)
     (fetched : compiled.code.val[raw.pc.val]? = some (.Jump target))
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission sourceStore {raw with pc := target} f compiled C targets next output)
+    (point : FramePoint sourceStore {raw with pc := target} f compiled C targets next output)
     (typed : Abs.CoreTyped ⟨sourceStore,ambient,f::rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       out.2.1 = {exec with frames := exec.frames.set index {raw with pc := target}} ∧
       FrameSlots out.2.1 {raw with pc := target} f ∧
-      FramePoint emission sourceStore {raw with pc := target} f compiled C targets next output ∧
+      FramePoint sourceStore {raw with pc := target} f compiled C targets next output ∧
       Abs.CoreTyped ⟨sourceStore,ambient,f::rest,[]⟩ ∧
       ConcreteSim compiled.code.length raw.pc.val target.val false false
         ⟨sourceStore,ambient,f::rest,[]⟩ ⟨sourceStore,ambient,f::rest,[]⟩ ⦄ := by

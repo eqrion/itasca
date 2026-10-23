@@ -1,10 +1,10 @@
 import Exec.Interp.StructuredMachine.Point
 namespace Exec.Interp.StructuredMachine
 
-theorem structuredCodeWithTables_empty_inv {emit types functions returns locals code jumpTables labels stack pc next output}
-    (relation : Code.StructuredCodeWithTables emit types functions returns locals code jumpTables labels stack [] pc next output) :
+theorem structuredCode_empty_inv {emit types functions returns locals code jumpTables labels stack pc next output}
+    (relation : Code.StructuredCode emit types functions returns locals code jumpTables labels stack [] pc next output) :
     (∃ target, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables emit types functions returns locals code jumpTables labels stack [] target.val next output) ∨
+      Code.StructuredCode emit types functions returns locals code jumpTables labels stack [] target.val next output) ∨
     (pc = next ∧ stack = output ∧ Code.NormalLive labels) := by
   cases relation with
   | nil _ _ _ _ live => exact Or.inr ⟨rfl,rfl,live⟩

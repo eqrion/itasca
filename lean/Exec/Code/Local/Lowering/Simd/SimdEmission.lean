@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdLowering
-import Exec.Code.Local.Control.Common.StructuredCode
+import Exec.Code.Local.Control.Common.Structured
 import Itasca.Binary.Wasm2.Simd
 
 namespace Exec.Code

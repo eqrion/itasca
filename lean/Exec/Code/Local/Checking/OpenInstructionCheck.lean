@@ -53,24 +53,4 @@ retain their own check. Semantic reachability alone does not imply this fact. -/
 def OpenInstructionPrefix (function : runtime.bytecode.CompiledFunction) (pending : Nat → Prop) : Prop :=
   ∀ index instruction, function.code.val[index]? = some instruction → OpenInstructionCheck function pending index instruction
 
-/-- Appending the actual epilogue turns closed prefix checks into a complete
-instruction certificate when the epilogue itself checks in the final function. -/
-theorem OpenInstructionPrefix.publish {before after : runtime.bytecode.CompiledFunction}
-    (held : OpenInstructionPrefix before (fun _ => False))
-    (growth : InstructionCheckExtends before after) (fragment : List runtime.bytecode.Instr)
-    (code : after.code.val = before.code.val++fragment) (nonempty : 0 < fragment.length)
-    (fresh : ∀ instruction ∈ fragment,
-      runtime.bytecode.CompiledFunction.instruction_valid after instruction = .ok true) :
-    CheckedInstructionPrefix after := by
-  have strict : before.code.length < after.code.length := by
-    change before.code.val.length < after.code.val.length
-    rw [code,List.length_append]
-    omega
-  intro instruction member
-  rw [code] at member
-  rcases List.mem_append.mp member with old | new
-  · obtain ⟨index,inside,found⟩ := List.getElem_of_mem old
-    exact (held index instruction (by simp [List.getElem?_eq_getElem inside,found])).publish growth strict
-  · exact fresh instruction new
-
 end Exec.Code

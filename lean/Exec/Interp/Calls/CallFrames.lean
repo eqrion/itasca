@@ -26,24 +26,6 @@ theorem CallEntryEffect.preserve_binding {M : Type} {store : runtime.store.Store
     exact List.mem_append_left _ member
   · exact bound.trans effect.slots_length.1
 
-/-- The caller's live prefix ends at the callee argument base. Its locals and
-remaining operands survive initialization and any backing-vector growth. -/
-theorem CallEntryEffect.caller_values
-    {before after : runtime.interp.Execution} {instanceIndex functionIndex base : Usize}
-    {code : runtime.bytecode.CompiledFunction} {raw : runtime.interp.Frame}
-    {source : Abs.AFrame} {front args : List val}
-    (effect : CallEntryEffect before after instanceIndex functionIndex base code)
-    (represented : FrameSlots before raw { source with vals := front ++ args })
-    (offset : base.val = raw.base.val + Code.slots ((source.locals ++ front).map Code.valueType))
-    (params : code.param_slots.val ≤ code.local_slots.val)
-    (capacity : code.local_slots.val ≤ code.slot_count.val) :
-    FrameSlots after raw { source with vals := front } := by
-  have prefixValues : ValuesAt before.slots.val raw.base.val (source.locals ++ front) := by
-    apply WordsAt.append_left (right := Code.encodeValues args)
-    simpa only [FrameSlots, ValuesAt, Code.encodeValues_append, List.append_assoc] using represented
-  apply effect.preserve_prefix prefixValues _ params capacity
-  rw [Code.encodeValues_length, offset]
-
 /-- Exact retained metadata for the newly pushed callee. -/
 theorem CallEntryEffect.callee_binding {M : Type}
     (store : runtime.store.Store M) (before after : runtime.interp.Execution)

@@ -23,7 +23,7 @@ theorem instantiate_inner_decomposition {M P F A : Type}
     (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged) ∨
     ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id, before.instances.len⟩ ready platform =
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         outcome := by
   have decomposition := instantiate_inner_prepared_decomposition memory hooks floats allocator law view laws
     before module imports platform shape accounted cache valid dataValid compiled handles outcome run

@@ -36,10 +36,6 @@ def sourceObservation : Observation → List Spec.OpenExecution.Observation
 def sourceHistory (events : List Observation) : List Spec.OpenExecution.Observation :=
   events.flatMap sourceObservation
 
-theorem sourceHistory_append (first next : List Observation) :
-    sourceHistory (first++next)=sourceHistory first++sourceHistory next := by
-  simp only [sourceHistory,List.flatMap_append]
-
 theorem visibleSourceHistory_append (first next : List Spec.OpenExecution.Observation) :
     visibleSourceHistory (first++next)=visibleSourceHistory first++visibleSourceHistory next := by
   simp only [visibleSourceHistory,List.flatMap_append]

@@ -3,7 +3,35 @@ import Exec.Theorems.Invocation.InvokeWorldResources
 import Exec.Theorems.Invocation.InvokeHostWorldResources
 import Exec.Platform.RecordingSpec
 import Exec.Interp.Invocation.InvokeRecordingErasure
-import Exec.Theorems.Instantiation.StartExecutableWorld
+import Exec.Theorems.Invocation.InvokeWorld
+import Exec.Theorems.Invocation.InvokeHostWorld
+import Exec.Theorems.Api.ExecutableInv
+import Exec.Theorems.Host.HostSegmentPublication
+import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
@@ -20,12 +48,11 @@ def WorldStartInvocationResourceCause {M P F A : Type}
     store.types.val[function.signature.val]?=some signature ∧
     signature.params.val=[] ∧ signature.results.val=[] ∧
     ((∃ ii fi, function.code=.Wasm ii fi ∧
-      WorldDefinedSourceResourceCause (emission:=Interp.Executable.emission) (allowed:=Abs.ExecutableInstr)
+      WorldDefinedSourceResourceCause
         memory hooks floats allocator view code (ExecutableInv view) store ambient
         address signature args after error) ∨
      ∃ identity, function.code=.Host identity ∧
       InitialHostSourceResourceCause hooks allocator store after identity signature error)
-
 
 theorem invoke_start_executable_world_resources {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -57,7 +84,7 @@ theorem invoke_start_executable_world_resources {M P F A : Type}
     args signature.params (by simp [ResultsTyped,params,empty]) (by simp [empty])
   cases kind : function.code with
   | Wasm instanceIndex functionIndex =>
-    have recorded := invoke_defined_world_recorded_resources Abs.executable_language memory hooks floats allocator correct allocation interrupts
+    have recorded := invoke_defined_world_recorded_resources memory hooks floats allocator correct allocation interrupts
       view laws code (ExecutableInv view) (fun c s held=>held.toCertifiedApiStore.toCertifiedSupportedStore)
       (fun c before after held mutation=>held.update mutation) (fun c s held=>held.capacities)
       sound preserve externs issued exec store platform certified ambient ambientWf address function signature

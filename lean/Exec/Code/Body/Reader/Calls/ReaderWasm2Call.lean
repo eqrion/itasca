@@ -29,7 +29,7 @@ theorem reader_body_success {A V : Type}
       exact ⟨value, readEq, callback⟩
 
 theorem reader_call_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x10#u8)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x10#u8 before =
@@ -39,12 +39,12 @@ theorem reader_call_wasm2 {data env locals index st}
       ReaderPostWasm2 p out.core (.CALL (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values := by
   rw [CallbackTrace.dispatch_call] at accepted
   obtain ⟨idx, read, callback⟩ := reader_body_success _ _ _ _ _ _ accepted
-  have erased : code.call st data env false = .ok (.Ok (), out) := by simp [code.call, read, core.result.Result.Insts.CoreOpsTry.branch]
+  have erased : code.call st data env .Wasm2 false = .ok (.Ok (), out) := by simp [code.call, read, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
   have contextMatch := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
-  have effect := code.call.direct_prefix st data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
+  have effect := code.call.direct_prefix st data env .Wasm2 ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) _ contextMatch _ p.current.ops (by simpa [polymorphic, Frames.enter] using typed)
   rw [erased, WP.spec_ok] at effect
   obtain ⟨sourceIndex, decoded, controls, sameBlocks, values, stack, sourceTyped⟩ := effect rfl

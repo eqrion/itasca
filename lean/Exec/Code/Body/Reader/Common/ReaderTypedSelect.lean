@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 /-- The explicit-select reader retains its literal declared type, exact
 callback, validated stack effect, and independently decoded source prefix. -/
 theorem reader_typed_select_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 28#u8 before =

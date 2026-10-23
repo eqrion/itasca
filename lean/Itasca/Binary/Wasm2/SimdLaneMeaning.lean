@@ -29,7 +29,6 @@ inductive LaneOperation where
   | f32x4Replace
   | f64x2Extract
   | f64x2Replace
-  deriving DecidableEq
 
 /-- The vector shape of a lane instruction. -/
 def LaneOperation.shape : LaneOperation → shape
@@ -201,7 +200,6 @@ theorem LaneOperation.bound (op : LaneOperation) (C : context) (lane : laneidx)
     Bool.false_eq_true, ↓reduceIte] at ht <;> cases ht
   all_goals cases_type fun_dim
   all_goals assumption
-
 
 /-- A lane operation has no declared-reference obligation. -/
 theorem LaneOperation.declared (op : LaneOperation) (refs : List funcidx) (lane : laneidx) :

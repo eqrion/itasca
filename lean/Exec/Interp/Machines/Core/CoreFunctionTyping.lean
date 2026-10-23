@@ -1,4 +1,5 @@
-import Exec.Interp.Machines.Core.CoreCompiledFunctions
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
 import Exec.Abs.Typing
 namespace Exec.Code
 /-- The completed module context has no ambient function-local declarations. -/

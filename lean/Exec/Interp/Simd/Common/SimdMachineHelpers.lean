@@ -1,4 +1,4 @@
-import Exec.Interp.Simd.Common.SimdFootprint
+import Exec.Interp.Simd.Common.SimdValueSlots
 import Exec.Interp.Relations.PrefixEffect
 import Exec.Interp.State.StatefulLookup
 import Exec.Interp.Simd.Common.SimdFrameCapacity

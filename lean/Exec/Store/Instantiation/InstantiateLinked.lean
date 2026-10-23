@@ -26,7 +26,7 @@ theorem instantiate_inner_linked_decomposition {M P F A : Type}
     ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
-      instantiate_tail memory hooks floats allocator ⟨before.id, before.instances.len⟩ ready platform =
+      runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         outcome := by
   have classified := instantiate_inner_classified_decomposition memory hooks floats allocator law view laws
     before module imports platform shape accounted cache valid dataValid compiled handles outcome run

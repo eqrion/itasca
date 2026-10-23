@@ -10,12 +10,6 @@ structure SegmentAccounting {M : Type} (store : runtime.store.Store M) : Prop wh
   elements : store.elems.length = (store.instances.val.map fun inst => inst.elems.length).sum
   datas : store.datas.length = (store.instances.val.map fun inst => inst.datas.length).sum
 
-theorem new_segment_accounting {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (id : Usize) (limits : runtime.store.StoreLimits) :
-    runtime.store.Store.with_identity memory id limits ⦃ store => SegmentAccounting store ⦄ := by
-  simp only [runtime.store.Store.with_identity, WP.spec_ok]
-  constructor <;> simp
-
 theorem SegmentAccounting.element_bound {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (accounted : SegmentAccounting store) (shape : Shape view store) :
     store.elems.length ≤ store.instance_items.val := by

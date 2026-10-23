@@ -1,4 +1,7 @@
-import Exec.Code.Local.Control.Common.CumulativeTokens
+import Exec.Abs.Core
+import Exec.Abs.Float.Decode
+import Exec.Abs.Stateful.Descriptor
+import Exec.Code.Local.Relations.Common.ConsumedPrefix
 import Exec.Code.Local.Lowering.Float.FloatSaturatingSupport
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
@@ -51,13 +54,4 @@ theorem At.cumulative_misc {data start token finish}
   obtain ⟨endPosition,prefixAt,suffixAt⟩ := tail.split
   exact ⟨subopcode,endPosition,⟨prefixBytes,prefixAt.suffix,prefixAt.length,prefixAt.bound,leb⟩,allowed⟩
 
-theorem BodyEncoding.next_cumulative_misc {data body tokens position}
-    (encoded : BodyEncoding data body) (supported : Forall Exec.Abs.CumulativeInstr body)
-    (before : Consumed data 0#usize tokens position) (remaining : position.val < data.length)
-    (next : Usize) (advance : next.val = position.val + 1)
-    (byte : data.val[position.val]'remaining = 252#u8) :
-    ∃ subopcode endPosition, Leb128.Decoded data next subopcode endPosition ∧
-      Exec.Code.CumulativeMiscOpcode subopcode := by
-  obtain ⟨token,finish,atToken,_⟩ := encoded.next_cumulative_token supported before remaining
-  exact atToken.cumulative_misc next advance remaining byte
 end Itasca.Wasm2

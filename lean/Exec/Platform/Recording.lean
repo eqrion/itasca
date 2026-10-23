@@ -1,5 +1,5 @@
 import Exec.Generated.Types
-import Exec.Spec.Events
+import Exec.Spec.Steps
 
 namespace Exec.Platform.Recording
 open Aeneas Aeneas.Std SpecExt
@@ -33,10 +33,4 @@ theorem returned {α : Type} (operation : Result α) (events : α → List HostE
   · rintro ⟨operationEq,rfl⟩
     simp only [run,operationEq,bind_ok]
 
-/-- Each invocation starts its own log; an atomic host callback's nested
-invocations are not implicitly inserted into the caller's list. -/
-theorem starts_empty {α : Type} (operation : Result α) (events : α → List HostEvent)
-    (answer : α) (result : operation = .ok answer) :
-    run operation events [] = .ok (answer,events answer) := by
-  simp only [run,result,bind_ok,List.nil_append]
 end Exec.Platform.Recording

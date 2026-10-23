@@ -1,4 +1,3 @@
-import Exec.Code.Body.Reader.Common.ReaderEnterWasm1
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
 import Exec.Code.Body.Reader.Common.ReaderValues
 namespace Exec.Code
@@ -6,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Live Wasm 2 entry exposes the full physical prefix below its block parameters and condition. -/
 theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val) :
@@ -35,30 +34,4 @@ theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins ou
     exact concreteStack_append.mpr ⟨concreteStack_append.mpr ⟨knownParts.1, remainingKnown⟩,
       (concreteStack_iff _).mpr ⟨ins, rfl⟩⟩
 
-/-- Wasm 1 blocks have no parameters; IF alone removes a condition before the child begins. -/
-theorem ReaderEnterPostWasm1.stacks {data env ctx bodyBt st out form bt remaining token}
-    {p : Wasm1.Pending data env ctx bodyBt st}
-    (post : ReaderEnterPostWasm1 p out form bt remaining token)
-    (live : p.current.ctrl.polymorphic_base = false) (known : ConcreteStack st.vals.val) :
-    ∃ front : List valtype,
-      Sequence.stackTypes st.vals.val = front ++ form.inputs ∧
-      Sequence.stackTypes out.vals.val = front ∧ ConcreteStack out.vals.val := by
-  obtain ⟨C, outer, spine, header, position, typed, controls, old⟩ := id p.opened
-  have old' : st.vals.val = p.parents.flatMap Wasm1.Frames.Saved.vals ++ p.current.vals := by
-    simpa only [wasm1_spine_values spine] using old
-  have knownParts := concreteStack_append.mp (old' ▸ known)
-  have transfer := post.popped
-  rw [live] at transfer
-  have remainingKnown := concrete_stack_transfer knownParts.2 transfer
-  have before := realized_concrete_types knownParts.2 (transfer _ (Sequence.realizes_default false remaining))
-  obtain ⟨C', outer', spine', header', position', typed', controls', new⟩ := post.opened
-  have new' : out.vals.val = p.parents.flatMap Wasm1.Frames.Saved.vals ++ remaining := by
-    simpa [wasm1_spine_values spine', Wasm1.Frames.Saved.fresh, List.flatMap_append] using new
-  refine ⟨Sequence.stackTypes (p.parents.flatMap Wasm1.Frames.Saved.vals) ++ Sequence.stackTypes remaining, ?_, ?_, ?_⟩
-  · simp only [old', Sequence.stackTypes, List.map_append] at before ⊢
-    simpa [List.append_assoc, Sequence.stackTypes] using
-      congrArg (Sequence.stackTypes (p.parents.flatMap Wasm1.Frames.Saved.vals) ++ ·) before.symm
-  · simp [new', Sequence.stackTypes]
-  · rw [new']
-    exact concreteStack_append.mpr ⟨knownParts.1, remainingKnown⟩
 end Exec.Code

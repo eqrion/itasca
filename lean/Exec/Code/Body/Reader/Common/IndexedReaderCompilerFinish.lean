@@ -1,14 +1,14 @@
-import Exec.Code.Body.Control.Table.StructuredCompiledBodyWithTables
+import Exec.Code.Body.Control.Table.StructuredCompiledBody
 import Exec.Code.Local.Control.Common.IndexedFunctionAssembly
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The final executable check turns a completed actual body compilation into
 its retained source certificate, with the original function-start metadata. -/
-theorem StructuredCompiledBodyWithTables.finish {A : Type} (ops : runtime.platform.Alloc A)
+theorem StructuredCompiledBody.finish {A : Type} (ops : runtime.platform.Alloc A)
     {initial final : runtime.compiler.FunctionCompiler A}
     {emit types functions params declared results source}
-    (body : StructuredCompiledBodyWithTables final.function.jump_tables.val emit initial final types functions results (params ++ declared) source)
+    (body : StructuredCompiledBody final.function.jump_tables.val emit initial final types functions results (params ++ declared) source)
     (signature : types[initial.function.type_index.val]? = some ⟨.mk_list params, .mk_list results⟩)
     (locals : initial.function.locals.val.map Translate.valueType = params ++ declared)
     (parameterSlots : initial.function.param_slots.val = slots params)
@@ -17,7 +17,7 @@ theorem StructuredCompiledBodyWithTables.finish {A : Type} (ops : runtime.platfo
     (validated : core.result.Result Unit error.Error)
     (compiled : runtime.bytecode.CompiledFunction) (budget : runtime.compiler.Budget A)
     (accepted : runtime.compiler.FunctionCompiler.finish ops final validated = .ok (.Ok compiled, budget)) :
-    ∃ epilogue, StructuredFunctionCodeWithTables emit types functions params declared results source compiled epilogue := by
+    ∃ epilogue, StructuredFunctionCode emit types functions params declared results source compiled epilogue := by
   obtain ⟨epilogue, stable, empty, code, ⟨src, count, srcWords, fetched⟩, ending, bound⟩ := body
   have sourceEq : src = initial.function.local_slots := by
     apply UScalar.eq_of_val_eq

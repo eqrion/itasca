@@ -46,7 +46,7 @@ theorem IndexedTableReaderCompilerPointWasm2.step_available_from_source {A : Typ
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have progress := code.step_profile.accepted_progress_wasm2 recorder data env ⟨sourceLocals,ft.results⟩ index
+  have progress := code.step_profile.accepted_progress recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2
     st out before after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance reference
   have liftOrdinary

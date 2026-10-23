@@ -16,8 +16,6 @@ theorem DormantFrame.entered {frame} (live : frame.entry_reachable = true) : Dor
 theorem DormantFrame.fresh {frame} (ends : frame.end_reachable = false) (fixups : frame.fixups.val = []) :
     DormantFrame frame := fun _ => ⟨ends, fixups⟩
 
-theorem DormantFrames.empty : DormantFrames [] := by simp [DormantFrames]
-
 theorem DormantFrames.push {frames} (clean : DormantFrames frames) (frame : runtime.compiler.Frame)
     (fresh : DormantFrame frame) : DormantFrames (frames ++ [frame]) := by
   intro other member
@@ -38,38 +36,9 @@ theorem DormantFrames.record_branch {frames} (clean : DormantFrames frames)
   · exact clean other old
   · exact DormantFrame.entered entered
 
-theorem DormantFrame.begin_else {frame} (clean : DormantFrame frame) (normal : Bool)
-    (site : Usize) (fixups : alloc.vec.Vec Usize)
-    (live : normal = true → frame.entry_reachable = true)
-    (appended : fixups.val = frame.fixups.val ++ (if normal then [site] else [])) :
-    DormantFrame {frame with kind := .Else, if_pc := none, end_reachable := frame.end_reachable || normal, fixups} := by
-  intro dead
-  change frame.entry_reachable = false at dead
-  have inactive : normal = false := by
-    cases normal with
-    | false => rfl
-    | true => have impossible := live rfl; simp [dead] at impossible
-  obtain ⟨ends, holes⟩ := clean dead
-  simp [inactive, ends, appended, holes]
-
 theorem DormantFrames.replace_last {frames frame} (clean : DormantFrames (frames ++ [frame]))
     (next : runtime.compiler.Frame) (fresh : DormantFrame next) : DormantFrames (frames ++ [next]) :=
   clean.pop.push next fresh
-
-/-- END cannot make an unentered scope reachable. In particular, an unreachable
-IF cannot gain an implicit else continuation merely from its syntactic kind. -/
-theorem DormantFrame.exit_entered {frame} (clean : DormantFrame frame) (reachable : Bool)
-    (current : reachable = true → frame.entry_reachable = true)
-    (exit : scopeExitLive reachable frame = true) : frame.entry_reachable = true := by
-  cases entered : frame.entry_reachable with
-  | true => rfl
-  | false =>
-    have ends := (clean entered).1
-    have dead : reachable = false := by
-      cases reachable with
-      | false => rfl
-      | true => have impossible := current rfl; simp [entered] at impossible
-    cases kind : frame.kind <;> simp [scopeExitLive, dead, ends, entered, kind] at exit
 
 /-- The complete live prefix supplies the selected frame's entry liveness;
 therefore adding a branch preserves dormant-frame cleanliness. -/

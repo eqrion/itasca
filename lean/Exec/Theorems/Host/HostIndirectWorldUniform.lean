@@ -5,13 +5,13 @@ import Exec.Theorems.Composition.Eventful.EventfulWorldReinterpret
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 open Exec.Interp.StructuredMachine
-theorem step_indirect_host_world_uniform {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem step_indirect_host_world_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s, Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s, Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
@@ -28,10 +28,10 @@ theorem step_indirect_host_world_uniform {M P F A : Type} {emission : FunctionEm
     (moduleEq : f.module=Store.decodeInstance store inst)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
@@ -44,15 +44,15 @@ theorem step_indirect_host_world_uniform {M P F A : Type} {emission : FunctionEm
     (externs : ∀p args results answer,hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
     (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
-    let before : EventfulWorld emission allowed M P view expected :=
+    let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
         raw.pc.val,false,machine,certify code store valid,owned⟩⟩
     runtime.interp.step memory hooks floats allocator exec store platform
-      ⦃ out => out.1=.Ok () → ∃ next : EventfulWorld emission allowed M P view expected,
+      ⦃ out => out.1=.Ok () → ∃ next : EventfulWorld M P view expected,
         Inv next.code next.machine.store ∧ out=(.Ok (),next.machine.exec,next.machine.store,next.machine.platform) ∧
         UniformWorldTransition memory hooks floats allocator before (stepHostEvents exec store out) next ⦄ := by
-  let before : EventfulMachine emission allowed M P view code expected :=
+  let before : EventfulMachine M P view code expected :=
     ⟨store,exec,platform,
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
       raw.pc.val,false,machine,certify code store valid,owned⟩
@@ -71,7 +71,7 @@ theorem step_indirect_host_world_uniform {M P F A : Type} {emission : FunctionEm
     change afterPlatform=platform at samePlatform
     subst afterStore
     subst afterPlatform
-    let final : EventfulMachine emission allowed M P view code expected :=
+    let final : EventfulMachine M P view code expected :=
       ⟨store,afterExec,platform,before.source,finalPC,false,resumed,certify code store valid,owned⟩
     have edge : EventfulTransition memory hooks floats allocator before [] final :=
       ⟨actual,(simulation.widen program.fetchBound).eventful,

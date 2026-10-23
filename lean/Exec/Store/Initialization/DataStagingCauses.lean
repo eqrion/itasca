@@ -32,13 +32,13 @@ theorem data_staging_resource_loop {M A : Type}
     (startBound : start.val ≤ inst.module.module.tail.data.val.length)
     (storeCapacity : store.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
     (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max) :
-    runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store (.Ok ()) start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store (.Ok ()) start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧
         (∀ error, finalStatus = .Err error → DataStagingCause memory allocator store instIndex start error) ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting after) ∧
         InitializerFunctionMetadataAt store inst after instIndex ∧ InitializerContext after instIndex inst.module ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop9
+  unfold runtime.store.instantiate.Store.prepare_instance_loop9
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.val.length - state.2.2.val)
     (fun state =>
       (state.2.1 = .Ok () → PreparationCalls (dataStageCall memory allocator instIndex) store start state.1 state.2.2) ∧
@@ -53,7 +53,7 @@ theorem data_staging_resource_loop {M A : Type}
   · rintro ⟨current, result, index⟩ ⟨trace, causes, hstaged, hobjects, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, hstoreCapacity⟩
     dsimp only at hstaged hobjects haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity hstoreCapacity ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop9.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,

@@ -1,7 +1,5 @@
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Module.Completeness
-import Itasca.Handler.ScalarConst
-import Itasca.Binary.ModuleUnique
 import Itasca.Examples.Module.Support
 
 /-!

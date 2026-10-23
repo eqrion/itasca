@@ -24,8 +24,8 @@ theorem recordedInstantiateTail_erase {M P F A : Type}
     (identity : runtime.InstanceAddr) (store : runtime.store.Store M) (platform : P)
     (prior : List HostEvent) :
     (do let (out,_) ← recordedInstantiateTail memory hooks floats allocator identity store platform prior
-        Result.ok out) = instantiate_tail memory hooks floats allocator identity store platform := by
-  unfold recordedInstantiateTail instantiate_tail
+        Result.ok out) = runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false := by
+  unfold recordedInstantiateTail runtime.store.instantiate.Store.commit_instance
   simp only [Std.bind_assoc,Std.uncurry]
   apply congrArg (Std.bind _)
   funext answer
@@ -59,10 +59,20 @@ theorem recordedInstantiateInner_erase {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P) (committed : Bool) (prior : List HostEvent) :
     (do let (out,_) ← recordedInstantiateInner memory hooks floats allocator store module imports platform committed prior
         Result.ok out) = runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator store module imports platform committed := by
-  unfold recordedInstantiateInner
-  rw [instantiateInnerAtTail_bind]
-  simp only [bind_ok,recordedInstantiateTail_erase]
-  exact instantiateInnerAtTail_original ..
+  unfold recordedInstantiateInner runtime.store.instantiate.Store.instantiate_inner
+  simp only [Std.bind_assoc]
+  apply congrArg (Std.bind _)
+  funext prepared
+  obtain ⟨result, staged, after⟩ := prepared
+  simp only [uncurry_apply_pair]
+  cases result with
+  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from]
+  | Ok prepared =>
+    obtain ⟨identity, items⟩ := prepared
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.bind_assoc]
+    apply congrArg (Std.bind _); funext charged
+    exact recordedInstantiateTail_erase ..
 
 theorem recordedInstantiateWith_erase {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)

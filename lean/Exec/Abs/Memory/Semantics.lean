@@ -69,23 +69,6 @@ theorem Load.source_step (op : Load) (s : _root_.store) (f : frame) (argument : 
       (by cases ty <;> cases width <;> exact operationWf) bytesWf
     cases ty <;> cases width <;> exact source
 
-theorem Store.payload_length (op : Store) (value : num_) (valid : wf_num_ op.type value) :
-    (op.payload value).length = op.bytes := by
-  cases op with
-  | full ty =>
-    cases valid with
-    | num__case_0 kind bits present bounded same =>
-      change ty = numtype_Inn kind at same
-      subst ty
-      cases kind <;> simp [Store.payload,Store.bytes,nbytes_,numtype_Inn,sizenn,
-        size,valtype_numtype,ibytes_,SpecExt.Builtins.integerBytes_length]
-    | num__case_1 kind number bounded same =>
-      change ty = numtype_Fnn kind at same
-      subst ty
-      cases kind <;> simp [Store.payload,Store.bytes,nbytes_,numtype_Fnn,sizenn,
-        size,valtype_numtype,fbytes_,SpecExt.Builtins.integerBytes_length]
-  | packed ty width => simp [Store.payload,Store.bytes,SpecExt.Builtins.integerBytes_length]
-
 /-- Scalar stores use the exact byte payload and generated bounds trap. -/
 theorem Store.source_step (op : Store) (s : _root_.store) (f : frame) (argument : memarg)
     (address : Nat) (value : num_) (storeWf : wf_store s) (frameWf : wf_frame f)

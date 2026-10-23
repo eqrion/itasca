@@ -71,11 +71,6 @@ theorem stream.find_code_region.spec (bytes : Slice U8) :
   simpa [stream.find_code_region] using
     stream.find_code_region_loop.spec bytes 8#usize
 
-theorem stream.find_code_region.total (bytes : Slice U8) :
-    ∃ result, stream.find_code_region bytes = .ok result := by
-  obtain ⟨result, hr, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec bytes)
-  exact ⟨result, hr⟩
-
 theorem stream.find_code_region.bounds (bytes : Slice U8) (first last : Usize)
     (h : stream.find_code_region bytes = .ok (first, last)) :
     first.val ≤ last.val ∧ last.val ≤ bytes.length := by

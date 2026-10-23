@@ -4,14 +4,11 @@ import Exec.Interp.Relations.ChosenControlPoint
 import Exec.Interp.Core.Linear
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.StructuredMachine.LinearContinuation
-import Exec.Interp.StructuredMachine.FloatHeads
 import Exec.Interp.Numeric.Float.FloatFetch
 import Exec.Abs.Float.Transition
 import Exec.Interp.Relations.ControlPoint
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Float
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem step_float_chosen_structured {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (numericChoice : choices.numeric=Spec.firstNumericChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -30,14 +27,14 @@ theorem step_float_chosen_structured {choices : Spec.SourceChoices} (admissible 
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := op.source :: after } compiled C targets next output) :
+    (point : FramePoint s raw { f with code := op.source :: after } compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ((out.1 = .Ok () ∧ ∃ (pc : U32) (g : Abs.AFrame),
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        FramePoint emission s { raw with pc := pc } g compiled C targets next output ∧
+        FramePoint s { raw with pc := pc } g compiled C targets next output ∧
         Abs.ATyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false
           ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ ⟨s, ambient, g :: rest, []⟩ ∧
@@ -52,9 +49,9 @@ theorem step_float_chosen_structured {choices : Spec.SourceChoices} (admissible 
           ⟨⟨s, ambient⟩, [.TRAP]⟩)) ⦄ := by
   have linear : linearSource op.source = true := by
     cases op <;> rfl
-  rcases structuredCodeWithTables_linear_inv linear point.code.current with skip | branch
+  rcases structuredCode_linear_inv linear point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s {raw with pc := target}
+    have targetPoint : FramePoint s {raw with pc := target}
         {f with code := op.source :: after} compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels,⟨continuation,point.code.targets,point.code.normal,point.code.exit,point.code.root⟩⟩
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
@@ -70,7 +67,7 @@ theorem step_float_chosen_structured {choices : Spec.SourceChoices} (admissible 
     · rw [exactState]
       exact SlotPrefix.refl _ _
   · obtain ⟨middle,emitted,tail,head,fragment,continuation⟩ := branch
-    obtain ⟨stack,left,right,shape,middleEq,emittedEq,leftPos,rightPos⟩ := (FloatHeads.project (.scalar op) head).float_inv op
+    obtain ⟨stack,left,right,shape,middleEq,emittedEq,leftPos,rightPos⟩ := (FloatHeads.project (.float op) head).float_inv op
     have frameTyped : Abs.FrameTyped s {f with code := op.source :: after} [] := by
       cases typed.frames with | cons h _ => exact h
     obtain ⟨front,a,b,split,first,second,frontWf,heights⟩ := op.typed_operands frameTyped
@@ -86,7 +83,7 @@ theorem step_float_chosen_structured {choices : Spec.SourceChoices} (admissible 
     have endpoint : tail = raw.pc.val + 1 := by
       obtain ⟨_,_,_,_,h⟩ := fragment
       simpa only [emittedEq,List.length_singleton] using h
-    have remaining : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    have remaining : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
         compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType ++ [valtype_numtype op.output]) after
         (raw.pc.val+1) next output := by
       simpa only [endpoint,middleEq,frontTypes] using continuation

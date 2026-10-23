@@ -5,7 +5,7 @@ set_option maxHeartbeats 2000000
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_saturating_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (ctx : code.Context) (subopcode : U32) (next : Usize)
     (operation : Numeric.Operation)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -97,55 +97,10 @@ theorem float_saturating_reader_facts {A : Type} (ops : runtime.platform.Alloc A
           | S => exact ⟨6#u32, _, .i64_trunc_sat_f64_s, rfl, by decide, rfl, rfl, rfl, rfl, rfl, rfl⟩
           | U => exact ⟨7#u32, _, .i64_trunc_sat_f64_u, rfl, by decide, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
-/-- Successful extended dispatch exposes the exact unsigned LEB bytes and
-physical conversion before the callback. -/
-theorem saturating_success {V : Type} (visitor : code.OpVisitor V)
-    (before after : V) (st out : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context)
-    (accepted : code.step_extended visitor st data env ctx 0xfc#u8 before = .ok (.Ok (), out, after)) :
-    ∃ subopcode next operation, Leb128.Decoded data st.pos subopcode next ∧
-      Wasm2.NumericExtensions.saturatingMeaning subopcode = some operation ∧
-      code.read_conversion {st with pos := next} operation.input operation.output = .ok (.Ok (),out) ∧
-      code.visit_saturating visitor before out subopcode = .ok (.Ok (),after) := by
-  obtain ⟨result, read, parsed⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.pos)
-  rw [code.step_extended.prefixed] at accepted
-  simp only [Wasm2.prefixedStep, read, bind_ok] at accepted
-  cases result with
-  | Err error => simp at accepted
-  | Ok pair =>
-    obtain ⟨subopcode,next⟩ := pair
-    cases meaning : Wasm2.NumericExtensions.saturatingMeaning subopcode with
-    | none => simp [meaning] at accepted
-    | some operation =>
-      simp only [meaning] at accepted
-      obtain ⟨value, converted, callback⟩ := reader_run_success _ _ _ _ _ accepted
-      cases value
-      exact ⟨subopcode,next,operation,parsed,meaning,converted,callback⟩
-
-/-- Reading an accepted miscellaneous prefix recovers its entire subopcode
-encoding; the numeric case delegates with precisely the original cursor. -/
-theorem misc_prefix_success {V : Type} (visitor : code.OpVisitor V)
-    (before after : V) (st out : code.BodyState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfc#u8 before = .ok (.Ok (), out, after)) :
-    ∃ subopcode next, Leb128.Decoded data st.core.pos subopcode next ∧
-      (subopcode.val < 8 → code.step_extended visitor st.core data env ctx 0xfc#u8 before = .ok (.Ok (),out.core,after)) := by
-  obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfc#u8 before after (by decide) accepted
-  obtain ⟨result,read,parsed⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
-  rw [code.step_wasm2.prefixed] at run
-  simp only [Wasm2.wasm2PrefixedStep,read,bind_ok] at run
-  cases result with
-  | Err error => simp at run
-  | Ok pair =>
-    obtain ⟨subopcode,next⟩ := pair
-    refine ⟨subopcode,next,parsed,?_⟩
-    intro bound
-    simpa [bound] using run
-
 /-- Saturating float lowering consumes the canonical complete LEB immediate
 and advances the same pending source zipper as the actual profile reader. -/
 theorem reader_float_saturating_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (op : Abs.Float.Instruction)

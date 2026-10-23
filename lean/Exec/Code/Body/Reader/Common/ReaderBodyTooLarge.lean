@@ -1,4 +1,4 @@
-import Itasca.Profile.BodyExecution
+import Itasca.Wasm2.EmptyVisitorLoop
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -6,10 +6,8 @@ open Aeneas Aeneas.Std Itasca
 theorem reader_body_too_large {V} (visitor : code.OpVisitor V) (profile : ValidationProfile)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (value : V)
     (large : limits.MAX_FUNCTION_BYTES.val < data.length) :
-    CodeEntry.runBody visitor profile data env ctx index value =
+    code.validate_body_with visitor data env ctx index profile value =
       .ok (.Err .BodyTooLarge,value) := by
   have guard : Slice.len data > limits.MAX_FUNCTION_BYTES := by simpa using large
-  cases profile <;>
-    simp only [CodeEntry.runBody,code.validate_body_with,code.validate_multi_value_body_with,
-      code.validate_body_with_profile,guard,↓reduceIte]
+  simp only [code.validate_body_with,guard,↓reduceIte]
 end Exec.Code

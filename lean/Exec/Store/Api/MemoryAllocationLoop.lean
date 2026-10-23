@@ -23,7 +23,7 @@ theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.M
     (ordered : AddressOrder base initial store.memories.length (inst.memories.val.map fun address => address.index.val))
     (matching : AllocationPrefix (fun ty => Spec.allocationMemory (Itasca.EnvTranslation.memType ty))
       seed.module.module.env.mem_types.val allocationStart original (store.memories.val.map (decodeMemory view)) start.val) :
-    runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator store (.Ok ()) start inst
+    runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator store (.Ok ()) start inst
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with memories := after.memories, memory_bytes := after.memory_bytes} ∧ next = {seed with memories := next.memories} ∧
         StagedPrefix before after ∧ objectCount after ≤ Usize.max ∧
@@ -34,7 +34,7 @@ theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.M
           seed.module.module.env.mem_types.val allocationStart original (after.memories.val.map (decodeMemory view))
           seed.module.module.env.mem_types.val.length) ⦄ := by
   have capacity := seed.module.module.env.mem_types.property
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop6
+  unfold runtime.store.instantiate.Store.prepare_instance_loop6
   apply loop.spec_decr_nat (fun state => seed.module.module.env.mem_types.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with memories := state.1.memories, memory_bytes := state.1.memory_bytes} ∧
       state.2.2.2 = {seed with memories := state.2.2.2.memories} ∧ StagedPrefix before state.1 ∧
@@ -51,7 +51,7 @@ theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.M
     have source : currentInst.module = seed.module := by
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop6.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.mem_types, Itasca.module.Env.impl.mem_types, source, bind_ok]
     split
@@ -121,7 +121,7 @@ theorem memory_allocation_success {M A : Type} (memory : runtime.platform.Memory
     (objectBound : objectCount before ≤ Usize.max)
     (issued : ∀ address ∈ inst.memories.val, address.index.val < before.memories.length)
     (count : inst.memories.length = start.val)
-    (run : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator before (.Ok ()) start inst =
+    (run : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator before (.Ok ()) start inst =
       .ok (typeParts after (.Ok ()) next)) :
     after.memories.val.map (decodeMemory view) = before.memories.val.map (decodeMemory view) ++
       (inst.module.module.env.mem_types.val.drop start.val).map

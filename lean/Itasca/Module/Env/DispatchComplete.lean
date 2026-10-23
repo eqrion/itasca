@@ -118,20 +118,4 @@ theorem module.decode_env_section.profile_complete (data : Slice U8) (pos : Usiz
     refine ⟨{env with data_count := some idx}, by simpa [module.decode_env_section, global_simps] using hread, ?_⟩
     simpa [update, hcount, sectionRank] using (Effect.dataCount (before := decls) rfl rfl hbytes)
 
-/-- `module.decode_env_section.profile_complete` for Wasm 1.0. -/
-theorem module.decode_env_section.complete (data : Slice U8) (pos : Usize) (id : U8)
-    (env : module.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize)
-    (hlo : 1 ≤ id.val) (hhi : id.val ≤ 9)
-    (hb : At (Payload raw id.val) data pos () next)
-    (hv : SectionValid raw id.val env) (hready : Ready raw (id.val - 1) decls env)
-    (hbound : Bounded env pos.val)
-    (hallowed : ModuleTypesAllowed .Wasm1 {raw with codes := [], data := []}) :
-    ∃ result, module.decode_env_section data pos id env .Wasm1 = .ok (.Ok next, result) ∧
-      Effect data pos env decls id next result (update raw id.val decls) := by
-  have hrank := sectionRank_early (id := id) (by omega)
-  simpa only [hrank] using module.decode_env_section.profile_complete data pos id env decls raw next .Wasm1
-    (by simpa [hrank] using hlo) (by simpa [hrank] using (show id.val ≤ 10 by omega))
-    (by simpa [hrank] using hb) (by simpa [hrank] using hv)
-    (by simpa [hrank] using hready) hbound hallowed
-
 end Itasca

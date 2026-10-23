@@ -61,19 +61,6 @@ theorem stream.frame_entry.spec (data : Slice U8) (pos index offset : Usize) :
           simp only [bind_ok, WP.spec_ok]
           exact ⟨content, finish, hp, rfl, hsp.1, hcp.1, hfp.1, hfp.2⟩
 
-theorem stream.frame_entry.total (data : Slice U8) (pos index offset : Usize) :
-    ∃ r, stream.frame_entry data pos index offset = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (stream.frame_entry.spec data pos index offset)
-  exact ⟨r, hr⟩
-
-/-- A successful `stream.frame_entry` returns a frame of the declared extent. -/
-theorem stream.frame_entry.sound (data : Slice U8) (pos index offset : Usize)
-    (entry : stream.CodeEntry)
-    (h : stream.frame_entry data pos index offset = .ok (.Ok entry)) :
-    StreamFraming.EntryFrame data pos index offset entry := by
-  have hs := stream.frame_entry.spec data pos index offset
-  simpa [h] using hs
-
 /-- A declared extent within the module offset cap can always be framed. -/
 theorem stream.frame_entry.complete (data : Slice U8) (pos index offset content finish : Usize)
     (hext : ModuleCode.Extent data pos content finish)

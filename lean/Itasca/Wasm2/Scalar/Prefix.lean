@@ -1,6 +1,5 @@
 import Itasca.Wasm2.Prefix
 import Itasca.Wasm2.Scalar.Total
-import Itasca.Handler.EnvMemory
 
 /-!
 # Scalar typed prefixes

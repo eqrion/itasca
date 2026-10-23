@@ -1,14 +1,15 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Interp.StructuredMachine.SuspendedPoint
-import Exec.Interp.Calls.CallReturnPoint
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.StructuredPoint
 namespace Exec.Interp.StructuredMachine
 open Aeneas.Std
 variable {jumpTables : List Aeneas.Std.U32}
 variable {emission : ContextEmission} [OrdinaryHeads emission]
 theorem codeRel_return_inv {C returns locals code labels stack pc next output after}
-    (relation : Code.StructuredCodeWithTables (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.RETURN :: after) pc next output) :
+    (relation : Code.StructuredCode (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.RETURN :: after) pc next output) :
     (∃ target, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.RETURN :: after) target.val next output) ∨
+      Code.StructuredCode (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.RETURN :: after) target.val next output) ∨
     (∃ front src count,
       stack = front ++ returns ∧ src.val = Code.slots locals + Code.slots front ∧
       count.val = Code.slots returns ∧ code[pc]? = some (.Return src count)) := by
@@ -17,15 +18,14 @@ theorem codeRel_return_inv {C returns locals code labels stack pc next output af
   | skip forward instruction rest => exact Or.inl ⟨_, forward, instruction, rest⟩
   | return_ source size instruction remaining scope => exact Or.inr ⟨_, _, _, rfl, source, size, instruction⟩
 
-
 /-- Static return stack types identify the actual result suffix and every
 copied word coordinate. -/
 theorem codeRel_return_values {C returns code labels pc next output after}
     (locals values : List val)
-    (relation : Code.StructuredCodeWithTables (emission C) C.TYPES C.FUNCS returns (locals.map Code.valueType) code jumpTables labels
+    (relation : Code.StructuredCode (emission C) C.TYPES C.FUNCS returns (locals.map Code.valueType) code jumpTables labels
       (values.map Code.valueType) (.RETURN :: after) pc next output) :
     (∃ target, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables (emission C) C.TYPES C.FUNCS returns (locals.map Code.valueType) code jumpTables labels
+      Code.StructuredCode (emission C) C.TYPES C.FUNCS returns (locals.map Code.valueType) code jumpTables labels
         (values.map Code.valueType) (.RETURN :: after) target.val next output) ∨
     (∃ front results src count,
       values = front ++ results ∧ results.map Abs.valueType = returns ∧

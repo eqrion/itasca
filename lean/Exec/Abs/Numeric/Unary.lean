@@ -55,23 +55,4 @@ theorem unary_pure (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_In
   · exact wf_admininstr_instr (.instr_case_14 _ _ (.unop__case_0 _ _ _ rfl))
   · exact wf_admininstr_val (integer_val_wf ty _ (word_bound ty (unary ty op bits)))
 
-theorem unary_simulation (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (baseValues : List val)
-    (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_Inn ty)))
-    (hs : wf_store s) (ha : wf_frame ambient) (hf : wf_frame f.toFrame)
-    (hl : LabelsWf f.labels) (hv : Forall wf_val baseValues)
-    (hc : Forall wf_instr after) (hr : Forall FrameWf rest)
-    (heights : ∀ label ∈ f.labels, label.height ≤ baseValues.length) :
-    StepH (decode ⟨s, ambient,
-      { f with code := .UNOP (numtype_Inn ty) (.mk_unop__0 ty op) :: after, vals := baseValues ++ [integerVal ty bits.toNat] } :: rest, []⟩) []
-      (decode ⟨s, ambient,
-      { f with code := after, vals := baseValues ++ [integerVal ty (unary ty op bits).toNat] } :: rest, []⟩) := by
-  apply pure_stack_simulation s ambient f rest _ after baseValues _ _ hs ha hf hl hv hc hr heights
-  · intro value h; simp only [List.mem_singleton] at h; subst value
-    exact integer_val_wf ty _ (word_bound ty bits)
-  · intro value h; simp only [List.mem_singleton] at h; subst value
-    exact integer_val_wf ty _ (word_bound ty (unary ty op bits))
-  · exact .instr_case_14 _ _ (.unop__case_0 _ _ _ rfl)
-  · exact unary_pure ty op bits
-
 end Exec.Abs.Numeric

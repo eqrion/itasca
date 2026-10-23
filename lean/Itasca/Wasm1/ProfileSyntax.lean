@@ -1,25 +1,17 @@
-import Itasca.Binary.Wasm1.Syntax
+import Itasca.Support.ControlTranslation
 
 /-!
 # Wasm 1.0 semantic profile
 
 The Wasm 1.0 restriction on instruction trees that the SpecTec Wasm 2.0 typing rules do not
 state. `Wasm1.Instruction` and `Wasm1.Instructions` require every `br_table` to have identical
-target signatures, and `Wasm1.Environment` bounds the result counts of the signature tables the
-body validator consults. The predicates depend on the label context only
+target signatures. The predicates depend on the label context only
 (`Wasm1.Instructions.congr_labels`).
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm1
-
-/-- The body API consults the function and type signature tables of `env` directly. Wasm 1.0
-permits at most one result in each signature. Coherence of these tables with the module is a
-separate module-level obligation. -/
-structure Environment (env : module.Env) : Prop where
-  funcs : ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1
-  types : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1
 
 /-- Wasm 1.0 branch tables require identical target signatures. The generated Wasm 2.0 typing
 rule only requires a common subtype, which is weaker in unreachable code. Label bounds are
@@ -29,7 +21,8 @@ def SameTargets (C : context) (targets : List labelidx) (fallback : labelidx) : 
     C.LABELS[proj_uN_0 target]! = C.LABELS[proj_uN_0 fallback]!
 
 /-- Conditions on a non-structured instruction. Binary provenance already restricts the opcode
-set. Structured instructions are excluded and must use the recursive constructors below. -/
+set and block types. Structured instructions are excluded and must use the recursive
+constructors below, which admit the zero-or-one-result block types of Wasm 1.0. -/
 def Leaf (C : context) : instr → Prop
   | .BR_TABLE targets fallback => SameTargets C targets fallback
   | .BLOCK _ _ | .LOOP _ _ | .IFELSE _ _ _ => False
@@ -40,16 +33,16 @@ mutual
 mention execution. -/
 inductive Instruction : context → instr → Prop where
   | leaf (C : context) (op : instr) : Leaf C op → Instruction C op
-  | block (C : context) (bt : code.BlockType) (body : List instr) :
-      Instructions (Control.labelContext (Control.resultTypes bt) ++ C) body →
-      Instruction C (.BLOCK (Control.blockType bt) body)
-  | loop (C : context) (bt : code.BlockType) (body : List instr) :
+  | block (C : context) (result : Option valtype) (body : List instr) :
+      Instructions (Control.labelContext result.toList ++ C) body →
+      Instruction C (.BLOCK (._RESULT result) body)
+  | loop (C : context) (result : Option valtype) (body : List instr) :
       Instructions (Control.labelContext [] ++ C) body →
-      Instruction C (.LOOP (Control.blockType bt) body)
-  | ifElse (C : context) (bt : code.BlockType) (yes no : List instr) :
-      Instructions (Control.labelContext (Control.resultTypes bt) ++ C) yes →
-      Instructions (Control.labelContext (Control.resultTypes bt) ++ C) no →
-      Instruction C (.IFELSE (Control.blockType bt) yes no)
+      Instruction C (.LOOP (._RESULT result) body)
+  | ifElse (C : context) (result : Option valtype) (yes no : List instr) :
+      Instructions (Control.labelContext result.toList ++ C) yes →
+      Instructions (Control.labelContext result.toList ++ C) no →
+      Instruction C (.IFELSE (._RESULT result) yes no)
 
 /-- The Wasm 1.0 restrictions hold for every instruction of a sequence. -/
 inductive Instructions : context → List instr → Prop where
@@ -66,26 +59,6 @@ theorem Instructions.append {C : context} {xs ys : List instr}
   | cons x xs ih =>
     cases hx with
     | cons h ht => exact .cons h (ih ht)
-
-theorem Instructions.append_iff {C : context} {xs ys : List instr} :
-    Instructions C (xs ++ ys) ↔ Instructions C xs ∧ Instructions C ys := by
-  constructor
-  · intro h
-    induction xs with
-    | nil => exact ⟨.nil C, h⟩
-    | cons x xs ih =>
-      cases h with
-      | cons hx ht =>
-        obtain ⟨hs, hy⟩ := ih ht
-        exact ⟨.cons hx hs, hy⟩
-  · rintro ⟨hx, hy⟩
-    exact hx.append hy
-
-theorem Instructions.singleton_iff {C : context} {op : instr} :
-    Instructions C [op] ↔ Instruction C op := by
-  constructor
-  · intro h; cases h with | cons hop _ => exact hop
-  · intro h; exact .cons h (.nil C)
 
 theorem Instruction.br_table_iff {C : context} {targets : List labelidx}
     {fallback : labelidx} :
@@ -123,9 +96,5 @@ theorem Instructions.congr_labels {C : context} {ops : List instr}
   case cons C op ops hop hops ih ihs =>
     intro D he
     exact .cons (ih D he) (ihs D he)
-
-theorem Instruction.congr_labels {C D : context} {op : instr}
-    (h : Instruction C op) (he : C.LABELS = D.LABELS) : Instruction D op :=
-  Instructions.singleton_iff.mp ((Instructions.singleton_iff.mpr h).congr_labels D he)
 
 end Itasca.Wasm1

@@ -14,7 +14,7 @@ theorem root_host_supported_resume {M : Type} (memory : runtime.platform.MemoryB
     (retained : FrameStorePrefix before after)
     (extension : Extend_store (Store.decodeStore view beforeCode before) (Store.decodeStore view afterCode after))
     (sourceTyped : Store_ok (Store.decodeStore view afterCode after))
-    (certified : CertifiedSupportedStore Executable.emission Abs.ExecutableInstr view afterCode after)
+    (certified : CertifiedSupportedStore view afterCode after)
     (ready : runtime.interp.Execution) (empty : ready.frames.val=[])
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
     (signature : Itasca.types.FuncType)
@@ -32,7 +32,7 @@ theorem root_host_supported_resume {M : Type} (memory : runtime.platform.MemoryB
         StepH ⟨⟨Store.decodeStore view beforeCode before,ambient⟩,vals args++[.CALL_ADDR address.index.val]⟩
           [.call address.index.val args (some (values.val.map sourceValue))]
           ⟨⟨Store.decodeStore view afterCode after,ambient⟩,vals (values.val.map sourceValue)⟩ ∧
-        StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+        StructuredMachine.Execution
           view afterCode after out.2 ⟨Store.decodeStore view afterCode after,ambient,[],values.val.map sourceValue⟩
           (signature.results.val.map sourceType) 0 false ∧
         Abs.Ownership.StatefulOwned (Store.ownershipBounds after)

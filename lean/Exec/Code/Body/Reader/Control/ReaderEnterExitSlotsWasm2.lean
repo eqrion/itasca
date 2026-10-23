@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.StructuredScopeEntryExitSlots
 import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
-import Exec.Code.Body.Callbacks.Calls.ScopeCallbackDormantInputs
+import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Body.Reader.Common.ReaderReachability
 
 namespace Exec.Code
@@ -10,12 +10,12 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 bounds from a reached source prefix, in live and unreachable code. -/
 theorem reader_enter_exit_slots_wasm2 {jumpTables : List U32}
     {emit : List valtype → instr → List Bytecode → List valtype → Prop}
-    {data env localTypes index st} (p : Wasm2.Pending data env localTypes index st)
+    {data env localTypes index st} (p : Wasm2.Pending data env .Wasm2 localTypes index st)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
     (parents : List SourceScope) (current : SourceScope)
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (reach : ReaderReachabilityWasm2 before.reachable parents current p.parents p.current)
     (signatures : SignatureSequence before.signatures.val env.types.val)

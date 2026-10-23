@@ -98,12 +98,10 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
         Ok(())
     }
     pub(super) fn patch(&mut self, pc: usize, target: u32) -> VisitResult {
-        match &mut self.function.code[pc] {
-            Instr::Jump { target: t }
-            | Instr::JumpIfZero { target: t, .. }
-            | Instr::JumpIfNonZero { target: t, .. } => *t = target,
-            _ => return Err(VisitError::OutOfMemory),
-        }
+        let patched = self.function.code[pc]
+            .retarget(target)
+            .ok_or(VisitError::OutOfMemory)?;
+        self.function.code[pc] = patched;
         Ok(())
     }
     pub(super) fn enter(

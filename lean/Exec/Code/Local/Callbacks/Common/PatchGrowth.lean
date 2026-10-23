@@ -2,29 +2,14 @@ import Exec.Code.Local.Callbacks.Common.CompilerFixupMetadata
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-private theorem code_update_length {A : Type} (before after : runtime.compiler.FunctionCompiler A)
-    (pc : Usize) (instruction : runtime.bytecode.Instr)
-    (result status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : Result.ok (result, {before with function := {before.function with
-      code := before.function.code.set pc instruction}}) = Result.ok (status, after)) :
-    after.function.code.val.length = before.function.code.val.length := by
-  have same := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-  subst after
-  simp
-
 theorem compiler_patch_code_length {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (pc : Usize) (target : U32)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.patch ops before pc target = .ok (status, after)) :
     after.function.code.val.length = before.function.code.val.length := by
-  unfold runtime.compiler.control.FunctionCompiler.patch at accepted
-  obtain ⟨⟨instruction, restore⟩, indexed, rest⟩ := bind_ok_inv _ _ _ accepted
-  rw [alloc.vec.Vec.index_mut_slice_index] at indexed
-  unfold alloc.vec.Vec.index_mut_usize at indexed
-  obtain ⟨value, _, indexed⟩ := bind_ok_inv _ _ _ indexed
-  have restoreEq := (Prod.mk.inj (Result.ok.injEq.mp indexed)).2
-  subst restore
-  cases instruction <;> exact code_update_length before after pc _ _ status rest
+  rcases compiler_patch_cases ops before after pc target status accepted with rfl | ⟨_, _, rfl, set⟩
+  · rfl
+  · simp [set]
 theorem compiler_fixups_code_length {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
     (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)

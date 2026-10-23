@@ -46,29 +46,4 @@ theorem supported_read_typing_preserved {s : store} {frame : _root_.frame} {cont
     apply table_get_typing_preserved environment components _ _ _ typed
     assumption
 
-theorem state_instructions_config_ok {s : store} {frame : _root_.frame} {context : _root_.context}
-    (state : State_ok ⟨s,frame⟩ context) {body : List admininstr} {output : List valtype}
-    (typed : Instrs_ok2 s context body (.mk_functype (.mk_list []) (.mk_list output))) :
-    Config_ok ⟨⟨s,frame⟩,body⟩ (.mk_list output) := by
-  have wf := instrs_ok2_wf typed
-  have stateWf : wf_state ⟨s,frame⟩ := by cases state; assumption
-  have frameWf : wf_frame frame := by cases stateWf; assumption
-  exact .mk_Config_ok _ _ _ _ context state
-    (.mk_Expr_ok2 _ _ _ _ typed wf.1 wf.2.1 wf.2.2) wf.2.1
-    (wf_config_make wf.1 frameWf wf.2.2) stateWf
-
-theorem supported_read_config_preserved {s : store} {frame : _root_.frame}
-    {before after : List admininstr} {types : resulttype}
-    (source : Step_read ⟨⟨s,frame⟩,before⟩ after) (scope : SupportedReadCode before)
-    (typed : Config_ok ⟨⟨s,frame⟩,before⟩ types) : Config_ok ⟨⟨s,frame⟩,after⟩ types := by
-  cases typed with
-  | mk_Config_ok _ _ _ output context state expression _ _ _ =>
-    have frameTyped : Frame_ok s frame context := by cases state; assumption
-    have storeTyped := state_ok_store state
-    have body : Instrs_ok2 s context before (.mk_functype (.mk_list []) (.mk_list output)) := by
-      cases expression
-      assumption
-    exact state_instructions_config_ok state
-      (supported_read_typing_preserved (.of_frame_ok frameTyped) (source_store_components storeTyped) source scope body)
-
 end Exec.Spec

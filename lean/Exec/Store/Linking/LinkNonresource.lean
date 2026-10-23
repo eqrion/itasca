@@ -45,14 +45,14 @@ theorem link_staging_nonresource {M : Type} (memory : runtime.platform.MemoryBuf
     (imports : Slice runtime.Extern)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed LinkFailure status)
-    {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports status index inst = .ok out) :
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop2 memory store imports status index inst = .ok out) :
     ErrorAllowed LinkFailure out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop2 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop2 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop2.body,
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop2.body,
       runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.types, Itasca.module.Env.impl.types, bind_ok] at run
     split at run
@@ -74,8 +74,8 @@ theorem link_staging_nonresource {M : Type} (memory : runtime.platform.MemoryBuf
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < count := by scalar_tac
         have nextAllowed := (link_import_nonresource memory store inst index external _ called).1
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop2 memory nextStore imports nextStatus nextIndex nextInst = .ok out := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop2, runtime.store.instantiate.Store.instantiate_inner_loop2.body,
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory nextStore imports nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop2, runtime.store.instantiate.Store.prepare_instance_loop2.body,
             runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
             module.Env.types, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl

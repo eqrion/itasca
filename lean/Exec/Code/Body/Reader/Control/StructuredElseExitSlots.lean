@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Checking.ElseExitSlotBounds
 
 namespace Exec.Code
@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Source THEN geometry provides the owned guard needed by actual ELSE in
 live, terminated, and unentered arms. -/
-theorem StructuredCompilerPrefixWithTables.else_exit_slots {A : Type}
+theorem StructuredCompilerPrefix.else_exit_slots {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {jumpTables emit initial compiler after types functions returns locals parents current raw position}
-    (invariant : @StructuredCompilerPrefixWithTables jumpTables emit A initial compiler types functions returns locals
+    (invariant : @StructuredCompilerPrefix jumpTables emit A initial compiler types functions returns locals
       parents current raw position)
     (state : code.OpIterState) (sourceBt : blocktype) (condition : U32)
     (form : current.form = .then_ sourceBt condition) (bt : signature.BlockType)

@@ -48,7 +48,7 @@ private theorem non_simd_instruction_monotone (before after : runtime.bytecode.C
   obtain ⟨slots,code,indirect,simd,constants,targets⟩ := growth
   cases instruction
   all_goals simp only [runtime.bytecode.Instr.simd,Result.ok.injEq,reduceCtorEq] at noSimd
-  all_goals simp only [runtime.bytecode.CompiledFunction.instruction_valid,
+  all_goals simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,
     runtime.bytecode.Instr.scalar,runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,
     runtime.bytecode.Instr.simd,slots_fit_arithmetic,bind_ok,lift,uncurry_apply_pair] at accepted ⊢
   all_goals simp_all only [bind_ok,ite_true,ite_false,Result.ok.injEq,decide_eq_true_eq]

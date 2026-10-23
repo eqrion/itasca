@@ -133,16 +133,6 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (stat
                     · simp
       · simp
 
-/-- Header termination requires only the reached source read to return an
-ordinary result; malformed headers and read errors remain covered. -/
-theorem stream.read_code_header.total {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env)
-    (htotal : StreamSource.CallbacksTotal source state) :
-    ∃ r, stream.read_code_header source state codeLen env = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (stream.read_code_header.spec source state codeLen env (fun _ => htotal.code_returns _ _))
-  exact ⟨r, hr⟩
-
 /-- Acceptance itself supplies the reached source callback. No premise is
 imposed on unrelated or unexecuted source calls. -/
 theorem stream.read_code_header.checked {S : Type} (source : stream.Source S) (state : S)

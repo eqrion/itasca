@@ -20,13 +20,6 @@ inductive ImportsAdded (initial : module.Env) : List module.Import → module.En
   | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
       ImportAdded before after entry profile → ImportsAdded initial (entries ++ [entry]) after profile
 
-/-- The result's imports are the initial imports followed by the added entries. -/
-theorem ImportsAdded.imports {profile env entries result} (h : ImportsAdded env entries result profile) :
-    result.imports.val = env.imports.val ++ entries := by
-  induction h with
-  | nil => simp
-  | snoc _ hadd ih => simpa [ih, List.append_assoc] using hadd.1
-
 /-- The profile allows the descriptor's table element type or global value type. Function and
 memory descriptors are always allowed. -/
 def ImportAllowed (profile : ValidationProfile) (desc : module.ImportDesc) : Prop :=

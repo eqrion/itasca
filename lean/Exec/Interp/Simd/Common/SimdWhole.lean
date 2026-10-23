@@ -19,12 +19,6 @@ theorem binary_lanes_eq (op : vvbinop) (a b : U128) :
   all_goals with_unfolding_all change ((Result.ok _) = _)
   all_goals rfl
 
-@[step] theorem binary_lanes (op : vvbinop) (a b : U128) :
-    runtime.interp.simd.bitwise_lanes (binaryOpcode op) a b ⦃ result =>
-      result.bv = Spec.Simd.binary op a.bv b.bv ⦄ := by
-  rw [binary_lanes_eq]
-  simp only [WP.spec_ok]
-
 @[step] theorem select_bits (a b c : U128) :
     runtime.interp.simd.select_bits a b c ⦃ result =>
       result.bv = (a.bv &&& c.bv) ||| (b.bv &&& ~~~c.bv) ⦄ := by
@@ -77,13 +71,5 @@ theorem binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
       (fun result => Result.ok (core.result.Result.Ok result, memory))) ⦃ _ ⦄
   step as ⟨value, valueEq⟩
   exact ⟨_, rfl, valueEq⟩
-
-@[step] theorem const_dispatch {F : Type} (floats : runtime.platform.FloatOps F)
-    (offset laneIndex : U32) (bits a b c : U128) (memory : Option (Slice U8)) :
-    runtime.interp.simd.simd floats 12#u32 offset laneIndex bits a b c memory
-      ⦃ result => result = (.Ok bits, memory) ⦄ := by
-  unfold runtime.interp.simd.simd
-  with_unfolding_all change (Result.ok (core.result.Result.Ok bits, memory)) ⦃ _ ⦄
-  simp only [WP.spec_ok]
 
 end Exec.Interp.Simd

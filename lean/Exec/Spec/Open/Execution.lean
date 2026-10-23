@@ -211,35 +211,4 @@ theorem Transition.preserves {H : Type} {model : HostModel H} {before after : St
     rw [←completed]
     exact OpenHost.Pending.completed_typed _ _ reply suspended.typed
 
-/-- Finite expanded histories include pending entries and nested observations;
-no completed outer event is synthesized while a host interaction is pending. -/
-inductive Trace {H : Type} (model : HostModel H) : Nat → State H → List Observation → State H → Prop
-  | nil (state) : Trace model 0 state [] state
-  | next {count first middle last events more} (step : Transition model first events middle)
-      (tail : Trace model count middle more last) : Trace model (count+1) first (events++more) last
-
-theorem Trace.preserves {H : Type} {model : HostModel H} {count : Nat}
-    {first last : State H} {events : List Observation} (trace : Trace model count first events last)
-    (held : first.Typed) : last.Typed ∧ Extend_store first.store last.store := by
-  induction trace with
-  | nil state => exact ⟨held,extend_store_refl _ (typed_store_wf held.1)⟩
-  | next step tail ih =>
-    obtain ⟨middle,head⟩ := step.preserves held
-    obtain ⟨last,more⟩ := ih middle
-    exact ⟨last,extend_store_trans head more⟩
-
-/-- A productive combined execution records an actual source transition at
-all positions, distinguishing Wasm ticks from host-local and nesting steps. -/
-def InfiniteTrace {H : Type} (model : HostModel H) (initial : State H) : Prop :=
-  ∃states : Nat → State H,∃events : Nat → List Observation,states 0=initial ∧
-    ∀n,Transition model (states n) (events n) (states (n+1))
-
-theorem infinite_prefix_typed {H : Type} {model : HostModel H} (states : Nat → State H)
-    (events : Nat → List Observation) (steps : ∀n,Transition model (states n) (events n) (states (n+1)))
-    (held : (states 0).Typed) (n : Nat) : (states n).Typed ∧ Extend_store (states 0).store (states n).store := by
-  induction n with
-  | zero => exact ⟨held,extend_store_refl _ (typed_store_wf held.1)⟩
-  | succ n ih =>
-    obtain ⟨fresh,extension⟩ := (steps n).preserves ih.1
-    exact ⟨fresh,extend_store_trans ih.2 extension⟩
 end Exec.Spec.OpenExecution

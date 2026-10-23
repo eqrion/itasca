@@ -15,7 +15,7 @@ open VisitorTrace CallbackTrace
 
 /-- Assembles `code.step_wasm2` dispatch from a contract for the scalar opcodes; the reference,
 bulk and SIMD cases are discharged here. -/
-theorem wasm2_dispatch {data env locals index st} (p : Pending data env locals index st)
+theorem wasm2_dispatch {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
@@ -76,7 +76,7 @@ theorem wasm2_dispatch {data env locals index st} (p : Pending data env locals i
 
 /-- Every non-control Wasm 2.0 step has an exact independent callback byte trace,
 including ordinary reader failure and rejecting callbacks. -/
-theorem wasm2_scalar {data env locals index st} (p : Pending data env locals index st)
+theorem wasm2_scalar {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)

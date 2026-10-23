@@ -6,11 +6,13 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 
  theorem table_rest_cont {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (env : module.Env) (count index depth : U32)
-    (types : signature.ResultType) (arity : Option Usize) (before after : V)
-    (next : code.OpIterState) (nextArity : Option Usize) (nextIndex : U32)
-    (accepted : tableRest visitor st env count index depth types arity before =
-      .ok (.cont (next,after,nextArity,nextIndex))) :
-    next = st.core ∧ after = before ∧ index ≠ count ∧ nextIndex.val = index.val + 1 := by
+    (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
+    (before after : V) (next : code.OpIterState) (nextArity : Option Usize)
+    (nextFirst : signature.ResultType) (nextIndex : U32)
+    (accepted : tableRest visitor st env count index depth types arity first before =
+      .ok (.cont (next,after,nextArity,nextFirst,nextIndex))) :
+    next = st.core ∧ after = before ∧ nextFirst = first ∧ index ≠ count ∧
+      nextIndex.val = index.val + 1 := by
   unfold tableRest at accepted
   obtain ⟨checked,_,rest⟩ := bind_ok_inv _ _ _ accepted
   cases checked with
@@ -24,15 +26,16 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
     · simp only [final,ite_false] at rest
       obtain ⟨incremented,increment,rest⟩ := bind_ok_inv _ _ _ rest
       simp only [Result.ok.injEq,ControlFlow.cont.injEq,Prod.mk.injEq] at rest
-      obtain ⟨rfl,rfl,rfl,rfl⟩ := rest
+      obtain ⟨rfl,rfl,rfl,rfl,rfl⟩ := rest
       have arithmetic := UScalar.add_equiv index 1#u32
       rw [increment] at arithmetic
-      exact ⟨rfl,rfl,final,by simpa using arithmetic.2.1⟩
+      exact ⟨rfl,rfl,rfl,final,by simpa using arithmetic.2.1⟩
 
 theorem table_rest_done {V : Type} (visitor : code.OpVisitor V)
     (st final : code.BodyState) (env : module.Env) (count index depth : U32)
-    (types : signature.ResultType) (arity : Option Usize) (before after : V)
-    (accepted : tableRest visitor st env count index depth types arity before =
+    (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
+    (before after : V)
+    (accepted : tableRest visitor st env count index depth types arity first before =
       .ok (.done (.Ok (),final,after))) :
     index = count ∧
     code.mark_unreachable st.core = .ok final.core ∧

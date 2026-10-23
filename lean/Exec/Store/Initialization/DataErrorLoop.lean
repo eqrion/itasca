@@ -9,14 +9,14 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     (store : runtime.store.Store M) (instanceIndex index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
     (after : runtime.store.Store M) (result : core.result.Result Unit runtime.ExecError)
-    (run : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status index instanceIndex =
+    (run : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store status index instanceIndex =
       .ok (storeStateParts after result)) : ErrorAllowed ResourceError result := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store index status with
   | h count ih =>
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop9 at run
+    unfold runtime.store.instantiate.Store.prepare_instance_loop9 at run
     rw [loop] at run
-    simp only [runtime.store.instantiate.Store.instantiate_inner_loop9.body, Std.bind_assoc] at run
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop9.body, Std.bind_assoc] at run
     obtain ⟨inst, found, rest⟩ := normal_bind_exists _ _ _ run
     clear run
     rename' rest => run
@@ -39,10 +39,10 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < count := by scalar_tac
         have nextAllowed := add_data_errors memory allocator law store instanceIndex index _ called
-        have nextRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator nextStore nextStatus nextIndex instanceIndex =
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator nextStore nextStatus nextIndex instanceIndex =
             .ok (storeStateParts after result) := by
-          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.instantiate_inner_loop9,
-            runtime.store.instantiate.Store.instantiate_inner_loop9.body, runtime.compiler.ExecutableModule.tail,
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop9,
+            runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail,
             module.Module.tail, Itasca.module.Module.impl.tail, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run

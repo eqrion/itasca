@@ -7,11 +7,6 @@ canonical frame typing after local/store changes. -/
 namespace Exec.Spec
 open SpecExt
 
-theorem FrameEnvironment.control_change {s : store} {frame : _root_.frame} {context : _root_.context}
-    (environment : FrameEnvironment s frame context) (labels : List resulttype) (returns : Option resulttype) :
-    FrameEnvironment s frame {context with LABELS := labels, RETURN := returns} :=
-  ⟨environment.moduleTyped,environment.locals⟩
-
 theorem FrameEnvironment.without_label {s : store} {frame : _root_.frame} {context : _root_.context}
     (types : List valtype)
     (environment : FrameEnvironment s frame ({(default : _root_.context) with LABELS := [.mk_list types]}++context)) :

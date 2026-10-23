@@ -59,13 +59,4 @@ theorem CompilerLayout.live_slots_fit {A : Type}
   rw [← h.height]
   exact h.capacity live
 
-/-- A straight-line prefix has already produced exactly the retained code, and
-the concrete compiler layout represents its current static stack. Structured
-control requires the additional open-label and fixup invariant. -/
-structure LinearCompileInv {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
-    (locals initial : List valtype) (source : List instr) (stack : List valtype) : Prop where
-  localsEq : compilerLocals compiler = locals
-  layout : CompilerLayout compiler stack
-  code : LinearRel locals initial source compiler.function.code.val stack
-
 end Exec.Code

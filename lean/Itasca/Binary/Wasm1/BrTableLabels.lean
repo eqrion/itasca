@@ -35,16 +35,6 @@ def Decoded (data : Slice U8) (start : Usize) (depths : List U32)
     depths.length = count.val ∧ LabelsDecoded data first depths last ∧
     Leb128.Decoded data last default next
 
-/-- A decoded `br_table` immediate is nonempty and within the input. -/
-theorem Decoded.span {data start depths default next}
-    (h : Decoded data start depths default next) :
-    start.val < next.val ∧ next.val ≤ data.length := by
-  obtain ⟨count, first, last, hc, _, hlabels, hd⟩ := h
-  have hc' := hc.span
-  have hl' := hlabels.span hc'.2.2
-  have hd' := hd.span
-  omega
-
 /-- A label run has an `IndicesEncoding` over the bytes it occupies. -/
 theorem LabelsDecoded.bytes {data start depths next}
     (h : LabelsDecoded data start depths next) (hb : start.val ≤ data.length) :

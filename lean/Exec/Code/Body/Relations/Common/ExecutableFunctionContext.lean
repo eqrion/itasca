@@ -11,10 +11,15 @@ theorem ExecutableEmission.context {tables C D before instruction emitted after}
     (emission : ExecutableEmission tables C before instruction emitted after) :
     ExecutableEmission tables D before instruction emitted after := by
   cases emission with
-  | base head =>
+  | scalar head => exact .scalar (head.context locals globals memories)
+  | stateful head =>
     cases head with
-    | left head => exact .base (.left (head.context types functions locals globals tableTypes memories elements datas))
-    | right head => exact .base (.right (head.context memories.symm locals.symm))
+    | instruction stack input output op signature first second a b entry firstSlot secondSlot arguments pair =>
+      exact .stateful (.instruction stack input output op
+        (signature.context functions tableTypes memories elements datas)
+        first second a b entry (by simpa only [locals] using firstSlot) secondSlot arguments pair)
+  | indirect head => exact .indirect (head.context types locals tableTypes)
+  | simd head => exact .simd (head.context memories.symm locals.symm)
   | typedSelect head =>
     cases head with
     | select front ty left right condition leftPos rightPos conditionPos =>

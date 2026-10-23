@@ -8,7 +8,7 @@ open SpecExt Exec.Spec
 source simulation; only moving a constant is an administrative stutter. -/
 theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (slice : SliceInstr op)
+    (slice : PureHead op)
     (typed : ATyped ⟨s, ambient, { f with code := op :: after } :: rest, []⟩)
     (step : astep ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ = .next next) :
     NextSim ⟨s, ambient, { f with code := op :: after } :: rest, []⟩ next := by
@@ -35,13 +35,8 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
       exact Or.inl ⟨decode_const s ambient f rest _ _ after hheights,
         const_measure_decreases s ambient f rest _ _ after⟩
     · contradiction
-  | add ty => exact typed_binop_simulation s ambient f rest after ty .ADD (Or.inl rfl) next typed step
-  | sub ty => exact typed_binop_simulation s ambient f rest after ty .SUB (Or.inr rfl) next typed step
-  | eqz ty => exact typed_eqz_simulation s ambient f rest after ty next typed step
-  | eq ty => exact typed_relop_simulation s ambient f rest after ty .EQ (Or.inl rfl) next typed step
-  | lt_u ty => exact typed_relop_simulation s ambient f rest after ty (.LT .U) (Or.inr rfl) next typed step
-  | block bt body _ => exact typed_block_simulation s ambient f rest after bt body next typed step
-  | loop bt body _ => exact typed_loop_simulation s ambient f rest after bt body next typed step
+  | block bt body => exact typed_block_simulation s ambient f rest after bt body next typed step
+  | loop bt body => exact typed_loop_simulation s ambient f rest after bt body next typed step
   | br index =>
     cases index with
     | mk_uN i => exact .counted (typed_branch_simulation s ambient f rest after i next typed step) (by omega)
@@ -133,7 +128,7 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
             simpa only [← hsplit] using result
           · contradiction
         · contradiction
-  | ifelse bt yes no _ _ =>
+  | ifelse bt yes no =>
     obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop
     obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands

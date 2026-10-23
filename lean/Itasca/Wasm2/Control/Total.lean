@@ -2,6 +2,7 @@ import Itasca.Wasm2.Control.Frame
 import Itasca.Wasm2.TableAdapters
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Handler.EnvReaders
+import Itasca.Wasm2.ProfileFilters
 
 /-!
 # Totality of the control handlers
@@ -78,9 +79,9 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
 parameters before fixing the frame's base preserves nested frame bounds. -/
 theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
-    (hcap : st.blocks.val.length < Usize.max) :
-    code.enter_info st data env kind ⦃ r =>
+    (env : module.Env) (profile : ValidationProfile) (kind : code.LabelKind)
+    (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
+    code.enter_info st data env profile kind ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length + 1 ∧
       st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
@@ -103,93 +104,6 @@ theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
     simp only [signature.BlockType.params.spec]
     cases bt <;> cases kind <;> step* <;> simp_all
 
-/-- Erasing callback metadata preserves the complete entry-state contract. -/
-theorem code.enter.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (kind : code.LabelKind) (hs : Control.Shape st.core)
-    (hcap : st.blocks.val.length < Usize.max) :
-    code.enter st data env kind ⦃ r =>
-      Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
-      r.2.blocks.val.length ≤ st.blocks.val.length + 1 ∧
-      st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  unfold code.enter
-  step with code.enter_info.total st data env kind hs hcap
-    as ⟨r, s, hshape, halign, hlen, hpos⟩
-  cases r <;> simp_all [core.result.Result.Insts.CoreOpsTry.branch,
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
-/-- The table loop includes its default target without incrementing the
-possibly maximal encoded count. Every iteration checks the original suffix. -/
-theorem Wasm2.branchTableLoop.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (count : U32) (arity : Option Usize) (i : U32)
-    (hs : Control.Shape st.core)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length) (hi : i.val ≤ count.val) :
-    Wasm2.branchTableLoop st.core data env count arity i ⦃ r =>
-      Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
-      r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      st.core data env () count arity i ⦃ r =>
-      Control.Shape r.2.1.core ∧ r.2.1.blocks.val.length = r.2.1.core.ctrls.val.length ∧
-      r.2.1.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.1.core.pos.val ⦄ := by
-    unfold code.branch_table_with_loop
-    apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.val)
-      (fun p => Control.Shape p.1 ∧ (code.BodyState.mk p.1).blocks.val.length = p.1.ctrls.val.length ∧
-        (code.BodyState.mk p.1).blocks = st.blocks ∧ p.2.2.2.val ≤ count.val ∧ st.core.pos.val ≤ p.1.pos.val)
-    · rintro ⟨stateCore, visitor, arity, j⟩ ⟨hs', ha', hb', hj, hpos⟩
-      cases visitor
-      dsimp only at hs' ha' hb' hj hpos
-      dsimp only
-      rw [Wasm2.tableBody_eq data env count stateCore arity j]
-      apply ResultFacts.map_spec
-      unfold Wasm2.branchTableLoop.body
-      obtain ⟨⟨r, s⟩, hr, hv, hc, hb, hp, hread⟩ := WP.spec_imp_exists
-        (code.read_multi_value_label.spec ⟨stateCore⟩ data ha')
-      rw [hr]
-      simp only [bind_ok]
-      dsimp only at hv hc hb hp hread
-      have hss : Control.Shape s.core :=
-        ⟨by simpa [hc] using hs'.ordered, by simpa [hc, hv] using hs'.bounded⟩
-      have has : s.blocks.val.length = s.core.ctrls.val.length := by simp_all
-      have hbs : s.blocks = st.blocks := by simp_all
-      have hprogress : st.core.pos.val ≤ s.core.pos.val := by omega
-      cases arity <;> step* by simp_all [Wasm2.tableFlow, Wasm2.tableCont, Wasm2.tableDone]
-      all_goals simp_all [Wasm2.tableFlow, Wasm2.tableCont]
-      all_goals scalar_tac
-    · exact ⟨hs, ha, rfl, hi, le_refl _⟩
-  unfold Wasm2.branchTableLoop
-  obtain ⟨⟨res, final, visitor⟩, hr, hp⟩ := WP.spec_imp_exists hlo
-  simpa [hr] using hp
-
-/-- `code.branch_table` is total and preserves frame alignment and bounds. -/
-@[step]
-theorem code.branch_table.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (hs : Control.Shape st.core)
-    (ha : st.blocks.val.length = st.core.ctrls.val.length) :
-    code.branch_table st data env ⦃ r =>
-      Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
-      r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  rw [code.branch_table.eq_core]
-  unfold Wasm2.tableCore
-  step with reader.read_u32_leb.spec data st.core.pos as ⟨res, hdecoded⟩
-  step
-  split
-  · rename_i _ pair
-    obtain ⟨count, next⟩ := pair
-    have hpnext : st.core.pos.val ≤ next.val := by
-      cases res <;> simp_all [Leb128.Post]
-      cases cf_post
-      exact (Leb128.Decoded.span _ _ _ _ hdecoded).1.le
-    have hspos : Control.Shape { st.core with pos := next } := ⟨hs.ordered, hs.bounded⟩
-    step with code.pop_with_type.total _ .I32 hspos as ⟨r, s, hs', hc, hp, hv, he⟩
-    step
-    split
-    · apply WP.spec_mono (Wasm2.branchTableLoop.total ⟨s⟩ data env count none
-        0#u32 hs' (by simp_all) (by simp))
-      intro result hout
-      exact ⟨hout.1, hout.2.1, by simpa [hc] using hout.2.2.1, hpnext.trans (by simpa [hp] using hout.2.2.2)⟩
-    · step*
-      simp_all
-  · step*
-
 @[step]
 theorem code.take_index.shape (st : code.OpIterState) (data : Slice U8)
     (hs : Control.Shape st) :
@@ -210,12 +124,6 @@ theorem types.ElemType.value_type.total (ty : types.ElemType) :
   cases ty <;> simp [types.ElemType.value_type]
 
 @[step]
-theorem types.ValueType.Insts.CoreCmpPartialEqValueType.eq.total
-    (a b : types.ValueType) :
-    types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ _ => True ⦄ := by
-  cases a <;> cases b <;> simp [types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-
-@[step]
 theorem types.ValueType.ne.total (a b : types.ValueType) :
     core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType a b
       ⦃ _ => True ⦄ := by
@@ -234,21 +142,11 @@ theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
 
 @[step]
 theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (hs : Control.Shape st.core) :
-    code.call_indirect_info st data env ⦃ r =>
+    (env : module.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
+    code.call_indirect_info st data env profile ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   unfold code.call_indirect_info
   step* <;> simp_all <;> omega
-
-/-- `code.call` is total, preserves frame alignment and bounds, and never moves the cursor
-backwards. -/
-@[step]
-theorem code.call.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (indirect : Bool) (hs : Control.Shape st.core) :
-    code.call st data env indirect ⦃ r =>
-      Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
-  unfold code.call
-  cases indirect <;> step*
 
 end Itasca

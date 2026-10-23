@@ -1,7 +1,6 @@
 import Exec.Interp.Control.LabelCompletion
 import Exec.Interp.StructuredMachine.Point
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 /-- Normal completion removes a source label at its retained fallthrough PC.
 The concrete words and PC are unchanged; the generated source semantics takes
@@ -13,12 +12,12 @@ theorem label_completion_point (exec : runtime.interp.Execution) (raw : runtime.
     (label : Abs.Label) (labels : List Abs.Label)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := [], labels := label :: labels } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := [], labels := label :: labels }
+    (point : FramePoint s raw { f with code := [], labels := label :: labels }
       compiled C targets next output)
     (atExit : raw.pc.val = next) (live : Code.NormalLive targets) :
     ∃ next' output',
       FrameSlots exec raw { f with code := label.after, labels := labels } ∧
-      FramePoint emission s raw { f with code := label.after, labels := labels }
+      FramePoint s raw { f with code := label.after, labels := labels }
         compiled C (targets.drop 1) next' output' ∧
       Abs.ATyped ⟨s, ambient, { f with code := label.after, labels := labels } :: rest, []⟩ ∧
       Abs.NextSim ⟨s, ambient, { f with code := [], labels := label :: labels } :: rest, []⟩

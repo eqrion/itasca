@@ -14,7 +14,7 @@ set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
 
 theorem frame_point_chosen_step {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {emission : FunctionEmission} {M P F A : Type}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
@@ -32,15 +32,15 @@ theorem frame_point_chosen_step {choices : Spec.SourceChoices} (admissible : cho
     (allocated : raw.base.val+compiled.slot_count.val≤exec.slots.length)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view interpretation store) raw
+    (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
     (allowed : Abs.SimdInstr source)
-    (project : ∀ before emitted result, emission compiled C before source emitted result →
+    (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
       Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result) :
     (∃ target : U32, raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view interpretation store) {raw with pc:=target}
+      FramePoint (Store.decodeStore view interpretation store) {raw with pc:=target}
         {f with code:=source::after} compiled C targets next output) ∨
-    (runtime.interp.step memory hooks floats allocator exec store platform ⦃ ChosenFrameOutcome choices occurrence emission view interpretation
+    (runtime.interp.step memory hooks floats allocator exec store platform ⦃ ChosenFrameOutcome choices occurrence view interpretation
       store exec platform raw index compiled C targets next output ambient {f with code:=source::after} rest ⦄) := by
   rcases framePoint_head source after allowed project point with jump | ⟨instruction,result,head,fetch,tail⟩
   · exact Or.inl jump

@@ -42,16 +42,4 @@ theorem compiler_core_map_publication {A : Type} (ops : runtime.platform.Alloc A
   rw [compiler_core_cursor ops law before after state op called]
   exact forward
 
-/-- Actual stateful lowering preserves all control-map bounds. -/
-theorem compiler_stateful_map_publication {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32)
-    (called : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (), after))
-    (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val) :
-    ControlMapPublication after := by
-  apply held.ordinary (compiler_stateful_ordinary_result ops law before after state op a b (.Ok ()) called)
-    (compiler_stateful_code_mono ops law before after state op a b (.Ok ()) called)
-  rw [compiler_stateful_cursor ops law before after state op a b called]
-  exact forward
-
 end Exec.Code

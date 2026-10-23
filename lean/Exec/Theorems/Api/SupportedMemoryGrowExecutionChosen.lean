@@ -1,4 +1,4 @@
-import Exec.Theorems.Api.GrowthChoiceMatching
+import Exec.Contracts
 import Exec.Theorems.Composition.Supported.ChosenSupportedOutcome
 import Exec.Theorems.Composition.StoreMutationFacts
 import Exec.Theorems.Api.StatefulMemoryGrowStepChosen
@@ -6,8 +6,8 @@ import Exec.Interp.StructuredMachine.JumpExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
 theorem stateful_memory_grow_execution_supported_chosen {choices : Exec.Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Exec.Spec.firstVectorChoice) (occurrence : Nat) {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (vector : choices.vector=Exec.Spec.firstVectorChoice) (occurrence : Nat)
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
@@ -20,13 +20,13 @@ theorem stateful_memory_grow_execution_supported_chosen {choices : Exec.Spec.Sou
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      ChosenSupportedStepOutcome choices occurrence emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      ChosenSupportedStepOutcome choices occurrence allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_memory_grow_point_step_chosen occurrence memory hooks floats allocator view laws code compatible exec store platform index raw inst compiled C targets next output
     ambient f rest after last frameFound found codeFound program.fetchBound shaped.memories moduleEq slots point machine.typed with jump | actual
@@ -40,9 +40,9 @@ theorem stateful_memory_grow_execution_supported_chosen {choices : Exec.Spec.Sou
     intro out result
     obtain ⟨success,samePlatform,metadata,pc,front,position,result,pcNext,above,inSlots,written,rawEffect,represented,retained,transition⟩ := result
     obtain ⟨address,delta,issued,effect⟩ := rawEffect
-    have mutation := memory_growth_cumulative_mutation_of_shape shaped sourceSyntax bounds issued effect ((transition.erases admissible).next_extends_supported language machine.typed machine.core)
+    have mutation := memory_growth_cumulative_mutation_of_shape shaped sourceSyntax bounds issued effect ((transition.erases admissible).next_extends_supported machine.typed machine.core)
     apply ChosenSupportedStepOutcome.success mutation success
-    exact StructuredMachine.ordinary_chosen_cumulative_step admissible vector occurrence language view code ambient {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}
+    exact StructuredMachine.ordinary_chosen_cumulative_step admissible vector occurrence view code ambient {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}
       {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} rest expected raw.pc.val false
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       written.2 (by rw [written.1]; exact SlotPrefix.set _ _ _ _ above) transition

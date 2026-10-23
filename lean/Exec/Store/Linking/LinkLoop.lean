@@ -15,12 +15,12 @@ theorem link_imports_loop {M : Type} (memory : runtime.platform.MemoryBuffer M)
     {tables memories} (cache : Cache module.module.env tables memories)
     (inst : runtime.store.ModuleInst) (start : Usize) (startBound : start.val ≤ imports.length)
     (maps : LinkedMaps view store module (module.module.env.imports.val.take start.val) inst) :
-    runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports (.Ok ()) start inst
+    runtime.store.instantiate.Store.prepare_instance_loop2 memory store imports (.Ok ()) start inst
       ⦃ out => out.1 = store ∧ out.2.2.module = module ∧
         (out.2.1 = .Ok () → LinkedMaps view store module module.module.env.imports.val out.2.2) ⦄ := by
   have hostSize : imports.length = imports.val.length := rfl
   have sourceSize : module.module.env.imports.length = module.module.env.imports.val.length := rfl
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop2
+  unfold runtime.store.instantiate.Store.prepare_instance_loop2
   apply loop.spec_decr_nat (fun state => imports.length - state.2.2.1.val)
     (fun state => state.1 = store ∧ state.2.2.2.module = module ∧ state.2.2.1.val ≤ imports.length ∧
       (state.2.1 = .Ok () → LinkedMaps view store module
@@ -28,7 +28,7 @@ theorem link_imports_loop {M : Type} (memory : runtime.platform.MemoryBuffer M)
   · rintro ⟨current, status, index, currentInst⟩ ⟨sameStore, source, indexBound, mapping⟩
     dsimp only at sameStore source indexBound mapping ⊢
     subst current
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop2.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop2.body
     dsimp only
     split
     · rename_i more

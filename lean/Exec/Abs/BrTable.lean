@@ -8,15 +8,6 @@ open SpecExt Exec.Spec
 def select (labels : List labelidx) (fallback : labelidx) (index : Nat) : labelidx :=
   if index < labels.length then labels[index]! else fallback
 
-theorem select_member (labels : List labelidx) (fallback : labelidx) (index : Nat) :
-    select labels fallback index ∈ labels ++ [fallback] := by
-  unfold select
-  split
-  · rename_i bound
-    simp only [getElem!_pos labels index bound]
-    exact List.mem_append_left _ (List.getElem_mem bound)
-  · simp
-
 theorem select_table (labels : List labelidx) (fallback : labelidx) (index : Nat) :
     (labels ++ [fallback])[Nat.min index labels.length]? = some (select labels fallback index) := by
   by_cases bound : index < labels.length
@@ -126,26 +117,6 @@ theorem frame_preservation {s : store} {f : AFrame} {after : List instr}
         C bindings localTypes locals retained returns ?_ frameWf
       simpa only [List.append_nil,base] using codeStack_prepend head' selectedWf heights tail
 
-/-- The isolated executable source operator leaves ordinary BR to the existing
-control machine, matching the runtime jump-table dispatcher. -/
-def step (state : AState) (f : AFrame) (rest : List AFrame) (after : List instr)
-    (labels : List labelidx) (fallback : labelidx) : AResult :=
-  match pop f.vals with
-  | none => .stuck
-  | some (front,value) =>
-    match integer .I32 value with
-    | none => .stuck
-    | some bits => advance state {f with vals := front, code := .BR (select labels fallback bits)::after} rest
-
-theorem step_eq (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (front : List val) (bits : Nat) (labels : List labelidx) (fallback : labelidx)
-    (bound : bits < 2^32) :
-    step ⟨s,ambient,{f with code := .BR_TABLE labels fallback :: after, vals := front ++ [integerVal .I32 bits]}::rest,[]⟩
-      {f with code := .BR_TABLE labels fallback :: after, vals := front ++ [integerVal .I32 bits]} rest after labels fallback =
-      .next ⟨s,ambient,{f with code := .BR (select labels fallback bits)::after,vals := front}::rest,[]⟩ := by
-  have accept : integer .I32 (integerVal .I32 bits) = some bits := integer_accepts .I32 bits bound
-  simp only [step,pop_append,accept,advance]
-
 theorem correct (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (front : List val) (bits : Nat) (labels : List labelidx) (fallback : labelidx)
     (bound : bits < 2^32)
@@ -190,21 +161,5 @@ theorem operands {s : store} {f : AFrame} {after : List instr}
       obtain ⟨bits,rfl,bound⟩ := integer_val_inv (ty := .I32) value
       refine ⟨first ++ discarded ++ arguments,bits,?_,bound⟩
       simpa only [List.append_assoc] using split
-
-theorem progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
-    (after : List instr) (labels : List labelidx) (fallback : labelidx)
-    (typed : ATyped ⟨s,ambient,{f with code := .BR_TABLE labels fallback :: after}::rest,[]⟩) :
-    ∃ next, step ⟨s,ambient,{f with code := .BR_TABLE labels fallback :: after}::rest,[]⟩
-      {f with code := .BR_TABLE labels fallback :: after} rest after labels fallback = .next next ∧
-      ATyped next ∧ NextSim ⟨s,ambient,{f with code := .BR_TABLE labels fallback :: after}::rest,[]⟩ next := by
-  have frameTyped : FrameTyped s {f with code := .BR_TABLE labels fallback :: after} [] := by
-    cases typed.frames with | cons head _ => exact head
-  obtain ⟨front,bits,values,bound⟩ := operands frameTyped
-  have fEq : f = {f with vals := front ++ [integerVal .I32 bits]} := by
-    cases f
-    simp_all only
-  rw [fEq] at typed ⊢
-  exact ⟨_,step_eq s ambient f rest after front bits labels fallback bound,
-    correct s ambient f rest after front bits labels fallback bound typed⟩
 
 end Exec.Abs.BrTable

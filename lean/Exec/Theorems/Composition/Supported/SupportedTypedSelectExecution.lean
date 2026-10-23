@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.TypedSelectExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-theorem step_typed_select_supported_execution {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)] {M P F A : Type}
+theorem step_typed_select_supported_execution
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -15,14 +15,14 @@ theorem step_typed_select_supported_execution {emission : StructuredMachine.Func
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      SupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=.SELECT (some [declared])::after}::rest,[]⟩ out ⦄ := by
   apply WP.spec_mono (StructuredMachine.TypedSelect.step_execution memory hooks floats allocator exec store platform index raw inst compiled
     C targets next output view code ambient f rest declared after last frameFound instanceFound codeFound slots point expected machine program)

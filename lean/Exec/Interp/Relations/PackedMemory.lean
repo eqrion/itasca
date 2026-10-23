@@ -1,4 +1,5 @@
-import Exec.Interp.Memory.MemoryDispatchSource
+import Exec.Interp.Memory.MemoryDispatch
+import Exec.Interp.Memory.MemoryDecode
 import Exec.Spec.PackedMemory
 
 namespace Exec.Interp.PackedMemory
@@ -32,11 +33,6 @@ theorem store_width (op : Spec.PackedMemory) :
 
 def storeBits (op : Spec.PackedMemory) (word : U64) : Nat :=
   match op.type with | .I32 => word.val % 2^32 | .I64 => word.val
-
-theorem store_value (op : Spec.PackedMemory) (word : U64) :
-    numericStoreValue (numtype_Inn op.type) word =
-      .mk_num__0 op.type (.mk_uN (storeBits op word)) := by
-  cases op <;> rfl
 
 theorem store_bytes (op : Spec.PackedMemory) (word : U64) :
     op.stored (storeBits op word) =

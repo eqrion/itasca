@@ -29,14 +29,6 @@ theorem ReferencesOwned.modify {bounds values} (owned : ReferencesOwned bounds v
     ReferencesOwned bounds (values.modify index (fun _ => value)) :=
   Segment.forall_modify _ _ _ _ owned (fun _ _ => allowed)
 
-theorem ReferencesOwned.set {bounds values} (owned : ReferencesOwned bounds values)
-    (index : Nat) (value : ref) (allowed : ValueOwned bounds (val_ref value)) :
-    ReferencesOwned bounds (values.set index value) := by
-  intro item member
-  rcases List.mem_or_eq_of_mem_set member with member | rfl
-  · exact owned item member
-  · exact allowed
-
 theorem StatefulHeapOwned.metadata {bounds before after} (owned : StatefulHeapOwned bounds before)
     (globals : after.GLOBALS = before.GLOBALS) (tables : after.TABLES = before.TABLES)
     (elements : after.ELEMS = before.ELEMS) (functions : after.FUNCS = before.FUNCS) :

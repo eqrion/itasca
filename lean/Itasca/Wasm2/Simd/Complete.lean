@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Completeness
 
 /-- Pure SIMD operators accept every realization of their principal signature. -/
-theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_pure {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.pureMeaning subopcode.val = some op)
@@ -30,7 +30,7 @@ theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨rfl, rfl⟩ := op.principal C ins outs ht
   let decoded : code.OpIterState := {st.core with pos := next}
@@ -43,7 +43,7 @@ theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
   refine ⟨{st with core := s}, ?_, hp,
     ⟨f.core.output_of_same_ctrls hc hv (by simpa [Simd.Signature.outputs_pop, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn]
     rw [code.step_wasm2.simd, code.step_simd.eq_runs]
@@ -54,7 +54,7 @@ theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : module.Env)
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.LaneOperation)
     (lane : U8) (prefixBytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.laneMeaning subopcode.val = some op)
@@ -63,7 +63,7 @@ theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (op.instruction (.mk_uN lane.val)) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hbound := op.bound C (.mk_uN lane.val) ins outs ht
   obtain ⟨rfl, rfl⟩ := op.principal C (.mk_uN lane.val) ins outs ht
@@ -81,7 +81,7 @@ theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     ⟨f.core.output_of_same_ctrls hc hv (by
         simpa [Simd.LaneOperation.outputs_pop, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
@@ -91,7 +91,7 @@ theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_const {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 12)
@@ -100,7 +100,7 @@ theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (Simd.vectorConstant low high) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨rfl, rfl⟩ := Simd.vectorConstant_principal C low high ins outs ht
   obtain ⟨middle, hprefix, hbits⟩ := hb.split
@@ -116,7 +116,7 @@ theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : module.Env
     ⟨f.core.output_of_same_ctrls hc hv (by
         simpa [Simd.outputTypes, Translate.valueType, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
@@ -127,7 +127,7 @@ theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : module.Env
     omega
 
 
-theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_memory {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -140,7 +140,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.En
     (ht : Instr_ok C (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
       (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hcond := op.conditions C arg 0#u8 ins outs ht
   obtain ⟨rfl, rfl⟩ := op.principal C (MemoryMeaning.memArg arg) (.mk_uN 0) ins outs ht
@@ -159,7 +159,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.En
     ⟨f.core.output_of_same_ctrls hc hv (by
         simpa [Simd.MemoryOperation.outputs_pop, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
@@ -169,7 +169,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : module.En
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_memory_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (lane : U8) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -182,7 +182,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : modu
     (ht : Instr_ok C (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
       (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hcond := op.conditions C arg lane ins outs ht
   obtain ⟨rfl, rfl⟩ := op.principal C (MemoryMeaning.memArg arg) (.mk_uN lane.val) ins outs ht
@@ -204,7 +204,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : modu
     ⟨f.core.output_of_same_ctrls hc hv (by
         simpa [Simd.MemoryOperation.outputs_pop, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
@@ -216,7 +216,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : modu
 
 
 
-theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_shuffle {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 13)
@@ -225,7 +225,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.E
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C (Simd.shuffle low high) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   have hbound := Simd.shuffle_bound C low high ins outs ht
   obtain ⟨rfl, rfl⟩ := Simd.shuffle_principal C low high ins outs ht
@@ -248,7 +248,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.E
     ⟨f.core.output_of_same_ctrls hc hv (by
         simpa [Simd.outputTypes, Translate.valueType, decoded, Control.polymorphic] using hout),
       code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFD#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFD#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.simd, code.step_simd.eq_runs]
     simp only [Simd.prefixStep, hread, bind_ok]
@@ -259,7 +259,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : module.E
     omega
 
 /-- Every independently encoded and typed SIMD instruction is accepted. -/
-theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : instr)
     (prefixBytes immediate : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes subopcode.val) (hi : Simd.Immediate subopcode op immediate)
@@ -268,7 +268,7 @@ theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : module.Env)
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFD#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   cases hi with
   | pure subopcode op hmap =>

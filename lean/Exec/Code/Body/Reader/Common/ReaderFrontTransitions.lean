@@ -3,24 +3,10 @@ import Exec.Code.Body.Relations.Common.EntryLayout
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
-/-- The exact saved operand segments, rather than only their slot widths,
-identify the source front of a Wasm 1 child scope. -/
-theorem ReaderEnterPostWasm1.scope_fronts {data env ctx bodyBt st out form bt remaining token}
-    {p : Wasm1.Pending data env ctx bodyBt st}
-    (post : ReaderEnterPostWasm1 p out form bt remaining token)
-    {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm1.Frames.Saved.vals))
-    (child : SourceScope) (same : Sequence.stackTypes out.vals.val = child.front) :
-    ReaderScopeFronts (parents ++ [current]) child
-      ((p.parents ++ [{p.current with vals := remaining}]).map Wasm1.Frames.Saved.vals) := by
-  have values := post.front.2.2
-  have front : child.front = Sequence.stackTypes ((p.parents.map Wasm1.Frames.Saved.vals).flatten ++ remaining) := by
-    simpa only [List.flatMap_def] using (same.symm.trans (congrArg Sequence.stackTypes values))
-  simpa only [List.map_append, List.map_cons, List.map_nil] using fronts.push child remaining front
-
 /-- The complete post-reader stack recovers a live Wasm 2 child front by
 cancelling its exact translated parameter suffix. -/
 theorem ReaderEnterPostWasm2.scope_fronts {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
@@ -40,7 +26,7 @@ theorem ReaderEnterPostWasm2.scope_fronts {data env locals index st out form bt 
 /-- A dormant Wasm 2 entry retains the exact saved prefix even when operand
 popping used the polymorphic stack rule. -/
 theorem ReaderEnterPostWasm2.scope_fronts_dormant {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env locals index st}
+    {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))

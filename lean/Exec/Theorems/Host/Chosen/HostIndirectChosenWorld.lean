@@ -8,13 +8,13 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 open Exec.Interp.StructuredMachine
 theorem step_indirect_host_chosen_world_outcomes {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s, Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s, Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (entryTyped : Store_ok (Store.decodeStore view code store))
@@ -32,10 +32,10 @@ theorem step_indirect_host_chosen_world_outcomes {choices : Spec.SourceChoices} 
     (moduleEq : f.module=Store.decodeInstance store inst)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
@@ -53,10 +53,10 @@ theorem step_indirect_host_chosen_world_outcomes {choices : Spec.SourceChoices} 
     (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
     runtime.interp.step memory hooks floats allocator exec store platform
-      ⦃ out => ChosenWorldSourceStepResult choices occurrence (emission:=emission) (allowed:=allowed) (view:=view)
+      ⦃ out => ChosenWorldSourceStepResult choices occurrence (view:=view)
         memory hooks floats allocator Inv code expected exec store platform
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ raw.pc.val false out ⦄ := by
-  let before : EventfulMachine emission allowed M P view code expected :=
+  let before : EventfulMachine M P view code expected :=
     ⟨store,exec,platform,
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
       raw.pc.val,false,machine,certify code store valid,owned⟩
@@ -73,7 +73,7 @@ theorem step_indirect_host_chosen_world_outcomes {choices : Spec.SourceChoices} 
     change afterPlatform=platform at samePlatform
     subst afterStore
     subst afterPlatform
-    let final : EventfulMachine emission allowed M P view code expected :=
+    let final : EventfulMachine M P view code expected :=
       ⟨store,afterExec,platform,before.source,finalPC,false,resumed,certify code store valid,owned⟩
     refine ⟨⟨code,final⟩,valid,rfl,?_,Spec.extend_store_refl _ machine.typed.typed.store,.refl store,rfl,?_⟩
     · simpa only [stepHostEvents,guard,before] using (ChosenConcreteSim.widen simulation program.fetchBound).eventful

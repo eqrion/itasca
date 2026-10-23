@@ -12,7 +12,7 @@ premises. Callback acceptance follows from allocation and source demand for
 every nonconstant SIMD form, including lanes, memory and shuffle. Constants
 use the separate checked pool-allocation callback theorem. -/
 theorem reader_simd_nonconstant_available {data env locals index st source values position inputs output}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (C : context) (opcode : U16) (sub a b : U32) (bits : U128)

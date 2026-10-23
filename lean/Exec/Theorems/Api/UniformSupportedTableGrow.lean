@@ -6,8 +6,8 @@ import Exec.Theorems.Api.StatefulTableGrowStep
 import Exec.Interp.StructuredMachine.JumpExecution
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
-theorem stateful_table_grow_execution_supported_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+theorem stateful_table_grow_execution_supported_uniform
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
@@ -19,14 +19,14 @@ theorem stateful_table_grow_execution_supported_uniform {emission : StructuredMa
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}::rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨decodeStore view code store,ambient,{f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_table_grow_point_step memory hooks floats allocator allocation view code exec store platform index raw inst compiled C targets next output
     ambient f rest after tableIndex last frameFound found codeFound program.fetchBound (fun object member => (shaped.tables object member).1) moduleEq slots point machine.typed with jump | actual
@@ -43,9 +43,9 @@ theorem stateful_table_grow_execution_supported_uniform {emission : StructuredMa
     have inBounds := (List.getElem?_eq_some_iff.mp issued).1
     have objectEq := (List.getElem?_eq_some_iff.mp issued).2
     have referenceShape := Store.owned_reference_shape store object.ty reference ((owned.values.2 _ (List.mem_cons_self ..)).2 _ member)
-    have mutation := table_growth_cumulative_mutation_of_shape shaped sourceSyntax bounds inBounds (by simpa only [objectEq] using referenceShape) effect (transition.next_extends_supported language machine.typed machine.core)
+    have mutation := table_growth_cumulative_mutation_of_shape shaped sourceSyntax bounds inBounds (by simpa only [objectEq] using referenceShape) effect (transition.next_extends_supported machine.typed machine.core)
     apply UniformSupportedStepOutcome.success mutation success
-    exact StructuredMachine.ordinary_cumulative_step_forward language view code ambient {f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}
+    exact StructuredMachine.ordinary_cumulative_step_forward view code ambient {f with code:=(Abs.Stateful.Instruction.tableGrow tableIndex).source::after}
       {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} rest expected raw.pc.val
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       written.2 (by rw [written.1]; exact SlotPrefix.set _ _ _ _ above) transition (by omega)

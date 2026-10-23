@@ -3,7 +3,7 @@ import Exec.Interp.Relations.ControlPoint
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 
-theorem step_forward_jump {emission : FunctionEmission} {supported : Abs.AState → Prop}
+theorem step_forward_jump
     {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -16,13 +16,13 @@ theorem step_forward_jump {emission : FunctionEmission} {supported : Abs.AState 
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (forward : raw.pc.val<target.val) (fetch : compiled.code.val[raw.pc.val]?=some (.Jump target))
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) {raw with pc:=target} f compiled C targets next output)
-    (machine : Execution emission supported view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false)
+    (point : FramePoint (Store.decodeStore view code store) {raw with pc:=target} f compiled C targets next output)
+    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧
       out.2.1={exec with frames:=exec.frames.set index {raw with pc:=target}} ∧
-      Execution emission supported view code store out.2.1 ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected target.val false ∧
+      Execution view code store out.2.1 ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected target.val false ∧
       ConcreteSim compiled.code.length raw.pc.val target.val false false
         ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ ⦄ := by
   have pcBound : raw.pc.val<U32.max := by

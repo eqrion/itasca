@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 
 /-! Compositional loop facts for the extracted interpreter. These lemmas are
 independent of the Wasm simulation; callers must discharge the body contract. -/

@@ -16,7 +16,7 @@ theorem prepare_function_signatures {M A : Type} (memory : runtime.platform.Memo
     (entries : TypeEntries store inst.module.module.env.types.val inst.types.val)
     (table : Interp.FunctionTable store inst
       ((inst.module.module.env.func_types.val.take (importedFuncs inst.module.module.env.imports.val).length).map decodeFuncType)) :
-    runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store (.Ok ()) 0#usize inst instanceIndex
+    runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator store (.Ok ()) 0#usize inst instanceIndex
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {store with funcs := after.funcs} ∧ next = {inst with funcs := next.funcs} ∧
         StagedPrefix store after ∧ objectCount after ≤ Usize.max ∧

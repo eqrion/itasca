@@ -25,7 +25,7 @@ theorem element_order_loop {M P F A : Type}
     (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
     (base : Nat) (initial : List Nat)
     (ordered : AddressOrder base initial store.elems.length (inst.elems.val.map (UScalar.val))) :
-    runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator store platform status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting after) ∧
@@ -34,7 +34,7 @@ theorem element_order_loop {M P F A : Type}
           AddressOrder base initial after.elems.length (next.elems.val.map (UScalar.val)) ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
           after.datas = store.datas ∧ next.datas = inst.datas ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop8
+  unfold runtime.store.instantiate.Store.prepare_instance_loop8
   apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧ StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
@@ -50,7 +50,7 @@ theorem element_order_loop {M P F A : Type}
       currentInst, hfound, hsource, horder, hbindings, himports, hsegments, hcapacity, hstoreCapacity, hdatas, hmapData⟩
     dsimp only at hhost hstaged hobjects haccounted hmetadata hindex hfound hsource horder hbindings himports hsegments hcapacity hstoreCapacity hdatas hmapData ⊢
     subst host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop8.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env,

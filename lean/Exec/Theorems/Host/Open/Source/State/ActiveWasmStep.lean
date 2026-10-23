@@ -18,7 +18,7 @@ theorem source_active_wasm_step {M F A : Type} (memory : runtime.platform.Memory
     (numericChoice : choices.wasm.numeric=Spec.firstNumericChoice) (vectorChoice : choices.wasm.vector=Spec.firstVectorChoice)
     (compatible : GrowthChoicesCompatible memory allocator view choices.wasm) (occurrence : Nat)
     (signature : Itasca.types.FuncType)
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+    (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
     (native : State M) (source : Spec.OpenExecution.State SourceControl)
     (guard : SourceStateGuard memory allocator view world.code native source
       (2+dispatchMeasure world.machine.pending U32.max world.machine.pc world.machine.source))
@@ -99,7 +99,7 @@ theorem source_finished_wasm_step {M F A : Type} (memory : runtime.platform.Memo
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (select : Selector)
     (owner : Usize) (stop : Spec.OpenExecution.StopReason → config → Prop)
     (choices : SourceOperationChoices) (occurrence : Nat) (signature : Itasca.types.FuncType)
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+    (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
     (native : State M) (source : Spec.OpenExecution.State SourceControl) (rank : Nat)
     (guard : SourceStateGuard memory allocator view world.code native source rank)
     (nativeStore : native.store=world.machine.store) (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value)

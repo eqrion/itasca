@@ -1,5 +1,6 @@
 import Exec.Representation.Collection
-import Exec.Store.Initialization.ElementStaging
+import Exec.Store.Initialization.ElementLoop
+import Exec.Store.Api.GlobalStaging
 import Exec.Store.Api.GlobalEffects
 
 namespace Exec.Store
@@ -85,7 +86,6 @@ theorem add_instance_element_effect {M P F A : Type}
           elements addresses {ty := segment.elem, refs := values} helements
           (by simpa only [instanceRead] using haddresses)
         simpa [hback, instanceRead] using And.intro effect (rfl : platform = platform)
-
 
 theorem ElementStageEffect.context {M : Type} {store after : runtime.store.Store M}
     {instIndex : Usize} {inst : runtime.store.ModuleInst}

@@ -15,12 +15,12 @@ from its source-typed reached prefix, including unreachable code and every
 complete-profile callback family. -/
 theorem reader_publication_wasm2 {jumpTables : List U32}
     {emit : List valtype → instr → List Bytecode → List valtype → Prop}
-    {data env localTypes index st} (p : Wasm2.Pending data env localTypes index st)
+    {data env localTypes index st} (p : Wasm2.Pending data env .Wasm2 localTypes index st)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
     (parents : List SourceScope) (current : SourceScope)
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (reach : ReaderReachabilityWasm2 before.reachable parents current p.parents p.current)
     (signatures : SignatureSequence before.signatures.val env.types.val)
@@ -61,8 +61,8 @@ theorem reader_publication_wasm2 {jumpTables : List U32}
     change st.core.ctrls.val ≠ []
     rw [controls]
     simp
-  have progress := code.step_profile.accepted_progress_wasm2
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index sourceState out before after
+  have progress := code.step_profile.accepted_progress
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index .Wasm2 sourceState out before after
     p.size ⟨p.opened.shape.core.ordered,p.opened.shape.core.bounded⟩ (by simp [sourceState]) p.ctrls nonempty p.inbounds st.core.pos p.pos accepted
   have forward : before.next_source.val ≤ out.core.pos.val := by
     have cursor := invariant.cursor

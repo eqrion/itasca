@@ -24,7 +24,7 @@ theorem prepare_defined_entry {M F A : Type}
     prepareCall memory hooks floats allocator before store platform address 0#usize ⦃phase=>
       ∃out,phase=.done out ∧ out.2.2.1=store ∧
         (out.1=.Ok () → ∃entry,
-          StructuredMachine.Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr)
+          StructuredMachine.Execution
             view code store out.2.1 entry (signature.results.val.map sourceType) 0 false ∧
           Abs.Ownership.StatefulOwned (Store.ownershipBounds store) entry ∧ entry.ambient=ambient ∧
           StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode entry)) ∧

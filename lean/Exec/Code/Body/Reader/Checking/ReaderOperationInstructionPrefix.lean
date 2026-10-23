@@ -2,140 +2,19 @@ import Exec.Code.Body.Reader.Checking.ReaderDeadOperationInstructionPrefix
 import Exec.Code.Body.Reader.Checking.ReaderNumericInstructionPrefix
 import Exec.Code.Body.Reader.Float.ReaderFloatInstructionPrefix
 import Exec.Code.Body.Reader.Checking.ReaderCoreInstructionPrefix
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
-theorem reader_numeric_checked_prefix_wasm1 {jumpTables : List U32} {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (initial before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
-      parents current st.vals.val p.start.val)
-    (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  by_cases live : before.reachable = true
-  · obtain ⟨entered,retained⟩ := invariant.live live
-    have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
-    obtain ⟨codeFits,sourceFits,_,_⟩ := invariant.capacities bound
-    have coordinateFits : before.function.body_start.val+before.next_source.val ≤ Usize.max := by
-      have cursor := invariant.cursor
-      have position := p.inbounds
-      omega
-    exact reader_numeric_open_instructions_wasm1 p ops law before after out op baseOpcode (invariant.known live) (monomorphic live) retained.layout live
-      codeFits sourceFits coordinateFits held exits byte accepted
-  · exact reader_dead_numeric_checked_prefix_wasm1 p ops law before after out (Bool.eq_false_iff.mpr live) op baseOpcode held exits byte accepted
-
-/-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
-theorem reader_float_checked_prefix_wasm1 {jumpTables : List U32} {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (initial before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
-      parents current st.vals.val p.start.val)
-    (C : context) (contextLocals : C.LOCALS = locals)
-    (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  by_cases live : before.reachable = true
-  · obtain ⟨entered,retained⟩ := invariant.live live
-    have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
-    obtain ⟨codeFits,sourceFits,_,_⟩ := invariant.capacities bound
-    have coordinateFits : before.function.body_start.val+before.next_source.val ≤ Usize.max := by
-      have cursor := invariant.cursor
-      have position := p.inbounds
-      omega
-    exact reader_float_open_instructions_wasm1 p ops law before after out op C (contextLocals.trans retained.localsEq.symm) baseOpcode (invariant.known live) (monomorphic live) retained.layout live
-      codeFits sourceFits coordinateFits held exits byte accepted
-  · exact reader_dead_float_checked_prefix_wasm1 p ops law before after out (Bool.eq_false_iff.mpr live) op baseOpcode held exits byte accepted
-
-/-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
-theorem reader_memory_load_checked_prefix_wasm1 {jumpTables : List U32} {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (initial before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
-      parents current st.vals.val p.start.val)
-    (C : context) (contextLocals : C.LOCALS = locals)
-    (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
-    (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Memory.Load)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  by_cases live : before.reachable = true
-  · obtain ⟨entered,retained⟩ := invariant.live live
-    have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
-    obtain ⟨codeFits,sourceFits,_,_⟩ := invariant.capacities bound
-    have coordinateFits : before.function.body_start.val+before.next_source.val ≤ Usize.max := by
-      have cursor := invariant.cursor
-      have position := p.inbounds
-      omega
-    exact reader_memory_load_open_instructions_wasm1 p ops law before after out op C (contextLocals.trans retained.localsEq.symm) contextMemories (invariant.known live) (monomorphic live) retained.layout live
-      codeFits sourceFits coordinateFits held exits byte accepted
-  · exact reader_dead_memory_load_checked_prefix_wasm1 p ops law before after out (Bool.eq_false_iff.mpr live) op held exits byte accepted
-
-/-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
-theorem reader_memory_store_checked_prefix_wasm1 {jumpTables : List U32} {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (initial before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
-      parents current st.vals.val p.start.val)
-    (C : context) (contextLocals : C.LOCALS = locals)
-    (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
-    (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Memory.Store)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  by_cases live : before.reachable = true
-  · obtain ⟨entered,retained⟩ := invariant.live live
-    have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
-    obtain ⟨codeFits,sourceFits,_,_⟩ := invariant.capacities bound
-    have coordinateFits : before.function.body_start.val+before.next_source.val ≤ Usize.max := by
-      have cursor := invariant.cursor
-      have position := p.inbounds
-      omega
-    exact reader_memory_store_open_instructions_wasm1 p ops law before after out op C (contextLocals.trans retained.localsEq.symm) contextMemories (invariant.known live) (monomorphic live) retained.layout live
-      codeFits sourceFits coordinateFits held exits byte accepted
-  · exact reader_dead_memory_store_checked_prefix_wasm1 p ops law before after out (Bool.eq_false_iff.mpr live) op held exits byte accepted
-
-/-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -160,12 +39,12 @@ theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env so
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (C : context) (contextLocals : C.LOCALS = locals)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -191,12 +70,12 @@ theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sour
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (C : context) (contextLocals : C.LOCALS = locals)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
@@ -223,12 +102,12 @@ theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data en
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (C : context) (contextLocals : C.LOCALS = locals)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
@@ -255,12 +134,12 @@ theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data e
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -285,12 +164,12 @@ theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (C : context) (contextLocals : C.LOCALS = locals)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)

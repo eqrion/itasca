@@ -4,7 +4,7 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- Entry rejections retain the exact allocator, frame limit, value limit, or interrupt witness. -/
-theorem call_defined_supported_entry_outcomes {emission : Interp.StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M P F A : Type}
+theorem call_defined_supported_entry_outcomes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
@@ -13,8 +13,8 @@ theorem call_defined_supported_entry_outcomes {emission : Interp.StructuredMachi
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
     (functionTyping : Interp.CoreFunctionsTyped view code store)
-    (coveredFunctions : Abs.FunctionsSupported allowed (Store.decodeStore view code store))
-    (compiledFunctions : Interp.StructuredMachine.CompiledFunctions emission code store)
+    (coveredFunctions : Abs.FunctionsSupported (Store.decodeStore view code store))
+    (compiledFunctions : Interp.StructuredMachine.CompiledFunctions code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
@@ -28,7 +28,7 @@ theorem call_defined_supported_entry_outcomes {emission : Interp.StructuredMachi
     (hw : function.code = .Wasm instanceIndex functionIndex) :
     runtime.interp.call memory hooks floats allocator before store platform address 0#usize ⦃ out =>
       out.2.2.1 = store ∧ (out.1 = .Ok () → ∃ entry,
-        Interp.StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store out.2.1 entry
+        Interp.StructuredMachine.Execution view code store out.2.1 entry
           (signature.results.val.map Interp.sourceType) 0 false ∧
         Abs.Ownership.StatefulOwned (Store.ownershipBounds store) entry ∧
         entry.ambient = ambient ∧

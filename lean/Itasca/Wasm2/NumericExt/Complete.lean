@@ -29,7 +29,7 @@ private theorem empty_saturating (st : code.OpIterState) (opcode : U32) :
   split <;> rfl
 
 /-- A sign-extension byte accepts its independently typed principal effect. -/
-theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.sign_extension {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) (op : Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.signMeaning opcode = some op)
@@ -37,7 +37,7 @@ theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : module
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨rfl, rfl⟩ := NumericExtensions.sign_signature hmap C ins outs ht
   obtain ⟨s, after, hs, hc, hp, hv, hl, hout⟩ := Numeric.read.complete op st.core f.core.outer
@@ -49,7 +49,7 @@ theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : module
     omega
   refine ⟨{st with core := s}, ?_, hp.trans hb.empty.symm,
     ⟨f.core.output_of_same_ctrls hc hv hout, code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index opcode hscalar]
+  · rw [step.scalar_eq st data env profile ctx index opcode hscalar]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.base _ _ _ _ _ _ _ (by
       simp only [List.mem_cons, List.not_mem_nil, or_false, not_or]
@@ -59,7 +59,7 @@ theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : module
     omega
 
 /-- A saturating conversion accepts every valid u32 LEB encoding of its subopcode. -/
-theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.saturating {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Numeric.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.saturatingMeaning subopcode = some op)
@@ -67,7 +67,7 @@ theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env
     (hsize : st.core.vals.val.length < Usize.max)
     (ht : Instr_ok C op.instruction (.mk_functype (.mk_list ins) (.mk_list outs)))
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ ins)) :
-    ∃ s, step st data env ctx index 0xFC#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env profile ctx index 0xFC#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ outs) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨rfl, rfl⟩ := NumericExtensions.saturating_signature hmap C ins outs ht
   let decoded : code.OpIterState := {st.core with pos := next}
@@ -77,7 +77,7 @@ theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : module.Env
   have hread := hb.read_u32 subopcode he
   refine ⟨{st with core := s}, ?_, hp,
     ⟨f.core.output_of_same_ctrls hc hv hout, code.BodyState.blocks_eq_of_ctrls hc⟩, ?_⟩
-  · rw [step.scalar_eq st data env ctx index 0xFC#u8 (by decide)]
+  · rw [step.scalar_eq st data env profile ctx index 0xFC#u8 (by decide)]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     have hd : Leb128.Decoded data st.core.pos subopcode next := ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
     have hsub : subopcode.val < 8 := by

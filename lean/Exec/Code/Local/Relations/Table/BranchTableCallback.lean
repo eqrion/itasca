@@ -58,39 +58,4 @@ theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
       have empty := runtime_clear lowered.table_depths
       rw [clearCalled,WP.spec_ok] at empty
       exact ⟨budget,depths,lowered,cleared,depthEq,by simpa only [live] using lowerCalled,empty,observeCalled⟩
-/-- Every successful terminal table callback restores the empty collection
-buffer and leaves the following source continuation unreachable. -/
-theorem compiler_br_table_clears {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (default : U32) (types : Itasca.signature.ResultType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
-      ops before state default types = .ok (.Ok (),after)) :
-    after.table_depths.val = [] ∧ after.reachable = false := by
-  by_cases live : before.reachable = true
-  · obtain ⟨budget,depths,lowered,cleared,_,_,empty,observed⟩ :=
-      compiler_br_table_success ops law before after state default types live accepted
-    have kept := compiler_observe_frame ops law {lowered with reachable := false,table_depths := cleared} state
-    rw [observed,WP.spec_ok] at kept
-    dsimp only [ObserveFrame] at kept
-    rw [kept]
-    exact ⟨empty,rfl⟩
-  · have dead : before.reachable = false := by cases h : before.reachable <;> simp_all
-    unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at accepted
-    obtain ⟨⟨result,labeled⟩,labeledCall,rest⟩ := bind_ok_inv _ _ _ accepted
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      obtain ⟨budget,depths,rfl,_⟩ := compiler_table_label_success ops law before labeled state default labeledCall
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,dead,Bool.false_eq_true,ite_false] at rest
-      obtain ⟨cleared,clearCalled,observed⟩ := bind_ok_inv _ _ _ rest
-      have empty := runtime_clear depths
-      rw [clearCalled,WP.spec_ok] at empty
-      have kept := compiler_observe_frame ops law {before with budget,table_depths := cleared} state
-      simp only [dead] at kept
-      rw [observed,WP.spec_ok] at kept
-      dsimp only [ObserveFrame] at kept
-      rw [kept]
-      exact ⟨empty,rfl⟩
 end Exec.Code

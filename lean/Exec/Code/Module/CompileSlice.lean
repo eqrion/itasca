@@ -1,6 +1,50 @@
 import Exec.Code.Module.CompileSourceSetup
 import Exec.Code.Module.CompileSchedulerAssembly
-import Exec.Code.Module.SchedulerSlice
+import Exec.Code.Module.SchedulerSubmission
+import Exec.Code.Local.Source.SourceBatchLookup
+import Exec.Code.Body.Relations.Common.EntryCompilerInitial
+import Exec.Code.Body.Callbacks.Common.CompilerPrefix
+import Exec.Code.Body.Reader.Common.ReaderBoundary
+import Exec.Code.Body.Reader.Control.ReaderScopeFronts
+import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
+import Exec.Code.Local.Control.Common.UniversalTerminal
+import Exec.Code.Local.Relations.Common.Prefix
+import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
+import Exec.Code.Local.Control.Common.UniversalRoot
+import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
+import Exec.Code.Body.Reader.Control.ReaderControlBoundary
+import Exec.Code.Local.Source.TypedRunClosed
+import Exec.Code.Body.Reader.Common.ReaderStacks
+import Exec.Code.Local.Callbacks.Common.CompilerMetadata
+import Exec.Code.Local.Callbacks.Common.CloseFunction
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Code.Local.Relations.Common.LabelWiden
+import Exec.Code.Local.Relations.Common.Extension
+import Itasca.Support.EnvTranslation
+import Exec.Code.Body.Reader.Common.ReaderCompilerOrdinary
+import Exec.Code.Body.Reader.Control.ReaderCompilerScopes
+import Exec.Code.Body.Reader.Common.ReaderCompilerBounds
+import Exec.Code.Local.Callbacks.Control.ElseSource
+import Exec.Code.Local.Callbacks.Control.ElseTransition
+import Exec.Code.Local.Callbacks.Common.FramePlanPop
+import Exec.Code.Local.Relations.Common.ResolvedGuards
+import Exec.Code.Local.Callbacks.Control.ScopeStackElse
+import Exec.Code.Local.Control.Common.UniversalDormant
+import Exec.Code.Local.Callbacks.Control.ScopeStackClose
+import Exec.Code.Local.Callbacks.Control.EnterElse
+import Exec.Code.Local.Relations.Control.ControlCursor
+import Exec.Code.Local.Relations.Control.ControlSources
+import Exec.Code.Local.Relations.Control.ControlMapCounts
+import Exec.Code.Local.Relations.Control.KnownControlStack
+import Exec.Code.Local.Callbacks.Control.ElseSuccess
+import Exec.Code.Local.Relations.Control.ControlObservedLayout
+import Exec.Code.Local.Relations.Common.PrefixZipper
+import Exec.Code.Local.Callbacks.Control.ElseFrames
+import Exec.Code.Local.Callbacks.Control.CloseGuardedScope
+import Exec.Code.Local.Relations.Common.ResolvedLiteral
+import Exec.Code.Body.Reader.Common.ReaderEndSignature
+import Exec.Code.Module.CompileEntryBounds
+import Exec.Code.Local.Source.SourceSubmission
 
 /-! Source-ordered slice certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
@@ -30,47 +74,4 @@ theorem CompileSourceCertificate.available {A : Type} {ops : runtime.platform.Al
   · obtain ⟨buffer, read, _⟩ := actual.tail_read
     exact ⟨buffer, read, c.coherent.tail_eq buffer read⟩
 
-/-- Actual successful compilation establishes all defined-function source
-certificates for the independently encoded integer slice. The scheduler,
-reader, compiler callbacks and final assembly are discharged internally. -/
-theorem CompileSourceCertificate.slice_functions {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
-    (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops) (subset : ModuleSlice c.raw) :
-    ModuleFunctions executable (sourceFunctions c.raw) ∧ InitializerMappings executable := by
-  obtain ⟨signatures,slots,origin⟩ := c.scheduler_setup law
-  have initial : SchedulerSlice w.env (sourceFunctions c.raw) c.run.remaining.configured :=
-    ⟨signatures, slots, origin, c.initial_functions law⟩
-  have submitted := c.run.remaining.submit_call
-  rw [c.code_length] at submitted
-  have certified := compiler_submit_source_functions ops law
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
-    {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64
-    w.env c.code profile c.run.remaining.config c.raw subset c.functions c.entryBounds
-    c.environmentProfile.1 c.environment.val c.tail.val c.available c.codeBound
-    c.run.remaining.entries c.entries c.codeCount c.run.remaining.configured c.run.remaining.submitted
-    c.run.remaining.pending initial submitted
-  exact c.functions_of_submission law certified.functions
-
-/-- Public compilation of an independently encoded slice module produces
-source-ordered certificates for the exact canonical module syntax. -/
-theorem compile_slice_functions {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
-    (limits : runtime.compiler.CompileLimits) (executable : runtime.compiler.ExecutableModule)
-    (subset : SourceSlice profile bytes)
-    (accepted : runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable)) :
-    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
-      ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw) ∧
-      ModuleElaboration.Matches executable.module.env executable.module.tail raw ∧
-      Module_ok (ModuleElaboration.moduleOf raw) ∧ ModuleElaboration.Profile raw profile ∧
-      ModuleElaboration.AccessorTypes executable.module.env raw ∧ ModuleSlice raw ∧
-      ModuleFunctions executable (sourceFunctions raw) ∧ InitializerMappings executable ∧
-      executable.profile = profile := by
-  obtain ⟨w⟩ := compile_accepted ops bytes profile limits executable accepted
-  obtain ⟨c⟩ := w.source_certificate law
-  have certificates := c.slice_functions law (subset.decoded c.encoded)
-  obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors⟩ := (w.source_validated law).1
-  have same := Profile.module_unique encoded c.encoded
-  subst raw
-  exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
-    subset.decoded c.encoded, certificates.1, certificates.2, (w.initializers law).2.1⟩
 end Exec.Code

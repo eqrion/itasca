@@ -2,11 +2,10 @@ import Exec.Interp.StructuredMachine.CompiledFunctions
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Abs.CallSafety
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
-    {store : runtime.store.Store M} (compiledFunctions : CompiledFunctions emission code store)
+    {store : runtime.store.Store M} (compiledFunctions : CompiledFunctions code store)
     (view : M → Slice U8) (typed : CoreFunctionsTyped view code store)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (instanceIndex functionIndex : Usize)
@@ -17,7 +16,7 @@ theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
       inst.module.functions.val[functionIndex.val]? = some compiled ∧
       store.types.val[function.signature.val]? = some signature ∧
       FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType) ∧
-      FunctionCode emission (Code.moduleFunctionContext inst.module
+      FunctionCode (Code.moduleFunctionContext inst.module
         (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType))
         (signature.params.val.map sourceType) declared (signature.results.val.map sourceType) body compiled epilogue ∧
       Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)

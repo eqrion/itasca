@@ -61,13 +61,4 @@ theorem InfiniteChosenSource.prepend_step {choices : SourceChoices} {occurrence 
   | zero => simpa only [Nat.add_zero,initial] using source
   | succ n => simpa only [Nat.add_assoc,Nat.add_comm,Nat.add_left_comm] using edges n
 
-theorem ChosenStepsN.prepend_infinite {choices : SourceChoices} {occurrence count : Nat}
-    {before after : config} {events : List HostEvent} (source : ChosenStepsN choices occurrence count before events after)
-    (infinite : InfiniteChosenSource choices (occurrence+count) after) : InfiniteChosenSource choices occurrence before := by
-  induction source with
-  | refl occurrence wf => simpa only [Nat.add_zero] using infinite
-  | cons first tail ih =>
-    apply InfiniteChosenSource.prepend_step first
-    apply ih
-    simpa only [Nat.add_assoc,Nat.add_comm,Nat.add_left_comm] using infinite
 end Exec.Spec

@@ -15,7 +15,7 @@ theorem TypedSelectEmission.instructions_accept {C before source emitted after}
       runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
   cases emission with
   | select front ty left right condition first second test =>
-    exact (CoreEmission.select front ty left right condition first second test).instructions_accept function inputs outputs
+    exact (ScalarEmission.select front ty left right condition first second test).instructions_accept function inputs outputs
 
 /-- Every ordinary complete-profile emission passes the bytecode checker from
 source stack capacities and the exact retained tables. Branch-table gates are
@@ -29,10 +29,10 @@ theorem ExecutableEmission.ordinary_instructions_accept (function : runtime.byte
     ∀ instruction ∈ emitted,
       runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
   cases emission with
-  | base head =>
-    cases head with
-    | left scalar => exact scalar.instructions_accept function rfl inputs outputs
-    | right vector => exact vector.instructions_accept function rfl rfl inputs outputs
+  | scalar head => exact head.instructions_accept function inputs outputs
+  | stateful head => exact head.instructions_accept function rfl inputs outputs
+  | indirect head => exact head.instructions_accept function rfl inputs
+  | simd head => exact head.instructions_accept function rfl rfl inputs outputs
   | typedSelect head => exact head.instructions_accept function inputs outputs
   | branchTable stack depths fallback selector start len => exact False.elim (ordinary depths fallback rfl)
 

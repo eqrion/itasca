@@ -1,5 +1,6 @@
 import Exec.Spec.TableInitSource
-import Exec.Spec.MemoryInitBoundary
+import Exec.Spec.Wf
+import Mathlib.Tactic
 import SpecExt.Builtins.Bytes
 
 namespace Exec.Spec.Segment

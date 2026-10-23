@@ -1,4 +1,11 @@
-import Exec.Theorems.Host.HostCallStructuredStep
+import Exec.Theorems.Host.HostCallSource
+import Exec.Interp.Relations.FrameStorePrefix
+import Exec.Theorems.Host.HostResumeOwned
+import Exec.Theorems.Host.HostStructuredResume
+import Exec.Theorems.Host.HostCallContext
+import Exec.Theorems.Composition.FrameStorePrefixStaged
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Interp.StructuredMachine.StructuredCall
 import Exec.Theorems.Host.Chosen.HostCallChosenWorld
 import Exec.Theorems.Host.Chosen.HostCallChosenContext
 import Exec.Theorems.Host.Chosen.HostCallChosenErasure
@@ -8,14 +15,14 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 open Exec.Interp.StructuredMachine
 
 theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s, Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s, Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (entryTyped : Store_ok (Store.decodeStore view code store))
@@ -35,9 +42,9 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
     (hostCode : function.code=.Host host)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
@@ -58,7 +65,7 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
       hooks.call_host p store host args results=.ok answer →
       ∀ value∈answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore emission allowed view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
+      ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length≤out.2.2.1.externs.length ∧
       ∃ signature base pc front args,
@@ -76,7 +83,7 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
           (∃ n, 2≤n ∧ Spec.ChosenStepsN choices occurrence n
            (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
            (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
-          (out.1=.Ok () → ∃ finalPC, Execution emission (Abs.SupportedState allowed) view afterCode out.2.2.1 out.2.1
+          (out.1=.Ok () → ∃ finalPC, Execution view afterCode out.2.2.1 out.2.1
             ⟨Store.decodeStore view afterCode out.2.2.1,ambient,
               {f with code := after,vals := front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
             Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ⦄ := by
@@ -137,7 +144,7 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
     apply step_direct_call memory hooks floats allocator exec store platform frameIndex raw caller compiled
       index offset address base last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset
     intro pc hpc
-    have tailCode : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+    have tailCode : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
         compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++signature.results.val.map sourceType) after pc.val next output := by
       simpa only [hpc,signatureTypes.2,point.locals] using continuation
     obtain ⟨out,callActual,result⟩ := WP.spec_imp_exists (call_host_chosen_retained_world (choices:=choices) (occurrence+1) memory hooks floats allocator allocation interrupts view code
@@ -151,10 +158,10 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
     rw [callActual,WP.spec_ok]
     obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
     have same := Store.decodeStore_code_agrees view agrees
-    have newMachine : Execution emission (Abs.SupportedState allowed) view afterCode store exec
+    have newMachine : Execution view afterCode store exec
         ⟨Store.decodeStore view afterCode store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false := by
       simpa only [same] using machine.change_code agrees
-    have newPoint : FramePoint emission (Store.decodeStore view afterCode store) raw
+    have newPoint : FramePoint (Store.decodeStore view afterCode store) raw
         {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output := by
       simpa only [same] using point
     have newPending : Abs.HostPending

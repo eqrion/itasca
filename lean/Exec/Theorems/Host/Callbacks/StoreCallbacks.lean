@@ -100,24 +100,4 @@ theorem Program.correct {M : Type} (memory : runtime.platform.MemoryBuffer M)
   rintro answer ⟨certified,metadata,extension,externs,owned⟩
   exact ⟨certified,metadata,extension,externs,fun value member=>(owned value member).issued⟩
 
-/-- Selectors receive copied arguments, not the store. Mutable memory borrows
-cannot escape a program or span later callback actions. -/
-def platform {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) : runtime.platform.Platform Unit M where
-  MemoryBufferInst := memory
-  interrupt token := .ok (.Continue,token)
-  call_host token store identity args _ := do
-    let answer ← (select identity args).run memory store
-    .ok (answer.1,token,answer.2.1,answer.2.2)
-
-theorem sound {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8)
-    (code : Store.CodeInterpretation) :
-    Platform.HostSound (platform memory select) (ExecutableInv view code) (Store.decodeStore view code) := by
-  apply Platform.HostSound.of_invariant (fun _ held => held.source_typed)
-  intro token store identity args results held
-  unfold platform
-  step with (select identity args).correct memory view code store held as ⟨answer,fresh,_,extension,_,_⟩
-  exact ⟨fresh,extension⟩
-
 end Exec.Theorems.StoreCallbacks

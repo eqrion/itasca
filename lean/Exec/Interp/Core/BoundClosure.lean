@@ -1,4 +1,8 @@
-import Exec.Interp.Core.SyntaxClosure
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Control.NormalizeClosure
 namespace Exec.Interp
 
@@ -7,10 +11,6 @@ def FrameBoundClosure (before after : Abs.AFrame) : Prop :=
   ∀ bound, Abs.FrameCodeBound bound before → Abs.FrameCodeBound bound after
 
 theorem FrameBoundClosure.refl (f : Abs.AFrame) : FrameBoundClosure f f := fun _ h => h
-
-theorem FrameBoundClosure.trans {before middle after}
-    (first : FrameBoundClosure before middle) (second : FrameBoundClosure middle after) :
-    FrameBoundClosure before after := fun bound h => second bound (first bound h)
 
 theorem FrameBoundClosure.tail (f : Abs.AFrame) (op : instr) (after : List instr)
     (locals values : List val) :

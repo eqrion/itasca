@@ -13,31 +13,6 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
-/-- `ref.func` of a 32-bit index is a well-formed instruction. -/
-theorem refFunc_wf (idx : U32) : wf_instr (.REF_FUNC (.mk_uN idx.val)) :=
-  .instr_case_41 _ (EnvTranslation.index_wf idx)
-
-/-- `ref.func idx` is a constant `funcref` expression when `idx` is a function index of `C`. -/
-theorem refFunc_const (C : context) (hC : wf_context C) (idx : U32)
-    (hi : idx.val < C.FUNCS.length) :
-    Expr_ok_const C [.REF_FUNC (.mk_uN idx.val)] .FUNCREF := by
-  have hw := refFunc_wf idx
-  have hws : Forall wf_instr [instr.REF_FUNC (.mk_uN idx.val)] := by simpa [Forall] using hw
-  have ht : Instr_ok C (.REF_FUNC (.mk_uN idx.val)) (.mk_functype (.mk_list []) (.mk_list [.FUNCREF])) :=
-    .ref_func C _ C.FUNCS[idx.val]! hi rfl hC hw
-  exact .mk_Expr_ok_const C _ _
-    (.mk_Expr_ok C _ _ (.instr C _ [] _ ht hC hw) hC hws)
-    (.mk_Expr_const C _ (by simpa [Forall] using Instr_const.ref_func C _ hC hw) hC hws)
-    hC hws
-
-/-- An elaborated element segment is well formed. -/
-theorem element_wf (entry : ModuleBinary.Element) : wf_elem (element entry) := by
-  constructor
-  · simp only [Forall, List.mem_map]
-    rintro _ ⟨init, _, rfl⟩
-    exact ModuleConstants.expression_wf init
-  · exact ModuleSegments.elementMode_wf entry.mode
-
 /-- Each element segment of a valid environment is typed in the initializer context. -/
 theorem element_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (entry : module.Element) (he : entry ∈ env.elements.val) :

@@ -8,8 +8,8 @@ import Exec.Theorems.Api.SupportedTableGrowExecutionChosen
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 theorem stateful_chosen_execution_supported {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat) {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    (language : Abs.Supported.Language allowed) {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (vector : choices.vector=Spec.firstVectorChoice) (occurrence : Nat)
+ {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
@@ -23,50 +23,50 @@ theorem stateful_chosen_execution_supported {choices : Spec.SourceChoices} (admi
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
     (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
-      ChosenSupportedStepOutcome choices occurrence emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
+      ChosenSupportedStepOutcome choices occurrence allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ out ⦄ := by
   cases op with
   | refNull type =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refNull type) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refNull type) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | refFunc function =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refFunc function) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refFunc function) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | refIsNull  =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refIsNull) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.refIsNull) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | tableGet table =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableGet table) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableGet table) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | tableSize table =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableSize table) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.tableSize table) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | memorySize  =>
-    exact stateful_read_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.memorySize) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_read_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after (.memorySize) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | tableSet table =>
-    exact stateful_table_set_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
+    exact stateful_table_set_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
   | tableGrow table =>
-    exact stateful_table_grow_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator allocation view code compatible exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
+    exact stateful_table_grow_execution_supported_chosen admissible vector occurrence memory hooks floats allocator allocation view code compatible exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
   | tableFill table =>
-    exact stateful_table_fill_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
+    exact stateful_table_fill_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds owned
   | tableCopy destination source =>
-    exact stateful_table_copy_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after destination source last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_table_copy_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after destination source last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | tableInit table element =>
-    exact stateful_table_init_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table element last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_table_init_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after table element last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | memoryGrow  =>
-    exact stateful_memory_grow_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code compatible exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_memory_grow_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code compatible exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | memoryFill  =>
-    exact stateful_memory_fill_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_memory_fill_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | memoryCopy  =>
-    exact stateful_memory_copy_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_memory_copy_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after  last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | memoryInit data =>
-    exact stateful_memory_init_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after data last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_memory_init_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after data last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | elemDrop element =>
-    exact stateful_drop_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.elemDrop element) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_drop_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.elemDrop element) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
   | dataDrop data =>
-    exact stateful_drop_execution_supported_chosen admissible vector occurrence language memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.dataDrop data) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
+    exact stateful_drop_execution_supported_chosen admissible vector occurrence memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.dataDrop data) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
 
 end Exec.Theorems

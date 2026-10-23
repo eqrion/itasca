@@ -21,7 +21,7 @@ open VisitorTrace CallbackTrace
 
 /-- The callback trace of one `code.step_wasm2` leaf is a `StepTrace` under the independent
 pending-byte cursor. -/
-def StepRecords {data env locals index st} (p : Pending data env locals index st)
+def StepRecords {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (ctx : code.Context) (opcode : U8) : Prop :=
   ∀ v result final v', code.step_wasm2 visitor st.core data env ctx opcode v =
@@ -65,7 +65,7 @@ theorem metadata_post {A B : Type} (st : code.OpIterState)
       obtain ⟨rfl, rfl⟩ := run
       simpa [hpos] using hp a rfl
 
-theorem metadata_bytes {data env locals index st} (p : Pending data env locals index st)
+theorem metadata_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)
@@ -80,7 +80,7 @@ theorem metadata_bytes {data env locals index st} (p : Pending data env locals i
   exact metadata_post st.core outer p.current.vals stack
     (by simp [Control.base, ctrls, base]) capacity decode pops output metadata P decoded value final run
 
-theorem metadata_bytes_at {data env locals index st} (p : Pending data env locals index st)
+theorem metadata_bytes_at {data env profile locals index st} (p : Pending data env profile locals index st)
     (next : Usize) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List types.ValueType) (output : A → Option types.ValueType)

@@ -32,16 +32,6 @@ inductive ChoiceFreeWriteRedex : List admininstr → Prop where
       ChoiceFreeWriteRedex [.CONST .I32 position,.VCONST .V128 value,.VSTORE_LANE .V128 width argument lane]
   | dataDrop (index : idx) : ChoiceFreeWriteRedex [.DATA_DROP index]
 
-/-- Control-rule classification inspects only the actual reduced pure redex,
-so inactive numeric instructions after a branch do not require choices. -/
-theorem label_redex_choice_free (arity : Nat) (continuation : List instr) (body : List admininstr) :
-    ChoiceFreePureRedex [.LABEL_ arity continuation body] := by
-  simp [ChoiceFreePureRedex,pureRedexUsesChoice]
-
-theorem frame_redex_choice_free (arity : Nat) (frame : _root_.frame) (body : List admininstr) :
-    ChoiceFreePureRedex [.FRAME_ arity frame body] := by
-  simp [ChoiceFreePureRedex,pureRedexUsesChoice]
-
 /-- A choosing pure redex contains only its operands and numeric operator. -/
 theorem choosing_pure_has_no_trap {body : List admininstr} (choosing : pureRedexUsesChoice body = true) :
     admininstr.TRAP ∉ body := by

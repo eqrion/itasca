@@ -23,14 +23,14 @@ theorem data_order_loop {M A : Type}
     (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
     (base : Nat) (initial : List Nat)
     (ordered : AddressOrder base initial store.datas.length (inst.datas.val.map (UScalar.val))) :
-    runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting after) ∧
         InitializerFunctionMetadataAt store inst after instIndex ∧ (∃ next, after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           AddressOrder base initial after.datas.length (next.datas.val.map (UScalar.val)) ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next) ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop9
+  unfold runtime.store.instantiate.Store.prepare_instance_loop9
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.val.length - state.2.2.val)
     (fun state => StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
@@ -44,7 +44,7 @@ theorem data_order_loop {M A : Type}
   · rintro ⟨current, result, index⟩ ⟨hstaged, hobjects, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, horder, hbindings, himports, hsegments, hcapacity, hstoreCapacity⟩
     dsimp only at hstaged hobjects haccounted hmetadata hindex hfound hsource horder hbindings himports hsegments hcapacity hstoreCapacity ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop9.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,

@@ -32,38 +32,4 @@ theorem table_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   intro function member
   rfl
 
-/-- Concrete lookup and bounds exactly select the generated read rule. -/
-theorem table_read_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
-    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst)
-    (moduleEq : ambient.MODULE = decodeInstance store inst)
-    (mapped : inst.tables.val[index.val]? = some address)
-    (found : store.tables.val[address.index.val]? = some object)
-    (storeWf : wf_store (decodeStore view code store)) (ambientWf : wf_frame ambient) :
-    StepH ⟨⟨decodeStore view code store,ambient⟩,[Spec.Segment.i32 position.val,.TABLE_GET (.mk_uN index.val)]⟩ []
-      ⟨⟨decodeStore view code store,ambient⟩,if position.val < object.elements.length then
-        [admininstr_ref (decodeRef object.ty object.elements.val[position.val]!)] else [.TRAP]⟩ := by
-  have source := Spec.table_get_step (decodeStore view code store) ambient index.val position.val storeWf ambientWf (by scalar_tac) (by scalar_tac)
-  rw [table_lookup_decodes view code store inst ambient index address object moduleEq mapped found] at source
-  by_cases inside : position.val < object.elements.length
-  · simpa [decodeTable,inside,_root_.getElem!_pos,alloc.vec.Vec.length] using source
-  · simpa [decodeTable,inside,alloc.vec.Vec.length] using source
-
-/-- A successful raw table write has the source TABLE_SET step. -/
-theorem table_write_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
-    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst) (word : U64)
-    (moduleEq : ambient.MODULE = decodeInstance store inst)
-    (mapped : inst.tables.val[index.val]? = some address)
-    (found : store.tables.val[address.index.val]? = some object)
-    (storeWf : wf_store (decodeStore view code store)) (ambientWf : wf_frame ambient)
-    (inside : position.val < object.elements.length) :
-    StepH ⟨⟨decodeStore view code store,ambient⟩,
-      [Spec.Segment.i32 position.val,admininstr_ref (decodeRef object.ty word),.TABLE_SET (.mk_uN index.val)]⟩ []
-      ⟨⟨decodeStore view code {store with tables := store.tables.set address.index ({object with elements := object.elements.set (UScalar.cast .Usize position) word})},ambient⟩,[]⟩ := by
-  rw [table_write_decodes view code store inst ambient index position address object word moduleEq mapped found]
-  apply Spec.Segment.table_write_step _ _ _ _ _ storeWf ambientWf (by scalar_tac) (by scalar_tac)
-  · simpa [moduleEq,decodeInstance] using (List.getElem?_eq_some_iff.mp mapped).1
-  · rw [table_lookup_decodes view code store inst ambient index address object moduleEq mapped found]
-    simpa [decodeTable] using inside
 end Exec.Interp

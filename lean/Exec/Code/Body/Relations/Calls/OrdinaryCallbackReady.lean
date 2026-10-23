@@ -49,7 +49,7 @@ structure OrdinaryCallbackReady {A} (compiler : runtime.compiler.FunctionCompile
 
 theorem ordinary_callback_ready_of_prefix {A} {initial compiler : runtime.compiler.FunctionCompiler A}
     {jumpTables emit types functions returns locals parents current values position}
-    (point : StructuredCompilerPrefixWithTables jumpTables emit initial compiler types functions returns locals parents current values position)
+    (point : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current values position)
     {env : module.Env} {ctx : code.Context} (length : Nat)
     (namespaces : OrdinaryNamespaces initial env ctx)
     (observed : ObservedStack compiler values)
@@ -64,20 +64,6 @@ theorem ordinary_callback_ready_of_prefix {A} {initial compiler : runtime.compil
   have cursor := point.cursor
   exact ⟨namespaces.stable point.metadata,observed,capacities.1,capacities.2.1,
     by omega,by omega,by omega,by omega⟩
-
-theorem IndexedTableReaderCompilerPointWasm1.ordinary_ready {A} {initial compiler : runtime.compiler.FunctionCompiler A}
-    {emit types functions returns locals data env ctx bodyBt st}
-    (point : IndexedTableReaderCompilerPointWasm1 emit initial compiler types functions returns locals data env ctx bodyBt st)
-    (namespaces : OrdinaryNamespaces initial env ctx)
-    (observed : ObservedStack compiler st.vals.val)
-    (bodyBound : initial.function.body_start.val + data.length ≤ Usize.max)
-    (pairs : compiler.function.indirect.val.length ≤ compiler.function.code.val.length)
-    (simd : compiler.function.simd.val.length ≤ compiler.function.code.val.length)
-    (pool : compiler.function.v128_pool.val.length ≤ compiler.function.code.val.length) :
-    OrdinaryCallbackReady compiler env ctx st.vals.val := by
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  exact ordinary_callback_ready_of_prefix state.compiled data.length namespaces observed
-    state.boundary.source_bound state.boundary.bounds.pos bodyBound pairs simd pool
 
 theorem IndexedTableReaderCompilerPointWasm2.ordinary_ready {A} {initial compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals data env sourceLocals index ft st}

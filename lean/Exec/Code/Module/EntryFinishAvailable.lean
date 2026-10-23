@@ -13,7 +13,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
-    (limits : Profile.EnvironmentWithinLimits profile env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)
@@ -38,7 +38,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
   obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds profile called
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt,w.function_type]
-  have valid := CodeEntry.runBody.sound _ profile w.body env w.ctx w.typeIdx w.ft w.startedState after signature w.context_results
+  have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after signature
     (environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _)) w.body_accepted
   obtain ⟨_,source,_,_,bodyEncoding,_⟩ := valid
   have endFits : batchStart.val+finish.val ≤ Usize.max := by
@@ -46,10 +46,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
     omega
   have functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)) := slotsMatch
-  obtain ⟨header,closed,codeBound⟩ := witness_header_publication ops law w signaturesMatch functionTable endFits created bodyEncoding (by
-    intro old
-    subst profile
-    exact environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _))
+  obtain ⟨header,closed,codeBound⟩ := witness_header_publication ops law w signaturesMatch functionTable endFits created bodyEncoding
   rw [called,WP.spec_ok]
   exact ⟨rfl,ranges,header,closed,codeBound,compiler_finish_publication ops after closed header ranges instructions.indexed,effect⟩
 

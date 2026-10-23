@@ -87,22 +87,4 @@ theorem integer_source_declared (op : Abs.Numeric.Instruction) (refs : List func
   | eqz ty => cases ty <;> simp [Abs.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
   | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-theorem integer_source_not_block (op : Abs.Numeric.Instruction) (ty : blocktype) (body : List instr) :
-    op.source ≠ .BLOCK ty body := by
-  cases op with
-  | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source]
-  | _ => simp [Abs.Numeric.Instruction.source]
-
-theorem integer_source_not_loop (op : Abs.Numeric.Instruction) (ty : blocktype) (body : List instr) :
-    op.source ≠ .LOOP ty body := by
-  cases op with
-  | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source]
-  | _ => simp [Abs.Numeric.Instruction.source]
-
-theorem integer_source_not_ifelse (op : Abs.Numeric.Instruction) (ty : blocktype) (yes no : List instr) :
-    op.source ≠ .IFELSE ty yes no := by
-  cases op with
-  | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source]
-  | _ => simp [Abs.Numeric.Instruction.source]
-
 end Exec.Code

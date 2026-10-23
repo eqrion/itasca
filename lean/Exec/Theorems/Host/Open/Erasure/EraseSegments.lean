@@ -41,20 +41,6 @@ theorem extract_task_prefix {M F A : Type} (memory : runtime.platform.MemoryBuff
         omega
     · exact ⟨0,current,count+1,.nil current,active,by simpa only [same] using Interp.NormalTrace.next actual rest,by omega⟩
 
-/-- A factored return boundary supplies a standalone finite task return. -/
-theorem task_prefix_returns {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A) (select : Selector)
-    {count : Nat} {first last : State M}
-    (retained : Interp.ContinuingTrace (tick memory floats allocator select) count first last)
-    (boundary : ¬Nonterminal last) :
-    ∃answer,Interp.NormalTrace (tick memory floats allocator select) count first answer := by
-  obtain ⟨answer,actual⟩ := boundary_tick memory floats allocator select last boundary
-  refine ⟨answer,?_⟩
-  induction retained with
-  | nil state=>exact .done actual
-  | next step tail ih=>exact .next step (ih boundary actual)
-
-
 theorem continuing_shape {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A) (select : Selector)
     {count : Nat} {first last : State M} {root : TaskKind}

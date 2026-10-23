@@ -39,7 +39,7 @@ theorem source_entry_prepared (data : Slice U8) (env : module.Env) (index start 
     (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env)
-    (environment : Profile.Environment profile env) (limits : Profile.EnvironmentWithinLimits profile env)
+    (environment : Profile.Environment profile env) (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish) :
     ∃ w : CodeEntry.Prepared data env index start profile,
       w.finish = finish ∧ Profile.Body profile w.body env w.ctx.locals w.typeIdx := by
@@ -47,15 +47,15 @@ theorem source_entry_prepared (data : Slice U8) (env : module.Env) (index start 
     (module.validate_code_entry_with.complete_spec_of_body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       FullVisitor.empty_accepts data start env index entry finish () profile indexBound typed bounds encoded (by
         intro body ctx typeIdx ft signature results size bodyValid started
-        exact CodeEntry.runBody.complete _ FullVisitor.empty_accepts profile body env ctx typeIdx ft started
-          signature results environment limits size bodyValid))
+        exact code.validate_body_with.profile_complete _ FullVisitor.empty_accepts body env ctx typeIdx profile started
+          limits size bodyValid))
   dsimp only at accepted
   subst reply
   obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     data start env index finish () after bounds profile called
   refine ⟨preparedOfSourceWitness w,rfl,?_⟩
-  exact CodeEntry.runBody.sound _ profile w.body env w.ctx w.typeIdx w.ft w.startedState after
-    (by simp only [List.getElem?_eq_getElem w.type_lt,w.function_type]) w.context_results
+  exact code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after
+    (by simp only [List.getElem?_eq_getElem w.type_lt,w.function_type])
     (environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _)) w.body_accepted
 
 end Exec.Code

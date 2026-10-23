@@ -2,8 +2,7 @@ import Exec.Interp.StructuredMachine.StructuredCall
 import Exec.Interp.Machines.Uniform.UniformSourceControl
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmission} {supported owned}
-    (semantics : CallSemantics supported owned)
+theorem step_call_structured_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
@@ -16,41 +15,41 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (index : U32) (after : List instr)
     (decoded : s = Store.decodeStore view code store)
-    (compiledFunctions : CompiledFunctions emission code store)
+    (compiledFunctions : CompiledFunctions code store)
     (functionTyping : CoreFunctionsTyped view code store)
     (last : frameIndex.val + 1 = exec.frames.length)
     (hf : exec.frames.val[frameIndex.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some caller)
     (hc : caller.module.functions.val[raw.function.val]? = some compiled)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := .CALL (.mk_uN index.val) :: after } :: rest, []⟩)
-    (covered : supported ⟨s, ambient, { f with code := .CALL (.mk_uN index.val) :: after } :: rest, []⟩)
+    (covered : Abs.SupportedState ⟨s, ambient, { f with code := .CALL (.mk_uN index.val) :: after } :: rest, []⟩)
     (binding : FrameBinding store exec raw f)
     (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission s raw { f with code := .CALL (.mk_uN index.val) :: after }
+    (point : FramePoint s raw { f with code := .CALL (.mk_uN index.val) :: after }
       compiled C targets next output)
-    (relation : FrameStackRel emission store s exec ({ f with code := .CALL (.mk_uN index.val) :: after } :: rest)) :
+    (relation : FrameStackRel store s exec ({ f with code := .CALL (.mk_uN index.val) :: after } :: rest)) :
     (∃ address function host offset, compiled.code.val[raw.pc.val]? = some (.Call index offset) ∧
       caller.funcs.val[index.val]? = some address ∧
       store.funcs.val[address.index.val]? = some function ∧ function.code = .Host host) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ (out.1 = .Ok () →
         ∃ pc frames, (out.2.1.frames.val.getLast?).map (fun frame => frame.pc) = some pc ∧
-          FrameStackRel emission store s out.2.1 frames ∧
+          FrameStackRel store s out.2.1 frames ∧
           Abs.ATyped ⟨s, ambient, frames, []⟩ ∧
-          supported ⟨s, ambient, frames, []⟩ ∧
+          Abs.SupportedState ⟨s, ambient, frames, []⟩ ∧
           ConcreteSim compiled.code.length raw.pc.val pc.val false false
             ⟨s, ambient, { f with code := .CALL (.mk_uN index.val) :: after } :: rest, []⟩
             ⟨s, ambient, frames, []⟩ ∧
           UniformConcreteSim raw.pc.val pc.val false false
             ⟨s, ambient, {f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩
             ⟨s,ambient,frames,[]⟩ [] ∧
-          ReadyState emission store out.2.1 ⟨s, ambient, frames, []⟩ ∧
+          ReadyState store out.2.1 ⟨s, ambient, frames, []⟩ ∧
           (∀ expected, Abs.InvocationResult expected
               ⟨s, ambient, { f with code := .CALL (.mk_uN index.val) :: after } :: rest, []⟩ →
             Abs.InvocationResult expected ⟨s, ambient, frames, []⟩) ∧
-          (∀ bounds, owned bounds ⟨s,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ →
-            owned bounds ⟨s,ambient,frames,[]⟩) ∧
+          (∀ bounds, Abs.Ownership.StatefulOwned bounds ⟨s,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ →
+            Abs.Ownership.StatefulOwned bounds ⟨s,ambient,frames,[]⟩) ∧
           (∀ bound, Abs.CodeBound bound ⟨s,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ →
             Abs.CodeBound bound ⟨s,ambient,frames,[]⟩)) ∧
       (∀ error, out.1 = .Err error →
@@ -60,7 +59,7 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
   rw [point.locals] at current
   rcases codeRel_call_values index f.locals f.vals current with skip | actual
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
-    have targetPoint : FramePoint emission s { raw with pc := target }
+    have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .CALL (.mk_uN index.val) :: after } compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels, by simpa only [point.locals] using continuation, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩
     apply Or.inr
@@ -86,7 +85,7 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
       cases rejected
   · obtain ⟨front, args, params, results, offset, split, argumentTypes, signatureAt,
       argumentOffset, fetched, continuation⟩ := actual
-    obtain ⟨address, function, signature, addressAt, owned, functionAt, signatureAtStore, signatureEq⟩ :=
+    obtain ⟨address, function, signature, addressAt, ownedHere, functionAt, signatureAtStore, signatureEq⟩ :=
       program.resolve_call caller hi index.val ⟨.mk_list params, .mk_list results⟩ signatureAt
     cases defined : function.code with
     | Host host => exact Or.inl ⟨address,function,host,offset,fetched,addressAt,functionAt,defined⟩
@@ -114,7 +113,7 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
               args defaults body :: { f with code := after, vals := front } :: rest, []⟩ := by
         simpa only [← split] using nextStep
       have nextTyped := Abs.instruction_preservation s ambient f rest (.CALL (.mk_uN index.val)) after _ (.call _) typed actualStep
-      have nextCovered := semantics.covered s ambient f rest index.val after _ covered actualStep
+      have nextCovered := StructuredMachine.call_supported s ambient f rest index.val after _ covered actualStep
       have simulation := Abs.instruction_simulation s ambient f rest (.CALL (.mk_uN index.val)) after _ (.call _) typed actualStep
       have heights : ∀ label ∈ f.labels, label.height ≤ front.length := by
         exact nextTyped.heights { f with code := after, vals := front } (by simp)
@@ -139,7 +138,7 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
       apply step_direct_call memory hooks floats allocator exec store platform frameIndex raw caller compiled
         index offset address calleeBase last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset
       intro pc hpc
-      have tail : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      have tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
           (front.map Code.valueType ++ signature.results.val.map sourceType) after pc.val next output := by
         simpa only [hpc, signatureTypes.2,point.locals] using continuation
       obtain ⟨raws, frames, saved⟩ := relation.prepare_call raw frameIndex pc last hf binding slots program point
@@ -169,7 +168,7 @@ theorem step_call_structured_uniform {M P F A : Type} {emission : FunctionEmissi
         · exact UniformConcreteSim.of_steps (by omega : 0 < 2) (Abs.typed_call_simulation s ambient f rest after index.val _ typed actualStep)
         · intro expected invariant
           exact Abs.instruction_result _ _ _ _ _ _ _ expected (.call _) typed invariant actualStep
-        · exact semantics.ownership s ambient f rest index.val after _ actualStep
+        · exact StructuredMachine.call_owned s ambient f rest index.val after _ actualStep
         · intro bound bounded
           exact Abs.instruction_bound bound s ambient f rest (.CALL (.mk_uN index.val)) after _ (.call _) bounded actualStep
       · intro error rejected

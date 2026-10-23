@@ -1,5 +1,5 @@
 import Exec.Representation.Layout
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Itasca.Support.TypeTranslation
 
 namespace Exec.Code

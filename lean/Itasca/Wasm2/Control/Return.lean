@@ -72,7 +72,7 @@ theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U3
     hp'.trans hp, by simpa [hvals, hb] using hv'⟩
 
 /-- The `return` opcode (`0x0f`) preserves `Pending` on success. -/
-theorem Pending.return_ {data env locals index st} (p : Pending data env locals index st)
+theorem Pending.return_ {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
     returnStep st env index ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
@@ -87,8 +87,10 @@ theorem Pending.return_ {data env locals index st} (p : Pending data env locals 
     (by simp [resolve, p.signature]) _ hC _ p.current.ops typed hreturn)
   intro r hr hok
   obtain ⟨hv, hc, hb, hp, ht⟩ := hr hok
+  have encoded : Wasm1.At data p.start (.plain .RETURN) r.2.core.pos :=
+    .no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) .return_
   exact p.append_result C outer spine header base r.2 .RETURN true [] .instr_case_12
-    (.plain (.no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) .return_)) ht hc
-    (by simpa [hb] using blocks) (by simpa using hv)
+    (.plain encoded) ht hc (by simpa [hb] using blocks) (by simpa using hv)
+    (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
 
 end Itasca.Wasm2

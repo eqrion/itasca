@@ -11,10 +11,10 @@ def ItemSumOutcome (total : Nat) (out : Usize × core.result.Result Unit runtime
 
 theorem item_counts_resource_causes (counts : Array Usize 7#usize) (items start : Usize)
     (startBound : start.val ≤ counts.val.length) :
-    runtime.store.instantiate.Store.instantiate_inner_loop0 items (.Ok ()) counts start
+    runtime.store.instantiate.Store.prepare_instance_loop0 items (.Ok ()) counts start
       ⦃ out => ItemSumOutcome (items.val + ((counts.val.drop start.val).map UScalar.val).sum) out ⦄ := by
   let total := items.val + ((counts.val.drop start.val).map UScalar.val).sum
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop0
+  unfold runtime.store.instantiate.Store.prepare_instance_loop0
   apply loop.spec_decr_nat (fun state => counts.val.length - state.2.2.val)
     (fun state => state.2.2.val ≤ counts.val.length ∧
       match state.2.1 with
@@ -22,7 +22,7 @@ theorem item_counts_resource_causes (counts : Array Usize 7#usize) (items start 
       | .Err error => error = .Exhausted .Objects ∧ Usize.max < total)
   · rintro ⟨current,status,index⟩ ⟨bound,invariant⟩
     dsimp only at bound invariant ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop0.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop0.body
     simp only [lift,bind_ok]
     split
     · rename_i more
@@ -56,11 +56,11 @@ theorem item_counts_resource_causes (counts : Array Usize 7#usize) (items start 
 
 theorem element_items_resource_causes (module : runtime.compiler.ExecutableModule) (items start : Usize)
     (startBound : start.val ≤ module.module.env.elements.val.length) :
-    runtime.store.instantiate.Store.instantiate_inner_loop1 module items (.Ok ()) start
+    runtime.store.instantiate.Store.prepare_instance_loop1 module items (.Ok ()) start
       ⦃ out => ItemSumOutcome (items.val +
         ((module.module.env.elements.val.drop start.val).map fun element => element.init.length).sum) out ⦄ := by
   let total := items.val + ((module.module.env.elements.val.drop start.val).map fun element => element.init.length).sum
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop1
+  unfold runtime.store.instantiate.Store.prepare_instance_loop1
   apply loop.spec_decr_nat (fun state => module.module.env.elements.val.length - state.2.2.val)
     (fun state => state.2.2.val ≤ module.module.env.elements.val.length ∧
       match state.2.1 with
@@ -68,7 +68,7 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
       | .Err error => error = .Exhausted .Objects ∧ Usize.max < total)
   · rintro ⟨current,status,index⟩ ⟨bound,invariant⟩
     dsimp only at bound invariant ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop1.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
     simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,
       Itasca.module.Module.impl.env,Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
     split
@@ -105,31 +105,4 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
       | Ok unit => simpa [ItemSumOutcome,equal,total] using invariant
   · exact ⟨startBound,rfl⟩
 
-/-- Both finite preflight loops compute the exact retained-map charge or
-report its actual machine-counter overflow. -/
-theorem instance_item_resource_causes (module : runtime.compiler.ExecutableModule) :
-    (do
-      let (items,status) ← runtime.store.instantiate.Store.instantiate_inner_loop0 0#usize (.Ok ())
-        (moduleItemCounts module) 0#usize
-      runtime.store.instantiate.Store.instantiate_inner_loop1 module items status 0#usize)
-      ⦃ out => ItemSumOutcome (moduleItems module) out ⦄ := by
-  step with item_counts_resource_causes (moduleItemCounts module) 0#usize 0#usize (by simp)
-    as ⟨items,status,counted⟩
-  cases status with
-  | Err error =>
-    rw [element_items_error]
-    simp only [WP.spec_ok,ItemSumOutcome] at *
-    refine ⟨counted.1,?_⟩
-    have bound := counted.2
-    simp [moduleItemCounts,Array.make] at bound
-    simp only [moduleItems,alloc.vec.Vec.length]
-    omega
-  | Ok unit =>
-    cases unit
-    have count : items.val = module.module.env.types.length + module.module.env.func_types.length +
-        module.module.env.table_types.length + module.module.env.mem_types.length +
-        module.module.env.global_types.length + module.module.env.elements.length + module.module.tail.data.length := by
-      simpa [ItemSumOutcome,moduleItemCounts,Array.make,Nat.add_assoc] using counted
-    step with element_items_resource_causes module items 0#usize (by simp) as ⟨out,effect⟩
-    simpa [moduleItems,count,Nat.add_assoc] using effect
 end Exec.Store

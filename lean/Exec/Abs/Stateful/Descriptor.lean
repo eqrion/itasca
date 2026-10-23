@@ -76,15 +76,7 @@ def Instruction.arity : Instruction → Nat
   | .tableSet _ | .tableGrow _ => 2
   | .tableFill _ | .tableCopy .. | .tableInit .. | .memoryFill | .memoryCopy | .memoryInit _ => 3
 
-def Instruction.results : Instruction → Nat
-  | .refNull _ | .refFunc _ | .refIsNull | .tableGet _ | .tableSize _ | .tableGrow _
-    | .memorySize | .memoryGrow => 1
-  | _ => 0
-
 theorem Instruction.arity_le_three (op : Instruction) : op.arity ≤ 3 := by
   cases op <;> simp [Instruction.arity]
-
-theorem Instruction.results_le_one (op : Instruction) : op.results ≤ 1 := by
-  cases op <;> simp [Instruction.results]
 
 end Exec.Abs.Stateful

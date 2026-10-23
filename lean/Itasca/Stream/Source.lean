@@ -1,52 +1,19 @@
 import Itasca.Support.Result
 import Itasca.Module.Readers.Basic
+import Itasca.Contracts
 
 /-!
 # Streaming sources
 
-Premises on a `stream.Source` implementation and the lemmas for the helpers that read from it.
-`StreamSource.Coherent` (successful reads agree with fixed environment, code and tail regions),
-`StreamSource.Available` (those reads succeed) and `StreamSource.CallbacksTotal` (the callbacks
-return, possibly with an error) are obligations on the embedding. `stream.SliceSource` satisfies all
-three. The file also covers `limits.add_offset`, `stream.read_len` and `stream.read_exact`, and
+Lemmas for the helpers that read from a `stream.Source`. The source premises
+`StreamSource.Coherent`, `StreamSource.Available` and `StreamSource.CallbacksTotal` are defined in
+`Itasca/Contracts`, and `stream.SliceSource` satisfies all three. The file also covers `limits.add_offset`, `stream.read_len` and `stream.read_exact`, and
 the transport of encoded intervals between a bounded view and its parent region.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSource
-
-/-- Successful source calls expose fixed logical regions. Read errors are
-permitted; neither availability nor a canonical module split is assumed. -/
-structure Coherent {S : Type} (source : stream.Source S) (state : S)
-    (environment code tail : List U8) : Prop where
-  environment_eq : ∀ bytes, source.environment state = .ok (.Ok bytes) →
-    bytes.val = environment
-  code_len_eq : ∀ len, source.code_len state = .ok len → len.val = code.length
-  code_eq : ∀ first last bytes, first.val ≤ last.val → last.val ≤ code.length →
-    source.code state first last = .ok (.Ok bytes) →
-    bytes.val = code.slice first.val last.val
-  tail_eq : ∀ bytes, source.tail state = .ok (.Ok bytes) → bytes.val = tail
-
-/-- Availability is a completeness premise. It prescribes successful reads
-without identifying the regions with a valid module or requiring canonical splitting. -/
-structure Available {S : Type} (source : stream.Source S) (state : S)
-    (environment code tail : List U8) : Prop where
-  environment_read : ∃ bytes, source.environment state = .ok (.Ok bytes) ∧
-    bytes.val = environment
-  code_len_read : ∃ len, source.code_len state = .ok len ∧ len.val = code.length
-  code_read : ∀ first last, first.val ≤ last.val → last.val ≤ code.length →
-    ∃ bytes, source.code state first last = .ok (.Ok bytes) ∧
-      bytes.val = code.slice first.val last.val
-  tail_read : ∃ bytes, source.tail state = .ok (.Ok bytes) ∧ bytes.val = tail
-
-/-- Source callbacks return ordinary modeled results. Unlike availability,
-this allows Rust errors, and unlike coherence it imposes no byte equality. -/
-structure CallbacksTotal {S : Type} (source : stream.Source S) (state : S) : Prop where
-  environment_returns : ∃ r, source.environment state = .ok r
-  code_len_returns : ∃ len, source.code_len state = .ok len
-  code_returns : ∀ first last, ∃ r, source.code state first last = .ok r
-  tail_returns : ∃ r, source.tail state = .ok r
 
 /-- Postcondition of `stream.read_len`: a returned length is a `U32` LEB128 value decoded from
 `data` at `start`, converted to `Usize`. Errors are unconstrained. -/
@@ -95,24 +62,6 @@ theorem stream.read_len.spec (data : Slice U8) (start : Usize) :
     step
     exact ⟨value, by scalar_tac, hp⟩
 
-theorem stream.read_len.total (data : Slice U8) (start : Usize) :
-    ∃ r, stream.read_len data start = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (stream.read_len.spec data start)
-  exact ⟨r, hr⟩
-
-/-- A successful `stream.read_len` is an actual LEB128 decoding of a `U32`. -/
-theorem stream.read_len.sound (data : Slice U8) (start len next : Usize)
-    (h : stream.read_len data start = .ok (.Ok (len, next))) :
-    ∃ value : U32, len.val = value.val ∧ Leb128.Decoded data start value next := by
-  have hs := stream.read_len.spec data start
-  simpa [h, StreamSource.LenPost] using hs
-
-theorem stream.read_len.success_span (data : Slice U8) (start len next : Usize)
-    (h : stream.read_len data start = .ok (.Ok (len, next))) :
-    start.val < next.val ∧ next.val ≤ start.val + 5 ∧ next.val ≤ data.length := by
-  obtain ⟨value, _, hd⟩ := stream.read_len.sound data start len next h
-  exact hd.span
-
 /-- Any LEB128 decoding of a `U32` at `start` is returned by `stream.read_len`. -/
 theorem stream.read_len.complete (data : Slice U8) (start next : Usize)
     (value : U32) (h : Leb128.Decoded data start value next) :
@@ -147,14 +96,6 @@ theorem stream.read_exact.spec {S : Type} (source : stream.Source S) (state : S)
     · simp
     · simp only [WP.spec_ok]
       exact ⟨trivial, by scalar_tac⟩
-
-theorem stream.read_exact.total {S : Type} (source : stream.Source S) (state : S)
-    (first last : Usize) (horder : first.val ≤ last.val)
-    (hreturn : ∃ r, source.code state first last = .ok r) :
-    ∃ r, stream.read_exact source state first last = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (stream.read_exact.spec source state first last horder hreturn)
-  exact ⟨r, hr⟩
-
 
 /-- Acceptance reveals the actual successful source call, without a callback
 termination premise for this or any other read. -/

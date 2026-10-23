@@ -1,4 +1,4 @@
-import Exec.Platform.Hooks
+import Exec.Generated.Types
 import Exec.Spec.Extend
 namespace Exec.Platform
 open Aeneas Aeneas.Std
@@ -31,15 +31,4 @@ theorem HostSound.of_invariant {P M : Type} {hooks : runtime.platform.Platform P
   rintro answer ⟨fresh,extension⟩
   exact ⟨fresh,extension,typed _ fresh⟩
 
-/-- Host soundness is available on both success and error, including a callback
-that reports stack exhaustion after nested calls changed the store. -/
-theorem HostSound.returned {P M : Type} {hooks : runtime.platform.Platform P M}
-    {invariant : runtime.store.Store M → Prop} {decode : runtime.store.Store M → _root_.store}
-    (law : HostSound hooks invariant decode)
-    (platform : P) (before : runtime.store.Store M) (identity : U64)
-    (args results : Slice runtime.Value) (valid : invariant before) :
-    ∃ answer, hooks.call_host platform before identity args results = .ok answer ∧
-      invariant answer.2.2.1 ∧ Extend_store (decode before) (decode answer.2.2.1) ∧
-      Store_ok (decode answer.2.2.1) := by
-  exact WP.spec_imp_exists (law.host platform before identity args results valid)
 end Exec.Platform

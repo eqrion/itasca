@@ -93,14 +93,4 @@ def sourceModel {M : Type} (view : M → Slice U8) (publication : SourcePublicat
   resume:=sourceResume
   permitsStop:=stop
 
-/-- A host-local loop has a productive source execution. Its transitions are
-host actions; the suspended Wasm stack and shared store remain unchanged. -/
-theorem source_host_loop {M : Type} (view : M → Slice U8) (publication : SourcePublication)
-    (owner : Usize) (stop : Spec.OpenExecution.StopReason → config → Prop)
-    (s : store) (identity : Nat) (arguments : List val)
-    (stack : List (Spec.OpenExecution.Continuation SourceControl)) :
-    Spec.OpenExecution.InfiniteTrace (sourceModel view publication (fun _ _=>[.jump 0]) owner stop)
-      ⟨s,.host (.active ⟨0,[.jump 0],identity,arguments⟩),stack⟩ := by
-  refine ⟨fun _=>_,fun _=>[.hostAction],rfl,fun _=>?_⟩
-  exact .action (.jump rfl)
 end Exec.Theorems.OpenReentrantControl

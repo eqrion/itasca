@@ -7,7 +7,7 @@ set_option maxRecDepth 4096
 /-- Every live canonical Wasm 2 BR_TABLE read supplies the source scope and
 operand suffix certificate required by actual table lowering. -/
 theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    {data env locals index st} (p : Wasm2.Pending data env locals index st)
+    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
     {parents current}
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
@@ -16,7 +16,7 @@ theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (monomorphic : p.current.ctrl.polymorphic_base=false)
     (before after : V) (final : code.BodyState) (depths : List U32) (fallback : U32) (next : Usize)
     (encoded : BrTable.Decoded data st.core.pos depths fallback next)
-    (accepted : code.branch_table_with visitor st data env before=.ok (.Ok (),final,after)) :
+    (accepted : code.branch_table_with visitor st data env .Wasm2 before=.ok (.Ok (),final,after)) :
     ∃ stack, Sequence.stackTypes st.core.vals.val=stack++[.I32] ∧
       TableOperandScopes (parents++[current]) stack (depths++[fallback]) := by
   obtain ⟨C,outer,spine,header,base,typed,controls,_,values⟩ := p.opened

@@ -14,7 +14,7 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
     {initial : runtime.compiler.FunctionCompiler A} {data env index start profile}
     (w : CodeEntry.Prepared data env index start profile)
-    (environment : Profile.Environment profile env) (limits : Profile.EnvironmentWithinLimits profile env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (body : Profile.Body profile w.body env w.ctx.locals w.typeIdx)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =
@@ -22,12 +22,12 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (demand : PreparedFunctionDemand budget w.ctx w.body.length
-      (independentBodyDemand profile w.body env w.ctx w.typeIdx).operands bound) :
+      (independentBodyDemand w.body env w.ctx w.typeIdx).operands bound) :
     ∃ started,
       runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
         ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started) ∧
-      CodeEntry.runBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) profile w.body env
-        w.ctx w.typeIdx started ⦃ result => result.1 = .Ok () ∧
+      code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body env w.ctx
+        w.typeIdx profile started ⦃ result => result.1 = .Ok () ∧
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ∧
           FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
@@ -58,7 +58,7 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
   have room := demand.body started usedLocals usedControls budgetFrame localsUsed controlsUsed layout localsMatch
     (function_body_coordinate_bound w.body_bytes bodyStart endFits)
   refine ⟨started,begun,?_⟩
-  apply WP.spec_mono (prepared_body_checked_available ops law bound allocation w environment limits body signaturesMatch slotsMatch
+  apply WP.spec_mono (prepared_body_checked_available ops law bound allocation w limits body signaturesMatch slotsMatch
     batchBound created begun room)
   intro result held
   refine ⟨held.1,?_,held.2.2⟩

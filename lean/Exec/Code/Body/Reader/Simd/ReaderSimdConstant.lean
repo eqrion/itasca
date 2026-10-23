@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 /-- An accepted vector constant retains all sixteen encoded bytes, its exact
 compiler callback, and the complete independently typed source prefix. -/
 theorem reader_simd_constant_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (next : Usize) (decoded : Leb128.Decoded data st.core.pos 12#u32 next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)

@@ -106,7 +106,6 @@ theorem compiler_simd_auxiliary_success {A : Type} (ops : runtime.platform.Alloc
   unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
   repeat' simd_auxiliary_step accepted using ops, law
 
-
 /-- Successful live or dormant SIMD dispatch preserves auxiliary-table
 headroom relative to actual emitted code. Vector constants use the pool;
 all other SIMD instructions preserve that pool exactly. -/
@@ -132,21 +131,5 @@ theorem compiler_lower_simd_auxiliary_growth {A : Type} (ops : runtime.platform.
     obtain ⟨simd, pool, indirect, code⟩ :=
       observe_auxiliary_result ops law before after state (.Ok ()) accepted
     simp [simd, pool, indirect, code]
-
-/-- The reached-compiler invariant `auxiliary length ≤ code length` survives
-an actual accepted SIMD callback, including the dead-code observation path. -/
-theorem compiler_lower_simd_auxiliary_bound {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (opcode : U16) (a b : U32) (bits : U128)
-    (lower : 512 ≤ opcode.val) (upper : opcode.val < 768)
-    (simd : before.function.simd.val.length ≤ before.function.code.val.length)
-    (pool : before.function.v128_pool.val.length ≤ before.function.code.val.length)
-    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits = .ok (.Ok (),after)) :
-    after.function.simd.val.length ≤ after.function.code.val.length ∧
-    after.function.v128_pool.val.length ≤ after.function.code.val.length ∧
-    after.function.indirect = before.function.indirect := by
-  obtain ⟨mono, simdGrowth, poolGrowth, indirect, _⟩ :=
-    compiler_lower_simd_auxiliary_growth ops law before after state opcode a b bits lower upper accepted
-  exact ⟨by omega, by omega, indirect⟩
 
 end Exec.Code

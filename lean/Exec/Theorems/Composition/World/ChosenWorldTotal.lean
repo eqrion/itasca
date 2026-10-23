@@ -4,22 +4,12 @@ import Exec.Theorems.Host.Chosen.HostSiteChosenWorld
 import Exec.Theorems.Host.Chosen.HostWorldChosenSound
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Full actual dispatch under a current-world callback contract. Each ordinary
 case reuses the fixed-world proof; actual host calls choose their post-world. -/
 theorem chosen_world_step_outcomes {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (numericChoice : choices.numeric=Spec.firstNumericChoice) (vector : choices.vector=Spec.firstVectorChoice)
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.RecordingHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -28,7 +18,7 @@ theorem chosen_world_step_outcomes {choices : Spec.SourceChoices} (admissible : 
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ code s,Inv code s → CertifiedSupportedStore emission allowed view code s)
+    (certify : ∀ code s,Inv code s → CertifiedSupportedStore view code s)
     (update : ∀ code before after,Inv code before → CumulativeStoreMutation view code before after → Inv code after)
     (typed : ∀ code store,Inv code store → Store_ok (Store.decodeStore view code store))
     (sound : HostWorldChosenSound memory hooks view Inv choices)
@@ -40,9 +30,9 @@ theorem chosen_world_step_outcomes {choices : Spec.SourceChoices} (admissible : 
       ∀ host p args results answer, hooks.call_host p store host args results=.ok answer →
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     (expected : List valtype) :
-    ChosenWorldStepOutcomes choices (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv := by
+    ChosenWorldStepOutcomes choices memory hooks floats allocator view expected Inv := by
   intro world valid active
-  rcases chosen_world_step_or_host admissible numericChoice vector world.occurrence language memory hooks floats allocator correct allocation
+  rcases chosen_world_step_or_host admissible numericChoice vector world.occurrence memory hooks floats allocator correct allocation
     interrupts view laws world.code compatible Inv update world.machine valid active with site | ordinary
   · obtain ⟨out,actual,result⟩ := WP.spec_imp_exists
       (site.chosen_world_outcomes admissible vector world.occurrence memory hooks floats allocator allocation interrupts view world.code Inv certify

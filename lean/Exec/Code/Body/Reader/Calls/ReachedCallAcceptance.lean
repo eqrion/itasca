@@ -9,57 +9,11 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
-/-- Independently accepted Wasm 1 calls determine their source parameter
-signature and live layout. Captured scheduler metadata then justifies actual
-compiler call acceptance and its single instruction charge. -/
-theorem reached_reader_call_available_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A V : Type}
-    (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (source : code.OpVisitor V) (before after : V)
-    (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (demand : CallbackDemand compiler out bound) (metadata : FunctionParameterSlots compiler env)
-    (known : compiler.reachable = true → ConcreteStack st.vals.val)
-    (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
-    (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.vals.val))
-    (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
-    (reference : code.step source st data env ctx code.OP_CALL before = .ok (.Ok (),out,after)) :
-    code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx code.OP_CALL compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
-        CompilationBudgetEffect compiler.budget result.2.2.budget
-          (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  obtain ⟨callee,_,_,read,_⟩ := reader_call_wasm1 p source before after out (by have := p.val_capacity; omega) (by simpa only [code.OP_CALL] using byte) reference
-  have callback : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_call compiler out callee ⦃ result =>
-      result.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget result.2.budget
-        (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-    change runtime.compiler.lower.FunctionCompiler.op ops compiler out 16#u16 callee 0#u32 0#u128 ⦃ _ ⦄
-    by_cases live : compiler.reachable = true
-    · obtain ⟨_,outer,_,_,base,_,controls,values⟩ := p.opened
-      obtain ⟨ft,rest,found,afterValues,transfer⟩ := reader_call_effect_wasm1 st out data env callee outer p.current.vals values
-        (by simpa [Control.base,controls] using base) (by have := p.val_capacity; omega) read
-      have poly : Control.polymorphic st = false := by simpa [Control.polymorphic,controls] using monomorphic live
-      rw [poly] at transfer
-      obtain ⟨front,beforeTypes,_⟩ := call_full_stack_types ft.params.val ft.results.val (known live) values afterValues transfer
-      obtain ⟨parameterSlots,lookup,width⟩ := metadata.lookup callee ft found
-      have layout := wholeLayout live
-      rw [beforeTypes] at layout
-      exact compiler_call_available ops bound available compiler out demand (front.map Translate.valueType)
-        (ft.params.val.map Translate.valueType) callee parameterSlots (fun _ => layout) (fun _ => lookup) width
-    · apply WP.spec_mono (compiler_dead_op_available ops bound available compiler out 16#u16 callee 0#u32
-        0#u128 live demand.operands demand.slots)
-      intro result held
-      rw [held.2]
-      exact ⟨held.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
-  rw [code.step_call.dispatch]
-  exact CoreVisitor.run.available_of_read (code.read_call st data env)
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_call compiler callee out
-    (fun after => CompilationBudgetEffect compiler.budget after.budget
-      (fun counter => if counter = .instructions then 1 else 0)) read callback
-
 /-- Independently accepted Wasm 2 calls determine their source parameter
 signature and live layout. Captured scheduler metadata then justifies actual
 compiler call acceptance and its single instruction charge. -/
 theorem reached_profile_call_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)

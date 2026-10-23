@@ -33,34 +33,6 @@ open Aeneas Aeneas.Std SpecExt
       · exact PackedMemory.store_bytes .i32x16 word
     | I64 => cases width <;> rfl
 
- theorem execute_load_value {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (instanceIndex base : Usize)
-    (op : Abs.Memory.Load) (dst address offset : U32) (inst : runtime.store.ModuleInst)
-    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M) (addressWord : U64)
-    (found : store.instances.val[instanceIndex.val]? = some inst)
-    (mapped : inst.memories.val[0]? = some memoryAddress)
-    (issued : store.memories.val[memoryAddress.index.val]? = some object)
-    (input : exec.slots.val[base.val+address.val]? = some addressWord)
-    (capacity : base.val+dst.val < exec.slots.length) :
-    runtime.interp.execute_load memory exec store instanceIndex base (loadOpcode op) dst address offset ⦃ out =>
-      if (UScalar.cast .U32 addressWord).val + offset.val + op.bytes ≤ (view object.buf).length then
-        ∃ word, out.1 = .Ok () ∧ SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) word) ∧
-          Store.decodeWords (numericMemoryType op.type) word 0#u64 =
-            op.value (Store.decodeBytes (((view object.buf).val.drop ((UScalar.cast .U32 addressWord).val+offset.val)).take op.bytes))
-      else out = (.Err (.Trap .MemoryOutOfBounds),exec) ⦄ := by
-  apply WP.spec_mono (execute_load_effect memory view laws exec store instanceIndex base (loadOpcode op) dst address offset
-    inst memoryAddress object addressWord found mapped issued input capacity)
-  intro out effect
-  rw [load_width] at effect
-  split at effect
-  · rename_i inside
-    rw [if_pos inside]
-    exact ⟨_,effect.1,effect.2,load_word_value op _ _ inside⟩
-  · rename_i outside
-    rw [if_neg outside]
-    exact effect
-
  theorem execute_store_value {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (instanceIndex base : Usize)

@@ -20,15 +20,6 @@ def recordedCall {M P F A : Type}
   Platform.Recording.run (runtime.interp.call memory hooks floats allocator exec store platform address base)
     (callHostEvents store address) prior
 
-theorem recordedCall_erase {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (base : Usize) (prior : List HostEvent) :
-    (do let (out,_) ← recordedCall memory hooks floats allocator exec store platform address base prior
-        Result.ok out) = runtime.interp.call memory hooks floats allocator exec store platform address base :=
-  Platform.Recording.erase _ _ _
-
 theorem recordedCall_returned {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)

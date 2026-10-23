@@ -15,118 +15,6 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.OpDispatch
 
-/-- `code.step` on `code.OP_BLOCK` runs `code.read_block` and then calls the `on_block` hook. -/
-theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BLOCK v =
-      CoreVisitor.run (code.read_block st data) (fun v s bt => visitor.on_block v s (Control.signature bt)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_LOOP` runs `code.read_loop` and then calls the `on_loop` hook. -/
-theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_LOOP v =
-      CoreVisitor.run (code.read_loop st data) (fun v s bt => visitor.on_loop v s (Control.signature bt)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_IF` runs `code.read_if` and then calls the `on_if` hook. -/
-theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_IF v =
-      CoreVisitor.run (code.read_if st data) (fun v s bt => visitor.on_if v s (Control.signature bt)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_ELSE` runs `code.read_else` and then calls the `on_else` hook. -/
-theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_ELSE v =
-      CoreVisitor.run (code.read_else st) (fun v s bt => visitor.on_else v s (Control.signature bt)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_END` runs `code.read_end` and then calls the `on_end` hook. -/
-theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_END v =
-      CoreVisitor.run (code.read_end st) (fun v s arg => visitor.on_end v s arg.1 (Control.signature arg.2)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_BR` runs `code.read_br` and then calls the `on_br` hook. -/
-theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BR v =
-      CoreVisitor.run (code.read_br st data) (fun v s arg => visitor.on_br v s arg.1 (Control.resultView arg.2)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_BR_IF` runs `code.read_br_if` and then calls the `on_br_if` hook. -/
-theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_BR_IF v =
-      CoreVisitor.run (code.read_br_if st data) (fun v s arg => visitor.on_br_if v s arg.1 (Control.resultView arg.2)) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
-/-- `code.step` on `code.OP_RETURN` runs `code.read_return` and then calls the `on_return` hook. -/
-theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
-    code.step visitor st data env ctx code.OP_RETURN v =
-      CoreVisitor.run (code.read_return st ctx) (fun v s _ => visitor.on_return v s) v := by
-  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
-    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  congr 1
-  funext x
-  obtain ⟨res, s⟩ := x
-  cases res <;> simp
-  congr 1
-
-
 /-- `code.step` on `code.OP_I32_CONST` runs `code.read_i32_const` and then calls the `on_i32_const`
 hook. -/
 theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
@@ -141,7 +29,6 @@ theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-
 /-- `code.step` on `code.OP_DROP` runs `code.read_drop` and then calls the `on_drop` hook. -/
 theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
@@ -154,7 +41,6 @@ theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨res, s⟩ := x
   cases res <;> simp
   congr 1
-
 
 /-- `code.step` on `code.OP_UNREACHABLE` runs `code.read_unreachable` and then calls the
 `on_unreachable` hook. -/
@@ -170,7 +56,6 @@ theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-
 /-- `code.step` on `code.OP_I64_CONST` runs `code.read_i64_const` and then calls the `on_i64_const`
 hook. -/
 theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
@@ -185,7 +70,6 @@ theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
   cases res <;> simp
   congr 1
 
-
 /-- `code.step` on `code.OP_F32_CONST` runs `code.read_f32_const` and then calls the `on_f32_const`
 hook. -/
 theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
@@ -199,7 +83,6 @@ theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
   obtain ⟨res, s⟩ := x
   cases res <;> simp
   congr 1
-
 
 /-- `code.step` on `code.OP_F64_CONST` runs `code.read_f64_const` and then calls the `on_f64_const`
 hook. -/

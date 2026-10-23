@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredPrefixDeadWithTables
+import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Callbacks.Calls.CallbackBounds
 import Exec.Code.Local.Relations.Common.EndSafety
 import Exec.Code.Local.Callbacks.Control.ElseSafety
@@ -19,11 +19,11 @@ set_option maxRecDepth 4096
 
 /-- Every reached END uses the retained physical frame, map and fixup sites.
 The validator may already have closed its own frame before invoking the hook. -/
-theorem StructuredCompilerPrefixWithTables.end_total {jumpTables : List U32} {A}
+theorem StructuredCompilerPrefix.end_total {jumpTables : List U32} {A}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial compiler types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current raw position)
     (bounded : position ≤ Itasca.limits.MAX_MODULE_BYTES.val)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind) (bt : Itasca.signature.BlockType)
     (coordinate : compiler.function.body_start.val + state.pos.val ≤ Usize.max)
@@ -37,11 +37,11 @@ theorem StructuredCompilerPrefixWithTables.end_total {jumpTables : List U32} {A}
     (invariant.mode.sites frame (by simp [frames])) shape.toScopeFrameShape.body_guard shape.mapBound
     (by omega) coordinate (by omega) (by omega) emitCoordinate
 
- theorem StructuredCompilerPrefixWithTables.else_total {jumpTables : List U32} {A}
+ theorem StructuredCompilerPrefix.else_total {jumpTables : List U32} {A}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial compiler types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current raw position)
     (bounded : position ≤ Itasca.limits.MAX_MODULE_BYTES.val)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)

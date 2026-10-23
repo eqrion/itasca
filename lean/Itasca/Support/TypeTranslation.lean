@@ -21,11 +21,6 @@ def valueType : types.ValueType → valtype
   | .FuncRef => .FUNCREF
   | .ExternRef => .EXTERNREF
 
-/-- Holds for the numeric value types `i32`, `i64`, `f32` and `f64`, the only ones in Wasm 1.0. -/
-def scalar : types.ValueType → Prop
-  | .I32 | .I64 | .F32 | .F64 => True
-  | _ => False
-
 /-- The SpecTec reference type of a Rust element type. -/
 def referenceType : types.ElemType → reftype
   | .FuncRef => .FUNCREF

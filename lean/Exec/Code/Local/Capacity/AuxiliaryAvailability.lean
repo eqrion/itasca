@@ -41,21 +41,4 @@ theorem compiler_pair_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
   exact ⟨index,pairs,rfl,indexEq,by rw [same],appended⟩
 
-/-- Checked transfer emission accepts under the same independent callback
-bounds, including zero-width and self-copy elision. -/
-theorem compiler_copy_available {A : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : CallbackDemand compiler state bound) (dst src count : U32) :
-    runtime.compiler.FunctionCompiler.copy ops compiler dst src count ⦃ out => out.1 = .Ok () ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.copy
-  split
-  · exact WP.spec.ret rfl
-  · split
-    · exact WP.spec.ret rfl
-    · have emit (instruction : runtime.bytecode.Instr) :=
-        compiler_emit_available ops bound available compiler instruction demand.pc demand.codeCapacity
-          demand.sourceCapacity demand.codeReserve demand.sourceReserve demand.coordinate demand.instruction
-      split <;> simp only [bind_ok] <;> apply WP.spec_mono (emit _) <;> intro out post <;> exact post.1
-
 end Exec.Code

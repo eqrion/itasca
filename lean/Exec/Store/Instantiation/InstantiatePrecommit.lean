@@ -59,27 +59,4 @@ theorem instantiate_compiled_precommit_error {M P F A : Type}
     law view laws before module imports platform shape accounted bytes profile limits accepted handles error staged host run
   exact ⟨cause, sameHost, retained⟩
 
-/-- Under the Wasm2 profile, an actual trap necessarily follows publication;
-the precommit rejection branch contains no trap constructor. -/
-theorem instantiate_wasm2_trap_committed {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
-    (imports : Slice runtime.Extern) (platform : P)
-    (shape : Shape view before) (accounted : SegmentAccounting before)
-    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes .Wasm2 limits = .ok (.Ok module))
-    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (trap : runtime.Trap) (after : runtime.store.Store M) (host : P) (committed : Bool)
-    (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
-      .ok (.Err (.Trap trap), after, host, committed)) : committed = true := by
-  cases committed with
-  | true => rfl
-  | false =>
-    have cause := (instantiate_compiled_precommit_error memory hooks floats allocator law view laws
-      before module imports platform shape accounted bytes .Wasm2 limits accepted handles
-      (.Trap trap) after host run).1
-    cases trap <;> simp_all [PrecommitError]
-
 end Exec.Store

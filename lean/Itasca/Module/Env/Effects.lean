@@ -77,10 +77,6 @@ theorem Effect.span {profile} {data pos env before id next result after}
     pos.val ≤ next.val ∧ next.val ≤ data.length := by
   cases h <;> apply At.span <;> assumption
 
-theorem Effect.id_range {profile} {data pos env before id next result after}
-    (h : Effect (profile := profile) data pos env before id next result after) : 1 ≤ (sectionRank id).val ∧ (sectionRank id).val ≤ 10 := by
-  cases h <;> decide
-
 /-- A section effect preserves the profile's type restrictions on the declarations. -/
 theorem Effect.allowed {profile data pos env before id next result after}
     (h : Effect data pos env before id next result after profile)

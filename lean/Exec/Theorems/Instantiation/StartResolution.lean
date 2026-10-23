@@ -1,4 +1,28 @@
-import Exec.Theorems.Instantiation.InstantiateStartAmbient
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
 import Exec.Abs.Sim.Call
 
 namespace Exec.Theorems
@@ -30,11 +54,5 @@ theorem module_start_resolve {M : Type} (view : M → Slice U8) (code : Store.Co
   apply Abs.call_resolve _ _ index.val address.index.val storeWf frameWf
   · simp only [moduleStartFrame, Store.decodeInstance, List.getElem?_map, mapped, Option.map_some]
   · scalar_tac
-
-theorem SliceInvocationError.prepend {initial current : config} {s : _root_.store} {ambient : frame}
-    {error : runtime.ExecError} (step : StepH initial [] current)
-    (outcome : SliceInvocationError current s ambient error) : SliceInvocationError initial s ambient error := by
-  cases error <;> simp only [SliceInvocationError] at outcome ⊢ <;> try trivial
-  exact ⟨outcome.1, by simpa using StepsH.cons step outcome.2⟩
 
 end Exec.Theorems

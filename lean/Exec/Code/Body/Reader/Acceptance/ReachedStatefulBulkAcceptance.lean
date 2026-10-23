@@ -11,7 +11,7 @@ set_option maxRecDepth 4096
 independent source typing and the retained live layout discharge their hooks.
 Only the current independently accepted source result is replayed. -/
 theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A V : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)

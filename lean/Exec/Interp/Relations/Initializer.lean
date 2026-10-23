@@ -43,10 +43,6 @@ theorem initialSlots_length (before words : List U64) :
   unfold initialSlots
   split <;> simp_all
 
-theorem InitialRead.width {M : Type} {store : runtime.store.Store M}
-    {inst code instruction words} (read : InitialRead store inst code instruction words) :
-    words.length = 1 ∨ words.length = 2 := by cases read <;> simp
-
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)

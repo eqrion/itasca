@@ -83,11 +83,4 @@ theorem values_expr_types {s : store} {context : _root_.context}
   apply values_instrs_types
   assumption
 
-theorem values_config_types {s : store} {frame : _root_.frame}
-    {values : List val} {types : List valtype}
-    (typed : Config_ok ⟨⟨s,frame⟩,vals values⟩ (.mk_list types)) : ResultsTyped s types values := by
-  cases typed
-  apply values_expr_types
-  assumption
-
 end Exec.Spec

@@ -138,10 +138,4 @@ theorem Consumed.append {data start middle next first rest}
   | nil _ => simpa using hfirst
   | snoc _ ha ih => simpa [List.append_assoc] using Consumed.snoc ih ha
 
-/-- The instructions of a body encoding are well formed. -/
-theorem BodyEncoding.wellFormed {data ops} (h : BodyEncoding data ops) :
-    Forall wf_instr ops := by
-  obtain ⟨_, _, _, _, _, _, he⟩ := h
-  exact he.wellFormed
-
 end Itasca.Wasm2

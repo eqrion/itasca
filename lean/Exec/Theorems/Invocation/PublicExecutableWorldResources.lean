@@ -1,4 +1,4 @@
-import Exec.Theorems.Invocation.WorldInvocationLaws
+import Exec.Contracts
 import Exec.Theorems.Api.ExecutableCallEntry
 import Exec.Theorems.Api.ExecutableInv
 import Exec.Interp.Invocation.InvokeRecordedChecks
@@ -64,7 +64,7 @@ private theorem invoke_executable_world_recorded_resources_of_laws {M P F A : Ty
         args (alloc.vec.Vec.deref signature.params) argumentIssued checked
       cases kind : function.code with
       | Wasm ii fi =>
-        apply WP.dspec_mono (invoke_defined_world_recorded_resources Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws code
+        apply WP.dspec_mono (invoke_defined_world_recorded_resources memory hooks floats allocator correct allocation interrupts view laws code
           (ExecutableInv view) (fun c s held=>held.toCertifiedApiStore.toCertifiedSupportedStore)
           (fun c before after held mutation=>held.update mutation) (fun _ _ held=>held.capacities) sound preserve externs issuedResults exec store platform valid Spec.invocationFrame ambientWf address function signature
           ii fi args results owner owned hf hs kind checked)

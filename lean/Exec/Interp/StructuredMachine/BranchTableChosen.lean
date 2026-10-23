@@ -6,7 +6,6 @@ import Exec.Interp.StructuredMachine.Point
 import Exec.Abs.BrTableInvariants
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std
-variable {emission : FunctionEmission}
 
 /-- The side-table certificate selects an ordinary structured BR point. No
 per-target execution assumption is retained: every target is an exact emitted
@@ -31,8 +30,8 @@ theorem step_brTable_point_chosen {choices : Exec.Spec.SourceChoices} (admissibl
       (front.map Code.valueType) compiled.code.val depths fallback raw.pc.val next selector start len)
     (bindings : Abs.ModuleBindings s f.module C) (locals : C.LOCALS = f.locals.map Code.valueType)
     (labels : LabelsMatch (front ++ [Abs.integerVal .I32 value]) f.labels targets)
-    (continuations : Code.StructuredCodeWithTables.Targets (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets)
-    (normals : Code.StructuredCodeWithTables.Normals (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets)
+    (continuations : Code.StructuredCode.Targets (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets)
+    (normals : Code.StructuredCode.Normals (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets)
     (aligned : Code.ExitAligned targets next) (root : Code.RootAligned compiled.code.val f.resultTypes targets next output)
     (typed : Abs.CoreTyped ⟨s,ambient,{f with code := .BR_TABLE depths fallback::after,vals := front ++ [Abs.integerVal .I32 value]}::rest,[]⟩)
     (slots : FrameSlots exec raw {f with vals := front ++ [Abs.integerVal .I32 value]}) :
@@ -40,7 +39,7 @@ theorem step_brTable_point_chosen {choices : Exec.Spec.SourceChoices} (admissibl
       ∃ target, out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       out.2.1 = {exec with frames := exec.frames.set frameIndex {raw with pc := target}} ∧
       FrameSlots out.2.1 {raw with pc := target} {f with code := .BR (Abs.BrTable.select depths fallback value)::after,vals := front} ∧
-      FramePoint emission s {raw with pc := target} {f with code := .BR (Abs.BrTable.select depths fallback value)::after,vals := front}
+      FramePoint s {raw with pc := target} {f with code := .BR (Abs.BrTable.select depths fallback value)::after,vals := front}
         compiled C targets next output ∧
       Abs.CoreTyped ⟨s,ambient,{f with code := .BR (Abs.BrTable.select depths fallback value)::after,vals := front}::rest,[]⟩ ∧
       Abs.ChosenNextSim choices occurrence ⟨s,ambient,{f with code := .BR_TABLE depths fallback::after,vals := front ++ [Abs.integerVal .I32 value]}::rest,[]⟩
@@ -61,7 +60,7 @@ theorem step_brTable_point_chosen {choices : Exec.Spec.SourceChoices} (admissibl
       omega
   have reducedLabels : LabelsMatch front f.labels targets := by
     simpa only [List.append_nil] using labels.replace_suffix (after := []) heights
-  have point : FramePoint emission s {raw with pc := target}
+  have point : FramePoint s {raw with pc := target}
       {f with code := .BR (Abs.BrTable.select depths fallback value)::after,vals := front} compiled C targets next output := by
     exact ⟨bindings,locals,reducedLabels,
       ⟨entry.structured_indexed (emission compiled C) C.TYPES C.FUNCS f.resultTypes compiled.jump_tables.val after output,

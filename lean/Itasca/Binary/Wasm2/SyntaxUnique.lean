@@ -5,7 +5,7 @@ import Itasca.Binary.Wasm2.Syntax
 
 `Emits.unique` and `BodyTokens.unique` show that a token list spells at most one instruction
 list. The proof folds the tokens with a stack of open structured instructions
-(`SyntaxDecode.run`), as in `Binary/Wasm1/SyntaxUnique`.
+(`SyntaxDecode.run`).
 -/
 
 namespace Itasca.Wasm2

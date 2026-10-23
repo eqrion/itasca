@@ -24,25 +24,25 @@ structure PreparedRun {M P F A : Type}
   funcInst : runtime.store.ModuleInst
   tableInst : runtime.store.ModuleInst
   inst : runtime.store.ModuleInst
-  typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
+  typeRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator before (.Ok ()) 0#usize seed =
     .ok (typeParts typed (.Ok ()) typeInst)
-  functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
+  functionRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
     .ok (typeParts functions (.Ok ()) funcInst)
-  tableRun : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
+  tableRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
     .ok (typeParts tabled (.Ok ()) tableInst)
-  memoryRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
+  memoryRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
     .ok (typeParts prepared (.Ok ()) inst)
   publishedInstances : alloc.vec.Vec runtime.store.ModuleInst
   publicationRun : alloc.vec.Vec.push prepared.instances inst = .ok publishedInstances
   globalStore : runtime.store.Store M
   elementStore : runtime.store.Store M
   dataStore : runtime.store.Store M
-  globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator
+  globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator
     {prepared with instances := publishedInstances} platform (.Ok ()) 0#usize before.instances.len =
     .ok (storeParts globalStore platform (.Ok ()))
-  elementRun : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
+  elementRun : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
     .ok (storeParts elementStore platform (.Ok ()))
-  dataRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
+  dataRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
     .ok (storeStateParts dataStore (.Ok ()))
   charged : Usize
   counted : charged.val = before.instance_items.val + moduleItems seed.module

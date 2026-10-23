@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp Exec.Interp.OpenCall Exec.Interp.Stru
 
 /-- Actual suspension is tied to an independently typed source request and
 its saved evaluation context. Early native rejection emits no host entry. -/
-def PreparedSourceHost {M P : Type} (emission : FunctionEmission) (allowed : instr → Prop)
+def PreparedSourceHost {M P : Type}
     (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (exec : runtime.interp.Execution) (source : config) (expected : resulttype) : CallPhase M P → Prop
   | .done out => hostStepAddress exec store=none ∨ ∃error,out.1=.Err error ∧ HostPreparationError error ∧ out.2.2.1=store
@@ -20,7 +20,7 @@ def PreparedSourceHost {M P : Type} (emission : FunctionEmission) (allowed : ins
       pending.arguments=args.val.map sourceValue ∧ StepsH source [] pending.initial ∧ Config_ok pending.initial expected ∧
       (∃resume : Abs.AState,∀fresh returned,pending.completed ⟨fresh,some returned⟩=Abs.decode (Abs.finishHost resume fresh returned)) ∧
       Spec.UniversalQuietPrefix source pending.initial ∧
-      SourceContinuation emission allowed memory view code store ready address base pending
+      SourceContinuation memory view code store ready address base pending
         (match expected with | .mk_list types=>types)
 
 private theorem host_identity_equal {s : _root_.store} {address left right : Nat} {p q r t : List valtype}
@@ -31,7 +31,7 @@ private theorem host_identity_equal {s : _root_.store} {address left right : Nat
   have codes := congrArg funcinst.CODE equal
   exact funccode.HOST.inj codes
 
-theorem prepare_direct_host_source {M P F A : Type} {emission : FunctionEmission} {allowed : instr → Prop}
+theorem prepare_direct_host_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
@@ -54,9 +54,9 @@ theorem prepare_direct_host_source {M P F A : Type} {emission : FunctionEmission
     (hostCode : function.code=.Host host)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code store) raw
+    (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
@@ -64,7 +64,7 @@ theorem prepare_direct_host_source {M P F A : Type} {emission : FunctionEmission
       (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩)
       (.mk_list expected)) :
     prepareStep memory hooks floats allocator exec store platform
-      ⦃phase=>PreparedSourceHost emission allowed memory view code store exec
+      ⦃phase=>PreparedSourceHost memory view code store exec
         (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩)
         (.mk_list expected) phase⦄ := by
   have current := point.code.current

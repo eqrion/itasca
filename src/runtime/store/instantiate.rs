@@ -61,6 +61,20 @@ impl<M: MemoryBuffer> Store<M> {
         platform: &mut P,
         committed: &mut bool,
     ) -> Result<InstanceAddr, ExecError> {
+        let (identity, items) = self.prepare_instance::<P, F, A>(module, imports, platform)?;
+        self.instance_items += items;
+        self.commit_instance::<P, F, A>(platform, identity, committed)
+    }
+    /// Links the imports and allocates every object of a new instance,
+    /// evaluating its global and element initializers, without writing any
+    /// imported object. Returns the instance address and item count; on error
+    /// the caller rolls back every provisional object.
+    fn prepare_instance<P: Platform<M>, F: FloatOps, A: Alloc>(
+        &mut self,
+        module: ExecutableModule,
+        imports: &[Extern],
+        platform: &mut P,
+    ) -> Result<(InstanceAddr, usize), ExecError> {
         if imports.len() != module.env().imports().len() {
             return Err(ExecError::Link(LinkError::MissingImport));
         }
@@ -181,8 +195,17 @@ impl<M: MemoryBuffer> Store<M> {
             }
             status?;
         }
+        Ok((identity, items))
+    }
+    /// Publishes a prepared instance: writes active segments into possibly
+    /// imported objects and runs the start function. Effects are not rolled back.
+    fn commit_instance<P: Platform<M>, F: FloatOps, A: Alloc>(
+        &mut self,
+        platform: &mut P,
+        identity: InstanceAddr,
+        committed: &mut bool,
+    ) -> Result<InstanceAddr, ExecError> {
         *committed = true;
-        self.instance_items += items;
         initialize_segments::<M, P, F, A>(self, platform, identity.index)?;
         if let Some(f) = self.instances[identity.index].module.env().start() {
             let func = self.instances[identity.index].funcs[f as usize];

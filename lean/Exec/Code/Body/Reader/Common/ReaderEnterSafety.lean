@@ -8,20 +8,20 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_enter_signature_wasm2 {data env locals index st out bt} {form : Frames.Form}
-    (p : Wasm2.Pending data env locals index st) (initial : form.Initial)
-    (accepted : code.enter_info st data env form.kind = .ok (.Ok bt, out)) :
+    (p : Wasm2.Pending data env .Wasm2 locals index st) (initial : form.Initial)
+    (accepted : code.enter_info st data env .Wasm2 form.kind = .ok (.Ok bt, out)) :
     ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs := by
-  have erased : code.enter st data env form.kind = .ok (.Ok (), out) := by
+  have erased : code.enter st data env .Wasm2 form.kind = .ok (.Ok (), out) := by
     simp [code.enter, accepted, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨C, outer, spine, header, parentBase, typed, ctrls, blocks, vals⟩ := p.opened
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have effect := code.enter.sound st data env form initial outer p.current.vals vals
+  have effect := code.enter.sound st data env .Wasm2 form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, parentBase]) p.opened.shape.core capacity
   rw [erased, WP.spec_ok] at effect
-  obtain ⟨sourceBt, ins, outs, decoded, inputs, outputs, _⟩ := effect rfl
-  have info := code.enter_info.bytes st data env form.kind p.opened.shape.core capacity
+  obtain ⟨sourceBt, ins, outs, decoded, _, inputs, outputs, _⟩ := effect rfl
+  have info := code.enter_info.bytes st data env .Wasm2 form.kind p.opened.shape.core capacity
   rw [accepted, WP.spec_ok] at info
   obtain ⟨rfl, _⟩ := (info bt rfl).unique decoded
   exact ⟨ins,outs,inputs,outputs⟩
@@ -40,7 +40,7 @@ theorem EntryPrefix.height_bound {A} {compiler : runtime.compiler.FunctionCompil
 
 theorem compiler_enter_reader_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    {data env locals index st} (p : Wasm2.Pending data env locals index st)
+    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (signatures : SignatureSequence compiler.signatures.val env.types.val)
     (observed : ObservedStack compiler st.core.vals.val)
@@ -50,14 +50,14 @@ theorem compiler_enter_reader_total {A} (ops : runtime.platform.Alloc A)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (mapsFit : compiler.function.controls.val.length < Usize.max)
     (framesFit : compiler.frames.val.length < Usize.max) :
-    CallbackTrace.bodyRun (code.enter_info st data env form.kind)
+    CallbackTrace.bodyRun (code.enter_info st data env .Wasm2 form.kind)
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) (enterAction form) compiler ⦃ out =>
         out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
   apply reader_body_run_reached _ _ _ compiler (fun s c => ObservedStack c s.core.vals.val)
-  · exact WP.spec_mono (code.enter_info.total st data env form.kind p.opened.shape.core capacity) (by simp)
+  · exact WP.spec_mono (code.enter_info.total st data env .Wasm2 form.kind p.opened.shape.core capacity) (by simp)
   · intro out bt read
     obtain ⟨ins,outs,inputs,outputs⟩ := reader_enter_signature_wasm2 p initial read
     obtain ⟨signature,selected,_⟩ := signatures.select inputs outputs

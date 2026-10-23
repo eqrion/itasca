@@ -3,8 +3,6 @@ import Exec.Abs.Float.ChosenErasure
 import Exec.Interp.Numeric.Float.FloatOwnership
 namespace Exec.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Float
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
-
 theorem step_float_chosen_structured_owned {choices : Spec.SourceChoices} (admissible : choices.Admissible)
     (numericChoice : choices.numeric=Spec.firstNumericChoice) (occurrence : Nat) {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -23,14 +21,14 @@ theorem step_float_chosen_structured_owned {choices : Spec.SourceChoices} (admis
     (pcBound : raw.pc.val < U32.max)
     (typed : Abs.ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission s raw { f with code := op.source :: after } compiled C targets next output) :
+    (point : FramePoint s raw { f with code := op.source :: after } compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ((out.1 = .Ok () ∧ ∃ (pc : U32) (g : Abs.AFrame),
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
-        FramePoint emission s { raw with pc := pc } g compiled C targets next output ∧
+        FramePoint s { raw with pc := pc } g compiled C targets next output ∧
         Abs.ATyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
         ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false
           ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ ⟨s, ambient, g :: rest, []⟩ ∧

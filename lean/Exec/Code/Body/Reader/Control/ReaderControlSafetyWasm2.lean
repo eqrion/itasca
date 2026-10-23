@@ -7,11 +7,11 @@ namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 2000000
 
-theorem StructuredReaderCompilerStateWithTablesWasm2.control_total {A}
+theorem StructuredReaderCompilerStateWasm2.control_total {A}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial compiler : runtime.compiler.FunctionCompiler A}
     {jumpTables emit types functions returns locals data env sourceLocals index ft st parents current savedParents savedCurrent}
-    (state : StructuredReaderCompilerStateWithTablesWasm2 jumpTables emit initial compiler types functions returns locals
+    (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial compiler types functions returns locals
       data env sourceLocals index ft st parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val < data.length)
     (ctx : code.Context) (opcode : U8) (covered : opcode.val ∈ [2,3,4,5,11,12,13,15])

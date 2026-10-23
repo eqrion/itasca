@@ -94,7 +94,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     (by change objectCount trace.prepared ≤ Usize.max; exact preparedBound) (by simp)
     (by simpa using globalCapacity) (decodeStore view code before) initialModule storeWf frameWf context
     before.globals.val (by intro _; exact ⟨[], by simp [published, preparedGlobals], .nil⟩)
-  change runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator
+  change runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator
     {trace.prepared with instances := trace.publishedInstances} platform (.Ok ()) 0#usize before.instances.len
     ⦃ _ ⦄ at result
   rw [trace.globalRun] at result
@@ -122,25 +122,4 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     simpa only [sameCount] using mapped
   · exact ⟨produced, stored, by simpa only [source] using evaluated⟩
 
-theorem PreparedRun.global_source_values {M P F A : Type}
-    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
-    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
-    {view : M → Slice U8} {before : runtime.store.Store M}
-    {module : runtime.compiler.ExecutableModule} {platform : P} {ready : runtime.store.Store M}
-    (trace : PreparedRun memory hooks floats allocator view before module platform ready)
-    (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
-    (shape : Shape view before) (accounted : SegmentAccounting before)
-    {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
-    (code : CodeInterpretation) (initialModule : moduleinst)
-    (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
-    (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
-    (storeWf : wf_store (decodeStore view code before))
-    (frameWf : wf_frame ⟨[], initialModule⟩) :
-    ∃ produced, trace.globalStore.globals.val = before.globals.val ++ produced ∧
-      GlobalSourceValues (decodeStore view code before) initialModule module.module.env.globals.val produced := by
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, produced, stored, evaluated⟩ :=
-    trace.global_source_context laws law shape accounted cache valid compiled code initialModule
-      functionMap globalMap storeWf frameWf
-  exact ⟨produced, stored, evaluated⟩
 end Exec.Store

@@ -77,14 +77,6 @@ set_option maxHeartbeats 1800000
 def initializerElementCost (elements : List Itasca.module.Element) : Nat :=
   (elements.map (fun e => e.init.val.length + 3)).sum
 
-theorem initializerElementCost_eq (elements : List Itasca.module.Element) :
-    initializerElementCost elements = (elements.map (fun e => e.init.val.length)).sum + 3 * elements.length := by
-  induction elements with
-  | nil => simp [initializerElementCost]
-  | cons head tail ih =>
-    simp only [initializerElementCost, List.map_cons, List.sum_cons, List.length_cons] at *
-    omega
-
 theorem initializer_element_cost_step (elements : List Itasca.module.Element)
     (index : Nat) (segment : Itasca.module.Element) (found : elements[index]? = some segment) :
     initializerElementCost (elements.drop index) = segment.init.val.length + 3 +

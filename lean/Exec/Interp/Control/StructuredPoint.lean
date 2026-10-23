@@ -12,7 +12,6 @@ structure FrameMetadata (before after : Abs.AFrame) : Prop where
   results : after.resultTypes = before.resultTypes
   locals : after.locals.map Code.valueType = before.locals.map Code.valueType
 
-
 theorem valueType_eq_abs (value : val) : Code.valueType value = Abs.valueType value := by
   cases value with
   | REF_NULL rt => cases rt <;> rfl
@@ -33,14 +32,6 @@ structure LabelsMatch (values : List val) (labels : List Abs.Label) (targets : L
   length : labels.length = targets.length
   atIndex : ∀ (depth : Nat) (label : Abs.Label), labels[depth]? = some label →
     ∃ target, targets[depth]? = some target ∧ LabelMatch values label target
-
-structure StructuredFramePoint (raw : runtime.interp.Frame) (frame : Abs.AFrame)
-    (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype) : Prop where
-  labels : LabelsMatch frame.vals frame.labels targets
-  code : Code.StructuredPoint frame.module.TYPES functions frame.resultTypes
-    (frame.locals.map Code.valueType) compiled.code.val targets
-    (frame.vals.map Code.valueType) frame.code raw.pc.val next output
 
 theorem LabelsMatch.staticLookup {values labels targets}
     (h : LabelsMatch values labels targets) (depth : Nat) (target : Code.LabelTarget)
@@ -127,83 +118,5 @@ theorem LabelsMatch.branch {front discarded results : List val} {labels targets}
   intro label member
   have bound := heights label member
   simp only [List.append_assoc, List.take_append_of_le_length bound]
-
-/-- Target lookup exposes the retained source continuation, with concrete
-label fields obtained from the dynamic/static label correspondence. -/
-theorem StructuredFramePoint.target {raw frame compiled functions targets next output}
-    (point : StructuredFramePoint raw frame compiled functions targets next output)
-    (depth : Nat) (label : Abs.Label) (lookup : frame.labels[depth]? = some label)
-    (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
-    ∃ target targetNext targetOutput,
-      targets[depth]? = some target ∧ LabelMatch frame.vals label target ∧
-      Code.StructuredPoint frame.module.TYPES functions frame.resultTypes
-        (frame.locals.map Code.valueType) compiled.code.val (targets.drop (depth + 1))
-        (target.front ++ label.branchTypes) (label.cont ++ label.after)
-        target.target.val targetNext targetOutput := by
-  obtain ⟨target, found, matching⟩ := point.labels.atIndex depth label lookup
-  obtain ⟨targetNext, targetOutput, continuation, aligned, root⟩ := point.code.targets depth target found (live target found)
-  refine ⟨target, targetNext, targetOutput, found, matching, ?_⟩
-  exact ⟨by simpa only [matching.branchTypes, matching.cont, matching.after] using continuation,
-    point.code.targets.drop (depth + 1), point.code.normal.drop (depth + 1), aligned, root⟩
-
-/-- A typed source branch preserves the surviving dynamic/static label
-correspondence and installs the exact retained target continuation. -/
-theorem StructuredFramePoint.branch {s : _root_.store} {raw : runtime.interp.Frame}
-    {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction}
-    {functions : List functype} {targets : List Code.LabelTarget} {next : Nat} {output : List valtype}
-    (front discarded results : List val)
-    (point : StructuredFramePoint raw { f with vals := front ++ discarded ++ results } compiled functions targets next output)
-    (typed : Abs.FrameTyped s { f with vals := front ++ discarded ++ results } [])
-    (depth : Nat) (label : Abs.Label) (lookup : f.labels[depth]? = some label)
-    (height : label.height = front.length) (types : results.map Abs.valueType = label.branchTypes)
-    (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
-    ∃ target targetNext targetOutput,
-      targets[depth]? = some target ∧ LabelMatch (front ++ discarded ++ results) label target ∧
-      StructuredFramePoint { raw with pc := target.target }
-        { f with code := label.cont ++ label.after, labels := f.labels.drop (depth + 1), vals := front ++ results }
-        compiled functions (targets.drop (depth + 1)) targetNext targetOutput := by
-  obtain ⟨target, targetNext, targetOutput, found, matching, continuation⟩ := point.target depth label lookup live
-  have frontTypes : target.front = front.map Code.valueType := by
-    simpa only [height, List.append_assoc, List.take_left] using matching.front
-  have resultTypes : results.map Code.valueType = label.branchTypes := by
-    simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs] using types
-  have outer := typed.outer_heights depth label lookup
-  have labels := point.labels.branch depth (by simpa only [height] using outer)
-  refine ⟨target, targetNext, targetOutput, found, matching, ⟨labels, ?_⟩⟩
-  simpa only [List.map_append, resultTypes, frontTypes] using continuation
-
-theorem branch_target_point {s : _root_.store} {raw : runtime.interp.Frame}
-    {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction}
-    {functions : List functype} {targets : List Code.LabelTarget}
-    (front discarded results : List val)
-    (matchingLabels : LabelsMatch (front ++ discarded ++ results) f.labels targets)
-    (continuations : Code.LabelContinuations f.module.TYPES functions f.resultTypes
-      (f.locals.map Code.valueType) compiled.code.val targets)
-    (normal : Code.NormalContinuations f.module.TYPES functions f.resultTypes
-      (f.locals.map Code.valueType) compiled.code.val targets)
-    (typed : Abs.FrameTyped s { f with vals := front ++ discarded ++ results } [])
-    (depth : Nat) (label : Abs.Label) (lookup : f.labels[depth]? = some label)
-    (height : label.height = front.length) (types : results.map Abs.valueType = label.branchTypes)
-    (live : ∀ target, targets[depth]? = some target → target.branchLive = true) :
-    ∃ target targetNext targetOutput,
-      targets[depth]? = some target ∧ LabelMatch (front ++ discarded ++ results) label target ∧
-      StructuredFramePoint { raw with pc := target.target }
-        { f with code := label.cont ++ label.after, labels := f.labels.drop (depth + 1), vals := front ++ results }
-        compiled functions (targets.drop (depth + 1)) targetNext targetOutput := by
-  obtain ⟨target, found, matching⟩ := matchingLabels.atIndex depth label lookup
-  obtain ⟨targetNext, targetOutput, relation, aligned, root⟩ := continuations depth target found (live target found)
-  have continuation : Code.StructuredPoint f.module.TYPES functions f.resultTypes
-      (f.locals.map Code.valueType) compiled.code.val (targets.drop (depth + 1))
-      (target.front ++ label.branchTypes) (label.cont ++ label.after) target.target.val targetNext targetOutput :=
-    ⟨by simpa only [matching.branchTypes, matching.cont, matching.after] using relation,
-      continuations.drop (depth + 1), normal.drop (depth + 1), aligned, root⟩
-  have frontTypes : target.front = front.map Code.valueType := by
-    simpa only [height, List.append_assoc, List.take_left] using matching.front
-  have resultTypes : results.map Code.valueType = label.branchTypes := by
-    simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs] using types
-  have outer := typed.outer_heights depth label lookup
-  have labels := matchingLabels.branch depth (by simpa only [height] using outer)
-  refine ⟨target, targetNext, targetOutput, found, matching, ⟨labels, ?_⟩⟩
-  simpa only [List.map_append, resultTypes, frontTypes] using continuation
 
 end Exec.Interp

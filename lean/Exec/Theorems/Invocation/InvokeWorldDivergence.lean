@@ -5,19 +5,9 @@ import Exec.Interp.Invocation.InvokeDivergence
 import Exec.Interp.Invocation.InvokePrefixDivergence
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 theorem invoke_defined_world_infinite_source
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.RecordingHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -25,7 +15,7 @@ theorem invoke_defined_world_infinite_source
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀code s,Inv code s → CertifiedSupportedStore emission allowed view code s)
+    (certify : ∀code s,Inv code s → CertifiedSupportedStore view code s)
     (update : ∀code before after,Inv code before → CumulativeStoreMutation view code before after → Inv code after)
     (sound : HostWorldSound hooks view Inv)
     (preserve : ∀ code store, Inv code store →
@@ -51,7 +41,7 @@ theorem invoke_defined_world_infinite_source
       ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ := by
   have certified := certify code store valid
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) => after=store ∧ ∃source,
-    StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store prepared source
+    StructuredMachine.Execution view code store prepared source
       (signature.results.val.map sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
@@ -70,10 +60,10 @@ theorem invoke_defined_world_infinite_source
     · intro after prepared p entered
       obtain ⟨same,source,invariant,ownedSource,ambientEq,sourceStep⟩ := entered
       subst after
-      let machine : EventfulMachine emission allowed M P view code (signature.results.val.map sourceType) :=
+      let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
         ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
       apply WP.dspec_mono (world_loop_results memory hooks floats allocator Inv
-        (world_step_outcomes language memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid)
+        (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid)
       intro out result
       obtain ⟨finalCode,newValid,fresh,retained,agrees,extension,returned,failed⟩ := result.1
       refine ⟨retained,?_⟩
@@ -85,9 +75,9 @@ theorem invoke_defined_world_infinite_source
         exact Store.owned_result_fits _ value (ownedValues value member)
   obtain ⟨after,prepared,p,⟨same,source,invariant,ownedSource,ambientEq,sourceStep⟩,bodyDivergent⟩ := reached
   subst after
-  let machine : EventfulMachine emission allowed M P view code (signature.results.val.map sourceType) :=
+  let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
     ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
   have infinite := world_loop_infinite memory hooks floats allocator Inv
-    (world_step_outcomes language memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid bodyDivergent
+    (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid bodyDivergent
   exact infinite.prepend (StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf))
 end Exec.Theorems

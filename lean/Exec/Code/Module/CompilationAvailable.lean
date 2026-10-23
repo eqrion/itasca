@@ -13,7 +13,7 @@ and signature limits. No compiler run or emitted object occurs in these fields. 
 structure ValidCompilationSource (bytes : Slice U8) (profile : ValidationProfile)
     (raw : ModuleBinary.Module) : Prop where
   encoding : ModuleBinary.ModuleEncodingWithinLimits raw bytes.val profile
-  signatures : ModuleBinary.ModuleSignaturesWithinLimits raw profile
+  signatures : ModuleBinary.ModuleSignaturesWithinLimits raw
   elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw)
   typed : Module_ok (ModuleElaboration.moduleOf raw)
   restrictions : ModuleElaboration.Profile raw profile

@@ -1,10 +1,9 @@
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
-import Exec.Code.Body.Reader.Common.ReaderCloseWasm1
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_end_root_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {kind bt out}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {kind bt out}
     (single : st.blocks.val.length = 1)
     (read : code.end_frame_info st env false = .ok (.Ok (kind,bt),out)) :
     out.core.ctrls.val = [] := by
@@ -24,7 +23,7 @@ theorem reader_end_root_wasm2 {data env locals index st}
   simpa [parents] using controlEq
 
 theorem step_end_root_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {V} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {V} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (single : st.blocks.val.length = 1)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0b#u8 before =
@@ -33,18 +32,4 @@ theorem step_end_root_wasm2 {data env locals index st}
   obtain ⟨pair,read,_⟩ := reader_body_success _ _ _ _ _ _ accepted
   exact reader_end_root_wasm2 p single read
 
-theorem reader_end_root_wasm1 {data env ctx bodyBt st}
-    (p : Wasm1.Pending data env ctx bodyBt st) {kind bt out}
-    (single : st.ctrls.val.length = 1)
-    (read : code.read_end st = .ok (.Ok (kind,bt),out)) : out.ctrls.val = [] := by
-  obtain ⟨C,outer,spine,header,base,typed,controls,values⟩ := p.opened
-  have parents : p.parents = [] := by
-    have count := congrArg List.length controls
-    simp only [List.length_append,List.length_map,List.length_singleton] at count
-    exact List.eq_nil_of_length_eq_zero (by omega)
-  have effect := code.read_end.realizes st (p.parents.map Wasm1.Frames.Saved.ctrl) p.current.ctrl
-    outer p.current.vals controls values base (Nat.le_of_lt p.val_capacity)
-  rw [read,WP.spec_ok] at effect
-  have controlEq := effect.2.2.2.1
-  simpa [parents] using controlEq
 end Exec.Code

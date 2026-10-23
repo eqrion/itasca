@@ -3,7 +3,6 @@ import Exec.Theorems.Composition.Cumulative.CumulativeNormalizeOutcome
 import Exec.Interp.Relations.EventfulNormalize
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Unbundled source-indexed form of the world result, used while erased
 source normalization changes the source point without executing a raw step. -/
@@ -15,7 +14,7 @@ def WorldSourceStepResult {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (source : Abs.AState) (pc : Nat) (pending : Bool) (out : EventfulDispatchResult M P) : Prop :=
   match out.1 with
-  | .Ok _ => ∃ next : EventfulWorld emission allowed M P view expected,
+  | .Ok _ => ∃ next : EventfulWorld M P view expected,
       Inv next.code next.machine.store ∧ out=(.Ok (),next.machine.exec,next.machine.store,next.machine.platform) ∧
       EventfulConcreteSim U32.max pc next.machine.pc pending next.machine.pending source next.machine.source
         (stepHostEvents exec store out) ∧
@@ -23,7 +22,7 @@ def WorldSourceStepResult {M P F A : Type}
       FrameStorePrefix store next.machine.store ∧ next.machine.source.ambient=source.ambient ∧
       Store.CodeAgreesOn store code next.code
   | .Err error => ∃ afterCode,
-      Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore emission allowed view afterCode out.2.2.1 ∧
+      Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧
       FrameStorePrefix store out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       EventfulInvocationError (Abs.decode source) (stepHostEvents exec store out)
@@ -37,9 +36,9 @@ theorem WorldStepResult.unbundle {M P F A : Type}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {expected : List valtype}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop}
-    {before : EventfulWorld emission allowed M P view expected} {out : EventfulDispatchResult M P}
+    {before : EventfulWorld M P view expected} {out : EventfulDispatchResult M P}
     (result : WorldStepResult memory hooks floats allocator Inv before out) :
-    WorldSourceStepResult (emission:=emission) (allowed:=allowed) (view:=view) memory hooks floats allocator Inv before.code expected before.machine.exec
+    WorldSourceStepResult (view:=view) memory hooks floats allocator Inv before.code expected before.machine.exec
       before.machine.store before.machine.platform before.machine.source before.machine.pc before.machine.pending out := by
   cases status : out.1 with
   | Ok unit =>
@@ -53,8 +52,8 @@ theorem WorldSourceStepResult.bundle {M P F A : Type}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {expected : List valtype}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop}
-    {before : EventfulWorld emission allowed M P view expected} {out : EventfulDispatchResult M P}
-    (result : WorldSourceStepResult (emission:=emission) (allowed:=allowed) (view:=view) memory hooks floats allocator Inv before.code expected before.machine.exec
+    {before : EventfulWorld M P view expected} {out : EventfulDispatchResult M P}
+    (result : WorldSourceStepResult (view:=view) memory hooks floats allocator Inv before.code expected before.machine.exec
       before.machine.store before.machine.platform before.machine.source before.machine.pc before.machine.pending out)
     (actual : runtime.interp.step memory hooks floats allocator before.machine.exec before.machine.store
       before.machine.platform=.ok out) : WorldStepResult memory hooks floats allocator Inv before out := by
@@ -75,9 +74,9 @@ theorem WorldSourceStepResult.prepend_normalization {M P F A : Type}
     {out : EventfulDispatchResult M P}
     (chain : ErasedSteps count before middle)
     (typed : Abs.ATyped ⟨s,ambient,before::rest,[]⟩)
-    (result : WorldSourceStepResult (emission:=emission) (allowed:=allowed) (view:=view)
+    (result : WorldSourceStepResult (view:=view)
       memory hooks floats allocator Inv code expected exec store platform ⟨s,ambient,middle::rest,[]⟩ pc false out) :
-    WorldSourceStepResult (emission:=emission) (allowed:=allowed) (view:=view)
+    WorldSourceStepResult (view:=view)
       memory hooks floats allocator Inv code expected exec store platform ⟨s,ambient,before::rest,[]⟩ pc false out := by
   have normalized := chain.sound s ambient rest typed
   have prefixSteps : StepsH (Abs.decode ⟨s,ambient,before::rest,[]⟩) [] (Abs.decode ⟨s,ambient,middle::rest,[]⟩) := by

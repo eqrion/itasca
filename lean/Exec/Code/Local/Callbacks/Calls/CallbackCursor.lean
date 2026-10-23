@@ -87,26 +87,4 @@ theorem compiler_br_if_cursor {A : Type} (ops : runtime.platform.Alloc A)
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
   repeat' control_cursor_step accepted using ops, law
 
-
-theorem compiler_block_cursor {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_block
-      ops before state bt = .ok (.Ok (), after)) : after.next_source = state.pos := by
-  exact compiler_enter_cursor ops law before after state .Block bt accepted
-
-theorem compiler_loop_cursor {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_loop
-      ops before state bt = .ok (.Ok (), after)) : after.next_source = state.pos := by
-  exact compiler_enter_cursor ops law before after state .Loop bt accepted
-
-theorem compiler_if_cursor {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bt : Itasca.signature.BlockType)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_if
-      ops before state bt = .ok (.Ok (), after)) : after.next_source = state.pos := by
-  exact compiler_enter_cursor ops law before after state .Then bt accepted
-
 end Exec.Code

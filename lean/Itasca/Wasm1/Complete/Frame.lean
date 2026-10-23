@@ -1,7 +1,7 @@
-import Itasca.Wasm1.Profile
+import Itasca.Wasm1.ProfileSyntax
 import Itasca.Spec.TypingInversion
 import Itasca.Handler.StackComplete
-import Itasca.Wasm1.Complete.Execution
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Concrete frames for forward execution
@@ -33,8 +33,6 @@ theorem Frame.poly_eq {st} (f : Frame st) :
     Control.polymorphic st = f.current.polymorphic_base := by
   simp [Control.polymorphic, f.ctrls]
 
-theorem Frame.nonempty {st} (f : Frame st) : st.ctrls.val ≠ [] := by simp [f.ctrls]
-
 /-- Executing an instruction list in one frame may change its polymorphism,
 but preserves all parent frames and the current frame's fixed fields. -/
 def Frame.Output {st} (f : Frame st) (out : List valtype) (s : code.OpIterState) : Prop :=
@@ -54,28 +52,32 @@ theorem Frame.output_self {st} (f : Frame st) {out : List valtype}
     (ht : Sequence.Realizes f.current.polymorphic_base f.operands out) : f.Output out st := by
   exact ⟨f.current.polymorphic_base, f.operands, by simpa using f.ctrls, f.vals, ht⟩
 
-theorem Frame.Output.mono {st} {f : Frame st} {a b : List valtype} {s : code.OpIterState}
-    (h : f.Output a s) (hs : Resulttype_sub (.mk_list a) (.mk_list b)) : f.Output b s := by
-  obtain ⟨poly, operands, hc, hv, ht⟩ := h
-  exact ⟨poly, operands, hc, hv, DeclarativeComplete.realizes_mono ht hs⟩
-
 /-- A state satisfying `Frame.Output` has a concrete frame of its own with the same parents,
 outer operands and fixed fields, ready for the next typing derivation. -/
 theorem Frame.Output.next {st} {f : Frame st} {out : List valtype} {s : code.OpIterState}
     (h : f.Output out s) :
     ∃ g : Frame s, g.parents = f.parents ∧ g.outer = f.outer ∧
-      g.current.kind = f.current.kind ∧ g.current.block_type = f.current.block_type ∧
-      g.current.signature = f.current.signature ∧
+      g.current.kind = f.current.kind ∧ g.current.signature = f.current.signature ∧
       g.current.value_stack_base = f.current.value_stack_base ∧
       Sequence.Realizes g.current.polymorphic_base g.operands out := by
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
   exact ⟨⟨f.parents, {f.current with polymorphic_base := poly}, f.outer, operands,
-    hc, hv, f.base⟩, rfl, rfl, rfl, rfl, rfl, rfl, ht⟩
+    hc, hv, f.base⟩, rfl, rfl, rfl, rfl, rfl, ht⟩
 
-theorem Frame.Output.labels {st} {f : Frame st} {out : List valtype} {s : code.OpIterState}
-    (h : f.Output out s) : Control.labels s.ctrls.val = Control.labels st.ctrls.val := by
+theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
+    {out : List valtype} (h : g.Output out t)
+    (hp : g.parents = f.parents) (ho : g.outer = f.outer)
+    (hk : g.current.kind = f.current.kind)
+    (hsig : g.current.signature = f.current.signature)
+    (hbase : g.current.value_stack_base = f.current.value_stack_base) : f.Output out t := by
   obtain ⟨poly, operands, hc, hv, ht⟩ := h
-  simp [Control.labels, hc, f.ctrls, Control.targetTypes, Control.targetBlockType]
+  have he : {g.current with polymorphic_base := poly} =
+      {f.current with polymorphic_base := poly} := by
+    cases hg : g.current
+    cases hf : f.current
+    simp only [hg, hf] at hk hsig hbase
+    simp_all
+  exact ⟨poly, operands, by simpa [hp, he] using hc, by simpa [ho] using hv, ht⟩
 
 /-- Common conclusion of a leaf dispatch after its opcode has been read: `code.step` returns
 `Ok` at the cursor `next` and the resulting state realizes the output types. -/

@@ -95,46 +95,4 @@ def platform {M : Type} (memory : runtime.platform.MemoryBuffer M)
     let reply := (select identity args).evaluate
     .ok (reply.1,token,store,reply.2)
 
-/-- The complete host source-store obligation is derived from this executable
-implementation and the public invariant's typing theorem. -/
-theorem sound {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8)
-    (code : Store.CodeInterpretation) :
-    Platform.HostSound (platform memory select) (ExecutableInv view code) (Store.decodeStore view code) := by
-  apply Platform.HostSound.of_invariant (fun _ held => held.source_typed)
-  intro token store identity args results held
-  exact WP.spec.ret ⟨held,Spec.extend_store_refl _ held.well_formed⟩
-
-/-- Pure implementations also satisfy the world-indexed contract. -/
-theorem world_sound {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (view : M → Slice U8) :
-    HostWorldSound (platform memory select) view (ExecutableInv view) :=
-  HostWorldSound.of_fixed (sound memory select view)
-
-/-- The implementation's result issuance contract has no callback-normality
-or returned-action decomposition premise. -/
-theorem issued {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (token : Unit)
-    (store : runtime.store.Store M) (identity : U64) (args results : Slice runtime.Value) :
-    (platform memory select).call_host token store identity args results ⦃ answer =>
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value ⦄ :=
-  WP.spec.ret ((select identity args).issued store)
-
-/-- Host effects retain the exact raw frame metadata and extern count. -/
-theorem retained {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) (token : Unit)
-    (store : runtime.store.Store M) (identity : U64) (args results : Slice runtime.Value) :
-    (platform memory select).call_host token store identity args results ⦃ answer =>
-      Interp.FrameStorePrefix store answer.2.2.1 ∧
-      store.externs.length = answer.2.2.1.externs.length ⦄ :=
-  WP.spec.ret ⟨Interp.FrameStorePrefix.refl _,rfl⟩
-
-/-- Finite callback control returns normally, and interrupts always continue. -/
-theorem total {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (select : U64 → Slice runtime.Value → Program) :
-    Platform.HooksTotal (platform memory select) := by
-  constructor
-  · intro token; exact WP.spec.ret trivial
-  · intro token store identity args results; exact WP.spec.ret trivial
-
 end Exec.Theorems.PureCallbacks

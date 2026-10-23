@@ -56,20 +56,6 @@ def SignatureTable (signatures : Slice runtime.compiler.Signature) (types : List
     ∃ params results : List valtype, types[i]? = some (.mk_functype (.mk_list params) (.mk_list results)) ∧
       SignatureMatches signature params results
 
-/-- The selected concrete signature gives exactly the source block signature
-and all four value/word arities, including indexed multi-value blocks. -/
-theorem SignatureAt.source {signatures bt signature types}
-    (selected : SignatureAt signatures bt signature) (table : SignatureTable signatures types) :
-    ∃ params results, BlockSignature types (Itasca.Wasm2.blockType bt) params results ∧
-      SignatureMatches signature params results := by
-  cases selected with
-  | empty => exact ⟨[], [], .empty, by constructor <;> rfl⟩
-  | value ty word width =>
-    refine ⟨[], [Itasca.Translate.valueType ty], .value _, ?_⟩
-    constructor <;> simp_all [slots]
-  | index i signature found =>
-    obtain ⟨params, results, lookup, matched⟩ := table i.val signature found
-    exact ⟨params, results, .index i.val params results lookup, matched⟩
 /-- Capturing an accepted module type appends its exact value and word counts.
 The slot accumulator is total, and rejects only a width above the u32 bound. -/
 @[step] theorem capture_signature {A : Type} (ops : runtime.platform.Alloc A)

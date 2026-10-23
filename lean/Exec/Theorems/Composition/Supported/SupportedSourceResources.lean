@@ -1,4 +1,147 @@
-import Exec.Theorems.Composition.Supported.SupportedBoundaries
+import Exec.Theorems.Composition.Certified.CertifiedSupported
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Interp.Relations.SuspendedPoint
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Abs.Core.Typing
+import Exec.Abs.Core
+import Exec.Abs.Ownership.Core
+import Exec.Interp.Core.Mutation
+import Exec.Interp.Relations.SourceCallCause
+import Exec.Interp.State.GlobalMutationStep
+import Exec.Interp.Control.PendingJump
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.Relations.ReferenceTransfers
+import Exec.Interp.Relations.SourceClosure
+import Exec.Interp.Core.Linear
+import Exec.Interp.Relations.PrefixDispatch
+import Exec.Abs.Core.Correct
+import Exec.Interp.Relations.ControlPoint
+import Exec.Interp.Numeric.Integer.NumericFetch
+import Exec.Interp.Numeric.Integer.NumericCodePoint
+import Exec.Abs.Numeric.TransitionSimulation
+import Exec.Abs.Core.Bound
+import Exec.Code.Local.Control.Table.StructuredCodeTableExclusion
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Interp.StructuredMachine.OrdinaryExecution
+import Exec.Interp.StructuredMachine.OrdinaryStack
+import Exec.Interp.StructuredMachine.StackPreservation
+import Exec.Interp.Relations.StackPreservation
+import Exec.Interp.Relations.PrefixEffect
+import Exec.Interp.Control.SkipStack
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Pure
+import Exec.Spec.Extend
+import Exec.Interp.Core.OwnershipClosure
+import Exec.Interp.Core.LocalInversion
+import Exec.Interp.Relations.LocalCodePoint
+import Exec.Interp.Relations.Fetch
+import Exec.Interp.Relations.ValueLookup
+import Exec.Interp.Relations.LocalCapacity
+import Exec.Interp.Relations.Capacity
+import Exec.Interp.Core.LocalPrefix
+import Exec.Interp.Machines.Core.CoreOwnership
+import Exec.Interp.Core.BoundClosure
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.BranchNoCopy
+import Exec.Interp.Control.BranchConditionStep
+import Exec.Interp.Relations.TypedOperands
+import Exec.Interp.Relations.ControlEntry
+import Exec.Interp.Control.LoopHead
+import Exec.Interp.Machines.Core.CoreIntegerConstantPoint
+import Exec.Interp.Machines.Core.CoreIntegerConstantSlots
+import Exec.Interp.Machines.Slice.SliceOpcode
+import Exec.Interp.State.GlobalCoreStep
+import Exec.Interp.State.GlobalCoreOperands
+import Exec.Code.Local.Capacity.GlobalCapacity
+import Exec.Interp.Machines.Core.CoreFloatConstantPoint
+import Exec.Interp.Machines.Core.CoreFloatConstantSlots
+import Exec.Interp.Relations.SelectSlots
+import Exec.Interp.Machines.Core.CoreSelectOperands
+import Exec.Interp.Memory.MemoryCoreTransition
+import Exec.Interp.Memory.MemoryCoreOperandBounds
+import Exec.Interp.Memory.MemoryCoreEmission
+import Exec.Interp.Memory.MemoryCoreStep
+import Exec.Interp.Memory.MemoryCoreResult
+import Exec.Interp.Memory.MemoryLoadStepFootprint
+import Exec.Abs.Bound
+import Exec.Abs.Numeric.Transition
+import Exec.Abs.ReferenceBounds
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.CallSafety
+import Exec.Interp.Calls.CallStack
+import Exec.Code.Local.Relations.Common.CoreFunction
+import Exec.Interp.Calls.CallRefinement
+import Exec.Abs.Results
+import Exec.Interp.Calls.ReturnRefinement
+import Exec.Interp.Calls.ReturnResult
+import Exec.Interp.Machines.Core.CoreUnreachableExecution
+import Exec.Interp.Relations.StackRelation
+import Exec.Interp.Relations.Epilogue
+import Exec.Interp.Relations.Normalization
+import Exec.Interp.Core.EmptyInversion
+import Exec.Interp.Control.LabelCompletion
+import Exec.Interp.Core.Erased
+import Exec.Interp.Control.NormalizeClosure
+import Exec.Interp.Control.NormalizeCompose
+import Exec.Interp.Machines.Slice.SliceMeasure
+import Exec.Store.Api.GlobalWriteExtension
+import Exec.Interp.Memory.MemoryMutation
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Store.Invariant.ObjectExtension
+import Exec.Theorems.Composition.GlobalMutationShape
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Spec.Mutation
+import Exec.Store.Invariant.InstantiationCode
+import Exec.Store.Initialization.SegmentObjectMetadata
+import Exec.Interp.StructuredMachine.Finished
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Theorems.Composition.Supported.SupportedBranchTableExecution
+import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
+import Exec.Theorems.Composition.StoreMutationFacts
+import Exec.Interp.StructuredMachine.GlobalMutation
+import Exec.Interp.StructuredMachine.OrdinaryAdvance
+import Exec.Interp.StructuredMachine.NumericExecutionOwned
+import Exec.Interp.StructuredMachine.GlobalExecutionOwned
+import Exec.Interp.StructuredMachine.FloatConstantExecutionOwned
+import Exec.Interp.StructuredMachine.SelectExecutionOwned
+import Exec.Interp.StructuredMachine.MemoryExecutionOwned
+import Exec.Interp.StructuredMachine.CallExecution
+import Exec.Interp.StructuredMachine.ReturnExecution
+import Exec.Interp.StructuredMachine.UnreachableExecution
+import Exec.Abs.Cumulative.Step
+import Exec.Code.Local.Relations.Common.StatefulEmission
+import Exec.Code.Local.Control.Common.CumulativeFunctionContext
+import Exec.Interp.StructuredMachine.CompiledFunctions
+import Exec.Code.Body.Control.Table.CumulativeTableExclusion
+import Exec.Code.Local.Control.Table.StructuredCodePoint
+import Exec.Interp.StructuredMachine.SupportedControlSemantics
+import Exec.Interp.StructuredMachine.SupportedBoundarySemantics
+import Exec.Theorems.Composition.Supported.SupportedScalarExecution
+import Exec.Theorems.Composition.Supported.SupportedStatefulExecution
+import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
+import Exec.Theorems.Composition.Supported.SupportedSimdExecution
+import Exec.Theorems.Composition.Supported.SupportedTypedSelectExecution
+import Exec.Interp.StructuredMachine.EpilogueExecution
+import Exec.Theorems.Composition.Supported.SupportedNormalizeOutcome
+import Exec.Interp.StructuredMachine.NormalizeExecution
+import Exec.Interp.StructuredMachine.PendingExecution
+import Exec.Theorems.Composition.Supported.SupportedMeasure
+import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
+import Exec.Theorems.Composition.Supported.SupportedBoundaryCauses
 import Exec.Interp.Relations.SourceIndirectResources
 import Exec.Store.Invariant.FunctionCapacities
 namespace Exec.Theorems
@@ -44,41 +187,5 @@ theorem CumulativeFailure.source_allocation {M P A : Type} {allocator : runtime.
       exact ⟨address,base,words,site,capacity,refusal⟩
     · exact indirect.source_allocation view code decoded capacities typed
 
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
-/-- The bounded request is witnessed at a source-reachable call state. Its
-limit is the invocation's original limit, even when prior steps mutate data. -/
-theorem SupportedLoopOutcome.source_values {M P F A : Type}
-    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
-    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
-    {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    {initial : SupportedMachine emission allowed M P view code expected} {result : ExecutionResult M P}
-    (capacities : Store.FunctionCapacities code initial.store)
-    (outcome : SupportedLoopOutcome memory hooks floats allocator initial result)
-    (failed : result.2.2.2.2.2.2.2=.Err (.Exhausted .Values)) :
-    ∃ source address base words, StepsH (Abs.decode initial.source) [] (Abs.decode source) ∧
-      SourceInvocationSite source address base ∧ SourceCanonicalFunctionCapacity source.store address words ∧
-      initial.store.limits.max_values.val<base+words := by
-  obtain ⟨previous,dispatches,count,finalExec,finalStore,finalPlatform,history,reductions,step,cause,decoded,ambient,returned⟩ := outcome.error_reachable failed
-  have metadata := (SupportedMachine.history_metadata memory hooks floats allocator history).2.1
-  have retained := capacities.metadata metadata.functions metadata.instances metadata.types metadata.identity
-  obtain ⟨address,base,words,site,capacity,exceeds⟩ := cause.source_values view code previous.invariant.storeEq retained previous.certified.typed
-  have limits := SupportedMachine.history_limits memory hooks floats allocator history
-  rw [limits] at exceeds
-  exact ⟨previous.source,address,base,words,reductions.erase,site,capacity,exceeds⟩
-
-theorem SupportedLoopOutcome.source_allocation {M P F A : Type}
-    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
-    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
-    {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
-    {initial : SupportedMachine emission allowed M P view code expected} {result : ExecutionResult M P}
-    (capacities : Store.FunctionCapacities code initial.store)
-    (outcome : SupportedLoopOutcome memory hooks floats allocator initial result)
-    (failed : result.2.2.2.2.2.2.2=.Err (.Exhausted .Allocation)) :
-    ∃ source, StepsH (Abs.decode initial.source) [] (Abs.decode source) ∧
-      SourceInvocationAllocation allocator source := by
-  obtain ⟨previous,dispatches,count,finalExec,finalStore,finalPlatform,history,reductions,step,cause,decoded,ambient,returned⟩ := outcome.error_reachable failed
-  have metadata := (SupportedMachine.history_metadata memory hooks floats allocator history).2.1
-  have retained := capacities.metadata metadata.functions metadata.instances metadata.types metadata.identity
-  exact ⟨previous.source,reductions.erase,cause.source_allocation view code previous.invariant.storeEq retained previous.certified.typed⟩
 end Exec.Theorems

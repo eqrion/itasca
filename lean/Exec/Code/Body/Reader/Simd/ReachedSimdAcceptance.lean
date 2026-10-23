@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 constant, and shuffle form accepts with bounded actual compiler allocation.
 The independent source dispatch excludes all unsupported subopcodes. -/
 theorem reached_profile_simd_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context)

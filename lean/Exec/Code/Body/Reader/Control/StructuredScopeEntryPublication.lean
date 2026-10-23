@@ -1,4 +1,4 @@
-import Exec.Code.Body.Control.Table.StructuredCompilerPrefixWithTables
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Local.Publication.ScopeEntryPublication
 
@@ -13,7 +13,7 @@ theorem structured_scope_entry_publication {jumpTables : List U32}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A}
     {types functions returns locals parents current raw position}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals parents current raw position)
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals parents current raw position)
     (sourceBound : position ≤ limits.MAX_MODULE_BYTES.val)
     (state : code.OpIterState) (ctrl : code.Ctrl) (prior : List code.Ctrl)
     (kind : code.LabelKind) (bt : signature.BlockType) (signature : runtime.compiler.Signature)

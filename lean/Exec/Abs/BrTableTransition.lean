@@ -15,20 +15,6 @@ private theorem normalized {f : AFrame} {source : List instr} {values : List val
   cases f
   simp_all
 
-theorem Transition.of_run {s ambient f rest after labels fallback next}
-    (typed : CoreTyped ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after}::rest,[]⟩)
-    (equation : step ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after}::rest,[]⟩
-      f rest after labels fallback = .next next) :
-    Transition ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after}::rest,[]⟩ next := by
-  have ft : FrameTyped s {f with code := .BR_TABLE labels fallback::after} [] := by
-    cases typed.typed.frames with | cons head _ => exact head
-  obtain ⟨front,bits,values,bound⟩ := operands ft
-  have accept : integer .I32 (integerVal .I32 bits) = some bits := by
-    simpa only [numtype_Inn] using integer_accepts .I32 bits bound
-  simp only [step,values,pop_append,accept,advance,AResult.next.injEq] at equation
-  cases equation
-  exact .next values bound
-
 theorem Transition.correct {before next} (transition : Transition before next) (typed : CoreTyped before) :
     CoreTyped next ∧ NextSim before next := by
   cases transition with
@@ -37,11 +23,11 @@ theorem Transition.correct {before next} (transition : Transition before next) (
       (by simpa only [normalized values] using typed.typed)
     exact ⟨⟨result.1,typed.contents⟩,by simpa only [normalized values] using result.2⟩
 
-theorem Transition.next_supported {allowed before next} (language : Supported.Language allowed)
-    (transition : Transition before next) (supported : SupportedState allowed before) : SupportedState allowed next := by
+theorem Transition.next_supported {before next}
+    (transition : Transition before next) (supported : SupportedState before) : SupportedState next := by
   cases transition with
   | next values bound =>
-    exact covered language (by simpa only [normalized values] using supported)
+    exact covered (by simpa only [normalized values] using supported)
 
 theorem Transition.next_owned {bounds before next} (transition : Transition before next)
     (initial : StatefulOwned bounds before) : StatefulOwned bounds next := by
@@ -52,11 +38,6 @@ theorem Transition.next_bound {bound before next} (transition : Transition befor
     (initial : CodeBound bound before) : CodeBound bound next := by
   cases transition with
   | next values bound => exact bounded (by simpa only [normalized values] using initial)
-
-theorem Transition.metadata {before next} (transition : Transition before next) :
-    next.store = before.store ∧ next.ambient = before.ambient := by
-  cases transition
-  exact ⟨rfl,rfl⟩
 
 end Exec.Abs.BrTable
 

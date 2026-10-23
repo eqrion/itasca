@@ -66,10 +66,11 @@ theorem LinearEmission.recording_shape {locals before source emitted after}
     split <;> rfl
   | _ => exact .singleton _ _ rfl
 
-theorem CoreEmission.recording_shape {C before source emitted after}
-    (head : CoreEmission C before source emitted after) : RecordingEmissionShape source emitted := by
+theorem ScalarEmission.recording_shape {C before source emitted after}
+    (head : ScalarEmission C before source emitted after) : RecordingEmissionShape source emitted := by
   cases head with
-  | pure head => exact head.recording_shape
+  | linear head => exact head.recording_shape
+  | float => exact .singleton _ _ (floatInstruction_callTag ..)
   | select =>
     apply RecordingEmissionShape.singleton
     unfold selectInstruction
@@ -94,12 +95,6 @@ theorem CoreEmission.recording_shape {C before source emitted after}
     | packed ty width => cases ty <;> cases width <;> rfl
   | _ => exact .singleton _ _ rfl
 
-theorem FloatCoreEmission.recording_shape {C before source emitted after}
-    (head : FloatCoreEmission C before source emitted after) : RecordingEmissionShape source emitted := by
-  cases head with
-  | core head => exact head.recording_shape
-  | scalar => exact .singleton _ _ (floatInstruction_callTag ..)
-
 theorem StatefulEmission.recording_shape {pairs C before source emitted after}
     (head : StatefulEmission pairs C before source emitted after) : RecordingEmissionShape source emitted := by
   cases head with
@@ -116,13 +111,6 @@ theorem IndirectCallEmission.recording_shape {pairs C before source emitted afte
   subst first
   exact ⟨by intros; simp,by intros; exact ⟨_,_,rfl⟩⟩
 
-theorem CumulativeEmission.recording_shape {pairs C before source emitted after}
-    (head : CumulativeEmission pairs C before source emitted after) : RecordingEmissionShape source emitted := by
-  cases head with
-  | left h => exact h.recording_shape
-  | right h => exact h.recording_shape
-  | indirect h => exact h.recording_shape
-
 theorem SimdEmission.recording_shape {immediates constants C before source emitted after}
     (head : SimdEmission immediates constants C before source emitted after) : RecordingEmissionShape source emitted := by
   cases head with
@@ -131,12 +119,6 @@ theorem SimdEmission.recording_shape {immediates constants C before source emitt
     apply RecordingEmissionShape.singleton
     have view := make_simd_roundtrip_bounded opcode operand operand entry instruction meaning.opcode_bound constructed
     cases instruction <;> first | rfl | simp [runtime.bytecode.Instr.simd,Result.ok.injEq] at view
-
-theorem SimdCumulativeEmission.recording_shape {tables C before source emitted after}
-    (head : SimdCumulativeEmission tables C before source emitted after) : RecordingEmissionShape source emitted := by
-  cases head with
-  | left h => exact h.recording_shape
-  | right h => exact h.recording_shape
 
 theorem TypedSelectEmission.recording_shape {C before source emitted after}
     (head : TypedSelectEmission C before source emitted after) : RecordingEmissionShape source emitted := by
@@ -148,7 +130,6 @@ theorem TypedSelectEmission.recording_shape {C before source emitted after}
 theorem ExecutableEmission.recording_shape {tables C before source emitted after}
     (head : ExecutableEmission tables C before source emitted after) : RecordingEmissionShape source emitted := by
   cases head with
-  | base h => exact h.recording_shape
-  | typedSelect h => exact h.recording_shape
+  | scalar h | stateful h | indirect h | simd h | typedSelect h => exact h.recording_shape
   | branchTable => exact .singleton _ _ rfl
 end Exec.Code

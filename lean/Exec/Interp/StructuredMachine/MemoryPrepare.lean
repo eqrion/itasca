@@ -1,9 +1,7 @@
-import Exec.Interp.StructuredMachine.FloatHeads
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Memory.MemoryCoreOperandBounds
 import Exec.Interp.StructuredMachine.MemoryContinue
 namespace Exec.Interp.StructuredMachine.Memory
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
@@ -13,9 +11,9 @@ theorem coreFramePoint_load_prepare {M : Type} (view : M → Slice U8) (code : S
     (next : Nat) (output : List valtype) (after : List instr) (op : Abs.Memory.Load) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} [])
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output) :
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output) :
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
     (∃ front bits memoryAddress object address offset,
       f.vals = front ++ [Abs.integerVal .I32 bits] ∧ bits < 2^32 ∧
       inst.memories.val[0]? = some memoryAddress ∧ store.memories.val[memoryAddress.index.val]? = some object ∧
@@ -23,7 +21,7 @@ theorem coreFramePoint_load_prepare {M : Type} (view : M → Slice U8) (code : S
       address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType) ∧
       proj_uN_0 argument.OFFSET = offset.val ∧
       compiled.code.val[raw.pc.val]? = some (Code.memoryLoadInstruction op address address offset) ∧
-      Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
         (front.map Code.valueType ++ [valtype_numtype op.type]) after (raw.pc.val+1) next output) := by
   rcases corePoint_load_head op argument after point.code with ⟨target,forward,fetch,tail⟩ | ⟨types,address,offset,input,position,offsetEq,fetch,tail⟩
   · exact Or.inl ⟨target,forward,fetch,⟨point.bindings,point.locals,point.labels,tail⟩⟩
@@ -44,9 +42,9 @@ theorem coreFramePoint_store_prepare {M : Type} (view : M → Slice U8) (code : 
     (next : Nat) (output : List valtype) (after : List instr) (op : Abs.Memory.Store) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} [])
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output) :
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output) :
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
     (∃ front bits number memoryAddress object address value offset,
       f.vals = front ++ [Abs.integerVal .I32 bits,.CONST op.type number] ∧ bits < 2^32 ∧ wf_num_ op.type number ∧
       inst.memories.val[0]? = some memoryAddress ∧ store.memories.val[memoryAddress.index.val]? = some object ∧
@@ -54,7 +52,7 @@ theorem coreFramePoint_store_prepare {M : Type} (view : M → Slice U8) (code : 
       address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType) ∧
       value.val = address.val+1 ∧ proj_uN_0 argument.OFFSET = offset.val ∧
       compiled.code.val[raw.pc.val]? = some (Code.memoryStoreInstruction op address value offset) ∧
-      Code.StructuredCodeWithTables.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
         (front.map Code.valueType) after (raw.pc.val+1) next output) := by
   rcases corePoint_store_head op argument after point.code with ⟨target,forward,fetch,tail⟩ | ⟨types,address,value,offset,input,position,valuePosition,offsetEq,fetch,tail⟩
   · exact Or.inl ⟨target,forward,fetch,⟨point.bindings,point.locals,point.labels,tail⟩⟩

@@ -35,12 +35,6 @@ theorem AllocationShape.replace_instances {M : Type} {view : M → Slice U8} {st
   cases shape
   constructor <;> assumption
 
-theorem AllocationShape.charge_instance_items {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    (shape : AllocationShape view store) (count : Usize) :
-    AllocationShape view {store with instance_items := count} := by
-  cases shape
-  constructor <;> assumption
-
 /-- Canonical type interning extends only its charged signature vector. -/
 theorem InternEffect.allocated {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
     {ty result} (effect : InternEffect store ty result) (shape : AllocationShape view store) :

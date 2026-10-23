@@ -9,10 +9,9 @@ import Itasca.Wasm2.Control.Return
 # Wasm 2.0 body soundness
 
 Discharges `Steps` for every opcode by dispatching to the non-control, block entry, `end`,
-branch and `return` families, and concludes `code.validate_multi_value_body.wasm_sound`: an
-accepted body (the extracted function validates all of Wasm 2.0) is `Wasm2.Validated`, that is,
-has a binary-grammar encoding typed by the generated Wasm 2.0 rules. `wasm_spec` is the same
-statement as a weakest-precondition spec.
+branch and `return` families, and concludes `code.bodyCore.sound`: a body accepted under a profile
+is `Wasm2.Validated` for that profile, that is, has a binary-grammar encoding typed by the
+generated Wasm 2.0 rules, and for Wasm 1.0 also the Wasm 1.0 grammar and restrictions.
 -/
 
 open Aeneas Aeneas.Std
@@ -21,9 +20,9 @@ namespace Itasca.Wasm2
 
 /-- Every opcode preserves semantic control and exact byte provenance on
 success. Reserved opcodes and malformed immediates need no input premise. -/
-theorem steps (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
-    (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals) :
-    Steps data env locals ctx index := by
+theorem steps (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
+    (hlocals : ctx.locals = locals) : Steps data env profile locals ctx index := by
   intro st p
   generalize hbyte : data.val[p.start.val]'p.inbounds = opcode
   by_cases hs : opcode.val ∉ controlOpcodes
@@ -49,21 +48,19 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-/-- The extracted public body validator is sound for independent
-binary grammar and generated Wasm 2.0 typing, on arbitrary bytes and contexts. -/
-theorem code.validate_multi_value_body.wasm_spec (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) :
-    code.validate_multi_value_body data env locals index ⦃ r =>
-      r = .Ok () → Wasm2.Validated data env locals index ⦄ :=
-  Wasm2.public_spec_of_steps data env locals index
-    (Wasm2.steps data env locals ⟨locals, alloc.vec.Vec.new _⟩ index rfl)
+/-- `code.bodyCore` is sound for either profile, on arbitrary bytes and contexts. -/
+theorem code.bodyCore.spec (data : Slice U8) (env : module.Env)
+    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (profile : ValidationProfile) :
+    code.bodyCore data env locals results index profile ⦃ r =>
+      r = .Ok () → Wasm2.Validated profile data env locals index ⦄ :=
+  Wasm2.public_spec_of_steps data env profile locals results index
+    (Wasm2.steps data env profile locals ⟨locals, results⟩ index rfl)
 
-/-- Accepted bodies are `Wasm2.Validated`. -/
-theorem code.validate_multi_value_body.wasm_sound (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32)
-    (haccepted : code.validate_multi_value_body data env locals index = .ok (.Ok ())) :
-    Wasm2.Validated data env locals index := by
-  have hs := code.validate_multi_value_body.wasm_spec data env locals index
+theorem code.bodyCore.sound (data : Slice U8) (env : module.Env)
+    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (profile : ValidationProfile)
+    (haccepted : code.bodyCore data env locals results index profile = .ok (.Ok ())) :
+    Wasm2.Validated profile data env locals index := by
+  have hs := code.bodyCore.spec data env locals results index profile
   simpa [haccepted] using hs
 
 end Itasca

@@ -1,7 +1,6 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorld
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Reusing a fixed-world successor after reinterpreting only unissued keys
 produces a genuine cross-world edge with the original source endpoint. -/
@@ -9,8 +8,8 @@ theorem EventfulTransition.world_reinterpret {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
     {view : M → Slice U8} {oldCode newCode : Store.CodeInterpretation} {expected : List valtype}
-    {before : EventfulMachine emission allowed M P view oldCode expected}
-    {after : EventfulMachine emission allowed M P view newCode expected} {events : List SpecExt.HostEvent}
+    {before : EventfulMachine M P view oldCode expected}
+    {after : EventfulMachine M P view newCode expected} {events : List SpecExt.HostEvent}
     (agrees : Store.CodeAgreesOn before.store oldCode newCode)
     (edge : EventfulTransition memory hooks floats allocator (before.change_code newCode agrees) events after) :
     EventfulWorldTransition memory hooks floats allocator ⟨oldCode,before⟩ events ⟨newCode,after⟩ := by

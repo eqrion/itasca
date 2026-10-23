@@ -49,29 +49,4 @@ theorem pure_step_typing_preserved {s : store} {before after : List admininstr}
       assumption
     simpa only [Map,vals,List.append_assoc] using br_succ_typing_preserved s _ _ _ _ _ branchWf
 
-theorem typing_replacement_config {s : store} {frame : _root_.frame}
-    {before after : List admininstr} {types : resulttype}
-    (replacement : TypedReplacement s s before after)
-    (typed : Config_ok ⟨⟨s,frame⟩,before⟩ types) : Config_ok ⟨⟨s,frame⟩,after⟩ types := by
-  cases typed with
-  | mk_Config_ok _ _ _ output context state expression contextWf _ stateWf =>
-    have body : Instrs_ok2 s context before (.mk_functype (.mk_list []) (.mk_list output)) := by
-      cases expression
-      assumption
-    have updated := replacement context [] output body
-    have storeWf := (instrs_ok2_wf updated).1
-    have bodyWf := (instrs_ok2_wf updated).2.2
-    have frameWf : wf_frame frame := by cases stateWf; assumption
-    exact .mk_Config_ok _ _ _ _ context state
-      (.mk_Expr_ok2 _ _ _ _ updated storeWf contextWf bodyWf) contextWf
-      (wf_config_make storeWf frameWf bodyWf) stateWf
-
-theorem pure_step_config_preserved {s : store} {frame : _root_.frame}
-    {before after : List admininstr} {types : resulttype}
-    (source : Step_pure before after) (typed : Config_ok ⟨⟨s,frame⟩,before⟩ types) :
-    Config_ok ⟨⟨s,frame⟩,after⟩ types := by
-  have storeTyped := config_ok_store typed
-  have storeWf : wf_store s := by cases storeTyped; assumption
-  exact typing_replacement_config (pure_step_typing_preserved storeWf source) typed
-
 end Exec.Spec

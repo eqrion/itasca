@@ -35,38 +35,6 @@ theorem TableDecodePrefix.initial {data all finish} (state : code.OpIterState)
     TableDecodePrefix data all finish 0 state [] := by
   exact ⟨rfl,all,by simp,decoded⟩
 
-/-- Reader-independent decoded-label transfer, also used by the Wasm 1
-collector whose metadata representation differs from Wasm 2. -/
-theorem TableDecodePrefix.read_decoded {data all finish index state depths depth out}
-    (held : TableDecodePrefix data all finish index state depths)
-    (remaining : index < all.length)
-    (bytes : Leb128.Decoded data state.pos depth out.pos) :
-    TableDecodeRead data all finish index out depths depth := by
-  obtain ⟨tail,whole,decoded⟩ := held.suffix
-  cases tail with
-  | nil =>
-    have length := congrArg List.length whole
-    simp only [List.length_append,List.length_nil,Nat.add_zero] at length
-    have prefixLength := held.length
-    omega
-  | cons first tail =>
-    obtain ⟨middle,head,rest⟩ := BrTable.LabelsDecoded.cons_iff.mp decoded
-    obtain ⟨rfl,position⟩ := bytes.unique head
-    exact ⟨held.length,tail,whole,by simpa only [position] using rest⟩
-
-/-- A complete vector collection contains exactly the independent source
-labels and ends at their independent byte cursor. -/
-theorem TableDecodePrefix.complete {data all finish index state depths}
-    (held : TableDecodePrefix data all finish index state depths)
-    (count : all.length = index) : depths = all ∧ state.pos = finish := by
-  obtain ⟨tail,whole,decoded⟩ := held.suffix
-  have length := congrArg List.length whole
-  simp only [List.length_append] at length
-  have prefixLength := held.length
-  have empty : tail = [] := List.length_eq_zero_iff.mp (by omega)
-  subst tail
-  exact ⟨by simpa only [List.append_nil] using whole.symm,(decoded.unique .nil rfl).2.symm⟩
-
 /-- The actual successful reader fixes both the next target and byte cursor
 by uniqueness of independent unsigned LEB128 decoding. -/
 theorem TableDecodePrefix.read {data all finish index depths depth ts out} {state : code.BodyState}

@@ -9,10 +9,8 @@ open Aeneas Aeneas.Std SpecExt Abs.Float Exec.Interp
 
 /-- All seventy scalar float operators preserve the mutable float machine or
 return the exact generated arithmetic trap; allowed NaN choices remain relational. -/
-theorem step_scalar_supported_execution_uniform {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem step_scalar_supported_execution_uniform
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -25,26 +23,26 @@ theorem step_scalar_supported_execution_uniform {emission : StructuredMachine.Fu
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false initial out ⦄ := by
+      UniformSupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false initial out ⦄ := by
   dsimp only
   have pcBound : raw.pc.val < U32.max := by
     have linear : linearSource op.source = true := by cases op <;> rfl
-    rcases StructuredMachine.structuredCodeWithTables_linear_inv linear point.code.current with skip | branch
+    rcases StructuredMachine.structuredCode_linear_inv linear point.code.current with skip | branch
     · obtain ⟨target,forward,fetched,continuation⟩ := skip
       have bound := (List.getElem?_eq_some_iff.mp fetched).1
       have cap := program.fetchBound
       omega
     · obtain ⟨middle,emitted,tail,head,fragment,continuation⟩ := branch
-      obtain ⟨stack,left,right,shape,middleEq,emittedEq,leftPos,rightPos⟩ := (StructuredMachine.FloatHeads.project (.scalar op) head).float_inv op
+      obtain ⟨stack,left,right,shape,middleEq,emittedEq,leftPos,rightPos⟩ := (StructuredMachine.FloatHeads.project (.float op) head).float_inv op
       have fetched : compiled.code.val[raw.pc.val]? = some (Code.floatInstruction op left left right) := by
         simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq,List.getElem?_cons_zero])
       have bound := (List.getElem?_eq_some_iff.mp fetched).1
@@ -66,7 +64,7 @@ theorem step_scalar_supported_execution_uniform {emission : StructuredMachine.Fu
         exact simulation.uniform_same (by scalar_tac)
       · exact UniformConcreteSim.single (Abs.Float.transition_positive _ _ _ _ _ _ _ machine.typed.typed actual)
     have facts : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ ∧
-        Abs.SupportedState allowed ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ ∧
+        Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ ∧
         (∀ bounds, Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ →
           Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩) ∧
         (∀ bound, Abs.CodeBound bound ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ →
@@ -76,9 +74,9 @@ theorem step_scalar_supported_execution_uniform {emission : StructuredMachine.Fu
         exact ⟨machine.typed,machine.core,fun _ owned => owned,fun _ bounded => bounded⟩
       · have step : Abs.Cumulative.Step ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
             (.next ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩) := .scalar actual
-        exact ⟨step.next_typed_supported language machine.typed machine.core,step.next_covered_supported language machine.typed machine.core,
-          fun _ invariant => step.next_owned_supported language machine.typed machine.core invariant,
-          fun _ invariant => step.next_bound_supported language machine.typed machine.core invariant⟩
+        exact ⟨step.next_typed_supported machine.typed machine.core,step.next_covered_supported machine.typed machine.core,
+          fun _ invariant => step.next_owned_supported machine.typed machine.core invariant,
+          fun _ invariant => step.next_bound_supported machine.typed machine.core invariant⟩
     have fresh := StructuredMachine.Execution.ordinary view code ambient {f with code := op.source::after} g rest expected raw.pc.val false machine
       (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields prefixEffect facts.1 facts.2.1
@@ -90,10 +88,8 @@ theorem step_scalar_supported_execution_uniform {emission : StructuredMachine.Fu
     rcases kind with overflow | conversion
     · exact Or.inr (Or.inr (Or.inl overflow))
     · exact Or.inr (Or.inr (Or.inr (Or.inr conversion)))
-theorem step_scalar_supported_execution {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+theorem step_scalar_supported_execution
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -106,17 +102,17 @@ theorem step_scalar_supported_execution {emission : StructuredMachine.FunctionEm
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
+    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : StructuredMachine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      SupportedStepOutcome emission allowed allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false initial out ⦄ := by
-  apply WP.spec_mono (step_scalar_supported_execution_uniform language memory hooks floats allocator correct exec store platform index raw inst compiled C targets next output view code ambient f rest op after last frameFound instanceFound codeFound slots point expected machine program shaped sourceSyntax bounds)
+      SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false initial out ⦄ := by
+  apply WP.spec_mono (step_scalar_supported_execution_uniform memory hooks floats allocator correct exec store platform index raw inst compiled C targets next output view code ambient f rest op after last frameFound instanceFound codeFound slots point expected machine program shaped sourceSyntax bounds)
   rintro out ⟨same,platform,outcome⟩
   exact ⟨same,platform,outcome.forget⟩
 

@@ -54,32 +54,4 @@ theorem compiler_br_if_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
       exact observe_budget ops law middle after state kept rest
   · exact observe_budget ops law before after state budget accepted
 
-theorem compiler_return_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (budget : FixupBudget before.frames.val before.function.code.val.length)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
-      ops before state = .ok (.Ok (), after)) :
-    FixupBudget after.frames.val after.function.code.val.length := by
-  have growth := compiler_return_code_mono ops law before after state accepted
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' fixup_step accepted using ops, law
-  all_goals try fixup_effect accepted using ops, law
-  all_goals fixup_close
-  all_goals exact budget.mono (by omega)
-
-theorem compiler_unreachable_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState)
-    (budget : FixupBudget before.frames.val before.function.code.val.length)
-    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-      ops before state = .ok (.Ok (), after)) :
-    FixupBudget after.frames.val after.function.code.val.length := by
-  have growth := compiler_unreachable_code_mono ops law before after state accepted
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' fixup_step accepted using ops, law
-  all_goals try fixup_effect accepted using ops, law
-  all_goals fixup_close
-  all_goals exact budget.mono (by omega)
-
 end Exec.Code

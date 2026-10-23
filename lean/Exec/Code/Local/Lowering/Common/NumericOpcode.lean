@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.Semantics
 import Exec.Representation.Layout
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 namespace Exec.Code
 open Aeneas Aeneas.Std Abs.Numeric
 

@@ -1,5 +1,5 @@
 import Exec.Platform.Alloc
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 
 namespace Exec.Platform
 open Aeneas Aeneas.Std

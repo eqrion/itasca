@@ -54,9 +54,10 @@ trust:
     @make trust
 
 # Report declarations unreachable from the library's headline roots.
-dead lib="Exec":
-    @cd lean && lake env lean --run scripts/reachability.lean {{ lib }} .build/dead-{{ lib }}.txt
-    @echo "Full report: lean/.build/dead-{{ lib }}.txt"
+dead *flags:
+    @mkdir -p lean/.build
+    @cd lean && lake env lean --run scripts/reachability.lean {{ flags }} .build/dead.txt
+    @echo "Full report: lean/.build/dead.txt"
 
 exec-stats lib="Exec":
     @python3 lean/scripts/exec_stats.py {{ lib }}

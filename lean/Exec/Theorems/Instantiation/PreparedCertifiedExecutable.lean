@@ -18,7 +18,7 @@ theorem prepared_certified_executable {M P F A : Type}
     {module : runtime.compiler.ExecutableModule} {platform : P} {ready : runtime.store.Store M}
     (trace : PreparedRun memory hooks floats allocator view before module platform ready)
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
-    (oldCode : CodeInterpretation) (old : CertifiedSupportedStore Interp.Executable.emission Abs.ExecutableInstr view oldCode before)
+    (oldCode : CodeInterpretation) (old : CertifiedSupportedStore view oldCode before)
     (accounted : SegmentAccounting before)
     {tables memories} (cache : ModuleEnv.Cache module.module.env tables memories)
     (valid : ModuleEnv.Valid module.module.env module.profile)
@@ -34,7 +34,7 @@ theorem prepared_certified_executable {M P F A : Type}
       count.val = module.module.tail.data.val.length)
     (bounds : SegmentBounds ready) :
     ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
-      CertifiedSupportedStore Interp.Executable.emission Abs.ExecutableInstr view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready ∧
+      CertifiedSupportedStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready ∧
       SegmentAccounting ready ∧
       Abs.ModuleBindings (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready)
         (decodeInstance ready inst) (ModuleElaboration.contextOf raw) := by

@@ -21,14 +21,6 @@ def SourcePublicationReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCo
     SourceCoordinates compiler ∧ ControlMapPublication compiler ∧ JumpTableBounds compiler ∧
       (st.core.ctrls.val = [] → FinalControlMapBounds compiler.function ∧ SourceAligned compiler)
 
-/-- Closing the complete-profile body exposes the exact final map checker bounds. -/
-theorem SourcePublicationReachedBodyWasm2.final_bounds {A : Type}
-    {initial compiler : runtime.compiler.FunctionCompiler A} {C locals data env sourceLocals index ft st}
-    (held : SourcePublicationReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st)
-    (closed : st.core.ctrls.val = []) :
-    SourceCoordinates compiler ∧ FinalControlMapBounds compiler.function :=
-  ⟨held.2.1,(held.2.2.2.2 closed).1⟩
-
 /-- All source and target range checks at the actual complete-profile function. -/
 theorem SourcePublicationReachedBodyWasm2.final_ranges {A : Type}
     {initial compiler : runtime.compiler.FunctionCompiler A} {C locals data env sourceLocals index ft st}

@@ -1,14 +1,16 @@
+import Exec.Code.Body.Reader.Simd.ReaderSimdEventPrefix
+import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
-theorem SimdReaderEvent.tables {A : Type} {ops : runtime.platform.Alloc A}
+theorem SimdReaderEvent.tables {jumpTables : List U32} {A : Type} {ops : runtime.platform.Alloc A}
     {data env sourceLocals index st p initial before after out C}
     (event : @SimdReaderEvent A ops data env sourceLocals index st p before after out C)
     (law : Platform.AllocCorrect ops)
     {emit types functions returns locals parents current}
     (contextLocals : C.LOCALS = locals)
-    (invariant : StructuredCompilerPrefix emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max) :

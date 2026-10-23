@@ -77,14 +77,4 @@ theorem frame_ok_extend {s t : store} (extension : Extend_store s t)
       (paired_mono valuesOk (fun _ _ h => val_ok_extend extension h))
       (extend_store_wf extension).2 contextWf frameWf localsWf
 
-/-- A typed post-call store plus extension preserves the ambient source state. -/
-theorem state_ok_extend {s t : store} {frame : _root_.frame} {context : _root_.context}
-    (extension : Extend_store s t) (typedStore : Store_ok t)
-    (typed : State_ok ⟨s,frame⟩ context) : State_ok ⟨t,frame⟩ context := by
-  cases typed with
-  | mk_State_ok _ _ context _ frameOk contextWf stateWf =>
-    have frameWf : wf_frame frame := by cases stateWf; assumption
-    exact .mk_State_ok _ _ _ typedStore (frame_ok_extend extension frameOk) contextWf
-      (.state_case_0 _ _ (extend_store_wf extension).2 frameWf)
-
 end Exec.Spec

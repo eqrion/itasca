@@ -1,14 +1,18 @@
-import Exec.Code.Body.Reader.Table.StructuredReaderPrefixTableWasm1
 import Exec.Code.Body.Reader.Table.ReaderTableInputsWasm2
+import Exec.Code.Body.Control.Table.StructuredTableScratch
+import Exec.Code.Body.Control.Table.StructuredCompilerPrefixTable
+import Exec.Code.Body.Control.Table.StructuredPrefixDead
+import Exec.Code.Body.Reader.Table.ReaderTablePost
+import Exec.Code.Body.Reader.Table.ReaderTableEffects
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     {jumpTables emit types functions returns locals parents current}
-    (invariant : StructuredCompilerPrefixWithTables jumpTables emit initial before types functions returns locals
+    (invariant : StructuredCompilerPrefix jumpTables emit initial before types functions returns locals
       parents current st.core.vals.val p.start.val)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
@@ -21,9 +25,9 @@ theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
       [.JumpTable selector start len] stack)
     (byte : data.val[p.start.val]'p.inbounds=0x0e#u8)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env before=.ok (.Ok (),out,after)) :
+      st data env .Wasm2 before=.ok (.Ok (),out,after)) :
     ReaderPostWasm2 p out.core (BrTable.instruction depths fallback) true [] ∧
-    StructuredCompilerPrefixWithTables jumpTables emit initial after types functions returns locals parents
+    StructuredCompilerPrefix jumpTables emit initial after types functions returns locals parents
       (current.advance (BrTable.instruction depths fallback)) out.core.vals.val out.core.pos.val ∧
     CompilerTableBoundary after ∧ after.reachable=false := by
   have post := reader_table_post_wasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

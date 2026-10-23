@@ -46,19 +46,11 @@ theorem Signature.input_length {C op input output} (signature : Signature C op i
     input.length = op.arity := by
   cases signature <;> rfl
 
-theorem Signature.output_length {C op input output} (signature : Signature C op input output) :
-    output.length = op.results := by
-  cases signature <;> rfl
-
 private theorem reference_scalar (type : reftype) : valtype_reftype type ≠ valtype.V128 := by
   cases type <;> decide
 
 theorem Signature.inputs_scalar {C op input output} (signature : Signature C op input output) :
     ∀ type ∈ input, type ≠ valtype.V128 := by
-  cases signature <;> simp_all [reference_scalar]
-
-theorem Signature.outputs_scalar {C op input output} (signature : Signature C op input output) :
-    ∀ type ∈ output, type ≠ valtype.V128 := by
   cases signature <;> simp_all [reference_scalar]
 
 end Exec.Abs.Stateful

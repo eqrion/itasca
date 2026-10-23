@@ -20,24 +20,6 @@ theorem Segment.fetch {code instructions pc next} (segment : Segment code pc ins
   simp only [Nat.add_sub_cancel_left]
   exact (List.getElem?_append_left (List.getElem?_eq_some_iff.mp found).1).trans found
 
-theorem Segment.append {code pc middle next first second}
-    (left : Segment code pc first middle) (right : Segment code middle second next) :
-    Segment code pc (first ++ second) next := by
-  obtain ⟨pre, suffix, hc, hp, hm⟩ := left
-  obtain ⟨pre', suffix', hc', hp', hn⟩ := right
-  have same : pre ++ first = pre' := by
-    have eq := congrArg (List.take middle) (hc.symm.trans hc')
-    have size : (pre ++ first).length = middle := by simp [hp, hm]
-    have takeLeft : (pre ++ first ++ suffix).take middle = pre ++ first := by
-      rw [← size, List.take_left]
-    have takeRight : (pre' ++ second ++ suffix').take middle = pre' := by
-      rw [List.append_assoc, ← hp', List.take_left]
-    exact takeLeft.symm.trans (eq.trans takeRight)
-  refine ⟨pre, suffix', ?_, hp, ?_⟩
-  · simpa only [List.append_assoc, ← same] using hc'
-  · simp only [List.length_append]
-    omega
-
 /-- Static label information retained from structured source control. Branch
 operands replace everything above `front`; a loop continuation re-enters its
 source LOOP instruction and its bytecode LoopHead. -/

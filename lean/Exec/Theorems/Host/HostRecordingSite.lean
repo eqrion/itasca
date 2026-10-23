@@ -6,11 +6,11 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
 theorem HostFrameSite.indirect_recording_boundary {M : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
     (table type : U32) (after : List instr)
-    (site : HostFrameSite emission allowed view code exec store expected ambient
+    (site : HostFrameSite view code exec store expected ambient
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest)
     [StructuredMachine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
     (shaped : Store.Shape view store) (address : runtime.FuncAddr)
@@ -53,11 +53,11 @@ theorem HostFrameSite.indirect_recording_boundary {M : Type}
     rw [if_pos same] at resolved
     exact ⟨f,rest,table.val,type.val,position,after,front++args,address.index,function,host,rfl,values,bounded,resolved,functionAt,hostCode⟩
 theorem HostFrameSite.direct_recording_instruction {M : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
     (index : U32) (after : List instr)
-    (site : HostFrameSite emission allowed view code exec store expected ambient
+    (site : HostFrameSite view code exec store expected ambient
       {f with code:=.CALL (.mk_uN index.val)::after} rest)
     [StructuredMachine.OrdinaryHeads (emission site.compiled)]
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
@@ -72,17 +72,17 @@ theorem HostFrameSite.direct_recording_instruction {M : Type}
     exact ⟨index,base,address,function,host,rfl,fetch,addressAt,functionAt,hostCode⟩
 
 theorem HostFrameSite.recording_ready {M : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     [∀compiled,StructuredMachine.OrdinaryHeads (emission compiled)]
     [∀compiled,StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
     [∀compiled,StructuredMachine.RecordingHeads (emission compiled)]
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
     (op : instr) (after : List instr)
-    (site : HostFrameSite emission allowed view code exec store expected ambient {f with code:=op::after} rest)
+    (site : HostFrameSite view code exec store expected ambient {f with code:=op::after} rest)
     (ready : ReadyInstruction op) (shaped : Store.Shape view store)
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
-    StructuredHostSite emission allowed view code exec store expected site.raw.pc.val false
+    StructuredHostSite view code exec store expected site.raw.pc.val false
       ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ := by
   obtain ⟨instruction,fetch,selectedHead⟩ := hostStepAddress_instruction exec store site.index site.raw site.inst site.compiled
     site.last site.frameAt site.instanceAt site.compiledAt address selected

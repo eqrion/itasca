@@ -1,12 +1,10 @@
-import Exec.Interp.StructuredMachine.FloatHeads
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Memory.MemoryCoreTransition
 import Exec.Interp.StructuredMachine.MemoryPrepare
 import Exec.Interp.Memory.MemoryCoreStep
 import Exec.Interp.Memory.MemoryCoreResult
 import Exec.Interp.Memory.MemoryLoadStepFootprint
 namespace Exec.Interp.StructuredMachine.Memory
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 
@@ -26,11 +24,11 @@ theorem coreFramePoint_load_step {M P F A : Type} (memory : runtime.platform.Mem
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
     (runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ((∃ nextFrame pc, out.1 = .Ok () ∧
@@ -39,7 +37,7 @@ theorem coreFramePoint_load_step {M P F A : Type} (memory : runtime.platform.Mem
         Abs.CoreTyped {initial with frames := nextFrame :: rest} ∧
         StepH (Abs.decode initial) [] (Abs.decode {initial with frames := nextFrame :: rest}) ∧
         FrameSlots out.2.1 {raw with pc := pc} nextFrame ∧
-        FramePoint emission (Store.decodeStore view code store) {raw with pc := pc} nextFrame compiled C targets next output ∧
+        FramePoint (Store.decodeStore view code store) {raw with pc := pc} nextFrame compiled C targets next output ∧
         (∃ values, nextFrame = {f with code := after,vals := values}) ∧
         ∃ position word, raw.base.val ≤ position ∧ position < exec.slots.length ∧
           out.2.1.slots.val = exec.slots.val.set position word) ∨
@@ -85,11 +83,11 @@ theorem coreFramePoint_store_step {M P F A : Type} (memory : runtime.platform.Me
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source argument :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := op.source argument :: after} compiled C targets next output) ∨
     (runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2 = platform ∧
       (∃ pc : U32, pc.val = raw.pc.val+1 ∧ out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
@@ -102,7 +100,7 @@ theorem coreFramePoint_store_step {M P F A : Type} (memory : runtime.platform.Me
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.2.1) ∧
         StepH (Abs.decode initial) [] (Abs.decode {initial with store := Store.decodeStore view code out.2.2.1,frames := nextFrame :: rest}) ∧
         FrameSlots out.2.1 {raw with pc := pc} nextFrame ∧
-        FramePoint emission (Store.decodeStore view code out.2.2.1) {raw with pc := pc} nextFrame compiled C targets next output ∧
+        FramePoint (Store.decodeStore view code out.2.2.1) {raw with pc := pc} nextFrame compiled C targets next output ∧
         (∃ values, nextFrame = {f with code := after,vals := values})) ∨
       (out.1 = .Err (.Trap .MemoryOutOfBounds) ∧ Store.decodeStore view code out.2.2.1 = Store.decodeStore view code store ∧
         ∃ n, 0 < n ∧ StepsHN n (Abs.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩))) ⦄) := by

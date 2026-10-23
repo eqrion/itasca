@@ -43,23 +43,6 @@ theorem eval_const_effect (law : Platform.AllocCorrect allocator)
       store.id referenceBound as ⟨value, hty, hvalue⟩
     simp_all
 
-theorem eval_const_staged (law : Platform.AllocCorrect allocator)
-    (before store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
-    (staged : StagedPrefix before store)
-    (hi : store.instances.val[instIndex.val]? = some inst)
-    (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code expr ty)
-    (resolved : Interp.InitializerResolution store inst expr ty words)
-    (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → ((words[0]?).getD 0#u64).val ≤ Usize.max) :
-    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
-      ⦃ out => StagedPrefix before out.2.1 ∧ out.2.2 = platform ⦄ := by
-  apply WP.spec_mono (eval_const_effect memory hooks floats allocator law store platform
-    instIndex function inst code expr ty words hi hc compiled resolved referenceBound)
-  rintro out ⟨hs, hp, _⟩
-  exact ⟨hs ▸ staged, hp⟩
-
 /-- Only the function-address map and already-created global contents are needed
 while instantiation is staged; a complete store typing invariant is unnecessary. -/
 structure InitializerBindings {M : Type} (store : runtime.store.Store M)

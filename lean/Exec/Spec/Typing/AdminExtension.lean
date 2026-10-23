@@ -41,33 +41,9 @@ private theorem admin_typing_extension {s t : store} (extension : Extend_store s
     | apply Instrs_ok2.Instrs_ok2_frame <;> assumption
     | apply Expr_ok2.mk_Expr_ok2 <;> assumption
 
-theorem instr_ok2_extend {s t : store} (extension : Extend_store s t)
-    {context : _root_.context} {instruction : admininstr} {type : functype}
-    (typed : Instr_ok2 s context instruction type) : Instr_ok2 t context instruction type :=
-  (admin_typing_extension extension).1 _ _ _ typed
-
 theorem instrs_ok2_extend {s t : store} (extension : Extend_store s t)
     {context : _root_.context} {instructions : List admininstr} {type : functype}
     (typed : Instrs_ok2 s context instructions type) : Instrs_ok2 t context instructions type :=
   (admin_typing_extension extension).2.1 _ _ _ typed
-
-theorem expr_ok2_extend {s t : store} (extension : Extend_store s t)
-    {context : _root_.context} {instructions : adminexpr} {type : resulttype}
-    (typed : Expr_ok2 s context instructions type) : Expr_ok2 t context instructions type :=
-  (admin_typing_extension extension).2.2 _ _ _ typed
-
-/-- A callback extension preserves semantic typing of every suspended source
-configuration when the returned store is semantically typed. -/
-theorem config_ok_extend {s t : store} {frame : _root_.frame} {body : List admininstr} {type : resulttype}
-    (extension : Extend_store s t) (storeTyped : Store_ok t)
-    (typed : Config_ok ⟨⟨s,frame⟩,body⟩ type) : Config_ok ⟨⟨t,frame⟩,body⟩ type := by
-  cases typed with
-  | mk_Config_ok _ _ _ types context stateTyped bodyTyped contextWf configWf stateWf =>
-    have frameWf := (wf_state_parts stateWf).2
-    have bodyWf := (wf_config_parts configWf).2
-    exact .mk_Config_ok _ _ _ _ _ (state_ok_extend extension storeTyped stateTyped)
-      (expr_ok2_extend extension bodyTyped) contextWf
-      (wf_config_make (extend_store_wf extension).2 frameWf bodyWf)
-      (.state_case_0 _ _ (extend_store_wf extension).2 frameWf)
 
 end Exec.Spec

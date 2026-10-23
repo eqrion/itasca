@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Common.NumericLowering
-import Exec.Code.Local.Lowering.Common.LoweringEqz
+import Exec.Code.Local.Lowering.Local.LoweringLocal
 namespace Exec.Code
 open Aeneas Aeneas.Std Abs.Numeric
 

@@ -40,8 +40,8 @@ theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
       Profile.BodyEncoding profile w.body entry.body := by
   have lookup : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
-  obtain ⟨ft, source, _, _, body, _⟩ := CodeEntry.runBody.sound visitor profile w.body env w.ctx w.typeIdx w.ft
-    w.startedState after lookup w.context_results (witness_type_profile w types) w.body_accepted
+  obtain ⟨ft, source, _, _, body, _⟩ := code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile w.ft
+    w.startedState after lookup (witness_type_profile w types) w.body_accepted
   have actual := Profile.codeEncoding_of_parts w.header w.extent w.locals_bytes w.body_bytes body
   obtain ⟨first, prefixEncoding, prefixSpan⟩ := previous
   obtain ⟨last, lastEncoding, lastSpan⟩ := actual

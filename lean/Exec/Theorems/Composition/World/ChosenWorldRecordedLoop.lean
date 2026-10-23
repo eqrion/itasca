@@ -3,14 +3,13 @@ import Exec.Theorems.Composition.World.ChosenWorldLoop
 import Exec.Platform.RecordingSpec
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 def ChosenWorldRecordedLoopOutcome (choices : Spec.SourceChoices) {M P : Type} {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : ChosenWorld emission allowed M P view expected) (result : ExecutionResult M P) (events : List HostEvent) : Prop :=
+    (initial : ChosenWorld M P view expected) (result : ExecutionResult M P) (events : List HostEvent) : Prop :=
   let finalStore := result.2.2.2.2.2.1
   let status := result.2.2.2.2.2.2.2
-  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore emission allowed view finalCode finalStore ∧
+  ∃ finalCode,Inv finalCode finalStore ∧ CertifiedSupportedStore view finalCode finalStore ∧
     FrameStorePrefix initial.machine.store finalStore ∧ Store.CodeAgreesOn initial.machine.store initial.code finalCode ∧
     Extend_store (Store.decodeStore view initial.code initial.machine.store) (Store.decodeStore view finalCode finalStore) ∧
     (status=.Ok () → ∃values,
@@ -26,7 +25,7 @@ theorem chosen_world_recorded_loop_finished {choices : Spec.SourceChoices} {M P 
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : ChosenWorld emission allowed M P view expected) (state : ExecutionState M P)
+    (initial : ChosenWorld M P view expected) (state : ExecutionState M P)
     (invariant : ChosenWorldLoopInvariant choices memory hooks floats allocator Inv initial state)
     (stopped : ¬ActiveExecution state) : ∃events,
       (∀prior,recordedInvokeLoop memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) prior=

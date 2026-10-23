@@ -27,15 +27,4 @@ theorem decodeStore_code_agrees {M : Type} (view : M → Slice U8)
   unfold decodeStore
   rw [functions]
 
-/-- Retained compiled-function certificates depend only on source code at
-actual installed instances. No execution property is assumed. -/
-theorem compiled_functions_code_agrees {M : Type} {store : runtime.store.Store M}
-    {before after : CodeInterpretation} (agrees : CodeAgreesOn store before after)
-    (compiled : Interp.CompiledFunctions before store) : Interp.CompiledFunctions after store := by
-  intro function present instanceIndex functionIndex defined
-  obtain ⟨inst, code, signature, functions, declared, body, epilogue,
-    found, functionFound, signatureFound, source, table, certificate⟩ :=
-    compiled function present instanceIndex functionIndex defined
-  exact ⟨inst, code, signature, functions, declared, body, epilogue, found, functionFound,
-    signatureFound, (agrees instanceIndex.val inst found functionIndex.val).trans source, table, certificate⟩
 end Exec.Store

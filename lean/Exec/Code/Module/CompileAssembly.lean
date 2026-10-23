@@ -101,15 +101,4 @@ theorem CompileWitness.initializers {A : Type} {allocator : runtime.platform.All
   exact initializer_lower allocator law (uninitializedModule w.env w.tail profile w.functions) executable
     w.collectedBudget w.finalBudget (by rfl) (by rfl) (by rfl) (by rfl) w.lowered
 
-/-- Once the per-entry prefix proof has populated the scheduler's source-indexed
-certificates, the actual public compiler assembly yields the final module relation. -/
-theorem CompileWitness.defined_functions {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
-    (law : Platform.AllocCorrect allocator) {sources}
-    (pending : PendingModuleFunctions w.env w.scheduler.functions.val sources) :
-    ModuleFunctions executable sources ∧ InitializerMappings executable := by
-  have initialCode := pending.collected (uninitializedModule w.env w.tail profile w.functions) rfl
-    (w.function_order law)
-  obtain ⟨source, _, prefixCode, initializers⟩ := w.initializers law
-  exact ⟨initialCode.extend source prefixCode, initializers⟩
 end Exec.Code

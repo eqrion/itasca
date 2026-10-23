@@ -1,14 +1,13 @@
 import Itasca.Wasm2.Trace.Basic
 import Itasca.Wasm2.Visitor.Transfer
-import Itasca.Wasm1.Trace.BodyContract
 
 /-!
 # Body-level callback byte provenance
 
-`StepContract` states that every ordinary `code.step_profile` step at `.Wasm2` has an exact
-`StepTrace`. `code.body_loop_loop.wasm2_trace_of_contract` lifts it through the body loop, and
-`code.validate_multi_value_body_with.trace_of_contract` through initialization, giving a
-`BodyTrace` for every ordinary outcome of the extracted Wasm 2.0 validator.
+`StepContract` states that every ordinary `code.step_profile` step whose opcode passed the
+profile's filter has an exact `StepTrace`. `code.body_loop_loop.trace_of_contract` lifts it
+through the body loop, and `code.validate_body_with.trace_of_contract` through
+initialization, giving a `BodyTrace` for every ordinary outcome of the extracted validator.
 -/
 
 open Aeneas Aeneas.Std
@@ -17,12 +16,12 @@ namespace Itasca.Wasm2.CallbackTrace
 
 open VisitorTrace
 
-/-- Byte provenance and stopping for every ordinary Wasm 2.0 step. -/
+/-- Byte provenance and stopping for every ordinary step. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
-    (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
-    (ctx : code.Context) (index : U32) : Prop :=
-  ∀ st (p : Pending data env locals index st) v result out v',
-    code.step_profile visitor st data env ctx index .Wasm2
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
+  ∀ st (p : Pending data env profile locals index st) v result out v',
+    code.step_profile visitor st data env ctx index profile
       (data.val[p.start.val]'p.inbounds) v = .ok (result, out, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result out.core
@@ -57,16 +56,17 @@ namespace Itasca
 
 open Wasm2
 
-/-- Lifts returned-step byte provenance through the Wasm 2.0 body loop. The accepting-visitor
-invariant supplies strict cursor progress. -/
-theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
+/-- Lifts returned-step byte provenance through the body loop. The accepting-visitor invariant
+supplies strict cursor progress. -/
+theorem code.body_loop_loop.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
-    (data : Slice U8) (env : module.Env) (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
-    (htrace : CallbackTrace.StepContract visitor observe data env locals ctx index)
+    (htrace : CallbackTrace.StepContract visitor observe data env profile locals ctx index)
     (st : code.BodyState) (v v' : V) (result : VisitorTrace.BodyResult)
-    (hi : State data env locals index st)
-    (h : code.body_loop_loop visitor data env ctx index .Wasm2 v st = .ok (result, v')) :
+    (hi : State data env profile locals index st)
+    (h : code.body_loop_loop visitor data env ctx index profile v st = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CallbackTrace.BodyTrace data st.core.pos observations result := by
   generalize hn : data.length - st.core.pos.val = n
@@ -102,9 +102,27 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
         rw [hr] at hb
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at hb
         obtain ⟨⟨res, out, w⟩, hs, htail⟩ := ResultFacts.bind_ok_inv _ _ _ hb
-        obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
+        obtain ⟨rc, hrc, hop⟩ := WP.spec_imp_exists
+          (code.check_opcode.spec profile (data.val[st.core.pos.val]'hp))
+        cases rc with
+        | Err e =>
+          have hs2 : res = .Err e ∧ w = v := by
+            unfold code.step_profile at hs
+            simp [hrc, core.result.Result.Insts.CoreOpsTry.branch,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at hs
+            exact ⟨hs.1.symm, hs.2.2.symm⟩
+          obtain ⟨rfl, rfl⟩ := hs2
+          simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at htail
+          subst cf
+          simp at ht
+          obtain ⟨rfl, rfl⟩ := ht
+          exact ⟨[], by simp, (CallbackTrace.StepTrace.silent e out.core
+            (VisitorTrace.Outcomes.empty _)).rejected hi.bounds.pos⟩
+        | Ok u =>
+        cases u
+        obtain ⟨p, hstart⟩ := hi.pending hc hp (hop rfl) next hnext
         have hs' : code.step_profile visitor {core := {st.core with pos := next}}
-            data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) v =
+            data env ctx index profile (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs
         obtain ⟨first, hfirst, hchunk⟩ := htrace _ p v res out w hs'
         rw [hstart] at hchunk
@@ -121,22 +139,22 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
           subst cf
           obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
             code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
-            data env ctx ctx rfl index st v () _ hb0 trivial
+            data env ctx ctx rfl index profile st v () _ hb0 trivial
           obtain ⟨⟨res, s⟩, hs0, hafter⟩ :=
-            WP.spec_imp_exists (steps data env locals ctx index hlocals _ p)
+            WP.spec_imp_exists (steps data env profile locals ctx index hlocals _ p)
           simp only [hstart] at hs0
           have heval : Visitor.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-              data env ctx index () st =
+              data env ctx index profile () st =
               .ok (match continueStep (res, s) with
                 | .cont (s, _) => .cont ((), s)
                 | .done r => .done (r, ())) := by
             change code.body_loop_loop.body _ _ _ _ _ _ _ _ = _
             rw [Wasm2.emptyVisitorLoop.body_eq]
-            change (loopBody data env ctx index st >>= fun r => .ok
+            change (loopBody data env profile ctx index st >>= fun r => .ok
               (match r with | .cont (s, _) => .cont ((), s) | .done r => .done (r, ())
                 : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
             rw [loopBody_eq, if_neg hc, hr]
-            simp only [bind_ok, hs0]
+            simp only [bind_ok, hrc, hs0]
             cases res <;> simp [continueStep]
           rw [hempty] at heval
           simp only [Result.ok.injEq] at heval
@@ -150,7 +168,8 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
             obtain ⟨hi', hge, hbound⟩ := hafter rfl
             change next.val ≤ out.core.pos.val at hge
             have hmeasure : data.length - out.core.pos.val < n := by omega
-            have ht' : code.body_loop_loop visitor data env ctx index .Wasm2 w out = .ok (result, v') := by
+            have ht' : code.body_loop_loop visitor data env ctx index profile w out =
+                .ok (result, v') := by
               simpa [code.body_loop_loop] using ht
             obtain ⟨rest, hrest, hbody⟩ := ih (data.length - out.core.pos.val)
               hmeasure out w hi' ht' rfl
@@ -165,11 +184,10 @@ theorem code.body_loop_loop.wasm2_trace_of_contract {V : Type}
         obtain ⟨rfl, rfl⟩ := ht
         exact ⟨[], by simp, .empty hi.bounds.pos (by simp)⟩
 
-/-- Successful Wasm 2.0 initialization selects the actual type entry and the
-same root frame used by the independent syntax invariant. -/
-theorem code.initial_state.wasm2_start (env : module.Env) (ctx : code.Context)
-    (index : U32) :
-    code.initial_state env ctx index .Wasm2 ⦃ r => match r with
+/-- Successful initialization selects the actual type entry and the same root frame used by the
+independent syntax invariant. -/
+theorem code.initial_state.start (env : module.Env) (index : U32) :
+    code.initial_state env index ⦃ r => match r with
       | .Err _ => True
       | .Ok st => st = initial index ∧ ∃ ft, env.types.val[index.val]? = some ft ⦄ := by
   unfold code.initial_state
@@ -192,15 +210,16 @@ theorem code.initial_state.wasm2_start (env : module.Env) (ctx : code.Context)
 
 /-- Initialization emits no callback. Step provenance therefore gives
 an exact whole-body trace for every ordinary public outcome, including errors. -/
-theorem code.validate_multi_value_body_with.trace_of_contract {V : Type}
+theorem code.validate_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (htrace : CallbackTrace.StepContract visitor observe data env ctx.locals ctx index)
+    (profile : ValidationProfile)
+    (htrace : CallbackTrace.StepContract visitor observe data env profile ctx.locals ctx index)
     (v v' : V) (result : VisitorTrace.BodyResult)
-    (h : code.validate_multi_value_body_with visitor data env ctx index v = .ok (result, v')) :
+    (h : code.validate_body_with visitor data env ctx index profile v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CallbackTrace.BodyTrace data 0#usize observations result := by
-  unfold code.validate_multi_value_body_with code.validate_body_with_profile at h
+  unfold code.validate_body_with at h
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
   · simp [hsize] at h
     obtain ⟨rfl, rfl⟩ := h
@@ -215,11 +234,11 @@ theorem code.validate_multi_value_body_with.trace_of_contract {V : Type}
       exact ⟨[], by simp, .empty (by simp) (by simp)⟩
     | Ok st =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h
-      have hp := code.initial_state.wasm2_start env ctx index
+      have hp := code.initial_state.start env index
       rw [hr, WP.spec_ok] at hp
       obtain ⟨rfl, ft, hi⟩ := hp
-      exact code.body_loop_loop.wasm2_trace_of_contract visitor observe
-        data env ctx.locals ctx index rfl htrace (initial index) v v' result
-        (State.start data env ctx.locals index ft hi (by scalar_tac)) h
+      exact code.body_loop_loop.trace_of_contract visitor observe
+        data env profile ctx.locals ctx index rfl htrace (initial index) v v' result
+        (State.start data env profile ctx.locals index ft hi (by scalar_tac)) h
 
 end Itasca

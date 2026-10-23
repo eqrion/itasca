@@ -27,7 +27,7 @@ theorem stream.validate_module_slice.profile_total (bytes : Slice U8) (profile :
   obtain ⟨⟨first, last⟩, hsplit, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec bytes)
   obtain ⟨environment, code, tail, he, hc, ht, _⟩ := stream.find_code_region.slices bytes first last hsplit
   obtain ⟨env, henv, _⟩ := WP.spec_imp_exists module.Env.new.spec
-  obtain ⟨⟨r, visitor, decoded⟩, hr⟩ := stream.validate_streaming.profile_total
+  obtain ⟨⟨r, visitor, decoded⟩, hr⟩ := stream.validate_streaming.total
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     0#u64 ⟨environment, code, tail⟩ ⟨none, none⟩ env
     (stream.SliceSource.callbacks_total _) (StreamSync.callbacks_total (profile := profile))
@@ -66,7 +66,7 @@ theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded :
     | some stored =>
       simp [hstored] at h
       subst decoded
-      obtain ⟨run, hvalid, _⟩ := stream.validate_streaming.profile_sound
+      obtain ⟨run, hvalid, _⟩ := stream.validate_streaming.sound
         stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
         StreamSync.Tracks (StreamSync.provenance (profile := profile)) 0#u64 ⟨environment, code, tail⟩ ⟨none, none⟩ visitor
         storage env bytes environment code tail (stream.SliceSource.coherent _) hbytes
@@ -93,23 +93,5 @@ theorem stream.validate_module_slice.profile_spec (bytes : Slice U8) (profile : 
   cases r with
   | Err _ => trivial
   | Ok decoded => exact stream.validate_module_slice.profile_sound bytes decoded profile hr
-
-/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_total`. -/
-theorem stream.validate_module_slice.wasm_total (bytes : Slice U8) :
-    ∃ r, stream.validate_module_slice bytes .Wasm1 = .ok r :=
-  stream.validate_module_slice.profile_total bytes .Wasm1
-
-/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_sound`. -/
-theorem stream.validate_module_slice.wasm_sound (bytes : Slice U8) (decoded : module.Module)
-    (h : stream.validate_module_slice bytes .Wasm1 = .ok (.Ok decoded)) :
-    ModuleSound.Validated bytes decoded :=
-  stream.validate_module_slice.profile_sound bytes decoded .Wasm1 h
-
-/-- The Wasm 1.0 instance of `stream.validate_module_slice.profile_spec`. -/
-theorem stream.validate_module_slice.wasm_spec (bytes : Slice U8) :
-    stream.validate_module_slice bytes .Wasm1 ⦃ r => match r with
-      | .Ok decoded => ModuleSound.Validated bytes decoded
-      | .Err _ => True ⦄ :=
-  stream.validate_module_slice.profile_spec bytes .Wasm1
 
 end Itasca

@@ -13,6 +13,12 @@ set_option maxHeartbeats 4000000
   interval_cases n <;> with_unfolding_all
     (apply (WP.spec_ok _).mpr; first | exact True.intro | exact ⟨by decide, by decide, by decide, by decide⟩)
 
+@[step] theorem other_valid_total (f : runtime.bytecode.CompiledFunction)
+    (instruction : runtime.bytecode.Instr) :
+    runtime.bytecode.CompiledFunction.other_valid f instruction ⦃ _ => True ⦄ := by
+  cases instruction <;> simp only [runtime.bytecode.CompiledFunction.other_valid, WP.spec_ok]
+  all_goals step*
+
 theorem instruction_valid_total (f : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) :
     runtime.bytecode.CompiledFunction.instruction_valid f instruction ⦃ _ => True ⦄ := by
@@ -55,6 +61,5 @@ theorem instruction_valid_total (f : runtime.bytecode.CompiledFunction)
             step*
         | none =>
           simp only [bind_ok]
-          cases instruction <;> simp only [WP.spec_ok]
-          all_goals step*
+          step*
 end Exec.Code

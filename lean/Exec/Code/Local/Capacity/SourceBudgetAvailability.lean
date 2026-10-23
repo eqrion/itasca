@@ -47,16 +47,4 @@ theorem SourceCompilationBudget.room {A : Type}
   rw [frames]
   omega
 
-/-- One source byte pays one instruction whenever the configured source rate
-is positive and the complete remaining-body demand fits the limit. -/
-theorem SourceCompilationBudget.instruction_room {A : Type}
-    {initial current : runtime.compiler.Budget A} {rate : ChargeCounter → Nat}
-    {position length : Nat} (held : SourceCompilationBudget initial current rate position)
-    (limit : initial.instructions.val + rate .instructions * length ≤ initial.limits.max_instructions.val)
-    (remaining : position < length) (positive : 0 < rate .instructions) :
-    current.instructions.val < current.limits.max_instructions.val := by
-  have room := held.room .instructions limit (bytes := 1) (amount := 1) (by omega) (by omega)
-  change current.instructions.val+1 ≤ current.limits.max_instructions.val at room
-  omega
-
 end Exec.Code

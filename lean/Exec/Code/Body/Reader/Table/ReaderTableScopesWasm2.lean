@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Canonical target checks and the saved source zipper discharge every static
 branch-table operand obligation on a live path. -/
 theorem reader_table_scopes_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {parents current}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {parents current}
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (chain : SourceEntryChain parents current) (entered : current.entered=true)

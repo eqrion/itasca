@@ -39,22 +39,6 @@ inductive Immediate : U32 → instr → List U8 → Prop where
   | tableFill (index : U32) {bytes} : Leb128.Encoding bytes index.val →
       Immediate 17#u32 (.TABLE_FILL (.mk_uN index.val)) bytes
 
-/-- Every bulk instruction spelled by `Immediate` is well formed. -/
-theorem Immediate.wellFormed {subopcode op bytes} (h : Immediate subopcode op bytes) : wf_instr op := by
-  cases h with
-  | memoryInit i _ => exact .instr_case_66 _ (EnvTranslation.index_wf i)
-  | dataDrop i _ => exact .instr_case_67 _ (EnvTranslation.index_wf i)
-  | memoryCopy => exact .instr_case_65
-  | memoryFill => exact .instr_case_64
-  | tableInit element table _ _ =>
-      exact .instr_case_54 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf element)
-  | elemDrop i _ => exact .instr_case_55 _ (EnvTranslation.index_wf i)
-  | tableCopy destination source _ _ =>
-      exact .instr_case_53 _ _ (EnvTranslation.index_wf destination) (EnvTranslation.index_wf source)
-  | tableGrow i _ => exact .instr_case_51 _ (EnvTranslation.index_wf i)
-  | tableSize i _ => exact .instr_case_50 _ (EnvTranslation.index_wf i)
-  | tableFill i _ => exact .instr_case_52 _ (EnvTranslation.index_wf i)
-
 /-- Bulk subopcodes lie between 8 and 17. -/
 theorem Immediate.subopcode_range {subopcode op bytes} (h : Immediate subopcode op bytes) :
     8 ≤ subopcode.val ∧ subopcode.val ≤ 17 := by

@@ -43,16 +43,4 @@ theorem FrameSlots.capacity {M : Type} {store : runtime.store.Store M}
   have bound := represented.end_le binding.base_bound
   simpa only [Code.encodeValues_length] using bound
 
-/-- A validated operand range fits the concrete allocation of its owning frame. -/
-theorem FrameBinding.range_bound {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
-    (binding : FrameBinding store exec raw source)
-    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (instanceLookup : store.instances.val[raw.instance.val]? = some inst)
-    (functionLookup : inst.module.functions.val[raw.function.val]? = some compiled)
-    (start count : Nat) (range : start + count ≤ compiled.slot_count.val) :
-    raw.base.val + start + count ≤ exec.slots.length := by
-  have capacity := binding.capacity inst compiled instanceLookup functionLookup
-  omega
-
 end Exec.Interp

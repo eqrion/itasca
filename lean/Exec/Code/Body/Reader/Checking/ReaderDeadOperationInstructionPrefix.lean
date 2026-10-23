@@ -1,98 +1,37 @@
 import Exec.Code.Body.Reader.Common.ReaderSignExtension
-import Exec.Code.Body.Reader.Common.ReaderPrefixDeadNumeric
-import Exec.Code.Body.Reader.Float.StructuredReaderPrefixDeadFloat
-import Exec.Code.Body.Reader.Memory.ReaderPrefixDeadMemory
-import Exec.Code.Body.Reader.Common.StructuredReaderPrefixDeadSaturating
+import Exec.Code.Body.Callbacks.Common.CompilerPrefix
+import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
+import Exec.Code.Local.Source.SourceCursor
+import Exec.Code.Local.Relations.Common.DeadCode
+import Exec.Code.Body.Reader.Common.ReaderSpan
+import Exec.Code.Body.Reader.Common.ReaderProfile
+import Exec.Code.Local.Relations.Common.KnownPopStack
+import Exec.Code.Local.Relations.Common.KnownNumericStack
+import Exec.Code.Body.Reader.Common.NumericReaderFacts
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Relations.Common.Concatenation
+import Exec.Code.Local.Relations.Common.Extension
+import Exec.Code.Local.Relations.Common.PrefixZipper
+import Exec.Code.Local.Relations.Common.Prefix
+import Exec.Code.Local.Relations.Common.ResolvedPrefix
+import Exec.Code.Local.Control.Common.UniversalPrefix
+import Exec.Code.Local.Control.Common.UniversalTerminal
+import Exec.Code.Local.Control.Common.UniversalDormant
+import Exec.Code.Body.Reader.Float.FloatReaderFacts
+import Exec.Code.Body.Reader.Memory.MemoryReaderFacts
+import Exec.Code.Local.Relations.Common.CoreLoweringEffects
+import Exec.Code.Body.Reader.Common.ReaderValues
+import Exec.Code.Local.Lowering.Common.LoweringArithmetic
+import Exec.Code.Body.Reader.Common.ReaderSaturating
 import Exec.Code.Local.Checking.DeadInstructionPrefix
 
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual unreachable numeric reading preserves both maintained checks. -/
-theorem reader_dead_numeric_checked_prefix_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (dead : before.reachable = false)
-    (op : Abs.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  obtain ⟨operation, hook, meaning, handler, instruction, inputs, output,
-    hookEq, ordinary, baseOpcode, sign, misc⟩ := integer_reader_facts ops before out op standard
-  have capacity : st.vals.val.length < Usize.max := by have bound := p.val_capacity; omega
-  obtain ⟨callback, read, _, _, values, effect, post⟩ := reader_numeric_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out _ operation hook
-    capacity byte meaning handler accepted
-  rw [hookEq] at callback
-  exact compiler_dead_op_checked_prefix ops law before after out (integerOpcode op) 0#u32 0#u32 0#u128 dead held exits callback
-
-/-- Actual unreachable float reading preserves both maintained checks. -/
-theorem reader_dead_float_checked_prefix_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (dead : before.reachable = false)
-    (op : Abs.Float.Instruction) (standard : (floatOpcode op).val < 256)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  obtain ⟨operation, hook, meaning, handler, instruction, inputs, output,
-    hookEq, ordinary, baseOpcode, sign, misc⟩ := float_reader_facts ops before out op standard
-  have capacity : st.vals.val.length < Usize.max := by have bound := p.val_capacity; omega
-  obtain ⟨callback, read, _, _, values, effect, post⟩ := reader_numeric_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out _ operation hook
-    capacity byte meaning handler accepted
-  rw [hookEq] at callback
-  exact compiler_dead_op_checked_prefix ops law before after out (floatOpcode op) 0#u32 0#u32 0#u128 dead held exits callback
-
-/-- Actual unreachable memory load reading preserves both maintained checks. -/
-theorem reader_dead_memory_load_checked_prefix_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (dead : before.reachable = false) (op : Abs.Memory.Load)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_load_reader_facts ops before out op ⟨0#u32,0#u32⟩
-  obtain ⟨arg,values,callback,read,post⟩ := reader_memory_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out _ (memoryLoadMeaning op)
-    byte meaning accepted
-  obtain ⟨_,_,_,source,callbackEq,_⟩ := memory_load_reader_facts ops before out op arg
-  rw [callbackEq] at callback
-  rw [source] at post
-  exact compiler_dead_op_checked_prefix ops law before after out (memoryLoadOpcode op) arg.offset arg.align 0#u128 dead held exits callback
-
-/-- Actual unreachable memory store reading preserves both maintained checks. -/
-theorem reader_dead_memory_store_checked_prefix_wasm1 {data env ctx bt st}
-    (p : Wasm1.Pending data env ctx bt st) {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (dead : before.reachable = false) (op : Abs.Memory.Store)
-    (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
-    (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
-    CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
-  obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_store_reader_facts ops before out op ⟨0#u32,0#u32⟩
-  obtain ⟨arg,values,callback,read,post⟩ := reader_memory_wasm1 p
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out _ (memoryStoreMeaning op)
-    byte meaning accepted
-  obtain ⟨_,_,_,source,callbackEq,_⟩ := memory_store_reader_facts ops before out op arg
-  rw [callbackEq] at callback
-  rw [source] at post
-  exact compiler_dead_op_checked_prefix ops law before after out (memoryStoreOpcode op) arg.offset arg.align 0#u128 dead held exits callback
-
-/-- Actual unreachable numeric reading preserves both maintained checks. -/
 theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -116,7 +55,7 @@ theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st
 
 /-- Actual unreachable float reading preserves both maintained checks. -/
 theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -140,7 +79,7 @@ theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
 
 /-- Actual unreachable memory load reading preserves both maintained checks. -/
 theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -164,7 +103,7 @@ theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals inde
 
 /-- Actual unreachable memory store reading preserves both maintained checks. -/
 theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -188,7 +127,7 @@ theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals ind
 
 /-- Actual unreachable saturating reading preserves both maintained checks. -/
 theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -208,7 +147,7 @@ theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index
 
 /-- Sign-extension reading in dead code only observes the returned stack. -/
 theorem reader_dead_sign_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (dead : before.reachable = false) (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)

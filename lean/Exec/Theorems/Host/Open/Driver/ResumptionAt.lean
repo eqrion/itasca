@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp Exec.Interp.OpenCall
 /-- Resumption at the exact ghost interpretation established by the returned
 host effects, including every key published while the caller was suspended. -/
 def ResumedWorldResultAt {M : Type} {view : M → Slice U8} {expected : List valtype}
-    (before : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (before : EventfulWorld M Unit view expected)
     (target : Store.CodeInterpretation) (out : Answer M Unit) : Prop :=
   match out.1 with
-  | .Ok _ => ∃next : EventfulMachine Executable.emission Abs.ExecutableInstr M Unit view target expected,
+  | .Ok _ => ∃next : EventfulMachine M Unit view target expected,
       ExecutableInv view target next.store ∧ out=(.Ok (),next.exec,next.store,next.platform) ∧
       EventfulConcreteSim U32.max before.machine.pc next.pc before.machine.pending next.pending
         before.machine.source next.source (stepHostEvents before.machine.exec before.machine.store out) ∧
@@ -32,7 +32,7 @@ theorem resume_world_at {M F A : Type}
     (allocator : runtime.platform.Alloc A) (correct : Platform.FloatOpsCorrect floats)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (ready : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize) (identity : U64)
     (args defaults : alloc.vec.Vec runtime.Value)
@@ -49,7 +49,7 @@ theorem resume_world_at {M F A : Type}
   let Inv := TargetReplayInv view world.code afterCode world.machine.store
   have raw := replay_retained memory world.machine.store after status values effect.metadata externs issued
   have sound := target_replay_sound memory view world.machine.store after world.code afterCode status values effect externs
-  have total := world_step_outcomes Abs.executable_language memory hooks floats allocator correct allocation
+  have total := world_step_outcomes memory hooks floats allocator correct allocation
     (fun _=>WP.spec.ret trivial) view laws Inv
     (fun _ _ valid=>valid.executable.toCertifiedApiStore.toCertifiedSupportedStore)
     (fun _ _ _ valid mutation=>valid.update mutation) sound

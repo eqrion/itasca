@@ -21,20 +21,20 @@ namespace Exec.Interp
 end Exec.Interp
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-theorem StructuredMachine.UniformAdvance.widen {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation} {store : runtime.store.Store M} {exec : runtime.interp.Execution}
+theorem StructuredMachine.UniformAdvance.widen {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation} {store : runtime.store.Store M} {exec : runtime.interp.Execution}
     {expected : List valtype} {small large pc : Nat} {pending : Bool} {before : Abs.AState}
-    (advance : StructuredMachine.UniformAdvance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store exec expected small pc pending before) (bound : small ≤ large) :
-    StructuredMachine.UniformAdvance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store exec expected large pc pending before := by
+    (advance : StructuredMachine.UniformAdvance view code store exec expected small pc pending before) (bound : small ≤ large) :
+    StructuredMachine.UniformAdvance view code store exec expected large pc pending before := by
   obtain ⟨nextPC,nextPending,after,invariant,simulation,uniform,ownership,ambient,bounded⟩ := advance
   exact ⟨nextPC,nextPending,after,invariant,simulation.widen bound,uniform,ownership,ambient,bounded⟩
 
-theorem UniformSupportedStepOutcome.widen {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M P A : Type} {allocator : runtime.platform.Alloc A}
+theorem UniformSupportedStepOutcome.widen {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {expected : List valtype} {small large pc : Nat}
     {pending : Bool} {source : Abs.AState} {out}
-    (outcome : UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected small pc pending source out)
+    (outcome : UniformSupportedStepOutcome allocator hooks view code exec store platform expected small pc pending source out)
     (bound : small ≤ large) :
-    UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected large pc pending source out := by
+    UniformSupportedStepOutcome allocator hooks view code exec store platform expected large pc pending source out := by
   obtain ⟨sameStore, transition⟩ := outcome
   refine ⟨sameStore, ?_⟩
   cases status : out.1 with
@@ -47,27 +47,27 @@ end Exec.Theorems
 
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
-theorem StructuredMachine.UniformAdvance.prepend_normalization {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
+theorem StructuredMachine.UniformAdvance.prepend_normalization {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution} {expected : List valtype} {codeLength pc : Nat}
     {count : Nat} {before middle : Abs.AFrame} {s : _root_.store} {ambient : frame} {rest : List Abs.AFrame}
     (chain : ErasedSteps count before middle)
     (typed : Abs.ATyped ⟨s,ambient,before::rest,[]⟩)
-    (advance : StructuredMachine.UniformAdvance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store exec expected codeLength pc false ⟨s,ambient,middle::rest,[]⟩) :
-    StructuredMachine.UniformAdvance emission (Abs.SupportedState allowed) Abs.Ownership.StatefulOwned view code store exec expected codeLength pc false ⟨s,ambient,before::rest,[]⟩ := by
+    (advance : StructuredMachine.UniformAdvance view code store exec expected codeLength pc false ⟨s,ambient,middle::rest,[]⟩) :
+    StructuredMachine.UniformAdvance view code store exec expected codeLength pc false ⟨s,ambient,before::rest,[]⟩ := by
   obtain ⟨nextPC,nextPending,after,invariant,simulation,uniform,ownership,ambientEq,bounded⟩ := advance
   exact ⟨nextPC,nextPending,after,invariant,simulation.prepend_normalization chain s ambient rest typed,
     uniform.prepend_normalization chain s ambient rest typed,
     fun bound owned => ownership bound (chain.ownership.stateful owned),ambientEq,fun bound h => bounded bound (chain.codeBound h)⟩
 
-theorem UniformSupportedStepOutcome.prepend_normalization {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop} {M P A : Type} {allocator : runtime.platform.Alloc A}
+theorem UniformSupportedStepOutcome.prepend_normalization {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P} {expected : List valtype}
     {codeLength pc count : Nat} {before middle : Abs.AFrame} {s : _root_.store} {ambient : frame} {rest : List Abs.AFrame}
     {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
     (chain : ErasedSteps count before middle)
     (typed : Abs.ATyped ⟨s,ambient,before::rest,[]⟩)
-    (outcome : UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected codeLength pc false ⟨s,ambient,middle::rest,[]⟩ out) :
-    UniformSupportedStepOutcome emission allowed allocator hooks view code exec store platform expected codeLength pc false ⟨s,ambient,before::rest,[]⟩ out := by
+    (outcome : UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc false ⟨s,ambient,middle::rest,[]⟩ out) :
+    UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc false ⟨s,ambient,before::rest,[]⟩ out := by
   obtain ⟨mutation,transition⟩ := outcome
   refine ⟨mutation,?_⟩
   cases status : out.1 with

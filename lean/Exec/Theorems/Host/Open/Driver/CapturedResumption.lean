@@ -16,7 +16,7 @@ theorem resume_captured_source {M : Type} (memory : runtime.platform.MemoryBuffe
     (beforeEq : sourcePending.before=Store.decodeStore view code store)
     (addressEq : sourcePending.address=address.index.val)
     (argumentsEq : ready.host_args.val.map sourceValue=sourcePending.arguments)
-    (saved : SourceContinuation Executable.emission Abs.ExecutableInstr memory view code store ready address base sourcePending expected)
+    (saved : SourceContinuation memory view code store ready address base sourcePending expected)
     (afterCode : Store.CodeInterpretation) (after : runtime.store.Store M)
     (effect : ReentrantCallbacks.Effect view code store afterCode after)
     (values : alloc.vec.Vec runtime.Value) (status : core.result.Result Unit runtime.platform.HostError)
@@ -29,7 +29,7 @@ theorem resume_captured_source {M : Type} (memory : runtime.platform.MemoryBuffe
       StepH sourcePending.initial (hostCallEvents address (out.1,out.2,after,())) (sourcePending.completed reply) ∧
       Config_ok (sourcePending.completed reply) (.mk_list expected) ∧
       (out.1=.Ok () → ∃source pc pendingFlag,
-        Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr) view afterCode after out.2 source expected pc pendingFlag ∧
+        Execution view afterCode after out.2 source expected pc pendingFlag ∧
         Abs.Ownership.StatefulOwned (Store.ownershipBounds after) source ∧
         Abs.decode source=sourcePending.completed reply)⦄ := by
   obtain ⟨function,signature,functionAt,signatureAt,resume⟩ := saved

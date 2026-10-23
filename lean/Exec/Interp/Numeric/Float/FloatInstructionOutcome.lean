@@ -2,7 +2,8 @@ import Exec.Abs.Float.Progress
 import Exec.Interp.Numeric.Float.FloatBounded
 import Exec.Interp.Numeric.Float.FloatSource
 import Exec.Interp.Numeric.Float.FloatMinMaxSource
-import Exec.Interp.Numeric.Float.FloatComparisonSource
+import Exec.Interp.Numeric.Float.FloatComparisonScalar
+import Exec.Spec.FloatComparison
 import Exec.Interp.Numeric.Float.FloatConvertSource
 import Exec.Interp.Numeric.Float.FloatPromoteSource
 import Exec.Interp.Numeric.Float.FloatReinterpretSource

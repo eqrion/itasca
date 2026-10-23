@@ -22,30 +22,16 @@ theorem ReachedCompilerLedger.advance {A} {before after : runtime.compiler.Funct
 
 theorem ReachedCompilerLedger.reader_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
-    {data env locals index st} (p : Wasm2.Pending data env locals index st)
-    (out : code.BodyState) (ctx : code.Context) (ctxLocals : ctx.locals = locals)
+    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (out : code.BodyState) (ctx : code.Context)
     (held : ReachedCompilerLedger before st.core.vals.val) (observed : ObservedStack after out.core.vals.val)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     ReachedCompilerLedger after out.core.vals.val := by
   by_cases control : (data.val[p.start.val]'p.inbounds).val ∈ [2,3,4,5,11,12,13,14,15]
-  · obtain ⟨growth,fixups⟩ := reader_control_ledger_wasm2 p ops law before after out ctx _ control held.fixups rfl accepted
+  · obtain ⟨growth,fixups⟩ := reader_control_ledger_wasm2 ops law before after st out data env ctx index _ control held.fixups accepted
     exact held.advance observed growth fixups
-  · have fresh := reader_ordinary_ledger_wasm2 p ops law before after out ctx ctxLocals _ control rfl accepted
-    exact held.advance observed fresh.auxiliary (fresh.fixups held.fixups)
-
-theorem ReachedCompilerLedger.reader_wasm1 {A} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
-    {data env ctx bt st} (p : Wasm1.Pending data env ctx bt st)
-    (out : code.OpIterState)
-    (held : ReachedCompilerLedger before st.vals.val) (observed : ObservedStack after out.vals.val)
-    (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
-    ReachedCompilerLedger after out.vals.val := by
-  by_cases control : (data.val[p.start.val]'p.inbounds).val ∈ [2,3,4,5,11,12,13,14,15]
-  · obtain ⟨growth,fixups⟩ := reader_control_ledger_wasm1 p ops law before after out _ control held.fixups rfl accepted
-    exact held.advance observed growth fixups
-  · have fresh := reader_ordinary_ledger_wasm1 p ops law before after out _ control rfl accepted
+  · have fresh := reader_ordinary_ledger_wasm2 p ops law before after out ctx _ control rfl accepted
     exact held.advance observed fresh.auxiliary (fresh.fixups held.fixups)
 
 end Exec.Code

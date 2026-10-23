@@ -19,7 +19,7 @@ theorem SourceSavedCaller.resumption {M : Type} {memory : runtime.platform.Memor
         StepH suspended.pending.initial (hostCallEvents address (out.1,out.2,store,())) (suspended.pending.completed reply) ∧
         Config_ok (suspended.pending.completed reply) suspended.expected ∧
         (out.1=.Ok () → ∃source pc pendingFlag,
-          Execution Executable.emission (Abs.SupportedState Abs.ExecutableInstr) view code store out.2 source
+          Execution view code store out.2 source
             (signature.results.val.map sourceType) pc pendingFlag ∧
           Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ Abs.decode source=suspended.pending.completed reply)⦄ := by
   obtain ⟨entryCode,entryStore,signature,held,effect,metadata,expected,beforeEq,addressEq,argsEq,continuation⟩ := saved

@@ -40,7 +40,7 @@ theorem source_host_chosen_success {M F A : Type} (memory : runtime.platform.Mem
   obtain ⟨calledSignature,resultTypes,recorded,admissible,atomic,typed,future⟩ := resumption
   obtain ⟨state,pc,pendingFlag,machine,stateOwned,completed⟩ := future rfl
   let reply:=checkedHostReply memory view code native.store calledSignature ⟨values⟩ status
-  let world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType):=
+  let world : EventfulWorld M Unit view (signature.results.val.map sourceType):=
     ⟨code,⟨native.store,finished,(),state,pc,pendingFlag,machine,guard.invariant.toCertifiedApiStore.toCertifiedSupportedStore,stateOwned⟩⟩
   have nextTyped : Config_ok (Abs.decode state) (.mk_list (signature.results.val.map sourceType)) := by
     rw [completed]

@@ -92,7 +92,8 @@ theorem submit {profile : ValidationProfile} (state : stream.SyncVisitor) (issue
     ∃ batch, (sync).submit_code_batch state issued.seed =
       .ok (.Ok (), { state with completed := some batch }) ∧
       StreamBatch.Reachable issued batch := by
-  obtain ⟨batch, hr, hp⟩ := stream.CodeBatch.validate_all.total issued issued.seed hissued hbound .seed hprofile
+  obtain ⟨batch, hr, hp⟩ := WP.spec_imp_exists
+    (stream.CodeBatch.validate_all.reachable issued issued.seed hissued hbound .seed hprofile)
   exact ⟨batch, by simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr], hp⟩
 
 /-- The synchronous scheduler satisfies `StreamScheduler.Provenance` across every callback,
@@ -157,28 +158,6 @@ theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.Callback
     exact ⟨(.Ok (), state), rfl⟩
   · intro state tail
     exact ⟨_, tail_ready state tail⟩
-
-/-- With its slot empty, the synchronous scheduler validates independently encoded and typed
-batch contents, returns that same reachable worker on polling, and leaves the slot empty again.
-The stored tail is preserved by both calls. -/
-theorem submit_poll_complete {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
-    (entries : List ModuleBinary.Code) (hempty : state.completed = none)
-    (hissued : issued.Bounded) (hcount : entries.length = issued.num_funcs.val)
-    (htyped : ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries)
-    (henv : Profile.Environment profile issued.env)
-    (hlimits : Profile.EnvironmentWithinLimits profile issued.env) (hbound : CodeEntry.Bounds issued.env)
-    (hbytes : ModuleBinary.Rep (Profile.CodeEncodingWithinLimits profile) entries issued.code.val)
-    (hprofile : issued.profile = profile) :
-    ∃ batch, (sync).submit_code_batch state issued.seed =
-        .ok (.Ok (), { state with completed := some batch }) ∧
-      (sync).poll_code_batch { state with completed := some batch } = .ok (.Ok batch, state) ∧
-      StreamBatch.Reachable issued batch ∧ stream.CodeBatch.finish batch = .ok (.Ok ()) := by
-  obtain ⟨batch, hr, hp, hf⟩ := stream.CodeBatch.validate_all.complete_seed
-    issued entries hissued hcount htyped henv hlimits hbound hbytes hprofile
-  refine ⟨batch, ?_, ?_, hp, hf⟩
-  · simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr]
-  · have he : { state with completed := none } = state := by cases state; simp_all
-    simpa [he] using poll_some { state with completed := some batch } batch rfl
 
 /-- Successful retirement preserves the stored tail, because its only visitor callback is polling,
 which clears only the completed slot. -/

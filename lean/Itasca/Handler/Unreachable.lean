@@ -6,7 +6,7 @@ import Itasca.Handler.Control
 Specifications of `code.mark_unreachable_loop` and `code.mark_unreachable`, which truncate the
 operand stack to the innermost frame base and make that frame polymorphic. In such a frame
 `code.pop_stack_type` and `code.pop_with_type` return `Bot` at the base without consuming
-operands (`code.pop_with_type.polymorphic`).
+operands.
 -/
 
 open Aeneas Aeneas.Std
@@ -74,32 +74,5 @@ theorem code.pop_stack_type.at_base (st : code.OpIterState)
   obtain ⟨_, hb, rfl⟩ := WP.spec_imp_exists (code.cur_base.spec st)
   obtain ⟨_, hp, rfl⟩ := WP.spec_imp_exists (code.cur_polymorphic.spec st)
   cases h : Control.polymorphic st <;> simp [code.pop_stack_type, hb, hbase, hp, h]
-
-/-- At an unreachable frame's base, any expected type can be popped as `Bot` without consuming a
-value. -/
-theorem code.pop_with_type.polymorphic (st : code.OpIterState) (expected : types.ValueType)
-    (hbase : alloc.vec.Vec.len st.vals = Control.base st)
-    (hpoly : Control.polymorphic st = true) :
-    code.pop_with_type st expected = .ok (.Ok .Bot, st) := by
-  have hp := code.pop_stack_type.at_base st hbase
-  simp only [hpoly, ↓reduceIte] at hp
-  simp [code.pop_with_type, hp, core.result.Result.Insts.CoreOpsTry.branch]
-
-/-- After `code.mark_unreachable`, any expected type pops as `Bot`. -/
-theorem code.mark_unreachable_then_pop (st : code.OpIterState)
-    (cs : List code.Ctrl) (c : code.Ctrl) (expected : types.ValueType)
-    (hctrls : st.ctrls.val = cs ++ [c])
-    (hbase : c.value_stack_base.val ≤ st.vals.val.length) :
-    ∃ st', code.mark_unreachable st = .ok st' ∧
-      st'.vals.val = st.vals.val.take c.value_stack_base.val ∧
-      st'.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
-      st'.pos = st.pos ∧ code.pop_with_type st' expected = .ok (.Ok .Bot, st') := by
-  obtain ⟨st', hr, hv, hlen, hc, hp⟩ :=
-    WP.spec_imp_exists (code.mark_unreachable.spec st cs c hctrls hbase)
-  refine ⟨st', hr, hv, hc, hp, code.pop_with_type.polymorphic st' expected ?_ ?_⟩
-  · have hb : Control.base st' = c.value_stack_base := by simp [Control.base, hc]
-    rw [hb]
-    scalar_tac
-  · simp [Control.polymorphic, hc]
 
 end Itasca

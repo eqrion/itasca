@@ -1,14 +1,18 @@
 # Execution proofs
 
-Start with the [execution boundary](../README.md#execution-boundary) for
-guarantees and premises. This guide explains how the proofs are assembled.
-The [Lean guide](../README.md) covers tool setup and the independent validator.
+Start with [Main](Main.lean): it lists every headline theorem, each stated in
+full under [Results/](Results), and [Contracts](Contracts.lean) lists every
+premise an embedder must discharge. The
+[execution boundary](../README.md#execution-boundary) summarizes the guarantees.
+This guide explains how the proofs are assembled. The [Lean guide](../README.md)
+covers tool setup and the independent validator.
 
 ## Canonical public constructions
 
-The headline modules are the roots listed in
+`Main` and `Results/` are the reachability roots listed in
 [`scripts/reachability.lean`](../scripts/reachability.lean); `just dead`
-reports declarations they do not reach.
+reports declarations they do not reach. Each result is a short projection of
+the construction named below.
 
 Evolving-world invocation is constructed in
 [PublicExecutableWorldResources](Theorems/Invocation/PublicExecutableWorldResources.lean).
@@ -21,10 +25,9 @@ contracts remain available when capacities or recording-head evidence are absent
 Evolving-world instantiation correspondence is constructed by
 [recorded source execution](Theorems/Instantiation/InstantiateExecutableWorldRecordedSource.lean).
 The actual-API recording adapter supplies ordinary correspondence by erasure.
-The [compiled package erasure](Theorems/Instantiation/InstantiateExecutableWorldRecordedCompiled.lean)
-is shared by accepted and all-input ordinary wrappers. Resource causes remain a
-supporting construction below the combined recording/resource theorem, avoiding
-a cycle back through ordinary source correspondence.
+Resource causes remain a supporting construction below the combined
+recording/resource theorem, avoiding a cycle back through ordinary source
+correspondence.
 
 ## Dependency layers
 
@@ -45,6 +48,8 @@ with proof fields, against the standard logical axiom allowlist.
 | `Exec/Interp/` | Concrete interpreter operations, machine preservation, source correspondence, and invocation. |
 | `Exec/Store/` | Issued-object API, linking, preparation, publication, initialization, and instantiation. |
 | `Exec/Theorems/` | Public API composition and specialized corollaries. |
+| `Exec/Contracts` | Definitions of the host and chosen-run obligations defined beside their proofs; it links the rest. |
+| `Exec/Results/`, `Exec/Main` | The headline theorems. Only `Main` and `Examples/` import them, and examples import only `Main`. |
 
 Store decoding and capacity contracts belong to `Representation`, below both
 interpreter and store proofs. Their definitions describe data and independently
@@ -171,15 +176,16 @@ success. Shared lemmas belong at the lowest stage their imports permit.
 | `Source/` | Source opcode classification and whole-body advance/step composition. |
 | `Common/` | Shared reader/compiler relations used by the topic adapters. |
 
-`Code/Body/Relations/Common/BodyAcceptanceWasm1` and `BodyAcceptanceWasm2`
-construct actual body success. `BodyPublicationWasm1/Wasm2` retain coordinates
-and maps; `BodyCheckedWasm1/Wasm2` establish the checker premises at root close.
-These are complementary invariants, not alternative versions of the body proof.
+Bodies of both profiles are compiled through the Wasm 2.0 reader proofs; a valid
+Wasm 1.0 body has the same run under both profiles
+(`code.validate_body_with.wasm1_of_body`). `Code/Body/Relations/Common/BodyCheckedWasm2`
+constructs actual body success with the checker premises at root close.
 
 `Code/Module/EntryFinishAvailable` composes entry parsing, body compilation,
 and actual finishing. Module demand envelopes account for metadata, functions,
 initializers, scheduling, collection, output counters, and temporary reserves.
-[CompilationComplete](Theorems/CompilationComplete.lean) constructs successful
+[CompilationComplete](Theorems/CompilationComplete.lean), stated in
+[Results/Compile](Results/Compile.lean), constructs successful
 compilation and the existing certificate for both complete profiles from
 independent source validity, conservative source-only `CompileEligible`,
 allocator correctness, and bounded allocation availability. It assumes neither
@@ -214,8 +220,8 @@ continuations and fresh nested executions. Its ticks preserve the full store
 invariant and expanded history, including effects before divergence.
 `Open/Erasure/` and `Open/Native/` connect those same ticks to the native
 routines. `Open/Source/` establishes combined source correspondence.
-[ChosenSourceCompleteness](Theorems/Host/Open/Completeness/ChosenSourceCompleteness.lean)
-matches a terminating selected combined run; source-prefix capacities,
+[ChosenSourceCompleteness](Theorems/Host/Open/Completeness/ChosenSourceCompleteness.lean),
+stated in [Results/Host](Results/Host.lean), matches a terminating selected combined run; source-prefix capacities,
 allocation availability, and numeric/vector/growth/API/publication compatibility
 remain explicit premises. Reference Wasm segments retain the reference suffix's
 choice index across differing trap-cleanup lengths.
@@ -228,16 +234,17 @@ supports modules with empty imports and no start function.
 
 ## Reading and extending the proofs
 
-1. Read the relevant public theorem and its explicit platform contracts.
+1. Read the relevant theorem in [Results/](Results) and its premises in
+   [Contracts](Contracts.lean).
 2. Follow its certificates into `Representation` and the compiler module result.
 3. Follow execution into invocation, machine steps, and operation lemmas.
 4. Check the source correspondence in `Abs` and `Spec`.
 
 Names such as `Core`, `FloatCore`, `Cumulative`, and `Executable` distinguish
 instruction grammars and theorem premises. They are not interchangeable proof
-versions. A module imported only by the audit can still expose an independent
-result or regression theorem; lack of downstream imports alone does not make
-it dead code.
+versions. Every module is reachable from [Main](Main.lean) or `Examples/`;
+`just prove-exec` runs `just dead --check`, which rejects unused modules outside
+the short allowlist in [`scripts/reachability.lean`](../scripts/reachability.lean).
 
 Shared slice lookup and list transport lemmas live in
 [Representation/Collection.lean](Representation/Collection.lean). Start-wrapper

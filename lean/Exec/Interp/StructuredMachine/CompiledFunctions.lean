@@ -2,13 +2,12 @@ import Exec.Interp.Relations.CompiledFunctions
 import Exec.Code.Local.Relations.Common.CoreFunctionContext
 import Exec.Interp.StructuredMachine.FunctionCode
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 /-- Concrete function lookup retains the canonical source context for mutable
 instructions. This is source syntax and layout evidence, independent of any
 claim about execution or mutable store contents. -/
-def FunctionCompiled (emission : FunctionEmission) {M : Type} (code : Store.CodeInterpretation)
+def FunctionCompiled {M : Type} (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (function : runtime.store.FuncInst) : Prop :=
   ∀ instanceIndex functionIndex, function.code = .Wasm instanceIndex functionIndex →
     ∃ inst compiled signature declared body epilogue,
@@ -19,17 +18,17 @@ def FunctionCompiled (emission : FunctionEmission) {M : Type} (code : Store.Code
         .FUNC (.mk_uN compiled.type_index.val) (declared.map local.LOCAL) body ∧
       FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType) ∧
       (Store.decodeInstance store inst).TYPES = inst.module.module.env.types.val.map Store.decodeFuncType ∧
-      FunctionCode emission (Code.moduleFunctionContext inst.module
+      FunctionCode (Code.moduleFunctionContext inst.module
         (signature.params.val.map sourceType ++ declared) (signature.results.val.map sourceType))
         (signature.params.val.map sourceType) declared (signature.results.val.map sourceType)
         body compiled epilogue
 
-def CompiledFunctions (emission : FunctionEmission) {M : Type} (code : Store.CodeInterpretation)
+def CompiledFunctions {M : Type} (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) : Prop :=
-  ∀ function ∈ store.funcs.val, FunctionCompiled emission code store function
+  ∀ function ∈ store.funcs.val, FunctionCompiled code store function
 
 theorem declared_types_not_bottom {C params declared results body compiled epilogue}
-    (certificate : FunctionCode emission C params declared results body compiled epilogue) :
+    (certificate : FunctionCode C params declared results body compiled epilogue) :
     Forall (fun ty => ty ≠ valtype.BOT) declared := by
   intro ty member
   have present : ty ∈ params ++ declared := List.mem_append_right _ member

@@ -1,9 +1,82 @@
-import Exec.Code.Body.Reader.Common.CumulativeReaderCompilerPoint
-import Exec.Code.Body.Reader.Calls.ReaderControlIndirect
-import Exec.Code.Body.Reader.Control.StructuredReaderCompilerScopes
-import Exec.Code.Body.Reader.Control.StructuredReaderCompilerElse
-import Exec.Code.Body.Reader.Common.StructuredReaderCompilerEndWasm2
-import Exec.Code.Body.Reader.Common.StructuredReaderCompilerRoot
+import Exec.Code.Body.Callbacks.Common.CompilerPrefix
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Relations.Common.Concatenation
+import Exec.Code.Local.Relations.Common.Extension
+import Exec.Code.Local.Relations.Common.PrefixZipper
+import Exec.Code.Local.Relations.Common.Prefix
+import Exec.Code.Local.Relations.Common.ResolvedPrefix
+import Exec.Code.Local.Control.Common.UniversalPrefix
+import Exec.Code.Local.Control.Common.UniversalTerminal
+import Exec.Code.Local.Control.Common.UniversalDormant
+import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
+import Exec.Code.Local.Relations.Common.StatefulEmissionTransport
+import Exec.Code.Body.Reader.Common.ReaderBoundary
+import Exec.Code.Body.Reader.Control.ReaderScopeFronts
+import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
+import Exec.Code.Body.Reader.Common.ReaderKnownFronts
+import Exec.Code.Body.Reader.Common.ReaderPostDeclared
+import Exec.Code.Local.Callbacks.Calls.CallbackIndirect
+import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
+import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
+import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
+import Exec.Code.Body.Reader.Control.ReaderCompilerScopes
+import Exec.Code.Body.Reader.Control.ReaderControlBoundary
+import Exec.Code.Local.Callbacks.Common.FramePlanPop
+import Exec.Code.Local.Callbacks.Control.ElseSource
+import Exec.Code.Local.Callbacks.Control.ElseFrames
+import Exec.Code.Local.Callbacks.Calls.ScopeCallbackEnter
+import Exec.Code.Local.Relations.Control.ControlEntrySuccess
+import Exec.Code.Local.Callbacks.Common.CompilerEnterMetadata
+import Exec.Code.Local.Relations.Control.ControlCursor
+import Exec.Code.Local.Relations.Control.ControlSources
+import Exec.Code.Local.Relations.Control.ControlObservedLayout
+import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
+import Exec.Code.Body.Reader.Common.ReaderReachability
+import Exec.Code.Body.Reader.Common.ReaderFrontTransitions
+import Exec.Code.Local.Callbacks.Calls.ScopeCallbackDead
+import Exec.Code.Local.Relations.Common.KnownPopStack
+import Exec.Code.Body.Reader.Common.ReaderKnownFrontEntry
+import Exec.Code.Local.Callbacks.Calls.ScopeCallbackIf
+import Exec.Code.Local.Callbacks.Control.ScopeFrameSelect
+import Exec.Code.Body.Reader.Control.ReaderBranchEffects
+import Exec.Code.Body.Reader.Control.ReaderBranchLayout
+import Exec.Code.Local.Callbacks.Common.FramePlanUpdate
+import Exec.Code.Local.Relations.Control.ResolvedBranchPrefix
+import Exec.Code.Local.Control.Control.UniversalBranch
+import Exec.Code.Local.Relations.Common.ResolvedConditionalPrefix
+import Exec.Code.Local.Control.Common.UniversalConditional
+import Exec.Code.Local.Callbacks.Control.ElseEvidence
+import Exec.Code.Local.Relations.Calls.BranchSuccessCallbacks
+import Exec.Code.Local.Relations.Control.BranchSuccessControls
+import Exec.Code.Local.Callbacks.Calls.CompilerCallbackMetadata
+import Exec.Code.Local.Callbacks.Calls.CallbackSources
+import Exec.Code.Local.Callbacks.Calls.CallbackCursor
+import Exec.Code.Body.Reader.Common.ReaderWasm2
+import Exec.Code.Local.Source.SourceStacks
+import Exec.Code.Body.Reader.Common.ReaderSpan
+import Exec.Code.Body.Relations.Control.BranchIfLayout
+import Exec.Code.Local.Relations.Control.BranchReachable
+import Exec.Code.Local.Relations.Calls.BranchSuccessConditionalCallbacks
+import Exec.Code.Body.Reader.Control.ReaderBranchIfLayout
+import Exec.Code.Local.Callbacks.Control.ElseTransition
+import Exec.Code.Local.Relations.Common.ResolvedGuards
+import Exec.Code.Local.Callbacks.Control.ScopeStackElse
+import Exec.Code.Local.Callbacks.Control.ScopeStackClose
+import Exec.Code.Local.Callbacks.Control.EnterElse
+import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
+import Exec.Code.Local.Relations.Control.ControlMapCounts
+import Exec.Code.Local.Relations.Control.KnownControlStack
+import Exec.Code.Local.Callbacks.Control.ElseSuccess
+import Exec.Code.Local.Control.Common.UniversalRoot
+import Exec.Code.Local.Callbacks.Control.CloseGuardedScope
+import Exec.Code.Local.Relations.Common.ResolvedLiteral
+import Exec.Code.Body.Reader.Common.ReaderEndSignature
+import Exec.Code.Local.Callbacks.Common.CloseFunction
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Code.Local.Relations.Common.LabelWiden
+import Exec.Code.Local.Source.TypedRunClosed
+import Exec.Code.Body.Reader.Common.ReaderStacks
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
 
@@ -22,66 +95,4 @@ theorem ReaderBoundaryWasm2.root_iff {data env locals index ft st parents curren
     | root => rfl
     | push => simp at empty
 
-theorem CumulativeReaderCompilerPointWasm2.scope_step {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    {initial before after : runtime.compiler.FunctionCompiler A}
-    {C types functions returns locals data env ctx index ft st}
-    (point : CumulativeReaderCompilerPointWasm2 C initial before types functions returns locals data env ctx.locals index ft st)
-    (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (signatures : SignatureSequence initial.signatures.val env.types.val)
-    (opcode : U8) (supported : ScopeOpcode opcode)
-    (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
-    CumulativeReaderCompilerPointWasm2 C initial after types functions returns locals data env ctx.locals index ft out := by
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point []
-  let p := state.boundary.pending next advance inbounds
-  have pairs := reader_scope_indirect_wasm2 p ops law before after out ctx opcode supported byte accepted
-  apply point.preserved_step pairs
-  intro future old
-  exact old.scope_step ops law next advance inbounds out sourceBound signatures opcode supported byte accepted
-
-theorem CumulativeReaderCompilerPointWasm2.else_ {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    {initial before after : runtime.compiler.FunctionCompiler A}
-    {C types functions returns locals data env ctx index ft st}
-    (point : CumulativeReaderCompilerPointWasm2 C initial before types functions returns locals data env ctx.locals index ft st)
-    (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (initialLocals : LocalLayout initial)
-    (byte : data.val[st.core.pos.val]'inbounds = 5#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 5#u8 before = .ok (.Ok (),out,after)) :
-    CumulativeReaderCompilerPointWasm2 C initial after types functions returns locals data env ctx.locals index ft out := by
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point []
-  let p := state.boundary.pending next advance inbounds
-  have pairs := reader_else_indirect_wasm2 p ops law before after out ctx byte accepted
-  apply point.preserved_step pairs
-  intro future old
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
-  exact state.else_ ops law initialLocals next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
-
-theorem CumulativeReaderCompilerPointWasm2.end_nested {A : Type}
-    (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    {initial before after : runtime.compiler.FunctionCompiler A}
-    {C types functions returns locals data env ctx index ft st}
-    (point : CumulativeReaderCompilerPointWasm2 C initial before types functions returns locals data env ctx.locals index ft st)
-    (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (initialLocals : LocalLayout initial)
-    (typesEq : types = env.types.val.map EnvTranslation.funcType)
-    (nonRoot : st.blocks.val.length ≠ 1)
-    (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
-    (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
-    CumulativeReaderCompilerPointWasm2 C initial after types functions returns locals data env ctx.locals index ft out := by
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point []
-  let p := state.boundary.pending next advance inbounds
-  have pairs := reader_end_indirect_wasm2 p ops law before after out ctx byte accepted
-  apply point.preserved_step pairs
-  intro future old
-  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
-  have form : savedCurrent.form ≠ .body := fun h => nonRoot (state.boundary.root_iff.mp h)
-  exact state.end_nested ops law initialLocals typesEq next advance inbounds out form bodyBound
-    (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
 end Exec.Code

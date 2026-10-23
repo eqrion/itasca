@@ -59,24 +59,6 @@ theorem SegmentObjectMetadata.trans {M : Type} {view : M → Slice U8} {a b c : 
       · exact Or.inr (same.trans dropped)
     · exact Or.inr empty
 
-theorem SegmentObjectMetadata.table_bindings {M : Type} {view : M → Slice U8}
-    {before after : runtime.store.Store M} (metadata : SegmentObjectMetadata view before after)
-    {types addresses} (bindings : TableBindings before types addresses) : TableBindings after types addresses := by
-  apply bindings.imp
-  rintro ty address ⟨owner, old, found, typeEq, limits⟩
-  obtain ⟨next, lookup, sameType, maximum, length⟩ := metadata.tables address.index.val old found
-  refine ⟨owner.trans metadata.space.identity.symm, next, lookup, sameType.trans typeEq, ?_⟩
-  simpa only [maximum, length] using limits
-
-theorem SegmentObjectMetadata.memory_bindings {M : Type} {view : M → Slice U8}
-    {before after : runtime.store.Store M} (metadata : SegmentObjectMetadata view before after)
-    {types addresses} (bindings : MemoryBindings view before types addresses) : MemoryBindings view after types addresses := by
-  apply bindings.imp
-  rintro ty address ⟨owner, old, found, limits⟩
-  obtain ⟨next, lookup, maximum, length⟩ := metadata.memories address.index.val old found
-  refine ⟨owner.trans metadata.space.identity.symm, next, lookup, ?_⟩
-  simpa only [maximum, length] using limits
-
 theorem lookup_set_relation {T : Type} (values : List T) (index : Nat) (old replacement : T)
     (found : values[index]? = some old) (R : T → T → Prop)
     (refl : ∀ value, R value value) (changed : R old replacement) :

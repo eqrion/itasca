@@ -98,20 +98,8 @@ inductive ChoiceTrace {H : Type} (model : HostModel H) (choices : Choices H) :
       (tail : ChoiceTrace model choices (occurrence+1) count middle more last) :
       ChoiceTrace model choices occurrence (count+1) first (events++more) last
 
-theorem ChoiceTrace.erases {H : Type} {model : HostModel H} {choices : Choices H}
-    (admissible : choices.Admissible model) {occurrence count first events last}
-    (trace : ChoiceTrace model choices occurrence count first events last) : Trace model count first events last := by
-  induction trace with
-  | nil _ _=>exact .nil _
-  | next step tail ih=>exact .next (step.erases admissible) ih
-
 def ChoiceInfinite {H : Type} (model : HostModel H) (choices : Choices H) (occurrence : Nat) (first : State H) : Prop:=
   ∃states : Nat → State H,∃events : Nat → List Observation,states 0=first ∧
     ∀n,ChoiceTransition model choices (occurrence+n) (states n) (events n) (states (n+1))
 
-theorem ChoiceInfinite.erases {H : Type} {model : HostModel H} {choices : Choices H}
-    (admissible : choices.Admissible model) {occurrence first}
-    (infinite : ChoiceInfinite model choices occurrence first) : InfiniteTrace model first := by
-  obtain ⟨states,events,initial,steps⟩:=infinite
-  exact ⟨states,events,initial,fun n=>(steps n).erases admissible⟩
 end Exec.Spec.OpenExecution

@@ -41,12 +41,6 @@ theorem FrameOwnershipClosure.drop (f : Abs.AFrame) (before after : List instr)
   intro bounds owned
   exact ⟨owned.1,(valuesOwned_append.mp owned.2).1⟩
 
-theorem FrameOwnershipClosure.branch (f : Abs.AFrame) (code : List instr)
-    (labels : List Abs.Label) (height count : Nat) :
-    FrameOwnershipClosure f { f with code, labels, vals := f.vals.take height ++ f.vals.drop count } := by
-  intro bounds owned
-  exact ⟨owned.1,valuesOwned_append.mpr ⟨owned.2.take _,owned.2.drop _⟩⟩
-
 theorem FrameOwnershipClosure.local_get (f : Abs.AFrame) (code : List instr)
     (index : Nat) (value : val) (lookup : f.locals[index]? = some value) :
     FrameOwnershipClosure f { f with code, vals := f.vals ++ [value] } := by
@@ -68,15 +62,6 @@ theorem FrameOwnershipClosure.local_tee (f : Abs.AFrame) (before after : List in
       { f with code := after, vals := front ++ [value], locals := f.locals.set index value } := by
   intro bounds owned
   exact ⟨owned.1.set (owned.2 value (by simp)) index,owned.2⟩
-
-theorem FrameOwnershipClosure.state {before after} (closure : FrameOwnershipClosure before after)
-    {bounds s ambient rest} (owned : CoreOwned bounds ⟨s,ambient,before :: rest,[]⟩) :
-    CoreOwned bounds ⟨s,ambient,after :: rest,[]⟩ := by
-  refine ⟨⟨owned.values.1,?_⟩,owned.globals⟩
-  intro frame member
-  rcases List.mem_cons.mp member with rfl | member
-  · exact closure bounds (owned.values.2 _ (List.mem_cons_self ..))
-  · exact owned.values.2 frame (List.mem_cons_of_mem _ member)
 
 theorem ErasedStep.ownership {before after} (step : ErasedStep before after) :
     FrameOwnershipClosure before after := by

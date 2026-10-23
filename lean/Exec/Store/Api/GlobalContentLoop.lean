@@ -23,7 +23,7 @@ theorem global_content_staging_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.globals.val.length)
     (mapCapacity : inst.globals.length + (inst.module.module.env.globals.val.length - start.val) ≤ Usize.max) :
-    runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator store platform status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ GlobalContents after ∧ (SegmentAccounting store → SegmentAccounting after) ∧
@@ -33,7 +33,7 @@ theorem global_content_staging_loop {M P F A : Type}
           after.elems = store.elems ∧ after.datas = store.datas ∧ next.elems = inst.elems ∧ next.datas = inst.datas ∧
           (finalStatus = .Ok () → next.globals.length = inst.globals.length + (inst.module.module.env.globals.val.length - start.val)) ⦄ := by
   have contents : GlobalContents store := bindings.globals
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop7
+  unfold runtime.store.instantiate.Store.prepare_instance_loop7
   apply loop.spec_decr_nat (fun state => inst.module.module.env.globals.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧ StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ GlobalContents state.1 ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
@@ -48,7 +48,7 @@ theorem global_content_staging_loop {M P F A : Type}
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, helements, hdatas, hmapElements, hmapData, hcount⟩
     dsimp only at hhost hstaged hobjects hcontents haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity helements hdatas hmapElements hmapData hcount ⊢
     subst host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop7.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env,

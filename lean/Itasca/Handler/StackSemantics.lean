@@ -293,15 +293,6 @@ theorem code.pop_types.realizes (st : code.OpIterState)
     intro ts hs
     simpa using hs
 
-/-- A full operand stack makes `code.push_val` fail with `maximumSizeExceeded`, the extraction's
-model of capacity exhaustion. -/
-theorem code.push_val.capacity (st : code.OpIterState) (t : code.StackType)
-    (hfull : st.vals.val.length = Usize.max) :
-    code.push_val st t = .fail .maximumSizeExceeded := by
-  have h1 : ¬ st.vals.val.length + 1 ≤ Usize.max := by omega
-  have h2 : ¬ st.vals.val.length + 1 ≤ U32.max := by scalar_tac
-  simp [code.push_val, alloc.vec.Vec.push, h1, h2]
-
 /-- `code.pop_stack_type` terminates and preserves `Control.Shape`, and fails only with
 `EmptyStack`. -/
 theorem code.pop_stack_type.total (st : code.OpIterState) (hshape : Control.Shape st) :

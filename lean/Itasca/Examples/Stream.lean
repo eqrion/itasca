@@ -1,6 +1,4 @@
-import Itasca.Stream.FramingComplete
-import Itasca.Stream.Sync
-import Itasca.Stream.SplitTotal
+import Itasca.Main
 import Itasca.Examples.Module.Support
 
 /-!

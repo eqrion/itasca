@@ -28,7 +28,7 @@ theorem function_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBu
     (entries : TypeEntries before seed.module.module.env.types.val seed.types.val)
     (table : Interp.FunctionTable store inst (initialTypes ++ (definedTypes.take start.val).map decodeFuncType))
     (stagedFunctions : StagedFunctionSignatures before store instanceIndex definedTypes) :
-    runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store (.Ok ()) start inst instanceIndex
+    runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator store (.Ok ()) start inst instanceIndex
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with funcs := after.funcs} ∧ next = {seed with funcs := next.funcs} ∧
         StagedPrefix before after ∧ objectCount after ≤ Usize.max ∧ AllocationShape view after ∧
@@ -36,7 +36,7 @@ theorem function_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBu
         (status = .Ok () → next.funcs.length = seed.funcs.length + seed.module.module.env.func_type_indices.val.length) ∧
         (status = .Ok () → Interp.FunctionTable after next (initialTypes ++ definedTypes.map decodeFuncType)) ∧
         StagedFunctionSignatures before after instanceIndex definedTypes ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop4
+  unfold runtime.store.instantiate.Store.prepare_instance_loop4
   apply loop.spec_decr_nat (fun state => seed.module.module.env.func_type_indices.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with funcs := state.1.funcs} ∧
       state.2.2.2 = {seed with funcs := state.2.2.2.funcs} ∧ StagedPrefix before state.1 ∧
@@ -55,7 +55,7 @@ theorem function_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBu
     have types : currentInst.types = seed.types := by
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop4.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, source, bind_ok]
     split

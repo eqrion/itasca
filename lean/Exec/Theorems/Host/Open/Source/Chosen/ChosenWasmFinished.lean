@@ -15,7 +15,7 @@ theorem source_wasm_chosen_finished {M F A : Type} (memory : runtime.platform.Me
     (owner : Usize) (stop : Spec.OpenExecution.StopReason → config → Prop)
     (choices : SourceOperationChoices) (occurrence : Nat)
     (signature : Itasca.types.FuncType)
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view (signature.results.val.map sourceType))
+    (world : EventfulWorld M Unit view (signature.results.val.map sourceType))
     (native : State M) (source : Spec.OpenExecution.State SourceControl)
     (rank : Nat) (guard : SourceStateGuard memory allocator view world.code native source rank)
     (nativeStore : native.store=world.machine.store) (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value)

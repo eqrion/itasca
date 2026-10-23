@@ -11,7 +11,7 @@ theorem EntryResourceDemand.of_prepared {A : Type} {budget : runtime.compiler.Bu
     {data env index start profile bound}
     (prepared : CodeEntry.Prepared data env index start profile)
     (demand : PreparedFunctionDemand budget prepared.ctx prepared.body.length
-      (independentBodyDemand profile prepared.body env prepared.ctx prepared.typeIdx).operands bound) :
+      (independentBodyDemand prepared.body env prepared.ctx prepared.typeIdx).operands bound) :
     EntryResourceDemand budget data env index start profile bound := by
   intro other
   obtain ⟨typeEq,ctxEq,bodyEq,_,_⟩ := prepared_entry_unique prepared other

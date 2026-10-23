@@ -56,41 +56,6 @@ theorem initializer_resolves {M : Type} (store : runtime.store.Store M)
       exact ⟨_, .global2 index addr value ha hv (by simpa [hty] using vector)⟩
     · exact ⟨_, .global gt.valtype index addr value ha hv (by rw [hty]) vector⟩
 
-/-- Appending initialized globals preserves all earlier source resolutions. -/
-theorem initializer_resolution_extend {M : Type}
-    {before after : runtime.store.Store M} {old next : runtime.store.ModuleInst}
-    (functions : next.funcs = old.funcs)
-    (globalMap : next.globals.val.take old.globals.length = old.globals.val)
-    (globals : after.globals.val.take before.globals.length = before.globals.val)
-    {expr ty words} (resolved : Interp.InitializerResolution before old expr ty words) :
-    Interp.InitializerResolution after next expr ty words := by
-  have lookupMap : ∀ (index : Nat) (addr : runtime.GlobalAddr), old.globals.val[index]? = some addr →
-      next.globals.val[index]? = some addr := by
-    intro index addr found
-    have bound := (List.getElem?_eq_some_iff.mp found).1
-    rw [← globalMap, List.getElem?_take] at found
-    simpa [bound] using found
-  have lookupGlobal : ∀ (index : Nat) (value : runtime.store.GlobalInst), before.globals.val[index]? = some value →
-      after.globals.val[index]? = some value := by
-    intro index value found
-    have bound := (List.getElem?_eq_some_iff.mp found).1
-    rw [← globals, List.getElem?_take] at found
-    simpa [bound] using found
-  cases resolved with
-  | i32 value => exact .i32 value
-  | i64 value => exact .i64 value
-  | f32 value => exact .f32 value
-  | f64 value => exact .f64 value
-  | vector lo hi => exact .vector lo hi
-  | nullFunc => exact .nullFunc
-  | nullExtern => exact .nullExtern
-  | func index addr reference found encoded =>
-    exact .func index addr reference (by simpa [functions] using found) encoded
-  | global ty index addr value found read typed scalar =>
-    exact .global ty index addr value (lookupMap _ _ found) (lookupGlobal _ _ read) typed scalar
-  | global2 index addr value found read typed =>
-    exact .global2 index addr value (lookupMap _ _ found) (lookupGlobal _ _ read) typed
-
 /-- Linking facts remain valid while defined globals and their addresses append. -/
 theorem InitializerImports.extend {M : Type}
     {before after : runtime.store.Store M} {old next : runtime.store.ModuleInst}

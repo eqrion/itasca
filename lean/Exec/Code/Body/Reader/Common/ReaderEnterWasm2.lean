@@ -11,7 +11,7 @@ def enterAction (form : Frames.Form) (bt : signature.BlockType) : Action :=
 
 /-- Entry retains the exact supplied parent zipper and decoded callback signature. -/
 structure ReaderEnterPostWasm2 {data env locals index st}
-    (p : Pending data env locals index st) (out : code.BodyState)
+    (p : Pending data env .Wasm2 locals index st) (out : code.BodyState)
     (form : Frames.Form) (bt : signature.BlockType)
     (ins outs : List types.ValueType) (remaining : List code.StackType) (base : Usize) : Prop where
   inputs : resolve env (Wasm2.inputs bt) = some ins
@@ -27,7 +27,7 @@ structure ReaderEnterPostWasm2 {data env locals index st}
   after : p.After out
 
 theorem reader_enter_wasm2 {data env locals index st}
-    (p : Pending data env locals index st) (form : Frames.Form) (initial : form.Initial)
+    (p : Pending data env .Wasm2 locals index st) (form : Frames.Form) (initial : form.Initial)
     {V : Type} (visitor : code.OpVisitor V) (before after : V)
     (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
@@ -35,29 +35,29 @@ theorem reader_enter_wasm2 {data env locals index st}
       .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base,
       invoke visitor before (.op out.core (enterAction form bt)) = .ok (.Ok (), after) ∧
-      code.enter_info st data env form.kind = .ok (.Ok bt, out) ∧
+      code.enter_info st data env .Wasm2 form.kind = .ok (.Ok bt, out) ∧
       ReaderEnterPostWasm2 p out form bt ins outs remaining base := by
   have dispatch : code.step_profile visitor st data env ctx index .Wasm2 form.opcode before =
-      CallbackTrace.bodyRun (code.enter_info st data env form.kind) visitor (enterAction form) before := by
+      CallbackTrace.bodyRun (code.enter_info st data env .Wasm2 form.kind) visitor (enterAction form) before := by
     rcases initial with rfl | rfl | rfl
-    · exact CallbackTrace.dispatch_block visitor st data env ctx index before
-    · exact CallbackTrace.dispatch_loop visitor st data env ctx index before
-    · exact CallbackTrace.dispatch_if visitor st data env ctx index before
+    · exact CallbackTrace.dispatch_block visitor st data env ctx index .Wasm2 before
+    · exact CallbackTrace.dispatch_loop visitor st data env ctx index .Wasm2 before
+    · exact CallbackTrace.dispatch_if visitor st data env ctx index .Wasm2 before
   rw [dispatch] at accepted
   obtain ⟨bt, read, callback⟩ := reader_body_success _ _ _ _ _ _ accepted
-  have erased : code.enter st data env form.kind = .ok (.Ok (), out) := by
+  have erased : code.enter st data env .Wasm2 form.kind = .ok (.Ok (), out) := by
     simp [code.enter, read, core.result.Result.Insts.CoreOpsTry.branch]
   obtain ⟨C, outer, spine, header, parentBase, typed, ctrls, blocks, vals⟩ := p.opened
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have effect := code.enter.sound st data env form initial outer p.current.vals vals
+  have effect := code.enter.sound st data env .Wasm2 form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, parentBase]) p.opened.shape.core capacity
   rw [erased, WP.spec_ok] at effect
-  obtain ⟨sourceBt, ins, outs, decoded, inputs, outputs, ib, ob, remaining, base,
+  obtain ⟨sourceBt, ins, outs, decoded, _, inputs, outputs, ib, ob, remaining, base,
     length, baseEq, popped, controls, signatures, values⟩ := effect rfl
   dsimp only at decoded inputs outputs ib ob length baseEq popped controls signatures values
-  have info := code.enter_info.bytes st data env form.kind p.opened.shape.core capacity
+  have info := code.enter_info.bytes st data env .Wasm2 form.kind p.opened.shape.core capacity
   rw [read, WP.spec_ok] at info
   obtain ⟨rfl, _⟩ := (info bt rfl).unique decoded
   have encoded : At data p.start (form.token bt) out.core.pos := by
@@ -78,6 +78,7 @@ theorem reader_enter_wasm2 {data env locals index st}
   refine ⟨bt, ins, outs, remaining, base, callback, read,
     inputs, outputs, ib, ob, encoded, popped', baseEq', opened, ?_⟩
   refine p.running_after out _ _ (form.token bt) encoded opened ?_ ?_ ?_
+    (fun h => nomatch h) (fun h => nomatch h)
     (by cases form <;> simp [Frames.Form.token, Token.Declared])
   · simpa [Frames.bodyType_enter] using p.bodyType
   · have opening : form.opening bt = [form.token bt] := by

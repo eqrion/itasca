@@ -9,9 +9,9 @@ host entry is represented by a separate suspended combined transition. -/
 def ChosenQuietWorldResult {M F A : Type} (choices : Spec.SourceChoices) (occurrence : Nat)
     (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {view : M → Slice U8} {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected) (out : Answer M Unit) : Prop:=
+    (world : EventfulWorld M Unit view expected) (out : Answer M Unit) : Prop:=
   match out.1 with
-  | .Ok _=>∃next : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected,
+  | .Ok _=>∃next : EventfulWorld M Unit view expected,
       ExecutableInv view next.code next.machine.store ∧ out=(.Ok (),next.machine.exec,next.machine.store,next.machine.platform) ∧
       ChosenConcreteSim choices occurrence U32.max world.machine.pc next.machine.pc world.machine.pending next.machine.pending world.machine.source next.machine.source ∧
       ReentrantCallbacks.Effect view world.code world.machine.store next.code next.machine.store ∧
@@ -29,7 +29,7 @@ theorem chosen_quiet_world {choices : Spec.SourceChoices} (admissible : choices.
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     {expected : List valtype}
-    (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (typed : Config_ok (Abs.decode world.machine.source) (.mk_list expected)) (out : Answer M Unit)
     (prepared : prepareStep memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform=.ok (.done out)) :

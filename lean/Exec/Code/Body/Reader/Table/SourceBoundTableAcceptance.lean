@@ -61,7 +61,7 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
       ⟨pending.opened.shape.core.ordered,pending.opened.shape.core.bounded⟩)
   rw [popCall,WP.spec_ok] at poppedSpec
   have readCount := reader.read_u32_leb.complete data next count first countDecoded
-  have loopReference : code.branch_table_with_loop recorder popped data env before count none 0#u32 =
+  have loopReference : code.branch_table_with_loop recorder popped data env .Wasm2 before count none .Empty 0#u32 =
       .ok (.Ok (),out,after) := by
     unfold code.branch_table_with at raw
     rw [readCount] at raw

@@ -7,12 +7,12 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp Exec.Interp.OpenCall
 prefix to the first suspension or inactive Wasm state. Real host control is
 left pending, including when the auxiliary loop used its trapping callback. -/
 theorem atomic_loop_open_boundary {choices : Spec.SourceChoices} {M F A : Type}
-    {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
+
     (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (select : Selector)
     {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (initial : ChosenWorld emission allowed M Unit view expected) (finalState : ExecutionState M Unit)
+    (initial : ChosenWorld M Unit view expected) (finalState : ExecutionState M Unit)
     (held : ChosenWorldLoopInvariant choices memory (inert memory) floats allocator Inv initial finalState)
     (stopped : ¬ActiveExecution finalState)
     (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value) (stack : List Continuation) (history : List Observation) :

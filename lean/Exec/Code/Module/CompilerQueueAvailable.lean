@@ -19,7 +19,7 @@ def SourcePreparationMaxima (env : module.Env) (profile : ValidationProfile)
     ∀ w : CodeEntry.Prepared data env ordinal position profile, w.finish = next →
     Profile.Body profile w.body env w.ctx.locals w.typeIdx →
     w.body.length ≤ bodyBytes ∧ w.ctx.locals.val.length ≤ localCount ∧
-    (independentBodyDemand profile w.body env w.ctx w.typeIdx).operands ≤ peak
+    (independentBodyDemand w.body env w.ctx w.typeIdx).operands ≤ peak
 
 /-- The compiler's local numerical and publication state at the source cursor. -/
 structure SchedulerCompilationReady {A : Type} (env : module.Env) (base : runtime.compiler.Budget A)

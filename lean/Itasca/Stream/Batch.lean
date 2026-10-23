@@ -1,14 +1,14 @@
 import Itasca.Support.Result
 import Itasca.Profile.EntrySound
-import Itasca.Module.Code.EntryVisitor
 import Itasca.Module.Code.Section
+import Itasca.Contracts
 
 /-!
 # Worker batches
 
-Models the `stream.CodeBatch` workers that the driver issues. `StreamBatch.Issued` is the immutable
-state of an issued batch, and `StreamBatch.Reachable` holds for every worker obtainable from its
-seed through actual `stream.CodeBatch.next_entry` and `stream.CodeBatch.validate_func` executions.
+Properties of the `stream.CodeBatch` workers that the driver issues. `StreamBatch.Issued`, the
+immutable state of an issued batch, and `StreamBatch.Reachable`, the workers obtainable from its
+seed through actual batch operations, are defined in `Itasca/Contracts`.
 `StreamBatch.Reachable.validation` extracts a `StreamBatch.Prefix` of successful entry
 validations from any reachable worker, `StreamBatch.Reachable.finished` shows that a worker
 accepted by `stream.CodeBatch.finish` has validated every entry in order and consumed exactly its
@@ -19,43 +19,6 @@ call. Both profiles are covered through the `profile` parameter.
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamBatch
-
-/-- Immutable description of the exact state issued by the driver. -/
-structure Issued where
-  module_id : U64
-  batch_id : Usize
-  env : module.Env
-  code : Slice U8
-  code_offset : Usize
-  first_func : Usize
-  num_funcs : Usize
-  profile : ValidationProfile
-
-/-- Workers begin with independent zeroed dispatch and validation cursors. -/
-def Issued.seed (issued : Issued) : stream.CodeBatch :=
-  { module_id := issued.module_id, batch_id := issued.batch_id,
-    profile := issued.profile, env := issued.env, code := issued.code, code_offset := issued.code_offset,
-    first_func := issued.first_func, num_funcs := issued.num_funcs,
-    num_dispatched := 0#usize, dispatch_end := 0#usize,
-    num_validated := 0#usize, validated_end := 0#usize, error := none }
-
-/-- Bounds supplied by framing and the actual environment decode, separately
-from the operation history of a worker. -/
-def Issued.Bounded (issued : Issued) : Prop :=
-  0 < issued.num_funcs.val ∧
-  issued.first_func.val + issued.num_funcs.val ≤ issued.env.func_type_indices.val.length ∧
-  issued.code_offset.val + issued.code.length ≤ limits.MAX_MODULE_BYTES.val
-
-/-- Every change is an ordinary result of a real extracted batch method.
-No constructor can assign a validation cursor or assert successful finishing. -/
-inductive Reachable (issued : Issued) : stream.CodeBatch → Prop where
-  | seed : Reachable issued issued.seed
-  | dispatch {before after result} : Reachable issued before →
-      stream.CodeBatch.next_entry before = .ok (result, after) → Reachable issued after
-  | validate {V : Type} (visitor : code.OpVisitor V) {before after index v v' result} :
-      Reachable issued before →
-      stream.CodeBatch.validate_func visitor before index v = .ok (result, after, v') →
-      Reachable issued after
 
 /-- Successful entry executions in byte and defined-function order. Dispatch
 is absent from this relation because a worker can validate before dispatching. -/
@@ -90,17 +53,6 @@ validated, and validation consumed the whole code view. -/
   constructor
   · intro h; apply UScalar.eq_of_val_eq; simpa using h
   · intro h; simpa using congrArg UScalar.val h
-
-/-- `stream.CodeBatch.finish` returns an ordinary result on every batch. -/
-theorem stream.CodeBatch.finish.total (batch : stream.CodeBatch) :
-    ∃ r, stream.CodeBatch.finish batch = .ok r := by
-  unfold stream.CodeBatch.finish
-  split
-  · split
-    · dsimp only
-      split <;> exact ⟨_, rfl⟩
-    · exact ⟨_, rfl⟩
-  · exact ⟨_, rfl⟩
 
 /-- A stored error returns verbatim and neither cursor nor visitor changes. -/
 theorem stream.CodeBatch.validate_func.sticky {V : Type} (visitor : code.OpVisitor V)

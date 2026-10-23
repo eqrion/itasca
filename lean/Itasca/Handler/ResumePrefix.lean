@@ -3,10 +3,8 @@ import Itasca.Handler.Sequence
 /-!
 # Suspended prefixes
 
-`Sequence.ResumePrefix` is the typed prefix of a parent frame suspended while a child block, loop
-or `if` is open. It remembers the arguments the child consumed, and `ResumePrefix.finish` resumes
-the parent once the child's instruction is typed. `realizes_append_concrete` characterizes
-realizations of a stack with concrete operands appended.
+`realizes_append_concrete` characterizes realizations of a stack with concrete operands
+appended, as when a child block resumes its parent's typed prefix.
 -/
 
 open Aeneas Aeneas.Std
@@ -38,47 +36,5 @@ theorem realizes_append_concrete (poly : Bool) (vals : List code.StackType)
   · rintro ⟨pre, ⟨front, suffix, hf, hs, rfl⟩, rfl⟩
     exact ⟨front, suffix ++ rs.map Translate.valueType, hf,
       List.rel_append hs ((accepts_concrete rs _).mpr rfl), List.append_assoc ..⟩
-
-/-- The typed prefix of a suspended parent frame. `inputs` are the arguments consumed when its child
-was entered: `[i32]` for an `if`, and none for blocks and loops in Wasm 1.0. -/
-structure ResumePrefix (C : context) (ops : List instr) (poly : Bool)
-    (vals : List code.StackType) (inputs : List valtype) : Prop where
-  wellFormed : Forall wf_instr ops
-  typed : ∀ ts, Sequence.Realizes poly vals ts →
-    Instrs_ok C ops (.mk_functype (.mk_list []) (.mk_list (ts ++ inputs)))
-
-/-- A typed prefix is a suspended prefix with no consumed arguments. -/
-theorem ResumePrefix.of_prefix {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} (h : Sequence.TypedPrefix C ops poly vals) :
-    ResumePrefix C ops poly vals [] := by
-  exact ⟨h.wellFormed, by simpa using h.typed⟩
-
-/-- Popping `inputs` from a typed prefix's stack gives a suspended prefix that remembers them. -/
-theorem ResumePrefix.after_pop {C : context} {ops : List instr} {poly : Bool}
-    {before after : List code.StackType} {inputs : List valtype}
-    (h : Sequence.TypedPrefix C ops poly before)
-    (hpop : ∀ ts, Sequence.Realizes poly after ts →
-      Sequence.Realizes poly before (ts ++ inputs)) :
-    ResumePrefix C ops poly after inputs :=
-  ⟨h.wellFormed, fun ts ht => h.typed _ (hpop ts ht)⟩
-
-/-- Completing a child instruction `op` with results `rs` pushes them and resumes the parent as a
-typed prefix. -/
-theorem ResumePrefix.finish {C : context} {ops : List instr} {poly : Bool}
-    {vals : List code.StackType} {inputs : List valtype}
-    (h : ResumePrefix C ops poly vals inputs) (hC : wf_context C)
-    (op : instr) (rs : List types.ValueType) (hwf : wf_instr op)
-    (hop : Instr_ok C op
-      (.mk_functype (.mk_list inputs) (.mk_list (rs.map Translate.valueType)))) :
-    Sequence.TypedPrefix C (ops ++ [op]) poly (vals ++ rs.map code.StackType.Val) := by
-  constructor
-  · simpa [Forall, or_imp, forall_and] using And.intro h.wellFormed hwf
-  · intro ts ht
-    obtain ⟨pre, hp, rfl⟩ := (realizes_append_concrete poly vals rs ts).mp ht
-    exact .seq C ops [op] [] (pre ++ rs.map Translate.valueType) (pre ++ inputs)
-      (h.typed pre hp)
-      (.frame C [op] pre inputs (rs.map Translate.valueType)
-        (.instr C op inputs _ hop hC hwf) hC (by simpa [Forall] using hwf))
-      hC h.wellFormed (by simpa [Forall] using hwf)
 
 end Itasca.Sequence

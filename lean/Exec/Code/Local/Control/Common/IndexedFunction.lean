@@ -1,4 +1,4 @@
-import Exec.Code.Local.Control.Table.StructuredFunctionWithTables
+import Exec.Code.Local.Control.Table.StructuredFunction
 import Exec.Code.Local.Relations.Common.CoreFunction
 import Exec.Code.Local.Callbacks.Table.CompilerTables
 namespace Exec.Code
@@ -11,15 +11,8 @@ def IndexedFunctionCode
     (C : context) (params declared results : List valtype) (body : List instr)
     (compiled : runtime.bytecode.CompiledFunction) (epilogue : U32) : Prop :=
   C.LOCALS=params++declared ∧
-  StructuredFunctionCodeWithTables (emission (CompilerTables.ofFunction compiled) C)
+  StructuredFunctionCode (emission (CompilerTables.ofFunction compiled) C)
     C.TYPES C.FUNCS params declared results body compiled epilogue
-
-theorem IndexedFunctionCode.entry {emission C params declared results body compiled epilogue}
-    (certificate : IndexedFunctionCode emission C params declared results body compiled epilogue) :
-    StructuredCodeWithTables.Point (emission (CompilerTables.ofFunction compiled) C) C.TYPES C.FUNCS results C.LOCALS
-      compiled.code.val compiled.jump_tables.val [functionRootLabel results compiled epilogue]
-      [] body 0 epilogue.val results := by
-  simpa only [certificate.1] using certificate.2.entry
 
 def DefinedIndexedFunctionCode
     (emission : CompilerTables → context → List valtype → instr → List Bytecode → List valtype → Prop)

@@ -6,21 +6,11 @@ import Exec.Theorems.Api.ReadbackIssued
 import Exec.Spec.HostCall
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
-variable {emission : StructuredMachine.FunctionEmission} {allowed : instr → Prop}
 
 /-- Actual public defined-function invocation keeps one selected final code
 world with its invariant, source outcomes and issued readback values. -/
 theorem invoke_defined_world_recorded_outcomes
-    [∀ compiled, StructuredMachine.FloatHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀ compiled, StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val]
-    [∀ compiled, StructuredMachine.TypedSelectHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.SupportedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.ErasedHeads (emission compiled)]
-    [∀ compiled, StructuredMachine.RecordingHeads (emission compiled)]
-    (language : Abs.Supported.Language allowed) {M P F A : Type}
+ {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats)
@@ -28,7 +18,7 @@ theorem invoke_defined_world_recorded_outcomes
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
-    (certify : ∀ c s,Inv c s → CertifiedSupportedStore emission allowed view c s)
+    (certify : ∀ c s,Inv c s → CertifiedSupportedStore view c s)
     (update : ∀ c before after,Inv c before → CumulativeStoreMutation view c before after → Inv c after)
     (sound : HostWorldSound hooks view Inv)
     (preserve : ∀ c store, Inv c store →
@@ -84,7 +74,7 @@ theorem invoke_defined_world_recorded_outcomes
       ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩
       events (Store.decodeStore view afterCode after) ambient error
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) (events : List HostEvent) => events=[] ∧ after=store ∧ ∃source,
-    StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store prepared source
+    StructuredMachine.Execution view code store prepared source
       (signature.results.val.map sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
@@ -121,10 +111,10 @@ theorem invoke_defined_world_recorded_outcomes
   · intro after prepared p entryTrace entered
     obtain ⟨rfl,same,source,invariant,ownedSource,ambientEq,sourceStep⟩ := entered
     subst after
-    let machine : EventfulWorld emission allowed M P view (signature.results.val.map sourceType) :=
+    let machine : EventfulWorld M P view (signature.results.val.map sourceType) :=
       ⟨code,⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩⟩
     apply WP.dspec_mono (world_recorded_loop_results memory hooks floats allocator Inv
-      (world_step_outcomes language memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) machine valid)
+      (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) machine valid)
     rintro ⟨out,events⟩ outcome
     obtain ⟨afterCode,newValid,fresh,kept,agrees,extension,success,failed⟩ := outcome
     refine ⟨kept,kept,?_,?_⟩

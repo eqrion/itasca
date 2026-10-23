@@ -1,5 +1,173 @@
-import Exec.Theorems.Instantiation.InstantiateExecutableRecordedOrigin
-import Exec.Theorems.Instantiation.InstantiateExecutableRecordedTail
+import Exec.Store.Instantiation.InstantiateRecordedBounds
+import Exec.Theorems.Api.CertifiedApi
+import Exec.Code.Module.CompileExecutableCapacities
+import Exec.Store.Invariant.FunctionCapacities
+import Exec.Code.Module.CompileExecutable
+import Exec.Theorems.Instantiation.InstantiateSourceOrigin
+import Exec.Theorems.Instantiation.PreparedCertifiedExecutableApi
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Interp.Relations.SuspendedPoint
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Abs.Core.Typing
+import Exec.Abs.Core
+import Exec.Abs.Ownership.Core
+import Exec.Interp.Core.Mutation
+import Exec.Interp.Relations.SourceCallCause
+import Exec.Interp.State.GlobalMutationStep
+import Exec.Interp.Control.PendingJump
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.Relations.ReferenceTransfers
+import Exec.Interp.Relations.SourceClosure
+import Exec.Interp.Core.Linear
+import Exec.Interp.Relations.PrefixDispatch
+import Exec.Abs.Core.Correct
+import Exec.Interp.Relations.ControlPoint
+import Exec.Interp.Numeric.Integer.NumericFetch
+import Exec.Interp.Numeric.Integer.NumericCodePoint
+import Exec.Abs.Numeric.TransitionSimulation
+import Exec.Abs.Core.Bound
+import Exec.Code.Local.Control.Table.StructuredCodeTableExclusion
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Interp.StructuredMachine.OrdinaryExecution
+import Exec.Interp.StructuredMachine.OrdinaryStack
+import Exec.Interp.StructuredMachine.StackPreservation
+import Exec.Interp.Relations.StackPreservation
+import Exec.Interp.Relations.PrefixEffect
+import Exec.Interp.Control.SkipStack
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Pure
+import Exec.Spec.Extend
+import Exec.Interp.Core.OwnershipClosure
+import Exec.Interp.Core.LocalInversion
+import Exec.Interp.Relations.LocalCodePoint
+import Exec.Interp.Relations.Fetch
+import Exec.Interp.Relations.ValueLookup
+import Exec.Interp.Relations.LocalCapacity
+import Exec.Interp.Relations.Capacity
+import Exec.Interp.Core.LocalPrefix
+import Exec.Interp.Machines.Core.CoreOwnership
+import Exec.Interp.Core.BoundClosure
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.BranchNoCopy
+import Exec.Interp.Control.BranchConditionStep
+import Exec.Interp.Relations.TypedOperands
+import Exec.Interp.Relations.ControlEntry
+import Exec.Interp.Control.LoopHead
+import Exec.Interp.Machines.Core.CoreIntegerConstantPoint
+import Exec.Interp.Machines.Core.CoreIntegerConstantSlots
+import Exec.Interp.Machines.Slice.SliceOpcode
+import Exec.Interp.State.GlobalCoreStep
+import Exec.Interp.State.GlobalCoreOperands
+import Exec.Code.Local.Capacity.GlobalCapacity
+import Exec.Interp.Machines.Core.CoreFloatConstantPoint
+import Exec.Interp.Machines.Core.CoreFloatConstantSlots
+import Exec.Interp.Relations.SelectSlots
+import Exec.Interp.Machines.Core.CoreSelectOperands
+import Exec.Interp.Memory.MemoryCoreTransition
+import Exec.Interp.Memory.MemoryCoreOperandBounds
+import Exec.Interp.Memory.MemoryCoreEmission
+import Exec.Interp.Memory.MemoryCoreStep
+import Exec.Interp.Memory.MemoryCoreResult
+import Exec.Interp.Memory.MemoryLoadStepFootprint
+import Exec.Abs.Bound
+import Exec.Abs.Numeric.Transition
+import Exec.Abs.ReferenceBounds
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.CallSafety
+import Exec.Interp.Calls.CallStack
+import Exec.Code.Local.Relations.Common.CoreFunction
+import Exec.Interp.Calls.CallRefinement
+import Exec.Abs.Results
+import Exec.Interp.Calls.ReturnRefinement
+import Exec.Interp.Calls.ReturnResult
+import Exec.Interp.Machines.Core.CoreUnreachableExecution
+import Exec.Interp.Relations.StackRelation
+import Exec.Interp.Relations.Epilogue
+import Exec.Interp.Relations.Normalization
+import Exec.Interp.Core.EmptyInversion
+import Exec.Interp.Control.LabelCompletion
+import Exec.Interp.Core.Erased
+import Exec.Interp.Control.NormalizeClosure
+import Exec.Interp.Control.NormalizeCompose
+import Exec.Interp.Machines.Slice.SliceMeasure
+import Exec.Store.Api.GlobalWriteExtension
+import Exec.Interp.Memory.MemoryMutation
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Store.Invariant.ObjectExtension
+import Exec.Theorems.Composition.GlobalMutationShape
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Spec.Mutation
+import Exec.Store.Invariant.InstantiationCode
+import Exec.Store.Initialization.SegmentObjectMetadata
+import Exec.Theorems.Composition.Eventful.EventfulHistory
+import Exec.Theorems.Composition.Eventful.EventfulErrors
+import Exec.Interp.Relations.StepRecording
+import Exec.Theorems.Composition.Supported.SupportedHostDispatch
+import Exec.Theorems.Host.HostFrameSiteExecution
+import Exec.Theorems.Host.HostCallSource
+import Exec.Interp.Relations.FrameStorePrefix
+import Exec.Theorems.Host.HostResumeOwned
+import Exec.Theorems.Host.HostStructuredResume
+import Exec.Theorems.Host.HostCallContext
+import Exec.Theorems.Composition.FrameStorePrefixStaged
+import Exec.Interp.StructuredMachine.StructuredCall
+import Exec.Theorems.Host.HostEventfulReturn
+import Exec.Theorems.Host.HostIndirectSelected
+import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
+import Exec.Interp.Relations.EventfulNormalize
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Theorems.Host.HostRecordingBoundary
+import Exec.Interp.Relations.StepRecordingLookup
+import Exec.Interp.Relations.StepActive
+import Exec.Interp.Invocation.InvokeLoopRecordingFacts
+import Exec.Platform.RecordingSpec
+import Exec.Theorems.Composition.Supported.SupportedEntryOutcomes
+import Exec.Interp.Invocation.InvokeRecordedPrefix
+import Exec.Theorems.Api.ReadbackIssued
+import Exec.Spec.HostCall
+import Exec.Theorems.Api.ExecutableInv
+import Exec.Store.Instantiation.InstantiateRecording
+import Exec.Theorems.Host.HostCallRecording
+import Exec.Store.Invariant.CheckedValues
+import Exec.Theorems.Composition.Entry
+import Exec.Theorems.Host.HostSegmentPublication
+import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
+import Exec.Theorems.Instantiation.StartResolution
+import Exec.Theorems.Instantiation.TailExecutableRecordedCases
+import Exec.Theorems.Composition.Eventful.EventfulInstantiationResult
+import Exec.Theorems.Composition.Executable.ExecutableInstantiationResult
+import Exec.Theorems.Composition.InstantiationResult
+import Exec.Store.Initialization.SegmentInitializeSource
 import Exec.Theorems.Instantiation.InstantiateExecutableEventfulSource
 import Exec.Store.Instantiation.InstantiateRecordingReturned
 namespace Exec.Theorems
@@ -41,110 +209,4 @@ theorem RecordedInstantiationSourceOutcome.erase {M P : Type} {view : M → Slic
   · exact Or.inl rejected
   · exact Or.inr ⟨inst,initial,found,source,allocated,⟨events,execution⟩,success⟩
 
-/-- Public compilation and instantiation connect the actual store/result to the
-generated source instantiation and its complete initialization/start execution.
-The caller supplies the prior invariant, issued imports and explicit host laws
-for the independently encoded installed module interpretation. Successful
-compilation supplies its complete-profile certificate; no start correctness is assumed. Precommit rejection is exact
-rollback with a classified API, resource, or Wasm1 precheck cause. -/
-theorem instantiate_compiled_executable_recorded_source {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (correct : Platform.FloatOpsCorrect floats)
-    (law : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
-    (imports : Slice runtime.Extern) (platform : P)
-    (oldCode : CodeInterpretation) (old : ExecutableInv view oldCode before)
-    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module)) 
-    (raw : ModuleBinary.Module)
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile)
-    (sound : Platform.HostSound hooks
-      (ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)))
-      (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw))))
-    (preserve : ∀ store, ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer → Interp.FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ store, ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length)
-    (issued : ∀ store, ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) store →
-      ∀ host p args results answer, hooks.call_host p store host args results = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, IssuedValue answer.2.2.1 value) :
-    Module_ok (ModuleElaboration.moduleOf raw) ∧
-      recordedInstantiateWith memory hooks floats allocator before module imports platform []
-        ⦃ (out,events) => ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1 ∧
-          Extend_store (decodeStore view oldCode before)
-            (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1) ∧
-          RecordedInstantiationSourceOutcome view oldCode
-            (installCode oldCode before.instances.length (Code.sourceFunctions raw)) before module imports raw platform
-            events out.1 out.2.1 out.2.2 ⦄div := by
-  obtain ⟨actualRaw, actualEncoded, elaborated, matched, typed, origin⟩ :=
-    instantiate_compiled_executable_recorded_origin memory hooks floats allocator view laws law before module imports platform
-      oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes profile limits accepted
-  have sameRaw := Profile.module_unique encoded actualEncoded
-  subst actualRaw
-  refine ⟨typed, ?_⟩
-  rcases origin with ⟨error, staged, returned, retained⟩ |
-    ⟨ready, inst, found, source, readyCertified, readyCapacities, readyAccounting, initializers, types, table, allocated,preparedExtension, continued⟩
-  · have actual : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
-        .ok (.Err error, staged, platform, false) := by
-      rw [←recordedInstantiateInner_erase memory hooks floats allocator before module imports platform false [],returned]
-      simp only [bind_ok,Std.uncurry]
-    obtain ⟨cause, sameHost, prior, origins⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
-      before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles
-      error staged platform actual
-    obtain ⟨compiledWitness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
-    have profileEq := (compiledWitness.initializers law).2.1
-    obtain ⟨out, run, resultEq, storeEq, hostEq⟩ := WP.spec_imp_exists
-      (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained actual)
-    rw [recordedInstantiateWith_inner_returned memory hooks floats allocator before module imports platform [] []
-      (.Err error,staged,platform,false) returned,run]
-    simp only [bind_ok,Std.uncurry]
-    apply WP.dspec.ret
-    have rollbackInv : ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) before :=
-      ⟨old.toCertifiedApiStore.install_code (Code.sourceFunctions raw),old.segmentAccounting,
-        old.capacities.code_agrees (installCode_agrees before oldCode (Code.sourceFunctions raw))⟩
-    have rollbackExtension : Extend_store (decodeStore view oldCode before)
-        (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1) := by
-      rw [storeEq,decodeStore_code_agrees view (installCode_agrees before oldCode (Code.sourceFunctions raw))]
-      exact Spec.extend_store_refl _ old.well_formed
-    refine ⟨(by simpa only [storeEq] using rollbackInv),rollbackExtension,
-      Or.inl ⟨rfl,error, resultEq, by simpa only [profileEq] using cause, storeEq, hostEq, ?_⟩⟩
-    intro trap failed
-    subst error
-    have wasm1 : module.profile = .Wasm1 := by
-      rw [profileEq]
-      cases trap <;> simp only [PrecommitError] at cause <;> first | exact cause | contradiction
-    obtain ⟨stagedInst, selected, stagedSource, bounds⟩ :=
-      origins.source_bounds retained oldCode old.storeSyntax raw elaborated typed matched
-    refine ⟨wasm1, staged, stagedInst, selected, stagedSource, ?_⟩
-    rw [storeEq]
-    exact .reject bounds
-  · have initialWf : wf_config (sourceInstantiationConfiguration view
-        (installCode oldCode before.instances.len.val (Code.sourceFunctions raw)) ready inst raw) := by
-      have wf : ∀ s m xs c, fun_instantiate s m xs c → wf_config c := by
-        intro s m xs c h
-        cases h
-        assumption
-      exact wf _ _ _ _ allocated
-    have acceptedInst : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module) := by
-      simpa only [source] using accepted
-    have matchedInst : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw := by
-      simpa only [source] using matched
-    have tail := instantiate_tail_executable_recorded_execution memory hooks floats allocator view laws correct law interrupts ready platform
-      ⟨before.id,before.instances.len⟩ inst bytes profile limits acceptedInst found
-      (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ⟨readyCertified,readyAccounting,readyCapacities old.capacities⟩ sound preserve externs issued initializers types table raw matchedInst initialWf
-    unfold recordedInstantiateWith
-    rw [← continued]
-    apply WP.dspec_bind tail
-    rintro ⟨⟨result,after,host,committed⟩,events⟩ ⟨commit,valid,tailExtension,retained,publication,success,execution⟩
-    dsimp only at commit valid tailExtension retained publication success execution ⊢
-    subst committed
-    have outcome : RecordedInstantiationSourceOutcome view oldCode
-        (installCode oldCode before.instances.length (Code.sourceFunctions raw)) before module imports raw platform events result after host := by
-      exact Or.inr ⟨inst,_,retained.instance_lookup found,source,allocated,execution,success⟩
-    cases result <;> simp only [uncurry_apply_pair,runtime.store.instantiation_failed,bind_ok,ite_self,↓reduceIte,WP.dspec_ok] <;>
-      exact ⟨valid,Spec.extend_store_trans preparedExtension tailExtension,outcome⟩
 end Exec.Theorems

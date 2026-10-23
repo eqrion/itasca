@@ -1,5 +1,5 @@
 import Exec.Theorems.Api.StatefulMemoryGrowthChosen
-import Exec.Theorems.Api.GrowthChoiceMatching
+import Exec.Contracts
 import Exec.Interp.Memory.MemoryGrow
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp

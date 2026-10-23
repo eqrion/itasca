@@ -25,27 +25,27 @@ inductive PreparationResourcePath {M P F A : Type}
     PreparationPhase → runtime.store.Store M → runtime.store.ModuleInst → Prop where
   | initial : PreparationResourcePath memory hooks floats allocator before module imports platform
       .initial before (emptyInstance module)
-  | linked {inst} (run : runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
+  | linked {inst} (run : runtime.store.instantiate.Store.prepare_instance_loop2 memory before imports
       (.Ok ()) 0#usize (emptyInstance module) = .ok (before,.Ok (),inst)) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .linked before inst
   | typed {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .linked store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator store (.Ok ()) 0#usize inst =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator store (.Ok ()) 0#usize inst =
         .ok (typeParts after (.Ok ()) next)) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .typed after next
   | functions {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .typed store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store (.Ok ()) 0#usize inst before.instances.len =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator store (.Ok ()) 0#usize inst before.instances.len =
         .ok (typeParts after (.Ok ()) next)) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .functions after next
   | tables {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .functions store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator store (.Ok ()) inst.tables.len inst =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator store (.Ok ()) inst.tables.len inst =
         .ok (typeParts after (.Ok ()) next)) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .tables after next
   | memories {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .tables store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator store (.Ok ()) inst.memories.len inst =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator store (.Ok ()) inst.memories.len inst =
         .ok (typeParts after (.Ok ()) next)) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .memories after next
   | published {store inst instances}
@@ -55,19 +55,19 @@ inductive PreparationResourcePath {M P F A : Type}
         {store with instances := instances} inst
   | globals {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .published store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize before.instances.len =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize before.instances.len =
         .ok (storeParts after platform (.Ok ())))
       (found : after.instances.val[before.instances.len.val]? = some next) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .globals after next
   | elements {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .globals store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator store platform (.Ok ()) 0#usize before.instances.len =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator store platform (.Ok ()) 0#usize before.instances.len =
         .ok (storeParts after platform (.Ok ())))
       (found : after.instances.val[before.instances.len.val]? = some next) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .elements after next
   | data {store inst after next}
       (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .elements store inst)
-      (run : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store (.Ok ()) 0#usize before.instances.len =
+      (run : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store (.Ok ()) 0#usize before.instances.len =
         .ok (storeStateParts after (.Ok ())))
       (found : after.instances.val[before.instances.len.val]? = some next) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .data after next

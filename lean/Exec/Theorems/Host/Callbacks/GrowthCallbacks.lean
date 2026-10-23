@@ -181,58 +181,5 @@ theorem Program.correct_owned {M A : Type} (memory : runtime.platform.MemoryBuff
       exact WP.spec_mono (ih answer.2 fresh) (fun _ post => ⟨.table inside growth post.1,effect.trans post.2.1,post.2.2⟩)
     · exact WP.spec.ret ⟨.table_invalid (by assumption),.refl held,by simp⟩
 
-/-- The issued-result contract follows from the stronger owned-result package. -/
-theorem Program.correct {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
-    (program : Program) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (held : ExecutableInv view code store) :
-    program.run memory allocator store ⦃ answer =>
-      Returns view code program store answer.1 answer.2.1 answer.2.2.val ∧
-      Effect view code store answer.2.1 ∧
-      ∀ value ∈ answer.2.2.val, Store.IssuedValue answer.2.1 value ⦄ := by
-  apply WP.spec_mono (program.correct_owned memory allocator allocation view laws code store held)
-  rintro answer ⟨source,effect,owned⟩
-  exact ⟨source,effect,fun value member=>(owned value member).issued⟩
-
-def platform {M A : Type} (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
-    (select : U64 → Slice runtime.Value → Program) : runtime.platform.Platform Unit M where
-  MemoryBufferInst := memory
-  interrupt token := .ok (.Continue,token)
-  call_host token store identity args _ := do
-    let answer ← (select identity args).run memory allocator store
-    .ok (answer.1,token,answer.2.1,answer.2.2)
-
-theorem sound {M A : Type} (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
-    (allocation : Platform.AllocCorrect allocator) (select : U64 → Slice runtime.Value → Program)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation) :
-    Platform.HostSound (platform memory allocator select) (ExecutableInv view code) (Store.decodeStore view code) := by
-  apply Platform.HostSound.of_invariant (fun _ held => held.source_typed)
-  intro token store identity args results held
-  unfold platform
-  step with (select identity args).correct memory allocator allocation view laws code store held
-    as ⟨answer,_,effect,_⟩
-  exact ⟨effect.invariant,effect.extension⟩
-
-theorem world_sound {M A : Type} (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
-    (allocation : Platform.AllocCorrect allocator) (select : U64 → Slice runtime.Value → Program)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) :
-    HostWorldSound (platform memory allocator select) view (ExecutableInv view) :=
-  HostWorldSound.of_fixed (sound memory allocator allocation select view laws)
-
-theorem callback_package {M A : Type} (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
-    (allocation : Platform.AllocCorrect allocator) (select : U64 → Slice runtime.Value → Program)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation) (token : Unit)
-    (store : runtime.store.Store M) (held : ExecutableInv view code store)
-    (identity : U64) (args results : Slice runtime.Value) :
-    (platform memory allocator select).call_host token store identity args results ⦃ answer =>
-      Returns view code (select identity args) store answer.1 answer.2.2.1 answer.2.2.2.val ∧
-      Effect view code store answer.2.2.1 ∧
-      Store_ok (Store.decodeStore view code answer.2.2.1) ∧
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value ⦄ := by
-  unfold platform
-  step with (select identity args).correct memory allocator allocation view laws code store held
-    as ⟨answer,source,effect,issued⟩
-  exact ⟨source,effect,effect.invariant.source_typed,issued⟩
-
 end Exec.Theorems.GrowthCallbacks
 

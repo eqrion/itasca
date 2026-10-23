@@ -1,4 +1,7 @@
-import Exec.Code.Local.Lowering.Common.LoweringTransfer
+import Exec.Code.Local.Lowering.Common.Copy
+import Exec.Code.Local.Relations.Control.BranchCertificates
+import Exec.Code.Local.Initializer.InitializerExpression
+import Exec.Code.Local.Callbacks.Common.Observe
 namespace Exec.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 3000000
@@ -150,6 +153,5 @@ set_option maxRecDepth 4096 in
           simp only [alloc.vec.Vec.set_val_eq]
           have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
           simpa only [← kind, ← atIndex] using List.set_getElem_self inBounds
-
 
 end Exec.Code

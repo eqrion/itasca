@@ -3,34 +3,14 @@ import Itasca.Support.ControlTranslation
 /-!
 # Control frames
 
-Defines the Wasm 1.0 control-frame vocabulary over the extracted `code.OpIterState`:
-`Control.labels` (the SpecTec label list), `frame`, `base`, `polymorphic`, and the structural
-invariant `Control.Shape`. Also states specifications for the small helpers `code.push_ctrl`,
-`code.cur_base`, `code.cur_polymorphic`, `code.block_results` and `code.branch_target_types`.
+Control-frame vocabulary over the extracted `code.OpIterState`: `base`, `polymorphic`, and the
+structural invariant `Control.Shape`, with specifications for `code.cur_base` and
+`code.cur_polymorphic`.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.Control
-
-/-- The block type a branch to the frame `c` supplies. A loop label takes its inputs, which are
-empty in Wasm 1.0. -/
-def targetBlockType (c : code.Ctrl) : code.BlockType :=
-  match c.kind with
-  | .Loop => .Empty
-  | _ => c.block_type
-
-/-- The result types a branch to the frame `c` supplies. -/
-def targetTypes (c : code.Ctrl) : List types.ValueType := results (targetBlockType c)
-
-/-- The SpecTec label list of a control stack. Rust appends frames, while SpecTec puts the innermost
-label first. -/
-def labels (cs : List code.Ctrl) : List resulttype :=
-  cs.reverse.map (fun c => .mk_list ((targetTypes c).map Translate.valueType))
-
-/-- The control frame that entering a block of kind `kind` and type `bt` pushes at state `st`. -/
-def frame (st : code.OpIterState) (kind : code.LabelKind) (bt : code.BlockType) : code.Ctrl :=
-  ⟨kind, bt, signature bt, alloc.vec.Vec.len st.vals, false⟩
 
 /-- The operand stack base of the innermost frame, or `0` with no frames. -/
 def base (st : code.OpIterState) : Usize :=
@@ -50,11 +30,6 @@ structure Shape (st : code.OpIterState) : Prop where
   ordered : st.ctrls.val.Pairwise (fun c d => c.value_stack_base.val ≤ d.value_stack_base.val)
   bounded : ∀ c ∈ st.ctrls.val, c.value_stack_base.val ≤ st.vals.val.length
 
-/-- Pushing a frame adds its target types as the innermost label. -/
-theorem labels_push (cs : List code.Ctrl) (c : code.Ctrl) :
-    labels (cs ++ [c]) = .mk_list ((targetTypes c).map Translate.valueType) :: labels cs := by
-  simp [labels]
-
 /-- The current frame base is within the operand stack. -/
 theorem Shape.base_le {st : code.OpIterState} (h : Shape st) :
     (base st).val ≤ st.vals.val.length := by
@@ -63,28 +38,6 @@ theorem Shape.base_le {st : code.OpIterState} (h : Shape st) :
   · simp
   · rename_i c hc
     exact h.bounded c (List.mem_of_getLast? hc)
-
-/-- Pushing a frame at the current operand height preserves `Shape`. -/
-theorem Shape.push {st st' : code.OpIterState} (h : Shape st)
-    (kind : code.LabelKind) (bt : code.BlockType)
-    (hctrls : st'.ctrls.val = st.ctrls.val ++ [frame st kind bt])
-    (hvals : st'.vals = st.vals) : Shape st' := by
-  constructor
-  · rw [hctrls, List.pairwise_append]
-    exact ⟨h.ordered, by simp, by simpa [frame] using h.bounded⟩
-  · intro c hc
-    rw [hctrls] at hc
-    rcases List.mem_append.mp hc with hc | hc
-    · simpa [hvals] using h.bounded c hc
-    · have heq : c = frame st kind bt := by simpa using hc
-      simp [heq, frame, hvals]
-
-/-- Label `depth` is the target types of the frame `depth` places from the top of the control
-stack. -/
-theorem labels_lookup (cs : List code.Ctrl) (depth : Nat) (h : depth < cs.length) :
-    (labels cs)[depth]'(by simpa [labels] using h) =
-      .mk_list ((targetTypes (cs[cs.length - 1 - depth]'(by omega))).map Translate.valueType) := by
-  simp [labels, List.getElem_reverse]
 
 /-- Truncating the operands to the innermost frame base and marking it polymorphic preserves
 `Shape`. -/
@@ -108,53 +61,6 @@ theorem Shape.unreachable {st st' : code.OpIterState} (h : Shape st)
 end Itasca.Control
 
 namespace Itasca
-
-@[simp, global_simps]
-theorem code.visitor_block_type.eq (bt : code.BlockType) :
-    code.visitor_block_type bt = .ok (Control.signature bt) := by cases bt <;> rfl
-
-@[simp, global_simps]
-theorem code.visitor_result_type.eq (bt : code.BlockType) :
-    code.visitor_result_type bt = .ok (Control.resultView bt) := by cases bt <;> rfl
-
-@[step]
-theorem code.block_results.spec (bt : code.BlockType) :
-    code.block_results bt ⦃ (v : alloc.vec.Vec types.ValueType) => v.val = Control.results bt ⦄ := by
-  cases bt with
-  | Empty => simp [code.block_results, Control.results]
-  | Value t =>
-    unfold code.block_results
-    step*
-    simp_all [Control.results]
-
-theorem code.branch_target_bt.eq (c : code.Ctrl) :
-    code.branch_target_bt c = .ok (Control.targetBlockType c) := by
-  cases c with
-  | mk kind bt full base poly => cases kind <;> rfl
-
-@[step]
-theorem code.branch_target_bt.spec (c : code.Ctrl) :
-    code.branch_target_bt c ⦃ (bt : code.BlockType) => bt = Control.targetBlockType c ⦄ := by
-  cases c with
-  | mk kind bt full base poly => cases kind <;> simp [code.branch_target_bt, Control.targetBlockType]
-
-@[step]
-theorem code.branch_target_types.spec (c : code.Ctrl) :
-    code.branch_target_types c ⦃ (v : alloc.vec.Vec types.ValueType) => v.val = Control.targetTypes c ⦄ := by
-  unfold code.branch_target_types
-  step*
-  simp_all [Control.targetTypes]
-
-@[step]
-theorem code.push_ctrl.spec (st : code.OpIterState) (kind : code.LabelKind) (bt : code.BlockType)
-    (hsize : st.ctrls.val.length < Usize.max) :
-    code.push_ctrl st kind bt ⦃ (st' : code.OpIterState) =>
-      st'.ctrls.val = st.ctrls.val ++ [Control.frame st kind bt] ∧
-      st'.vals = st.vals ∧ st'.pos = st.pos ⦄ := by
-  unfold code.push_ctrl
-  step*
-  simp_all [Control.frame]
-  step*
 
 @[step]
 theorem code.cur_base.spec (st : code.OpIterState) :

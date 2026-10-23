@@ -26,13 +26,6 @@ theorem WasmBoundaryArrival.boundary {select owner expected stack configuration 
   | trap s f => exact .terminal (.trap _)
   | host suspended expectedEq => exact .host suspended.pending typed
 
-theorem WasmBoundaryArrival.store {select owner expected stack configuration events after}
-    (arrival : WasmBoundaryArrival select owner expected stack configuration events after) :
-    configuration.1.1=after.store := by
-  cases arrival with
-  | values | trap => rfl
-  | host suspended expectedEq => exact Spec.OpenExecution.pending_store suspended.pending
-
 theorem WasmBoundaryArrival.transition {M : Type} (view : M → Slice U8) (publication : SourcePublication)
     {select owner expected stack configuration events after}
     (arrival : WasmBoundaryArrival select owner expected stack configuration events after)

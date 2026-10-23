@@ -47,31 +47,4 @@ def stepHostEvents {M P : Type} (exec : runtime.interp.Execution)
   | some address => hostCallEvents address out
   | none => []
 
-/-- Common proof-only dispatch instrumentation; erasure is the actual step. -/
-def recordedStep {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (prior : List HostEvent) :=
-  Platform.Recording.run (runtime.interp.step memory hooks floats allocator exec store platform)
-    (stepHostEvents exec store) prior
-
-theorem recordedStep_erase {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (prior : List HostEvent) :
-    (do let (out,_) ← recordedStep memory hooks floats allocator exec store platform prior
-        Result.ok out) = runtime.interp.step memory hooks floats allocator exec store platform :=
-  Platform.Recording.erase _ _ _
-
-theorem recordedStep_returned {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (prior : List HostEvent) (out) (trace : List HostEvent) :
-    recordedStep memory hooks floats allocator exec store platform prior = .ok (out,trace) ↔
-      runtime.interp.step memory hooks floats allocator exec store platform = .ok out ∧
-      trace = prior ++ stepHostEvents exec store out :=
-  Platform.Recording.returned _ _ _ _ _
-
 end Exec.Interp

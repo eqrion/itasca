@@ -120,33 +120,10 @@ theorem stream.validate_remaining.spec_on {S V : Type} (source : stream.Source S
                         intro accepted
                         exact (retained7 accepted).2
 
-theorem stream.validate_remaining.total_spec_on {S V : Type} (source : stream.Source S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
-    (hv : StreamScheduler.CallbacksOn visitor pre ready admissible profile) (held : pre v)
-    (henv : CodeEntry.Bounds env) (admitted : admissible env) :
-    stream.validate_remaining source visitor moduleId profile state env envLen v ⦃ _ => True ⦄ := by
-  apply WP.spec_mono (stream.validate_remaining.spec_on source visitor moduleId state env envLen v
-    hs pre ready admissible hv held henv admitted)
-  intros; trivial
-
-/-- `stream.validate_remaining` returns an ordinary result under returning callbacks. -/
-theorem stream.validate_remaining.total_on {S V : Type} (source : stream.Source S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
-    (hv : StreamScheduler.CallbacksOn visitor pre ready admissible profile) (held : pre v)
-    (henv : CodeEntry.Bounds env) (admitted : admissible env) :
-    ∃ r, stream.validate_remaining source visitor moduleId profile state env envLen v = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (stream.validate_remaining.total_spec_on source visitor moduleId state env envLen v hs pre ready admissible hv held henv admitted)
-  exact ⟨r, hr⟩
-
 /-- The streaming driver returns using a pre-environment invariant and a separate
 ready-state invariant. Decoder acceptance establishes environment admissibility;
 callbacks need not return on arbitrary fabricated scheduler records. -/
-theorem stream.validate_streaming.profile_spec_on {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : module.Env)
     (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
@@ -192,18 +169,5 @@ theorem stream.validate_streaming.profile_spec_on {S V : Type} (source : stream.
           rw [hr]
           simpa only [bind_ok,uncurry_apply_pair,WP.spec_ok] using retained3
         · simp
-
-theorem stream.validate_streaming.profile_total_on {S V : Type} (source : stream.Source S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
-    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
-    (hv : StreamScheduler.CallbacksOn visitor pre ready admissible profile) (held : pre v)
-    (decoded : ∀ bytes env next, bytes.length ≤ limits.MAX_MODULE_BYTES.val →
-      module.validate_env bytes profile = .ok (.Ok (env,next)) → admissible env) :
-    ∃ r, stream.validate_streaming source visitor moduleId profile state v storage = .ok r := by
-  obtain ⟨out,run,_⟩ := WP.spec_imp_exists
-    (stream.validate_streaming.profile_spec_on source visitor moduleId state v storage hs pre ready
-      admissible hv held decoded)
-  exact ⟨out,run⟩
 
 end Itasca

@@ -1,11 +1,17 @@
-import Exec.Interp.Machines.FloatCore.FloatCoreTransitions
 import Exec.Abs.Core.Step
+import Exec.Abs.Core
+import Exec.Abs.Float.Decode
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Supported.CoreStuck
+import Exec.Abs.Core.Pure
+import Exec.Abs.Ownership.Core
+import Exec.Abs.Core.Bound
 import Exec.Interp.State.GlobalCoreStep
 import Exec.Interp.StructuredMachine.GlobalContinue
 import Exec.Interp.Relations.Capacity
 import Exec.Code.Local.Capacity.GlobalCapacity
 namespace Exec.Interp.StructuredMachine.Global
-variable {emission : FunctionEmission} [∀ compiled, FloatHeads (emission compiled)]
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -26,11 +32,11 @@ theorem coreFramePoint_globalGet_step_owned (platform : P) (frameIndex : Usize)
     (checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true)
     (pcBound : raw.pc.val < U32.max)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after} :: rest,[]⟩
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output) ∨
     (runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ nextFrame pc, pc.val = raw.pc.val+1 ∧
@@ -38,7 +44,7 @@ theorem coreFramePoint_globalGet_step_owned (platform : P) (frameIndex : Usize)
         Abs.CoreTyped {initial with frames := nextFrame :: rest} ∧
         StepH (Abs.decode initial) [] (Abs.decode {initial with frames := nextFrame :: rest}) ∧
         FrameSlots out.2.1 {raw with pc := pc} nextFrame ∧
-        FramePoint emission (Store.decodeStore view code store) {raw with pc := pc} nextFrame compiled C targets next output ∧ (∃ values, nextFrame = {f with code := after,vals := values}) ∧ SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ∧
+        FramePoint (Store.decodeStore view code store) {raw with pc := pc} nextFrame compiled C targets next output ∧ (∃ values, nextFrame = {f with code := after,vals := values}) ∧ SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ∧
         Abs.Core.step initial = .next {initial with frames := nextFrame :: rest} ⦄) := by
   dsimp only
   have frameTyped : Abs.FrameTyped (Store.decodeStore view code store) {f with code := .GLOBAL_GET (.mk_uN index) :: after} [] := by
@@ -81,11 +87,11 @@ theorem coreFramePoint_globalSet_step_owned (platform : P) (frameIndex : Usize)
     (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after} :: rest,[]⟩) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after} :: rest,[]⟩
     (∃ target : U32, raw.pc.val < target.val ∧ compiled.code.val[raw.pc.val]? = some (.Jump target) ∧
-      FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output) ∨
+      FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output) ∨
     (runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.2 = platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       ∃ nextFrame pc, pc.val = raw.pc.val+1 ∧
@@ -94,7 +100,7 @@ theorem coreFramePoint_globalSet_step_owned (platform : P) (frameIndex : Usize)
         Extend_store initial.store (Store.decodeStore view code out.2.2.1) ∧
         StepH (Abs.decode initial) [] (Abs.decode {initial with store := Store.decodeStore view code out.2.2.1,frames := nextFrame :: rest}) ∧
         FrameSlots out.2.1 {raw with pc := pc} nextFrame ∧
-        FramePoint emission (Store.decodeStore view code out.2.2.1) {raw with pc := pc} nextFrame compiled C targets next output ∧ (∃ values, nextFrame = {f with code := after,vals := values}) ∧
+        FramePoint (Store.decodeStore view code out.2.2.1) {raw with pc := pc} nextFrame compiled C targets next output ∧ (∃ values, nextFrame = {f with code := after,vals := values}) ∧
         Abs.Core.step initial = .next {initial with store := Store.decodeStore view code out.2.2.1,frames := nextFrame :: rest} ⦄) := by
   dsimp only
   have frameTyped : Abs.FrameTyped (Store.decodeStore view code store) {f with code := .GLOBAL_SET (.mk_uN index) :: after} [] := by

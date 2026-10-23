@@ -132,8 +132,4 @@ theorem initializerContext_wf (env : module.Env) : wf_context (initializerContex
   cases moduleContext_wf env [] 0
   constructor <;> assumption
 
-/-- `initializerContext` is the global context for constant initializers. -/
-theorem initializerContext_globals (env : module.Env) :
-    ModuleConstants.GlobalContext env (initializerContext env) := rfl
-
 end Itasca.ModuleElaboration

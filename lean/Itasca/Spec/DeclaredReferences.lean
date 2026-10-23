@@ -43,28 +43,6 @@ end
   | nil => rfl
   | cons op ops ih => simp [ih, List.append_assoc]
 
-mutual
-  theorem instructionIndices_ref_subset (op : instr) (x : funcidx)
-      (hx : x ∈ instructionIndices false op) : x ∈ instructionIndices true op := by
-    cases op with
-    | BLOCK _ body | LOOP _ body => exact instructionsIndices_ref_subset body x hx
-    | IFELSE _ yes no =>
-      rcases List.mem_append.mp hx with h | h
-      · exact List.mem_append_left _ (instructionsIndices_ref_subset yes x h)
-      · exact List.mem_append_right _ (instructionsIndices_ref_subset no x h)
-    | REF_FUNC _ => exact hx
-    | _ => simp [instructionIndices] at hx
-
-  theorem instructionsIndices_ref_subset (ops : List instr) (x : funcidx)
-      (hx : x ∈ instructionsIndices false ops) : x ∈ instructionsIndices true ops := by
-    cases ops with
-    | nil => cases hx
-    | cons op ops =>
-      rcases List.mem_append.mp hx with h | h
-      · exact List.mem_append_left _ (instructionIndices_ref_subset op x h)
-      · exact List.mem_append_right _ (instructionsIndices_ref_subset ops x h)
-end
-
 /-- All `ref.func` occurrences in one instruction have declarations in `refs`. -/
 def Instruction (refs : List funcidx) (op : instr) : Prop :=
   ∀ x ∈ instructionIndices false op, x ∈ refs
@@ -104,35 +82,10 @@ def Instructions (refs : List funcidx) (ops : List instr) : Prop :=
     Instructions refs (xs ++ ys) ↔ Instructions refs xs ∧ Instructions refs ys := by
   simp only [Instructions, instructionsIndices_append, List.mem_append, or_imp, forall_and]
 
-theorem Instruction.mono {refs refs' op}
-    (hsub : ∀ x ∈ refs, x ∈ refs') (h : Instruction refs op) : Instruction refs' op :=
-  fun x hx => hsub x (h x hx)
-
 /-- Declared-reference conditions are monotone in `refs`. -/
 theorem Instructions.mono {refs refs' ops}
     (hsub : ∀ x ∈ refs, x ∈ refs') (h : Instructions refs ops) : Instructions refs' ops :=
   fun x hx => hsub x (h x hx)
-
-/-- An expression meets the reference requirements of its own function-index occurrences, whether
-or not it is a valid constant expression. -/
-theorem Instructions.of_allIndices (ops : List instr) :
-    Instructions (instructionsIndices true ops) ops :=
-  instructionsIndices_ref_subset ops
-
-theorem Instructions.member {refs ops} (h : Instructions refs ops)
-    {op : instr} (hm : op ∈ ops) : Instruction refs op := by
-  induction ops with
-  | nil => cases hm
-  | cons first rest ih =>
-    rcases List.mem_cons.mp hm with rfl | hm
-    · exact Instructions.cons_iff.mp h |>.1
-    · exact ih (Instructions.cons_iff.mp h |>.2) hm
-
-theorem Instructions.iff_forall {refs ops} :
-    Instructions refs ops ↔ ∀ op ∈ ops, Instruction refs op := by
-  induction ops with
-  | nil => simp
-  | cons op ops ih => simp [ih]
 
 /-- Function indices occurring in a global initializer. -/
 def globalIndices : global → List funcidx
@@ -186,69 +139,5 @@ theorem Function.mono {refs refs' f}
     (ts is fs gs tables ms es ds start exports fs' start') :
     declarations (.MODULE ts is fs gs tables ms es ds start exports) =
       declarations (.MODULE ts is fs' gs tables ms es ds start' exports) := rfl
-
-theorem declared_global {ts is fs gs tables ms es ds start exports g x}
-    (hg : g ∈ gs) (hx : x ∈ globalIndices g) :
-    x ∈ declarations (.MODULE ts is fs gs tables ms es ds start exports) := by
-  simp only [declarations, List.mem_append, List.mem_flatMap]
-  exact Or.inl (Or.inl (Or.inl ⟨g, hg, hx⟩))
-
-theorem declared_element {ts is fs gs tables ms es ds start exports e x}
-    (he : e ∈ es) (hx : x ∈ elementIndices e) :
-    x ∈ declarations (.MODULE ts is fs gs tables ms es ds start exports) := by
-  simp only [declarations, List.mem_append, List.mem_flatMap]
-  exact Or.inl (Or.inl (Or.inr ⟨e, he, hx⟩))
-
-theorem declared_data {ts is fs gs tables ms es ds start exports d x}
-    (hd : d ∈ ds) (hx : x ∈ dataIndices d) :
-    x ∈ declarations (.MODULE ts is fs gs tables ms es ds start exports) := by
-  simp only [declarations, List.mem_append, List.mem_flatMap]
-  exact Or.inl (Or.inr ⟨d, hd, hx⟩)
-
-theorem declared_export {ts is fs gs tables ms es ds start exports e x}
-    (he : e ∈ exports) (hx : x ∈ exportIndices e) :
-    x ∈ declarations (.MODULE ts is fs gs tables ms es ds start exports) := by
-  simp only [declarations, List.mem_append, List.mem_flatMap]
-  exact Or.inr ⟨e, he, hx⟩
-
-/-- A global initializer needs no extra declaration premise, since its occurrences are part of
-`declarations`. -/
-theorem global_body_declared {ts is fs gs tables ms es ds start exports gt body}
-    (hg : global.GLOBAL gt body ∈ gs) :
-    Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) body :=
-  (Instructions.of_allIndices body).mono (fun _ hx => declared_global hg hx)
-
-/-- An element initializer needs no extra declaration premise. -/
-theorem element_initializer_declared
-    {ts is fs gs tables ms es ds start exports rt initializers mode body}
-    (he : elem.ELEM rt initializers mode ∈ es) (hb : body ∈ initializers) :
-    Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) body := by
-  apply (Instructions.of_allIndices body).mono
-  intro x hx
-  apply declared_element he
-  exact List.mem_append_left _ (List.mem_flatMap.mpr ⟨body, hb, hx⟩)
-
-/-- An active element offset needs no extra declaration premise. -/
-theorem element_offset_declared
-    {ts is fs gs tables ms es ds start exports rt initializers tableIndex offset}
-    (he : elem.ELEM rt initializers (.ACTIVE tableIndex offset) ∈ es) :
-    Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) offset := by
-  apply (Instructions.of_allIndices offset).mono
-  intro x hx
-  exact declared_element he (List.mem_append_right _ hx)
-
-/-- An active data offset needs no extra declaration premise. -/
-theorem data_offset_declared
-    {ts is fs gs tables ms es ds start exports bytes memoryIndex offset}
-    (hd : data.DATA bytes (.ACTIVE memoryIndex offset) ∈ ds) :
-    Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) offset :=
-  (Instructions.of_allIndices offset).mono (fun _ hx => declared_data hd hx)
-
-/-- Under `Module`, every function body meets the declared-reference condition. -/
-theorem Module.body {ts is fs gs tables ms es ds start exports typeIndex locals body}
-    (h : Module (.MODULE ts is fs gs tables ms es ds start exports))
-    (hf : func.FUNC typeIndex locals body ∈ fs) :
-    Instructions (declarations (.MODULE ts is fs gs tables ms es ds start exports)) body :=
-  h _ hf
 
 end Itasca.DeclaredReferences

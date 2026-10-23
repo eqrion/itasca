@@ -76,7 +76,6 @@ structure Saved where
 from its block type, and its completed material is valid and emitted by its tokens. -/
 structure Header (env : module.Env) (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
-  placeholder : f.ctrl.block_type = .Empty
   inputs : resolve env (Wasm2.inputs f.bt) = some f.ins
   outputs : resolve env (Wasm2.outputs f.bt) = some f.outs
   prior : f.form.Valid C f.ins f.outs
@@ -263,7 +262,7 @@ theorem Open.close {env root st st' parents current}
     · refine ⟨parentC, outer, spine, ?_, pbase,
         resume.finish hC op current.outs hwf (by simpa [hform] using hop),
         by simpa using hctrls, by simpa using hblocks, ?_⟩
-      · exact ⟨pheader.kind, pheader.placeholder, pheader.inputs, pheader.outputs,
+      · exact ⟨pheader.kind, pheader.inputs, pheader.outputs,
           pheader.prior, by
             simpa [Saved.trace, List.append_assoc] using pheader.emits.append hemit⟩
       · have htake : st.core.vals.val.take current.ctrl.value_stack_base.val =
@@ -306,7 +305,7 @@ theorem Open.else_ {env root st st' parents current}
   constructor
   · refine ⟨C, outer, spine.change_form (by simp [hform, Saved.nextElse, Form.args])
       (by simp [hform, Saved.nextElse]), ?_, base, ?_, hctrls, ?_, ?_⟩
-    · exact ⟨rfl, header.placeholder, header.inputs, header.outputs,
+    · exact ⟨rfl, header.inputs, header.outputs,
         ⟨header.emits, by
           simpa [hform, Saved.nextElse, enter, Form.label, Form.params]
             using typed.typed _ hresults⟩, .nil⟩
@@ -318,7 +317,7 @@ theorem Open.else_ {env root st st' parents current}
 /-- A newly opened frame with the given stack base and an empty body. -/
 def Saved.fresh (base : Usize) (form : Form) (bt : signature.BlockType)
     (ins outs : List types.ValueType) : Saved :=
-  { ctrl := ⟨form.kind, .Empty, bt, base, false⟩, bt, ins, outs, form,
+  { ctrl := ⟨form.kind, bt, base, false⟩, bt, ins, outs, form,
     ops := [], vals := (form.params ins).map code.StackType.Val, tokens := [] }
 
 /-- The forms that `block`, `loop` and `if` open. -/
@@ -350,9 +349,9 @@ theorem Open.enter_child {env root st st' parents current}
   constructor
   · refine ⟨enter C current.form current.ins current.outs, outer ++ remaining,
       .push parents C outer { current with vals := remaining } form ins spine
-        ⟨header.kind, header.placeholder, header.inputs, header.outputs, header.prior, header.emits⟩
+        ⟨header.kind, header.inputs, header.outputs, header.prior, header.emits⟩
         pbase (ResumePrefix.after_pop typed hpop) hn, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · refine ⟨rfl, rfl, hin, hout, ?_, .nil⟩
+    · refine ⟨rfl, hin, hout, ?_, .nil⟩
       rcases hi with rfl | rfl | rfl <;> trivial
     · simpa [Saved.fresh, pbase] using hbase
     · exact TypedPrefix.start _ (enter_wf _ (enter_wf C hC _ _ _) _ _ _) _
@@ -368,7 +367,7 @@ theorem Open.start (env : module.Env) (root : context) (hroot : wf_context root)
     (hctrls : st.core.ctrls.val = [(Saved.fresh 0#usize .body bt ins outs).ctrl])
     (hblocks : st.blocks.val = [bt]) (hvals : st.core.vals.val = []) :
     Open env root st [] (Saved.fresh 0#usize .body bt ins outs) := by
-  refine ⟨root, [], .root _, ⟨rfl, rfl, hin, hout, trivial, .nil⟩, rfl,
+  refine ⟨root, [], .root _, ⟨rfl, hin, hout, trivial, .nil⟩, rfl,
     TypedPrefix.start _ (enter_wf root hroot _ _ _) [], hctrls, hblocks, hvals⟩
 
 theorem Spine.body {env root parents C outer ins}

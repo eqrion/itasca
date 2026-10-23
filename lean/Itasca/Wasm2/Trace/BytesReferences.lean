@@ -13,7 +13,7 @@ namespace Itasca.Wasm2.CallbackBytes
 
 open VisitorTrace CallbackTrace
 
-theorem ref_null {data env locals index st} (p : Pending data env locals index st)
+theorem ref_null {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -31,7 +31,7 @@ theorem ref_null {data env locals index st} (p : Pending data env locals index s
   exact ⟨hv, hc, fun rt hok => At.of_immediate p.inbounds byte p.pos
     (.reference (.refNull rt)) (hd rt hok)⟩
 
-theorem typed_select {data env locals index st} (p : Pending data env locals index st)
+theorem typed_select {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -51,7 +51,7 @@ theorem typed_select {data env locals index st} (p : Pending data env locals ind
   obtain ⟨count, hb, he⟩ := hd ty hok
   exact At.of_immediate p.inbounds byte p.pos (.reference (.selectTyped ty he)) hb
 
-theorem table_get {data env locals index st} (p : Pending data env locals index st)
+theorem table_get {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -71,7 +71,7 @@ theorem table_get {data env locals index st} (p : Pending data env locals index 
   obtain ⟨bytes, hs, hl, hb, he⟩ := (hd idx ty hok).1
   exact At.of_immediate p.inbounds byte p.pos (.reference (.tableGet idx he)) ⟨hs, hl, hb⟩
 
-theorem table_set {data env locals index st} (p : Pending data env locals index st)
+theorem table_set {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -91,7 +91,7 @@ theorem table_set {data env locals index st} (p : Pending data env locals index 
   obtain ⟨bytes, hs, hl, hb, he⟩ := (hd idx ty hok).1
   exact At.of_immediate p.inbounds byte p.pos (.reference (.tableSet idx he)) ⟨hs, hl, hb⟩
 
-theorem ref_func {data env locals index st} (p : Pending data env locals index st)
+theorem ref_func {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -107,7 +107,7 @@ theorem ref_func {data env locals index st} (p : Pending data env locals index s
   obtain ⟨bytes, hs, hl, hb, he⟩ := (spec.2 a rfl).1
   exact At.of_immediate p.inbounds byte p.pos (.reference (.refFunc a he)) ⟨hs, hl, hb⟩
 
-theorem ref_is_null {data env locals index st} (p : Pending data env locals index st)
+theorem ref_is_null {data env profile locals index st} (p : Pending data env profile locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (capacity : st.core.vals.val.length < Usize.max)

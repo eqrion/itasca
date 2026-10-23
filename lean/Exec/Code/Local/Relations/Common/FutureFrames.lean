@@ -25,15 +25,6 @@ theorem FrameFuture.before {length smaller locals frame label guardTarget}
     FrameFuture smaller locals frame label guardTarget :=
   { future with normalBound := order.trans future.normalBound, forwardBound := fun h => order.trans (future.forwardBound h), guardBound := fun h => order.trans (future.guardBound h) }
 
-/-- Appending a branch fixup only strengthens the known branch-liveness fact;
-all static future coordinates remain the same. -/
-theorem FrameFuture.mark {length locals frame label guardTarget}
-    (future : FrameFuture length locals frame label guardTarget)
-    (live : label.branchLive = true) (fixups : alloc.vec.Vec Usize) :
-    FrameFuture length locals {frame with end_reachable := true, fixups} label guardTarget :=
-  { future with marked := fun _ => live }
-
-
 /-- A plan admissible after recording a branch was already admissible before
 that branch; the prior universally quantified prefix can use it unchanged. -/
 theorem FrameFuture.previous_mark {length locals frame label guardTarget fixups}
@@ -66,10 +57,6 @@ theorem FramePlans.before {length smaller locals frames labels groups}
   | push prior frame label guardTarget future ih =>
     exact .push ih frame label guardTarget (future.before order)
 
-theorem FramePlans.length {length locals frames labels groups}
-    (plans : FramePlans length locals frames labels groups) : frames.length = labels.length := by
-  induction plans <;> simp_all
-
 theorem FramePlans.lookup {length locals frames labels groups}
     (plans : FramePlans length locals frames labels groups) {index depth : Nat} {frame}
     (atFrame : frames[index]? = some frame) (position : index + depth + 1 = frames.length) :
@@ -94,35 +81,5 @@ theorem FramePlans.lookup {length locals frames labels groups}
       have decomp : depth = (depth - 1) + 1 := by omega
       rw [decomp, List.getElem?_cons_succ]
       exact lookup
-
-theorem FramePlans.branch_group {length locals frames labels groups}
-    (plans : FramePlans length locals frames labels groups) {index depth : Nat} {frame}
-    (atFrame : frames[index]? = some frame) (position : index + depth + 1 = frames.length) :
-    ∃ label guardTarget before after, labels[depth]? = some label ∧
-      FrameFuture length locals frame label guardTarget ∧
-      groups = before ++ ⟨frame.fixups.val, label.target⟩ :: after := by
-  induction plans generalizing index depth with
-  | nil => simp at atFrame
-  | @push frames labels groups prior current label guardTarget future ih =>
-    by_cases top : index = frames.length
-    · have zero : depth = 0 := by simp only [List.length_append, List.length_singleton] at position; omega
-      have same : frame = current := by simpa [top] using atFrame.symm
-      subst frame
-      refine ⟨label, guardTarget, (match current.if_pc with | none => [] | some site => [⟨[site], guardTarget⟩]), groups,
-        by simp [zero], future, ?_⟩
-      simp [frameGroups, List.append_assoc]
-    · have inside : index < frames.length := by
-        have bound := (List.getElem?_eq_some_iff.mp atFrame).1
-        simp only [List.length_append, List.length_singleton] at bound
-        omega
-      have positive : 0 < depth := by simp only [List.length_append, List.length_singleton] at position; omega
-      obtain ⟨found, target, before, after, lookup, valid, grouped⟩ := ih
-        (by simpa only [List.getElem?_append_left inside] using atFrame)
-        (depth := depth - 1) (by simp only [List.length_append, List.length_singleton] at position; omega)
-      refine ⟨found, target, frameGroups current label guardTarget ++ before, after, ?_, valid, ?_⟩
-      · have decomp : depth = (depth - 1) + 1 := by omega
-        rw [decomp, List.getElem?_cons_succ]
-        exact lookup
-      · simp [grouped, List.append_assoc]
 
 end Exec.Code

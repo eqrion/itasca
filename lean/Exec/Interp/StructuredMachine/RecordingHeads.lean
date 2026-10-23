@@ -25,7 +25,7 @@ assumption about the host callback. -/
 theorem code_recording_source {emission : ContextEmission} [RecordingHeads emission]
     {C returns locals code jumpTables labels stack op source pc next output instruction}
     (ready : ReadyInstruction op)
-    (relation : Code.StructuredCodeWithTables (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (op::source) pc next output)
+    (relation : Code.StructuredCode (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (op::source) pc next output)
     (fetched : code[pc]?=some instruction) (calls : Code.callTag instruction≠0) :
     (∃index : U32,op=.CALL (.mk_uN index.val)) ∨ (∃table type : U32,op=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)) := by
   cases relation with
@@ -62,14 +62,4 @@ theorem code_recording_source {emission : ContextEmission} [RecordingHeads emiss
   | unreachable head remaining scope => rw [head] at fetched; cases fetched; exact (calls rfl).elim
   | return_ source size head remaining scope => rw [head] at fetched; cases fetched; exact (calls rfl).elim
   | branchTable gate table bounds => rw [table.instruction] at fetched; cases fetched; exact (calls rfl).elim
-theorem frame_recording_source {emission : FunctionEmission} {sourceStore raw f compiled C targets next output}
-    [RecordingHeads (emission compiled)]
-    (point : FramePoint emission sourceStore raw f compiled C targets next output)
-    (ready : ReadySource f) (op : instr) (after : List instr) (code : f.code=op::after)
-    (instruction : Code.Bytecode) (fetched : compiled.code.val[raw.pc.val]?=some instruction)
-    (calls : Code.callTag instruction≠0) :
-    (∃index : U32,op=.CALL (.mk_uN index.val)) ∨ (∃table type : U32,op=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)) := by
-  have readyOp : ReadyInstruction op := by
-    cases op <;> simp_all only [ReadyInstruction,ReadySource,code]
-  exact code_recording_source readyOp (by simpa only [code] using point.code.current) fetched calls
 end Exec.Interp.StructuredMachine

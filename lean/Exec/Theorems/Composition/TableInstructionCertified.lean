@@ -1,6 +1,35 @@
-import Exec.Interp.State.TableWriteSource
-import Exec.Theorems.Composition.Certified.CertifiedContentUpdate
-import Exec.Theorems.Composition.Certified.CertifiedCoreContent
+import Exec.Interp.State.TableMutation
+import Exec.Spec.TableWriteBounds
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Calls.CallRefinement
+import Exec.Interp.Control.StructuredPoint
+import Exec.Interp.Calls.CallStack
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Abs.Results
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Invariant.FunctionTables
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.Core
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Store.Invariant.SemanticApi
@@ -62,54 +91,4 @@ theorem table_mutation_extends {M : Type} (view : M → Slice U8)
       getElem!_pos (before.tables.val.map decodeTable) address.index.val
         (by simpa only [List.length_map] using bound),List.getElem_map] using objectExtension
 
-/-- The mutable Core certificate survives table-content replacement; the
-new reference is required to be an issued value of the table's element type. -/
-theorem table_mutation_core_certified {M : Type} (view : M → Slice U8)
-    (code : CodeInterpretation) (before after : runtime.store.Store M)
-    (certified : CertifiedCoreStore view code before)
-    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
-    (issued : before.tables.val[address.index.val]? = some object)
-    (mutation : TableMutation before after address object replacement)
-    (reference : ReferenceShape before object.ty replacement) :
-    CertifiedCoreStore view code after ∧ Extend_store (decodeStore view code before) (decodeStore view code after) := by
-  obtain ⟨shape,extension⟩ := table_mutation_extends view code before after certified.shape certified.storeSyntax
-    address object replacement issued mutation reference
-  obtain ⟨words,rfl,lengthEq,references⟩ := mutation
-  exact ⟨certified.content_update rfl rfl rfl rfl rfl rfl shape extension,extension⟩
-theorem table_set_core_certified {M : Type}
-    (memory : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (code : CodeInterpretation)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.ModuleInst)
-    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32) (ambient : frame)
-    (found : store.instances.val[instanceIndex.val]? = some inst)
-    (mapped : inst.tables.val[table.val]? = some address)
-    (issued : store.tables.val[address.index.val]? = some object)
-    (input : UScalar.cast .U32 exec.slots.val[base.val+index.val]! = position)
-    (indexBound : base.val+index.val < exec.slots.length)
-    (valueBound : base.val+value.val < exec.slots.length)
-    (moduleEq : ambient.MODULE = decodeInstance store inst)
-    (certified : CertifiedCoreStore view code store)
-    (reference : ReferenceShape store object.ty exec.slots.val[base.val+value.val]!) (ambientWf : wf_frame ambient) :
-    runtime.interp.execute_table_set memory exec store instanceIndex base index value table ⦃ out =>
-      CertifiedCoreStore view code out.2.2 ∧
-      Extend_store (decodeStore view code store) (decodeStore view code out.2.2) ∧
-      out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
-      (out.1 = .Ok () ∨ out.1 = .Err (.Trap .TableOutOfBounds)) ∧
-      StepH ⟨⟨decodeStore view code store,ambient⟩,
-        [Spec.Segment.i32 position.val,admininstr_ref (decodeRef object.ty exec.slots.val[base.val+value.val]!),.TABLE_SET (.mk_uN table.val)]⟩ []
-        ⟨⟨decodeStore view code out.2.2,ambient⟩,match out.1 with | .Ok _ => [] | .Err _ => [.TRAP]⟩ ∧
-      (out.1 = .Err (.Trap .TableOutOfBounds) → out.2.2 = store) ⦄ := by
-  have storeWf := decodeStore_wf view code store certified.shape certified.storeSyntax
-  obtain ⟨out,run,source⟩ := WP.spec_imp_exists
-    (table_set_source_effect memory view code exec store instanceIndex base index value table inst address object position ambient
-      found mapped issued input indexBound valueBound moduleEq storeWf ambientWf)
-  have changed := table_set_mutation memory exec store instanceIndex base index value table inst address object position
-    found mapped issued input indexBound valueBound
-  rw [run,WP.spec_ok] at changed ⊢
-  rcases changed.2.2 with ⟨success,mutation⟩ | ⟨trap,unchanged⟩
-  · obtain ⟨fresh,extension⟩ := table_mutation_core_certified view code store out.2.2 certified address object _ issued mutation reference
-    exact ⟨fresh,extension,source⟩
-  · exact ⟨by simpa only [unchanged] using certified,
-      by simpa only [unchanged] using Spec.extend_store_refl _ storeWf,source⟩
 end Exec.Theorems

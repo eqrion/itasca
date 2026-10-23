@@ -7,19 +7,19 @@ open Aeneas.Std
 /-- Actual SIMD frame effects preserve the complete stack of compiled callers.
 Source typing, supported syntax, ownership, and source bounds follow from the
 checked source SIMD step rather than additional runtime postulates. -/
-theorem Execution.simd {emission : FunctionEmission} {allowed : instr → Prop} {M : Type}
+theorem Execution.simd {M : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     {store nextStore : runtime.store.Store M} {exec after : runtime.interp.Execution}
     (ambient : frame) (source updated : Abs.AFrame) (rest : List Abs.AFrame)
     (expected : List valtype) (beforePC : Nat) (beforePending : Bool)
-    (machine : Execution emission (Abs.SupportedState allowed) view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩ expected beforePC beforePending)
     (stores : FrameStoreMetadata store nextStore)
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val+1 = exec.frames.length) (lookup : exec.frames.val[index.val]? = some raw)
     {compiled C targets next output}
     (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
-    (point : FramePoint emission (Store.decodeStore view code nextStore) {raw with pc := pc}
+    (point : FramePoint (Store.decodeStore view code nextStore) {raw with pc := pc}
       updated compiled C targets next output)
     (slots : FrameSlots after {raw with pc := pc} updated)
     (metadata : FrameMetadata source updated)
@@ -27,7 +27,7 @@ theorem Execution.simd {emission : FunctionEmission} {allowed : instr → Prop} 
     (preserved : SlotPrefix raw.base.val exec.slots.val after.slots.val)
     (step : Abs.Simd.Step ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩
       (.next ⟨Store.decodeStore view code nextStore,ambient,updated::rest,[]⟩)) :
-    Execution emission (Abs.SupportedState allowed) view code nextStore after
+    Execution view code nextStore after
       ⟨Store.decodeStore view code nextStore,ambient,updated::rest,[]⟩ expected pc.val false ∧
     ConcreteSim compiled.code.length beforePC pc.val beforePending false
       ⟨Store.decodeStore view code store,ambient,source::rest,[]⟩

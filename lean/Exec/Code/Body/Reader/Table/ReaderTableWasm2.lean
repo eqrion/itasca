@@ -4,13 +4,13 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
-/-- Accepted Wasm 2 reader decomposition with exact decoded count/targets and
+/-- Accepted reader decomposition with exact decoded count/targets and
 actual selector-pop/final-callback equations. No replacement visitor is assumed. -/
-theorem compiler_read_br_table_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
+theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env before = .ok (.Ok (),final,after)) :
+      st data env profile before = .ok (.Ok (),final,after)) :
     ∃ (count : U32) (first : Usize) (selector : code.StackType) (popped : code.OpIterState)
       (depths : List U32) (default : U32) (types : signature.ResultType)
       (defaultStart : Usize) (readState : code.BodyState) (budget : runtime.compiler.Budget A)
@@ -41,7 +41,8 @@ theorem compiler_read_br_table_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair] at rest
       obtain ⟨depths,default,types,defaultStart,readState,budget,buffer,bufferEq,
         decoded,defaultDecoded,countEq,marked,callback⟩ :=
-        compiler_table_loop_wasm2 ops law before after ⟨popped⟩ final data env count 0#u32 none (by scalar_tac) rest
+        compiler_table_loop ops law before after ⟨popped⟩ final data env profile count 0#u32 none .Empty
+          (by scalar_tac) rest
       exact ⟨count,first,selector,popped,depths,default,types,defaultStart,readState,budget,buffer,
         readSpec,popCall,bufferEq,decoded,defaultDecoded,by simpa using countEq,marked,callback⟩
 end Exec.Code

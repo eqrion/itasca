@@ -1,4 +1,4 @@
-import Itasca.Spec.DeclaredReferences
+import Itasca.Main
 
 /-!
 # The `ref.func` declaration condition

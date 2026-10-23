@@ -59,42 +59,4 @@ set_option maxRecDepth 4096 in
     simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     exact finish_op ops law compiler state types _ before layout concrete codeFits sourceFits coordinateFits
 
-/-- Direct-call source typing and signature-slot metadata determine the exact
-argument base used by the actual callback and its retained structured code. -/
-@[step] theorem callback_call_certificate {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (typeTable functions : List functype) (returns : List valtype) (labels : List LabelTarget)
-    (front params results : List valtype) (index paramSlots base : U32)
-    (live : NormalLive labels)
-    (layout : CompilerLayout compiler (front ++ params)) (reachable : compiler.reachable = true)
-    (metadata : compiler.func_param_slots.val[index.val]? = some paramSlots)
-    (parameterWidth : paramSlots.val = slots params)
-    (basePosition : base.val = slots (compilerLocals compiler) + slots front)
-    (signature : functions[index.val]? = some ⟨.mk_list params, .mk_list results⟩)
-    (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ results)
-    (codeFits : compiler.function.code.val.length < Usize.max)
-    (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call ops compiler state index ⦃ out =>
-      out.1 = .Ok () →
-        Lowered compiler out.2 (.Call index base) (front ++ results) ∧
-        CodeRel typeTable functions returns (compilerLocals compiler) out.2.function.code.val
-          labels (front ++ params) [.CALL (.mk_uN index.val)] compiler.function.code.val.length
-          (compiler.function.code.val.length + 1) (front ++ results) ⦄ := by
-  have arguments : compiler.height.val = base.val + paramSlots.val := by
-    rw [layout.height, slots_append, parameterWidth, basePosition]
-    omega
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call
-  apply WP.spec_mono (lower_call ops law compiler state types (front ++ params) index paramSlots base
-    layout reachable metadata arguments concrete codeFits sourceFits coordinateFits)
-  intro out result accepted
-  have lowered := result accepted
-  rw [typed] at lowered
-  refine ⟨lowered, CodeRel.call signature basePosition ?_ ?_⟩
-  · simp [lowered.1]
-  · apply CodeRel.nil
-    · simp [lowered.1]
-    · exact live
 end Exec.Code

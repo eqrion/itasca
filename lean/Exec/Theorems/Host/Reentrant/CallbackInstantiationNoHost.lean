@@ -1,4 +1,4 @@
-import Exec.Theorems.Host.Reentrant.ReentrantPackage
+import Exec.Theorems.Host.Reentrant.ReentrantInvocation
 import Exec.Theorems.Instantiation.InstantiateExecutableWorldNoStartSource
 import Exec.Store.Instantiation.InstantiateNoStartExterns
 

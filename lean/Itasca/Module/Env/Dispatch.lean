@@ -131,13 +131,4 @@ theorem module.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (
       constructor <;> assumption
   · simp
 
-/-- `module.decode_env_section.profile_spec` for Wasm 1.0. -/
-@[step]
-theorem module.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
-    (env : module.Env) (before : Declarations) (hb : Bounded env pos.val) :
-    module.decode_env_section data pos id env .Wasm1 ⦃ r => match r.1 with
-      | .Ok next => ∃ after, Effect data pos env before id next r.2 after ∧ Bounded r.2 next.val
-      | .Err _ => True ⦄ := by
-  exact module.decode_env_section.profile_spec data pos id env before .Wasm1 hb
-
 end Itasca

@@ -1,7 +1,5 @@
 import Exec.Interp.Simd.Common.SimdTruncSatLanes
 import Exec.Spec.SimdTruncSatStep
-import Exec.Interp.Simd.Common.SimdTruncSatLanes
-import Exec.Spec.SimdTruncSatStep
 namespace Exec.Interp.Simd
 open Aeneas Aeneas.Std Platform
 

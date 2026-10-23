@@ -17,13 +17,13 @@ theorem type_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
     (retained : StagedPrefix before store) (objectBound : objectCount store ≤ Usize.max)
     (allocated : AllocationShape view store)
     (entries : TypeEntries store (seed.module.module.env.types.val.take start.val) inst.types.val) :
-    runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator store (.Ok ()) start inst
+    runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator store (.Ok ()) start inst
       ⦃ out => ∃ after next status, out = typeParts after status next ∧
         after = {before with types := after.types, signature_values := after.signature_values} ∧
         next = {seed with types := next.types} ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ AllocationShape view after ∧
         (status = .Ok () → TypeEntries after seed.module.module.env.types.val next.types.val) ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop3
+  unfold runtime.store.instantiate.Store.prepare_instance_loop3
   apply loop.spec_decr_nat (fun state => seed.module.module.env.types.val.length - state.2.2.1.val)
     (fun state => state.1 = {before with types := state.1.types, signature_values := state.1.signature_values} ∧
       state.2.2.2 = {seed with types := state.2.2.2.types} ∧ StagedPrefix before state.1 ∧
@@ -35,7 +35,7 @@ theorem type_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
     have source : currentInst.module = seed.module := by
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop3.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop3.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
       module.Env.types, Itasca.module.Env.impl.types, source, bind_ok]
     split

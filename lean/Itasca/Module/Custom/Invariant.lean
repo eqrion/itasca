@@ -1,5 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Module.Custom.Visitor
+import Itasca.Contracts
 
 /-!
 # Custom section hook invariants
@@ -12,15 +13,6 @@ They speak only about the successful run.
 -/
 
 open Aeneas Aeneas.Std
-
-namespace Itasca.ModuleTail
-
-/-- The visitor's `on_custom_section` hook preserves the predicate `P` on its state across
-successful calls. Hooks may advance workers, and no fixed work observation is required. -/
-def PreservesInvariant {V : Type} (visitor : module.ModuleVisitor V) (P : V → Prop) : Prop :=
-  ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') → P v → P v'
-
-end Itasca.ModuleTail
 
 namespace Itasca
 

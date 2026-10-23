@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Itasca.Support.Result
 
 namespace Exec.Code
@@ -15,21 +15,6 @@ abbrev checkInstructions (f : runtime.bytecode.CompiledFunction)
   runtime.bytecode.CompiledFunction.well_formed_loop0 f.locals f.local_slots f.param_slots
     f.slot_count f.max_stack f.code f.jump_tables f.v128_pool f.indirect f.simd f.source_offsets
     f.controls f.type_index f.body_start f.body_end length synthetic valid index
-
-theorem checkInstructions_false (f : runtime.bytecode.CompiledFunction)
-    (length : Usize) (synthetic : Bool) (index : Usize) :
-    checkInstructions f length synthetic false index = .ok false := by
-  unfold checkInstructions runtime.bytecode.CompiledFunction.well_formed_loop0
-  rw [loop.eq_def]
-  simp only [runtime.bytecode.CompiledFunction.well_formed_loop0.body]
-  split <;> simp
-
-theorem checkInstructions_true (f : runtime.bytecode.CompiledFunction)
-    (length : Usize) (synthetic valid : Bool) (index : Usize)
-    (run : checkInstructions f length synthetic valid index = .ok true) : valid = true := by
-  cases valid with
-  | false => simp only [checkInstructions_false] at run; cases Result.ok_injective run
-  | true => rfl
 
 /-- A successful check iteration records the actual instruction-validity
 result and advances the bounded counter. -/
@@ -74,7 +59,6 @@ theorem checkInstructionBody_cont (f : runtime.bytecode.CompiledFunction)
         simpa only [WP.spec_ok] using lookup
     · cases Result.ok_injective run
   · cases Result.ok_injective run
-
 
 theorem checkInstructionBody_done (f : runtime.bytecode.CompiledFunction)
     (length : Usize) (synthetic valid : Bool) (index : Usize)
@@ -137,7 +121,6 @@ theorem checkInstructions_valid (f : runtime.bytecode.CompiledFunction)
         · subst j; exact current
         · exact remaining.2 j (by omega) upper
   exact main _ index valid rfl run
-
 
 theorem checkJumpTable_false (values : alloc.vec.Vec U32) (length index : Usize) :
     runtime.bytecode.CompiledFunction.well_formed_loop1 values length false index = .ok false := by
@@ -203,7 +186,6 @@ theorem well_formed_instructions (f : runtime.bytecode.CompiledFunction)
     | (have impossible := Result.ok_injective run; contradiction)
     | split at run
     | obtain ⟨value, checked, run⟩ := bind_ok_inv _ _ _ run
-
 
 theorem well_formed_fetched (f : runtime.bytecode.CompiledFunction)
     (run : runtime.bytecode.CompiledFunction.well_formed f = .ok true)

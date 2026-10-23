@@ -4,23 +4,22 @@ import Exec.Store.Invariant.FunctionSignatures
 import Exec.Store.Initialization.SegmentCodeMetadata
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
-variable {allowed : instr → Prop}
 
 /-- The installed source subset is preserved for old functions and established
 for every new defined function by its actual source index. -/
 theorem store_supported_publish {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (oldSlice : Abs.FunctionsSupported allowed (decodeStore view oldCode before))
+    (oldSlice : Abs.FunctionsSupported (decodeStore view oldCode before))
     (inst : runtime.store.ModuleInst) (sources : List funccode)
     (sourceCount : sources.length = inst.module.module.env.func_type_indices.val.length)
     (supported : ∀ source ∈ sources, match source with
-      | .HOST _ => False | .FUNC _ _ body => Forall allowed body)
+      | .HOST _ => False | .FUNC _ _ body => Forall Abs.BinaryInstr body)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
-    Abs.FunctionsSupported allowed (decodeStore view (installCode oldCode before.instances.len.val sources) after) := by
+    Abs.FunctionsSupported (decodeStore view (installCode oldCode before.instances.len.val sources) after) := by
   intro decoded present
   obtain ⟨function, member, rfl⟩ := List.mem_map.mp present
   rcases staged function member with old | ⟨index, bound, encoded, signature⟩
@@ -39,15 +38,5 @@ theorem store_supported_publish {M : Type} (view : M → Slice U8)
     simp only [decodeFunction, encoded, found,
       installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
     cases same : source <;> simpa only [same] using known
-
-/-- Segment initialization changes no source bodies, even when it traps. -/
-theorem SegmentAddressSpace.supported {M : Type} {before after : runtime.store.Store M}
-    (metadata : SegmentAddressSpace before after) (view : M → Slice U8) (code : CodeInterpretation)
-    (supported : Abs.FunctionsSupported allowed (decodeStore view code before)) :
-    Abs.FunctionsSupported allowed (decodeStore view code after) := by
-  have same : decodeFunction code after = decodeFunction code before := by
-    funext function
-    simp only [decodeFunction, decodeInstance, metadata.signatures, metadata.instances]
-  simpa only [Abs.FunctionsSupported, decodeStore, metadata.functions, same] using supported
 
 end Exec.Store

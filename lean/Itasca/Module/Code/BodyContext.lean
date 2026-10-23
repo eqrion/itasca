@@ -1,5 +1,5 @@
 import Itasca.Spec.TypingInversion
-import Itasca.Wasm1.Profile
+import Itasca.Wasm1.ProfileSyntax
 
 /-!
 # Body typing under extended segment spaces
@@ -447,13 +447,6 @@ theorem instrs_extend {C : context} {ops : List instr} {ft : functype}
       | exact blocktype_segments (by assumption) _ _
       | (apply_assumption <;> assumption)
 
-/-- Empty segment spaces are a special case of index-preserving extension. -/
-theorem instrs_segments {C : context} {ops : List instr} {ft : functype}
-    (h : Instrs_ok C ops ft) (elems : List elemtype) (datas : List datatype)
-    (he : C.ELEMS = []) (hd : C.DATAS = []) :
-    Instrs_ok (segments C elems datas) ops ft :=
-  instrs_extend h elems datas (by simp [he]) (by simp [hd])
-
 /-- Two contexts agree on every field except the element and data segment spaces. -/
 structure SameCore (C D : context) : Prop where
   types : C.TYPES = D.TYPES
@@ -480,22 +473,5 @@ theorem instrs_transport_extend {C D : context} {ops : List instr} {ft : functyp
     (hd : C.DATAS.IsPrefix D.DATAS) (hc : SameCore C D) : Instrs_ok D ops ft := by
   rw [hc.eq_segments]
   exact instrs_extend h _ _ he hd
-
-/-- A body typing in a context with empty segment spaces moves to any context that agrees outside
-the segment spaces. -/
-theorem instrs_transport {C D : context} {ops : List instr} {ft : functype}
-    (h : Instrs_ok C ops ft) (he : C.ELEMS = []) (hd : C.DATAS = [])
-    (hc : SameCore C D) : Instrs_ok D ops ft := by
-  rw [hc.eq_segments]
-  exact instrs_segments h _ _ he hd
-
-/-- `instrs_transport` for typed expressions. -/
-theorem expr_transport {C D : context} {ops : expr} {rt : resulttype}
-    (h : Expr_ok C ops rt) (he : C.ELEMS = []) (hd : C.DATAS = [])
-    (hc : SameCore C D) : Expr_ok D ops rt := by
-  cases h with
-  | mk_Expr_ok ts ht hw hops =>
-    exact .mk_Expr_ok D ops ts (instrs_transport ht he hd hc)
-      (by rw [hc.eq_segments]; exact segments_wf hw _ _) hops
 
 end Itasca.BodyContext

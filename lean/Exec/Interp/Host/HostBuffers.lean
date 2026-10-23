@@ -16,9 +16,6 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
 @[simp] theorem zeroValue_type (ty : Itasca.types.ValueType) : rawType (zeroValue ty) = ty := by
   cases ty <;> rfl
 
-@[simp] theorem zeroValue_owned (ty : Itasca.types.ValueType) (store : Usize) :
-    ValueOwnedFits store (zeroValue ty) := by cases ty <;> trivial
-
 @[simp] theorem zeroValue_exact (ty : Itasca.types.ValueType) : runtime.Value.zero ty = .ok (zeroValue ty) := by
   cases ty <;> rfl
 

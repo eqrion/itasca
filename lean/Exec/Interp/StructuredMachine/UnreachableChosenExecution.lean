@@ -3,21 +3,21 @@ import Exec.Interp.Relations.ChosenControlSource
 import Exec.Interp.Machines.Core.CoreOwnership
 import Exec.Interp.Machines.Core.CoreUnreachableExecution
 import Exec.Interp.StructuredMachine.OrdinaryExecution
-import Exec.Interp.StructuredMachine.FloatHeads
-import Exec.Code.Local.Lowering.Float.FloatCoreProjection
+import Exec.Interp.StructuredMachine.OrdinaryHeads
+import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
+import Exec.Abs.Stateful.OwnershipStore
 namespace Exec.Interp.StructuredMachine.Unreachable
 variable {jumpTables : List Aeneas.Std.U32}
-variable {emission : FunctionEmission} {compiled : runtime.bytecode.CompiledFunction} [∀ compiled, FloatHeads (emission compiled)]
-variable {supported : Abs.AState → Prop} {owned : Abs.Ownership.Bounds → Abs.AState → Prop}
+variable {compiled : runtime.bytecode.CompiledFunction}
 open Aeneas Aeneas.Std SpecExt Exec.Spec
 
 theorem coreCodeRel_unreachable_inv {C returns locals code labels stack pc next output after}
-    (relation : Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) pc next output) :
+    (relation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) pc next output) :
     (∃ target, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCodeWithTables (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) target.val next output) ∨
+      Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) target.val next output) ∨
     code[pc]? = some .Unreachable := by
   cases relation with
-  | linear head ordinary fragment rest => exact False.elim (coreEmission_not_unreachable ((FloatHeads.project (.core (.slice .unreachable)) head).core_inv rfl))
+  | linear head ordinary fragment rest => exact False.elim (scalarEmission_not_unreachable (FloatHeads.project (.core (.pure .unreachable)) head))
   | skip forward instruction rest => exact Or.inl ⟨_, forward, instruction, rest⟩
   | unreachable instruction remaining scope => exact Or.inr instruction
 
@@ -38,18 +38,18 @@ theorem step_unreachable_chosen_core_execution_owned {choices : Spec.SourceChoic
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint emission (Store.decodeStore view code store) raw {f with code := .UNREACHABLE :: after} compiled C targets next output)
+    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .UNREACHABLE :: after} compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution emission supported view code store exec
+    (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .UNREACHABLE::after}::rest,[]⟩ expected raw.pc.val false)
     (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
     let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .UNREACHABLE::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ pc : U32, out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
-        ((out.1 = .Ok () ∧ Execution emission supported view code store out.2.1 initial expected pc.val false ∧
+        ((out.1 = .Ok () ∧ Execution view code store out.2.1 initial expected pc.val false ∧
           ChosenConcreteSim choices occurrence compiled.code.length raw.pc.val pc.val false false initial initial ∧
-          (∀ bounds, owned bounds initial → owned bounds initial)) ∨
+          (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds initial)) ∨
          (out.1 = .Err (.Trap .Unreachable) ∧ ∃ n, 0 < n ∧ Spec.ChosenStepsN choices occurrence n (Abs.decode initial) []
            ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
@@ -62,7 +62,7 @@ theorem step_unreachable_chosen_core_execution_owned {choices : Spec.SourceChoic
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform index raw inst compiled target last frameFound instanceFound codeFound pcBound fetched)
     intro out effect
     obtain ⟨success,exactState,sameStore,samePlatform⟩ := effect
-    have targetPoint : FramePoint emission (Store.decodeStore view code store) {raw with pc := target} {f with code := .UNREACHABLE::after} compiled C targets next output :=
+    have targetPoint : FramePoint (Store.decodeStore view code store) {raw with pc := target} {f with code := .UNREACHABLE::after} compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels,continuation,point.code.targets,point.code.normal,point.code.exit,point.code.root⟩
     have represented : FrameSlots out.2.1 {raw with pc := target} {f with code := .UNREACHABLE::after} := by
       simpa only [exactState,FrameSlots] using slots
@@ -71,7 +71,7 @@ theorem step_unreachable_chosen_core_execution_owned {choices : Spec.SourceChoic
       raw index target last frameFound program (.ready targetPoint) represented ⟨rfl,rfl,rfl,rfl⟩
       (by rw [exactState]) (by rw [exactState]; exact SlotPrefix.refl _ _) machine.typed machine.core
     exact ⟨sameStore,samePlatform,target,exactState,Or.inl ⟨success,fresh,
-      Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩,fun _ owned => owned⟩⟩
+      Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩,fun _ h => h⟩⟩
   · have pcBound : raw.pc.val < U32.max := by
       have bound := (List.getElem?_eq_some_iff.mp fetched).1
       have cap := program.fetchBound

@@ -81,44 +81,4 @@ theorem run.recorded {A V : Type}
   · exact Or.inl ⟨err, hr, he, rfl⟩
   · exact Or.inr ⟨a, reply, hr, he, hrecords v (event st' a) reply v' hv⟩
 
-/-- Instrumenting the visitor preserves every normal return of a run, including validator and
-callback rejections, and adds at most one observation. -/
-theorem run.instrument_forward {A V : Type}
-    (read : Result (core.result.Result A error.OpError × code.OpIterState))
-    (visitor : code.OpVisitor V) (event : code.OpIterState → A → Event)
-    (v : V) (log : List Observation) (res : core.result.Result Unit error.OpError)
-    (st' : code.OpIterState) (v' : V)
-    (h : run read (fun v st a => invoke visitor v (event st a)) v = .ok (res, st', v')) :
-    ∃ added, added.length ≤ 1 ∧
-      run read (fun w st a => invoke (instrument visitor) w (event st a)) (v, log) =
-        .ok (res, st', (v', log ++ added)) := by
-  rcases (run.returned_iff _ _ _ _ _ _).mp h with
-    ⟨err, hr, rfl, rfl⟩ | ⟨a, reply, hr, hv, rfl⟩
-  · refine ⟨[], by simp, ?_⟩
-    apply (run.returned_iff _ _ _ _ _ _).mpr
-    exact Or.inl ⟨err, hr, rfl, by simp⟩
-  · refine ⟨[⟨event st' a, reply⟩], by simp, ?_⟩
-    apply (run.returned_iff _ _ _ _ _ _).mpr
-    exact Or.inr ⟨a, reply, hr, by simp [hv], rfl⟩
-
-/-- A run of an instrumented visitor that returns normally gives the same result and states for the
-wrapped visitor, and adds at most one observation. -/
-theorem run.instrument_backward {A V : Type}
-    (read : Result (core.result.Result A error.OpError × code.OpIterState))
-    (visitor : code.OpVisitor V) (event : code.OpIterState → A → Event)
-    (v : V) (log : List Observation) (res : core.result.Result Unit error.OpError)
-    (st' : code.OpIterState) (v' : V) (log' : List Observation)
-    (h : run read (fun w st a => invoke (instrument visitor) w (event st a)) (v, log) =
-      .ok (res, st', (v', log'))) :
-    run read (fun v st a => invoke visitor v (event st a)) v = .ok (res, st', v') ∧
-      ∃ added, added.length ≤ 1 ∧ log' = log ++ added := by
-  rcases (run.returned_iff _ _ _ _ _ _).mp h with
-    ⟨err, hr, he, hv⟩ | ⟨a, reply, hr, hv, he⟩
-  · obtain ⟨rfl, rfl⟩ := Prod.mk.inj hv
-    exact ⟨(run.returned_iff _ _ _ _ _ _).mpr (Or.inl ⟨err, hr, he, rfl⟩),
-      [], by simp, by simp⟩
-  · have hi := (record_ok_iff log (event st' a) _ reply v' log').mp (by simpa using hv)
-    exact ⟨(run.returned_iff _ _ _ _ _ _).mpr (Or.inr ⟨a, reply, hr, hi.1, he⟩),
-      [⟨event st' a, reply⟩], by simp, hi.2⟩
-
 end Itasca.CoreVisitor

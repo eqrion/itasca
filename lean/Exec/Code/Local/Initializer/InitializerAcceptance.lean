@@ -41,7 +41,8 @@ theorem initial_instruction_accepts (function : runtime.bytecode.CompiledFunctio
     simp [capacity,same,initializerWidth]
   cases lowered <;>
     simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
-      runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
+      runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,
+      runtime.bytecode.CompiledFunction.other_valid,bind_ok]
   all_goals first | exact scalar | exact wide rfl | skip
   rename_i lo hi pool embedded
   rw [wide (vector lo hi rfl),bind_ok]
@@ -71,7 +72,8 @@ theorem initializer_well_formed (function : runtime.bytecode.CompiledFunction)
     have returned : runtime.bytecode.CompiledFunction.instruction_valid function
         (.Return 0#u32 (initializerWidth ty)) = .ok true := by
       simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.Instr.scalar,
-        runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,bind_ok]
+        runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,runtime.bytecode.Instr.simd,
+      runtime.bytecode.CompiledFunction.other_valid,bind_ok]
       exact slots_fit_zero function (initializerWidth ty) (by rw [shape.capacity])
     interval_cases j <;> simpa [code] using (by assumption)
   · simp [jumps]

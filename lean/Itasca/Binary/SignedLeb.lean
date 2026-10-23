@@ -202,11 +202,6 @@ theorem Decoded.range (data : Slice U8) (start : Usize) (value : Int) (next : Us
   rcases h with ⟨_, _, _, _, _, _, _, _, _, _, _, hbounds⟩
   exact hbounds
 
-/-- Signed LEB128 rejections are `UnexpectedEof` or `LebTooLong`. -/
-theorem Rejected.kind {data : Slice U8} {start : Usize} {e : error.OpError}
-    (h : Rejected format data start e) : e = .UnexpectedEof ∨ e = .LebTooLong := by
-  cases h <;> simp
-
 end Itasca.SignedLeb
 
 namespace Itasca.SignedLeb

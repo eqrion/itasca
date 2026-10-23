@@ -60,62 +60,6 @@ theorem global_valid_of_typing {env : module.Env} {C : context} {g : module.Glob
     ModuleConstants.Valid env g.init g.gtype.valtype :=
   ModuleConstants.valid_of_typing hg hf (global_expr_typed h)
 
-/-- A typed export resolves in the environment to an external type that translates to its typing. -/
-theorem export_resolves_of_typing {env : module.Env} {C : context} {entry : module.Export} {xt}
-    (hc : CodeEntry.ModuleContext env C)
-    (h : Export_ok C (exportDecl (ModuleEnv.rawExport entry)) xt) :
-    ∃ actual, ModuleExternals.ExportResolves env entry actual ∧ ModuleExternals.externalType actual = xt := by
-  have hx : Externidx_ok C (exportIndex entry.desc) xt := by cases h; assumption
-  cases hd : entry.desc <;> simp only [hd, exportIndex] at hx
-  · rename_i idx
-    cases hx with
-    | func _ ft hi he hw hf ht =>
-      have hb : idx.val < env.func_types.val.length := by simpa [hc.funcs, proj_uN_0] using hi
-      refine ⟨.Func env.func_types.val[idx.val], ?_, ?_⟩
-      · simp only [ModuleExternals.ExportResolves, hd]
-        exact ⟨hb, trivial⟩
-      · simp only [ModuleExternals.externalType]
-        congr 1
-        change C.FUNCS[idx.val]! = ft at he
-        rw [hc.funcs, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
-        exact he
-  · rename_i idx
-    cases hx with
-    | table _ tt hi he hw hf ht =>
-      have hb : idx.val < env.table_types.val.length := by simpa [hc.tables, proj_uN_0] using hi
-      refine ⟨.Table env.table_types.val[idx.val], ?_, ?_⟩
-      · simp only [ModuleExternals.ExportResolves, hd]
-        exact ⟨hb, trivial⟩
-      · simp only [ModuleExternals.externalType]
-        congr 1
-        change C.TABLES[idx.val]! = tt at he
-        rw [hc.tables, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
-        exact he
-  · rename_i idx
-    cases hx with
-    | mem _ mt hi he hw hf ht =>
-      have hb : idx.val < env.mem_types.val.length := by simpa [hc.mems, proj_uN_0] using hi
-      refine ⟨.Memory env.mem_types.val[idx.val], ?_, ?_⟩
-      · simp only [ModuleExternals.ExportResolves, hd]
-        exact ⟨hb, trivial⟩
-      · simp only [ModuleExternals.externalType]
-        congr 1
-        change C.MEMS[idx.val]! = mt at he
-        rw [hc.mems, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
-        exact he
-  · rename_i idx
-    cases hx with
-    | global _ gt hi he hw hf ht =>
-      have hb : idx.val < env.global_types.val.length := by simpa [hc.globals, proj_uN_0] using hi
-      refine ⟨.Global env.global_types.val[idx.val], ?_, ?_⟩
-      · simp only [ModuleExternals.ExportResolves, hd]
-        exact ⟨hb, trivial⟩
-      · simp only [ModuleExternals.externalType]
-        congr 1
-        change C.GLOBALS[idx.val]! = gt at he
-        rw [hc.globals, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
-        exact he
-
 /-- Inversion of `Start_ok`: the start function exists and has type `[] -> []`. -/
 theorem start_signature {C : context} {s : _root_.start} (h : Start_ok C s) :
     match s with
@@ -166,17 +110,6 @@ theorem data_valid_of_typing {env : module.Env} {C : context} {entry : module.Da
       (And.intro (show idx.val < env.mem_types.val.length by simpa [hm, hidx] using hn)
         (ModuleConstants.valid_of_typing hg hf ht))
 
-/-- Inversion of `Elemmode_ok`: an active segment names a table with a constant `i32` offset. -/
-theorem elemmode_active_properties {C : context} {mode : elemmode} {rt}
-    (h : Elemmode_ok C mode rt) :
-    match mode with
-    | .ACTIVE idx expr => proj_uN_0 idx < C.TABLES.length ∧ Expr_ok_const C expr .I32
-    | .PASSIVE | .DECLARE => True := by
-  cases h
-  · exact ⟨by assumption, by assumption⟩
-  · trivial
-  · trivial
-
 /-- Inversion of `Elem_ok`: the initializers are constant expressions of the reference type and
 the mode is typed. -/
 theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
@@ -185,18 +118,6 @@ theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
         Elemmode_ok C mode rt := by
   cases h
   exact ⟨by assumption, by assumption⟩
-
-/-- A constant `ref.func idx` expression has `idx` in the function space. -/
-theorem ref_func_index {C : context} {idx : U32} {ty}
-    (h : Expr_ok_const C [instr.REF_FUNC (.mk_uN idx.val)] ty) : idx.val < C.FUNCS.length := by
-  have hs : Instrs_ok C [instr.REF_FUNC (.mk_uN idx.val)] (.mk_functype (.mk_list []) (.mk_list [ty])) := by
-    cases h
-    rename_i he _ _ _
-    cases he
-    assumption
-  obtain ⟨_, _, _, hp, _, _⟩ := DeclarativeComplete.singleton hs
-  cases hp
-  assumption
 
 /-- A typed raw element segment satisfies the element validity requirement. -/
 theorem element_valid_raw_of_typing {env : module.Env} {C : context} {entry : ModuleBinary.Element}

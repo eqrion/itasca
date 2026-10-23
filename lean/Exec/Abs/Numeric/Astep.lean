@@ -75,11 +75,4 @@ theorem astep_typed_eq (s : AState) (f : AFrame) (rest : List AFrame)
     cases f; simp_all
   rw [same, astep_operands, transition_operands_code]
 
-theorem numeric_progress (s : store) (ambient : frame) (f : AFrame)
-    (rest : List AFrame) (after : List instr) (op : Instruction)
-    (typed : FrameTyped s { f with code := op.source :: after } []) :
-    astep ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ ≠ .stuck := by
-  rw [astep_typed_eq ⟨s, ambient, [], []⟩ f rest after op typed]
-  exact transition_progress _ _ _ _ _ typed
-
 end Exec.Abs.Numeric

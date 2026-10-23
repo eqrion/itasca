@@ -53,16 +53,4 @@ theorem SignatureSequence.select {signatures : Slice runtime.compiler.Signature}
   obtain ⟨signature, selected⟩ := selected
   exact ⟨signature, selected, selected.resolved sequence.table inputs outputs⟩
 
-/-- Wasm 1 block signatures need no module lookup and have no parameters. -/
-theorem wasm1_signature_select (signatures : Slice runtime.compiler.Signature) (bt : code.BlockType) :
-    ∃ signature, SignatureAt signatures (Control.signature bt) signature ∧
-      SignatureMatches signature [] (Control.resultTypes bt) := by
-  cases bt with
-  | Empty => exact ⟨_, .empty, by constructor <;> rfl⟩
-  | Value ty =>
-    have bound : width (Translate.valueType ty) < 2^32 := by cases ty <;> decide
-    let word : U32 := UScalar.ofNatCore _ bound
-    refine ⟨_, .value ty word rfl, ?_⟩
-    constructor <;> simp [Control.resultTypes, Control.results, slots, word]
-
 end Exec.Code

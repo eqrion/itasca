@@ -15,10 +15,6 @@ theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
   | eqz ty => exact .instr_case_16 _ _ (.testop__case_0 _ _ _ rfl)
   | conversion op => exact op.source_wf
 
-theorem Instruction.result_bound (op : Instruction)
-    (result : BitVec (sizenn (numtype_Inn op.output))) :
-    result.toNat < 2 ^ integerWidth op.output := word_bound _ _
-
 theorem Instruction.operands_wf (op : Instruction)
     (a b : BitVec (sizenn (numtype_Inn op.input))) : Forall wf_val (op.operands a b) := by
   unfold operands

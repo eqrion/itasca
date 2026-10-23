@@ -97,48 +97,5 @@ theorem FrameProgram.store_prefix {M : Type} {before after : runtime.store.Store
   refine ⟨?_,program.checked,program.fetchBound,program.localSlots,program.epilogue⟩
   obtain ⟨inst,found,code,table⟩ := program.lookup
   exact ⟨inst,retained.instance_lookup found,code,table.store_prefix retained⟩
-theorem SavedFrame.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) (bounds : FrameTypeBounds before) {exec raw source waiting childBase}
-    (saved : SavedFrame before exec raw source waiting childBase) :
-    SavedFrame after exec raw source waiting childBase := by
-  refine ⟨saved.binding.store_prefix retained bounds,saved.slots,saved.destination,?_⟩
-  obtain ⟨compiled,functions,targets,next,output,program,point⟩ := saved.continuation
-  exact ⟨compiled,functions,targets,next,output,program.store_prefix retained,point⟩
 
-theorem SavedFrames.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) (bounds : FrameTypeBounds before) {exec raws sources waiting childBase}
-    (saved : SavedFrames before exec raws sources waiting childBase) :
-    SavedFrames after exec raws sources waiting childBase := by
-  induction saved with
-  | nil waiting => exact .nil waiting
-  | cons head tail ih => exact .cons (head.store_prefix retained bounds) ih
-
-theorem ActiveFrame.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) (bounds : FrameTypeBounds before) {exec raw source}
-    (active : ActiveFrame before exec raw source) : ActiveFrame after exec raw source := by
-  refine ⟨active.binding.store_prefix retained bounds,active.slots,?_⟩
-  obtain ⟨compiled,functions,targets,next,output,pending,program,point⟩ := active.continuation
-  exact ⟨compiled,functions,targets,next,output,pending,program.store_prefix retained,point⟩
-
-theorem FrameStackRel.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) (bounds : FrameTypeBounds before) {exec sources}
-    (stack : FrameStackRel before exec sources) : FrameStackRel after exec sources := by
-  cases stack with
-  | empty frames => exact .empty frames
-  | active frames top saved => exact .active frames (top.store_prefix retained bounds) (saved.store_prefix retained bounds)
-
-theorem ReadyTop.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) {exec source}
-    (ready : ReadyTop before exec source) : ReadyTop after exec source := by
-  obtain ⟨raw,compiled,functions,targets,next,output,top,program,point⟩ := ready
-  exact ⟨raw,compiled,functions,targets,next,output,top,program.store_prefix retained,point⟩
-
-theorem ReadyState.store_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) {exec source}
-    (ready : ReadyState before exec source) : ReadyState after exec source := by
-  cases frames : source.frames with
-  | nil => simpa only [ReadyState,frames] using ready
-  | cons frame rest =>
-    have top : ReadyTop before exec frame := by simpa only [ReadyState,frames] using ready
-    simpa only [ReadyState,frames] using top.store_prefix retained
 end Exec.Interp

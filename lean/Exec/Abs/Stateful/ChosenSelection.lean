@@ -15,19 +15,4 @@ theorem Transition.chosen_of_no_growth {choices : SourceChoices} {occurrence : N
   refine ⟨selection,allowed,?_,equation⟩
   cases op <;> simp_all only [Instruction.choosesGrowth,Selection.Matches,Bool.true_eq_false]
 
-/-- The admissible source policy itself supplies an allowed reply on every
-actual operand/object tuple; no whole execution trace is assumed. -/
-theorem memory_policy_allowed {choices : SourceChoices} (admissible : choices.Admissible)
-    (occurrence : Nat) (object : meminst) (delta : Nat) :
-    MemoryGrowthChoice object delta (choices.memory occurrence object delta) := by
-  cases selected : choices.memory occurrence object delta with
-  | none => exact .refused
-  | some next => exact .grown (admissible.memory occurrence object delta next selected)
-
-theorem table_policy_allowed {choices : SourceChoices} (admissible : choices.Admissible)
-    (occurrence : Nat) (object : tableinst) (delta : Nat) (value : ref) :
-    TableGrowthChoice object delta value (choices.table occurrence object delta value) := by
-  cases selected : choices.table occurrence object delta value with
-  | none => exact .refused
-  | some next => exact .grown (admissible.table occurrence object delta value next selected)
 end Exec.Abs.Stateful

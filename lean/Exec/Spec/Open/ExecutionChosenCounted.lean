@@ -32,12 +32,4 @@ theorem ChoiceTrace.wasmCounted {H : Type} (model : HostModel H) (choices : Choi
     rcases middle with ⟨⟨t,g⟩,after⟩
     simpa only [List.replicate_succ,List.singleton_append] using ChoiceTrace.next (ChoiceTransition.wasm head) rest
 
-theorem ChoiceInfinite.uncons {H : Type} {model : HostModel H} {choices : Choices H} {occurrence first}
-    (infinite : ChoiceInfinite model choices occurrence first) :
-    ∃events middle,ChoiceTransition model choices occurrence first events middle ∧ ChoiceInfinite model choices (occurrence+1) middle := by
-  obtain ⟨states,events,initial,steps⟩:=infinite
-  refine ⟨events 0,states 1,?_,fun n=>states (n+1),fun n=>events (n+1),rfl,?_⟩
-  · simpa only [initial,Nat.add_zero] using steps 0
-  · intro n
-    simpa only [Nat.add_assoc,Nat.add_comm,Nat.add_left_comm] using steps (n+1)
 end Exec.Spec.OpenExecution

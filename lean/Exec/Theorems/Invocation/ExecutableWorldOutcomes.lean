@@ -26,44 +26,6 @@ def ExecutableWorldInvocationOutcome {M P : Type} (view : M → Slice U8)
     ((error=.BadArguments ∨ error=.WrongStore) ∧ out=(.Err error,exec,before,platform,results)) ∨
     ∃events,EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error)
 
-/-- Construct ordinary correspondence from existential source-event evidence.
-Unlike recorded construction, this does not require a specified recorder log. -/
-theorem ExecutableWorldInvocationOutcome.of_executed {M P : Type}
-    {view : M → Slice U8} {code afterCode : Store.CodeInterpretation} {before : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
-    {initial : config} {out}
-    (agrees : Store.CodeAgreesOn before code afterCode)
-    (retained : ExecutableInv view afterCode out.2.2.1 ∧ FrameStorePrefix before out.2.2.1 ∧
-      Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode out.2.2.1))
-    (success : out.1=.Ok () → (∃events,StepsH initial events
-      ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
-      (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value))
-    (failure : ∀error,out.1=.Err error → ∃events,
-      EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error) :
-    ExecutableWorldInvocationOutcome view code before exec platform results initial out := by
-  refine ⟨afterCode,agrees,retained.1,retained.2.1,retained.2.2,?_,success,fun error failed=>Or.inr (failure error failed)⟩
-  cases status : out.1 with
-  | Ok value =>
-    cases value
-    obtain ⟨events,steps⟩ := (success status).1
-    exact ⟨events,_,steps⟩
-  | Err error =>
-    obtain ⟨events,outcome⟩ := failure error status
-    obtain ⟨body,steps⟩ := outcome.reachable
-    exact ⟨events,body,steps⟩
-
-/-- The retained API/store facts share one chosen final code interpretation. -/
-theorem ExecutableWorldInvocationOutcome.retained {M P : Type}
-    {view : M → Slice U8} {code : Store.CodeInterpretation} {before : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
-    {initial : config} {out}
-    (outcome : ExecutableWorldInvocationOutcome view code before exec platform results initial out) :
-    ∃ afterCode, Store.CodeAgreesOn before code afterCode ∧
-      ExecutableInv view afterCode out.2.2.1 ∧ FrameStorePrefix before out.2.2.1 ∧
-      Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode out.2.2.1) := by
-  obtain ⟨afterCode,agrees,valid,kept,extension,rest⟩ := outcome
-  exact ⟨afterCode,agrees,valid,kept,extension⟩
-
 /-- Public source correspondence at the exact concrete log, allowing callbacks
 to publish new code while preserving existing issued instances. -/
 def ExecutableWorldRecordedOutcome {M P : Type} (view : M → Slice U8)

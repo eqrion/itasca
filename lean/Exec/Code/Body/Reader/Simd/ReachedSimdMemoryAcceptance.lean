@@ -11,7 +11,7 @@ set_option maxRecDepth 4096
 /-- The actual memory SIMD reader accepts from its independent source
 memory rule and the retained live compiler layout, including dead code. -/
 theorem reached_profile_simd_memory_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context)
@@ -66,7 +66,7 @@ theorem reached_profile_simd_memory_available_wasm2 {data env locals index st}
 /-- The actual memory_lane SIMD reader accepts from its independent source
 memory rule and the retained live compiler layout, including dead code. -/
 theorem reached_profile_simd_memory_lane_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env locals index st) {A : Type}
+    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context)

@@ -12,7 +12,7 @@ theorem chosen_completed_only_trap {choices : Spec.SourceChoices} (admissible : 
     (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
-    {expected : List valtype} (world : EventfulWorld Executable.emission Abs.ExecutableInstr M Unit view expected)
+    {expected : List valtype} (world : EventfulWorld M Unit view expected)
     (held : ExecutableInv view world.code world.machine.store) (active : 0<world.machine.exec.frames.length)
     (typed : Config_ok (Abs.decode world.machine.source) (.mk_list expected))
     (resources : SourceWorldResources world.machine.store.limits.max_values.val world.machine.store.limits.max_frames.val world.machine.source)

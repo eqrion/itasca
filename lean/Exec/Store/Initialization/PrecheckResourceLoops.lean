@@ -102,9 +102,9 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
       ∃ segment, inst.module.module.env.elements.val[index.val]? = some segment ∧
         ElementPrecheckReady store inst index segment)
     (hstart : start.val ≤ inst.module.module.env.elements.length) :
-    runtime.store.instantiate.Store.instantiate_inner_loop10 memory hooks floats allocator store platform status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop10 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) finalStatus ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop10
+  unfold runtime.store.instantiate.Store.prepare_instance_loop10
   apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.length - state.2.2.2.val)
     (fun state => state.1 = store ∧ state.2.1 = platform ∧
       state.2.2.2.val ≤ inst.module.module.env.elements.length ∧
@@ -112,7 +112,7 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
   · rintro ⟨current, host, state, index⟩ ⟨hcurrent, hhost, hindex, hallowed⟩
     dsimp only at hcurrent hhost hindex hallowed ⊢
     subst current host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop10.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop10.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
@@ -148,9 +148,9 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
       ∃ segment, inst.module.module.tail.data.val[index.val]? = some segment ∧
         DataPrecheckReady store inst index segment)
     (hstart : start.val ≤ inst.module.module.tail.data.length) :
-    runtime.store.instantiate.Store.instantiate_inner_loop11 memory hooks floats allocator store platform status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop11 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ finalStatus, out = storeParts store platform finalStatus ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) finalStatus ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop11
+  unfold runtime.store.instantiate.Store.prepare_instance_loop11
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.length - state.2.2.2.val)
     (fun state => state.1 = store ∧ state.2.1 = platform ∧
       state.2.2.2.val ≤ inst.module.module.tail.data.length ∧
@@ -158,7 +158,7 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
   · rintro ⟨current, host, state, index⟩ ⟨hcurrent, hhost, hindex, hallowed⟩
     dsimp only at hcurrent hhost hindex hallowed ⊢
     subst current host
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop11.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop11.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,

@@ -17,16 +17,8 @@ inductive PreparedBatchSource (data : Slice U8) (env : module.Env) (profile : Va
       (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry next)
       (prepared : CodeEntry.Prepared data env ordinal start profile) (ending : prepared.finish = next)
       (bytes : prepared.body.length ≤ bodyBytes) (locals : prepared.ctx.locals.val.length ≤ localCount)
-      (operands : (independentBodyDemand profile prepared.body env prepared.ctx prepared.typeIdx).operands ≤ peak)
+      (operands : (independentBodyDemand prepared.body env prepared.ctx prepared.typeIdx).operands ≤ peak)
       (rest : PreparedBatchSource data env profile bodyBytes localCount peak (index+1) next entries finish) :
       PreparedBatchSource data env profile bodyBytes localCount peak index start (entry::entries) finish
-
-/-- A nonempty prepared source sequence has a representable next function
-index, independent of any worker or emitted code. -/
-theorem PreparedBatchSource.next_index {data env profile bodyBytes localCount peak index start entry entries finish}
-    (source : PreparedBatchSource data env profile bodyBytes localCount peak index start (entry::entries) finish) :
-    index < env.func_type_indices.val.length := by
-  cases source with
-  | cons ordinal value bounded => omega
 
 end Exec.Code

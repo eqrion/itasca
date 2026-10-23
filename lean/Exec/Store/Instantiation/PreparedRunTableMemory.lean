@@ -35,23 +35,23 @@ theorem prepared_commit_table_memory_bindings {M P F A : Type}
     (limited : count.val ≤ before.limits.max_instance_items.val)
     (typed functions tabled prepared : runtime.store.Store M)
     (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
-    (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
+    (typeRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
-    (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
+    (functionRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
       .ok (typeParts functions (.Ok ()) funcInst))
-    (tableRun : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
+    (tableRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator functions (.Ok ()) funcInst.tables.len funcInst =
       .ok (typeParts tabled (.Ok ()) tableInst))
-    (memoryRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
+    (memoryRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
       .ok (typeParts prepared (.Ok ()) inst))
     (publishedInstances : alloc.vec.Vec runtime.store.ModuleInst)
     (publicationRun : alloc.vec.Vec.push prepared.instances inst = .ok publishedInstances)
     (globalStore elementStore after : runtime.store.Store M)
-    (globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator
+    (globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator
       {prepared with instances := publishedInstances} platform (.Ok ()) 0#usize before.instances.len =
       .ok (storeParts globalStore platform (.Ok ())))
-    (elementRun : runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
+    (elementRun : runtime.store.instantiate.Store.prepare_instance_loop8 memory hooks floats allocator globalStore platform (.Ok ()) 0#usize before.instances.len =
       .ok (storeParts elementStore platform (.Ok ())))
-    (dataRun : runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
+    (dataRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator elementStore (.Ok ()) 0#usize before.instances.len =
       .ok (storeStateParts after (.Ok ()))) :
     ∃ next, after.instances.val[before.instances.len.val]? = some next ∧ next.module = seed.module ∧
       TableBindings after next.module.module.env.table_types.val next.tables.val ∧
@@ -123,7 +123,6 @@ theorem prepared_commit_table_memory_bindings {M P F A : Type}
   · exact metadata.table_bindings (TableBindings.prefix fullTables rfl (by simp [published]))
   · exact metadata.memory_bindings (MemoryBindings.prefix fullMemories rfl (by simp [published]))
 
-
 theorem PreparedRun.table_memory_bindings {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
@@ -151,27 +150,5 @@ theorem PreparedRun.table_memory_bindings {M P F A : Type}
     exact TableBindings.prefix tableMap rfl (by simp)
   · rw [trace.committed]
     exact MemoryBindings.prefix memoryMap rfl (by simp)
-
-theorem PreparedRun.compiled_table_memory_bindings {M P F A : Type}
-    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
-    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
-    {view : M → Slice U8} {before : runtime.store.Store M}
-    {module : runtime.compiler.ExecutableModule} {platform : P} {ready : runtime.store.Store M}
-    (trace : PreparedRun memory hooks floats allocator view before module platform ready)
-    (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
-    (shape : Shape view before) (accounted : SegmentAccounting before)
-    (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module)) :
-    ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
-      TableBindings ready inst.module.module.env.table_types.val inst.tables.val ∧
-      MemoryBindings view ready inst.module.module.env.mem_types.val inst.memories.val := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
-  obtain ⟨tables, memories, cache⟩ := witness.cache law
-  have certificates := witness.initializers law
-  obtain ⟨valid, _⟩ := witness.semantic law
-  have actualValid : Valid module.module.env module.profile := by
-    rw [certificates.2.1]
-    exact valid
-  exact trace.table_memory_bindings laws law shape accounted cache actualValid certificates.2.2.2
 
 end Exec.Store

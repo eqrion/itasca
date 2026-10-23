@@ -31,7 +31,7 @@ theorem memory_grow_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
          Std.bind_assoc,Std.uncurry])
 
 theorem reader_memory_size_wasm2 {data env locals index st}
-    (p : Pending data env locals index st)
+    (p : Pending data env .Wasm2 locals index st)
     (byte : data.val[p.start.val]'p.inbounds = 63#u8)
     (size : st.core.vals.val.length < Usize.max) (out : code.OpIterState)
     (accepted : code.read_memory_size st.core data env = .ok (.Ok (),out)) :
@@ -56,7 +56,7 @@ theorem reader_memory_size_wasm2 {data env locals index st}
     simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
 
 theorem reader_memory_grow_wasm2 {data env locals index st}
-    (p : Pending data env locals index st)
+    (p : Pending data env .Wasm2 locals index st)
     (byte : data.val[p.start.val]'p.inbounds = 64#u8)
     (size : st.core.vals.val.length < Usize.max) (out : code.OpIterState)
     (accepted : code.read_memory_grow st.core data env = .ok (.Ok (),out)) :

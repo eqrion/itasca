@@ -30,20 +30,20 @@ theorem compiler_table_reader_loop_available {A V : Type}
     (tables : compiler.reachable = true → compiler.function.jump_tables.val.length ≤ compiler.function.code.val.length)
     (selector : U32)
     (selectorAt : compiler.reachable = true → compiler.before.val[compiler.before.val.length-1]? = some selector)
-    (reference : code.branch_table_with_loop source st data env before count none 0#u32 =
+    (reference : code.branch_table_with_loop source st data env .Wasm2 before count none .Empty 0#u32 =
       .ok (.Ok (),out,after)) :
     code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env compiler count none 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env .Wasm2 compiler count none .Empty 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => match counter with
             | .instructions => 2*(count.val+1)+1 | .branches => count.val+1 | _ => 0) ⦄ := by
   refine compiler_table_loop_collect_available ops law bound allocation source before after compiler st out data env
-    count all empty length decoded (by omega) (by omega) (by omega)
+    .Wasm2 count all empty length decoded (by omega) (by omega) (by omega)
     (fun _ _ targetAfter => CompilationBudgetEffect compiler.budget targetAfter.budget
       (fun counter => match counter with
         | .instructions => 2*(count.val+1)+1 | .branches => count.val+1 | _ => 0)) ?_ reference
   intro state current marked depth ts sourceBefore sourceAfter collected read values controls mark _
-  have markedEq := source_table_loop_marked source data env count 0#u32 none st out before after (by simp)
+  have markedEq := source_table_loop_marked source data env .Wasm2 count 0#u32 none .Empty st out before after (by simp)
     shape reference state.core marked values controls (read.cursor length) mark
   subst marked
   have whole := read.complete length

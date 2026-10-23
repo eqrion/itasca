@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Exec.Representation.Encoding
 
 namespace Exec.Interp
@@ -30,94 +30,6 @@ def ValueOwnedFits (store : Usize) : runtime.Value → Prop
   | .FuncRef (some a) => a.store = store ∧ a.index.val < Usize.max ∧ a.index.val < U64.max
   | .ExternRef (some a) => a.store = store ∧ a.index.val < Usize.max ∧ a.index.val < U64.max
   | _ => True
-
-/-- Primitive API values roundtrip through their raw slot pair. Store identity
-and address bounds are explicit for references. -/
-theorem value_roundtrip (value : runtime.Value) (store : Usize)
-    (hv : ValueOwnedFits store value) :
-    (do let (lo, hi) ← runtime.value.encode value
-        runtime.value.decode (rawType value) lo hi store) ⦃ result => result = value ⦄ := by
-  cases value <;> simp only [runtime.value.encode, rawType, runtime.value.decode]
-  all_goals simp [lift]
-  case I32 v => scalar_tac
-  case F32 v => scalar_tac
-  case V128 v =>
-    step
-    step
-    congr 1
-    apply (UScalar.eq_equiv_bv_eq _ _).2
-    simp only [UScalar.bv_or, UScalar.cast_bv_eq, i2_post1, x_post1]
-    have bits (b : BitVec 128) :
-        (BitVec.setWidth 128 (BitVec.setWidth 64 b)) |||
-          ((BitVec.setWidth 128 (BitVec.setWidth 64 (b >>> 64))) <<< 64) = b := by
-      apply BitVec.eq_of_getLsbD_eq
-      intro i
-      simp only [BitVec.getLsbD_or, BitVec.getLsbD_setWidth, BitVec.getLsbD_ushiftRight, BitVec.getLsbD_shiftLeft]
-      intro hi
-      by_cases h : i < 64
-      · simp [hi, h]
-      · have hsub : i - 64 < 64 := by omega
-        have hadd : 64 + (i - 64) = i := by omega
-        simp [hi, h, hsub, hadd, show i - 64 < 128 by omega]
-    exact bits v.bv
-  case FuncRef a =>
-    cases a with
-    | none => simp
-    | some a =>
-      simp only [ValueOwnedFits] at hv
-      rcases hv with ⟨hstore, hsize, h64⟩
-      simp only
-      step
-      have hn : lo ≠ 0#u64 := by scalar_tac
-      simp only [hn, ite_false]
-      have hcast64 : (UScalar.cast .U64 a.index).val = a.index.val := by
-        rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt]
-        simpa [UScalarTy.numBits] using (show a.index.val < 2^64 by simpa [U64.max, U64.numBits] using Nat.lt_trans h64 (by simp [U64.max, U64.numBits]))
-      have hloval : lo.val = a.index.val + 1 := by simpa [hcast64] using hi
-      have hcastsize : (UScalar.cast .Usize lo).val = lo.val := by
-        rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt]
-        rw [hloval]
-        simpa [UScalarTy.numBits, Usize.max, Usize.numBits] using (show a.index.val + 1 < 2^Usize.numBits by
-          have hs : a.index.val < 2^Usize.numBits - 1 := by simpa only [Usize.max] using hsize
-          omega)
-      step as ⟨index, hindex⟩
-      have he : index = a.index := by
-        simp only [hcastsize, hloval] at hindex
-        scalar_tac
-      rw [he]
-      cases a
-      simp only at hstore
-      cases hstore
-      rfl
-  case ExternRef a =>
-    cases a with
-    | none => simp
-    | some a =>
-      simp only [ValueOwnedFits] at hv
-      rcases hv with ⟨hstore, hsize, h64⟩
-      simp only
-      step
-      have hn : lo ≠ 0#u64 := by scalar_tac
-      simp only [hn, ite_false]
-      have hcast64 : (UScalar.cast .U64 a.index).val = a.index.val := by
-        rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt]
-        simpa [UScalarTy.numBits] using (show a.index.val < 2^64 by simpa [U64.max, U64.numBits] using Nat.lt_trans h64 (by simp [U64.max, U64.numBits]))
-      have hloval : lo.val = a.index.val + 1 := by simpa [hcast64] using hi
-      have hcastsize : (UScalar.cast .Usize lo).val = lo.val := by
-        rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt]
-        rw [hloval]
-        simpa [UScalarTy.numBits, Usize.max, Usize.numBits] using (show a.index.val + 1 < 2^Usize.numBits by
-          have hs : a.index.val < 2^Usize.numBits - 1 := by simpa only [Usize.max] using hsize
-          omega)
-      step as ⟨index, hindex⟩
-      have he : index = a.index := by
-        simp only [hcastsize, hloval] at hindex
-        scalar_tac
-      rw [he]
-      cases a
-      simp only at hstore
-      cases hstore
-      rfl
 
 def sourceValue : runtime.Value → val
   | .I32 bits => .CONST .I32 (.mk_num__0 .I32 (.mk_uN bits.val))
@@ -279,60 +191,6 @@ theorem written_high (words : List U64) (position : Nat) (ty : Itasca.types.Valu
     (lo hi : U64) (hv : sourceType ty = .V128) (hp : position + 1 < words.length) :
     (written words position ty lo hi)[position + 1]! = hi := by
   simp [written, hv, hp]
-
-/-- Concrete slot write followed by concrete slot read preserves the API value
-whenever its primitive encoding and decoding agree. -/
-theorem slots_roundtrip (slots : Slice U64) (position : Usize)
-    (ty : Itasca.types.ValueType) (value : runtime.Value) (store : Usize) (lo hi : U64)
-    (he : runtime.value.encode value = .ok (lo, hi))
-    (hd : runtime.value.decode ty lo hi store = .ok value)
-    (hz : sourceType ty ≠ .V128 → hi = 0#u64)
-    (hb : position.val + Code.width (sourceType ty) ≤ slots.length) :
-    (do let slots' ← runtime.interp.encode_slot slots position ty value
-        runtime.interp.decode_slot slots' position ty store) ⦃ result => result = value ⦄ := by
-  have hbval : position.val + Code.width (sourceType ty) ≤ slots.val.length := hb
-  step with encode_slot_spec slots position ty value lo hi he hb as ⟨slots', hw⟩
-  have hl : slots'.length = slots.length := by
-    change slots'.val.length = slots.val.length
-    rw [hw, written_length]
-  apply decode_slot_spec slots' position ty store lo hi value (by simpa [hl] using hb)
-  · rw [hw]
-    exact written_low _ _ _ _ _ (by have := Code.width_positive (sourceType ty); omega)
-  · by_cases hv : sourceType ty = .V128
-    · simp only [hv, ↓reduceIte]
-      rw [hw]
-      exact written_high _ _ _ _ _ hv (by rw [hv] at hbval; simp only [Code.width] at hbval; omega)
-    · simpa only [hv, ↓reduceIte] using hz hv
-  · exact hd
-
-theorem encode_hi_zero (value : runtime.Value) (store : Usize)
-    (hv : ValueOwnedFits store value) :
-    runtime.value.encode value ⦃ pair => sourceType (rawType value) ≠ .V128 → pair.2 = 0#u64 ⦄ := by
-  cases value <;> simp [runtime.value.encode, rawType, sourceType, lift]
-  case V128 bits => step
-  case FuncRef address =>
-    cases address with
-    | none => simp
-    | some a => simp only [ValueOwnedFits] at hv; step
-  case ExternRef address =>
-    cases address with
-    | none => simp
-    | some a => simp only [ValueOwnedFits] at hv; step
-
-/-- Every representable, owned API value roundtrips through an in-bounds slot
-region, using the actual extracted slot writer and reader. -/
-theorem owned_slots_roundtrip (slots : Slice U64) (position : Usize)
-    (value : runtime.Value) (store : Usize) (hv : ValueOwnedFits store value)
-    (hb : position.val + Code.width (sourceType (rawType value)) ≤ slots.length) :
-    (do let slots' ← runtime.interp.encode_slot slots position (rawType value) value
-        runtime.interp.decode_slot slots' position (rawType value) store)
-      ⦃ result => result = value ⦄ := by
-  obtain ⟨⟨lo, hi⟩, he, hz⟩ := WP.spec_imp_exists (encode_hi_zero value store hv)
-  have hr := value_roundtrip value store hv
-  simp [he] at hr
-  obtain ⟨result, hd, hv'⟩ := WP.spec_imp_exists hr
-  subst result
-  exact slots_roundtrip slots position (rawType value) value store lo hi he hd hz hb
 
 /-- The total slot width of a signature component, as computed by `value::type_slots`. -/
 def valueTypeSlots (types : List Itasca.types.ValueType) : Nat :=

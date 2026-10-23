@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.StatefulEmission
-import Exec.Code.Local.Lowering.Float.FloatCoreInstructionAcceptance
+import Exec.Code.Local.Relations.Common.ScalarEmissionAcceptance
 
 namespace Exec.Code
 open Aeneas Aeneas.Std
@@ -69,19 +69,5 @@ theorem IndirectCallEmission.instructions_accept {pairs C before source emitted 
     · omega
     · omega
     · exact row
-
-/-- Ordinary complete-profile emission checking, including references, bulk
-operations, and indirect calls. -/
-theorem CumulativeEmission.instructions_accept {pairs C before source emitted after}
-    (emission : CumulativeEmission pairs C before source emitted after)
-    (function : runtime.bytecode.CompiledFunction) (table : pairs = function.indirect.val)
-    (inputs : slots C.LOCALS+slots before ≤ function.slot_count.val)
-    (outputs : slots C.LOCALS+slots after ≤ function.slot_count.val) :
-    ∀ instruction ∈ emitted,
-      runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
-  cases emission with
-  | left head => exact head.instructions_accept function inputs outputs
-  | right head => exact head.instructions_accept function table inputs outputs
-  | indirect head => exact head.instructions_accept function table inputs
 
 end Exec.Code

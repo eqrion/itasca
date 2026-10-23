@@ -140,13 +140,13 @@ theorem codeEncoding_of_parts {profile data start content localEnd last size gro
   · simpa [hlen] using he
   · exact ((⟨hh, hn, hb⟩ : Wasm1.BytesAt data start header content).append hls).append hbodybytes
 
-/-- `functionContext` is the code entry body context when locals are parameters then declared
+/-- `Wasm2.functionContext` is the code entry body context when locals are parameters then declared
 locals. -/
 theorem functionContext_entry {env : module.Env} {locals : alloc.vec.Vec types.ValueType}
     {ft : types.FuncType} {declared : List types.ValueType}
     (hl : locals.val = ft.params.val ++ declared) :
-    functionContext env locals ft = CodeEntry.bodyContext env ft.params.val declared ft.results.val := by
-  simp [functionContext, Wasm2.bodyContext, EnvTranslation.context,
+    Wasm2.functionContext env locals ft = CodeEntry.bodyContext env ft.params.val declared ft.results.val := by
+  simp [Wasm2.functionContext, Wasm2.bodyContext, EnvTranslation.context,
     Control.labelContext, CodeEntry.bodyContext, hl]
   rfl
 
@@ -155,7 +155,7 @@ theorem EntryTyped.of_body {profile env locals index ft groups ops}
     (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
     (hl : locals.val = ft.params.val ++ ModuleLocals.declared groups)
     (ht : Wasm2.FunctionTyped env locals ft ops)
-    (hp : Instructions profile (functionContext env locals ft) ops)
+    (hp : Instructions profile (Wasm2.functionContext env locals ft) ops)
     (hallowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2)
     (hdeclared : DeclaredReferences.Instructions
       (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) ops) :
@@ -163,7 +163,7 @@ theorem EntryTyped.of_body {profile env locals index ft groups ops}
   have hlt := List.getElem?_eq_some_iff.mp hi
   refine ⟨hlt.1, ?_, ?_, ?_, hallowed, hdeclared⟩
   · simpa [hlt.2] using hs
-  · change Instrs_ok (functionContext env locals ft) ops _ at ht
+  · change Instrs_ok (Wasm2.functionContext env locals ft) ops _ at ht
     rw [functionContext_entry hl] at ht
     simpa only [hlt.2, ModuleBinary.Code.declared, ModuleLocals.declared,
       CodeEntry.instructionType] using ht
@@ -178,19 +178,11 @@ theorem EntryTyped.body {profile env index entry}
     (he : BodyEncoding profile data entry.body) : Body profile data env locals index := by
   refine ⟨env.types.val[index.val]'h.type_lt, entry.body,
     List.getElem?_eq_getElem h.type_lt, h.signature, he, ?_, ?_, h.declared⟩
-  · change Instrs_ok (functionContext env locals _) entry.body _
+  · change Instrs_ok (Wasm2.functionContext env locals _) entry.body _
     rw [functionContext_entry hl]
     exact h.typed
   · rw [functionContext_entry hl]
     exact h.instructions
-
-/-- `EntryTyped` gives the generated `Func_ok` judgment for the entry, for either profile. -/
-theorem EntryTyped.func_ok {profile env typeIdx entry}
-    (h : EntryTyped profile env typeIdx entry) (C : context)
-    (hc : CodeEntry.ModuleContext env C) (hsegments : CodeEntry.SegmentContext env C) :
-    Func_ok C (CodeEntry.function typeIdx entry)
-      (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
-  CodeEntry.typed_func_ok h.type_lt h.typed C hc hsegments
 
 /-- `EntryTyped` gives `CodeEntry.Typed`, which omits the signature restriction. -/
 theorem EntryTyped.core {profile env typeIdx entry} (h : EntryTyped profile env typeIdx entry) :
@@ -199,15 +191,6 @@ theorem EntryTyped.core {profile env typeIdx entry} (h : EntryTyped profile env 
 /-- `CodeEntry.Typed` and the signature restriction give `EntryTyped`. -/
 theorem EntryTyped.of_core {profile env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry profile)
     (hs : FuncType profile (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped profile env typeIdx entry :=
-  ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
-
-/-- For Wasm 1.0, `EntryTyped` gives `CodeEntry.Typed`. -/
-theorem EntryTyped.wasm1 {env typeIdx entry} (h : EntryTyped .Wasm1 env typeIdx entry) :
-    CodeEntry.Typed env typeIdx entry := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
-
-/-- For Wasm 1.0, `CodeEntry.Typed` and the signature restriction give `EntryTyped`. -/
-theorem EntryTyped.of_wasm1 {env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry)
-    (hs : FuncType .Wasm1 (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped .Wasm1 env typeIdx entry :=
   ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
 
 end Itasca.Profile

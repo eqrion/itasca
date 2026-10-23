@@ -1,4 +1,6 @@
-import Exec.Interp.Memory.MemoryCoreSimulation
+import Exec.Interp.Memory.MemoryCoreStore
+import Exec.Abs.Core.MemoryLoad
+import Exec.Abs.Core.MemoryStore
 namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt Exec.Spec
  theorem execute_load_core_simulation_exact {M : Type} (memory : runtime.platform.MemoryBuffer M)

@@ -1,4 +1,4 @@
-import Exec.Generated.Funs
+import Exec.Generated.Equations
 import Exec.Abs.Sim.Int
 import Exec.Spec.IntegerDiv
 import Exec.Spec.IntegerBits
@@ -43,7 +43,6 @@ theorem scalar_i64_add_eq {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨_, rfl, ?_⟩
   simp [U64.size, U64.numBits]
-
 
 theorem scalar_i32_sub_eq {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 107#u16 a b = .ok (.Ok (UScalar.cast .U64 (core.num.U32.wrapping_sub (UScalar.cast .U32 a) (UScalar.cast .U32 b)))) := by
@@ -123,7 +122,6 @@ theorem scalar_i64_mul_eq {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨_, rfl, ?_⟩
   simp [U64.size, U64.numBits]
-
 
 /-- Multiplication's mathematical result satisfies the pinned numerical rule. -/
 theorem integer_mul_relation (ty : Inn) (a b : Nat) :
@@ -236,7 +234,6 @@ theorem scalar_i64_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
   rw [hv]
   simpa [numtype_Inn, Abs.integerWidth] using integer_mul_relation .I64 (a.val) (b.val)
 
-
 theorem scalar_i32_eqz_eq {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 69#u16 a b =
       .ok (.Ok (UScalar.cast_fromBool .U64 (decide ((UScalar.cast .U32 a) = 0#u32)))) := by
@@ -253,19 +250,6 @@ theorem scalar_i32_eqz_eq {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨_, rfl, ?_⟩
   simp [UScalar.eq_equiv, Bool.toNat]
-
-theorem scalar_i32_eqz_sound {F : Type} (ops : runtime.platform.FloatOps F)
-    (a b : U64) : runtime.interp.int.scalar ops 69#u16 a b ⦃ r =>
-      ∃ value, r = .Ok value ∧
-        fun_testop_ .I32 (.mk_testop__0 .I32 .EQZ)
-          (.mk_num__0 .I32 (.mk_uN (a.val % 4294967296)))
-          (some (.mk_num__0 .I32 (.mk_uN value.val))) ⦄ := by
-  obtain ⟨_, hr, value, rfl, hv⟩ := WP.spec_imp_exists (scalar_i32_eqz ops a b)
-  rw [hr]
-  simp only [WP.spec_ok]
-  refine ⟨value, rfl, ?_⟩
-  rw [hv]
-  exact Abs.integer_eqz_relation .I32 (a.val % 4294967296)
 
 theorem scalar_i64_eqz_eq {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 80#u16 a b =
@@ -284,19 +268,6 @@ theorem scalar_i64_eqz_eq {F : Type} (ops : runtime.platform.FloatOps F)
   refine ⟨_, rfl, ?_⟩
   simp [UScalar.eq_equiv, Bool.toNat]
 
-theorem scalar_i64_eqz_sound {F : Type} (ops : runtime.platform.FloatOps F)
-    (a b : U64) : runtime.interp.int.scalar ops 80#u16 a b ⦃ r =>
-      ∃ value, r = .Ok value ∧
-        fun_testop_ .I64 (.mk_testop__0 .I64 .EQZ)
-          (.mk_num__0 .I64 (.mk_uN (a.val)))
-          (some (.mk_num__0 .I32 (.mk_uN value.val))) ⦄ := by
-  obtain ⟨_, hr, value, rfl, hv⟩ := WP.spec_imp_exists (scalar_i64_eqz ops a b)
-  rw [hr]
-  simp only [WP.spec_ok]
-  refine ⟨value, rfl, ?_⟩
-  rw [hv]
-  exact Abs.integer_eqz_relation .I64 (a.val)
-
 @[step] theorem compare_int_eq (a b : U64) (width : U32)
     (hw : 0 < width.val) (hw' : width.val ≤ 64) :
     runtime.interp.int.compare_int 0#u16 a b width ⦃ result => result = decide (a.val = b.val) ⦄ := by
@@ -308,7 +279,6 @@ theorem scalar_i64_eqz_sound {F : Type} (ops : runtime.platform.FloatOps F)
     IScalar.shiftRight_UScalar, IScalar.shiftRight, IScalarTy.numBits]
   with_unfolding_all change Result.ok (decide (a = b)) ⦃ result => result = decide (a.val = b.val) ⦄
   simp [UScalar.eq_equiv]
-
 
 @[step] theorem compare_int_ne (a b : U64) (width : U32)
     (hw : 0 < width.val) (hw' : width.val ≤ 64) :
@@ -577,7 +547,6 @@ theorem scalar_i64_eqz_sound {F : Type} (ops : runtime.platform.FloatOps F)
   refine ⟨result, rfl, ?_⟩
   by_cases h : a.val ≥ b.val <;> simp_all
 
-
 /-- The extracted i32.eq handler implements the generated relation. -/
 theorem scalar_i32_eq_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 70#u16 a b ⦃ r =>
@@ -758,7 +727,6 @@ theorem scalar_i64_geu_sound {F : Type} (ops : runtime.platform.FloatOps F)
   rw [hv]
   exact Spec.integer_geu_relation .I64 a.val b.val
 
-
 /-- i32.divu traps on zero without a machine failure. -/
 @[step] theorem scalar_i32_divu_zero {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) (hb : (b.val % 4294967296) = 0) :
@@ -881,7 +849,6 @@ theorem scalar_i64_geu_sound {F : Type} (ops : runtime.platform.FloatOps F)
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
-
 /-- Both ordinary and trapping results of extracted i32.divu satisfy the generated operator rule. -/
 theorem scalar_i32_divu_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 110#u16 a b ⦃ r =>
@@ -1001,14 +968,6 @@ theorem scalar_i32_and_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : 
   change Aeneas.Std.bind (lift ((UScalar.cast .U32 a) &&& (UScalar.cast .U32 b))) (fun value => Aeneas.Std.bind (lift (UScalar.cast .U64 value)) (fun result => Result.ok (core.result.Result.Ok result : core.result.Result U64 runtime.ExecError))) = _
   rw [lift, bind_ok, lift, bind_ok]
 
-@[step] theorem scalar_i32_and {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 113#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = ((UScalar.cast .U32 a).val &&& (UScalar.cast .U32 b).val) ⦄ := by
-  rw [scalar_i32_and_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [U32.cast_U64_val_eq, UScalar.val_and]
-
 theorem scalar_i32_and_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 113#u16 a b ⦃ result =>
       ∃ value, result = .Ok value ∧
@@ -1031,14 +990,6 @@ theorem scalar_i32_or_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U
   rw [lift, bind_ok, lift, bind_ok]
   change Aeneas.Std.bind (lift ((UScalar.cast .U32 a) ||| (UScalar.cast .U32 b))) (fun value => Aeneas.Std.bind (lift (UScalar.cast .U64 value)) (fun result => Result.ok (core.result.Result.Ok result : core.result.Result U64 runtime.ExecError))) = _
   rw [lift, bind_ok, lift, bind_ok]
-
-@[step] theorem scalar_i32_or {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 114#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = ((UScalar.cast .U32 a).val ||| (UScalar.cast .U32 b).val) ⦄ := by
-  rw [scalar_i32_or_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [U32.cast_U64_val_eq, UScalar.val_or]
 
 theorem scalar_i32_or_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 114#u16 a b ⦃ result =>
@@ -1063,14 +1014,6 @@ theorem scalar_i32_xor_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : 
   change Aeneas.Std.bind (lift ((UScalar.cast .U32 a) ^^^ (UScalar.cast .U32 b))) (fun value => Aeneas.Std.bind (lift (UScalar.cast .U64 value)) (fun result => Result.ok (core.result.Result.Ok result : core.result.Result U64 runtime.ExecError))) = _
   rw [lift, bind_ok, lift, bind_ok]
 
-@[step] theorem scalar_i32_xor {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 115#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = ((UScalar.cast .U32 a).val ^^^ (UScalar.cast .U32 b).val) ⦄ := by
-  rw [scalar_i32_xor_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [U32.cast_U64_val_eq, UScalar.val_xor]
-
 theorem scalar_i32_xor_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 115#u16 a b ⦃ result =>
       ∃ value, result = .Ok value ∧
@@ -1093,14 +1036,6 @@ theorem scalar_i64_and_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : 
   rw [lift, bind_ok, lift, bind_ok]
   change Aeneas.Std.bind (lift (a &&& b)) (fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) = _
   rw [lift, bind_ok]
-
-@[step] theorem scalar_i64_and {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 131#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = (a.val &&& b.val) ⦄ := by
-  rw [scalar_i64_and_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [UScalar.val_and]
 
 theorem scalar_i64_and_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 131#u16 a b ⦃ result =>
@@ -1125,14 +1060,6 @@ theorem scalar_i64_or_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U
   change Aeneas.Std.bind (lift (a ||| b)) (fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) = _
   rw [lift, bind_ok]
 
-@[step] theorem scalar_i64_or {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 132#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = (a.val ||| b.val) ⦄ := by
-  rw [scalar_i64_or_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [UScalar.val_or]
-
 theorem scalar_i64_or_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 132#u16 a b ⦃ result =>
       ∃ value, result = .Ok value ∧
@@ -1155,14 +1082,6 @@ theorem scalar_i64_xor_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : 
   rw [lift, bind_ok, lift, bind_ok]
   change Aeneas.Std.bind (lift (a ^^^ b)) (fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) = _
   rw [lift, bind_ok]
-
-@[step] theorem scalar_i64_xor {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
-    runtime.interp.int.scalar ops 133#u16 a b ⦃ result =>
-      ∃ value, result = .Ok value ∧ value.val = (a.val ^^^ b.val) ⦄ := by
-  rw [scalar_i64_xor_eq]
-  simp only [WP.spec_ok]
-  refine ⟨_, rfl, ?_⟩
-  simp only [UScalar.val_xor]
 
 theorem scalar_i64_xor_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.int.scalar ops 133#u16 a b ⦃ result =>

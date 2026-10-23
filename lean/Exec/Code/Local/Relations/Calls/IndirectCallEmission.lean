@@ -1,4 +1,4 @@
-import Exec.Code.Local.Lowering.Float.FloatCoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 namespace Exec.Code
 open Aeneas.Std
 
@@ -16,10 +16,6 @@ inductive IndirectCallEmission (pairs : List (U32 × U32)) (C : context) :
       IndirectCallEmission pairs C ((front ++ params) ++ [.I32])
         (.CALL_INDIRECT (.mk_uN tableIndex.val) (.mk_uN typeIndex.val))
         [.CallIndirect entry index base] (front ++ results)
-
-theorem IndirectCallEmission.length_one {pairs C before instruction emitted after}
-    (emission : IndirectCallEmission pairs C before instruction emitted after) : emitted.length = 1 := by
-  cases emission; rfl
 
 theorem IndirectCallEmission.append_pairs {pairs C before instruction emitted after}
     (emission : IndirectCallEmission pairs C before instruction emitted after)

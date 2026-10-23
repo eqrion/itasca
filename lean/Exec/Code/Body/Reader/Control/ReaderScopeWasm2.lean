@@ -1,4 +1,4 @@
-import Exec.Code.Body.Reader.Control.ReaderScope
+import Exec.Code.Local.Callbacks.Control.ElseSource
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca
@@ -62,29 +62,6 @@ theorem SourceScopeMatchesWasm2.resume {scope parent child instruction}
     (same : SourceScopeMatchesWasm2 scope parent) :
     SourceScopeMatchesWasm2 (scope.advance instruction) (resumedSource parent child instruction) :=
   ⟨same.form, same.params, same.results, by simp [SourceScope.advance, resumedSource, same.source]⟩
-
-/-- Actual ordinary readers append the same literal instruction to both source representations. -/
-theorem ReaderPostWasm2.scope {data env locals index st out instruction poly values}
-    {p : Wasm2.Pending data env locals index st} {scope}
-    (post : ReaderPostWasm2 p out instruction poly values)
-    (same : SourceScopeMatchesWasm2 scope p.current) :
-    SourceScopeMatchesWasm2 (scope.advance instruction) (p.current.advance (.plain instruction) instruction poly values) ∧
-      Wasm2.Frames.Open env (Wasm2.bodyContext env locals p.ft) {core := out} p.parents
-        (p.current.advance (.plain instruction) instruction poly values) :=
-  ⟨(SourceScopeMatchesWasm2.advance_iff _ _ _ _).mpr same, post.opened⟩
-
-theorem ScopeFormMatchesWasm2.closed {bt scope saved source instruction}
-    (same : ScopeFormMatchesWasm2 bt scope saved)
-    (closed : Wasm2.Frames.Closed saved bt source instruction) :
-    ScopeClosed scope source instruction := by
-  cases closed <;> cases same <;> constructor
-
-theorem SourceScopeMatchesWasm2.closed {scope saved instruction}
-    (same : SourceScopeMatchesWasm2 scope saved)
-    (closed : Wasm2.Frames.Closed saved.form saved.bt saved.ops instruction) :
-    ScopeClosed scope.form scope.source instruction := by
-  rw [same.source]
-  exact same.form.closed closed
 
 theorem SourceScopeMatchesWasm2.fresh (bt : signature.BlockType) (form : Wasm2.Frames.Form)
     (scopeForm : ScopeForm) (matched : ScopeFormMatchesWasm2 bt scopeForm form)

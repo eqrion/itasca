@@ -18,10 +18,6 @@ theorem SourceFronts.flatten {parents values front} (fronts : SourceFronts paren
   | root => rfl
   | push prior scope segment same ih => simp [List.flatten_append, ih]
 
-theorem SourceFronts.length {parents values front} (fronts : SourceFronts parents values front) :
-    parents.length = values.length := by
-  induction fronts <;> simp_all
-
 structure ReaderScopeFronts (parents : List SourceScope) (current : SourceScope)
     (values : List (List code.StackType)) : Prop where
   prior : SourceFronts parents values values.flatten
@@ -67,25 +63,6 @@ theorem ReaderScopeFronts.pop {parents parent current values segment}
     (instruction : instr) : ReaderScopeFronts parents (parent.advance instruction) values := by
   obtain ⟨prior, same⟩ := fronts.prior.pop
   exact ⟨prior, same⟩
-
-theorem SourceFronts.lookup {parents values front} (fronts : SourceFronts parents values front)
-    (index : Nat) (scope : SourceScope) (found : parents[index]? = some scope) :
-    scope.front = Sequence.stackTypes (values.take index).flatten := by
-  induction fronts with
-  | root => simp at found
-  | @push parents values front prior current segment same ih =>
-    have bound := (List.getElem?_eq_some_iff.mp found).1
-    by_cases earlier : index < parents.length
-    · have atIndex : parents[index]? = some scope := by
-        simpa only [List.getElem?_append, if_pos earlier] using found
-      have short : index ≤ values.length := by rw [← prior.length]; omega
-      simpa only [List.take_append_of_le_length short] using ih atIndex
-    · have last : index = parents.length := by simp only [List.length_append, List.length_singleton] at bound; omega
-      have equal : current = scope := by simpa only [last, List.getElem?_append, lt_self_iff_false,
-        if_false, Nat.sub_self, List.getElem?_cons_zero, Option.some.injEq] using found
-      subst scope
-      rw [last, prior.length, List.take_append_of_le_length (Nat.le_refl values.length), List.take_length]
-      simpa only [prior.flatten] using same
 
 theorem SourceFronts.prefix {parents values front} (fronts : SourceFronts parents values front)
     (scope : SourceScope) (member : scope ∈ parents) :

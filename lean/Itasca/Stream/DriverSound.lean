@@ -6,13 +6,13 @@ import Itasca.Module.Soundness
 /-!
 # Streaming driver soundness
 
-`stream.validate_streaming.profile_sound`: if `stream.validate_streaming` accepts, then the
+`stream.validate_streaming.sound`: if `stream.validate_streaming` accepts, then the
 concatenation of the source's environment, code and tail regions satisfies `ModuleSound.Validated`
 for the returned environment and tail, and is within the module size cap. The premises are source
 coherence (`StreamSource.Coherent`) and scheduler provenance (`StreamScheduler.Provenance`), both
 obligations on the embedding. Read errors and callback failures are allowed, and neither callback
-termination nor a canonical region split is needed. `stream.validate_streaming.wasm_sound` is the
-Wasm 1.0 instance.
+termination nor a canonical region split is needed. `Itasca/Results/Stream` states the public
+`profile_sound` and `wasm_sound`.
 -/
 
 open Aeneas Aeneas.Std
@@ -24,7 +24,7 @@ variable {profile : ValidationProfile}
 /-- Acceptance of the streaming driver certifies the concatenated bytes, its returned
 environment, and the tail it actually received. Soundness requires coherent source views and
 worker provenance, and does not require callback termination or prevalidated bodies. -/
-theorem stream.validate_streaming.profile_sound {S V : Type}
+theorem stream.validate_streaming.sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
@@ -126,22 +126,5 @@ theorem stream.validate_streaming.profile_sound {S V : Type}
     simp only [List.length_append] at hdLength
     simp only [Slice.len_val, Slice.length] at he hc hm ⊢
     omega
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_sound`. -/
-theorem stream.validate_streaming.wasm_sound {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : StreamScheduler.Provenance visitor Tracks)
-    (id : U64) (state : S) (v v' : V) (storage env : module.Env)
-    (data environment code tail : Slice U8)
-    (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
-    (hbytes : data.val = environment.val ++ code.val ++ tail.val)
-    (hv : Tracks id [] v)
-    (h : stream.validate_streaming source visitor id .Wasm1 state v storage = .ok (.Ok (), v', env)) :
-    ∃ run : StreamRun.Accepted source visitor id state v v' env,
-      ModuleSound.Validated data ⟨env, run.remaining.tail⟩ ∧
-      data.length ≤ limits.MAX_MODULE_BYTES.val :=
-  stream.validate_streaming.profile_sound source visitor Tracks hp id state v v' storage env
-    data environment code tail hsource hbytes hv h
 
 end Itasca

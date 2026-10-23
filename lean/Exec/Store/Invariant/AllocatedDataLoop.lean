@@ -30,7 +30,7 @@ theorem data_allocated_loop {M A : Type}
     (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val)
     (contents : ElementContents store)
     (issued : ∀ address ∈ inst.datas.val, address.val < store.datas.length) :
-    runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status start instIndex
+    runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ AllocationShape view after ∧ ElementContents after ∧ after.globals = store.globals ∧ (SegmentAccounting store → SegmentAccounting after) ∧
@@ -40,7 +40,7 @@ theorem data_allocated_loop {M A : Type}
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
           ElementTypeMap after inst.module.module.env.elements.val next.elems.val ∧
           (finalStatus = .Ok () → next.datas.length = inst.datas.length + (inst.module.module.tail.data.val.length - start.val)) ⦄ := by
-  unfold runtime.store.instantiate.Store.instantiate_inner_loop9
+  unfold runtime.store.instantiate.Store.prepare_instance_loop9
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.val.length - state.2.2.val)
     (fun state => StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ AllocationShape view state.1 ∧ ElementContents state.1 ∧ state.1.globals = store.globals ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
@@ -56,7 +56,7 @@ theorem data_allocated_loop {M A : Type}
   · rintro ⟨current, result, index⟩ ⟨hstaged, hobjects, hallocated, hcontents, hglobals, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hissued, hglobalMap, hbindings, himports, hsegments, hcapacity, hstoreCapacity, htyped, hcount⟩
     dsimp only at hstaged hobjects hallocated hcontents hglobals haccounted hmetadata hindex hfound hsource hissued hglobalMap hbindings himports hsegments hcapacity hstoreCapacity htyped hcount ⊢
-    unfold runtime.store.instantiate.Store.instantiate_inner_loop9.body
+    unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,

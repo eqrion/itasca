@@ -211,14 +211,4 @@ theorem stream.get_next_batch.spec {S : Type} (source : stream.Source S) (state 
     omega
   · omega
 
-theorem stream.get_next_batch.total {S : Type} (source : stream.Source S) (state : S)
-    (codeLen start first num threshold : Usize)
-    (htotal : StreamSource.CallbacksTotal source state)
-    (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
-    (hstart : start.val ≤ codeLen.val) (hmore : first.val < num.val) :
-    ∃ r, stream.get_next_batch source state codeLen start first num threshold = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (stream.get_next_batch.spec source state codeLen start first num threshold htotal hcap hstart hmore)
-  exact ⟨r, hr⟩
-
 end Itasca

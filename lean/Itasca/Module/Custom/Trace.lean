@@ -138,104 +138,6 @@ theorem module.validate_env_with.accepted_trace {V : Type}
       v initial start 0#u8 result next v' hp.bound ht
     exact ⟨events, hlog, start, hp, htrace⟩
 
-/-- Custom callbacks in the tail are separated by the exact intervening data section, and the
-successful walk reaches the end of the input. -/
-theorem module.validate_tail_with_loop.accepted_trace {V : Type}
-    (visitor : module.ModuleVisitor V) (observe : V → List Event)
-    (hrecords : RecordsCustom visitor observe) (data : Slice U8) (env : module.Env)
-    (v : V) (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
-    (result : module.Tail) (v' : V) (hpos : pos.val ≤ data.length)
-    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
-    ∃ events, observe v' = observe v ++ events ∧ TailTrace data pos events := by
-  generalize hn : data.length - pos.val = n
-  induction n using Nat.strong_induction_on generalizing v segments pos seen with
-  | h n ih =>
-    unfold module.validate_tail_with_loop at h
-    rw [loop] at h
-    simp only [module.validate_tail_with_loop.body] at h
-    by_cases hstop : pos ≥ Slice.len data
-    · simp only [hstop, ↓reduceIte] at h
-      have hv : v' = v := by
-        cases hc : env.data_count with
-        | none =>
-          simp [hc] at h
-          exact h.2.symm
-        | some count =>
-          simp only [hc, Std.bind_assoc] at h
-          obtain ⟨size, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
-          by_cases he : size.val = segments.val.length
-          · simp [he] at ht
-            exact ht.2.symm
-          · simp [he] at ht
-      subst v'
-      have he : pos = Slice.len data := UScalar.eq_of_val_eq (by scalar_tac)
-      exact ⟨[], by simp, by simpa only [he, TailTrace] using SectionTrace.done (data := data) (allowed := fun id => id = 11#u8) pos hpos⟩
-    · simp only [hstop, ↓reduceIte] at h
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.read_section_header.spec data pos)
-      rw [hr] at h
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-      | Ok triple =>
-        obtain ⟨id, first, last⟩ := triple
-        have hspan := hp.span
-        have hmeasure : data.length - last.val < n := by scalar_tac
-        simp [core.result.Result.Insts.CoreOpsTry.branch] at h
-        by_cases hcustom : id = module.SECTION_CUSTOM
-        · simp only [hcustom, ↓reduceIte] at h
-          obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (module.decode_custom_section.spec data first last)
-          rw [hr] at h
-          cases r with
-          | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-          | Ok chunk =>
-            simp [Std.bind_assoc] at h
-            obtain ⟨⟨reply, v1⟩, hv, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
-            cases reply with
-            | Err e => simp at ht
-            | Ok u =>
-              cases u
-              obtain ⟨events, hlog, htrace⟩ := ih (data.length - last.val) hmeasure v1 segments last seen hspan.2.2
-                (by simpa [module.validate_tail_with_loop, module.validate_tail_with_loop.body,
-                  core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
-              obtain ⟨nm, hname, hbefore, hend, hlen⟩ := hc
-              refine ⟨.custom chunk :: events, ?_, .custom ?_ htrace⟩
-              · simpa [hrecords v chunk v1 hv, List.append_assoc] using hlog
-              · exact ⟨first, nm, by simpa [hcustom, module.SECTION_CUSTOM] using hp,
-                  hname, hbefore, hend, hlen⟩
-        · simp only [hcustom, ↓reduceIte] at h
-          by_cases hdata : id.val = module.SECTION_DATA.val
-          · simp only [hdata, ↓reduceIte] at h
-            cases seen with
-            | true => simp at h
-            | false =>
-              simp [Std.bind_assoc] at h
-              obtain ⟨read, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
-              cases read with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at ht
-              | Ok pair =>
-                obtain ⟨decoded, consumed⟩ := pair
-                simp at ht
-                by_cases he : consumed.val = last.val
-                · simp only [he, ↓reduceIte] at ht
-                  obtain ⟨events, hlog, htrace⟩ := ih (data.length - last.val) hmeasure v decoded last true hspan.2.2
-                    (by simpa [module.validate_tail_with_loop, module.validate_tail_with_loop.body,
-                      core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
-                  have hid : id = 11#u8 := UScalar.eq_of_val_eq (by simpa [module.SECTION_DATA] using hdata)
-                  exact ⟨events, hlog, .ordinary hid (by simp [hid]) hp htrace⟩
-                · simp [he] at ht
-          · simp [hdata] at h
-
-/-- A successful `module.validate_tail_with` run has an exact custom callback stream. The bound on
-`pos` excludes the immediate success of the API for an out-of-range start. -/
-theorem module.validate_tail_with.accepted_trace {V : Type}
-    (visitor : module.ModuleVisitor V) (observe : V → List Event)
-    (hrecords : RecordsCustom visitor observe) (data : Slice U8) (pos : Usize) (env : module.Env)
-    (v : V) (result : module.Tail) (v' : V) (hpos : pos.val ≤ data.length)
-    (h : module.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
-    ∃ events, observe v' = observe v ++ events ∧ TailTrace data pos events :=
-  module.validate_tail_with_loop.accepted_trace visitor observe hrecords data env v (alloc.vec.Vec.new _)
-    pos false result v' hpos h
-
 end Itasca
 
 open Aeneas Aeneas.Std
@@ -250,10 +152,5 @@ def customRecorder : module.ModuleVisitor (List Event) where
 theorem customRecorder_records : RecordsCustom customRecorder id := by
   intro v chunk v' h
   simpa [customRecorder, Eq.comm] using h
-
-/-- `customRecorder` accepts every callback. -/
-theorem customRecorder_accepts : ModuleTail.HooksAccept customRecorder := by
-  intro events chunk
-  exact ⟨events ++ [.custom chunk], rfl⟩
 
 end Itasca.ModuleTrace

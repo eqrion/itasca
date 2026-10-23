@@ -4,7 +4,6 @@ import Exec.Abs.Core.PureMetadata
 import Exec.Abs.Core.MemoryLoad
 import Exec.Abs.Core.MemoryStore
 
-import Exec.Abs.Core.Control
 
 namespace Exec.Abs.Core
 open SpecExt Exec.Spec
@@ -13,19 +12,19 @@ open SpecExt Exec.Spec
 and has a counted source simulation (or the bounded constant stutter). -/
 theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
-    (covered : CoreInstr op)
+    (covered : CoreHead op)
     (typed : CoreTyped ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩)
     (equation : instruction s ambient f rest op after = .next next) :
     CoreTyped next ∧ NextSim ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩ next := by
   have frameTyped : FrameTyped s {f with code := op :: after} [] := by
     cases typed.typed.frames with | cons head _ => exact head
   cases covered with
-  | slice allowed =>
+  | pure allowed =>
     rw [instruction_slice s ambient f rest _ after allowed frameTyped] at equation
     refine ⟨⟨Exec.Abs.instruction_preservation s ambient f rest _ after next allowed typed.typed equation,?_⟩,
       Exec.Abs.instruction_simulation s ambient f rest _ after next allowed typed.typed equation⟩
     simpa only [astep_store equation] using typed.contents
-  | constant ty value =>
+  | const ty value =>
     obtain ⟨actual,actualEq,fresh,simulation⟩ := constant_progress s ambient f rest after ty value typed
     rw [actualEq] at equation
     cases equation
@@ -70,21 +69,6 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
       exact ⟨fresh,.single simulation⟩
     · rw [actualEq] at equation
       contradiction
-  | block bt body _ =>
-    have pure : astep ⟨s,ambient,{f with code := .BLOCK bt body :: after} :: rest,[]⟩ = .next next := equation
-    refine ⟨⟨block_preservation s ambient f rest after bt body next typed.typed pure,?_⟩,
-      typed_block_simulation s ambient f rest after bt body next typed.typed pure⟩
-    simpa only [astep_store pure] using typed.contents
-  | loop bt body _ =>
-    have pure : astep ⟨s,ambient,{f with code := .LOOP bt body :: after} :: rest,[]⟩ = .next next := equation
-    refine ⟨⟨loop_preservation s ambient f rest after bt body next typed.typed pure,?_⟩,
-      typed_loop_simulation s ambient f rest after bt body next typed.typed pure⟩
-    simpa only [astep_store pure] using typed.contents
-  | ifelse bt yes no _ _ =>
-    have pure : astep ⟨s,ambient,{f with code := .IFELSE bt yes no :: after} :: rest,[]⟩ = .next next := equation
-    refine ⟨⟨core_if_preservation s ambient f rest bt yes no after next typed.typed pure,?_⟩,
-      core_if_simulation s ambient f rest bt yes no after next typed.typed pure⟩
-    simpa only [astep_store pure] using typed.contents
 
 theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (next : AState)
@@ -115,25 +99,5 @@ theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
         rw [← equation]
         exact active_frame_preservation typed.typed (label_exit_frame_preservation (f := frame) frameTyped) rfl
       · contradiction
-
-/-- Every successful mutable Core step is source typed and source simulated;
-ordinary and mutable instructions share the same active/suspended-frame model. -/
-theorem step_correct (s next : AState) (typed : CoreTyped s) (covered : CoreState s)
-    (equation : step s = .next next) : CoreTyped next ∧ NextSim s next := by
-  rcases s with ⟨source,ambient,frames,results⟩
-  cases frames with
-  | nil => simp [step] at equation
-  | cons frame rest =>
-    have noResults := typed.typed.activeResults (by simp)
-    change results = [] at noResults
-    subst results
-    have body := (covered.active frame (by simp)).1
-    cases frame with
-    | mk address resultTypes locals module labels code values =>
-      let frame : AFrame := ⟨address,resultTypes,locals,module,labels,code,values⟩
-      cases code with
-      | nil => exact empty_correct source ambient frame rest next typed equation
-      | cons op after =>
-        exact instruction_correct source ambient frame rest op after next (body op (by simp)) typed equation
 
 end Exec.Abs.Core

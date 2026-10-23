@@ -58,9 +58,7 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
     have found : w.dispatched.env.func_type_indices.val[w.entry.index.val]? = some entry.typeIdx := by
       simp only [List.getElem?_eq_getElem entry.index_lt, entry.index_type]
     simpa only [w.metadata.1] using found
-  have signature := witness_type_profile entry entryTypes
   have certificate := w.compile_executable law reachable bounded origin signatureTable functionTable entry body
-    (by intro selected; simpa only [selected, Profile.FuncType] using signature)
   refine ⟨entry.typeIdx, sourceFunctionCode entry.typeIdx rawEntry, typeFound,
     sourceFunctions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
   simpa only [sourceFunctionCode, ModuleBinary.Code.declared, ModuleLocals.declared, groups, List.map_map, Function.comp_def] using certificate

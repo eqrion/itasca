@@ -1,5 +1,5 @@
+import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Module.Completeness
 import Itasca.Examples.Module.Support
 
 /-!

@@ -89,12 +89,6 @@ theorem value_type_ne_eq (left right : Itasca.types.ValueType) :
       types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
       Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
-@[step] theorem value_type_ne_spec (left right : Itasca.types.ValueType) :
-    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType left right
-      ⦃ out => out = if left = right then false else true ⦄ := by
-  rw [value_type_ne_eq]
-  simp
-
 def checkSequence (first rest : core.result.Result Unit runtime.ExecError) :
     core.result.Result Unit runtime.ExecError :=
   match first with

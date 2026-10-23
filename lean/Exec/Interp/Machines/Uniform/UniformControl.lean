@@ -40,14 +40,6 @@ theorem UniformConcreteSim.forward {beforePC afterPC : Nat} {before after : Abs.
     UniformConcreteSim beforePC afterPC false false before after [] :=
   Or.inl ⟨same, rfl, silentDispatchPotential_forward forward bound⟩
 
-theorem UniformConcreteSim.of_source_forward {beforePC afterPC : Nat} {before after : Abs.AState}
-    (simulation : Abs.NextSim before after) (forward : beforePC < afterPC)
-    (bound : afterPC ≤ U32.max) :
-    UniformConcreteSim beforePC afterPC false false before after [] := by
-  rcases simulation with ⟨same,_⟩ | reductions
-  · exact .forward same forward bound
-  · exact Or.inr reductions
-
 theorem ConcreteSim.uniform_forward {codeLength beforePC afterPC : Nat} {before after : Abs.AState}
     (simulation : ConcreteSim codeLength beforePC afterPC false false before after)
     (forward : beforePC < afterPC) (bound : afterPC ≤ U32.max) :
@@ -60,14 +52,6 @@ theorem UniformConcreteSim.of_steps {beforePC afterPC beforePending afterPending
     (positive : 0 < n) (steps : Spec.StepsHN n (Abs.decode before) events (Abs.decode after)) :
     UniformConcreteSim beforePC afterPC beforePending afterPending before after events :=
   Or.inr ⟨n,positive,steps⟩
-
-/-- Administrative source normalization changes neither concrete PC nor phase.
-Positive normalization is paid for; empty normalization retains the rank. -/
-theorem UniformConcreteSim.prepend {beforePC afterPC beforePending afterPending before middle after events}
-    (normal : Spec.StepsHN 0 (Abs.decode before) [] (Abs.decode middle))
-    (step : UniformConcreteSim beforePC afterPC beforePending afterPending middle after events) :
-    UniformConcreteSim beforePC afterPC beforePending afterPending before after events := by
-  simpa only [UniformConcreteSim, normal.zero.1] using step
 
 theorem UniformConcreteSim.prepend_steps {beforePC afterPC beforePending afterPending before middle after events rest n}
     (normal : Spec.StepsHN n (Abs.decode before) events (Abs.decode middle))

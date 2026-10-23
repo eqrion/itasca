@@ -55,33 +55,12 @@ theorem Instruction.operands_wf (op : Instruction) (a b : Nat)
     · exact .val_case_0 _ _ (numberOfBits_wf _ _ first)
     · exact .val_case_0 _ _ (numberOfBits_wf _ _ second)
 
-
 def Instruction.signature (op : Instruction) : functype :=
   .mk_functype (.mk_list (List.replicate op.arity (valtype_numtype op.input))) (.mk_list [valtype_numtype op.output])
-
-theorem Instruction.source_typed (op : Instruction) (C : context) (contextWf : wf_context C) :
-    Instr_ok C op.source op.signature := by
-  cases op with
-  | unary ty operation => exact .unop _ _ _ contextWf (Instruction.source_wf (.unary ty operation))
-  | binary ty operation => exact .binop _ _ _ contextWf (Instruction.source_wf (.binary ty operation))
-  | compare ty operation => exact .relop _ _ _ contextWf (Instruction.source_wf (.compare ty operation))
-  | convert source target sign => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf (.convert source target sign))
-  | truncate source target sign sat => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf (.truncate source target sign sat))
-  | reinterpretFloat source => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf (.reinterpretFloat source))
-  | reinterpretInt source => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf (.reinterpretInt source))
-  | promote => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf .promote)
-  | demote => exact .cvtop _ _ _ _ contextWf (Instruction.source_wf .demote)
 
 theorem numberOfBits_typed (s : store) (storeWf : wf_store s) (ty : numtype) (bits : Nat)
     (bound : bits < 2^sizenn ty) :
     Val_ok s (.CONST ty (numberOfBits ty bits)) (valtype_numtype ty) :=
   .numtype _ _ _ storeWf (.val_case_0 _ _ (numberOfBits_wf ty bits bound))
-
-theorem Instruction.Result.result_typed (op : Instruction) (s : store) (storeWf : wf_store s)
-    (a b bits : Nat) (step : op.Result a b (some bits)) :
-    Val_ok s (.CONST op.output (numberOfBits op.output bits)) (valtype_numtype op.output) :=
-  numberOfBits_typed s storeWf op.output bits step.1
-
-
 
 end Exec.Abs.Float

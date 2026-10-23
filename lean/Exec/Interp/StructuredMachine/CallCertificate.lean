@@ -3,7 +3,6 @@ import Exec.Interp.Calls.CallRefinement
 import Exec.Interp.StructuredMachine.Point
 
 namespace Exec.Interp.StructuredMachine
-variable {emission : FunctionEmission}
 open Aeneas Aeneas.Std
 
 /-- The compiler's complete function certificate supplies the initial callee
@@ -13,12 +12,12 @@ theorem function_callee_point
     (bindings : Abs.ModuleBindings s moduleInst C)
     (params declared results : List valtype) (body : List instr)
     (compiled : runtime.bytecode.CompiledFunction) (epilogue : U32)
-    (certificate : FunctionCode emission C params declared results body compiled epilogue)
+    (certificate : FunctionCode C params declared results body compiled epilogue)
     (address : Nat) (instanceIndex functionIndex base : Usize)
     (args defaults : List val)
     (argumentTypes : args.map Code.valueType = params)
     (default : Abs.defaultLocals (declared.map local.LOCAL) = some defaults) :
-    FramePoint emission s ⟨instanceIndex, functionIndex, 0#u32, base⟩
+    FramePoint s ⟨instanceIndex, functionIndex, 0#u32, base⟩
       (callCallee address moduleInst results args defaults body) compiled C
       [Code.functionRootLabel results compiled epilogue] epilogue.val results := by
   refine ⟨bindings,?_,?_,?_⟩
@@ -53,7 +52,7 @@ theorem call_wasm_certified {M P F A : Type}
     (s : _root_.store) (C : context) (bindings : Abs.ModuleBindings s (Store.decodeInstance store inst) C)
     (declared : List valtype) (body : List instr)
     (args defaults : List val)
-    (certificate : FunctionCode emission C
+    (certificate : FunctionCode C
       (signature.params.val.map sourceType) declared (signature.results.val.map sourceType) body compiled epilogue)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
@@ -71,7 +70,7 @@ theorem call_wasm_certified {M P F A : Type}
           (signature.results.val.map sourceType) args defaults body
         CallEntryEffect exec out.2.1 instanceIndex functionIndex base compiled ∧
         FrameBinding store out.2.1 raw source ∧ FrameSlots out.2.1 raw source ∧
-        FramePoint emission s raw source compiled C
+        FramePoint s raw source compiled C
           [Code.functionRootLabel (signature.results.val.map sourceType) compiled epilogue]
           epilogue.val (signature.results.val.map sourceType)) ⦄ := by
   have localSlots : compiled.local_slots.val = compiled.param_slots.val + Code.slots declared := by

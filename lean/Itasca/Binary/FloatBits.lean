@@ -186,27 +186,6 @@ end Itasca.FloatBits
 
 namespace Itasca
 
-/-- `reader.read_f32_bits` never panics. -/
-theorem reader.read_f32_bits.total (data : Slice U8) (start : Usize) :
-    ∃ r, reader.read_f32_bits data start = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_f32_bits.spec data start)
-  exact ⟨r, hr⟩
-
-/-- A successful `reader.read_f32_bits` result is a four-byte `Decoded` span. -/
-theorem reader.read_f32_bits.sound (data : Slice U8) (start : Usize)
-    (bits : U32) (next : Usize)
-    (h : reader.read_f32_bits data start = .ok (.Ok (bits, next))) :
-    FloatBits.Decoded 4 data start bits.val next := by
-  have hs := reader.read_f32_bits.spec data start
-  simpa [h, FloatBits.Post] using hs
-
-/-- A rejected `reader.read_f32_bits` result is `UnexpectedEof` on truncated input. -/
-theorem reader.read_f32_bits.rejected (data : Slice U8) (start : Usize)
-    (e : error.OpError) (h : reader.read_f32_bits data start = .ok (.Err e)) :
-    FloatBits.Rejected 4 data start e := by
-  have hs := reader.read_f32_bits.spec data start
-  simpa [h, FloatBits.Post] using hs
-
 /-- Every four-byte `Decoded` span is accepted by `reader.read_f32_bits`. -/
 theorem reader.read_f32_bits.complete (data : Slice U8) (start : Usize)
     (bits : U32) (next : Usize) (h : FloatBits.Decoded 4 data start bits.val next) :
@@ -222,27 +201,6 @@ theorem reader.read_f32_bits.complete (data : Slice U8) (start : Usize)
     have := FloatBits.Decoded.span 4 data start bits.val next h
     have := hp.2
     omega
-
-/-- `reader.read_f64_bits` never panics. -/
-theorem reader.read_f64_bits.total (data : Slice U8) (start : Usize) :
-    ∃ r, reader.read_f64_bits data start = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data start)
-  exact ⟨r, hr⟩
-
-/-- A successful `reader.read_f64_bits` result is an eight-byte `Decoded` span. -/
-theorem reader.read_f64_bits.sound (data : Slice U8) (start : Usize)
-    (bits : U64) (next : Usize)
-    (h : reader.read_f64_bits data start = .ok (.Ok (bits, next))) :
-    FloatBits.Decoded 8 data start bits.val next := by
-  have hs := reader.read_f64_bits.spec data start
-  simpa [h, FloatBits.Post] using hs
-
-/-- A rejected `reader.read_f64_bits` result is `UnexpectedEof` on truncated input. -/
-theorem reader.read_f64_bits.rejected (data : Slice U8) (start : Usize)
-    (e : error.OpError) (h : reader.read_f64_bits data start = .ok (.Err e)) :
-    FloatBits.Rejected 8 data start e := by
-  have hs := reader.read_f64_bits.spec data start
-  simpa [h, FloatBits.Post] using hs
 
 /-- Every eight-byte `Decoded` span is accepted by `reader.read_f64_bits`. -/
 theorem reader.read_f64_bits.complete (data : Slice U8) (start : Usize)

@@ -1,14 +1,14 @@
-import Exec.Code.Local.Control.Table.StructuredUniversalTerminalWithTables
+import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
 namespace Exec.Code
 open Aeneas.Std
 
 /-- Ordered target fragments close one source BR_TABLE. The retained plans and
 resolved-code append are syntactic facts produced by the actual table callback. -/
-theorem StructuredUniversalPrefixWithTables.branch_table
+theorem StructuredUniversalPrefix.branch_table
     {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {jumpTables : List U32} {emit types functions returns locals parents current stack}
     (depths : List labelidx) (fallback : labelidx)
-    (invariant : StructuredUniversalPrefixWithTables jumpTables emit before types functions returns locals
+    (invariant : StructuredUniversalPrefix jumpTables emit before types functions returns locals
       parents current (stack ++ [.I32]))
     (localsEq : compilerLocals after = locals)
     (sites : ∀ frame ∈ after.frames.val, FrameSites after.function.code.val frame)
@@ -23,7 +23,7 @@ theorem StructuredUniversalPrefixWithTables.branch_table
         BranchTableLayout jumpTables locals (label :: labels) stack (resolvedCode after.function.code.val groups)
           depths fallback before.function.code.val.length after.function.code.val.length selector start len ∧
         before.function.code.val.length + 1 ≤ after.function.code.val.length) :
-    StructuredUniversalTerminalWithTables jumpTables emit after types functions returns locals parents
+    StructuredUniversalTerminal jumpTables emit after types functions returns locals parents
       (current.advance (.BR_TABLE depths fallback)) := by
   refine ⟨localsEq, sites, ?_⟩
   intro label labels groups plans shape parentShapes
@@ -35,11 +35,11 @@ theorem StructuredUniversalPrefixWithTables.branch_table
   refine ⟨?_, ?_⟩
   · rw [codeEq]
     exact (saved.extend suffix).advance_current _
-  · have prior : StructuredPrefixWithTables (jumpTables := jumpTables) emit types functions returns locals
+  · have prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals
         (resolvedCode after.function.code.val groups) (label :: labels) current.input current.source
         current.bodyPc before.function.code.val.length (stack ++ [.I32]) := by
       rw [codeEq]
       exact retained.extend suffix
-    have terminal := StructuredDeadPrefixWithTables.branchTable (types := types) (functions := functions) (returns := returns) (gate selector start len) table header
+    have terminal := StructuredDeadPrefix.branchTable (types := types) (functions := functions) (returns := returns) (gate selector start len) table header
     simpa only [SourceScope.advance, SourceScope.input] using prior.terminal terminal
 end Exec.Code

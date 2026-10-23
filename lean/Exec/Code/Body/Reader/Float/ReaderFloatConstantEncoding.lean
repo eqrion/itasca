@@ -1,4 +1,4 @@
-import Exec.Code.Local.Relations.Common.CoreEmission
+import Exec.Code.Local.Relations.Common.ScalarEmission
 import Itasca.Spec.ScalarConst
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca

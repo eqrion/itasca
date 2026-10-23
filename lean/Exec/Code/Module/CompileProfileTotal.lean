@@ -23,8 +23,8 @@ def ProfilePreparedBodiesTotal {A : Type} (ops : runtime.platform.Alloc A)
     FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial →
     FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start ops initial prepared.ctx
       prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-    CodeEntry.runBody (FunctionCompiler.Insts.ItascaCodeOpVisitor ops) profile prepared.body env
-      prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄
+    code.validate_body_with (FunctionCompiler.Insts.ItascaCodeOpVisitor ops) prepared.body env prepared.ctx
+      prepared.typeIdx profile started ⦃ _ => True ⦄
 
 /-- All entry dispatch, local decoding, start-callback and checker obligations
 are discharged; the body proof is used only at the fresh state reached here. -/

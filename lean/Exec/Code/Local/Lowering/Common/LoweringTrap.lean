@@ -32,23 +32,4 @@ open Aeneas Aeneas.Std
     · simpa [exactState] using hframes
     · simpa [exactState] using hl
 
-@[step] theorem callback_unreachable_certificate {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (reachable : compiler.reachable = true)
-    (codeFits : compiler.function.code.val.length < Usize.max)
-    (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
-    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max)
-    (types functions : List functype) (returns locals stack final : List valtype)
-    (labels : List LabelTarget) (after : List instr) :
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops compiler state ⦃ out =>
-      out.1 = .Ok () → out.2.reachable = false ∧
-        CodeRel types functions returns locals out.2.function.code.val labels stack
-          (.UNREACHABLE :: after) compiler.function.code.val.length
-          (compiler.function.code.val.length + 1) final ⦄ := by
-  apply WP.spec_mono (callback_unreachable ops law compiler state reachable codeFits sourceFits coordinateFits)
-  intro out post accepted
-  obtain ⟨dead, code, frames, locals⟩ := post accepted
-  refine ⟨dead, .unreachable ?_ (by omega) ?_⟩
-  · simp [code]
-  · simp [code]
 end Exec.Code
