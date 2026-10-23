@@ -53,6 +53,18 @@ profile module:
 trust:
     @make trust
 
+# Report declarations unreachable from the library's headline roots.
+dead lib="Exec":
+    @cd lean && lake env lean --run scripts/reachability.lean {{ lib }} .build/dead-{{ lib }}.txt
+    @echo "Full report: lean/.build/dead-{{ lib }}.txt"
+
+exec-stats lib="Exec":
+    @python3 lean/scripts/exec_stats.py {{ lib }}
+
+# Compare import-only and full elaboration time on a fixed file sample.
+exec-timing lib="Exec":
+    @python3 lean/scripts/exec_stats.py timing {{ lib }}
+
 # Refresh each library audit after adding or moving proof files.
 audit-imports:
     @make audit-imports

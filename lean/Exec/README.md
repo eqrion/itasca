@@ -6,6 +6,10 @@ The [Lean guide](../README.md) covers tool setup and the independent validator.
 
 ## Canonical public constructions
 
+The headline modules are the roots listed in
+[`scripts/reachability.lean`](../scripts/reachability.lean); `just dead`
+reports declarations they do not reach.
+
 Evolving-world invocation is constructed in
 [PublicExecutableWorldResources](Theorems/Invocation/PublicExecutableWorldResources.lean).
 It establishes correspondence, exact recording, the retained invariant and
