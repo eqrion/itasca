@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 theorem table_mutation_shape {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (shape : Shape view before)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
     (issued : before.tables.val[address.index.val]? = some object)
     (mutation : TableMutation before after address object replacement)
     (reference : ReferenceShape before object.ty replacement) : Shape view after := by
@@ -28,7 +28,7 @@ theorem table_mutation_shape {M : Type} (view : M → Slice U8)
 theorem table_mutation_extends {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (before after : runtime.store.Store M)
     (shape : Shape view before) (syntaxProof : StoreSyntax code before)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
     (issued : before.tables.val[address.index.val]? = some object)
     (mutation : TableMutation before after address object replacement)
     (reference : ReferenceShape before object.ty replacement) :
@@ -67,7 +67,7 @@ new reference is required to be an issued value of the table's element type. -/
 theorem table_mutation_core_certified {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (before after : runtime.store.Store M)
     (certified : CertifiedCoreStore view code before)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
     (issued : before.tables.val[address.index.val]? = some object)
     (mutation : TableMutation before after address object replacement)
     (reference : ReferenceShape before object.ty replacement) :
@@ -76,13 +76,12 @@ theorem table_mutation_core_certified {M : Type} (view : M → Slice U8)
     address object replacement issued mutation reference
   obtain ⟨words,rfl,lengthEq,references⟩ := mutation
   exact ⟨certified.content_update rfl rfl rfl rfl rfl rfl shape extension,extension⟩
-theorem table_set_core_certified {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem table_set_core_certified {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (position : U32) (ambient : frame)
+    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32) (ambient : frame)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)
@@ -92,7 +91,7 @@ theorem table_set_core_certified {M P F A : Type}
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (certified : CertifiedCoreStore view code store)
     (reference : ReferenceShape store object.ty exec.slots.val[base.val+value.val]!) (ambientWf : wf_frame ambient) :
-    runtime.interp.admin_table_set memory hooks floats allocator exec store instanceIndex base index value table ⦃ out =>
+    runtime.interp.execute_table_set memory exec store instanceIndex base index value table ⦃ out =>
       CertifiedCoreStore view code out.2.2 ∧
       Extend_store (decodeStore view code store) (decodeStore view code out.2.2) ∧
       out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
@@ -103,9 +102,9 @@ theorem table_set_core_certified {M P F A : Type}
       (out.1 = .Err (.Trap .TableOutOfBounds) → out.2.2 = store) ⦄ := by
   have storeWf := decodeStore_wf view code store certified.shape certified.storeSyntax
   obtain ⟨out,run,source⟩ := WP.spec_imp_exists
-    (table_set_source_effect memory hooks floats allocator view code exec store instanceIndex base index value table inst address object position ambient
+    (table_set_source_effect memory view code exec store instanceIndex base index value table inst address object position ambient
       found mapped issued input indexBound valueBound moduleEq storeWf ambientWf)
-  have changed := table_set_mutation memory hooks floats allocator exec store instanceIndex base index value table inst address object position
+  have changed := table_set_mutation memory exec store instanceIndex base index value table inst address object position
     found mapped issued input indexBound valueBound
   rw [run,WP.spec_ok] at changed ⊢
   rcases changed.2.2 with ⟨success,mutation⟩ | ⟨trap,unchanged⟩

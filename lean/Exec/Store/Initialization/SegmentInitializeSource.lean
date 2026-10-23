@@ -11,7 +11,7 @@ theorem initialize_segments_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[inst.module.initialization.val]? = some code)
     (ready : SegmentCodeReady store inst code code.slot_count.val)
@@ -21,11 +21,11 @@ theorem initialize_segments_source {M P F A : Type}
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some value → value.ty.valtype = .I32)
     (shape : Shape view store) (sourceSyntax : StoreSyntax sourceCode store) (bounds : SegmentBounds store)
     (ambient : frame) (ambientWf : wf_frame ambient) (moduleEq : ambient.MODULE = decodeInstance store inst) :
-    runtime.instantiate.initialize_segments memory hooks floats allocator store platform instIndex
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Code.segmentSource code code.code.val⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩, segmentResult out.1⟩ ⦄ := by
-  unfold runtime.instantiate.initialize_segments
+  unfold runtime.interp.initialize_segments
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
   subst actual
   step with segment_synthetic_source memory hooks floats allocator view laws law store platform instIndex
@@ -49,7 +49,7 @@ theorem initialize_segments_compiled_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
@@ -58,7 +58,7 @@ theorem initialize_segments_compiled_source {M P F A : Type}
     (imports : InitializerImports store inst) (bindings : InitializerBindings store inst)
     (types : SegmentTypeBindings store inst)
     (ambient : frame) (ambientWf : wf_frame ambient) (moduleEq : ambient.MODULE = decodeInstance store inst) :
-    runtime.instantiate.initialize_segments memory hooks floats allocator store platform instIndex
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,segmentModuleSource inst.module⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩,segmentResult out.1⟩ ⦄ := by
@@ -108,7 +108,7 @@ theorem initialize_segments_raw_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
@@ -120,7 +120,7 @@ theorem initialize_segments_raw_source {M P F A : Type}
     (raw : Itasca.ModuleBinary.Module)
     (matched : Itasca.ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
     (after : List admininstr) (afterWf : Forall wf_admininstr after) :
-    runtime.instantiate.initialize_segments memory hooks floats allocator store platform instIndex
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,segmentRawSource raw ++ after⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩,segmentAfter out.1 after⟩ ⦄ := by

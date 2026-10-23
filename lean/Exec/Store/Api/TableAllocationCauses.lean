@@ -28,7 +28,7 @@ theorem define_table_resource_causes {M A : Type} (memory : runtime.platform.Mem
     step with check_limits_spec ty.limits core.num.U32.MAX as ⟨limits,limitsEq⟩
     rw [limitsEq]
     by_cases fitted : LimitsFit ty.limits core.num.U32.MAX
-    · simp [fitted,core.result.Result.Insts.CoreOpsTry.branch,runtime.store.Store.impl.table_elements,lift]
+    · simp [fitted,core.result.Result.Insts.CoreOpsTry.branch,lift]
       step with within_spec store.table_elements (UScalar.cast .Usize ty.limits.min)
         store.limits.max_table_elements as ⟨fits,fitsEq⟩
       rw [fitsEq]

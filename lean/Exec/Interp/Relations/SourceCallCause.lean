@@ -58,12 +58,12 @@ source provenance of the shared callee argument position. -/
 def SourceDirectCallCause {A M P : Type} (allocator : runtime.platform.Alloc A)
     (hooks : runtime.platform.Platform P M) (before : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (caller : runtime.store.Instance)
+    (raw : runtime.interp.Frame) (caller : runtime.store.ModuleInst)
     (callerCode : runtime.bytecode.CompiledFunction) (source : Abs.AState)
     (error : runtime.ExecError) : Prop :=
   ∃ (target offset pc : U32) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction),
+    (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction),
     callerCode.code.val[raw.pc.val]? = some (.Call target offset) ∧
     caller.funcs.val[target.val]? = some address ∧
     store.funcs.val[address.index.val]? = some function ∧
@@ -79,7 +79,7 @@ def SourceDirectCallCause {A M P : Type} (allocator : runtime.platform.Alloc A)
 theorem SourceDirectCallCause.concrete {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {before : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {frameIndex : Usize}
-    {raw : runtime.interp.Frame} {caller : runtime.store.Instance}
+    {raw : runtime.interp.Frame} {caller : runtime.store.ModuleInst}
     {callerCode : runtime.bytecode.CompiledFunction} {source : Abs.AState} {error : runtime.ExecError}
     (cause : SourceDirectCallCause allocator hooks before store platform frameIndex raw caller callerCode source error) :
     DirectCallCause allocator hooks before store platform frameIndex raw caller callerCode error := by
@@ -91,7 +91,7 @@ theorem SourceDirectCallCause.concrete {A M P : Type} {allocator : runtime.platf
 theorem SourceDirectCallCause.prepend {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {frameIndex : Usize}
-    {raw : runtime.interp.Frame} {caller : runtime.store.Instance}
+    {raw : runtime.interp.Frame} {caller : runtime.store.ModuleInst}
     {compiled : runtime.bytecode.CompiledFunction} {before after : Abs.AState} {error : runtime.ExecError} {count}
     (steps : Spec.StepsHN count (Abs.decode before) [] (Abs.decode after))
     (sameStore : after.store = before.store) (sameAmbient : after.ambient = before.ambient)

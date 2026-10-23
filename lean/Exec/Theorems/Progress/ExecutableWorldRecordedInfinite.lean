@@ -21,11 +21,11 @@ theorem executable_world_loop_recorded_prefixes
     {expected : List valtype}
     (initial : EventfulWorld Interp.Executable.emission Abs.ExecutableInstr M P view expected)
     (valid : ExecutableInv view initial.code initial.machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     ∃ (states : Nat → EventfulWorld Interp.Executable.emission Abs.ExecutableInstr M P view expected) (events : Nat → List HostEvent),
       states 0=initial ∧
       (∀n,ExecutableInv view (states n).code (states n).machine.store ∧ WorldRecordedTransition memory hooks floats allocator (states n) (events n) (states (n+1))) ∧
-      (∀n,runtime.interp.invoke_with_loop2 memory hooks floats allocator (states n).machine.exec (states n).machine.store (states n).machine.platform (.Ok ())=.div) ∧
+      (∀n,runtime.interp.invoke_with_loop1 memory hooks floats allocator (states n).machine.exec (states n).machine.store (states n).machine.platform (.Ok ())=.div) ∧
       (∀n prior,recordedSteps memory hooks floats allocator n initial.machine.exec initial.machine.store initial.machine.platform prior=
         .ok ((.Ok (),(states n).machine.exec,(states n).machine.store,(states n).machine.platform),prior++recordedPrefixEvents events n)) ∧
       (∀n,∃count,Spec.StepsHN count (Abs.decode initial.machine.source) (recordedPrefixEvents events n) (Abs.decode (states n).machine.source)) :=

@@ -8,7 +8,7 @@ theorem stateful_memory_grow_dispatch {M P F A : Type} (memory : runtime.platfor
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (first second a entry : U32)
     (signature : Abs.Stateful.Signature C .memoryGrow input output)
@@ -46,7 +46,7 @@ theorem stateful_memory_grow_dispatch {M P F A : Type} (memory : runtime.platfor
     simp only [Nat.add_zero] at amountSlot
     obtain ⟨address,object,mapped,issued⟩ := memory_binding_raw view code store inst C type bindings selected
     obtain ⟨out,run,success,metadata,result,written,growth,represented,transition⟩ := WP.spec_imp_exists
-      (stateful_memory_grow_slots memory hooks floats allocator view laws code exec store raw first inst address object amount
+      (stateful_memory_grow_slots memory view laws code exec store raw first inst address object amount
         state f rest after front found mapped issued amountSlot shapes sourceStore moduleEq
         (by simpa only [deltaValue] using values) slots position)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]

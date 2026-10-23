@@ -15,7 +15,7 @@ theorem global_allocated_loop {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
     (before store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -36,7 +36,7 @@ theorem global_allocated_loop {M P F A : Type}
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           (∀ address ∈ next.globals.val, address.store = after.id ∧ address.index.val < after.globals.length) ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          after.elems = store.elems ∧ after.datas = store.datas ∧ next.elements = inst.elements ∧ next.data = inst.data ∧
+          after.elems = store.elems ∧ after.datas = store.datas ∧ next.elems = inst.elems ∧ next.datas = inst.datas ∧
           (finalStatus = .Ok () → next.globals.length = inst.globals.length + (inst.module.module.env.globals.val.length - start.val)) ⦄ := by
   have contents : GlobalContents store := bindings.globals
   unfold runtime.store.instantiate.Store.instantiate_inner_loop7
@@ -49,7 +49,7 @@ theorem global_allocated_loop {M P F A : Type}
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
         currentInst.globals.length + (inst.module.module.env.globals.val.length - state.2.2.2.val) ≤ Usize.max ∧
-        state.1.elems = store.elems ∧ state.1.datas = store.datas ∧ currentInst.elements = inst.elements ∧ currentInst.data = inst.data ∧
+        state.1.elems = store.elems ∧ state.1.datas = store.datas ∧ currentInst.elems = inst.elems ∧ currentInst.datas = inst.datas ∧
         (state.2.2.1 = .Ok () → currentInst.globals.length + start.val = inst.globals.length + state.2.2.2.val))
   · rintro ⟨current, host, result, index⟩ ⟨hhost, hstaged, hobjects, hallocated, hcontents, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hissued, hbindings, himports, hsegments, hcapacity, helements, hdatas, hmapElements, hmapData, hcount⟩

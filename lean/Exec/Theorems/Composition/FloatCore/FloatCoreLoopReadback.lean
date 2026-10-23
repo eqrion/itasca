@@ -49,7 +49,7 @@ theorem float_core_loop_readback {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (initial : FloatCoreMachine M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ (_,words,_,_,_,afterStore,_,status) =>
         CertifiedFloatCoreStore view code afterStore ∧ FrameStoreMetadata initial.store afterStore ∧
         Extend_store (Store.decodeStore view code initial.store) (Store.decodeStore view code afterStore) ∧

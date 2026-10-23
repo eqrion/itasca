@@ -47,6 +47,7 @@ theorem ChosenCumulativeFailure.chosen_eventful_error {choices : SourceChoices} 
   | Exhausted limit => exact ⟨_,0,.refl occurrence typed.decode_wf⟩
   | Terminated => exact ⟨_,0,.refl occurrence typed.decode_wf⟩
   | BadArguments => simp at kind
+  | Internal => simp at kind
   | WrongStore => simp at kind
   | Link reason => simp at kind
 end Exec.Theorems

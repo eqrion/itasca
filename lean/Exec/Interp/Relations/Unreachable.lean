@@ -12,7 +12,7 @@ theorem dispatch_unreachable_eq {M P F A : Type}
     (index inst function base : Usize) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index inst function base .Unreachable =
       .ok (.Err (.Trap .Unreachable), exec, store, platform) := by
-  simp [runtime.interp.dispatch, runtime.interp.admin_unreachable, core.convert.IntoFrom.into,
+  simp [runtime.interp.dispatch, runtime.interp.execute_unreachable, core.convert.IntoFrom.into,
     runtime.ExecError.Insts.CoreConvertFromTrap.from]
 
 /-- The actual explicit trap has a positive counted SpecTec derivation through
@@ -22,7 +22,7 @@ theorem step_unreachable_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

@@ -14,8 +14,8 @@ theorem native_execution_stopped {M F A : Type} (memory : runtime.platform.Memor
   | Ok unit=>
     cases unit
     have noFrames : ¬exec.frames.len>0#usize := by scalar_tac
-    simp [executionBody,runtime.interp.invoke_with_loop2.body,noFrames,finishExecution]
-  | Err error=>simp [executionBody,runtime.interp.invoke_with_loop2.body,core.result.Result.is_ok,finishExecution]
+    simp [executionBody,runtime.interp.invoke_with_loop1.body,noFrames,finishExecution]
+  | Err error=>simp [executionBody,runtime.interp.invoke_with_loop1.body,core.result.Result.is_ok,finishExecution]
 
 def NativeBodyResult {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (before : ExecutionState M Unit) (root : runtime.FuncAddr) (signature : Itasca.types.FuncType) :

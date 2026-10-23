@@ -25,8 +25,7 @@ theorem trunc_sat_body_eq {F : Type} (floats : runtime.platform.FloatOps F)
             (core.convert.FromSame runtime.ExecError) residual
           Result.ok (ControlFlow.done r)
       else do
-        let result ← runtime.interp.simd.vector current
-        Result.ok (ControlFlow.done (core.result.Result.Ok result))) := by
+        Result.ok (ControlFlow.done (core.result.Result.Ok current))) := by
   cases ty <;> cases signed
   all_goals unfold runtime.interp.simd.convert_lanes_loop.body truncSatOpcode
   all_goals with_unfolding_all rfl
@@ -83,8 +82,6 @@ theorem trunc_sat_loop {F : Type} (floats : runtime.platform.FloatOps F)
         exact zeroed j above bound
       · omega
     · have finished : index.val = count.val := by scalar_tac
-      unfold runtime.interp.simd.vector
-      simp only [bind_ok]
       exact ⟨current,rfl,by simpa [finished] using initialized,zeroed⟩
   · exact ⟨position,initializedPrefix,initializedSuffix⟩
 

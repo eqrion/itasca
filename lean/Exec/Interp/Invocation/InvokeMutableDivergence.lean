@@ -13,7 +13,7 @@ theorem invoke_mutable_divergent_entry {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -27,7 +27,7 @@ theorem invoke_mutable_divergent_entry {M P F A : Type}
       runtime.interp.call memory hooks floats allocator prepared store p address 0#usize ⦃ out =>
         out.2.2.1 = store ∧ (out.1 = .Ok () → entry out.2.1) ⦄)
     (executed : ∀ prepared p, entry prepared →
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ())
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ())
         ⦃ (_, words, _, _, _, afterStore, _, status) => afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧
           (status = .Ok () → ∃ values,
             signature.results.val.map sourceType = values.map Code.valueType ∧
@@ -36,7 +36,7 @@ theorem invoke_mutable_divergent_entry {M P F A : Type}
             ValuesAt words.val 0 values) ⦄div)
     (diverges : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results = .div) :
     ∃ prepared p, entry prepared ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
   classical
   by_contra absent
   have total : WP.spec
@@ -52,7 +52,7 @@ theorem invoke_mutable_divergent_entry {M P F A : Type}
     · intro prepared p entered
       have safe := executed prepared p entered
       have normal : WP.spec
-          (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+          (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
           (fun (_,words,_,_,_,afterStore,_,status) =>
             afterStore.id=store.id ∧ afterStore.funcs=store.funcs ∧ afterStore.types=store.types ∧
             (status=.Ok () → ∃ values,

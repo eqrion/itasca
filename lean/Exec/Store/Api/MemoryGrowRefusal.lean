@@ -4,7 +4,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 def MemoryGrowRefusal {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (s : runtime.store.Store M) (m : runtime.store.Memory M)
+    (view : M → Slice U8) (s : runtime.store.Store M) (m : runtime.store.MemInst M)
     (delta : U32) : Prop :=
   65536 < (view m.buf).length / 65536 + delta.val ∨
   (core.option.Option.unwrap_or m.maximum 65536#u32).val <
@@ -51,8 +51,7 @@ theorem memory_grow_refusal {M : Type} (ops : runtime.platform.MemoryBuffer M)
         · simp only [WP.spec_ok]
           intro _
           exact ⟨m, lookup, Or.inr (Or.inr (Or.inr (Or.inl (by scalar_tac))))⟩
-        · simp [runtime.store.Store.impl.memory_bytes]
-          step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
+        · step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
           split
           · step as ⟨m', back, hm', hback⟩
             have hsame : m' = m := by simp [hm, hm']

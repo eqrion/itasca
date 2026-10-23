@@ -11,7 +11,7 @@ theorem element_source_staging_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -22,11 +22,11 @@ theorem element_source_staging_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.elements.val.length)
     (storeCapacity : store.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.elements.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
+    (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
     (sourceStore : _root_.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (sourceContext : InitializerSourceContext sourceStore sourceInstance store inst)
-    (baseElements : List runtime.store.ElemInstance)
+    (baseElements : List runtime.store.ElemInst)
     (matching : status = .Ok () → ∃ produced, store.elems.val = baseElements ++ produced ∧
       ElementSourceSegments sourceStore sourceInstance
         (inst.module.module.env.elements.val.take start.val) produced) :
@@ -37,7 +37,7 @@ theorem element_source_staging_loop {M P F A : Type}
         InitializerFunctionMetadataAt store inst after instIndex ∧ ∃ next,
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          after.datas = store.datas ∧ next.data = inst.data ∧ after.globals = store.globals ∧ next.globals = inst.globals ∧
+          after.datas = store.datas ∧ next.datas = inst.datas ∧ after.globals = store.globals ∧ next.globals = inst.globals ∧
           InitializerSourceContext sourceStore sourceInstance after next ∧
           (finalStatus = .Ok () → ∃ produced, after.elems.val = baseElements ++ produced ∧
             ElementSourceSegments sourceStore sourceInstance inst.module.module.env.elements.val produced) ⦄ := by
@@ -49,9 +49,9 @@ theorem element_source_staging_loop {M P F A : Type}
       ∃ currentInst, state.1.instances.val[instIndex.val]? = some currentInst ∧ currentInst.module = inst.module ∧
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
-        currentInst.elements.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
+        currentInst.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
         state.1.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
-        state.1.datas = store.datas ∧ currentInst.data = inst.data ∧ state.1.globals = store.globals ∧ currentInst.globals = inst.globals ∧
+        state.1.datas = store.datas ∧ currentInst.datas = inst.datas ∧ state.1.globals = store.globals ∧ currentInst.globals = inst.globals ∧
         InitializerSourceContext sourceStore sourceInstance state.1 currentInst ∧
         (state.2.2.1 = .Ok () → ∃ produced, state.1.elems.val = baseElements ++ produced ∧
           ElementSourceSegments sourceStore sourceInstance
@@ -87,7 +87,7 @@ theorem element_source_staging_loop {M P F A : Type}
         have certificates := element_initializer_certificates current currentInst index segment
           (by simpa [hsource] using compiled) hsegment hvalid hbindings himports
         have room : current.elems.length < Usize.max := by omega
-        have mapRoom : currentInst.elements.length < Usize.max := by omega
+        have mapRoom : currentInst.elems.length < Usize.max := by omega
         step with add_instance_element_value_effect memory hooks floats allocator law current platform instIndex index
           currentInst segment hfound hsegment certificates hbindings room mapRoom
           sourceStore sourceInstance storeWf frameWf hcontext

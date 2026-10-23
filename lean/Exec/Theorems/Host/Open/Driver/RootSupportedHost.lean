@@ -16,7 +16,7 @@ theorem root_host_supported_resume {M : Type} (memory : runtime.platform.MemoryB
     (sourceTyped : Store_ok (Store.decodeStore view afterCode after))
     (certified : CertifiedSupportedStore Executable.emission Abs.ExecutableInstr view afterCode after)
     (ready : runtime.interp.Execution) (empty : ready.frames.val=[])
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (identity : U64)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
     (signature : Itasca.types.FuncType)
     (functionAt : before.funcs.val[address.index.val]?=some function)
     (host : function.code=.Host identity)

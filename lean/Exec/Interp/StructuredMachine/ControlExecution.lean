@@ -24,7 +24,7 @@ include semantics
 theorem step_if_execution_uniform (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (bt : blocktype) (yes no : List instr) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -75,7 +75,7 @@ theorem step_if_execution_uniform (platform : P) (frameIndex : Usize)
 theorem step_if_execution (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (bt : blocktype) (yes no : List instr) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -101,7 +101,7 @@ theorem step_loop_execution_uniform     (law : ∀ p, hooks.interrupt p ⦃ _ =>
 (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (bt : blocktype) (body : List instr) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -156,7 +156,7 @@ theorem step_loop_execution     (law : ∀ p, hooks.interrupt p ⦃ _ => True �
 (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (bt : blocktype) (body : List instr) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -184,7 +184,7 @@ theorem step_loop_execution     (law : ∀ p, hooks.interrupt p ⦃ _ => True �
 theorem step_branch_execution_uniform (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (depth : Nat) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -229,7 +229,7 @@ theorem step_branch_execution_uniform (platform : P) (frameIndex : Usize)
 theorem step_branch_execution (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (depth : Nat) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -254,7 +254,7 @@ theorem step_branch_execution (platform : P) (frameIndex : Usize)
 theorem step_branchIf_execution_uniform (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (depth : Nat) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)
@@ -290,7 +290,7 @@ theorem step_branchIf_execution_uniform (platform : P) (frameIndex : Usize)
 theorem step_branchIf_execution (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (depth : Nat) (after : List instr)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst) (slots : FrameSlots exec raw f)

@@ -28,7 +28,7 @@ theorem compiler_br_table_dead_effect {A : Type} (ops : runtime.platform.Alloc A
     obtain ⟨budget,depths,rfl,_⟩ := compiler_table_label_success ops law before labeled state fallback labeledCall
     simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,dead,Bool.false_eq_true,ite_false] at rest
     obtain ⟨cleared,clearCall,observed⟩ := bind_ok_inv _ _ _ rest
-    have empty := compiler_clear_table_depths depths
+    have empty := runtime_clear depths
     rw [clearCall,WP.spec_ok] at empty
     have kept := compiler_observe_frame ops law {before with budget,table_depths := cleared} state
     have stable := compiler_observe_stable ops law {before with budget,table_depths := cleared} after state

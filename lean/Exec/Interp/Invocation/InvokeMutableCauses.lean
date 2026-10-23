@@ -1,7 +1,8 @@
 import Exec.Interp.Invocation.InvokeCompose
 import Exec.Interp.Invocation.InvokeResourceCauses
 import Exec.Interp.Invocation.InvokeChecks
-import Exec.Interp.Relations.InvocationSetup
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
 import Exec.Interp.Relations.Readback
 import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
@@ -33,7 +34,7 @@ theorem invoke_with_mutable_causes_composition_mode {M P F A : Type}
     (allowDivergence : Bool)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -53,7 +54,7 @@ theorem invoke_with_mutable_causes_composition_mode {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       InvocationWP allowDivergence
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,
@@ -135,7 +136,13 @@ theorem invoke_with_mutable_causes_composition_mode {M P F A : Type}
         | Ok unit =>
           cases unit
           simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-          step with clear_frames grown as ⟨words, frames, hostArgs, hostResults, wordsEq, empty, argsEq, resultsEq⟩
+          step with runtime_clear grown.frames as ⟨frames, empty⟩
+          generalize sameWords : grown.slots = words
+          generalize sameArgs : grown.host_args = hostArgs
+          generalize sameResults : grown.host_results = hostResults
+          have wordsEq := sameWords.symm
+          have argsEq := sameArgs.symm
+          have resultsEq := sameResults.symm
           have capacity : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length := by
             have length : grown.slots.length = exec.slots.length + ((core.cmp.impls.OrdUsize.max params returns).val - exec.slots.length) := by
               change grown.slots.val.length = _
@@ -188,7 +195,7 @@ theorem invoke_with_mutable_causes_composition_mode {M P F A : Type}
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, cause, finalRetained]
               | true =>
                 simp only [ite_true, bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
-                step with clear_results results as ⟨emptyResults, empty⟩
+                step with runtime_clear results as ⟨emptyResults, empty⟩
                 step with read_results finalWords finalStore emptyResults signature.results values empty types wellFormed fits represented
                   as ⟨returnedStore, returnedResults, sameStore, sameResults⟩
                 subst returnedStore
@@ -209,7 +216,7 @@ theorem invoke_with_mutable_causes_composition {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -229,7 +236,7 @@ theorem invoke_with_mutable_causes_composition {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       WP.dspec
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,

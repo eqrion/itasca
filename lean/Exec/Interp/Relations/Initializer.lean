@@ -1,4 +1,4 @@
-import Exec.Interp.Relations.InitializerAdmin
+import Exec.Interp.Relations.InitializerExecute
 import Exec.Code.Local.Initializer.Initializer
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Control.LoopBasis
@@ -10,7 +10,7 @@ namespace Exec.Interp
 open Aeneas Aeneas.Std
 
 inductive InitialRead {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) :
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) :
     runtime.bytecode.Instr → List U64 → Prop where
   | const32 (bits : U32) : InitialRead store inst code (.Const32 0#u32 bits)
       [UScalar.cast .U64 bits]
@@ -23,11 +23,11 @@ inductive InitialRead {M : Type} (store : runtime.store.Store M)
       (lookup : inst.funcs.val[index.val]? = some addr)
       (encoded : reference.val = addr.index.val + 1) :
       InitialRead store inst code (.RefFunc 0#u32 index) [reference]
-  | global (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+  | global (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (lookup : inst.globals.val[index.val]? = some addr)
       (resolved : store.globals.val[addr.index.val]? = some value) :
       InitialRead store inst code (.GlobalGet 0#u32 index) [value.lo]
-  | global2 (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+  | global2 (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (lookup : inst.globals.val[index.val]? = some addr)
       (resolved : store.globals.val[addr.index.val]? = some value) :
       InitialRead store inst code (.GlobalGet2 0#u32 index) [value.lo, value.hi]
@@ -53,7 +53,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem dispatch_initial_read (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (instIndex function frameIndex : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
@@ -66,37 +66,37 @@ theorem dispatch_initial_read (exec : runtime.interp.Execution)
   cases read with
   | const32 bits =>
     simp only [runtime.interp.dispatch]
-    step with const32_effect memory hooks floats allocator exec 0#usize 0#u32 bits (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
+    step with const32_effect exec 0#usize 0#u32 bits (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
   | const64 bits =>
     simp only [runtime.interp.dispatch]
-    step with const64_effect memory hooks floats allocator exec 0#usize 0#u32 bits (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
+    step with const64_effect exec 0#usize 0#u32 bits (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
   | vector pool bits hpool =>
     simp only [runtime.interp.dispatch]
-    step with const_v128_effect memory hooks floats allocator exec store instIndex function
+    step with const_v128_effect memory exec store instIndex function
       0#usize 0#u32 pool inst code bits hi hc hpool (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
   | null =>
     simp only [runtime.interp.dispatch]
-    step with ref_null_effect memory hooks floats allocator exec 0#usize 0#u32 (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
+    step with ref_null_effect exec 0#usize 0#u32 (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
   | func index addr reference lookup encoded =>
     simp only [runtime.interp.dispatch]
     have bound : addr.index.val < U64.max := by scalar_tac
-    step with ref_func_effect memory hooks floats allocator exec store instIndex 0#usize 0#u32
+    step with ref_func_effect memory exec store instIndex 0#usize 0#u32
       index inst addr hi lookup bound (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
       as ⟨result, after, store', hok, hs, actual, hactual, heffect⟩
     have heq : actual = reference := by scalar_tac
     simp_all [initialSlots]
   | global index addr value lookup resolved =>
     simp only [runtime.interp.dispatch]
-    step with global_get_effect memory hooks floats allocator exec store instIndex 0#usize
+    step with global_get_effect memory exec store instIndex 0#usize
       0#u32 index inst addr value hi lookup resolved (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
   | global2 index addr value lookup resolved =>
     simp only [runtime.interp.dispatch]
-    step with global_get2_effect memory hooks floats allocator exec store instIndex 0#usize
+    step with global_get2_effect memory exec store instIndex 0#usize
       0#u32 index inst addr value hi lookup resolved (by simp only [List.length_cons, List.length_nil] at capacity; scalar_tac)
     simp_all [initialSlots]
 
@@ -107,7 +107,7 @@ def initializerFrame (instIndex function : Usize) (pc : U32) : runtime.interp.Fr
 
 theorem step_initial_read (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
@@ -134,7 +134,7 @@ theorem step_initial_read (exec : runtime.interp.Execution)
 
 theorem step_initial_return (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) (width : U32)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) (width : U32)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (capacity : width.val ≤ exec.slots.length)
@@ -148,7 +148,7 @@ theorem step_initial_return (exec : runtime.interp.Execution)
     (by simpa [alloc.vec.Vec.length, hf]) (by simp [hf]) hi hc hop (by simp [initializerFrame, U32.max_eq])
   intro pc hpc
   simp only [runtime.interp.dispatch, initializerFrame]
-  step with initializer_return_effect memory hooks floats allocator
+  step with initializer_return_effect
     { exec with frames := exec.frames.set 0#usize { «instance» := instIndex, function := function, pc := pc, base := 0#usize } }
     width capacity
   simp_all [hf]
@@ -158,18 +158,18 @@ one normally returning instruction. -/
 theorem synthetic_body_active (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P)
     (active : 0 < exec.frames.length) :
-    runtime.interp.synthetic_loop.body memory hooks floats allocator store platform exec (.Ok ()) =
+    runtime.interp.run_synthetic_loop.body memory hooks floats allocator store platform exec (.Ok ()) =
       (do let (status, next, store', platform') ←
             runtime.interp.step memory hooks floats allocator exec store platform
           .ok (.cont (store', platform', next, status))) := by
   have nonempty : exec.frames.val ≠ [] := by intro h; simp [alloc.vec.Vec.length, h] at active
-  simp [runtime.interp.synthetic_loop.body, core.result.Result.is_ok, nonempty]
+  simp [runtime.interp.run_synthetic_loop.body, core.result.Result.is_ok, nonempty]
 
 theorem synthetic_body_done (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P)
     (empty : exec.frames.val = []) :
-    runtime.interp.synthetic_loop.body memory hooks floats allocator store platform exec (.Ok ()) =
+    runtime.interp.run_synthetic_loop.body memory hooks floats allocator store platform exec (.Ok ()) =
       .ok (.done (store, platform, exec.slots, .Ok ())) := by
-  simp [runtime.interp.synthetic_loop.body, alloc.vec.Vec.len, empty]
+  simp [runtime.interp.run_synthetic_loop.body, alloc.vec.Vec.len, empty]
 
 end Exec.Interp

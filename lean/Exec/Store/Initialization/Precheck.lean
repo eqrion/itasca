@@ -15,14 +15,14 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem element_range_inactive (store : runtime.store.Store M) (platform : P)
-    (instIndex index : Usize) (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+theorem element_bounds_inactive (store : runtime.store.Store M) (platform : P)
+    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (inactive : segment.mode = .Passive ∨ segment.mode = .Declarative) :
-    runtime.store.instantiate.Store.element_range_for memory hooks floats allocator store platform instIndex index
-      ⦃ out => out = (.Ok none, store, platform) ⦄ := by
-  unfold runtime.store.instantiate.Store.element_range_for
+    runtime.store.instantiate.Store.check_element_bounds memory hooks floats allocator store platform instIndex index
+      ⦃ out => out = (.Ok (), store, platform) ⦄ := by
+  unfold runtime.store.instantiate.Store.check_element_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
@@ -32,12 +32,12 @@ theorem element_range_inactive (store : runtime.store.Store M) (platform : P)
   subst found
   rcases inactive with inactive | inactive <;> simp [inactive]
 
-theorem element_range_active (law : Platform.AllocCorrect allocator)
+theorem element_bounds_active (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (tableIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
-    (addr : runtime.TableAddr) (table : runtime.store.Table)
+    (addr : runtime.TableAddr) (table : runtime.store.TableInst)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (active : segment.mode = .Active tableIndex offset)
@@ -48,9 +48,9 @@ theorem element_range_active (law : Platform.AllocCorrect allocator)
     (bindings : InitializerBindings store inst)
     (ht : inst.tables.val[tableIndex.val]? = some addr)
     (htable : store.tables.val[addr.index.val]? = some table) :
-    runtime.store.instantiate.Store.element_range_for memory hooks floats allocator store platform instIndex index
+    runtime.store.instantiate.Store.check_element_bounds memory hooks floats allocator store platform instIndex index
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ⦄ := by
-  unfold runtime.store.instantiate.Store.element_range_for
+  unfold runtime.store.instantiate.Store.check_element_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
@@ -62,7 +62,7 @@ theorem element_range_active (law : Platform.AllocCorrect allocator)
   step with Interp.vec_index_given inst.module.element_offsets index (some function) mapping
     as ⟨found, hfound⟩
   subst found
-  step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+  step with eval_const_owned memory hooks floats allocator law store platform instIndex function
     inst code offset .I32 words hi hc compiled resolved bindings
     as ⟨result, after, host, hs, hp, hvalue⟩
   subst after host
@@ -89,14 +89,14 @@ theorem element_range_active (law : Platform.AllocCorrect allocator)
     cases checked <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem data_range_inactive (store : runtime.store.Store M) (platform : P)
-    (instIndex index : Usize) (inst : runtime.store.Instance) (segment : Itasca.module.Data)
+theorem data_bounds_inactive (store : runtime.store.Store M) (platform : P)
+    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
     (inactive : segment.mode = .Passive) :
-    runtime.store.instantiate.Store.data_range_for memory hooks floats allocator store platform instIndex index
-      ⦃ out => out = (.Ok none, store, platform) ⦄ := by
-  unfold runtime.store.instantiate.Store.data_range_for
+    runtime.store.instantiate.Store.check_data_bounds memory hooks floats allocator store platform instIndex index
+      ⦃ out => out = (.Ok (), store, platform) ⦄ := by
+  unfold runtime.store.instantiate.Store.check_data_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
@@ -105,13 +105,13 @@ theorem data_range_inactive (store : runtime.store.Store M) (platform : P)
   subst found
   simp [inactive]
 
-theorem data_range_active (law : Platform.AllocCorrect allocator)
+theorem data_bounds_active (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
     (memoryIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
-    (addr : runtime.MemoryAddr) (mem : runtime.store.Memory M)
+    (addr : runtime.MemoryAddr) (mem : runtime.store.MemInst M)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.tail.data.val[index.val]? = some segment)
     (active : segment.mode = .Active memoryIndex offset)
@@ -122,9 +122,9 @@ theorem data_range_active (law : Platform.AllocCorrect allocator)
     (bindings : InitializerBindings store inst)
     (ht : inst.memories.val[memoryIndex.val]? = some addr)
     (hmemory : store.memories.val[addr.index.val]? = some mem) :
-    runtime.store.instantiate.Store.data_range_for memory hooks floats allocator store platform instIndex index
+    runtime.store.instantiate.Store.check_data_bounds memory hooks floats allocator store platform instIndex index
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ⦄ := by
-  unfold runtime.store.instantiate.Store.data_range_for
+  unfold runtime.store.instantiate.Store.check_data_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
@@ -135,7 +135,7 @@ theorem data_range_active (law : Platform.AllocCorrect allocator)
   step with Interp.vec_index_given inst.module.data_offsets index (some function) mapping
     as ⟨found, hfound⟩
   subst found
-  step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+  step with eval_const_owned memory hooks floats allocator law store platform instIndex function
     inst code offset .I32 words hi hc compiled resolved bindings
     as ⟨result, after, host, hs, hp, hvalue⟩
   subst after host

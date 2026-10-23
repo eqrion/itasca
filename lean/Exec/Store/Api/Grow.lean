@@ -80,8 +80,7 @@ theorem memory_grow_total {M : Type} (ops : runtime.platform.MemoryBuffer M)
       · step as ⟨bytes, hbytes⟩
         split
         · simp
-        · simp [runtime.store.Store.impl.memory_bytes]
-          step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
+        · step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
           split
           · step as ⟨m', back, hm', hback⟩
             have hcastPages : (UScalar.cast .Usize pages).val ≤ pages.val := by
@@ -98,7 +97,7 @@ theorem memory_grow_total {M : Type} (ops : runtime.platform.MemoryBuffer M)
 def TableGrowth {M : Type} (s : runtime.store.Store M) (index : Usize)
     (delta : U32) (value : U64) (result : U32 × runtime.store.Store M) : Prop :=
   (result.1 = core.num.U32.MAX ∧ result.2 = s) ∨
-  ∃ old : runtime.store.Table, ∃ elements : alloc.vec.Vec U64, ∃ count : Usize,
+  ∃ old : runtime.store.TableInst, ∃ elements : alloc.vec.Vec U64, ∃ count : Usize,
     s.tables.val[index.val]? = some old ∧
     elements.val = old.elements.val ++ List.replicate delta.val value ∧
     old.elements.length + delta.val ≤ U32.max ∧
@@ -124,8 +123,7 @@ theorem table_grow_total {M A : Type} (ops : runtime.platform.MemoryBuffer M)
   · simp
   · split
     · simp
-    · simp [runtime.store.Store.impl.table_elements]
-      step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
+    · step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
       split
       · step as ⟨t', back, ht', hback⟩
         have hsame : t' = t := by simp [ht, ht']
@@ -155,8 +153,7 @@ theorem table_grow_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
   · simp [TableGrowth]
   · split
     · simp [TableGrowth]
-    · simp [runtime.store.Store.impl.table_elements]
-      step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
+    · step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
       split
       · step as ⟨t', back, ht', hback⟩
         have hsame : t' = t := by simp [ht, ht']
@@ -201,10 +198,10 @@ def MemoryGrowth {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (index : Usize) (delta : U32)
     (result : U32 × runtime.store.Store M) : Prop :=
   (result.1 = core.num.U32.MAX ∧ decodeStore view code result.2 = decodeStore view code s ∧
-    (result.2 = s ∨ ∃ old : runtime.store.Memory M, ∃ after : M,
+    (result.2 = s ∨ ∃ old : runtime.store.MemInst M, ∃ after : M,
       s.memories.val[index.val]? = some old ∧ view after = view old.buf ∧
       result.2 = {s with memories := s.memories.set index {old with buf := after}})) ∨
-  ∃ old : runtime.store.Memory M, ∃ after : M, ∃ count : Usize,
+  ∃ old : runtime.store.MemInst M, ∃ after : M, ∃ count : Usize,
     s.memories.val[index.val]? = some old ∧
     (view after).val = (view old.buf).val ++ List.replicate (delta.val * 65536) 0#u8 ∧
     count.val = s.memory_bytes.val + delta.val * 65536 ∧
@@ -240,8 +237,7 @@ theorem memory_grow_effect {M : Type} (ops : runtime.platform.MemoryBuffer M)
       · step as ⟨bytes, hbytes⟩
         split
         · simp [MemoryGrowth]
-        · simp [runtime.store.Store.impl.memory_bytes]
-          step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
+        · step with within_spec s.memory_bytes (UScalar.cast .Usize add) s.limits.max_memory_bytes as ⟨fits, hfits⟩
           split
           · step as ⟨m', back, hm', hback⟩
             have hcastPages : (UScalar.cast .Usize pages).val ≤ pages.val := by
@@ -328,7 +324,7 @@ theorem table_grow_failure_or_maximal_zero {M A : Type} (ops : runtime.platform.
     (hsizes : ∀ t ∈ s.tables.val, t.elements.length ≤ U32.max) :
     runtime.store.Store.grow_table_index ops allocator s index delta value ⦃ result =>
       result.1 = core.num.U32.MAX → result.2 = s ∨
-        ∃ old : runtime.store.Table, s.tables.val[index.val]? = some old ∧
+        ∃ old : runtime.store.TableInst, s.tables.val[index.val]? = some old ∧
           old.elements.length = U32.max ∧ delta.val = 0 ⦄ := by
   apply WP.spec_mono (table_grow_effect ops allocator ha s index delta value hindex hsizes)
   intro result effect hfailed

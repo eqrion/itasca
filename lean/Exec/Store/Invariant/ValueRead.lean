@@ -25,7 +25,7 @@ theorem decode_value_boundary (ty : Itasca.types.ValueType) (lo hi : U64) (store
 existing address. This establishes the caller invariant for values obtained
 through global and table accessors. -/
 theorem decode_global_owned {M : Type} (s : runtime.store.Store M)
-    (global : runtime.store.GlobalInstance) (hg : GlobalShape s global) :
+    (global : runtime.store.GlobalInst) (hg : GlobalShape s global) :
     runtime.value.decode global.ty.valtype global.lo global.hi s.id ⦃ value => ValueInStore s value ⦄ := by
   cases ht : global.ty.valtype <;> simp only [runtime.value.decode, ht]
   all_goals simp [lift, ValueInStore, Interp.ValueOwnedFits]

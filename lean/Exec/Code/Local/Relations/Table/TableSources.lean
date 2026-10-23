@@ -12,16 +12,16 @@ def snapshotStatus {A : Type} (output : CompilerSnapshot A) :
 theorem compiler_table_branch_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (), after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.table_branch at accepted
+  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   repeat' control_sources_step accepted using ops, law
 
 theorem compiler_table_loop_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     (before : runtime.compiler.FunctionCompiler A) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
     (output : CompilerSnapshot A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches_loop
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
       ops before index status = .ok output) :
     snapshotStatus output = .Ok () →
       status = .Ok () ∧ SourceProgress before (snapshotCompiler output) := by
@@ -29,9 +29,9 @@ theorem compiler_table_loop_sources {A : Type} (ops : runtime.platform.Alloc A)
   generalize measure : Usize.max - index.val = n
   induction n using Nat.strong_induction_on generalizing before index status with
   | h n ih =>
-    unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop at accepted
+    unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.FunctionCompiler.lower_table_branches_loop.body,
+    simp only [runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body,
       bind_ok] at accepted
     split at accepted
     · rename_i inside
@@ -52,11 +52,11 @@ theorem compiler_table_loop_sources {A : Type} (ops : runtime.platform.Alloc A)
         have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.FunctionCompiler.lower_table_branches_loop
+        have tail' : runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
             ops middle nextIndex result = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.FunctionCompiler.lower_table_branches_loop,
-            runtime.compiler.FunctionCompiler.lower_table_branches_loop.body,
+            runtime.compiler.control.FunctionCompiler.lower_table_branches_loop,
+            runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body,
             core.result.Result.is_ok] using tail
         obtain ⟨resultOk, restSources⟩ := ih _ smaller middle nextIndex result tail' rfl
         subst result
@@ -70,7 +70,7 @@ elab "table_sources_effect " h:ident " using " ops:term ", " law:term : tactic =
   let hyp ← elabTerm h none
   let ty ← inferType hyp
   let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.FunctionCompiler.lower_table_branches_loop then
+  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.lower_table_branches_loop then
     evalTactic (← `(tactic| have effect := compiler_table_loop_sources $ops $law _ _ _ _ $h))
   else
     evalTactic (← `(tactic| control_sources_effect $h using $ops, $law))
@@ -105,9 +105,9 @@ macro "table_sources_step " h:ident " using " ops:term ", " law:term : tactic =>
 
 theorem compiler_lower_table_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (), after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches at accepted
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches at accepted
   repeat' table_sources_step accepted using ops, law
   rename_i middle unit emitted signatures tail loopEffect
   have result := (Prod.mk.inj (Result.ok.injEq.mp accepted)).1

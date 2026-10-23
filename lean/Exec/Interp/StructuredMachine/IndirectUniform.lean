@@ -23,7 +23,7 @@ theorem call_indirect_selected_uniform {emission : FunctionEmission} {allowed : 
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (params results : List valtype) (pc : U32) (base : Usize)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
     (compiledFunctions : StructuredMachine.CompiledFunctions emission code store)
     (functionTyping : CoreFunctionsTyped view code store)
     (functionAt : store.funcs.val[address.index.val]? = some function)

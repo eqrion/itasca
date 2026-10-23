@@ -9,12 +9,12 @@ def ElementSourceValues (sourceStore : _root_.store) (sourceInstance : moduleins
     (Itasca.ModuleConstants.expression expr) ⟨sourceStore, ⟨[], sourceInstance⟩⟩
     [refVal (decodeRef ty word)]) expressions words
 
-theorem eval_const_exec_source {M P F A : Type}
+theorem eval_const_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (codeFound : inst.module.functions.val[function.val]? = some code)
@@ -25,15 +25,15 @@ theorem eval_const_exec_source {M P F A : Type}
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (context : InitializerSourceContext sourceStore sourceInstance store inst)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env expr ty) :
-    runtime.instantiate.eval_const_exec memory hooks floats allocator store platform instIndex function ty
+    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧ ∀ value, out.1 = .Ok value →
         ValueInStore store value ∧ Interp.rawType value = ty ∧
         Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (Itasca.ModuleConstants.expression expr)
           ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [Interp.sourceValue value] ⦄ := by
-  have exactValue := eval_const_exec_effect memory hooks floats allocator law store platform instIndex function
+  have exactValue := eval_const_effect memory hooks floats allocator law store platform instIndex function
     inst code expr ty words found codeFound compiled resolved (initializer_reference_bound resolved bindings)
   obtain ⟨result, run, owned⟩ := WP.spec_imp_exists
-    (eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+    (eval_const_owned memory hooks floats allocator law store platform instIndex function
       inst code expr ty words found codeFound compiled resolved bindings)
   rw [run] at exactValue ⊢
   simp only [WP.spec_ok] at exactValue ⊢

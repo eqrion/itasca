@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Canonical source typing supplies the syntax for an installed instance. -/
 theorem instance_syntax_source (oldCode : CodeInterpretation) (fresh : Nat)
-    (inst : runtime.store.Instance) (raw : ModuleBinary.Module)
+    (inst : runtime.store.ModuleInst) (raw : ModuleBinary.Module)
     (elaborates : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw) :
@@ -34,7 +34,7 @@ theorem instance_syntax_source (oldCode : CodeInterpretation) (fresh : Nat)
 
 /-- Changing instance maps leaves its source syntax unchanged. -/
 theorem InstanceSyntax.module_eq {code : CodeInterpretation} {index : Nat}
-    {before after : runtime.store.Instance} (hsyntax : InstanceSyntax code index before)
+    {before after : runtime.store.ModuleInst} (hsyntax : InstanceSyntax code index before)
     (same : after.module = before.module) : InstanceSyntax code index after := by
   exact ⟨by simpa only [same] using hsyntax.exportNames,
     by simpa only [same] using hsyntax.functionCodes⟩
@@ -51,7 +51,7 @@ theorem StoreSyntax.code_agrees {M : Type} {store : runtime.store.Store M}
 /-- Publishing one instance preserves the syntax of every existing instance. -/
 theorem StoreSyntax.publish {M : Type} {before after : runtime.store.Store M}
     {oldCode newCode : CodeInterpretation} (prior : StoreSyntax oldCode before)
-    (agrees : CodeAgreesOn before oldCode newCode) (inst : runtime.store.Instance)
+    (agrees : CodeAgreesOn before oldCode newCode) (inst : runtime.store.ModuleInst)
     (appended : after.instances.val = before.instances.val ++ [inst])
     (fresh : InstanceSyntax newCode before.instances.length inst) :
     StoreSyntax newCode after := by
@@ -88,7 +88,7 @@ theorem StoreSyntax.staged {M : Type} {before after : runtime.store.Store M}
       InstanceSyntax newCode before.instances.length inst) : StoreSyntax newCode after := by
   intro index inst found
   by_cases bound : index < before.instances.length
-  · have same := congrArg (fun values : List runtime.store.Instance => values[index]?) retained.instances
+  · have same := congrArg (fun values : List runtime.store.ModuleInst => values[index]?) retained.instances
     have oldFound : before.instances.val[index]? = some inst := by
       simpa only [List.getElem?_take, if_pos bound, found] using same.symm
     exact prior.code_agrees agrees index inst oldFound

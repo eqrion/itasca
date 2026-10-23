@@ -14,7 +14,7 @@ private theorem length_of_prefix {T : Type} {before after : List T}
   omega
 
 theorem StagedPrefix.instance_shape {M : Type} {before after : runtime.store.Store M}
-    (retained : StagedPrefix before after) (inst : runtime.store.Instance) (shape : InstanceShape before inst) :
+    (retained : StagedPrefix before after) (inst : runtime.store.ModuleInst) (shape : InstanceShape before inst) :
     InstanceShape after inst :=
   InstanceShape.mono before after retained.identity.symm
     (length_of_prefix retained.types) (length_of_prefix retained.funcs)
@@ -23,7 +23,7 @@ theorem StagedPrefix.instance_shape {M : Type} {before after : runtime.store.Sto
     (length_of_prefix retained.datas) inst shape
 
 theorem StagedPrefix.function_shape {M : Type} {before after : runtime.store.Store M}
-    (retained : StagedPrefix before after) (function : runtime.store.Function) (shape : FunctionShape before function) :
+    (retained : StagedPrefix before after) (function : runtime.store.FuncInst) (shape : FunctionShape before function) :
     FunctionShape after function := by
   obtain ⟨signature, body⟩ := shape
   refine ⟨Nat.lt_of_lt_of_le signature (length_of_prefix retained.types), ?_⟩
@@ -38,7 +38,7 @@ theorem StagedPrefix.function_shape {M : Type} {before after : runtime.store.Sto
 supply FunctionShape after the provisional instance has been published. -/
 theorem staged_function_shapes {M : Type} {view : M → Slice U8}
     (before after : runtime.store.Store M) (shape : Shape view before)
-    (retained : StagedPrefix before after) (inst : runtime.store.Instance)
+    (retained : StagedPrefix before after) (inst : runtime.store.ModuleInst)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (staged : StagedFunctionSignatures before after before.instances.len
@@ -59,7 +59,7 @@ theorem staged_function_shapes {M : Type} {view : M → Slice U8}
 
 /-- A source-complete instance is charged exactly the preflight module total. -/
 theorem InstanceShape.item_charge {M : Type} {store : runtime.store.Store M}
-    (inst : runtime.store.Instance) (shape : InstanceShape store inst) : instanceItems inst = moduleItems inst.module := by
+    (inst : runtime.store.ModuleInst) (shape : InstanceShape store inst) : instanceItems inst = moduleItems inst.module := by
   obtain ⟨types, functions, tables, memories, globals, elements, datas, rest⟩ := shape
   simp only [instanceItems, moduleItems, types, functions, tables, memories, globals, elements, datas]
 
@@ -83,7 +83,7 @@ inventory, the completed new instance, and concrete staged function metadata. -/
 theorem shape_after_staging {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (shape : Shape view before)
     (allocated : AllocationShape view after) (retained : StagedPrefix before after)
-    (inst : runtime.store.Instance) (found : after.instances.val[before.instances.len.val]? = some inst)
+    (inst : runtime.store.ModuleInst) (found : after.instances.val[before.instances.len.val]? = some inst)
     (instanceShape : InstanceShape after inst)
     (instanceCount : after.instances.length = before.instances.length + 1)
     (instanceRoom : before.instances.length < before.limits.max_instances.val)

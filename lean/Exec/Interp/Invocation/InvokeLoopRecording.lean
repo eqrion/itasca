@@ -22,7 +22,7 @@ def recordedInvokeLoop {M P F A : Type}
     (status : core.result.Result Unit runtime.ExecError) (prior : List HostEvent) :
     Result (InvokeLoopResult M P × List HostEvent) :=
   Platform.Recording.loop
-    (fun (exec,store,platform,status) => runtime.interp.invoke_with_loop2.body memory hooks floats allocator exec store platform status)
+    (fun (exec,store,platform,status) => runtime.interp.invoke_with_loop1.body memory hooks floats allocator exec store platform status)
     invokeLoopEvents (exec,store,platform,status) prior
 
 theorem recordedInvokeLoop_erase {M P F A : Type}
@@ -31,6 +31,6 @@ theorem recordedInvokeLoop_erase {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (status : core.result.Result Unit runtime.ExecError) (prior : List HostEvent) :
     (do let (out,_) ← recordedInvokeLoop memory hooks floats allocator exec store platform status prior; Result.ok out) =
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator exec store platform status := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator exec store platform status := by
   exact Platform.Recording.loop_erase _ _ _ _
 end Exec.Interp

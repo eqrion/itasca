@@ -12,7 +12,7 @@ theorem compiler_table_branch_exit_slots {A : Type} (ops : runtime.platform.Allo
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]? = some depth)
     (transfers : TableTransferBounds before) (heightFits : before.height.val ≤ before.function.slot_count.val)
     (held : FrameExitSlotBounds before)
-    (called : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     FrameExitSlotBounds after := by
   obtain ⟨_,_,_,_,effect⟩ := compiler_table_target_code ops law before after index depth lookup called
   have capacity := (compiler_table_branch_fixed ops law before after index depth lookup called).stable.capacity
@@ -49,7 +49,7 @@ theorem compiler_lower_table_exit_slots {A : Type} (ops : runtime.platform.Alloc
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (transfers : TableTransferBounds before) (heightFits : before.height.val ≤ before.function.slot_count.val)
     (held : FrameExitSlotBounds before)
-    (called : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     FrameExitSlotBounds after := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
   have growth := emission.instructionCheckExtends

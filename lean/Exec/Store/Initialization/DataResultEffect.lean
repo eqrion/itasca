@@ -4,21 +4,21 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 inductive DataResultEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : DataResultEffect store instIndex inst (.Err error) store
-  | appended (datas : alloc.vec.Vec runtime.store.DataInstance)
-      (addresses : alloc.vec.Vec Usize) (data : runtime.store.DataInstance)
+  | appended (datas : alloc.vec.Vec runtime.store.DataInst)
+      (addresses : alloc.vec.Vec Usize) (data : runtime.store.DataInst)
       (dataValues : datas.val = store.datas.val ++ [data])
-      (addressValues : addresses.val = inst.data.val ++ [store.datas.len]) :
+      (addressValues : addresses.val = inst.datas.val ++ [store.datas.len]) :
       DataResultEffect store instIndex inst (.Ok ())
-        { store with datas := datas, instances := store.instances.set instIndex { inst with data := addresses } }
+        { store with datas := datas, instances := store.instances.set instIndex { inst with datas := addresses } }
 
 theorem add_instance_data_result_effect {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bound : index.val < inst.module.module.tail.data.val.length)
-    (room : store.datas.length < Usize.max) (mapRoom : inst.data.length < Usize.max) :
+    (room : store.datas.length < Usize.max) (mapRoom : inst.datas.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_data memory allocator store instIndex index
       ⦃ out => DataResultEffect store instIndex inst out.1 out.2 ⦄ := by
   have instanceBound : instIndex.val < store.instances.length := (List.getElem?_eq_some_iff.mp found).1
@@ -41,9 +41,9 @@ theorem DataResultEffect.effect {M : Type} {store after : runtime.store.Store M}
 
 theorem DataResultEffect.count {M : Type} {store after : runtime.store.Store M}
     {instIndex inst status} (effect : DataResultEffect store instIndex inst status after)
-    (bound : instIndex.val < store.instances.length) {next : runtime.store.Instance}
+    (bound : instIndex.val < store.instances.length) {next : runtime.store.ModuleInst}
     (found : after.instances.val[instIndex.val]? = some next) (success : status = .Ok ()) :
-    next.data.length = inst.data.length + 1 := by
+    next.datas.length = inst.datas.length + 1 := by
   cases effect with
   | failed error => simp at success
   | appended datas addresses data stored mapped =>

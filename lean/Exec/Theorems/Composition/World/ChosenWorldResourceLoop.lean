@@ -38,6 +38,7 @@ theorem ChosenWorldLoopInvariant.only_trap_error {choices : SourceChoices} {M P 
     | Allocation => exact False.elim (excludes (Or.inr (Or.inr (Or.inr (Or.inl rfl)))))
     | Objects => exact False.elim (excludes (Or.inr (Or.inr (Or.inr (Or.inr rfl)))))
   | BadArguments => exact False.elim outcome
+  | Internal => exact False.elim outcome
   | WrongStore => exact False.elim outcome
   | Link reason => exact False.elim outcome
 
@@ -54,7 +55,7 @@ theorem chosen_world_loop_no_boundary {choices : SourceChoices} {M P F A : Type}
     (resources : ChosenWorldResources choices initial.occurrence (Abs.decode initial.machine.source) valueLimit frameLimit)
     (available : Platform.AllocationAvailable allocator (2*Usize.max))
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after)) (noOverflow : NoHostStackOverflow hooks Inv) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => ChosenWorldLoopResult choices Inv initial result ∧
         ∀ error,result.2.2.2.2.2.2.2=.Err error → ∃ trap,error=.Trap trap ⦄div := by
   apply WP.dspec_mono (chosen_world_loop_stops memory hooks floats allocator Inv steps initial valid)

@@ -2,9 +2,16 @@
 //!
 //! The streaming driver validates the complete input. Separate execution proofs
 //! establish compiler normal return and source correspondence under allocator laws.
+//!
+//! Visitor callbacks report compiler budget exhaustion as
+//! `VisitError::OutOfMemory` after recording the resource in `Budget`. They
+//! report violated compiler invariants the same way without recording a
+//! resource, and scheduler invariants as `Error::Host`.
 
 use super::bytecode::{CompiledFunction, Instr, SimdImmediate};
+use super::clear;
 use super::platform::Alloc;
+use super::value::{self, width};
 use crate::{
     BlockType, CodeBatch, Config, Context, ElemType, Env, Error, LabelKind, MemArg, Module,
     ModuleVisitor, OpIterState, OpVisitor, Region, ResultType, Source, StackType, StreamingVisitor,
@@ -21,9 +28,10 @@ mod simd;
 
 /// Bounds on the input and aggregate compiler artifacts for one module.
 ///
-/// Defined-function and type caps bound input declarations. Instruction and control counts include synthetic
-/// initialization code. The validator's temporary metadata allocations retain its documented
-/// allocator-failure limitation; compiler-owned storage uses fallible reserves.
+/// Defined-function and type caps bound input declarations. Instruction and
+/// control counts include synthetic initialization code. The validator's
+/// temporary metadata allocations retain its documented allocator-failure
+/// limitation; compiler-owned storage uses fallible reserves.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct CompileLimits {
@@ -137,13 +145,15 @@ impl<A: Alloc> Budget<A> {
 /// Validated metadata and immutable executable code, independent of any instance.
 ///
 /// Constructed only after the entire validation driver accepts, including its
-/// tail and every issued worker. The rewriting and execution are not verified
-/// by the validator's Lean theorems.
+/// tail and every issued worker. `lean/Exec` proves the rewriting and its
+/// execution correct under explicit platform contracts.
 #[cfg_attr(not(charon), derive(Debug))]
 pub struct ExecutableModule {
     pub(super) module: Module,
     pub(super) profile: ValidationProfile,
+    /// Defined functions, followed by compiled initialization code.
     pub(super) functions: Vec<CompiledFunction>,
+    // The remaining fields are indices into `functions`.
     pub(super) global_initializers: Vec<usize>,
     pub(super) element_initializers: Vec<Vec<usize>>,
     pub(super) element_offsets: Vec<Option<usize>>,
@@ -257,12 +267,8 @@ impl ExecutableModule {
     }
 }
 
-/// Validates and rewrites a complete module under the selected profile.
-///
-/// The returned code owns all initialization bytes and has no dependency on the
-/// input slice. The default `CompileLimits` apply. Resource failures are reported
-/// as `Error::Visitor(VisitError::OutOfMemory)`; use `compile_with_limits` to
-/// distinguish the exhausted compiler budget from validation failures.
+/// Compiles with the default limits, reporting resource failures as
+/// `Error::Visitor(VisitError::OutOfMemory)`.
 pub(crate) fn compile_default_with<A: Alloc>(
     bytes: &[u8],
     profile: ValidationProfile,
@@ -274,12 +280,7 @@ pub(crate) fn compile_default_with<A: Alloc>(
     }
 }
 
-/// Validates and rewrites a complete module with explicit compiler budgets.
-///
-/// Bytecode, source maps, locals, labels, and branch-table storage are bounded;
-/// compiler allocations use fallible reservation. Metadata decoding retains the
-/// validator's documented allocation premise. A resource failure never yields a
-/// partial executable module.
+/// Validates and compiles a complete module with explicit budgets.
 pub(crate) fn compile_with<A: Alloc>(
     bytes: &[u8],
     profile: ValidationProfile,
@@ -392,12 +393,6 @@ impl Source for CompileSource<'_> {
     }
     fn tail(&self) -> Result<&[u8], Error> {
         Ok(&self.bytes[self.code_end..])
-    }
-}
-
-fn clear_depths(depths: &mut Vec<u32>) {
-    while !depths.is_empty() {
-        depths.pop();
     }
 }
 
@@ -538,27 +533,20 @@ fn bounded_index(value: usize) -> Result<u32, VisitError> {
     }
 }
 
-fn width(ty: ValueType) -> u32 {
-    match ty {
-        ValueType::V128 => 2,
-        _ => 1,
-    }
-}
 fn type_slots(types: &[ValueType]) -> Result<u32, Error> {
-    let mut slots = 0u32;
-    let mut i = 0;
-    let mut overflow = false;
-    while i < types.len() && !overflow {
-        match slots.checked_add(width(types[i])) {
-            Some(n) => slots = n,
-            None => overflow = true,
-        }
-        i += 1;
-    }
-    if overflow {
+    let slots = value::type_slots(types).ok_or(Error::Host)?;
+    if slots > u32::MAX as usize {
         Err(Error::Host)
     } else {
-        Ok(slots)
+        Ok(slots as u32)
+    }
+}
+
+/// Returns the slot width of an operand; unreachable-code operands use one slot.
+fn stack_width(ty: StackType) -> u32 {
+    match ty {
+        StackType::Val(ty) => width(ty),
+        StackType::Bot => 1,
     }
 }
 
@@ -657,9 +645,7 @@ impl<'a, A: Alloc> FunctionCompiler<'a, A> {
         if self.reachable {
             self.function.max_stack = self.function.max_stack.max(st.vals.len());
         }
-        while !self.before.is_empty() {
-            self.before.pop();
-        }
+        clear(&mut self.before);
         self.height = self.function.local_slots;
         observe_values(
             &mut self.budget,
@@ -692,6 +678,18 @@ impl<'a, A: Alloc> FunctionCompiler<'a, A> {
         let entry = bounded_index(self.function.indirect.len())?;
         self.budget.push(&mut self.function.indirect, (a, b))?;
         Ok(entry)
+    }
+    fn add_local(&mut self, ty: ValueType) -> VisitResult {
+        self.budget.charge(CompileResource::Locals)?;
+        self.budget
+            .push(&mut self.local_offsets, self.function.local_slots)?;
+        self.budget.push(&mut self.function.locals, ty)?;
+        self.function.local_slots = self
+            .function
+            .local_slots
+            .checked_add(width(ty))
+            .ok_or(VisitError::OutOfMemory)?;
+        Ok(())
     }
 }
 
@@ -734,38 +732,32 @@ impl<'a, A: Alloc> CompileScheduler<'a, A> {
     }
 }
 
-impl<A: Alloc> FunctionCompiler<'_, A> {
-    fn add_local(&mut self, ty: ValueType) -> VisitResult {
-        self.budget.charge(CompileResource::Locals)?;
-        self.budget
-            .push(&mut self.local_offsets, self.function.local_slots)?;
-        self.budget.push(&mut self.function.locals, ty)?;
-        self.function.local_slots = self
-            .function
-            .local_slots
-            .checked_add(width(ty))
-            .ok_or(VisitError::OutOfMemory)?;
-        Ok(())
-    }
-    fn lower_table_branches(&mut self) -> VisitResult {
-        let start = bounded_index(self.function.jump_tables.len())?;
-        let len = bounded_index(self.table_depths.len())?;
-        let index = self.operand(1)?;
-        self.emit(Instr::JumpTable { index, start, len })?;
-        let mut i = 0;
-        let mut result = Ok(());
-        while i < self.table_depths.len() && result.is_ok() {
-            result = self.table_branch(i);
-            i += 1;
-        }
-        result
-    }
+fn observe_value<A: Alloc>(
+    budget: &mut Budget<A>,
+    before: &mut Vec<u32>,
+    height: &mut u32,
+    ty: StackType,
+) -> VisitResult {
+    budget.push(before, *height)?;
+    *height = height
+        .checked_add(stack_width(ty))
+        .ok_or(VisitError::OutOfMemory)?;
+    Ok(())
+}
 
-    fn table_branch(&mut self, index: usize) -> VisitResult {
-        let target = self.pc()?;
-        self.budget.push(&mut self.function.jump_tables, target)?;
-        self.branch(self.table_depths[index], 1, false)
+fn observe_values<A: Alloc>(
+    budget: &mut Budget<A>,
+    before: &mut Vec<u32>,
+    height: &mut u32,
+    values: &[StackType],
+) -> VisitResult {
+    let mut i = 0;
+    let mut result = Ok(());
+    while i < values.len() && result.is_ok() {
+        result = observe_value(budget, before, height, values[i]);
+        i += 1;
     }
+    result
 }
 
 #[cfg(test)]
@@ -848,34 +840,4 @@ mod tests {
         );
         assert_eq!(module.functions[0].max_stack, 2);
     }
-}
-
-fn observe_value<A: Alloc>(
-    budget: &mut Budget<A>,
-    before: &mut Vec<u32>,
-    height: &mut u32,
-    ty: StackType,
-) -> VisitResult {
-    budget.push(before, *height)?;
-    let n = match ty {
-        StackType::Val(t) => width(t),
-        StackType::Bot => 1,
-    };
-    *height = height.checked_add(n).ok_or(VisitError::OutOfMemory)?;
-    Ok(())
-}
-
-fn observe_values<A: Alloc>(
-    budget: &mut Budget<A>,
-    before: &mut Vec<u32>,
-    height: &mut u32,
-    values: &[StackType],
-) -> VisitResult {
-    let mut i = 0;
-    let mut result = Ok(());
-    while i < values.len() && result.is_ok() {
-        result = observe_value(budget, before, height, values[i]);
-        i += 1;
-    }
-    result
 }

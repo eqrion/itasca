@@ -4,7 +4,7 @@ import Exec.Store.Api.TableInitLists
 namespace Exec.Store
 open Aeneas Aeneas.Std
 def TableCopyEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
-    (table sourceTable : runtime.store.Table) (destination source count : U64)
+    (table sourceTable : runtime.store.TableInst) (destination source count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M) : Prop :=
   if destination.val+count.val ≤ table.elements.length ∧ source.val+count.val ≤ sourceTable.elements.length then
     ∃ words, out = (.Ok (),{store with tables := store.tables.set address {table with elements := words}}) ∧
@@ -13,9 +13,9 @@ def TableCopyEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
 
 theorem bulk_table_copy {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (operand entry tableId sourceId : U32) (sourceAddress tableAddress : runtime.TableAddr)
-    (table : runtime.store.Table) (sourceTable : runtime.store.Table)
+    (table : runtime.store.TableInst) (sourceTable : runtime.store.TableInst)
     (destination source count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)

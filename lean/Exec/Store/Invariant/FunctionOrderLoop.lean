@@ -10,7 +10,7 @@ function maps, while retaining all old store objects. The exact helper effect
 also records each function's canonical signature and source function index. -/
 theorem function_order_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (instanceIndex start : Usize)
     (startBound : start.val ≤ seed.module.module.env.func_type_indices.val.length)
     (changed : store = {before with funcs := store.funcs})
@@ -41,10 +41,10 @@ theorem function_order_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentOrder, currentIssued, indexBound, counting⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentOrder currentIssued indexBound counting ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     have types : currentInst.types = seed.types := by
-      have eq := congrArg runtime.store.Instance.types mapChanged
+      have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop4.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

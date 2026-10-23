@@ -4,7 +4,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 theorem ElementStageEffect.global_types {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {index : Usize}
+    {inst next : runtime.store.ModuleInst} {index : Usize}
     (effect : ElementStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
     (nextFound : after.instances.val[index.val]? = some next)
@@ -21,7 +21,7 @@ theorem ElementStageEffect.global_types {M : Type} {store after : runtime.store.
     exact mapping
 
 theorem DataStageEffect.global_types {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {index : Usize}
+    {inst next : runtime.store.ModuleInst} {index : Usize}
     (effect : DataStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
     (nextFound : after.instances.val[index.val]? = some next)

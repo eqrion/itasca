@@ -12,7 +12,7 @@ def memorySplatShift : Jnn → U32
 theorem memory_splat_unfold (ty : Jnn) (offset lane : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op (memorySplatOpcode ty) offset lane address value memory = (do
       let size ← 1#usize <<< memorySplatShift ty
-      let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset size
+      let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset size (Slice.len memory)
       match result with
       | .Err error => .ok (.Err error,memory)
       | .Ok start =>
@@ -26,6 +26,7 @@ theorem memory_splat_unfold (ty : Jnn) (offset lane : U32) (address value : U128
   all_goals congr 1
   all_goals try (with_unfolding_all rfl)
   all_goals funext size
+  all_goals try simp only []
   all_goals congr 1
   all_goals try (with_unfolding_all rfl)
   all_goals funext result;cases result <;>

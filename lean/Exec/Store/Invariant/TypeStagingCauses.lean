@@ -5,13 +5,13 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 abbrev typeStageCall {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (state : runtime.store.Store M × runtime.store.Instance) (index : Usize) :=
+    (allocator : runtime.platform.Alloc A) (state : runtime.store.Store M × runtime.store.ModuleInst) (index : Usize) :=
   runtime.store.instantiate.Store.add_instance_type memory allocator state.1 state.2 index
 
 /-- A reached canonical-signature refusal, preceded only by actual successful
 calls from the given type-loop input. -/
 def TypeStagingCause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (allocator : runtime.platform.Alloc A) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (start : Usize) (error : runtime.ExecError) : Prop :=
   ∃ current currentInst index ty,
     PreparationCalls (typeStageCall memory allocator) (store,inst) start (current,currentInst) index ∧
@@ -23,7 +23,7 @@ def TypeStagingCause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
 successful type vector resolves every source signature to an exact store entry. -/
 theorem type_staging_resource_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize) (startBound : start.val ≤ seed.module.module.env.types.val.length)
     (changed : store = {before with types := store.types, signature_values := store.signature_values})
     (instChanged : inst = {seed with types := inst.types})
@@ -48,7 +48,7 @@ theorem type_staging_resource_loop {M A : Type} (memory : runtime.platform.Memor
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, indexBound, typing, trace, cause⟩
     dsimp only at currentChanged mapChanged prefixStore bound indexBound typing ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop3.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

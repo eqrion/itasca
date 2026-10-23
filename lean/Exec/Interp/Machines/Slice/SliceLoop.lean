@@ -73,7 +73,7 @@ theorem slice_loop_stops {M P F A : Type}
     {expected : List valtype} {bound : Nat}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (initial : SliceMachine P store sourceStore ambient expected bound) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
       ⦃ result => ∃ state, SliceLoopInvariant memory hooks floats allocator initial state ∧
         ¬ActiveExecution state ∧ finishExecution state = result ⦄div := by
   apply execution_loop_stops memory hooks floats allocator
@@ -151,7 +151,7 @@ theorem slice_loop {M P F A : Type}
     {expected : List valtype} {bound : Nat}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (initial : SliceMachine P store sourceStore ambient expected bound) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
       ⦃ result => SliceLoopOutcome memory hooks floats allocator initial result ⦄div := by
   apply WP.dspec_mono (slice_loop_stops memory hooks floats allocator allocation interrupts view code decoded compiled initial)
   rintro result ⟨state, invariant, stopped, same⟩

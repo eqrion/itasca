@@ -23,7 +23,7 @@ theorem call_defined_executable_eventful_finite_progress {M P F A : Type}
     (prepared : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value)
     (empty : prepared.frames.val = []) (identity : prepared.store = store.id)

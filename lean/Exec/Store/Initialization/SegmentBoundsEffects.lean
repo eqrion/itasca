@@ -13,7 +13,7 @@ theorem SegmentBounds.same {M : Type} {before after : runtime.store.Store M}
   · simpa [datas] using bounded.data
 
 theorem SegmentBounds.element_drop {M : Type} (store : runtime.store.Store M)
-    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.ElemInstance) :
+    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.ElemInst) :
     SegmentBounds {store with elems := store.elems.set address {segment with refs := alloc.vec.Vec.new U64}} := by
   constructor
   · intro element member
@@ -25,7 +25,7 @@ theorem SegmentBounds.element_drop {M : Type} (store : runtime.store.Store M)
   · exact bounded.data
 
 theorem SegmentBounds.data_drop {M : Type} (store : runtime.store.Store M)
-    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.DataInstance) :
+    (bounded : SegmentBounds store) (address : Usize) (segment : runtime.store.DataInst) :
     SegmentBounds {store with datas := store.datas.set address {segment with bytes := alloc.vec.Vec.new U8}} := by
   constructor
   · exact bounded.elements
@@ -60,10 +60,10 @@ theorem MemoryInitializationEffect.bounds {M : Type} {view : M → Slice U8} {st
 it beyond its binary vector count. Allocation refusal leaves all bounds intact. -/
 theorem add_instance_data_bounds {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bound : index.val < inst.module.module.tail.data.val.length)
-    (room : store.datas.length < Usize.max) (mapRoom : inst.data.length < Usize.max)
+    (room : store.datas.length < Usize.max) (mapRoom : inst.datas.length < Usize.max)
     (sourceBound : ∀ data ∈ inst.module.module.tail.data.val, data.init.length < 2^32)
     (bounded : SegmentBounds store) :
     runtime.store.instantiate.Store.add_instance_data memory allocator store instIndex index

@@ -38,7 +38,7 @@ theorem core_continuing_history {M P F A : Type}
       have active : 0 < initial.exec.frames.length := by
         by_contra inactive
         have empty : ¬initial.exec.frames.len > 0#usize := by scalar_tac
-        simp [executionBody,runtime.interp.invoke_with_loop2.body,empty] at bodyStep
+        simp [executionBody,runtime.interp.invoke_with_loop1.body,empty] at bodyStep
       obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,returned,fresh,extension,bounds,hostFree,mutation,outcome⟩ :=
         WP.spec_imp_exists (step_core_host_free memory hooks floats allocator allocation interrupts view laws code
           initial.exec initial.store initial.platform initial.source expected initial.pc initial.pending
@@ -50,7 +50,7 @@ theorem core_continuing_history {M P F A : Type}
       | Err error =>
         cases tail with
         | nil => exact ⟨initial,0,.refl initial,Or.inr ⟨rfl,error,nextExec,nextStore,nextPlatform,returned,outcome.1,rfl⟩⟩
-        | next stopped _ => simp [executionBody,runtime.interp.invoke_with_loop2.body,core.result.Result.is_ok] at stopped
+        | next stopped _ => simp [executionBody,runtime.interp.invoke_with_loop1.body,core.result.Result.is_ok] at stopped
       | Ok unit =>
         cases unit
         obtain ⟨pc,pending,source,invariant,simulation,ownership,ambient,bounded⟩ := outcome

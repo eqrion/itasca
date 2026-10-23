@@ -22,7 +22,7 @@ theorem compiler_br_table_callback_exit_slots {A : Type} (ops : runtime.platform
     (lower : ∀ labeled,
       runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label
         ops before state fallback = .ok (.Ok (),labeled) → labeled.reachable = true → ∀ lowered,
-      runtime.compiler.FunctionCompiler.lower_table_branches ops labeled = .ok (.Ok (),lowered) →
+      runtime.compiler.control.FunctionCompiler.lower_table_branches ops labeled = .ok (.Ok (),lowered) →
       FrameExitSlotBounds lowered)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
       ops before state fallback types = .ok (.Ok (),after)) : FrameExitSlotBounds after := by

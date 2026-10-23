@@ -28,16 +28,16 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 /-- Scalar global reads copy the exact stored low word and preserve the store
 and all non-slot execution state. -/
 theorem global_get_dispatch_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst global : U32) (inst : runtime.store.Instance)
-    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (instanceIndex base : Usize) (dst global : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.globals.val[global.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some value)
     (capacity : base.val + dst.val < exec.slots.length) :
-    runtime.interp.admin_global_get memory hooks floats allocator exec store instanceIndex base dst global
+    runtime.interp.execute_global_get memory exec store instanceIndex base dst global
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2.1
         (exec.slots.val.set (base.val + dst.val) value.lo) ∧ out.2.2 = store ⦄ := by
-  unfold runtime.interp.admin_global_get
+  unfold runtime.interp.execute_global_get
   rw [global_index_given store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
   rw [global_index_given inst.globals (UScalar.cast .Usize global) address
@@ -47,18 +47,18 @@ theorem global_get_dispatch_effect (exec : runtime.interp.Execution) (store : ru
 
 /-- Vector global reads copy both stored words in little-word order. -/
 theorem global_get2_dispatch_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst global : U32) (inst : runtime.store.Instance)
-    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (instanceIndex base : Usize) (dst global : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.globals.val[global.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some value)
     (capacity : base.val + dst.val + 2 ≤ exec.slots.length) :
-    runtime.interp.admin_global_get2 memory hooks floats allocator exec store instanceIndex base dst global
+    runtime.interp.execute_global_get2 memory exec store instanceIndex base dst global
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2.1
         ((exec.slots.val.set (base.val + dst.val) value.lo).set (base.val + dst.val + 1) value.hi) ∧
         out.2.2 = store ⦄ := by
   change base.val + dst.val + 2 ≤ exec.slots.val.length at capacity
-  unfold runtime.interp.admin_global_get2
+  unfold runtime.interp.execute_global_get2
   rw [global_index_given store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
   rw [global_index_given inst.globals (UScalar.cast .Usize global) address
@@ -69,16 +69,16 @@ theorem global_get2_dispatch_effect (exec : runtime.interp.Execution) (store : r
 /-- Scalar global writes change only the selected global's low word. The
 stored type, high word and every other object are preserved exactly. -/
 theorem global_set_dispatch_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (src global : U32) (inst : runtime.store.Instance)
-    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (instanceIndex base : Usize) (src global : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.globals.val[global.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some value)
     (capacity : base.val + src.val < exec.slots.length) :
-    runtime.interp.admin_global_set memory hooks floats allocator exec store instanceIndex base src global
+    runtime.interp.execute_global_set memory exec store instanceIndex base src global
       ⦃ out => out = (.Ok (), exec, {store with globals := store.globals.set address.index ({value with lo := exec.slots.val[base.val + src.val]!})}) ⦄ := by
   change base.val + src.val < exec.slots.val.length at capacity
-  unfold runtime.interp.admin_global_set
+  unfold runtime.interp.execute_global_set
   rw [global_index_given store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
   rw [global_index_given inst.globals (UScalar.cast .Usize global) address
@@ -98,16 +98,16 @@ theorem global_set_dispatch_effect (exec : runtime.interp.Execution) (store : ru
 /-- Vector global writes retain exactly the two source words and preserve all
 other global metadata and execution state. -/
 theorem global_set2_dispatch_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (src global : U32) (inst : runtime.store.Instance)
-    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (instanceIndex base : Usize) (src global : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.globals.val[global.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some value)
     (capacity : base.val + src.val + 2 ≤ exec.slots.length) :
-    runtime.interp.admin_global_set2 memory hooks floats allocator exec store instanceIndex base src global
+    runtime.interp.execute_global_set2 memory exec store instanceIndex base src global
       ⦃ out => out = (.Ok (), exec, {store with globals := store.globals.set address.index ({value with lo := exec.slots.val[base.val + src.val]!, hi := exec.slots.val[base.val + src.val + 1]!})}) ⦄ := by
   change base.val + src.val + 2 ≤ exec.slots.val.length at capacity
-  unfold runtime.interp.admin_global_set2
+  unfold runtime.interp.execute_global_set2
   rw [global_index_given store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
   rw [global_index_given inst.globals (UScalar.cast .Usize global) address

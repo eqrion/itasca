@@ -32,7 +32,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
       InitializerSourceContext (decodeStore view code before) initialModule trace.globalStore next ∧
       StagedPrefix before trace.globalStore ∧ objectCount trace.globalStore ≤ Usize.max ∧
       SegmentAccounting trace.globalStore ∧ trace.globalStore.elems = before.elems ∧
-      trace.globalStore.datas = before.datas ∧ next.elements.val = [] ∧ next.data.val = [] ∧
+      trace.globalStore.datas = before.datas ∧ next.elems.val = [] ∧ next.datas.val = [] ∧
       next.globals.val.map (fun address => address.index.val) =
         trace.seed.globals.val.map (fun address => address.index.val) ++
           List.range' before.globals.length module.module.env.globals.val.length ∧
@@ -53,8 +53,8 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     constructor
     · simpa only [preparedElements, preparedInstances] using accounted.elements
     · simpa only [preparedData, preparedInstances] using accounted.datas
-  have emptyElements : trace.inst.elements.val = [] := by rw [preparedElementMap]; exact trace.maps.elements
-  have emptyData : trace.inst.data.val = [] := by rw [preparedDataMap]; exact trace.maps.data
+  have emptyElements : trace.inst.elems.val = [] := by rw [preparedElementMap]; exact trace.maps.elements
+  have emptyData : trace.inst.datas.val = [] := by rw [preparedDataMap]; exact trace.maps.data
   have publication := publish_prepared_instance trace.prepared trace.inst room
     preparedBindings preparedImports preparedSegments preparedAccounting emptyElements emptyData
   rw [trace.publicationRun] at publication

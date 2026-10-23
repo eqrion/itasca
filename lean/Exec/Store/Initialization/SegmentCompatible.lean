@@ -6,12 +6,12 @@ open Aeneas Aeneas.Std
 /-- For an emitted table initialization, source-segment words and destination
 slots have the same reference type. Other instructions impose no type equality. -/
 def SegmentBulkCompatible {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) : Prop :=
   match instruction with
   | .TableInit _ entry => ∀ element tableId address target segment table,
       code.indirect.val[entry.val]? = some (element, tableId) →
-      inst.elements.val[element.val]? = some address → inst.tables.val[tableId.val]? = some target →
+      inst.elems.val[element.val]? = some address → inst.tables.val[tableId.val]? = some target →
       store.elems.val[address.val]? = some segment → store.tables.val[target.index.val]? = some table →
       segment.ty = table.ty
   | _ => True
@@ -40,7 +40,7 @@ theorem SegmentBulkCompatible.transport {M : Type} {store after : runtime.store.
 /-- Source typing and source/raw type-map agreement establish the needed equality
 for a compiler-selected active element segment. -/
 theorem segment_table_compatible {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (entry element tableId : U32) (segment : Itasca.module.Element) (tableType : Itasca.types.TableType)
     (descriptor : code.indirect.val[entry.val]? = some (element, tableId))
     (source : inst.module.module.env.elements.val[element.val]? = some segment)

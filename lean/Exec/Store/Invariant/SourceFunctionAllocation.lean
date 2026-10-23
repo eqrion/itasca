@@ -31,12 +31,12 @@ theorem installed_source_function (code : CodeInterpretation) (instanceIndex : N
   simp only [Code.sourceFunctions_eq, List.getElem?_map, found, Option.map_some, source_function_code]
 
 theorem canonical_function_payload_decode {M : Type} {before after : runtime.store.Store M}
-    {seed : runtime.store.Instance} {instanceIndex : Usize}
+    {seed : runtime.store.ModuleInst} {instanceIndex : Usize}
     (raw : ModuleBinary.Module)
     (lengths : raw.functions.length = raw.codes.length)
     (indices : seed.module.module.env.func_type_indices.val = raw.functions)
     (payload : FunctionPayload before after seed instanceIndex raw.functions.length)
-    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (types : inst.types = seed.types) :
     after.funcs.val.map (decodeFunction (installCode code instanceIndex.val (Code.sourceFunctions raw)) store) =

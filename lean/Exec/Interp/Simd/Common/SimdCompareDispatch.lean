@@ -56,9 +56,8 @@ theorem integerCompareIndex_roundtrip (op : vrelop_Jnn_N) :
 theorem integer_compare_dispatch_eq (ty : Jnn) (op : vrelop_Jnn_N) (x y : U128)
     (supported : Spec.Simd.integerCompareSupported ty op) :
     runtime.interp.simd.compare_lanes (integerCompareOpcode ty op) x y =
-      Aeneas.Std.bind (runtime.interp.simd.compare_lanes_loop y x (integerCompareWidth ty)
-        (UScalar.cast .U32 (integerCompareIndex op)) false 0#u128 0#u32)
-        runtime.interp.simd.vector := by
+      (runtime.interp.simd.compare_lanes_loop x y (integerCompareWidth ty)
+        (UScalar.cast .U32 (integerCompareIndex op)) false 0#u128 0#u32) := by
   cases ty <;> cases op <;> (try rename_i sign; cases sign)
   all_goals simp only [Spec.Simd.integerCompareSupported] at supported
   all_goals try contradiction

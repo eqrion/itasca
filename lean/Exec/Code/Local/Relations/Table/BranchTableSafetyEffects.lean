@@ -26,7 +26,7 @@ theorem TableTargetCode.fixup_budget {A} {before after : runtime.compiler.Functi
 theorem compiler_table_branch_cursor {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]? = some depth)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     after.next_source = before.next_source := by
   obtain ⟨target,budget,table,_,_,called⟩ :=
     compiler_table_branch_success ops law before after index depth lookup accepted
@@ -47,7 +47,7 @@ theorem TableLoopSafe.advance {A} (ops : runtime.platform.Alloc A) (law : Platfo
     {before after : runtime.compiler.FunctionCompiler A} {index : Usize} {limit : Nat}
     (safe : TableLoopSafe before index.val limit)
     (inside : index.val < before.table_depths.val.length)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     TableLoopSafe after (index.val+1) limit := by
   let depth := before.table_depths.val[index.val]
   have lookup : before.table_depths.val[index.val]? = some depth := by simp [depth,inside]

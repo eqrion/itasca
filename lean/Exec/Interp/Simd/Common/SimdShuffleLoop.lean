@@ -10,7 +10,7 @@ def shuffleByte (op : U32) (bits x y : U128) (index : Nat) : BitVec 8 :=
 @[step] theorem shuffle_loop (op : U32) (bits x y initial : U128) (i : U32)
     (position : i.val ≤ 16)
     (initializedPrefix : ∀ j, j < i.val → laneBits 8 j initial.bv = shuffleByte op bits x y j) :
-    runtime.interp.simd.shuffle_lanes_loop op bits y x initial i ⦃ result =>
+    runtime.interp.simd.shuffle_lanes_loop op bits x y initial i ⦃ result =>
       ∀ j, j < 16 → laneBits 8 j result.bv = shuffleByte op bits x y j ⦄ := by
   unfold runtime.interp.simd.shuffle_lanes_loop
   apply loop.spec_decr_nat (fun p => 16-p.2.val)
@@ -53,7 +53,6 @@ def shuffleByte (op : U32) (bits x y : U128) (index : Nat) : BitVec 8 :=
     runtime.interp.simd.shuffle_lanes op bits x y ⦃ result =>
       ∀ j, j < 16 → laneBits 8 j result.bv = shuffleByte op bits x y j ⦄ := by
   unfold runtime.interp.simd.shuffle_lanes
-  step with shuffle_loop as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  exact shuffle_loop op bits x y 0#u128 0#u32 (by simp) (by simp)
 
 end Exec.Interp.Simd

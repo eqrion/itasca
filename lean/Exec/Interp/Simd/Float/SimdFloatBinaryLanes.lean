@@ -23,7 +23,7 @@ def floatBinaryOpcode (ty : Fnn) (op : vbinop_Fnn_N) : U32 :=
 
 theorem float_binary_loop_sound {F : Type} (floats : runtime.platform.FloatOps F)
     (laws : FloatOpsCorrect floats) (ty : Fnn) (op : vbinop_Fnn_N) (x y : U128) :
-    runtime.interp.simd.float_binary_lanes_loop floats (floatCompareWidth ty) (floatBinaryIndex op) y x 0#u128 0#u32
+    runtime.interp.simd.float_binary_lanes_loop floats x y (floatCompareWidth ty) (floatBinaryIndex op) 0#u128 0#u32
       ⦃ result => ∀ j, j < 128/lsize (lanetype_Fnn ty) →
         floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j result.bv).toNat ∈
           floatBinaryChoices (lsize (lanetype_Fnn ty)) op
@@ -48,8 +48,8 @@ theorem float_binary_loop_sound {F : Type} (floats : runtime.platform.FloatOps F
 theorem float_binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     (ty : Fnn) (op : vbinop_Fnn_N) (x y : U128) :
     runtime.interp.simd.float_binary_lanes floats (floatBinaryOpcode ty op) x y =
-      Aeneas.Std.bind (runtime.interp.simd.float_binary_lanes_loop floats (floatCompareWidth ty)
-        (floatBinaryIndex op) y x 0#u128 0#u32) runtime.interp.simd.vector := by
+      (runtime.interp.simd.float_binary_lanes_loop floats x
+        y (floatCompareWidth ty) (floatBinaryIndex op) 0#u128 0#u32) := by
   cases ty <;> cases op
   all_goals unfold runtime.interp.simd.float_binary_lanes floatBinaryOpcode floatCompareWidth floatBinaryIndex
   all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _
@@ -67,7 +67,8 @@ theorem float_binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps 
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j x.bv).toNat)
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j y.bv).toNat) ⦄ := by
   rw [float_binary_dispatch_eq]
-  step with float_binary_loop_sound floats laws ty op x y as ⟨result,allowed⟩
-  simpa [runtime.interp.simd.vector] using allowed
+  apply WP.spec_mono (float_binary_loop_sound floats laws ty op x y)
+  intro result allowed
+  simpa using allowed
 
 end Exec.Interp.Simd

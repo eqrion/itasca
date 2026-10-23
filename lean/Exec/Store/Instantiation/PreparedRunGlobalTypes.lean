@@ -20,7 +20,7 @@ theorem PreparedRun.global_types {M P F A : Type}
     : ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       ready.instances.length = before.instances.length + 1 ∧
       GlobalTypeMap ready module.module.env.global_types.val inst.globals.val ∧
-      ElementTypeMap ready module.module.env.elements.val inst.elements.val := by
+      ElementTypeMap ready module.module.env.elements.val inst.elems.val := by
   obtain ⟨inst, found, source, count, globals, elements⟩ := prepared_commit_global_types memory hooks floats allocator law view laws before trace.seed platform
     shape accounted trace.maps
     (by simpa only [trace.source] using cache) (by simpa only [trace.source] using valid)

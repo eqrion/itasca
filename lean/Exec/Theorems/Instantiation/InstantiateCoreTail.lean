@@ -11,7 +11,7 @@ theorem instantiate_tail_core_no_start {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)

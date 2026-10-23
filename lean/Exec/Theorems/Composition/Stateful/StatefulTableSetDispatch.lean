@@ -8,7 +8,7 @@ theorem stateful_table_set_dispatch {M P F A : Type} (memory : runtime.platform.
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (index : Nat)
     (first second a b entry : U32)
@@ -51,7 +51,7 @@ theorem stateful_table_set_dispatch {M P F A : Type} (memory : runtime.platform.
       rw [valueEq,←referenceEq]
       exact values
     obtain ⟨out,run,same,metadata,effect⟩ := WP.spec_imp_exists
-      (table_set_slots memory hooks floats allocator view code exec store raw first second a inst address object value
+      (table_set_slots memory view code exec store raw first second a inst address object value
         state f rest after front found mapped issued slots position secondSlot sourceStore moduleEq actualValues)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     refine ⟨same,rfl,trivial,metadata,?_⟩

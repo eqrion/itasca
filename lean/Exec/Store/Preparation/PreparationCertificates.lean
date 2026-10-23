@@ -11,13 +11,13 @@ are the structural inputs to compiled-function coverage after publication. -/
 theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before : runtime.store.Store M) (seed : runtime.store.Instance)
+    (before : runtime.store.Store M) (seed : runtime.store.ModuleInst)
     (shape : Shape view before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
     (instanceIndex : Usize)
     (typed functions tabled after : runtime.store.Store M)
-    (typeInst funcInst tableInst inst : runtime.store.Instance)
+    (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
     (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
     (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
@@ -47,17 +47,17 @@ theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryB
   dsimp only at typeStore_tables
   have typeStore_memories := congrArg runtime.store.Store.memories typeStore
   dsimp only at typeStore_memories
-  have typeMap_module := congrArg runtime.store.Instance.module typeMap
+  have typeMap_module := congrArg runtime.store.ModuleInst.module typeMap
   dsimp only at typeMap_module
-  have typeMap_tables := congrArg runtime.store.Instance.tables typeMap
+  have typeMap_tables := congrArg runtime.store.ModuleInst.tables typeMap
   dsimp only at typeMap_tables
-  have typeMap_memories := congrArg runtime.store.Instance.memories typeMap
+  have typeMap_memories := congrArg runtime.store.ModuleInst.memories typeMap
   dsimp only at typeMap_memories
   have typeSource : typeInst.module = seed.module := by
-    have h := congrArg runtime.store.Instance.module typeMap
+    have h := congrArg runtime.store.ModuleInst.module typeMap
     exact h
   have typeFuncs : typeInst.funcs = seed.funcs := by
-    have h := congrArg runtime.store.Instance.funcs typeMap
+    have h := congrArg runtime.store.ModuleInst.funcs typeMap
     exact h
   have typeTable : Interp.FunctionTable typed typeInst
       ((typeInst.module.module.env.func_types.val.take (importedFuncs typeInst.module.module.env.imports.val).length).map decodeFuncType) := by
@@ -76,11 +76,11 @@ theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryB
   dsimp only at functionStore_tables
   have functionStore_memories := congrArg runtime.store.Store.memories functionStore
   dsimp only at functionStore_memories
-  have functionMap_module := congrArg runtime.store.Instance.module functionMap
+  have functionMap_module := congrArg runtime.store.ModuleInst.module functionMap
   dsimp only at functionMap_module
-  have functionMap_tables := congrArg runtime.store.Instance.tables functionMap
+  have functionMap_tables := congrArg runtime.store.ModuleInst.tables functionMap
   dsimp only at functionMap_tables
-  have functionMap_memories := congrArg runtime.store.Instance.memories functionMap
+  have functionMap_memories := congrArg runtime.store.ModuleInst.memories functionMap
   dsimp only at functionMap_memories
   have functionSource : funcInst.module = seed.module := by
     simpa only [functionMap_module] using typeSource
@@ -98,11 +98,11 @@ theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryB
   dsimp only at tableStore_funcs
   have tableStore_memories := congrArg runtime.store.Store.memories tableStore
   dsimp only at tableStore_memories
-  have tableMap_module := congrArg runtime.store.Instance.module tableMap
+  have tableMap_module := congrArg runtime.store.ModuleInst.module tableMap
   dsimp only at tableMap_module
-  have tableMap_funcs := congrArg runtime.store.Instance.funcs tableMap
+  have tableMap_funcs := congrArg runtime.store.ModuleInst.funcs tableMap
   dsimp only at tableMap_funcs
-  have tableMap_memories := congrArg runtime.store.Instance.memories tableMap
+  have tableMap_memories := congrArg runtime.store.ModuleInst.memories tableMap
   dsimp only at tableMap_memories
   obtain ⟨memoryStart, importedMemories⟩ := maps.memory_start cache
   have memoryStartBound : tableInst.memories.len.val ≤ tableInst.module.module.env.mem_types.val.length := by
@@ -116,13 +116,13 @@ theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryB
   obtain ⟨memoryStore, memoryMap, memoryPrefix, memoryBound, memoryAddresses, memoryCount⟩ := memoryPost
   have memoryStore_funcs := congrArg runtime.store.Store.funcs memoryStore
   dsimp only at memoryStore_funcs
-  have memoryMap_funcs := congrArg runtime.store.Instance.funcs memoryMap
+  have memoryMap_funcs := congrArg runtime.store.ModuleInst.funcs memoryMap
   dsimp only at memoryMap_funcs
-  have functionMap_types := congrArg runtime.store.Instance.types functionMap
+  have functionMap_types := congrArg runtime.store.ModuleInst.types functionMap
   dsimp only at functionMap_types
-  have tableMap_types := congrArg runtime.store.Instance.types tableMap
+  have tableMap_types := congrArg runtime.store.ModuleInst.types tableMap
   dsimp only at tableMap_types
-  have memoryMap_types := congrArg runtime.store.Instance.types memoryMap
+  have memoryMap_types := congrArg runtime.store.ModuleInst.types memoryMap
   dsimp only at memoryMap_types
   have finalEntries := (typeEntries rfl).extend (functionPrefix.trans (tablePrefix.trans memoryPrefix))
   have finalTable := function_table_prefix (tablePrefix.trans memoryPrefix) (functionTable rfl)

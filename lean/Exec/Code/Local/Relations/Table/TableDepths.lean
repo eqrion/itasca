@@ -155,8 +155,8 @@ theorem compiler_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
 theorem compiler_table_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (index : Usize)
     (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.FunctionCompiler.table_branch at accepted
+  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   repeat' depths_step accepted using ops
 end Exec.Code

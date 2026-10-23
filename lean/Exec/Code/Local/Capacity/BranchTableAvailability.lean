@@ -69,7 +69,7 @@ theorem compiler_on_br_table_available {A : Type} (ops : runtime.platform.Alloc 
     subst status
     rw [lowerCalled]
     simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with compiler_clear_table_depths lowered.table_depths as ⟨cleared,_⟩
+    step with runtime_clear lowered.table_depths as ⟨cleared,_⟩
     have fixed := (compiler_lower_table_fixed ops law staged lowered lowerCalled).stable.fields
     have localsSame := fixed.2.2.2.2.2.2.1
     have slotsFit : lowered.function.local_slots.val+2*state.vals.length ≤ U32.max := by
@@ -81,7 +81,7 @@ theorem compiler_on_br_table_available {A : Type} (ops : runtime.platform.Alloc 
     exact ⟨post.1,(labelEffect.trans lowerEffect).weaken
       (by intro counter; cases counter <;> simp [staged,lengthEq])⟩
   · rw [if_neg live]
-    step with compiler_clear_table_depths depths as ⟨cleared,_⟩
+    step with runtime_clear depths as ⟨cleared,_⟩
     let observed := {compiler with budget,table_depths := cleared}
     apply WP.spec_mono (compiler_observe_available_budget ops bound available observed state capacity.operands capacity.slots)
     intro out post

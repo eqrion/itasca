@@ -36,7 +36,7 @@ theorem step_call_structured {M P F A : Type} {emission : FunctionEmission} {sup
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (caller : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (caller : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (index : U32) (after : List instr)

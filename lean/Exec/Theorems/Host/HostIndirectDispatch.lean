@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std SpecExt Exec.Interp
 
 /-- The actual extracted host call, including preparation and result checking,
 refines an indirect source call under every suspended execution context. -/
-theorem admin_indirect_host_frame_source {M P F A : Type}
+theorem execute_indirect_host_frame_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
@@ -20,7 +20,7 @@ theorem admin_indirect_host_frame_source {M P F A : Type}
     (valid : invariant store)
     (sourceWf : ∀ s, invariant s → wf_store (Store.decodeStore view code s))
     (address : runtime.FuncAddr) (base : Usize) (ambient : frame) (wfAmbient : wf_frame ambient)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)
@@ -39,8 +39,8 @@ theorem admin_indirect_host_frame_source {M P F A : Type}
     (tail : Forall wf_instr after) (callers : Forall Abs.FrameWf rest)
     (heights : ∀ label ∈ f.labels, label.height ≤ front.length)
     (instanceIndex functionIndex rawBase : Usize) (entry selector callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (tableAddress : runtime.TableAddr) (object : runtime.store.Table) (signatureIndex : Usize)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst) (signatureIndex : Usize)
     (reference : U64)
     (instanceFound : store.instances.val[instanceIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[functionIndex.val]? = some compiled)
@@ -56,7 +56,7 @@ theorem admin_indirect_host_frame_source {M P F A : Type}
     (signatureEq : function.signature = signatureIndex)
     (owner : address.store = store.id) (funcref : object.ty = .FuncRef)
     (moduleEq : f.toFrame.MODULE = Store.decodeInstance store inst) :
-    runtime.interp.admin_call_indirect memory hooks floats allocator exec store platform
+    runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
       instanceIndex functionIndex rawBase entry selector callee ⦃ out =>
       invariant out.2.2.1 ∧
       ((∃ error, out.1 = .Err error ∧ HostPreparationError error ∧ out.2.2.1 = store) ∨
@@ -81,7 +81,7 @@ theorem admin_indirect_host_frame_source {M P F A : Type}
     have lt : reference.val < 2^UScalarTy.Usize.numBits := by scalar_tac
     rw [Nat.mod_eq_of_lt lt,word]
   have nonzero : reference ≠ 0#u64 := by intro zero; rw [zero] at word; scalar_tac
-  apply admin_call_indirect_resolved memory hooks floats allocator exec store platform
+  apply execute_call_indirect_resolved memory hooks floats allocator exec store platform
     instanceIndex functionIndex rawBase entry selector callee inst compiled table type tableAddress object position
     signatureIndex base address.index reference function instanceFound functionFound pairFound tableMapped tableFound
     input indexBound signatureMapped baseOffset selected nonzero castEq functionAt signatureEq

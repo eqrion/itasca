@@ -13,7 +13,7 @@ theorem invoke_certified_source_values {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSliceStore view code store)
     (capacities : Store.FunctionCapacities code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)

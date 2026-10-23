@@ -6,8 +6,8 @@ namespace Exec.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem core_global_set_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInstance) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
+    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (after : List instr) (index : U32) (front : List val) (value : val)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
@@ -42,8 +42,8 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (src index : U32) (inst : runtime.store.Instance) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInstance) (s : Abs.AState) (f : Abs.AFrame)
+    (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
+    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (front : List val) (value : val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
@@ -54,7 +54,7 @@ theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation
     (position : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
     (scalar : object.ty.valtype ≠ .V128) (mutable : object.ty.mutability = .Var)
     (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Code.valueType value) :
-    runtime.interp.admin_global_set memory hooks floats allocator exec store raw.instance raw.base src index ⦃ out =>
+    runtime.interp.execute_global_set memory exec store raw.instance raw.base src index ⦃ out =>
       out.1 = .Ok () ∧ out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
       ∃ nextFrame, Abs.Core.globalSet s f rest index.val after =
           .next {s with store := Store.decodeStore view code out.2.2, frames := nextFrame :: rest} ∧
@@ -80,7 +80,7 @@ theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation
   have source := global_write_decodes view code store inst f.toFrame index address object
     exec.slots.val[raw.base.val+src.val]! object.hi moduleEq mapped issued
   rw [decode_words_scalar _ _ _ scalar,decoded] at source
-  apply WP.spec_mono (global_set_dispatch_effect memory hooks floats allocator exec store raw.instance raw.base src index
+  apply WP.spec_mono (global_set_dispatch_effect memory exec store raw.instance raw.base src index
     inst address object found mapped issued capacity)
   intro out effect
   subst out
@@ -90,8 +90,8 @@ theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation
 
 theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (src index : U32) (inst : runtime.store.Instance) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInstance) (s : Abs.AState) (f : Abs.AFrame)
+    (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
+    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (front : List val) (value : val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
@@ -102,7 +102,7 @@ theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretatio
     (position : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
     (vector : object.ty.valtype = .V128) (mutable : object.ty.mutability = .Var)
     (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Code.valueType value) :
-    runtime.interp.admin_global_set2 memory hooks floats allocator exec store raw.instance raw.base src index ⦃ out =>
+    runtime.interp.execute_global_set2 memory exec store raw.instance raw.base src index ⦃ out =>
       out.1 = .Ok () ∧ out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
       ∃ nextFrame, Abs.Core.globalSet s f rest index.val after =
           .next {s with store := Store.decodeStore view code out.2.2, frames := nextFrame :: rest} ∧
@@ -126,7 +126,7 @@ theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretatio
   have source := global_write_decodes view code store inst f.toFrame index address object
     exec.slots.val[raw.base.val+src.val]! exec.slots.val[raw.base.val+src.val+1]! moduleEq mapped issued
   rw [vector,decoded] at source
-  apply WP.spec_mono (global_set2_dispatch_effect memory hooks floats allocator exec store raw.instance raw.base src index
+  apply WP.spec_mono (global_set2_dispatch_effect memory exec store raw.instance raw.base src index
     inst address object found mapped issued capacity)
   intro out effect
   subst out

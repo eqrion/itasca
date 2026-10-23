@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- Replacing memory contents while retaining its maximum and not shrinking
 its byte buffer satisfies generated memory-instance extension. -/
 theorem decodeMemory_extends {M : Type} (view : M → Slice U8)
-    (before after : runtime.store.Memory M)
+    (before after : runtime.store.MemInst M)
     (maximum : after.maximum = before.maximum)
     (length : (view before.buf).length ≤ (view after.buf).length)
     (old : wf_meminst (decodeMemory view before))
@@ -20,7 +20,7 @@ theorem decodeMemory_extends {M : Type} (view : M → Slice U8)
 
 /-- Table contents may change and grow while preserving reference type and
 maximum; the generated extension relation retains both endpoint wf premises. -/
-theorem decodeTable_extends (before after : runtime.store.Table)
+theorem decodeTable_extends (before after : runtime.store.TableInst)
     (ty : after.ty = before.ty) (maximum : after.maximum = before.maximum)
     (length : before.elements.length ≤ after.elements.length)
     (old : wf_tableinst (decodeTable before)) (fresh : wf_tableinst (decodeTable after)) :

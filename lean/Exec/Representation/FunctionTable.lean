@@ -14,14 +14,14 @@ abbrev FunctionsMatch (store : _root_.store) (moduleInst : moduleinst)
 /-- Concrete signature tables retain issued addresses and actual canonical
 signature lookups. This is metadata correspondence, not execution correctness. -/
 def FunctionTable {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (functions : List functype) : Prop :=
+    (inst : runtime.store.ModuleInst) (functions : List functype) : Prop :=
   List.Forall₂ (fun address ty => address.store = store.id ∧
     ∃ function signature, store.funcs.val[address.index.val]? = some function ∧
       store.types.val[function.signature.val]? = some signature ∧ Store.decodeFuncType signature = ty)
     inst.funcs.val functions
 
 theorem FunctionTable.resolve {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {functions : List functype}
+    {inst : runtime.store.ModuleInst} {functions : List functype}
     (table : FunctionTable store inst functions) (index : Nat) (ty : functype)
     (signature : functions[index]? = some ty) :
     ∃ address function rawType, inst.funcs.val[index]? = some address ∧
@@ -36,7 +36,7 @@ theorem FunctionTable.resolve {M : Type} {store : runtime.store.Store M}
     owned, found, typed, decoded.trans actualType⟩
 
 private theorem decodeFunction_type {M : Type} (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (lookup : store.types.val[function.signature.val]? = some signature) :
     (Store.decodeFunction code store function).TYPE = Store.decodeFuncType signature := by
   unfold Store.decodeFunction
@@ -47,7 +47,7 @@ private theorem decodeFunction_type {M : Type} (code : Store.CodeInterpretation)
 
 /-- The concrete table produces the source module-binding relation exactly. -/
 theorem FunctionTable.source {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {functions : List functype}
+    {inst : runtime.store.ModuleInst} {functions : List functype}
     (table : FunctionTable store inst functions) (view : M → Slice U8)
     (code : Store.CodeInterpretation) :
     FunctionsMatch (Store.decodeStore view code store) (Store.decodeInstance store inst) functions := by

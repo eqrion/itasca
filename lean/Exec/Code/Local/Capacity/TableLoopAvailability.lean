@@ -17,11 +17,11 @@ theorem compiler_table_loop_available {A : Type} (ops : runtime.platform.Alloc A
     (index : Usize) (inside : index.val ≤ compiler.table_depths.val.length) (limit : Nat)
     (safe : TableLoopSafe compiler index.val limit) (widths : TableWidthsFit compiler)
     (capacity : CallbackCapacity compiler state bound (2*(compiler.table_depths.val.length-index.val))) :
-    runtime.compiler.FunctionCompiler.lower_table_branches_loop ops compiler index (.Ok ()) ⦃ out =>
+    runtime.compiler.control.FunctionCompiler.lower_table_branches_loop ops compiler index (.Ok ()) ⦃ out =>
       ∃ after, out = compilerSnapshot after (.Ok ()) ∧
         CompilationBudgetEffect compiler.budget after.budget
           (fun counter => if counter = .instructions then 2*(compiler.table_depths.val.length-index.val) else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
   apply loop.spec_decr_nat (fun p => compiler.table_depths.val.length-p.2.1.val)
     (fun p => index.val ≤ p.2.1.val ∧ p.2.1.val ≤ compiler.table_depths.val.length ∧ p.2.2 = .Ok () ∧
       p.1.table_depths = compiler.table_depths ∧ TableLoopSafe p.1 p.2.1.val limit ∧ TableWidthsFit p.1 ∧
@@ -30,7 +30,7 @@ theorem compiler_table_loop_available {A : Type} (ops : runtime.platform.Alloc A
         (fun counter => if counter = .instructions then 2*(p.2.1.val-index.val) else 0))
   · rintro ⟨current,i,result⟩ ⟨lower,upper,rfl,depths,heldSafe,heldWidths,heldCapacity,effect⟩
     dsimp only at lower upper depths heldSafe heldWidths heldCapacity effect
-    unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop.body
+    unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body
     simp only
     split
     · rename_i more

@@ -17,7 +17,7 @@ structure ModuleExportBounds (env : Itasca.module.Env) : Prop where
 
 /-- Every retained instance has bounded module export descriptors. -/
 def ExportBounds {M : Type} (store : runtime.store.Store M) : Prop :=
-  ∀ (index : Nat) (inst : runtime.store.Instance), store.instances.val[index]? = some inst → ModuleExportBounds inst.module.module.env
+  ∀ (index : Nat) (inst : runtime.store.ModuleInst), store.instances.val[index]? = some inst → ModuleExportBounds inst.module.module.env
 
 /-- Successful validation supplies export bounds without an API correctness premise. -/
 theorem module_export_bounds {env profile} (valid : Itasca.ModuleEnv.Valid env profile) :
@@ -33,7 +33,7 @@ theorem module_export_bounds {env profile} (valid : Itasca.ModuleEnv.Valid env p
 /-- Combining retained export descriptors with completed instance map lengths
 makes every actual export address lookup safe. -/
 theorem export_address_bounds {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} (bounds : ModuleExportBounds inst.module.module.env)
+    {inst : runtime.store.ModuleInst} (bounds : ModuleExportBounds inst.module.module.env)
     (shape : InstanceShape store inst) (entry : Itasca.module.Export)
     (member : entry ∈ inst.module.module.env.exports.val) :
     match entry.desc with
@@ -60,7 +60,7 @@ theorem ExportBounds.staged {M : Type} {before after : runtime.store.Store M}
       ModuleExportBounds inst.module.module.env) : ExportBounds after := by
   intro index inst found
   by_cases bound : index < before.instances.length
-  · have same := congrArg (fun values : List runtime.store.Instance => values[index]?) retained.instances
+  · have same := congrArg (fun values : List runtime.store.ModuleInst => values[index]?) retained.instances
     have oldFound : before.instances.val[index]? = some inst := by
       simpa only [List.getElem?_take, if_pos bound, found] using same.symm
     exact bounds index inst oldFound

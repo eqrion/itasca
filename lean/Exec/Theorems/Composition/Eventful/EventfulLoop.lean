@@ -23,9 +23,9 @@ theorem eventful_divergent_next {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : EventfulStepTotal (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected)
     (machine : EventfulMachine emission allowed M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div) :
     ∃ events next, EventfulTransition memory hooks floats allocator machine events next ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator next.exec next.store next.platform (.Ok ())=.div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator next.exec next.store next.platform (.Ok ())=.div := by
   have active := execution_loop_divergent_active memory hooks floats allocator machine.exec machine.store machine.platform divergent
   obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,returned,outcome⟩ := WP.spec_imp_exists (steps machine active)
   change loop (executionBody memory hooks floats allocator) (machine.exec,machine.store,machine.platform,.Ok ())=.div at divergent
@@ -50,10 +50,10 @@ theorem eventful_loop_infinite {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : EventfulStepTotal (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected)
     (initial : EventfulMachine emission allowed M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
     Spec.InfiniteSourceWithEvents (Abs.decode initial.source) := by
   apply EventfulMachine.infinite_source
-    (fun machine => runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div)
+    (fun machine => runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div)
     (fun machine divergent => eventful_divergent_next memory hooks floats allocator steps machine divergent) initial divergent
 /-- Normal per-dispatch execution rules out panic throughout the actual loop,
 including executions that eventually return an error or run forever. -/
@@ -63,7 +63,7 @@ theorem eventful_loop_safe {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : EventfulStepTotal (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected)
     (initial : EventfulMachine emission allowed M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ _ => True ⦄div := by
   let invariant (state : ExecutionState M P) : Prop :=
     (∃ error,state.2.2.2=.Err error) ∨

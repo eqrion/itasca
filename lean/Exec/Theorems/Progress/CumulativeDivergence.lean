@@ -45,9 +45,9 @@ theorem cumulative_divergent_history {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (dispatches : Nat) (initial : CumulativeMachine M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
     ∃ final, Spec.Iterations (CumulativeTransition memory hooks floats allocator) dispatches initial [] final ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator final.exec final.store final.platform (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator final.exec final.store final.platform (.Ok ()) = .div := by
   exact silent_history (cumulative_divergent_next memory hooks floats allocator correct allocation interrupts view laws code) dispatches initial divergent
 
 theorem cumulative_no_silent_divergence {M P F A : Type}
@@ -58,7 +58,7 @@ theorem cumulative_no_silent_divergence {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (initial : CumulativeMachine M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div)
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div)
     (requested : Nat) :
     ∃ final count,
       Spec.Iterations (CumulativeTransition memory hooks floats allocator)
@@ -79,12 +79,12 @@ theorem cumulative_infinite_source {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (initial : CumulativeMachine M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ()) = .div) :
     ∃ states : Nat → config, states 0 = Abs.decode initial.source ∧ ∀ n,
       ∃ count, 0 < count ∧ Spec.StepsHN count (states n) [] (states (n+1)) := by
   classical
   let Running := {machine : CumulativeMachine M P view code expected //
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ()) = .div}
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ()) = .div}
   have successor (current : Running) : ∃ next : Running, ∃ count, 0 < count ∧
       Spec.StepsHN count (Abs.decode current.val.source) [] (Abs.decode next.val.source) := by
     obtain ⟨next,history,stillDivergent⟩ := cumulative_divergent_history memory hooks floats allocator correct allocation interrupts view laws code

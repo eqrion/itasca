@@ -11,7 +11,7 @@ theorem step_float_values {M P F A : Type}
     (correct : Platform.FloatOpsCorrect floats)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (op : Instruction) (left right : U32) (front : List val)
     (a b : Nat)
     (first : a < 2^sizenn op.input) (second : b < 2^sizenn op.input)

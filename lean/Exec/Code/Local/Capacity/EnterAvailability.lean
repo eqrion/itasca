@@ -45,21 +45,19 @@ theorem compiler_enter_without_emission_available {A : Type} (ops : runtime.plat
     (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height,hheight⟩
   have coordinate := demand.coordinate
   step as ⟨source,hsource⟩
-  have thenTotal : runtime.compiler.control.is_then kind ⦃ label => ¬ (compiler.reachable = true ∧ label = true) ⦄ := by
-    cases kind <;> simp_all [runtime.compiler.control.is_then,WP.spec_ok]
-  have loopTotal : runtime.compiler.control.is_loop kind ⦃ label => ¬ (compiler.reachable = true ∧ label = true) ⦄ := by
-    cases kind <;> simp_all [runtime.compiler.control.is_loop,WP.spec_ok]
-  step with thenTotal as ⟨thenLabel,thenGuard⟩
-  step with loopTotal as ⟨loopLabel,loopGuard⟩
-  simp only [bind_ok,Bool.and_eq_true,← ite_and]
-  rw [if_neg thenGuard]
-  step with compiler_pc_available ops compiler demand.pc as ⟨status,first,same,pc,accepted,_⟩
-  subst first
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Bool.and_eq_true,← ite_and]
-  rw [if_neg loopGuard]
-  change scopePublication ops compiler state kind signature height source ctrl.value_stack_base pc none ⦃ out => _ ⦄
-  exact scope_publication_available ops bound available compiler state demand kind signature height source
-    ctrl.value_stack_base pc none
+  cases kind
+  all_goals
+    simp only [bind_ok,Bool.and_eq_true,← ite_and,Bool.false_eq_true,and_false,and_true,
+      ite_false,if_false]
+    try rw [if_neg (show ¬ compiler.reachable = true from fun active => noThen active rfl)]
+    step with compiler_pc_available ops compiler demand.pc as ⟨status,first,same,pc,accepted,_⟩
+    subst first
+    rw [accepted]
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Bool.and_eq_true,← ite_and,
+      Bool.false_eq_true,and_false,and_true,ite_false,if_false]
+    try rw [if_neg (show ¬ compiler.reachable = true from fun active => noLoop active rfl)]
+    change scopePublication ops compiler state _ signature height source ctrl.value_stack_base pc none ⦃ out => _ ⦄
+    exact scope_publication_available ops bound available compiler state demand _ signature height source
+      ctrl.value_stack_base pc none
 
 end Exec.Code

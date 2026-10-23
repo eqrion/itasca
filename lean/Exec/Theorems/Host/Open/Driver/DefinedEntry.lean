@@ -13,7 +13,7 @@ theorem prepare_defined_entry {M F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : Unit)
     (held : ExecutableInv view code store) (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (instanceIndex functionIndex : Usize) (args : Slice runtime.Value)
     (empty : before.frames.val=[]) (identity : before.store=store.id)
     (arguments : ValuesAt before.slots.val 0 (args.val.map sourceValue))

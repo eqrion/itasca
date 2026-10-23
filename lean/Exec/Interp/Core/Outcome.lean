@@ -11,9 +11,9 @@ def CoreTrap (trap : runtime.Trap) : Prop :=
 /-- A host entry is an explicit boundary until a host-soundness contract is
 attached to the mutable execution loop. -/
 def CoreHostBoundary {M : Type} (exec : runtime.interp.Execution) (store : runtime.store.Store M) : Prop :=
-  ∃ (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+  ∃ (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (index offset : U32) (address : runtime.FuncAddr)
-    (function : runtime.store.Function), ∃ host,
+    (function : runtime.store.FuncInst), ∃ host,
     frameIndex.val+1 = exec.frames.length ∧ exec.frames.val[frameIndex.val]? = some raw ∧
     store.instances.val[raw.instance.val]? = some inst ∧
     inst.module.functions.val[raw.function.val]? = some compiled ∧

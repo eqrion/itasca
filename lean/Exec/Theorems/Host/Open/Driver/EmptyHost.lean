@@ -12,7 +12,7 @@ theorem prepare_empty_host {M F A : Type}
     (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
     (available : Platform.AllocationAvailable allocator (2*Usize.max))
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (hf : store.funcs.val[address.index.val]?=some function) (kind : function.code=.Host identity)
     (hs : store.types.val[function.signature.val]?=some signature)
     (params : signature.params.val=[]) (results : signature.results.val=[])

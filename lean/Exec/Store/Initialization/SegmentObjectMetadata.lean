@@ -8,16 +8,16 @@ open Aeneas Aeneas.Std
 structure SegmentObjectMetadata {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) : Prop where
   space : SegmentAddressSpace before after
-  tables : ∀ (index : Nat) (old : runtime.store.Table), before.tables.val[index]? = some old → ∃ (next : runtime.store.Table),
+  tables : ∀ (index : Nat) (old : runtime.store.TableInst), before.tables.val[index]? = some old → ∃ (next : runtime.store.TableInst),
     after.tables.val[index]? = some next ∧ next.ty = old.ty ∧
     next.maximum = old.maximum ∧ next.elements.length = old.elements.length
-  memories : ∀ (index : Nat) (old : runtime.store.Memory M), before.memories.val[index]? = some old → ∃ (next : runtime.store.Memory M),
+  memories : ∀ (index : Nat) (old : runtime.store.MemInst M), before.memories.val[index]? = some old → ∃ (next : runtime.store.MemInst M),
     after.memories.val[index]? = some next ∧ next.maximum = old.maximum ∧
     (view next.buf).length = (view old.buf).length
-  elements : ∀ (index : Nat) (old : runtime.store.ElemInstance), before.elems.val[index]? = some old → ∃ (next : runtime.store.ElemInstance),
+  elements : ∀ (index : Nat) (old : runtime.store.ElemInst), before.elems.val[index]? = some old → ∃ (next : runtime.store.ElemInst),
     after.elems.val[index]? = some next ∧ next.ty = old.ty ∧
     (next.refs.val = old.refs.val ∨ next.refs.val = [])
-  datas : ∀ (index : Nat) (old : runtime.store.DataInstance), before.datas.val[index]? = some old → ∃ (next : runtime.store.DataInstance),
+  datas : ∀ (index : Nat) (old : runtime.store.DataInst), before.datas.val[index]? = some old → ∃ (next : runtime.store.DataInst),
     after.datas.val[index]? = some next ∧ (next.bytes.val = old.bytes.val ∨ next.bytes.val = [])
 
 theorem SegmentObjectMetadata.refl {M : Type} (view : M → Slice U8) (store : runtime.store.Store M) :

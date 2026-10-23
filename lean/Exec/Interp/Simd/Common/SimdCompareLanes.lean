@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 theorem integer_compare_loop (op : vrelop_Jnn_N) (x y : U128) (width : U32)
     (positive : 0 < width.val) (widthBound : width.val ≤ 64) :
-    runtime.interp.simd.compare_lanes_loop y x width (UScalar.cast .U32 (integerCompareIndex op)) false 0#u128 0#u32
+    runtime.interp.simd.compare_lanes_loop x y width (UScalar.cast .U32 (integerCompareIndex op)) false 0#u128 0#u32
       ⦃ result => ∀ j, j < 128/width.val → laneBits width.val j result.bv =
         comparisonBits width.val (Spec.Simd.integerLaneCompare op (laneBits width.val j x.bv) (laneBits width.val j y.bv)) ⦄ := by
   apply comparison_loop x y 0#u128 width (UScalar.cast .U32 (integerCompareIndex op)) 0#u32 false
@@ -38,8 +38,9 @@ theorem integer_compare_loop (op : vrelop_Jnn_N) (x y : U128) (width : U32)
         comparisonBits (integerCompareWidth ty).val (Spec.Simd.integerLaneCompare op
           (laneBits (integerCompareWidth ty).val j x.bv) (laneBits (integerCompareWidth ty).val j y.bv)) ⦄ := by
   rw [integer_compare_dispatch_eq ty op x y supported]
-  step with integer_compare_loop op x y (integerCompareWidth ty)
-    (by cases ty <;> decide) (by cases ty <;> decide) as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (integer_compare_loop op x y (integerCompareWidth ty)
+    (by cases ty <;> decide) (by cases ty <;> decide))
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

@@ -5,7 +5,7 @@ namespace Exec.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem global_lookup_back {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame) (index sourceAddress : Nat)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame) (index sourceAddress : Nat)
     (sourceObject : globalinst) (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : f.module.GLOBALS[index]? = some sourceAddress)
     (issued : (Store.decodeStore view code store).GLOBALS[sourceAddress]? = some sourceObject) :
@@ -19,7 +19,7 @@ theorem global_lookup_back {M : Type} (view : M → Slice U8) (code : Store.Code
   exact ⟨address,object,rawMapped,by simpa only [addressEq] using rawIssued,objectEq⟩
 
 theorem coreGlobal_lookup {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (C : context) (index : Nat) (mutability : «mut») (ty : valtype)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) f.module C)

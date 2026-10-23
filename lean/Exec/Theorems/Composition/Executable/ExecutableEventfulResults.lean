@@ -24,7 +24,7 @@ theorem executable_eventful_loop_results
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     {expected : List valtype}
     (initial : EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => EventfulLoopResult initial result ⦄div :=
   eventful_loop_results memory hooks floats allocator
     (eventful_step_outcomes Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws code sound preserve externs issued expected) initial

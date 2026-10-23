@@ -11,13 +11,13 @@ before publication of the provisional instance. -/
 theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before : runtime.store.Store M) (seed : runtime.store.Instance)
+    (before : runtime.store.Store M) (seed : runtime.store.ModuleInst)
     (shape : Shape view before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
     (instanceIndex : Usize)
     (typed functions tabled after : runtime.store.Store M)
-    (typeInst funcInst tableInst inst : runtime.store.Instance)
+    (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
     (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
     (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
@@ -30,7 +30,7 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
     inst.module = seed.module ∧ after.globals = before.globals ∧
     after.instances = before.instances ∧ after.elems = before.elems ∧ after.datas = before.datas ∧
     inst.globals = seed.globals ∧
-    inst.elements = seed.elements ∧ inst.data = seed.data ∧
+    inst.elems = seed.elems ∧ inst.datas = seed.datas ∧
     InitializerBindings after inst ∧ InitializerImports after inst ∧ InitializerSegmentBindings after inst := by
   have objectBound : objectCount before ≤ Usize.max := by
     have bound := shape.objectLimit
@@ -57,23 +57,23 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
   dsimp only at typeStore_elems
   have typeStore_datas := congrArg runtime.store.Store.datas typeStore
   dsimp only at typeStore_datas
-  have typeMap_module := congrArg runtime.store.Instance.module typeMap
+  have typeMap_module := congrArg runtime.store.ModuleInst.module typeMap
   dsimp only at typeMap_module
-  have typeMap_tables := congrArg runtime.store.Instance.tables typeMap
+  have typeMap_tables := congrArg runtime.store.ModuleInst.tables typeMap
   dsimp only at typeMap_tables
-  have typeMap_memories := congrArg runtime.store.Instance.memories typeMap
+  have typeMap_memories := congrArg runtime.store.ModuleInst.memories typeMap
   dsimp only at typeMap_memories
-  have typeMap_globals := congrArg runtime.store.Instance.globals typeMap
+  have typeMap_globals := congrArg runtime.store.ModuleInst.globals typeMap
   dsimp only at typeMap_globals
-  have typeMap_elements := congrArg runtime.store.Instance.elements typeMap
+  have typeMap_elements := congrArg runtime.store.ModuleInst.elems typeMap
   dsimp only at typeMap_elements
-  have typeMap_data := congrArg runtime.store.Instance.data typeMap
+  have typeMap_data := congrArg runtime.store.ModuleInst.datas typeMap
   dsimp only at typeMap_data
   have typeSource : typeInst.module = seed.module := by
-    have h := congrArg runtime.store.Instance.module typeMap
+    have h := congrArg runtime.store.ModuleInst.module typeMap
     exact h
   have typeFuncs : typeInst.funcs = seed.funcs := by
-    have h := congrArg runtime.store.Instance.funcs typeMap
+    have h := congrArg runtime.store.ModuleInst.funcs typeMap
     exact h
   have typesComplete : typeInst.types.length = seed.module.module.env.types.length :=
     (typeEntries rfl).length_eq.symm
@@ -102,17 +102,17 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
   dsimp only at functionStore_elems
   have functionStore_datas := congrArg runtime.store.Store.datas functionStore
   dsimp only at functionStore_datas
-  have functionMap_module := congrArg runtime.store.Instance.module functionMap
+  have functionMap_module := congrArg runtime.store.ModuleInst.module functionMap
   dsimp only at functionMap_module
-  have functionMap_tables := congrArg runtime.store.Instance.tables functionMap
+  have functionMap_tables := congrArg runtime.store.ModuleInst.tables functionMap
   dsimp only at functionMap_tables
-  have functionMap_memories := congrArg runtime.store.Instance.memories functionMap
+  have functionMap_memories := congrArg runtime.store.ModuleInst.memories functionMap
   dsimp only at functionMap_memories
-  have functionMap_globals := congrArg runtime.store.Instance.globals functionMap
+  have functionMap_globals := congrArg runtime.store.ModuleInst.globals functionMap
   dsimp only at functionMap_globals
-  have functionMap_elements := congrArg runtime.store.Instance.elements functionMap
+  have functionMap_elements := congrArg runtime.store.ModuleInst.elems functionMap
   dsimp only at functionMap_elements
-  have functionMap_data := congrArg runtime.store.Instance.data functionMap
+  have functionMap_data := congrArg runtime.store.ModuleInst.datas functionMap
   dsimp only at functionMap_data
   have functionSource : funcInst.module = seed.module := by
     simpa only [functionMap_module] using typeSource
@@ -138,17 +138,17 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
   dsimp only at tableStore_elems
   have tableStore_datas := congrArg runtime.store.Store.datas tableStore
   dsimp only at tableStore_datas
-  have tableMap_module := congrArg runtime.store.Instance.module tableMap
+  have tableMap_module := congrArg runtime.store.ModuleInst.module tableMap
   dsimp only at tableMap_module
-  have tableMap_funcs := congrArg runtime.store.Instance.funcs tableMap
+  have tableMap_funcs := congrArg runtime.store.ModuleInst.funcs tableMap
   dsimp only at tableMap_funcs
-  have tableMap_memories := congrArg runtime.store.Instance.memories tableMap
+  have tableMap_memories := congrArg runtime.store.ModuleInst.memories tableMap
   dsimp only at tableMap_memories
-  have tableMap_globals := congrArg runtime.store.Instance.globals tableMap
+  have tableMap_globals := congrArg runtime.store.ModuleInst.globals tableMap
   dsimp only at tableMap_globals
-  have tableMap_elements := congrArg runtime.store.Instance.elements tableMap
+  have tableMap_elements := congrArg runtime.store.ModuleInst.elems tableMap
   dsimp only at tableMap_elements
-  have tableMap_data := congrArg runtime.store.Instance.data tableMap
+  have tableMap_data := congrArg runtime.store.ModuleInst.datas tableMap
   dsimp only at tableMap_data
   obtain ⟨memoryStart, importedMemories⟩ := maps.memory_start cache
   have memoryStartBound : tableInst.memories.len.val ≤ tableInst.module.module.env.mem_types.val.length := by
@@ -172,17 +172,17 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
   dsimp only at memoryStore_elems
   have memoryStore_datas := congrArg runtime.store.Store.datas memoryStore
   dsimp only at memoryStore_datas
-  have memoryMap_module := congrArg runtime.store.Instance.module memoryMap
+  have memoryMap_module := congrArg runtime.store.ModuleInst.module memoryMap
   dsimp only at memoryMap_module
-  have memoryMap_funcs := congrArg runtime.store.Instance.funcs memoryMap
+  have memoryMap_funcs := congrArg runtime.store.ModuleInst.funcs memoryMap
   dsimp only at memoryMap_funcs
-  have memoryMap_tables := congrArg runtime.store.Instance.tables memoryMap
+  have memoryMap_tables := congrArg runtime.store.ModuleInst.tables memoryMap
   dsimp only at memoryMap_tables
-  have memoryMap_globals := congrArg runtime.store.Instance.globals memoryMap
+  have memoryMap_globals := congrArg runtime.store.ModuleInst.globals memoryMap
   dsimp only at memoryMap_globals
-  have memoryMap_elements := congrArg runtime.store.Instance.elements memoryMap
+  have memoryMap_elements := congrArg runtime.store.ModuleInst.elems memoryMap
   dsimp only at memoryMap_elements
-  have memoryMap_data := congrArg runtime.store.Instance.data memoryMap
+  have memoryMap_data := congrArg runtime.store.ModuleInst.datas memoryMap
   dsimp only at memoryMap_data
   have retained := ((typePrefix.trans functionPrefix).trans tablePrefix).trans memoryPrefix
   have source : inst.module = seed.module := by simpa only [memoryMap_module, tableMap_module] using functionSource

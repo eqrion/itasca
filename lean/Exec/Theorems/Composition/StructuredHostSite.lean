@@ -5,9 +5,9 @@ open Aeneas Aeneas.Std Exec.Interp
 /-- The fetched direct call is tied to its source opcode, not only to an
 unindexed raw store boundary. -/
 def DirectHostInstruction {M : Type} (store : runtime.store.Store M)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (op : instr) : Prop :=
-  ∃ (index offset : U32) (address : runtime.FuncAddr) (function : runtime.store.Function) (host : U64),
+  ∃ (index offset : U32) (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64),
     op=.CALL (.mk_uN index.val) ∧
     compiled.code.val[raw.pc.val]?=some (.Call index offset) ∧
     inst.funcs.val[index.val]?=some address ∧ store.funcs.val[address.index.val]?=some function ∧
@@ -21,7 +21,7 @@ structure HostFrameSite {M : Type} (emission : StructuredMachine.FunctionEmissio
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) where
   index : Usize
   raw : runtime.interp.Frame
-  inst : runtime.store.Instance
+  inst : runtime.store.ModuleInst
   compiled : runtime.bytecode.CompiledFunction
   context : _root_.context
   targets : List Code.LabelTarget

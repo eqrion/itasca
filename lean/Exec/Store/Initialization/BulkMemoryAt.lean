@@ -4,11 +4,11 @@ open Aeneas Aeneas.Std
 theorem bulk_memory_init_at {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (operand data : U32) (address : Usize) (memoryAddress : runtime.MemoryAddr)
-    (memory : runtime.store.Memory M) (segment : runtime.store.DataInstance)
+    (inst : runtime.store.ModuleInst) (operand data : U32) (address : Usize) (memoryAddress : runtime.MemoryAddr)
+    (memory : runtime.store.MemInst M) (segment : runtime.store.DataInst)
     (destination source count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (mapped : inst.data.val[data.val]? = some address)
+    (mapped : inst.datas.val[data.val]? = some address)
     (resolved : store.datas.val[address.val]? = some segment)
     (memoryMapped : inst.memories.val[0]? = some memoryAddress)
     (target : store.memories.val[memoryAddress.index.val]? = some memory)
@@ -48,7 +48,7 @@ theorem bulk_memory_init_at {M : Type} (ops : runtime.platform.MemoryBuffer M)
     rw [if_pos fitsTarget] at rangeEffect
     obtain ⟨dst, rfl, dstStart, dstEnd⟩ := rangeEffect
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with Interp.vec_index_given inst.data (UScalar.cast .Usize data) address
+    step with Interp.vec_index_given inst.datas (UScalar.cast .Usize data) address
       (by simpa using mapped) as ⟨actual, actualEq⟩
     subst actual
     step with Interp.vec_index_given store.datas address segment resolved as ⟨actual, actualEq⟩

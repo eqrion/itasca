@@ -32,7 +32,7 @@ theorem refVal_eq (r : ref) : refVal r = val_ref r := by cases r <;> rfl
 
 theorem decodeWords_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (global : runtime.store.GlobalInstance) (h : GlobalShape s global) :
+    (global : runtime.store.GlobalInst) (h : GlobalShape s global) :
     Val_ok (decodeStore view code s) (decodeWords global.ty.valtype global.lo global.hi)
       (Interp.sourceType global.ty.valtype) := by
   have hv := decodeWords_wf global.ty.valtype global.lo global.hi
@@ -82,7 +82,7 @@ theorem value_in_store_typed {M : Type} (view : M → Slice U8) (code : CodeInte
 
 theorem decodeGlobal_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (global : runtime.store.GlobalInstance) (h : GlobalShape s global) :
+    (global : runtime.store.GlobalInst) (h : GlobalShape s global) :
     Globalinst_ok (decodeStore view code s) (decodeGlobal global) (decodeGlobal global).TYPE := by
   exact .mk_Globalinst_ok _ _ _ _ (.mk_Globaltype_ok _ _)
     (decodeWords_typed view code s hwf global h) hwf
@@ -111,7 +111,7 @@ theorem decodeLimits_typed (length ceiling : Nat) (maximum : Option U32)
     exact decodeLimits_wf length maximum (Nat.le_trans hlength hceiling)
 
 theorem decoded_tabletype_typed {M : Type} (s : runtime.store.Store M)
-    (table : runtime.store.Table) (h : TableShape s table) :
+    (table : runtime.store.TableInst) (h : TableShape s table) :
     Tabletype_ok (decodeTable table).TYPE := by
   constructor
   · apply decodeLimits_typed table.elements.length _ table.maximum (by scalar_tac) (by have hb := h.1; scalar_tac)
@@ -120,7 +120,7 @@ theorem decoded_tabletype_typed {M : Type} (s : runtime.store.Store M)
   · exact .tabletype_case_0 _ _ (decodeLimits_wf _ _ h.1)
 
 theorem decoded_memtype_typed {M : Type} (view : M → Slice U8)
-    (memory : runtime.store.Memory M) (h : MemoryShape view memory) :
+    (memory : runtime.store.MemInst M) (h : MemoryShape view memory) :
     Memtype_ok (decodeMemory view memory).TYPE := by
   constructor
   · apply decodeLimits_typed _ _ memory.maximum (by scalar_tac) (by simpa using h.2.1)
@@ -129,7 +129,7 @@ theorem decoded_memtype_typed {M : Type} (view : M → Slice U8)
 
 theorem decodeTable_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (table : runtime.store.Table) (h : TableShape s table) :
+    (table : runtime.store.TableInst) (h : TableShape s table) :
     Tableinst_ok (decodeStore view code s) (decodeTable table) (decodeTable table).TYPE := by
   have ht := decoded_tabletype_typed s table h
   have hwt : wf_tabletype (decodeTable table).TYPE :=
@@ -149,7 +149,7 @@ theorem decodeTable_typed {M : Type} (view : M → Slice U8) (code : CodeInterpr
 
 theorem decodeMemory_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (memory : runtime.store.Memory M) (h : MemoryShape view memory) :
+    (memory : runtime.store.MemInst M) (h : MemoryShape view memory) :
     Meminst_ok (decodeStore view code s) (decodeMemory view memory) (decodeMemory view memory).TYPE := by
   have ht := decoded_memtype_typed view memory h
   have hwt : wf_memtype (decodeMemory view memory).TYPE :=
@@ -177,7 +177,7 @@ structure SegmentBounds {M : Type} (s : runtime.store.Store M) : Prop where
 
 theorem decodeElement_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (element : runtime.store.ElemInstance)
+    (element : runtime.store.ElemInst)
     (hrefs : ∀ word ∈ element.refs.val, ReferenceShape s element.ty word)
     (hbound : element.refs.length < 2^32) :
     Eleminst_ok (decodeStore view code s) (decodeElement element) (decodeElement element).TYPE := by
@@ -189,7 +189,7 @@ theorem decodeElement_typed {M : Type} (view : M → Slice U8) (code : CodeInter
   · exact hwf
 
 theorem decodeData_typed (s : _root_.store) (hwf : wf_store s)
-    (data : runtime.store.DataInstance) (hbound : data.bytes.length < 2^32) :
+    (data : runtime.store.DataInst) (hbound : data.bytes.length < 2^32) :
     Datainst_ok s (decodeData data) .OK := by
   constructor
   · simpa [decodeBytes] using hbound

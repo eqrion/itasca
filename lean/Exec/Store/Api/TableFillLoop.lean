@@ -15,8 +15,8 @@ theorem fillTableWords_length (before : List U64) (start count : Nat) (value : U
 
 /-- The extracted table-fill loop terminates and changes exactly the selected
 consecutive words, retaining every other table and all table metadata. -/
-theorem table_fill_loop (tables : alloc.vec.Vec runtime.store.Table)
-    (value : U64) (tableIndex start finish : Usize) (table : runtime.store.Table)
+theorem table_fill_loop (tables : alloc.vec.Vec runtime.store.TableInst)
+    (value : U64) (tableIndex start finish : Usize) (table : runtime.store.TableInst)
     (target : tables.val[tableIndex.val]? = some table)
     (ordered : start.val ≤ finish.val) (bounded : finish.val ≤ table.elements.length) :
     runtime.interp.bulk.execute_loop2 tables value tableIndex finish start ⦃ out =>

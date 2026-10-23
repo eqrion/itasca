@@ -31,7 +31,7 @@ theorem define_memory_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.define_memory_with ops allocator s ty buffer ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨
-      ∃ memories : alloc.vec.Vec (runtime.store.Memory M), ∃ count : Usize,
+      ∃ memories : alloc.vec.Vec (runtime.store.MemInst M), ∃ count : Usize,
         memories.val = s.memories.val ++ [{buf := buffer, maximum := ty.limits.max}] ∧
         LimitsFit ty.limits 65536#u32 ∧
         (view buffer).length = ty.limits.min.val * 65536 ∧

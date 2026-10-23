@@ -20,8 +20,8 @@ theorem copySegment_all (predicate : U64 → Prop) (before source : List U64)
       exact input _ (by simp [bound])
 
 theorem TableInitializationEffect.shape {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {tableIndex : Usize} {table : runtime.store.Table}
-    {segment : runtime.store.ElemInstance} {destination source count : U64}
+    {store : runtime.store.Store M} {tableIndex : Usize} {table : runtime.store.TableInst}
+    {segment : runtime.store.ElemInst} {destination source count : U64}
     {out : core.result.Result Unit runtime.ExecError × runtime.store.Store M}
     (effect : TableInitializationEffect store tableIndex table segment destination source count out)
     (shape : Shape view store) (target : store.tables.val[tableIndex.val]? = some table)
@@ -46,8 +46,8 @@ theorem TableInitializationEffect.shape {M : Type} {view : M → Slice U8}
     exact shape
 
 theorem MemoryInitializationEffect.shape {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {memoryIndex : Usize} {memory : runtime.store.Memory M}
-    {segment : runtime.store.DataInstance} {destination source count : U64}
+    {store : runtime.store.Store M} {memoryIndex : Usize} {memory : runtime.store.MemInst M}
+    {segment : runtime.store.DataInst} {destination source count : U64}
     {out : core.result.Result Unit runtime.ExecError × runtime.store.Store M}
     (effect : MemoryInitializationEffect view store memoryIndex memory segment destination source count out)
     (shape : Shape view store) (target : store.memories.val[memoryIndex.val]? = some memory) : Shape view out.2 := by
@@ -87,7 +87,7 @@ theorem Shape.data_drop {M : Type} {view : M → Slice U8} {store : runtime.stor
   · exact shape.tableLimit
 
 theorem Shape.element_drop {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    (shape : Shape view store) (address : Usize) (segment : runtime.store.ElemInstance) :
+    (shape : Shape view store) (address : Usize) (segment : runtime.store.ElemInst) :
     Shape view {store with elems := store.elems.set address {segment with refs := alloc.vec.Vec.new U64}} := by
   have elements : ∀ e ∈ (store.elems.set address {segment with refs := alloc.vec.Vec.new U64}).val,
       ∀ word ∈ e.refs.val, ReferenceShape store e.ty word := by

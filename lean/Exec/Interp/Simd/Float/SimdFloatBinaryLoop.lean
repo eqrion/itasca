@@ -29,7 +29,7 @@ theorem float_binary_loop {F : Type} (floats : runtime.platform.FloatOps F)
       floatBinaryWord floats width bin a b ⦃ value => R j (value.bv.setWidth width.val) ⦄)
     (position : i.val ≤ 128/width.val)
     (initializedPrefix : ∀ j, j < i.val → R j (laneBits width.val j initial.bv)) :
-    runtime.interp.simd.float_binary_lanes_loop floats width bin y x initial i ⦃ result =>
+    runtime.interp.simd.float_binary_lanes_loop floats x y width bin initial i ⦃ result =>
       ∀ j, j < 128/width.val → R j (laneBits width.val j result.bv) ⦄ := by
   unfold runtime.interp.simd.float_binary_lanes_loop
   apply loop.spec_decr_nat (fun p => 128/width.val-p.2.val)

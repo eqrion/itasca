@@ -8,20 +8,19 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 /-- Actual MEMORY_GROW preserves the decoded Core store certificate and follows
 source success or permitted refusal, even when opaque allocation refusal changes
 the buffer representation without changing its byte view. -/
-theorem memory_grow_instruction_certified {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem memory_grow_instruction_certified {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.Instance)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (amount : U64) (ambient : frame)
+    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (amount : U64) (ambient : frame)
     (certified : CertifiedCoreStore view code store)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address)
     (issued : store.memories.val[address.index.val]? = some object)
     (amountSlot : exec.slots.val[base.val+dst.val]? = some amount)
     (moduleEq : ambient.MODULE = decodeInstance store inst) (ambientWf : wf_frame ambient) :
-    runtime.interp.admin_memory_grow memory hooks floats allocator exec store instanceIndex base dst ⦃ out =>
+    runtime.interp.execute_memory_grow memory exec store instanceIndex base dst ⦃ out =>
       out.1 = .Ok () ∧ CertifiedCoreStore view code out.2.2 ∧ FrameStoreMetadata store out.2.2 ∧
       Extend_store (decodeStore view code store) (decodeStore view code out.2.2) ∧
       ∃ result : U32, SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 result)) ∧
@@ -54,7 +53,7 @@ theorem memory_grow_instruction_certified {M P F A : Type}
       · rw [unchanged]; exact .refl _
       · rw [changed]; exact ⟨rfl,rfl,rfl,rfl⟩
       · rw [changed]; exact ⟨rfl,rfl,rfl,rfl⟩
-  apply WP.spec_mono (memory_grow_handler memory hooks floats allocator exec store instanceIndex base dst inst address amount
+  apply WP.spec_mono (memory_grow_handler memory exec store instanceIndex base dst inst address amount
     found mapped amountSlot post primitive)
   intro out effect
   obtain ⟨result,success,⟨fresh,metadata,extension,source⟩,slots⟩ := effect

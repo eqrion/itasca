@@ -11,7 +11,7 @@ termination, soundness, and completeness proofs.
 
 The execution runtime has checked compilation, invocation, instantiation, API
 invariant, resource-cause, and progress theorems for both profiles. These are
-conditional guarantees under [explicit contracts that the embedder must uphold.](docs/EXECUTION_VERIFICATION.md#public-theorem-map)
+conditional guarantees under [explicit contracts that the embedder must uphold.](lean/README.md#execution-boundary)
 
 This is an experiment in AI-assisted formal verification, built extensively
 with Claude and Codex. Read [formal verification](#formal-verification) for

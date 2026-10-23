@@ -19,7 +19,7 @@ theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
     (ty : Itasca.types.ValueType) (dst src : U32) (different : src ≠ dst) :
     (do
-      let count ← runtime.compiler.width ty
+      let count ← runtime.value.width ty
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
       let branch ← core.result.Result.Insts.CoreOpsTry.branch result
       match branch with
@@ -30,7 +30,7 @@ theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
         Result.ok (error, changed)) =
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
         (move (Itasca.Translate.valueType ty) dst src) := by
-  cases ty <;> simp [runtime.compiler.width, runtime.compiler.FunctionCompiler.copy, different,
+  cases ty <;> simp [runtime.value.width, runtime.compiler.FunctionCompiler.copy, different,
     runtime.compiler.lower.FunctionCompiler.finish_op, move, width, Itasca.Translate.valueType] <;>
     split <;> simp only [bind_ok] <;> first
     | rfl
@@ -70,7 +70,7 @@ set_option maxRecDepth 4096 in
       let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
       let j ← lift (UScalar.cast .Usize index)
       let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
-      let count ← runtime.compiler.width rawType
+      let count ← runtime.value.width rawType
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
       let branch ← core.result.Result.Insts.CoreOpsTry.branch result
       match branch with
@@ -150,7 +150,7 @@ set_option maxRecDepth 4096 in
       | .Continue src =>
         let j ← lift (UScalar.cast .Usize index)
         let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
-        let count ← runtime.compiler.width rawType
+        let count ← runtime.value.width rawType
         let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
         let branch ← core.result.Result.Insts.CoreOpsTry.branch result
         match branch with

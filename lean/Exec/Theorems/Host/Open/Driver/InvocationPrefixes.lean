@@ -11,7 +11,7 @@ theorem native_invoke_divergent_prefixes {M F A : Type} (memory : runtime.platfo
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (select : Selector)
     (code : Store.CodeInterpretation) (store : runtime.store.Store M) (held : ExecutableInv view code store)
     (exec : runtime.interp.Execution) (address : runtime.FuncAddr) (owner : address.store=store.id)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]?=some function)
     (signatureAt : store.types.val[function.signature.val]?=some signature)
     (args : Slice runtime.Value) (issued : ∀value∈args.val,Store.IssuedValue store value)

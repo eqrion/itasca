@@ -248,11 +248,11 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                     exact Or.inl ⟨_, _, run.symm, .refl _, by exact PrecommitResourceEvidence.at_phase PreparationResourcePath.initial (Or.inr ⟨rfl,Or.inr (Or.inr (Or.inr globalsCause))⟩)⟩
                   | true =>
                     simp only [↓reduceIte, bind_ok] at run
-                    let seed : runtime.store.Instance := {
+                    let seed : runtime.store.ModuleInst := {
                       module := module, types := alloc.vec.Vec.new Usize,
                       funcs := alloc.vec.Vec.new runtime.FuncAddr, tables := alloc.vec.Vec.new runtime.TableAddr,
                       memories := alloc.vec.Vec.new runtime.MemoryAddr, globals := alloc.vec.Vec.new runtime.GlobalAddr,
-                      elements := alloc.vec.Vec.new Usize, data := alloc.vec.Vec.new Usize }
+                      elems := alloc.vec.Vec.new Usize, datas := alloc.vec.Vec.new Usize }
                     have seedMaps : LinkedMaps view before module (module.module.env.imports.val.take 0) seed := by
                       simpa using linked_maps_empty view before seed rfl rfl rfl rfl rfl rfl rfl
                     obtain ⟨⟨linkedStore, linkStatus, inst⟩, linkedRun, sameStore, source, linked⟩ := WP.spec_imp_exists
@@ -328,23 +328,23 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                           dsimp only at typeStore_elems
                           have typeStore_datas := congrArg runtime.store.Store.datas typeStore
                           dsimp only at typeStore_datas
-                          have typeMap_module := congrArg runtime.store.Instance.module typeMap
+                          have typeMap_module := congrArg runtime.store.ModuleInst.module typeMap
                           dsimp only at typeMap_module
-                          have typeMap_tables := congrArg runtime.store.Instance.tables typeMap
+                          have typeMap_tables := congrArg runtime.store.ModuleInst.tables typeMap
                           dsimp only at typeMap_tables
-                          have typeMap_memories := congrArg runtime.store.Instance.memories typeMap
+                          have typeMap_memories := congrArg runtime.store.ModuleInst.memories typeMap
                           dsimp only at typeMap_memories
-                          have typeMap_globals := congrArg runtime.store.Instance.globals typeMap
+                          have typeMap_globals := congrArg runtime.store.ModuleInst.globals typeMap
                           dsimp only at typeMap_globals
-                          have typeMap_elements := congrArg runtime.store.Instance.elements typeMap
+                          have typeMap_elements := congrArg runtime.store.ModuleInst.elems typeMap
                           dsimp only at typeMap_elements
-                          have typeMap_data := congrArg runtime.store.Instance.data typeMap
+                          have typeMap_data := congrArg runtime.store.ModuleInst.datas typeMap
                           dsimp only at typeMap_data
                           have typeSource : typeInst.module = inst.module := by
-                            have h := congrArg runtime.store.Instance.module typeMap
+                            have h := congrArg runtime.store.ModuleInst.module typeMap
                             exact h
                           have typeFuncs : typeInst.funcs = inst.funcs := by
-                            have h := congrArg runtime.store.Instance.funcs typeMap
+                            have h := congrArg runtime.store.ModuleInst.funcs typeMap
                             exact h
                           have typesComplete : typeInst.types.length = inst.module.module.env.types.length :=
                             (typeEntries rfl).length_eq.symm
@@ -385,17 +385,17 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                             dsimp only at functionStore_elems
                             have functionStore_datas := congrArg runtime.store.Store.datas functionStore
                             dsimp only at functionStore_datas
-                            have functionMap_module := congrArg runtime.store.Instance.module functionMap
+                            have functionMap_module := congrArg runtime.store.ModuleInst.module functionMap
                             dsimp only at functionMap_module
-                            have functionMap_tables := congrArg runtime.store.Instance.tables functionMap
+                            have functionMap_tables := congrArg runtime.store.ModuleInst.tables functionMap
                             dsimp only at functionMap_tables
-                            have functionMap_memories := congrArg runtime.store.Instance.memories functionMap
+                            have functionMap_memories := congrArg runtime.store.ModuleInst.memories functionMap
                             dsimp only at functionMap_memories
-                            have functionMap_globals := congrArg runtime.store.Instance.globals functionMap
+                            have functionMap_globals := congrArg runtime.store.ModuleInst.globals functionMap
                             dsimp only at functionMap_globals
-                            have functionMap_elements := congrArg runtime.store.Instance.elements functionMap
+                            have functionMap_elements := congrArg runtime.store.ModuleInst.elems functionMap
                             dsimp only at functionMap_elements
-                            have functionMap_data := congrArg runtime.store.Instance.data functionMap
+                            have functionMap_data := congrArg runtime.store.ModuleInst.datas functionMap
                             dsimp only at functionMap_data
                             have functionSource : funcInst.module = inst.module := by
                               simpa only [functionMap_module] using typeSource
@@ -435,17 +435,17 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                               dsimp only at tableStore_elems
                               have tableStore_datas := congrArg runtime.store.Store.datas tableStore
                               dsimp only at tableStore_datas
-                              have tableMap_module := congrArg runtime.store.Instance.module tableMap
+                              have tableMap_module := congrArg runtime.store.ModuleInst.module tableMap
                               dsimp only at tableMap_module
-                              have tableMap_funcs := congrArg runtime.store.Instance.funcs tableMap
+                              have tableMap_funcs := congrArg runtime.store.ModuleInst.funcs tableMap
                               dsimp only at tableMap_funcs
-                              have tableMap_memories := congrArg runtime.store.Instance.memories tableMap
+                              have tableMap_memories := congrArg runtime.store.ModuleInst.memories tableMap
                               dsimp only at tableMap_memories
-                              have tableMap_globals := congrArg runtime.store.Instance.globals tableMap
+                              have tableMap_globals := congrArg runtime.store.ModuleInst.globals tableMap
                               dsimp only at tableMap_globals
-                              have tableMap_elements := congrArg runtime.store.Instance.elements tableMap
+                              have tableMap_elements := congrArg runtime.store.ModuleInst.elems tableMap
                               dsimp only at tableMap_elements
-                              have tableMap_data := congrArg runtime.store.Instance.data tableMap
+                              have tableMap_data := congrArg runtime.store.ModuleInst.datas tableMap
                               dsimp only at tableMap_data
                               obtain ⟨memoryStart, importedMemories⟩ := maps.memory_start instCache
                               have memoryStartBound : tableInst.memories.len.val ≤ tableInst.module.module.env.mem_types.val.length := by
@@ -495,8 +495,8 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                     constructor
                                     · simpa only [preparedElements, preparedInstances] using accounted.elements
                                     · simpa only [preparedData, preparedInstances] using accounted.datas
-                                  have emptyElements : preparedInst.elements.val = [] := by rw [preparedElementMap]; exact maps.elements
-                                  have emptyData : preparedInst.data.val = [] := by rw [preparedDataMap]; exact maps.data
+                                  have emptyElements : preparedInst.elems.val = [] := by rw [preparedElementMap]; exact maps.elements
+                                  have emptyData : preparedInst.datas.val = [] := by rw [preparedDataMap]; exact maps.data
                                   obtain ⟨publishedInstances, publishedRun, appended, publishedFound, publishedPrefix,
                                     publishedBindings, publishedImports, publishedSegments, publishedAccounting, publishedObjects⟩ :=
                                     WP.spec_imp_exists (publish_prepared_instance prepared preparedInst instanceRoom preparedBindings
@@ -539,10 +539,10 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                     rw [index_given globalStore.instances before.instances.len globalInst globalFound, bind_ok] at run
                                     rw [index_mut_given globalStore.instances before.instances.len globalInst globalFound, bind_ok] at run
                                     simp only [uncurry_apply_pair] at run
-                                    obtain ⟨elementsReserved, elementsRun, elementsCause⟩ := reserve_with_cause allocator law globalInst.elements globalInst.module.module.env.elements.len
+                                    obtain ⟨elementsReserved, elementsRun, elementsCause⟩ := reserve_with_cause allocator law globalInst.elems globalInst.module.module.env.elements.len
                                     rw [elementsRun] at run
                                     simp only [bind_ok, uncurry_apply_pair] at run
-                                    have elementEta : {globalInst with elements := globalInst.elements} = globalInst := by cases globalInst; rfl
+                                    have elementEta : {globalInst with elems := globalInst.elems} = globalInst := by cases globalInst; rfl
                                     simp only [set_given globalStore.instances before.instances.len globalInst globalFound] at run
                                     cases elementsReserved with
                                     | false =>
@@ -559,8 +559,8 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                         simpa only [globalSource, preparedSource, source] using valid.elements
                                       have elementStoreCapacity : globalStore.elems.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
                                         simpa only [globalElements, published, preparedElements, globalSource, preparedSource, source, Nat.sub_zero] using elementCapacity
-                                      have elementMapCapacity : globalInst.elements.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
-                                        have empty : globalInst.elements.val = [] := by rw [globalElementMap]; exact emptyElements
+                                      have elementMapCapacity : globalInst.elems.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
+                                        have empty : globalInst.elems.val = [] := by rw [globalElementMap]; exact emptyElements
                                         simpa only [alloc.vec.Vec.length, empty, List.length_nil, Nat.zero_add, globalSource,
                                           preparedSource, source, Nat.sub_zero] using elementLength
                                       obtain ⟨out, elementStageRun, elementStore, elementStatus, parts, elementCause, elementErrors, elementPrefix, elementBound,
@@ -585,10 +585,10 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                         rw [index_given elementStore.instances before.instances.len elementInst elementFound, bind_ok] at run
                                         rw [index_mut_given elementStore.instances before.instances.len elementInst elementFound, bind_ok] at run
                                         simp only [uncurry_apply_pair] at run
-                                        obtain ⟨dataReserved, dataRun, dataCause⟩ := reserve_with_cause allocator law elementInst.data elementInst.module.module.tail.data.len
+                                        obtain ⟨dataReserved, dataRun, dataCause⟩ := reserve_with_cause allocator law elementInst.datas elementInst.module.module.tail.data.len
                                         rw [dataRun] at run
                                         simp only [bind_ok, uncurry_apply_pair] at run
-                                        have dataEta : {elementInst with data := elementInst.data} = elementInst := by cases elementInst; rfl
+                                        have dataEta : {elementInst with datas := elementInst.datas} = elementInst := by cases elementInst; rfl
                                         simp only [set_given elementStore.instances before.instances.len elementInst elementFound] at run
                                         cases dataReserved with
                                         | false =>
@@ -601,8 +601,8 @@ theorem instantiate_inner_resource_decomposition {M P F A : Type}
                                           have dataStoreCapacity : elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
                                             simpa only [elementData, globalData, published, preparedData, elementSource, globalSource,
                                               preparedSource, source, Nat.sub_zero] using dataCapacity
-                                          have dataMapCapacity : elementInst.data.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
-                                            have empty : elementInst.data.val = [] := by rw [elementDataMap, globalDataMap]; exact emptyData
+                                          have dataMapCapacity : elementInst.datas.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
+                                            have empty : elementInst.datas.val = [] := by rw [elementDataMap, globalDataMap]; exact emptyData
                                             simpa only [alloc.vec.Vec.length, empty, List.length_nil, Nat.zero_add, elementSource, globalSource,
                                               preparedSource, source, Nat.sub_zero] using dataLength
                                           obtain ⟨out, dataStageRun, dataStore, dataStatus, parts, dataStageCause, dataPrefix, dataBound, dataAccounting, dataMetadata,

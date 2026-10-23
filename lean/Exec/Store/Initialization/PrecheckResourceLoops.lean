@@ -4,7 +4,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 /-- Synthetic setup failure belongs to an active source-segment offset. -/
 def OffsetInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (error : runtime.ExecError) : Prop :=
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (error : runtime.ExecError) : Prop :=
   ∃ (index : Usize) (target : U32), ∃ offset function code,
     ((∃ segment, inst.module.module.env.elements.val[index.val]? = some segment ∧
         segment.mode = .Active target offset ∧
@@ -17,7 +17,7 @@ def OffsetInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
 
 /-- Refined Wasm1 checks retain exact resource requests or generated bounds witnesses. -/
 def PrecheckResourceCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (view : M → Slice U8) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (view : M → Slice U8) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (error : runtime.ExecError) : Prop :=
   OffsetInitializerCause allocator store inst error ∨
   (error = .Trap .TableOutOfBounds ∧ ElementBoundsFailure store inst) ∨
@@ -26,20 +26,20 @@ def PrecheckResourceCause {M A : Type} (allocator : runtime.platform.Alloc A)
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
-theorem element_range_ready_resource_causes (law : Platform.AllocCorrect allocator) (view : M → Slice U8)
+theorem element_bounds_ready_resource_causes (law : Platform.AllocCorrect allocator) (view : M → Slice U8)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (ready : ElementPrecheckReady store inst index segment)
     (bindings : InitializerBindings store inst) :
-    runtime.store.instantiate.Store.element_range_for memory hooks floats allocator store platform instIndex index
+    runtime.store.instantiate.Store.check_element_bounds memory hooks floats allocator store platform instIndex index
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) out.1 ⦄ := by
   cases mode : segment.mode with
   | Active tableIndex offset =>
     simp only [ElementPrecheckReady, mode] at ready
     obtain ⟨function, code, words, addr, table, mapping, hc, compiled, resolved, ht, htable⟩ := ready
-    apply WP.spec_mono (element_range_active_resource_causes memory hooks floats allocator law store platform instIndex index inst segment
+    apply WP.spec_mono (element_bounds_active_resource_causes memory hooks floats allocator law store platform instIndex index inst segment
       tableIndex offset function code words addr table hi helem mode mapping hc compiled resolved bindings ht htable)
     rintro ⟨result, after, host⟩ ⟨sameStore, sameHost, errors⟩
     refine ⟨sameStore, sameHost, ?_⟩
@@ -51,31 +51,31 @@ theorem element_range_ready_resource_causes (law : Platform.AllocCorrect allocat
       · exact Or.inr (Or.inl ⟨rfl, index, segment, tableIndex, offset, words, addr, table,
           helem, mode, resolved, ht, htable, outside⟩)
   | Passive =>
-    apply WP.spec_mono (element_range_inactive memory hooks floats allocator store platform instIndex index
+    apply WP.spec_mono (element_bounds_inactive memory hooks floats allocator store platform instIndex index
       inst segment hi helem (.inl mode))
     rintro out rfl
     exact ⟨rfl, rfl, trivial⟩
   | Declarative =>
-    apply WP.spec_mono (element_range_inactive memory hooks floats allocator store platform instIndex index
+    apply WP.spec_mono (element_bounds_inactive memory hooks floats allocator store platform instIndex index
       inst segment hi helem (.inr mode))
     rintro out rfl
     exact ⟨rfl, rfl, trivial⟩
 
-theorem data_range_ready_resource_causes (law : Platform.AllocCorrect allocator)
+theorem data_bounds_ready_resource_causes (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
     (ready : DataPrecheckReady store inst index segment)
     (bindings : InitializerBindings store inst) :
-    runtime.store.instantiate.Store.data_range_for memory hooks floats allocator store platform instIndex index
+    runtime.store.instantiate.Store.check_data_bounds memory hooks floats allocator store platform instIndex index
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧ ErrorAllowed (PrecheckResourceCause allocator view store inst) out.1 ⦄ := by
   cases mode : segment.mode with
   | Active memoryIndex offset =>
     simp only [DataPrecheckReady, mode] at ready
     obtain ⟨function, code, words, addr, mem, mapping, hc, compiled, resolved, hm, hmemory⟩ := ready
-    apply WP.spec_mono (data_range_active_resource_causes memory hooks floats allocator law view memoryLaws store platform instIndex index
+    apply WP.spec_mono (data_bounds_active_resource_causes memory hooks floats allocator law view memoryLaws store platform instIndex index
       inst segment memoryIndex offset function code words addr mem hi hdata mode mapping hc compiled resolved bindings hm hmemory)
     rintro ⟨result, after, host⟩ ⟨sameStore, sameHost, errors⟩
     refine ⟨sameStore, sameHost, ?_⟩
@@ -87,14 +87,14 @@ theorem data_range_ready_resource_causes (law : Platform.AllocCorrect allocator)
       · exact Or.inr (Or.inr ⟨rfl, index, segment, memoryIndex, offset, words, addr, mem,
           hdata, mode, resolved, hm, hmemory, outside⟩)
   | Passive =>
-    apply WP.spec_mono (data_range_inactive memory hooks floats allocator store platform instIndex index
+    apply WP.spec_mono (data_bounds_inactive memory hooks floats allocator store platform instIndex index
       inst segment hi hdata mode)
     rintro out rfl
     exact ⟨rfl, rfl, trivial⟩
 
 theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect allocator) (view : M → Slice U8)
     (store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (allowed : ErrorAllowed (PrecheckResourceCause allocator view store inst) status)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst)
@@ -129,7 +129,7 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
         cases unit
         simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
         obtain ⟨segment, helem, ready⟩ := certificates index hmore
-        step with element_range_ready_resource_causes memory hooks floats allocator law view store platform instIndex index
+        step with element_bounds_ready_resource_causes memory hooks floats allocator law view store platform instIndex index
           inst segment hi helem ready bindings as ⟨result, after, host', hs, hp, errors⟩
         subst after host'
         cases result <;> step as ⟨next, hnext⟩ <;> exact ⟨by omega, errors, by omega⟩
@@ -140,7 +140,7 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
 theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (allowed : ErrorAllowed (PrecheckResourceCause allocator view store inst) status)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst)
@@ -175,7 +175,7 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
         cases unit
         simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
         obtain ⟨segment, helem, ready⟩ := certificates index hmore
-        step with data_range_ready_resource_causes memory hooks floats allocator law view memoryLaws store platform instIndex index
+        step with data_bounds_ready_resource_causes memory hooks floats allocator law view memoryLaws store platform instIndex index
           inst segment hi helem ready bindings as ⟨result, after, host', hs, hp, errors⟩
         subst after host'
         cases result <;> step as ⟨next, hnext⟩ <;> exact ⟨by omega, errors, by omega⟩

@@ -28,7 +28,7 @@ def floatLanePredicate (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 128) (j : Na
     (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j y).toNat)
 
 theorem float_compare_loop (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
-    runtime.interp.simd.compare_lanes_loop y x (floatCompareWidth ty)
+    runtime.interp.simd.compare_lanes_loop x y (floatCompareWidth ty)
       (UScalar.cast .U32 (floatCompareIndex op)) true 0#u128 0#u32
       ⦃ result => ∀ j, j < 128/lsize (lanetype_Fnn ty) →
         laneBits (lsize (lanetype_Fnn ty)) j result.bv =
@@ -52,9 +52,8 @@ theorem float_compare_loop (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
 
 theorem float_compare_dispatch_eq (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
     runtime.interp.simd.compare_lanes (floatCompareOpcode ty op) x y =
-      Aeneas.Std.bind (runtime.interp.simd.compare_lanes_loop y x (floatCompareWidth ty)
-        (UScalar.cast .U32 (floatCompareIndex op)) true 0#u128 0#u32)
-        runtime.interp.simd.vector := by
+      (runtime.interp.simd.compare_lanes_loop x y (floatCompareWidth ty)
+        (UScalar.cast .U32 (floatCompareIndex op)) true 0#u128 0#u32) := by
   cases ty <;> cases op
   all_goals unfold runtime.interp.simd.compare_lanes floatCompareOpcode floatCompareWidth floatCompareIndex
   all_goals with_unfolding_all change (Aeneas.Std.bind (Aeneas.Std.bind (Result.ok _) _) _) = _
@@ -66,7 +65,8 @@ theorem float_compare_dispatch_eq (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
       ∀ j, j < 128/lsize (lanetype_Fnn ty) → laneBits (lsize (lanetype_Fnn ty)) j result.bv =
         comparisonBits (lsize (lanetype_Fnn ty)) (floatLanePredicate ty op x.bv y.bv j) ⦄ := by
   rw [float_compare_dispatch_eq]
-  step with float_compare_loop ty op x y as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (float_compare_loop ty op x y)
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

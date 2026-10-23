@@ -45,14 +45,14 @@ theorem initialize_segments_certified_supported {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (code : Store.CodeInterpretation) (certified : CertifiedSupportedStore emission allowed view code store)
     (imports : Store.InitializerImports store inst) (bindings : Store.InitializerBindings store inst)
     (types : Store.SegmentTypeBindings store inst) :
-    runtime.instantiate.initialize_segments memory hooks floats allocator store platform instIndex
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => CertifiedSupportedStore emission allowed view code out.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.1) ∧
         Store.SegmentObjectMetadata view store out.2.1 ∧ out.2.2 = platform ⦄ := by

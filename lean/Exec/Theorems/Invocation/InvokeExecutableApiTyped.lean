@@ -17,7 +17,7 @@ theorem invoke_defined_executable_api_typed
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedExecutableApiStore view code store) (hostFree : CoreHostFree store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)

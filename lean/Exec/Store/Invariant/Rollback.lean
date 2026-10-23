@@ -32,37 +32,37 @@ private theorem trim_spec {T : Type} (n : Usize) (v : alloc.vec.Vec T) :
       simpa only [WP.spec_ok, List.take_of_length_le hle] using hinv
   · rfl
 
-@[step] theorem rollback_loop1 (items : alloc.vec.Vec (runtime.store.DataInstance)) (n : Usize) :
+@[step] theorem rollback_loop1 (items : alloc.vec.Vec (runtime.store.DataInst)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop1 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop2 (items : alloc.vec.Vec (runtime.store.Instance)) (n : Usize) :
+@[step] theorem rollback_loop2 (items : alloc.vec.Vec (runtime.store.ModuleInst)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop2 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop3 (items : alloc.vec.Vec (runtime.store.Function)) (n : Usize) :
+@[step] theorem rollback_loop3 (items : alloc.vec.Vec (runtime.store.FuncInst)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop3 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop4 (items : alloc.vec.Vec (runtime.store.Table)) (n : Usize) :
+@[step] theorem rollback_loop4 (items : alloc.vec.Vec (runtime.store.TableInst)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop4 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop5 {M : Type} (items : alloc.vec.Vec (runtime.store.Memory M)) (n : Usize) :
+@[step] theorem rollback_loop5 {M : Type} (items : alloc.vec.Vec (runtime.store.MemInst M)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop5 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop6 (items : alloc.vec.Vec (runtime.store.GlobalInstance)) (n : Usize) :
+@[step] theorem rollback_loop6 (items : alloc.vec.Vec (runtime.store.GlobalInst)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop6 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄

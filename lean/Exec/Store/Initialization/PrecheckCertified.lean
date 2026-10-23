@@ -12,7 +12,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem element_precheck_certified (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
@@ -32,7 +32,7 @@ theorem element_precheck_certified (law : Platform.AllocCorrect allocator)
 theorem data_precheck_certified (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.tail.data.val,

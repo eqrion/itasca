@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
 
 theorem float_binary_loop_first {F : Type} (floats : runtime.platform.FloatOps F)
     (laws : FloatOpsCorrect floats) (ty : Fnn) (op : vbinop_Fnn_N) (x y : U128) :
-    runtime.interp.simd.float_binary_lanes_loop floats (floatCompareWidth ty) (floatBinaryIndex op) y x 0#u128 0#u32
+    runtime.interp.simd.float_binary_lanes_loop floats x y (floatCompareWidth ty) (floatBinaryIndex op) 0#u128 0#u32
       ⦃ result => ∀ j, j < 128/lsize (lanetype_Fnn ty) →
         (floatBinaryChoices (lsize (lanetype_Fnn ty)) op
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j x.bv).toNat)
@@ -36,7 +36,8 @@ theorem float_binary_loop_first {F : Type} (floats : runtime.platform.FloatOps F
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j y.bv).toNat)).head? =
           some (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j result.bv).toNat) ⦄ := by
   rw [float_binary_dispatch_eq]
-  step with float_binary_loop_first floats laws ty op x y as ⟨result,allowed⟩
-  simpa [runtime.interp.simd.vector] using allowed
+  apply WP.spec_mono (float_binary_loop_first floats laws ty op x y)
+  intro result allowed
+  simpa using allowed
 
 end Exec.Interp.Simd

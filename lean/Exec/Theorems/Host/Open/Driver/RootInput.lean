@@ -12,7 +12,7 @@ theorem prepare_root_input {M F A : Type} (memory : runtime.platform.MemoryBuffe
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (token : Unit)
     (held : ExecutableInv view code store) (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value) (owner : address.store=store.id)
     (issued : ∀value∈args.val,Store.IssuedValue store value)
     (functionAt : store.funcs.val[address.index.val]?=some function)

@@ -17,7 +17,7 @@ theorem native_execute_partial {M F A : Type} (memory : runtime.platform.MemoryB
       (out.1=.Ok () → ∀value∈out.2.2.2.2.val,Store.IssuedValue out.2.2.1 value)⦄div := by
   have safe:=native_loop_partial memory floats allocator correct allocation view laws select code state root signature held task
   simp only [executeAndReadback]
-  generalize loopResult : runtime.interp.invoke_with_loop2 memory (platform memory floats allocator select) floats allocator
+  generalize loopResult : runtime.interp.invoke_with_loop1 memory (platform memory floats allocator select) floats allocator
     state.1 state.2.1 state.2.2.1 state.2.2.2=result at safe ⊢
   cases safe with
   | div=>simp only [bind_div];exact WP.dspec.div _

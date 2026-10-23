@@ -13,7 +13,7 @@ theorem link_external_maps_loop {M : Type} (memory : runtime.platform.MemoryBuff
     (lengths : imports.length = module.module.env.imports.length)
     (handles : ∀ external ∈ imports.val, ExternalIssued store external)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (inst : runtime.store.Instance) (start : Usize) (startBound : start.val ≤ imports.length)
+    (inst : runtime.store.ModuleInst) (start : Usize) (startBound : start.val ≤ imports.length)
     (maps : LinkedMaps view store module (module.module.env.imports.val.take start.val) inst)
     (externals : ExternalMaps (imports.val.take start.val) inst) :
     runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports (.Ok ()) start inst

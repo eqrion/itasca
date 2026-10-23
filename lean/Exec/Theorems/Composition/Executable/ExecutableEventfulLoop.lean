@@ -24,7 +24,7 @@ theorem executable_eventful_loop_safe
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     {expected : List valtype}
     (initial : EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ _ => True ⦄div :=
   eventful_loop_safe memory hooks floats allocator
     (eventful_step_total Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws code sound preserve externs issued expected) initial
@@ -50,7 +50,7 @@ theorem executable_eventful_loop_infinite
       ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
     {expected : List valtype}
     (initial : EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
     Spec.InfiniteSourceWithEvents (Abs.decode initial.source) :=
   eventful_loop_infinite memory hooks floats allocator
     (eventful_step_total Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws code sound preserve externs issued expected) initial divergent

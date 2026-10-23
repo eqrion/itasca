@@ -9,7 +9,7 @@ inductive TableBranchRun {A : Type} (ops : runtime.platform.Alloc A) :
       TableBranchRun ops compiler index compiler
   | cons {before middle after} (index : Usize)
       (inside : index.val < before.table_depths.val.length)
-      (called : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),middle))
+      (called : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),middle))
       (rest : TableBranchRun ops middle (index.val+1) after) :
       TableBranchRun ops before index.val after
 
@@ -17,7 +17,7 @@ theorem compiler_table_loop_trace {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     (before : runtime.compiler.FunctionCompiler A) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
     (output : CompilerSnapshot A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches_loop
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
       ops before index status = .ok output) :
     snapshotStatus output = .Ok () →
       status = .Ok () ∧ TableBranchRun ops before index.val (snapshotCompiler output) := by
@@ -25,9 +25,9 @@ theorem compiler_table_loop_trace {A : Type} (ops : runtime.platform.Alloc A)
   generalize measure : Usize.max - index.val = n
   induction n using Nat.strong_induction_on generalizing before index status with
   | h n ih =>
-    unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop at accepted
+    unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.FunctionCompiler.lower_table_branches_loop.body,
+    simp only [runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body,
       bind_ok] at accepted
     split at accepted
     · rename_i inside
@@ -48,11 +48,11 @@ theorem compiler_table_loop_trace {A : Type} (ops : runtime.platform.Alloc A)
         have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.FunctionCompiler.lower_table_branches_loop
+        have tail' : runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
             ops middle nextIndex result = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.FunctionCompiler.lower_table_branches_loop,
-            runtime.compiler.FunctionCompiler.lower_table_branches_loop.body,
+            runtime.compiler.control.FunctionCompiler.lower_table_branches_loop,
+            runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body,
             core.result.Result.is_ok] using tail
         obtain ⟨resultOk, restSources⟩ := ih _ smaller middle nextIndex result tail' rfl
         subst result

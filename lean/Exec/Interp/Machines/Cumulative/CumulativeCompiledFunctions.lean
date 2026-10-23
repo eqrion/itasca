@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 instructions. This is source syntax and layout evidence, independent of any
 claim about execution or mutable store contents. -/
 def CumulativeFunctionCompiled {M : Type} (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (function : runtime.store.Function) : Prop :=
+    (store : runtime.store.Store M) (function : runtime.store.FuncInst) : Prop :=
   ∀ instanceIndex functionIndex, function.code = .Wasm instanceIndex functionIndex →
     ∃ inst compiled signature declared body epilogue,
       store.instances.val[instanceIndex.val]? = some inst ∧

@@ -23,7 +23,7 @@ theorem step_simd_of_view {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (frame : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (frame : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (code : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (op dst a entry : U32)
     (last : index.val + 1 = exec.frames.length)

@@ -14,7 +14,7 @@ theorem fillTableWords_member (before : List U64) (start count : Nat) (value wor
     · exact Or.inr equal
 
 theorem TableFillEffect.mutation {M : Type} (store : runtime.store.Store M)
-    (address : runtime.TableAddr) (table : runtime.store.Table) (destination value count : U64)
+    (address : runtime.TableAddr) (table : runtime.store.TableInst) (destination value count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : TableFillEffect store address.index table destination value count out) :
     FrameStoreMetadata store out.2 ∧

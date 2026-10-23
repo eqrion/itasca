@@ -35,12 +35,11 @@ theorem shiftWidth_val (ty : Jnn) : (shiftWidth ty).val=lsize (lanetype_Jnn ty) 
   have positive : 0 < (shiftWidth ty).val := by cases ty <;> decide
   have bounded : (shiftWidth ty).val ≤ 64 := by cases ty <;> decide
   step as ⟨amount,amountEq⟩
-  step with shift_lanes_loop kind (shiftOpcode ty kind) (shiftWidth ty) amount x 0#u128 0#u32
+  apply WP.spec_mono (shift_lanes_loop kind (shiftOpcode ty kind) (shiftWidth ty) amount x 0#u128 0#u32
     positive bounded (by scalar_tac)
     (by cases ty <;> cases kind <;> decide) (by cases ty <;> decide)
-    (by intro j bound; change j < 0 at bound; omega) as ⟨result,lanes⟩
-  unfold runtime.interp.simd.vector
-  simp only [WP.spec_ok]
+    (by intro j bound; change j < 0 at bound; omega))
+  intro result lanes
   rw [amountEq] at lanes
   cases ty <;> with_unfolding_all exact lanes
 end Exec.Interp.Simd

@@ -13,7 +13,7 @@ theorem segment_loop_shape {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (exec : runtime.interp.Execution)
-    (instIndex function : Usize) (inst : runtime.store.Instance)
+    (instIndex function : Usize) (inst : runtime.store.ModuleInst)
     (code : runtime.bytecode.CompiledFunction) (position : U32)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
@@ -22,9 +22,9 @@ theorem segment_loop_shape {M P F A : Type}
     (ready : SegmentCodeReady store inst code exec.slots.length)
     (shape : Shape view store)
     (compatible : ∀ instruction ∈ code.code.val, SegmentBulkCompatible store inst code instruction) :
-    runtime.interp.synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
+    runtime.interp.run_synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
       ⦃ out => Shape view out.1 ∧ SegmentTypes store out.1 ⦄ := by
-  unfold runtime.interp.synthetic_loop
+  unfold runtime.interp.run_synthetic_loop
   apply loop.spec_decr_nat (fun state => segmentRemaining code state.2.2.1 state.2.2.2)
     (fun state => Shape view state.1 ∧ SegmentTypes store state.1 ∧ SegmentAddressSpace store state.1 ∧ state.2.1 = platform ∧
       state.2.2.1.slots.length = exec.slots.length ∧ SegmentStatus state.2.2.2 ∧
@@ -35,7 +35,7 @@ theorem segment_loop_shape {M P F A : Type}
     subst host
     cases result with
     | Err error =>
-      simp only [runtime.interp.synthetic_loop.body, core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, ite_self, WP.spec_ok]
+      simp only [runtime.interp.run_synthetic_loop.body, core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, ite_self, WP.spec_ok]
       exact ⟨currentShape, types⟩
     | Ok unitValue =>
       cases unitValue

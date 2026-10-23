@@ -24,7 +24,7 @@ theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}
 theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (issued : before.memories.val[address.index.val]? = some object)
     (mutation : Interp.MemoryMutation view before after address object) :
     CumulativeStoreMutation view code before after := by
@@ -71,7 +71,7 @@ theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
 theorem table_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (before after : runtime.store.Store M)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
     (issued : before.tables.val[address.index.val]? = some object)
     (mutation : TableMutation before after address object replacement)
     (reference : ReferenceShape before object.ty replacement) :
@@ -189,14 +189,14 @@ theorem table_init_cumulative_mutation_of_shape {M : Type} {view : M → Slice U
   exact shaped.elements segment (List.mem_of_getElem? sourceFound) word member
 
 theorem data_drop_cumulative_mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.DataInstance}
+    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.DataInst}
     (shaped : Shape view store) (sourceSyntaxBefore : StoreSyntax code store) (bounds : SegmentBounds store)
     (issued : store.datas.val[index.val]? = some object) :
     CumulativeStoreMutation view code store {store with datas := store.datas.set index ⟨alloc.vec.Vec.new U8⟩} :=
   segment_mutation_cumulative_of_shape shaped sourceSyntaxBefore bounds (.data_drop view store index object issued) (shaped.data_drop index)
 
 theorem element_drop_cumulative_mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.ElemInstance}
+    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.ElemInst}
     (shaped : Shape view store) (sourceSyntaxBefore : StoreSyntax code store) (bounds : SegmentBounds store)
     (issued : store.elems.val[index.val]? = some object) :
     CumulativeStoreMutation view code store {store with elems := store.elems.set index {object with refs := alloc.vec.Vec.new U64}} :=

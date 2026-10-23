@@ -10,7 +10,7 @@ set_option maxRecDepth 4096
       unaryLane action width.val (laneBits width.val j x.bv))
     (allPrefix : all = unaryAll width.val x.bv i.val)
     (signPrefix : signs.bv = unarySigns width.val x.bv i.val) :
-    runtime.interp.simd.integer_unary_lanes_loop width action x initial all signs i ⦃ out =>
+    runtime.interp.simd.integer_unary_lanes_loop x width action initial all signs i ⦃ out =>
       (∀ j, j < 128/width.val → laneBits width.val j out.1.bv =
         unaryLane action width.val (laneBits width.val j x.bv)) ∧
       out.2.1 = unaryAll width.val x.bv (128/width.val) ∧

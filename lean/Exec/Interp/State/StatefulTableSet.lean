@@ -3,13 +3,12 @@ import Exec.Abs.Stateful.Transition
 namespace Exec.Interp
 open Aeneas Aeneas.Std SpecExt Exec.Store
 
-theorem stateful_table_set_effect {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem stateful_table_set_effect {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (position : U32)
+    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
@@ -17,7 +16,7 @@ theorem stateful_table_set_effect {M P F A : Type}
     (indexBound : base.val+index.val < exec.slots.length) (valueBound : base.val+value.val < exec.slots.length)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
     (values : f.vals = front++[Abs.integerVal .I32 position.val,val_ref (decodeRef object.ty exec.slots.val[base.val+value.val]!)]) :
-    runtime.interp.admin_table_set memory hooks floats allocator exec store instanceIndex base index value table ⦃ out =>
+    runtime.interp.execute_table_set memory exec store instanceIndex base index value table ⦃ out =>
       out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
       if position.val < object.elements.length then
         out.1 = .Ok () ∧ TableMutation store out.2.2 address object exec.slots.val[base.val+value.val]! ∧
@@ -29,7 +28,7 @@ theorem stateful_table_set_effect {M P F A : Type}
     Abs.integer_accepts .I32 position.val (by change position.val < 2^32; scalar_tac)
   have splitValues : f.vals = (front++[Abs.integerVal .I32 position.val])++[val_ref (decodeRef object.ty exec.slots.val[base.val+value.val]!)] := by
     simpa only [List.append_assoc,List.singleton_append] using values
-  apply WP.spec_mono (table_set_effect memory hooks floats allocator exec store instanceIndex base index value table
+  apply WP.spec_mono (table_set_effect memory exec store instanceIndex base index value table
     inst address object position found mapped issued input indexBound valueBound)
   intro out effect
   by_cases inside : position.val < object.elements.length

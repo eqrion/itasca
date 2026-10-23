@@ -8,15 +8,15 @@ open Aeneas Aeneas.Std
 /-- Exact element staging retains the source reference type in the newly
 allocated segment and distinguishes a normal refusal from successful append. -/
 inductive ElementTypedEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) (source : Itasca.module.Element) :
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (source : Itasca.module.Element) :
     core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : ElementTypedEffect store instIndex inst source (.Err error) store
-  | appended (elements : alloc.vec.Vec runtime.store.ElemInstance) (addresses : alloc.vec.Vec Usize)
+  | appended (elements : alloc.vec.Vec runtime.store.ElemInst) (addresses : alloc.vec.Vec Usize)
       (values : alloc.vec.Vec U64)
       (elementValues : elements.val = store.elems.val ++ [{ty := source.elem, refs := values}])
-      (addressValues : addresses.val = inst.elements.val ++ [store.elems.len]) :
+      (addressValues : addresses.val = inst.elems.val ++ [store.elems.len]) :
       ElementTypedEffect store instIndex inst source (.Ok ())
-        {store with elems := elements, instances := store.instances.set instIndex {inst with elements := addresses}}
+        {store with elems := elements, instances := store.instances.set instIndex {inst with elems := addresses}}
 
 theorem ElementTypedEffect.effect {M : Type} {store after : runtime.store.Store M}
     {instIndex inst source status} (typed : ElementTypedEffect store instIndex inst source status after) :
@@ -30,12 +30,12 @@ theorem add_instance_element_typed_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
     (bindings : InitializerBindings store inst)
-    (room : store.elems.length < Usize.max) (mapRoom : inst.elements.length < Usize.max) :
+    (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index
       ⦃ out => ElementTypedEffect store instIndex inst segment out.1 out.2.1 ∧ out.2.2 = platform ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_element

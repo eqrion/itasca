@@ -9,14 +9,14 @@ set_option maxRecDepth 4096
 lookup, dispatch emission, and finite sequence of target branches. -/
 theorem compiler_lower_table_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     ∃ start len selector emitted,
       start.val = before.function.jump_tables.val.length ∧
       len.val = before.table_depths.val.length ∧
       runtime.compiler.FunctionCompiler.operand ops before 1#usize = .ok (.Ok selector) ∧
       Emitted before emitted (.JumpTable selector start len) ∧
       TableBranchRun ops emitted 0 after := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches at accepted
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches at accepted
   obtain ⟨startResult,startCalled,rest⟩ := bind_ok_inv _ _ _ accepted
   cases startResult with
   | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,

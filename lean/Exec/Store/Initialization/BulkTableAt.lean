@@ -3,14 +3,14 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 theorem bulk_table_init_at {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (operand entry element tableId : U32) (address : Usize) (tableAddress : runtime.TableAddr)
-    (table : runtime.store.Table) (segment : runtime.store.ElemInstance)
+    (table : runtime.store.TableInst) (segment : runtime.store.ElemInst)
     (destination source count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (descriptor : code.indirect.val[entry.val]? = some (element, tableId))
-    (mapped : inst.elements.val[element.val]? = some address)
+    (mapped : inst.elems.val[element.val]? = some address)
     (resolved : store.elems.val[address.val]? = some segment)
     (tableMapped : inst.tables.val[tableId.val]? = some tableAddress)
     (target : store.tables.val[tableAddress.index.val]? = some table)
@@ -56,7 +56,7 @@ theorem bulk_table_init_at {M : Type} (memory : runtime.platform.MemoryBuffer M)
     rw [if_pos fitsTarget] at rangeEffect
     obtain ⟨dst, rfl, dstStart, dstEnd⟩ := rangeEffect
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with Interp.vec_index_given inst.elements (UScalar.cast .Usize element) address
+    step with Interp.vec_index_given inst.elems (UScalar.cast .Usize element) address
       (by simpa using mapped) as ⟨actual, actualEq⟩
     subst actual
     step with Interp.vec_index_given store.elems address segment resolved as ⟨actual, actualEq⟩

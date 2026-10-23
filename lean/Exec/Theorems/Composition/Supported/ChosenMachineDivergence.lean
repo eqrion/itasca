@@ -34,10 +34,10 @@ theorem chosen_supported_loop_infinite {choices : SourceChoices} {M P F A : Type
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : ChosenSupportedStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view code expected)
     (initial : ChosenSupportedMachine emission allowed M P view code expected)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
     InfiniteChosenSource choices initial.occurrence (Abs.decode initial.source) := by
   let Running := {before : ChosenSupportedMachine emission allowed M P view code expected //
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator before.exec before.store before.platform (.Ok ())=.div}
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator before.exec before.store before.platform (.Ok ())=.div}
   let edge := fun (before : Running) (events : List HostEvent) (after : Running) =>
     ChosenSupportedTransition choices memory hooks floats allocator before.val events after.val
   apply infinite_chosen_of_decreasing_stutter choices edge (fun p=>Abs.decode p.val.source)

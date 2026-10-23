@@ -6,21 +6,21 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem eval_const_exec_errors (law : Platform.AllocCorrect allocator)
+theorem eval_const_errors (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → ((words[0]?).getD 0#u64).val ≤ Usize.max) :
-    runtime.instantiate.eval_const_exec memory hooks floats allocator store platform instIndex function ty
+    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         (∀ value, out.1 = .Ok value → Interp.rawType value = ty ∧
           Interp.sourceValue value = decodeWords ty ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64)) ∧
         (∀ error, out.1 = .Err error → ∃ resource, error = .Exhausted resource) ⦄ := by
-  unfold runtime.instantiate.eval_const_exec
+  unfold runtime.interp.eval_const
   step with Interp.synthetic_resolved_initializer_errors memory hooks floats allocator law store platform
     instIndex function inst code expr ty words hi hc compiled resolved
     as ⟨result, store', platform', hs, hp, success, errors⟩

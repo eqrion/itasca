@@ -7,10 +7,10 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 theorem stateful_data_drop_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (index : U32) (address : Usize)
+    (inst : runtime.store.ModuleInst) (index : U32) (address : Usize)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (mapped : inst.data.val[index.val]? = some address) (issued : address.val < store.datas.length)
+    (mapped : inst.datas.val[index.val]? = some address) (issued : address.val < store.datas.length)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst) :
     runtime.interp.bulk.execute memory store instIndex function base slots (.DataDrop index) ⦃ out =>
       out = (.Ok (),{store with datas := store.datas.set address ⟨alloc.vec.Vec.new U8⟩}) ∧
@@ -29,10 +29,10 @@ theorem stateful_data_drop_effect {M : Type} (memory : runtime.platform.MemoryBu
 theorem stateful_element_drop_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (index : U32) (address : Usize)
+    (inst : runtime.store.ModuleInst) (index : U32) (address : Usize)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (mapped : inst.elements.val[index.val]? = some address) (issued : address.val < store.elems.length)
+    (mapped : inst.elems.val[index.val]? = some address) (issued : address.val < store.elems.length)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst) :
     runtime.interp.bulk.execute memory store instIndex function base slots (.ElemDrop index) ⦃ out =>
       out = (.Ok (),{store with elems := store.elems.set address {store.elems.val[address.val] with refs := alloc.vec.Vec.new U64}}) ∧

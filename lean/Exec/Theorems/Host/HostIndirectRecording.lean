@@ -17,7 +17,7 @@ theorem recorded_indirect_host_frame_source {M P F A : Type}
     (valid : invariant store)
     (sourceWf : ∀ s, invariant s → wf_store (Store.decodeStore view code s))
     (address : runtime.FuncAddr) (base : Usize) (ambient : frame) (wfAmbient : wf_frame ambient)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)

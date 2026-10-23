@@ -10,8 +10,8 @@ theorem stateful_memory_grow_slots_chosen {choices : Exec.Spec.SourceChoices} (o
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (raw : runtime.interp.Frame) (dst : U32) (inst : runtime.store.Instance)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (amount : U64)
+    (raw : runtime.interp.Frame) (dst : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (amount : U64)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
@@ -21,7 +21,7 @@ theorem stateful_memory_grow_slots_chosen {choices : Exec.Spec.SourceChoices} (o
     (values : f.vals = front++[Abs.integerVal .I32 (UScalar.cast .U32 amount).val])
     (frameSlots : FrameSlots exec raw f)
     (position : dst.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType)) :
-    runtime.interp.admin_memory_grow memory hooks floats allocator exec store raw.instance raw.base dst ⦃ out =>
+    runtime.interp.execute_memory_grow memory exec store raw.instance raw.base dst ⦃ out =>
       out.1 = .Ok () ∧ FrameStoreMetadata store out.2.2 ∧ ∃ result : U32,
         SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) (UScalar.cast .U64 result)) ∧
         MemoryGrowth view code store address.index (UScalar.cast .U32 amount) (result,out.2.2) ∧
@@ -41,8 +41,8 @@ theorem stateful_table_grow_slots_chosen {choices : Exec.Spec.SourceChoices} (oc
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (raw : runtime.interp.Frame) (dst table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (reference amount : U64)
+    (raw : runtime.interp.Frame) (dst table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (reference amount : U64)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
@@ -53,7 +53,7 @@ theorem stateful_table_grow_slots_chosen {choices : Exec.Spec.SourceChoices} (oc
     (values : f.vals = front++[val_ref (decodeRef object.ty reference),Abs.integerVal .I32 (UScalar.cast .U32 amount).val])
     (frameSlots : FrameSlots exec raw f)
     (position : dst.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType)) :
-    runtime.interp.admin_table_grow memory hooks floats allocator exec store raw.instance raw.base dst table ⦃ out =>
+    runtime.interp.execute_table_grow memory allocator exec store raw.instance raw.base dst table ⦃ out =>
       out.1 = .Ok () ∧ FrameStoreMetadata store out.2.2 ∧ ∃ result : U32,
         SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) (UScalar.cast .U64 result)) ∧
         TableGrowth store address.index (UScalar.cast .U32 amount) reference (result,out.2.2) ∧

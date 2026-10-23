@@ -37,8 +37,8 @@ theorem SourceIndirectCallCause.source_site {A M P : Type} {allocator : runtime.
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (cause : SourceIndirectCallCause allocator hooks interpretation exec store platform index raw compiled source error) :
-    ∃ (pc : U32) (address base : Usize) (function : runtime.store.Function)
-      (instanceIndex functionIndex : Usize) (inst : runtime.store.Instance) (callee : runtime.bytecode.CompiledFunction),
+    ∃ (pc : U32) (address base : Usize) (function : runtime.store.FuncInst)
+      (instanceIndex functionIndex : Usize) (inst : runtime.store.ModuleInst) (callee : runtime.bytecode.CompiledFunction),
       store.funcs.val[address.val]?=some function ∧ function.code=.Wasm instanceIndex functionIndex ∧
       store.instances.val[instanceIndex.val]?=some inst ∧ inst.module.functions.val[functionIndex.val]?=some callee ∧
       CallCause allocator hooks {exec with frames:=exec.frames.set index {raw with pc:=pc}}

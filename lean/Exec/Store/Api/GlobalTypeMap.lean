@@ -16,12 +16,12 @@ theorem GlobalTypeMap.prefix {M : Type} {before after : runtime.store.Store M}
   rintro ty address ⟨owner, global, found, typed⟩
   refine ⟨owner.trans identity.symm, global, ?_, typed⟩
   have bound := (List.getElem?_eq_some_iff.mp found).1
-  have same := congrArg (fun values : List runtime.store.GlobalInstance => values[address.index.val]?) retained
+  have same := congrArg (fun values : List runtime.store.GlobalInst => values[address.index.val]?) retained
   simp only [List.getElem?_take, alloc.vec.Vec.length, if_pos bound] at same
   exact same.trans found
 
 theorem GlobalTypedEffect.type_map {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {instIndex : Usize} {ty status}
+    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {ty status}
     (effect : GlobalTypedEffect store instIndex inst ty status after)
     (bound : instIndex.val < store.instances.length)
     (found : after.instances.val[instIndex.val]? = some next)

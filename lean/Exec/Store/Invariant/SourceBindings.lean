@@ -10,15 +10,15 @@ theorem decodeFuncType_source (ty : types.FuncType) : decodeFuncType ty = EnvTra
   simp only [decodeFuncType, EnvTranslation.funcType, same]
 
 theorem SegmentTypeBindings.element_map {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} (bindings : SegmentTypeBindings store inst)
+    {inst : runtime.store.ModuleInst} (bindings : SegmentTypeBindings store inst)
     (shape : InstanceShape store inst) :
-    ElementTypeMap store inst.module.module.env.elements.val inst.elements.val := by
+    ElementTypeMap store inst.module.module.env.elements.val inst.elems.val := by
   obtain ⟨_, _, _, _, _, count, _, _, _, _, _, _, issued, _⟩ := shape
   apply List.forall₂_of_length_eq_of_get (by exact count.symm)
   intro index sourceBound addressBound
   let source := inst.module.module.env.elements.val[index]
-  let address := inst.elements.val[index]
-  have mapped : inst.elements.val[index]? = some address := List.getElem?_eq_getElem addressBound
+  let address := inst.elems.val[index]
+  have mapped : inst.elems.val[index]? = some address := List.getElem?_eq_getElem addressBound
   have bound := issued address (List.mem_of_getElem? mapped)
   let element := store.elems.val[address.val]
   have found : store.elems.val[address.val]? = some element := List.getElem?_eq_getElem bound
@@ -29,7 +29,7 @@ theorem SegmentTypeBindings.element_map {M : Type} {store : runtime.store.Store 
 canonical source environment. Import subtyping is discharged by the generated
 external-address rules. -/
 theorem module_bindings_env {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (shape : Shape view store) (sourceSyntax : StoreSyntax code store)
     (instanceShape : InstanceShape store inst) (bounds : SegmentBounds store)
     (types : TypeEntries store inst.module.module.env.types.val inst.types.val)
@@ -52,15 +52,15 @@ theorem module_bindings_env {M : Type} (view : M → Slice U8) (code : CodeInter
   · exact tables.source view code wellformed shape
   · exact memories.source code wellformed shape
   · exact elementMap.source view code wellformed shape bounds
-  · have result := data_addresses_typed view code store inst.data.val wellformed bounds dataIssued
-    change List.Forall₂ _ (inst.data.val.map UScalar.val) (List.replicate inst.module.module.tail.data.length datatype.OK)
+  · have result := data_addresses_typed view code store inst.datas.val wellformed bounds dataIssued
+    change List.Forall₂ _ (inst.datas.val.map UScalar.val) (List.replicate inst.module.module.tail.data.length datatype.OK)
     simpa only [dataCount] using result
   · exact ModuleElaboration.moduleContext_wf _ _ _
 
 /-- Source uniqueness identifies this same binding context with the independent
 module used by generated function typing. -/
 theorem module_bindings_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (raw : ModuleBinary.Module)
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
     (shape : Shape view store) (sourceSyntax : StoreSyntax code store)

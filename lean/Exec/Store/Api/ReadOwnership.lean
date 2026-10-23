@@ -34,7 +34,7 @@ theorem table_read_owned {M : Type} (ops : runtime.platform.MemoryBuffer M)
   · simp
   · step as ⟨word, hword⟩
     have href := (hs.tables table (by simp [htableEq])).2.2 word (by simp [hword])
-    let global : runtime.store.GlobalInstance :=
+    let global : runtime.store.GlobalInst :=
       {ty := {mutability := .Const, valtype := elementValueType table.ty}, lo := word, hi := 0#u64}
     have hglobal : GlobalShape s global := by
       cases ht : table.ty <;> simpa [GlobalShape, global, elementValueType, ht] using href

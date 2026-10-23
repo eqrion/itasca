@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Exec.Interp
 /-- The source invocation signature is determined by the same raw function
 and type metadata as the checked native call, for either function kind. -/
 theorem source_function_signature {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (index : Usize) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (index : Usize) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[index.val]?=some function)
     (signatureAt : store.types.val[function.signature.val]?=some signature) :
     index.val<(Store.decodeStore view code store).FUNCS.length ∧

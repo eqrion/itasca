@@ -17,7 +17,7 @@ theorem prepared_commit_shape {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before : runtime.store.Store M) (seed : runtime.store.Instance) (platform : P)
+    (before : runtime.store.Store M) (seed : runtime.store.ModuleInst) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
@@ -29,7 +29,7 @@ theorem prepared_commit_shape {M P F A : Type}
     (count : Usize) (counted : count.val = before.instance_items.val + moduleItems seed.module)
     (limited : count.val ≤ before.limits.max_instance_items.val)
     (typed functions tabled prepared : runtime.store.Store M)
-    (typeInst funcInst tableInst inst : runtime.store.Instance)
+    (typeInst funcInst tableInst inst : runtime.store.ModuleInst)
     (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
     (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst before.instances.len =
@@ -38,7 +38,7 @@ theorem prepared_commit_shape {M P F A : Type}
       .ok (typeParts tabled (.Ok ()) tableInst))
     (memoryRun : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator tabled (.Ok ()) tableInst.memories.len tableInst =
       .ok (typeParts prepared (.Ok ()) inst))
-    (publishedInstances : alloc.vec.Vec runtime.store.Instance)
+    (publishedInstances : alloc.vec.Vec runtime.store.ModuleInst)
     (publicationRun : alloc.vec.Vec.push prepared.instances inst = .ok publishedInstances)
     (globalStore elementStore after : runtime.store.Store M)
     (globalRun : runtime.store.instantiate.Store.instantiate_inner_loop7 memory hooks floats allocator
@@ -70,8 +70,8 @@ theorem prepared_commit_shape {M P F A : Type}
     constructor
     · simpa only [preparedElements, preparedInstances] using accounted.elements
     · simpa only [preparedData, preparedInstances] using accounted.datas
-  have emptyElements : inst.elements.val = [] := by rw [preparedElementMap]; exact maps.elements
-  have emptyData : inst.data.val = [] := by rw [preparedDataMap]; exact maps.data
+  have emptyElements : inst.elems.val = [] := by rw [preparedElementMap]; exact maps.elements
+  have emptyData : inst.datas.val = [] := by rw [preparedDataMap]; exact maps.data
   have publication := publish_prepared_instance prepared inst room preparedBindings preparedImports preparedSegments
     preparedAccounting emptyElements emptyData
   rw [publicationRun] at publication

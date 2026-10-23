@@ -18,17 +18,17 @@ theorem segment_loop_total {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (exec : runtime.interp.Execution)
-    (instIndex function : Usize) (inst : runtime.store.Instance)
+    (instIndex function : Usize) (inst : runtime.store.ModuleInst)
     (code : runtime.bytecode.CompiledFunction) (position : U32)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (frames : exec.frames.val = [initializerFrame instIndex function position])
     (positionBound : position.val < code.code.length)
     (ready : SegmentCodeReady store inst code exec.slots.length) :
-    runtime.interp.synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
+    runtime.interp.run_synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
       ⦃ out => SegmentAddressSpace store out.1 ∧ out.2.1 = platform ∧
         out.2.2.1.length = exec.slots.length ∧ SegmentStatus out.2.2.2 ⦄ := by
-  unfold runtime.interp.synthetic_loop
+  unfold runtime.interp.run_synthetic_loop
   apply loop.spec_decr_nat (fun state => segmentRemaining code state.2.2.1 state.2.2.2)
     (fun state => SegmentAddressSpace store state.1 ∧ state.2.1 = platform ∧
       state.2.2.1.slots.length = exec.slots.length ∧ SegmentStatus state.2.2.2 ∧
@@ -39,7 +39,7 @@ theorem segment_loop_total {M P F A : Type}
     subst host
     cases result with
     | Err error =>
-      simp only [runtime.interp.synthetic_loop.body, core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, ite_self, WP.spec_ok]
+      simp only [runtime.interp.run_synthetic_loop.body, core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, ite_self, WP.spec_ok]
       exact ⟨metadata, trivial, slots, status⟩
     | Ok unitValue =>
       cases unitValue

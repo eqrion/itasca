@@ -10,7 +10,7 @@ private theorem constant_compatible {M : Type} {store : runtime.store.Store M} {
   cases constant <;> trivial
 
 private theorem element_compatible {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
     (program : Code.ElementProgram code index segment instructions)
     (found : inst.module.module.env.elements.val[index]? = some segment)
@@ -37,7 +37,7 @@ private theorem element_compatible {M : Type} (store : runtime.store.Store M)
     · trivial
 
 private theorem data_compatible {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
     (program : Code.DataProgram code index segment instructions) :
     ∀ instruction ∈ instructions, SegmentBulkCompatible store inst code instruction := by
@@ -53,7 +53,7 @@ private theorem data_compatible {M : Type} (store : runtime.store.Store M)
 /-- The compiler's source-ordered program and staged type maps discharge all
 reference-type compatibility requirements of its table initialization steps. -/
 theorem segment_program_compatible {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (program : Code.SegmentProgram inst.module code) (bindings : SegmentTypeBindings store inst)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid inst.module.module.env segment) :

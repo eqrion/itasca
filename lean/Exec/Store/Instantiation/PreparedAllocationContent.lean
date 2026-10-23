@@ -48,8 +48,8 @@ theorem PreparedRun.allocation_content {M P F A : Type}
         List.range' before.tables.length raw.tables.length ∧
       next.memories.val.map (fun a => a.index.val) = trace.seed.memories.val.map (fun a => a.index.val) ++
         List.range' before.memories.length raw.memories.length ∧
-      next.elements.val.map UScalar.val = List.range' before.elems.length elements.length ∧
-      next.data.val.map UScalar.val = List.range' before.datas.length module.module.tail.data.val.length := by
+      next.elems.val.map UScalar.val = List.range' before.elems.length elements.length ∧
+      next.datas.val.map UScalar.val = List.range' before.datas.length module.module.tail.data.val.length := by
   obtain ⟨globalInst, next, globals, elements, globalFound, found, source, metadata, globalMapEq,
     globalsStored, globalValues, elementsStored, elementValues, datasStored, elementAddresses,
     dataAddresses, globalAddresses⟩ := trace.segment_source_values laws law shape accounted cache valid compiled

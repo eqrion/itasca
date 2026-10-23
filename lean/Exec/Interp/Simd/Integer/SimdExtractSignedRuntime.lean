@@ -29,7 +29,7 @@ def extractSignedOpcode (ty : packtype) : U32 :=
   all_goals step with lane as ⟨laneValue, laneEq⟩
   all_goals with_unfolding_all change (Aeneas.Std.bind (runtime.interp.simd.signed _ _) _) ⦃ _ ⦄
   all_goals step with signed as ⟨signedValue, signedEq⟩
-  all_goals simp only [runtime.interp.simd.from_u32, lift, bind_ok, WP.spec_ok]
+  all_goals simp only [lift, bind_ok, WP.spec_ok]
   all_goals refine ⟨_, rfl, ?_⟩
   all_goals rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt (by scalar_tac)]
   all_goals rw [IScalar.hcast_val_eq, signedEq, ←Spec.signedValue_bitvec, BitVec.toNat_setWidth]

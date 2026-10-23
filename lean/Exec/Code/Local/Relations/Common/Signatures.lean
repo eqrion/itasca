@@ -1,6 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.EnterBlock
 import Exec.Code.Local.Control.Common.Structured
 import Itasca.Support.ControlTranslation
+import Exec.Representation.Values
 /-! Compiler signature capture: total exact word counting, retained source
 value/word arities, and source block-signature resolution. -/
 namespace Exec.Code
@@ -9,55 +10,12 @@ open Aeneas Aeneas.Std
 def signatureSlots (types : List Itasca.types.ValueType) : Nat :=
   slots (types.map Itasca.Translate.valueType)
 
-def SignatureCount (types : List Itasca.types.ValueType) (total : Nat)
-    (amount : U32) (index : Usize) (overflow : Bool) : Prop :=
-  if overflow then U32.max < total else amount.val + signatureSlots (types.drop index.val) = total
-
-@[step] theorem compiler_type_slots_loop (types : Slice Itasca.types.ValueType)
-    (amount : U32) (index : Usize) (overflow : Bool) (total : Nat)
-    (bound : index.val ≤ types.val.length)
-    (state : SignatureCount types.val total amount index overflow) :
-    runtime.compiler.type_slots_loop types amount index overflow ⦃ out =>
-      if out.2 then U32.max < total else out.1.val = total ⦄ := by
-  unfold runtime.compiler.type_slots_loop
-  apply loop.spec_decr_nat (fun p => types.val.length - p.2.1.val)
-    (fun p => p.2.1.val ≤ types.val.length ∧ SignatureCount types.val total p.1 p.2.1 p.2.2)
-  · rintro ⟨amount, i, overflow⟩ ⟨hi, hs⟩
-    dsimp only at hi hs
-    unfold runtime.compiler.type_slots_loop.body
-    dsimp only
-    split
-    · rename_i more
-      have hb : i.val < types.val.length := by scalar_tac
-      cases overflow with
-      | true => simpa [SignatureCount] using hs
-      | false =>
-        simp only [Bool.false_eq_true, ite_false]
-        simp only [SignatureCount, Bool.false_eq_true, ite_false] at hs
-        rw [List.drop_eq_getElem_cons hb] at hs
-        simp only [signatureSlots, List.map_cons, slots] at hs
-        step as ⟨ty, hty⟩
-        step with compiler_width ty as ⟨word, hword⟩
-        step as ⟨sum, hsum⟩
-        cases sum with
-        | none =>
-          simp only [bind_ok, uncurry_apply_pair]
-          step as ⟨next, hnext⟩
-          refine ⟨by scalar_tac, ?_, by scalar_tac⟩
-          simp only [SignatureCount, ite_true]
-          rw [← hty] at hs
-          scalar_tac
-        | some sum =>
-          simp only [bind_ok, uncurry_apply_pair]
-          step as ⟨next, hnext⟩
-          refine ⟨by scalar_tac, ?_, by scalar_tac⟩
-          simp only [SignatureCount, Bool.false_eq_true, ite_false, hnext, signatureSlots]
-          rw [← hty] at hs
-          scalar_tac
-    · rename_i finished
-      have same : i.val = types.val.length := by scalar_tac
-      cases overflow <;> simpa [SignatureCount, same, signatureSlots, slots] using hs
-  · exact ⟨bound, state⟩
+theorem signatureSlots_eq (types : List Itasca.types.ValueType) :
+    signatureSlots types = Interp.valueTypeSlots types := by
+  have same : Itasca.Translate.valueType = Interp.sourceType := by
+    funext ty
+    cases ty <;> rfl
+  simp [signatureSlots, Interp.valueTypeSlots, same]
 
 @[step] theorem compiler_type_slots (types : Slice Itasca.types.ValueType) :
     runtime.compiler.type_slots types ⦃ result =>
@@ -65,9 +23,26 @@ def SignatureCount (types : List Itasca.types.ValueType) (total : Nat)
       | .Ok word => word.val = signatureSlots types.val
       | .Err error => error = .Host ∧ U32.max < signatureSlots types.val ⦄ := by
   unfold runtime.compiler.type_slots
-  step with compiler_type_slots_loop types 0#u32 0#usize false (signatureSlots types.val)
-    (by simp) (by simp [SignatureCount]) as ⟨amount, overflow, hs⟩
-  cases overflow <;> simpa using hs
+  step with Interp.value_type_slots types as ⟨slots, hs⟩
+  rw [← signatureSlots_eq] at hs
+  have maxCast : (UScalar.cast .Usize core.num.U32.MAX).val = U32.max := by
+    simp [core.num.U32.MAX, U32.rMax, U32.max, U32.numBits]
+  cases slots with
+  | none =>
+    simp only at hs
+    simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from]
+    scalar_tac
+  | some total =>
+    simp only at hs
+    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok, lift]
+    split
+    · simp only [WP.spec_ok]
+      exact ⟨trivial, by scalar_tac⟩
+    · simp only [WP.spec_ok]
+      rw [UScalar.cast_val_eq]
+      scalar_tac
 
 structure SignatureMatches (signature : runtime.compiler.Signature)
     (params results : List valtype) : Prop where

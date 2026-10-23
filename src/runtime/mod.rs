@@ -1,6 +1,10 @@
 //! Slot-based execution of validated WebAssembly modules.
 //!
-//! Execution proofs are developed separately from the verified validator.
+//! The generic compiler, store, and interpreter are extracted to Lean, where
+//! `lean/Exec` proves their correctness under explicit platform contracts. The
+//! `native` module instantiates them with the standard allocator and IEEE
+//! operations and is excluded from extraction.
+//!
 //! Handles identify objects in exactly one store. Float values preserve bits.
 
 use crate::{FuncType, ValueType};
@@ -8,7 +12,6 @@ use alloc::vec::Vec;
 
 mod bytecode;
 mod compiler;
-mod instantiate;
 mod interp;
 #[cfg(not(charon))]
 mod native;
@@ -84,7 +87,7 @@ impl Value {
     pub(super) fn i32(self) -> Result<u32, ExecError> {
         match self {
             Self::I32(v) => Ok(v),
-            _ => Err(ExecError::BadArguments),
+            _ => Err(ExecError::Internal),
         }
     }
 }
@@ -139,6 +142,9 @@ pub enum ExecError {
     BadArguments,
     WrongStore,
     Terminated,
+    /// A violated runtime invariant. Code produced by the compiler never
+    /// reaches these checks; they keep the extracted interpreter total.
+    Internal,
 }
 impl From<Trap> for ExecError {
     fn from(t: Trap) -> Self {
@@ -154,6 +160,7 @@ impl core::fmt::Display for ExecError {
 #[cfg(all(feature = "std", not(charon)))]
 impl std::error::Error for ExecError {}
 
+/// Reserves capacity for `n` more elements, reporting failure as allocation exhaustion.
 pub(crate) fn reserve<A: platform::Alloc, T>(v: &mut Vec<T>, n: usize) -> Result<(), ExecError> {
     if A::reserve(v, n) {
         Ok(())
@@ -161,6 +168,13 @@ pub(crate) fn reserve<A: platform::Alloc, T>(v: &mut Vec<T>, n: usize) -> Result
         Err(ExecError::Exhausted(ResourceLimit::Allocation))
     }
 }
+/// Removes every element while retaining capacity.
+pub(crate) fn clear<T>(values: &mut Vec<T>) {
+    while !values.is_empty() {
+        values.pop();
+    }
+}
+/// Copies a signature into fallibly reserved storage.
 pub(crate) fn copy_type<A: platform::Alloc>(t: &FuncType) -> Result<FuncType, ExecError> {
     let mut params = Vec::new();
     let mut results = Vec::new();
@@ -178,6 +192,7 @@ pub(crate) fn copy_type<A: platform::Alloc>(t: &FuncType) -> Result<FuncType, Ex
     }
     Ok(FuncType { params, results })
 }
+/// Returns `start..start + len` if it lies within `0..size`, and `trap` otherwise.
 pub(crate) fn range(
     start: u64,
     len: u64,

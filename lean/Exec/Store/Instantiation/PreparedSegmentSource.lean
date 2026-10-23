@@ -40,8 +40,8 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
       ready.elems.val = before.elems.val ++ elements ∧
       ElementSourceSegments (decodeStore view code before) initialModule module.module.env.elements.val elements ∧
       ready.datas.val.map decodeData = before.datas.val.map decodeData ++ module.module.tail.data.val.map sourceDataPayload ∧
-      next.elements.val.map UScalar.val = List.range' before.elems.length module.module.env.elements.val.length ∧
-      next.data.val.map UScalar.val = List.range' before.datas.length module.module.tail.data.val.length ∧
+      next.elems.val.map UScalar.val = List.range' before.elems.length module.module.env.elements.val.length ∧
+      next.datas.val.map UScalar.val = List.range' before.datas.length module.module.tail.data.val.length ∧
       next.globals.val.map (fun address => address.index.val) = trace.seed.globals.val.map (fun address => address.index.val) ++
         List.range' before.globals.length module.module.env.globals.val.length := by
   obtain ⟨globalInst, globalFound, globalSource, globalMetadata, globalBindings, globalImports, globalSegments, globalContext,
@@ -54,7 +54,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
     simpa only [globalSource] using valid.elements
   have elementCapacity : trace.globalStore.elems.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
     simpa only [globalElements, globalSource, trace.source, Nat.sub_zero] using trace.elementCapacity
-  have elementMapCapacity : globalInst.elements.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
+  have elementMapCapacity : globalInst.elems.length + (globalInst.module.module.env.elements.val.length - 0) ≤ Usize.max := by
     have bound := globalInst.module.module.env.elements.property
     simpa [alloc.vec.Vec.length, emptyElements] using bound
   have elementsChecked := element_source_staging_loop memory hooks floats allocator law before trace.globalStore platform
@@ -87,8 +87,8 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   have dataSource : elementInst.module = module := elementSource.trans globalSource
   have dataCapacity : trace.elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
     simpa only [elementData, globalData, dataSource, trace.source, Nat.sub_zero] using trace.dataCapacity
-  have dataEmpty : elementInst.data.val = [] := by rw [elementDataMap]; exact emptyData
-  have dataMapCapacity : elementInst.data.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
+  have dataEmpty : elementInst.datas.val = [] := by rw [elementDataMap]; exact emptyData
+  have dataMapCapacity : elementInst.datas.length + (elementInst.module.module.tail.data.val.length - 0) ≤ Usize.max := by
     have bound := elementInst.module.module.tail.data.property
     simpa [alloc.vec.Vec.length, dataEmpty] using bound
   have dataChecked := data_payload_loop memory allocator law before trace.elementStore before.instances.len 0#usize elementInst (.Ok ())

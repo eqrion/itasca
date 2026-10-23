@@ -9,14 +9,14 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem dispatch_globalGet {Q : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M → Prop}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex inst function base : Usize) (wide : Bool) (dst index : U32)
-    (handler : (if wide then runtime.interp.admin_global_get2 memory hooks floats allocator exec store inst base dst index
-        else runtime.interp.admin_global_get memory hooks floats allocator exec store inst base dst index) ⦃ Q ⦄) :
+    (handler : (if wide then runtime.interp.execute_global_get2 memory exec store inst base dst index
+        else runtime.interp.execute_global_get memory exec store inst base dst index) ⦃ Q ⦄) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex inst function base
       (Code.globalGetInstruction wide dst index) ⦃ out => Q (out.1,out.2.1,out.2.2.1) ∧ out.2.2.2 = platform ⦄ := by
   have equation : runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex inst function base
       (Code.globalGetInstruction wide dst index) = (do
-        let (result,next,nextStore) ← if wide then runtime.interp.admin_global_get2 memory hooks floats allocator exec store inst base dst index
-          else runtime.interp.admin_global_get memory hooks floats allocator exec store inst base dst index
+        let (result,next,nextStore) ← if wide then runtime.interp.execute_global_get2 memory exec store inst base dst index
+          else runtime.interp.execute_global_get memory exec store inst base dst index
         Result.ok (result,next,nextStore,platform)) := by cases wide <;> rfl
   rw [equation]
   obtain ⟨out,result,property⟩ := WP.spec_imp_exists handler
@@ -29,14 +29,14 @@ theorem dispatch_globalGet {Q : core.result.Result Unit runtime.ExecError × run
 theorem dispatch_globalSet {Q : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M → Prop}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex inst function base : Usize) (wide : Bool) (src index : U32)
-    (handler : (if wide then runtime.interp.admin_global_set2 memory hooks floats allocator exec store inst base src index
-        else runtime.interp.admin_global_set memory hooks floats allocator exec store inst base src index) ⦃ Q ⦄) :
+    (handler : (if wide then runtime.interp.execute_global_set2 memory exec store inst base src index
+        else runtime.interp.execute_global_set memory exec store inst base src index) ⦃ Q ⦄) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex inst function base
       (Code.globalSetInstruction wide src index) ⦃ out => Q (out.1,out.2.1,out.2.2.1) ∧ out.2.2.2 = platform ⦄ := by
   have equation : runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex inst function base
       (Code.globalSetInstruction wide src index) = (do
-        let (result,next,nextStore) ← if wide then runtime.interp.admin_global_set2 memory hooks floats allocator exec store inst base src index
-          else runtime.interp.admin_global_set memory hooks floats allocator exec store inst base src index
+        let (result,next,nextStore) ← if wide then runtime.interp.execute_global_set2 memory exec store inst base src index
+          else runtime.interp.execute_global_set memory exec store inst base src index
         Result.ok (result,next,nextStore,platform)) := by cases wide <;> rfl
   rw [equation]
   obtain ⟨out,result,property⟩ := WP.spec_imp_exists handler

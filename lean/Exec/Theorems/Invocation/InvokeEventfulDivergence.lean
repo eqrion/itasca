@@ -32,7 +32,7 @@ theorem invoke_defined_eventful_infinite_source
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSupportedStore emission allowed view code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -51,7 +51,7 @@ theorem invoke_defined_eventful_infinite_source
   have accepted := invoke_divergent_arguments memory hooks floats allocator exec store platform address
     function signature args results owner hf hs divergent
   have reached : ∃after prepared p,entry after prepared ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared after p (.Ok ())=.div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared after p (.Ok ())=.div := by
     apply invoke_prefix_divergent_entry memory hooks floats allocator allocation exec store platform address
       function signature args results owner hf hs accepted (fun value member=>(owned value member).1) entry ?_ ?_ divergent
     · intro prepared p identity empty represented

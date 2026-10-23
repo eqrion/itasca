@@ -5,7 +5,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- The exact runtime append is the generated table-growth operation. -/
-theorem decode_table_growth (old : runtime.store.Table) (elements : alloc.vec.Vec U64)
+theorem decode_table_growth (old : runtime.store.TableInst) (elements : alloc.vec.Vec U64)
     (delta : U32) (value : U64)
     (values : elements.val = old.elements.val ++ List.replicate delta.val value)
     (capacity : old.elements.length + delta.val ≤ U32.max)
@@ -55,8 +55,8 @@ theorem table_grow_source {M A : Type} (memory : runtime.platform.MemoryBuffer M
     (allocator : runtime.platform.Alloc A) (allocation : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (shape : Shape view store) (syntaxProof : StoreSyntax code store)
-    (inst : runtime.store.Instance) (ambient : frame) (table : U32)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (delta : U32) (value : U64)
+    (inst : runtime.store.ModuleInst) (ambient : frame) (table : U32)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (delta : U32) (value : U64)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)

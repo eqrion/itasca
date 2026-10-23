@@ -19,7 +19,7 @@ theorem call_defined_float_core_entry_certified {M P F A : Type}
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedFloatCoreStore view code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value)
     (empty : before.frames.val = []) (identity : before.store = store.id)

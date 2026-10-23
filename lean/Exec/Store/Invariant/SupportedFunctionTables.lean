@@ -9,7 +9,7 @@ variable {emission : Interp.StructuredMachine.FunctionEmission}
 theorem supported_function_compiled_prefix {M : Type} {view : M → Slice U8}
     {before after : runtime.store.Store M} {oldCode newCode : CodeInterpretation}
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.Function}
+    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.FuncInst}
     (compiled : Interp.StructuredMachine.FunctionCompiled emission oldCode before function) :
     Interp.StructuredMachine.FunctionCompiled emission newCode after function := by
   intro instanceIndex functionIndex defined

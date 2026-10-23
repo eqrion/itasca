@@ -13,20 +13,20 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem eval_const_exec_effect (law : Platform.AllocCorrect allocator)
+theorem eval_const_effect (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → ((words[0]?).getD 0#u64).val ≤ Usize.max) :
-    runtime.instantiate.eval_const_exec memory hooks floats allocator store platform instIndex function ty
+    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         ∀ value, out.1 = .Ok value → Interp.rawType value = ty ∧
           Interp.sourceValue value = decodeWords ty ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64) ⦄ := by
-  unfold runtime.instantiate.eval_const_exec
+  unfold runtime.interp.eval_const
   step with Interp.synthetic_resolved_initializer memory hooks floats allocator law store platform
     instIndex function inst code expr ty words hi hc compiled resolved
     as ⟨result, store', platform', hs, hp, success⟩
@@ -43,9 +43,9 @@ theorem eval_const_exec_effect (law : Platform.AllocCorrect allocator)
       store.id referenceBound as ⟨value, hty, hvalue⟩
     simp_all
 
-theorem eval_const_exec_staged (law : Platform.AllocCorrect allocator)
+theorem eval_const_staged (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (staged : StagedPrefix before store)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -53,9 +53,9 @@ theorem eval_const_exec_staged (law : Platform.AllocCorrect allocator)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → ((words[0]?).getD 0#u64).val ≤ Usize.max) :
-    runtime.instantiate.eval_const_exec memory hooks floats allocator store platform instIndex function ty
+    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
       ⦃ out => StagedPrefix before out.2.1 ∧ out.2.2 = platform ⦄ := by
-  apply WP.spec_mono (eval_const_exec_effect memory hooks floats allocator law store platform
+  apply WP.spec_mono (eval_const_effect memory hooks floats allocator law store platform
     instIndex function inst code expr ty words hi hc compiled resolved referenceBound)
   rintro out ⟨hs, hp, _⟩
   exact ⟨hs ▸ staged, hp⟩
@@ -63,11 +63,11 @@ theorem eval_const_exec_staged (law : Platform.AllocCorrect allocator)
 /-- Only the function-address map and already-created global contents are needed
 while instantiation is staged; a complete store typing invariant is unnecessary. -/
 structure InitializerBindings {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   funcs : ∀ address ∈ inst.funcs.val, address.index.val < store.funcs.length
   globals : ∀ global ∈ store.globals.val, GlobalShape store global
 
-def initializerGlobal (ty : Itasca.types.ValueType) (words : List U64) : runtime.store.GlobalInstance :=
+def initializerGlobal (ty : Itasca.types.ValueType) (words : List U64) : runtime.store.GlobalInst :=
   { ty := { mutability := .Const, valtype := ty },
     lo := (words[0]?).getD 0#u64, hi := (words[1]?).getD 0#u64 }
 
@@ -106,19 +106,19 @@ theorem initializer_reference_bound {store : runtime.store.Store M} {inst expr t
 
 /-- The instantiated initializer result is an issued, typed API value, so it can
 safely pass through the generic global-definition boundary. -/
-theorem eval_const_exec_owned (law : Platform.AllocCorrect allocator)
+theorem eval_const_owned (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (bindings : InitializerBindings store inst) :
-    runtime.instantiate.eval_const_exec memory hooks floats allocator store platform instIndex function ty
+    runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         ∀ value, out.1 = .Ok value → ValueInStore store value ∧ Interp.rawType value = ty ⦄ := by
-  unfold runtime.instantiate.eval_const_exec
+  unfold runtime.interp.eval_const
   step with Interp.synthetic_resolved_initializer memory hooks floats allocator law store platform
     instIndex function inst code expr ty words hi hc compiled resolved
     as ⟨result, store', platform', hs, hp, success⟩

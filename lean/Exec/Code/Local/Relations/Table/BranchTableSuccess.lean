@@ -10,14 +10,14 @@ theorem compiler_table_branch_success {A : Type} (ops : runtime.platform.Alloc A
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (depth : U32)
     (lookup : before.table_depths.val[index.val]? = some depth)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     ∃ target budget table,
       target.val = before.function.code.val.length ∧
       table.val = before.function.jump_tables.val ++ [target] ∧
       runtime.compiler.control.FunctionCompiler.branch ops
         { before with budget, function := { before.function with jump_tables := table } }
         depth 1#u32 false = .ok (.Ok (),after) := by
-  unfold runtime.compiler.FunctionCompiler.table_branch at accepted
+  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   obtain ⟨⟨pc, current⟩, called, rest⟩ := bind_ok_inv _ _ _ accepted
   have effect := compiler_pc ops before
   rw [called, WP.spec_ok] at effect

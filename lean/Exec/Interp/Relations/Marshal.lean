@@ -83,16 +83,16 @@ theorem argumentWords_bound (args : List runtime.Value) (count : Nat) :
     (indexBound : index.val ≤ args.length)
     (position : slot.val = (argumentWords args.val index.val).length)
     (initialWords : WordsAt words.val 0 (argumentWords args.val index.val)) :
-    runtime.interp.invoke_with_loop1 words args types index slot ⦃ after =>
+    runtime.interp.invoke_with_loop0 words args types index slot ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val 0 (args.val.map sourceValue) ⦄ := by
-  unfold runtime.interp.invoke_with_loop1
+  unfold runtime.interp.invoke_with_loop0
   apply loop.spec_decr_nat (fun p => args.length - p.2.1.val)
     (fun p => p.1.length = words.length ∧ p.2.1.val ≤ args.length ∧
       p.2.2.val = (argumentWords args.val p.2.1.val).length ∧
       WordsAt p.1.val 0 (argumentWords args.val p.2.1.val))
   · rintro ⟨current, i, offset⟩ ⟨hlen, hi, hoffset, hpref⟩
     dsimp only at hlen hi hoffset hpref
-    unfold runtime.interp.invoke_with_loop1.body
+    unfold runtime.interp.invoke_with_loop0.body
     dsimp only
     split
     · have hib : i.val < args.val.length := by change i.val < args.length; scalar_tac
@@ -138,7 +138,7 @@ of every accepted argument, starting at slot zero. -/
     (store : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
     (bound : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
-    runtime.interp.invoke_with_loop1 words args types 0#usize 0#usize ⦃ after =>
+    runtime.interp.invoke_with_loop0 words args types 0#usize 0#usize ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val 0 (args.val.map sourceValue) ⦄ := by
   apply marshal_arguments_loop words args types 0#usize 0#usize store typed owned bound
   · simp

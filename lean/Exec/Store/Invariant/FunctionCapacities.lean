@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem FunctionCapacity.staged {M : Type} {before after : runtime.store.Store M}
     {oldCode newCode : CodeInterpretation} (retained : StagedPrefix before after)
-    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.Function}
+    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.FuncInst}
     (capacity : FunctionCapacity oldCode before function) : FunctionCapacity newCode after function := by
   intro instanceIndex functionIndex defined
   obtain ⟨inst, compiled, typeIndex, found, functionFound, bound, entries, table, signature, typeFound, signatureFound⟩ := capacity instanceIndex functionIndex defined
@@ -23,7 +23,7 @@ theorem function_capacities_publish {M : Type}
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (retained : StagedPrefix before after)
     (oldCapacities : FunctionCapacities oldCode before)
-    (inst : runtime.store.Instance) (sources : List funccode)
+    (inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     (certificate : Code.ModuleCapacities inst.module sources)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
@@ -36,7 +36,7 @@ theorem function_capacities_publish {M : Type}
   rcases staged function present with old | ⟨index, bound, encoded, signatureFound⟩
   · exact (oldCapacities function old).staged retained (installCode_agrees before oldCode sources)
   · intro instanceIndex functionIndex defined
-    obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FunctionCode.Wasm.inj (defined.symm.trans encoded)
+    obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FuncCode.Wasm.inj (defined.symm.trans encoded)
     subst instanceIndex
     subst functionIndex
     let imported := (importedFuncs inst.module.module.env.imports.val).length
@@ -62,7 +62,7 @@ theorem function_capacities_publish {M : Type}
     exact capacity
 
 theorem InstantiationCode.capacities {M : Type}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (metadata : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (oldCapacities : FunctionCapacities oldCode before)
     (found : ready.instances.val[before.instances.len.val]? = some inst)

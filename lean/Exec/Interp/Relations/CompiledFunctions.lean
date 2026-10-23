@@ -22,7 +22,7 @@ theorem declared_types_not_bottom {types functions params declared results body 
 certificate under its actual instance's canonical signature table. This
 predicate contains only syntax, table lookups, and bytecode layout facts. -/
 def FunctionCompiled {M : Type} (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (function : runtime.store.Function) : Prop :=
+    (store : runtime.store.Store M) (function : runtime.store.FuncInst) : Prop :=
   ∀ instanceIndex functionIndex, function.code = .Wasm instanceIndex functionIndex →
     ∃ inst compiled signature functions declared body epilogue,
       store.instances.val[instanceIndex.val]? = some inst ∧
@@ -43,7 +43,7 @@ def CompiledFunctions {M : Type} (code : Store.CodeInterpretation)
 theorem FrameProgram.function_table {M : Type} {store : runtime.store.Store M}
     {raw compiled locals results functions}
     (program : FrameProgram store raw compiled locals results functions)
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst) :
     FunctionTable store inst functions := by
   obtain ⟨actual, found, _, table⟩ := program.lookup
@@ -55,7 +55,7 @@ function entry, and canonical signature consumed by interpreter dispatch. -/
 theorem FrameProgram.resolve_call {M : Type} {store : runtime.store.Store M}
     {raw compiled locals results functions}
     (program : FrameProgram store raw compiled locals results functions)
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst)
     (index : Nat) (ty : functype) (signature : functions[index]? = some ty) :
     ∃ address function rawType, inst.funcs.val[index]? = some address ∧
@@ -68,7 +68,7 @@ so any actually resolved concrete function is a defined Wasm function. -/
 theorem slice_function_defined {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (source : Abs.AState) (sameStore : source.store = Store.decodeStore view code store)
-    (slice : Abs.SliceState source) (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (slice : Abs.SliceState source) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (lookup : store.funcs.val[address.index.val]? = some function) :
     ∃ instanceIndex functionIndex, function.code = .Wasm instanceIndex functionIndex := by
   have found : source.store.FUNCS[address.index.val]? = some (Store.decodeFunction code store function) := by
@@ -82,7 +82,7 @@ theorem slice_function_defined {M : Type} (view : M → Slice U8)
 address; the decoded signature and owning module agree with concrete lookup. -/
 theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} (compiledFunctions : CompiledFunctions code store)
-    (view : M → Slice U8) (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (view : M → Slice U8) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (instanceIndex functionIndex : Usize)
     (lookup : store.funcs.val[address.index.val]? = some function)
     (defined : function.code = .Wasm instanceIndex functionIndex) :

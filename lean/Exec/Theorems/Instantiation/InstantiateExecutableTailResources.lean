@@ -13,12 +13,12 @@ def ExecutableTailResourceCause {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (raw : ModuleBinary.Module) (error : runtime.ExecError) : Prop :=
+    (inst : runtime.store.ModuleInst) (raw : ModuleBinary.Module) (error : runtime.ExecError) : Prop :=
   match error with
   | .Exhausted _ | .Terminated =>
     SegmentSetupCause allocator store inst.module error ∨
     ∃ initialized index address function signature,
-      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+      runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
         .ok (.Ok (),initialized,platform) ∧
       SegmentObjectMetadata view store initialized ∧
       inst.module.module.env.start = some index ∧ inst.funcs.val[index.val]? = some address ∧
@@ -41,7 +41,7 @@ theorem instantiate_tail_executable_resource_causes {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)

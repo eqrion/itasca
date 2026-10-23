@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 consecutive fresh addresses, preserving all previous objects. -/
 theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize)
     (startBound : start.val ≤ seed.module.module.env.table_types.val.length)
     (changed : store = {before with tables := store.tables, table_elements := store.table_elements})
@@ -48,7 +48,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentIssued, indexLower, currentOrder, indexBound, counting, typed⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentIssued indexLower currentOrder indexBound counting typed ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop5.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
@@ -114,7 +114,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
 and the consecutive address map required by module allocation. -/
 theorem table_allocation_success {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (before after : runtime.store.Store M) (inst next : runtime.store.Instance) (start : Usize)
+    (before after : runtime.store.Store M) (inst next : runtime.store.ModuleInst) (start : Usize)
     (bound : start.val ≤ inst.module.module.env.table_types.val.length)
     (objectBound : objectCount before ≤ Usize.max)
     (issued : ∀ address ∈ inst.tables.val, address.index.val < before.tables.length)

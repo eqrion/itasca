@@ -55,7 +55,7 @@ theorem dispatch_return_refines {M P F A : Type}
       simpa only [FrameSlots, ValuesAt, Code.encodeValues_append, List.append_assoc] using slots
     simpa only [ValuesAt, Code.encodeValues_length, source] using words.append_right
   simp only [runtime.interp.dispatch]
-  step with return_effect memory hooks floats allocator exec raw.base src count bounds sourceBound
+  step with return_effect exec raw.base src count bounds sourceBound
     as ⟨result, next, success, effect⟩
   exact ⟨success, effect, effect.results represented width bounds, simulation⟩
 
@@ -82,7 +82,7 @@ theorem step_return_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (src count : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (last : frameIndex.val + 1 = exec.frames.length)
     (hf : exec.frames.val[frameIndex.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)

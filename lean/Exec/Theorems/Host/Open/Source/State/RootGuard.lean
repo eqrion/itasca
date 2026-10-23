@@ -11,7 +11,7 @@ theorem prepare_source_root_guard {M F A : Type} (memory : runtime.platform.Memo
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (held : ExecutableInv view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value) (owner : address.store=store.id)
     (owned : ∀value∈args.val,Store.ValueInStore store value)
     (functionAt : store.funcs.val[address.index.val]?=some function)

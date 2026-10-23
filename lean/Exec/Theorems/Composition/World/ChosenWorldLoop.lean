@@ -61,7 +61,7 @@ theorem chosen_world_loop_stops {choices : Spec.SourceChoices} {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (steps : ChosenWorldStepOutcomes choices (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
     (initial : ChosenWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => ∃state,ChosenWorldLoopInvariant choices memory hooks floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
   apply execution_loop_stops memory hooks floats allocator

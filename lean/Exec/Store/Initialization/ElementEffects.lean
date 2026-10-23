@@ -6,26 +6,26 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 inductive ElementStageEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) : runtime.store.Store M → Prop where
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) : runtime.store.Store M → Prop where
   | unchanged : ElementStageEffect store instIndex inst store
-  | appended (elements : alloc.vec.Vec runtime.store.ElemInstance)
-      (addresses : alloc.vec.Vec Usize) (element : runtime.store.ElemInstance)
+  | appended (elements : alloc.vec.Vec runtime.store.ElemInst)
+      (addresses : alloc.vec.Vec Usize) (element : runtime.store.ElemInst)
       (elementValues : elements.val = store.elems.val ++ [element])
-      (addressValues : addresses.val = inst.elements.val ++ [store.elems.len]) :
+      (addressValues : addresses.val = inst.elems.val ++ [store.elems.len]) :
       ElementStageEffect store instIndex inst
-        { store with elems := elements, instances := store.instances.set instIndex { inst with elements := addresses } }
+        { store with elems := elements, instances := store.instances.set instIndex { inst with elems := addresses } }
 
 theorem add_instance_element_effect {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
     (bindings : InitializerBindings store inst)
-    (room : store.elems.length < Usize.max) (mapRoom : inst.elements.length < Usize.max) :
+    (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index
       ⦃ out => ElementStageEffect store instIndex inst out.2.1 ∧ out.2.2 = platform ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_element
@@ -88,20 +88,20 @@ theorem add_instance_element_effect {M P F A : Type}
 
 
 theorem ElementStageEffect.context {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : ElementStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst) :
     ∃ next, after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
       InitializerBindings after next ∧ InitializerImports after next ∧
-      InitializerSegmentBindings after next ∧ next.elements.length ≤ inst.elements.length + 1 ∧
-      after.elems.length ≤ store.elems.length + 1 ∧ next.data = inst.data := by
+      InitializerSegmentBindings after next ∧ next.elems.length ≤ inst.elems.length + 1 ∧
+      after.elems.length ≤ store.elems.length + 1 ∧ next.datas = inst.datas := by
   cases effect with
   | unchanged => exact ⟨inst, found, rfl, bindings, imports, segments, by omega, by omega, rfl⟩
   | appended elements addresses element elementValues addressValues =>
     have bound : instIndex.val < store.instances.val.length := (List.getElem?_eq_some_iff.mp found).1
-    refine ⟨{inst with elements := addresses}, ?_, rfl, ?_, ?_, ?_, ?_, ?_, rfl⟩
+    refine ⟨{inst with elems := addresses}, ?_, rfl, ?_, ?_, ?_, ?_, ?_, rfl⟩
     · simp [alloc.vec.Vec.set_val_eq, bound]
     · exact ⟨bindings.funcs, bindings.globals⟩
     · exact imports.extend rfl rfl (by simp) (by simp)
@@ -110,17 +110,17 @@ theorem ElementStageEffect.context {M : Type} {store after : runtime.store.Store
     · simp [elementValues]
 
 theorem ElementStageEffect.data {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : ElementStageEffect store instIndex inst after) : after.datas = store.datas := by
   cases effect <;> rfl
 
 theorem ElementStageEffect.object_count {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : ElementStageEffect store instIndex inst after) : objectCount after = objectCount store := by
   cases effect <;> rfl
 
 theorem ElementStageEffect.staged {M : Type} {before store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : ElementStageEffect store instIndex inst after)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val) :
     StagedPrefix before after := by
@@ -129,6 +129,6 @@ theorem ElementStageEffect.staged {M : Type} {before store after : runtime.store
   | appended elements addresses element elementValues addressValues =>
     have appended : StagedPrefix store {store with elems := elements} := by
       constructor <;> simp [elementValues]
-    exact (staged.trans appended).set_fresh_instance instIndex {inst with elements := addresses} fresh
+    exact (staged.trans appended).set_fresh_instance instIndex {inst with elems := addresses} fresh
 
 end Exec.Store

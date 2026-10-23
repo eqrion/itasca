@@ -297,8 +297,8 @@ audit ensures the proofs do not depend on them.
 
 The slot runtime has checked public correspondence, invariant, resource-cause
 and progress theorems under explicit platform and callback contracts. The
-[execution verification reference](../docs/EXECUTION_VERIFICATION.md) records their
-premises and embedder obligations. `SpecExt.Builtins` supplies
+[execution proof guide](Exec/README.md) describes their premises and embedder
+obligations. `SpecExt.Builtins` supplies
 concrete definitions for all 64 pinned builtin signatures. Float rounding uses
 exact rationals and midpoint comparisons; the NaN sets retain permitted
 nondeterminism. The audit rejects any new opaque builtin placeholder.

@@ -30,7 +30,7 @@ theorem Shape.signature_eq_iff {M : Type} {view : M → Slice U8}
 functions imported from other instances. -/
 theorem Shape.function_signature_eq_iff {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (shape : Shape view store)
-    (code : CodeInterpretation) (function : runtime.store.Function)
+    (code : CodeInterpretation) (function : runtime.store.FuncInst)
     (present : function ∈ store.funcs.val) (wanted : Usize)
     (wantedType : Itasca.types.FuncType)
     (wantedFound : store.types.val[wanted.val]? = some wantedType) :
@@ -54,7 +54,7 @@ theorem Shape.function_signature_eq_iff {M : Type} {view : M → Slice U8}
 when the reference word is wider than `usize`. -/
 theorem Shape.table_function_reference_cast {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (shape : Shape view store)
-    (table : runtime.store.Table) (present : table ∈ store.tables.val)
+    (table : runtime.store.TableInst) (present : table ∈ store.tables.val)
     (funcref : table.ty = .FuncRef) (position : Nat) (reference : U64)
     (selected : table.elements.val[position]? = some reference) :
     (UScalar.cast .Usize reference).val = reference.val := by
@@ -73,11 +73,11 @@ theorem Shape.table_function_reference_cast {M : Type} {view : M → Slice U8}
 /-- A nonnull funcref retained in a shaped table selects an actual function. -/
 theorem Shape.table_function_target {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (shape : Shape view store)
-    (table : runtime.store.Table) (present : table ∈ store.tables.val)
+    (table : runtime.store.TableInst) (present : table ∈ store.tables.val)
     (funcref : table.ty = .FuncRef) (position : Nat) (reference : U64)
     (selected : table.elements.val[position]? = some reference)
     (nonzero : reference ≠ 0#u64) :
-    ∃ address : Usize, ∃ function : runtime.store.Function,
+    ∃ address : Usize, ∃ function : runtime.store.FuncInst,
       (UScalar.cast .Usize reference).val = address.val+1 ∧
       store.funcs.val[address.val]? = some function := by
   have owned := (shape.tables table present).2.2 reference (List.mem_of_getElem? selected)

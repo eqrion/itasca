@@ -14,7 +14,7 @@ def ExternalIssued {M : Type} (store : runtime.store.Store M) : runtime.Extern �
 /-- Exact structural effect of one successful import. Signature and global
 agreement are retained for the initializer and ordinary call invariants. -/
 inductive LinkedStep {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (before : runtime.store.Instance) : Itasca.module.ImportDesc → runtime.Extern → runtime.store.Instance → Prop where
+    (before : runtime.store.ModuleInst) : Itasca.module.ImportDesc → runtime.Extern → runtime.store.ModuleInst → Prop where
   | func (index : U32) (address : runtime.FuncAddr) (addresses : alloc.vec.Vec runtime.FuncAddr)
       (mapped : addresses.val = before.funcs.val ++ [address])
       (owner : address.store = store.id) (issued : address.index.val < store.funcs.length)
@@ -45,11 +45,11 @@ inductive LinkedStep {M : Type} (view : M → Slice U8) (store : runtime.store.S
       (typeEq : (store.globals.val[address.index.val]).ty = required) :
       LinkedStep view store before (.Global required) (.Global address) {before with globals := addresses}
 
-private theorem instance_ext (a b : runtime.store.Instance)
+private theorem instance_ext (a b : runtime.store.ModuleInst)
     (module : a.module = b.module) (types : a.types = b.types)
     (funcs : a.funcs = b.funcs) (tables : a.tables = b.tables)
     (memories : a.memories = b.memories) (globals : a.globals = b.globals)
-    (elements : a.elements = b.elements) (data : a.data = b.data) : a = b := by
+    (elements : a.elems = b.elems) (data : a.datas = b.datas) : a = b := by
   cases a; cases b; simp_all
 
 /-- Every admitted API import is checked without changing the store. A successful
@@ -57,7 +57,7 @@ result exposes only issued addresses and the actual checked type agreements. -/
 theorem link_import_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (shape : Shape view store)
-    (inst : runtime.store.Instance) (index : Usize) (external : runtime.Extern)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
     (bound : index.val < inst.module.module.env.imports.length)
     (typeBound : ∀ idx, inst.module.module.env.imports.val[index.val].desc = .Func idx →
       idx.val < inst.module.module.env.types.length)

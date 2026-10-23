@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 theorem core_function_typed_code_agrees {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} {before after : CodeInterpretation}
-    (agrees : CodeAgreesOn store before after) {function : runtime.store.Function}
+    (agrees : CodeAgreesOn store before after) {function : runtime.store.FuncInst}
     (typed : Interp.CoreFunctionTyped view before store function) :
     Interp.CoreFunctionTyped view after store function := by
   cases kind : function.code with
@@ -31,7 +31,7 @@ theorem core_function_typed_prefix {M : Type} (view : M → Slice U8) (code : Co
     (before after : runtime.store.Store M) (shape : Shape view before)
     (retained : StagedPrefix before after)
     (extension : Extend_store (decodeStore view code before) (decodeStore view code after))
-    (function : runtime.store.Function) (present : function ∈ before.funcs.val)
+    (function : runtime.store.FuncInst) (present : function ∈ before.funcs.val)
     (typed : Interp.CoreFunctionTyped view code before function) :
     Interp.CoreFunctionTyped view code after function := by
   have fnEq := decodeFunction_prefix code before after retained view shape function present
@@ -56,7 +56,7 @@ theorem staged_core_function_typed_old_wf {M : Type} (view : M → Slice U8) (co
     (sourceSyntax : StoreSyntax code before) (afterWf : wf_store (decodeStore view code after))
     (retained : StagedPrefix before after)
     (typed : Interp.CoreFunctionsTyped view code before)
-    (function : runtime.store.Function) (present : function ∈ before.funcs.val) :
+    (function : runtime.store.FuncInst) (present : function ∈ before.funcs.val) :
     Interp.CoreFunctionTyped view code after function := by
   obtain ⟨functions, globals, tables, memories, elements, datas⟩ := decodeStore_prefix view code before after shape retained
   have extension := store_prefix_extends _ _ (decodeStore_wf view code before shape sourceSyntax) afterWf

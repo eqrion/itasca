@@ -11,7 +11,7 @@ theorem compiler_table_branch_target_bounds {A : Type} (ops : runtime.platform.A
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]? = some depth)
     (held : JumpTableBounds before)
-    (called : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     JumpTableBounds after := by
   obtain ⟨target,budget,table,position,appended,branch⟩ := compiler_table_branch_success ops law before after index depth lookup called
   let staged := {before with budget,function := {before.function with jump_tables := table}}
@@ -43,7 +43,7 @@ bounds without assuming loop acceptance or a completed code certificate. -/
 theorem compiler_lower_table_target_bounds {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (held : JumpTableBounds before)
-    (called : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     JumpTableBounds after := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
   exact run.jumpTableBounds law (emission.jumpTableBounds held)

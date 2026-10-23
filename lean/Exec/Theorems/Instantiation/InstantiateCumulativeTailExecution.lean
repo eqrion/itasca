@@ -16,7 +16,7 @@ theorem instantiate_tail_cumulative_execution {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)

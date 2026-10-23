@@ -25,7 +25,7 @@ theorem invoke_supported_divergent_machine
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSupportedStore emission allowed view code store) (hostFree : CoreHostFree store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -37,7 +37,7 @@ theorem invoke_supported_divergent_machine
     ∃ machine : SupportedMachine emission allowed M P view code (signature.results.val.map Interp.sourceType),
       StepH ⟨⟨Store.decodeStore view code store,ambient⟩,
         vals (args.val.map Interp.sourceValue) ++ [.CALL_ADDR address.index.val]⟩ [] (Abs.decode machine.source) ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ()) = .div := by
   let entry (prepared : runtime.interp.Execution) : Prop := ∃ source,
     Interp.StructuredMachine.Execution emission (Abs.SupportedState allowed) view code store prepared source (signature.results.val.map Interp.sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient = ambient ∧
@@ -46,7 +46,7 @@ theorem invoke_supported_divergent_machine
   have accepted := Interp.invoke_divergent_arguments memory hooks floats allocator exec store platform address
     function signature args results owner hf hs divergent
   have reached : ∃ prepared p, entry prepared ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
     apply Interp.invoke_mutable_divergent_entry memory hooks floats allocator allocation exec store platform address
       function signature args results owner hf hs accepted (fun value member => (owned value member).1) entry ?_ ?_ divergent
     · intro prepared p identity empty arguments
@@ -85,7 +85,7 @@ theorem invoke_defined_supported_no_silent_divergence
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSupportedStore emission allowed view code store) (hostFree : CoreHostFree store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -121,7 +121,7 @@ theorem invoke_defined_supported_infinite_source
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSupportedStore emission allowed view code store) (hostFree : CoreHostFree store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)

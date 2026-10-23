@@ -9,7 +9,7 @@ theorem step_simd_supported_execution_uniform {emission : StructuredMachine.Func
     (view : M → Slice U8) (interpretation : Store.CodeInterpretation)
     (memoryLaws : Platform.MemoryLaws memory view) (floatLaws : Platform.FloatOpsCorrect floats)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (raw : runtime.interp.Frame) (index : Usize) (inst : runtime.store.Instance)
+    (raw : runtime.interp.Frame) (index : Usize) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction)
     [StructuredMachine.SimdProjection (emission compiled) compiled.simd.val compiled.v128_pool.val] (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

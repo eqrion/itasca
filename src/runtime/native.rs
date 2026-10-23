@@ -4,7 +4,6 @@ use super::*;
 use crate::{GlobalType, MemType, TableType};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-#[path = "native_float.rs"]
 mod float;
 pub(super) use float::NativeFloat;
 
@@ -119,14 +118,24 @@ impl Execution {
     }
 }
 
-/// Validates and compiles a module with default compiler budgets.
+/// Validates and rewrites a complete module under the selected profile.
+///
+/// The returned code owns all initialization bytes and has no dependency on the
+/// input slice. The default `CompileLimits` apply. Resource failures are reported
+/// as `Error::Visitor(VisitError::OutOfMemory)`; use `compile_with_limits` to
+/// distinguish the exhausted compiler budget from validation failures.
 pub fn compile(
     bytes: &[u8],
     profile: crate::ValidationProfile,
 ) -> Result<ExecutableModule, crate::Error> {
     compiler::compile_default_with::<StdAlloc>(bytes, profile)
 }
-/// Validates and compiles a module with explicit compiler budgets.
+/// Validates and rewrites a complete module with explicit compiler budgets.
+///
+/// Bytecode, source maps, locals, labels, and branch-table storage are bounded;
+/// compiler allocations use fallible reservation. Metadata decoding retains the
+/// validator's documented allocation premise. A resource failure never yields a
+/// partial executable module.
 pub fn compile_with_limits(
     bytes: &[u8],
     profile: crate::ValidationProfile,

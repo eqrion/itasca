@@ -20,12 +20,12 @@ def InstantiationSliceOutcome {M P F A : Type}
   ∃ ready inst status,
     ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
     after.id = before.id ∧ after.instances = ready.instances ∧
-    runtime.instantiate.initialize_segments memory hooks floats allocator ready platform before.instances.len =
+    runtime.interp.initialize_segments memory hooks floats allocator ready platform before.instances.len =
       .ok (status, after, platform) ∧
     TailSourceResult view code inst after ⟨before.id, before.instances.len⟩ status result
 
 theorem TailSourceResult.success {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {inst : runtime.store.Instance} {store : runtime.store.Store M} {identity : runtime.InstanceAddr}
+    {inst : runtime.store.ModuleInst} {store : runtime.store.Store M} {identity : runtime.InstanceAddr}
     {initialized result} (outcome : TailSourceResult view code inst store identity initialized result)
     {address : runtime.InstanceAddr} (success : result = .Ok address) : address = identity := by
   cases initialized with
@@ -148,7 +148,7 @@ theorem instantiate_compiled_slice_divergence {M P F A : Type}
       ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
       ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       inst.module.module.env.start = some index ∧ inst.funcs.val[index.val]? = some address ∧
-      runtime.instantiate.initialize_segments memory hooks floats allocator ready platform before.instances.len =
+      runtime.interp.initialize_segments memory hooks floats allocator ready platform before.instances.len =
         .ok (.Ok (), initialized, platform) ∧
       (∀ requested, ∃ final count, Spec.StepsHN count
         (moduleStartConfiguration view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) initialized inst index)

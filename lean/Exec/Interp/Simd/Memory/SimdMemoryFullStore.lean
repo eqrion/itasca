@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 
 theorem full_store_unfold (offset lane : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op 11#u32 offset lane address value memory = (do
-      let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset 16#usize
+      let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset 16#usize (Slice.len memory)
       match result with
       | .Err error => .ok (.Err error,memory)
       | .Ok start =>

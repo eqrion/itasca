@@ -19,7 +19,7 @@ def comparisonBits (width : Nat) (answer : Bool) : BitVec width :=
     (initializedPrefix : ∀ j, j < i.val →
       laneBits width.val j initial.bv = comparisonBits width.val (predicate j))
     (zeroSuffix : ∀ j, i.val ≤ j → j < 128/width.val → laneBits width.val j initial.bv = 0) :
-    runtime.interp.simd.compare_lanes_loop y x width cmp float initial i ⦃ result =>
+    runtime.interp.simd.compare_lanes_loop x y width cmp float initial i ⦃ result =>
       ∀ j, j < 128/width.val → laneBits width.val j result.bv = comparisonBits width.val (predicate j) ⦄ := by
   unfold runtime.interp.simd.compare_lanes_loop
   apply loop.spec_decr_nat (fun p => 128/width.val-p.2.val)

@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
 Only imported globals are required: validated initializers cannot read a newly
 defined global, including one whose initialization has already completed. -/
 structure InitializerImports {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   funcs : inst.module.module.env.func_types.val.length ≤ inst.funcs.val.length
   globals : ∀ index : U32, ∀ ty : Itasca.types.GlobalType,
     inst.module.module.env.global_types.val[index.val]? = some ty →
@@ -21,7 +21,7 @@ structure InitializerImports {M : Type} (store : runtime.store.Store M)
 /-- Source constant typing supplies the resolution relation used by the machine
 proof. The encoded reference bound follows from the issued store address. -/
 theorem initializer_resolves {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (expr : Itasca.types.ConstExpr)
+    (inst : runtime.store.ModuleInst) (expr : Itasca.types.ConstExpr)
     (ty : Itasca.types.ValueType)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env expr ty)
     (bindings : InitializerBindings store inst)
@@ -58,7 +58,7 @@ theorem initializer_resolves {M : Type} (store : runtime.store.Store M)
 
 /-- Appending initialized globals preserves all earlier source resolutions. -/
 theorem initializer_resolution_extend {M : Type}
-    {before after : runtime.store.Store M} {old next : runtime.store.Instance}
+    {before after : runtime.store.Store M} {old next : runtime.store.ModuleInst}
     (functions : next.funcs = old.funcs)
     (globalMap : next.globals.val.take old.globals.length = old.globals.val)
     (globals : after.globals.val.take before.globals.length = before.globals.val)
@@ -70,7 +70,7 @@ theorem initializer_resolution_extend {M : Type}
     have bound := (List.getElem?_eq_some_iff.mp found).1
     rw [← globalMap, List.getElem?_take] at found
     simpa [bound] using found
-  have lookupGlobal : ∀ (index : Nat) (value : runtime.store.GlobalInstance), before.globals.val[index]? = some value →
+  have lookupGlobal : ∀ (index : Nat) (value : runtime.store.GlobalInst), before.globals.val[index]? = some value →
       after.globals.val[index]? = some value := by
     intro index value found
     have bound := (List.getElem?_eq_some_iff.mp found).1
@@ -93,7 +93,7 @@ theorem initializer_resolution_extend {M : Type}
 
 /-- Linking facts remain valid while defined globals and their addresses append. -/
 theorem InitializerImports.extend {M : Type}
-    {before after : runtime.store.Store M} {old next : runtime.store.Instance}
+    {before after : runtime.store.Store M} {old next : runtime.store.ModuleInst}
     (imports : InitializerImports before old)
     (source : next.module = old.module) (functions : next.funcs = old.funcs)
     (globalMap : next.globals.val.take old.globals.length = old.globals.val)

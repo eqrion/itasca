@@ -30,7 +30,7 @@ theorem Shape.allocated {M : Type} {view : M → Slice U8} {store : runtime.stor
     shape.memoryAccounting, shape.memoryLimit, shape.tableAccounting, shape.tableLimit⟩
 
 theorem AllocationShape.replace_instances {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    (shape : AllocationShape view store) (instances : alloc.vec.Vec runtime.store.Instance) :
+    (shape : AllocationShape view store) (instances : alloc.vec.Vec runtime.store.ModuleInst) :
     AllocationShape view {store with instances} := by
   cases shape
   constructor <;> assumption

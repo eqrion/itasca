@@ -10,7 +10,7 @@ successful type vector resolves every source signature to an exact store entry. 
 theorem type_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize) (startBound : start.val ≤ seed.module.module.env.types.val.length)
     (changed : store = {before with types := store.types, signature_values := store.signature_values})
     (instChanged : inst = {seed with types := inst.types})
@@ -33,7 +33,7 @@ theorem type_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentAllocated, indexBound, typing⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentAllocated indexBound typing ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop3.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

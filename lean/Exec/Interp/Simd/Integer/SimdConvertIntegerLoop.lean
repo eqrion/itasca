@@ -18,8 +18,7 @@ theorem convert_integer_body_eq {F : Type} (floats : runtime.platform.FloatOps F
         let next ← index + 1#u32
         Result.ok (ControlFlow.cont (updated,next))
       else do
-        let result ← runtime.interp.simd.vector current
-        Result.ok (ControlFlow.done (core.result.Result.Ok result))) := by
+        Result.ok (ControlFlow.done (core.result.Result.Ok current))) := by
   cases ty <;> cases signed
   all_goals unfold runtime.interp.simd.convert_lanes_loop.body convertIntegerOpcode
   all_goals with_unfolding_all simp only [convertIntegerWord,floatCompareWidth,lift,bind_ok,Std.bind_assoc]
@@ -65,8 +64,6 @@ theorem convert_integer_loop {F : Type} (floats : runtime.platform.FloatOps F)
         · rw [other j (lane_range _ _ (by omega)) eq]; exact initialized j (by omega)
       · omega
     · have finished : index.val = count.val := by scalar_tac
-      unfold runtime.interp.simd.vector
-      simp only [bind_ok]
       exact ⟨current,rfl,by simpa [finished] using initialized⟩
   · exact ⟨position,initializedPrefix⟩
 

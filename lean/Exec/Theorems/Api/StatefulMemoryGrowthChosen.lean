@@ -8,8 +8,8 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 theorem stateful_memory_growth_chosen {choices : Exec.Spec.SourceChoices} (occurrence : Nat) {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (address : runtime.MemoryAddr)
-    (object : runtime.store.Memory M) (delta : U32) (out : U32 × runtime.store.Store M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.MemoryAddr)
+    (object : runtime.store.MemInst M) (delta : U32) (out : U32 × runtime.store.Store M)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
     (shape : MemoryShape view object) (sourceStore : state.store = decodeStore view code store)

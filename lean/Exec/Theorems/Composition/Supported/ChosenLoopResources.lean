@@ -58,7 +58,7 @@ theorem chosen_supported_loop_matches {choices : SourceChoices} (admissible : ch
     {events : List HostEvent} {target : config}
     (run : ChoiceSteps choices initial.occurrence (Abs.decode initial.source) events target)
     (terminal : SourceTerminal target) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ChosenSupportedLoopOutcome choices memory hooks floats allocator initial result ∧
         ChosenLoopAgreement view code initial.source.ambient events target result ⦄ := by
   apply WP.spec_mono (chosen_supported_loop_terminates admissible memory hooks floats allocator steps initial run terminal)

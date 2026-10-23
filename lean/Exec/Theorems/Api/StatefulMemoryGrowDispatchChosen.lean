@@ -10,7 +10,7 @@ theorem stateful_memory_grow_dispatch_chosen {choices : Exec.Spec.SourceChoices}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (first second a entry : U32)
     (signature : Abs.Stateful.Signature C .memoryGrow input output)

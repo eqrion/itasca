@@ -31,7 +31,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -42,7 +42,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.elements.val.length)
     (storeCapacity : store.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.elements.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max) :
+    (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max) :
     runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator store platform (.Ok ()) start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧
@@ -51,7 +51,7 @@ theorem element_staging_resource_loop {M P F A : Type}
         InitializerFunctionMetadataAt store inst after instIndex ∧ ∃ next,
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          after.datas = store.datas ∧ next.data = inst.data ⦄ := by
+          after.datas = store.datas ∧ next.datas = inst.datas ⦄ := by
   unfold runtime.store.instantiate.Store.instantiate_inner_loop8
   apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧
@@ -62,9 +62,9 @@ theorem element_staging_resource_loop {M P F A : Type}
       ∃ currentInst, state.1.instances.val[instIndex.val]? = some currentInst ∧ currentInst.module = inst.module ∧
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
-        currentInst.elements.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
+        currentInst.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
         state.1.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
-        state.1.datas = store.datas ∧ currentInst.data = inst.data)
+        state.1.datas = store.datas ∧ currentInst.datas = inst.datas)
   · rintro ⟨current, host, result, index⟩ ⟨hhost, trace, causes, errors, hstaged, hobjects, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, hstoreCapacity, hdatas, hmapData⟩
     dsimp only at hhost errors hstaged hobjects haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity hstoreCapacity hdatas hmapData ⊢
@@ -96,7 +96,7 @@ theorem element_staging_resource_loop {M P F A : Type}
         have certificates := element_initializer_certificates current currentInst index segment
           (by simpa [hsource] using compiled) hsegment hvalid hbindings himports
         have room : current.elems.length < Usize.max := by omega
-        have mapRoom : currentInst.elements.length < Usize.max := by omega
+        have mapRoom : currentInst.elems.length < Usize.max := by omega
         have reached := trace rfl
         obtain ⟨⟨state,after,host'⟩,called,⟨effect,hhost'⟩,nextErrors⟩ := WP.spec_imp_exists (normal_return_post
           (add_instance_element_effect memory hooks floats allocator law current platform instIndex index

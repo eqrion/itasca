@@ -13,13 +13,13 @@ theorem initialize_segments_compiled {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst) :
-    runtime.instantiate.initialize_segments memory hooks floats allocator store platform instIndex
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ := by
   obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law

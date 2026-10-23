@@ -5,8 +5,8 @@ open Aeneas Aeneas.Std SpecExt Exec.Store
 
 /-- Exact source lookup for the runtime's resolved table address. -/
 theorem table_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index : U32) (address : runtime.TableAddr) (object : runtime.store.Table)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[index.val]? = some address)
     (found : store.tables.val[address.index.val]? = some object) :
@@ -15,8 +15,8 @@ theorem table_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
 
 /-- A raw element replacement is exactly the generated source table update. -/
 theorem table_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.Table) (word : U64)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst) (word : U64)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[index.val]? = some address)
     (found : store.tables.val[address.index.val]? = some object) :
@@ -34,8 +34,8 @@ theorem table_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
 
 /-- Concrete lookup and bounds exactly select the generated read rule. -/
 theorem table_read_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.Table)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[index.val]? = some address)
     (found : store.tables.val[address.index.val]? = some object)
@@ -51,8 +51,8 @@ theorem table_read_source {M : Type} (view : M → Slice U8) (code : CodeInterpr
 
 /-- A successful raw table write has the source TABLE_SET step. -/
 theorem table_write_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.Table) (word : U64)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index position : U32) (address : runtime.TableAddr) (object : runtime.store.TableInst) (word : U64)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[index.val]? = some address)
     (found : store.tables.val[address.index.val]? = some object)

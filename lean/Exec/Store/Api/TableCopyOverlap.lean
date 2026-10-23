@@ -3,8 +3,8 @@ import Exec.Spec.CopyInterval
 namespace Exec.Store
 open Aeneas Aeneas.Std
 
-theorem table_copy_forward_same (tables : alloc.vec.Vec runtime.store.Table)
-    (tableIndex destination source : Usize) (count : U64) (table : runtime.store.Table)
+theorem table_copy_forward_same (tables : alloc.vec.Vec runtime.store.TableInst)
+    (tableIndex destination source : Usize) (count : U64) (table : runtime.store.TableInst)
     (target : tables.val[tableIndex.val]? = some table)
     (direction : destination.val ≤ source.val)
     (sourceBound : source.val+count.val ≤ table.elements.length)
@@ -67,8 +67,8 @@ theorem table_copy_forward_same (tables : alloc.vec.Vec runtime.store.Table)
     · simpa using Spec.Segment.CopyPrefix.initial table.elements.val destination.val source.val
     · have same : {table with elements := table.elements} = table := by cases table; rfl
       rw [same,←tableRead,vec_set_current tables tableIndex tableBound]
-theorem table_copy_backward_same (tables : alloc.vec.Vec runtime.store.Table)
-    (tableIndex destination source count : Usize) (table : runtime.store.Table)
+theorem table_copy_backward_same (tables : alloc.vec.Vec runtime.store.TableInst)
+    (tableIndex destination source count : Usize) (table : runtime.store.TableInst)
     (target : tables.val[tableIndex.val]? = some table)
     (direction : source.val ≤ destination.val)
     (sourceBound : source.val+count.val ≤ table.elements.length)

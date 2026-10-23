@@ -7,7 +7,7 @@ published. A successful resumption contains exactly the accepted source reply. -
 theorem host_resume_checked_result {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (exec : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]?=some function)
     (signatureAt : store.types.val[function.signature.val]?=some signature)
     (values : alloc.vec.Vec runtime.Value) (status : core.result.Result Unit runtime.platform.HostError)

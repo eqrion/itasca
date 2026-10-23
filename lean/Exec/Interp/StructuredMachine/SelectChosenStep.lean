@@ -15,7 +15,7 @@ theorem step_select_core_chosen {choices : Exec.Spec.SourceChoices} (admissible 
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (sourceStore : _root_.store) (ambient : frame)
     (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)

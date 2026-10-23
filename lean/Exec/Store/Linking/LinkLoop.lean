@@ -13,7 +13,7 @@ theorem link_imports_loop {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (lengths : imports.length = module.module.env.imports.length)
     (handles : ∀ external ∈ imports.val, ExternalIssued store external)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (inst : runtime.store.Instance) (start : Usize) (startBound : start.val ≤ imports.length)
+    (inst : runtime.store.ModuleInst) (start : Usize) (startBound : start.val ≤ imports.length)
     (maps : LinkedMaps view store module (module.module.env.imports.val.take start.val) inst) :
     runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports (.Ok ()) start inst
       ⦃ out => out.1 = store ∧ out.2.2.module = module ∧
@@ -92,10 +92,10 @@ theorem link_imports_loop {M : Type} (memory : runtime.platform.MemoryBuffer M)
 seed: AllocCorrect preserves their contents whether reservation succeeds or
 fails. -/
 theorem linked_maps_empty {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (types : inst.types.val = [])
+    (inst : runtime.store.ModuleInst) (types : inst.types.val = [])
     (funcs : inst.funcs.val = []) (tables : inst.tables.val = [])
     (memories : inst.memories.val = []) (globals : inst.globals.val = [])
-    (elements : inst.elements.val = []) (data : inst.data.val = []) :
+    (elements : inst.elems.val = []) (data : inst.datas.val = []) :
     LinkedMaps view store inst.module [] inst := by
   constructor <;> simp [*, importedFuncs, importedTables, importedMems, importedGlobals]
 

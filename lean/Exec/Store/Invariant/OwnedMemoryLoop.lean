@@ -11,7 +11,7 @@ while retaining all old store objects and all other provisional maps. -/
 theorem memory_owned_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize)
     (startBound : start.val ≤ seed.module.module.env.mem_types.val.length)
     (changed : store = {before with memories := store.memories, memory_bytes := store.memory_bytes})
@@ -41,7 +41,7 @@ theorem memory_owned_staging_loop {M A : Type} (memory : runtime.platform.Memory
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentIssued, currentOwners, indexBound, counting⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentIssued currentOwners indexBound counting ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop6.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

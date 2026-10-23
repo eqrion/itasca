@@ -27,7 +27,7 @@ theorem executable_recorded_loop_results
     {expected : List valtype}
     (initial : EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected)
     (valid : ExecutableInv view code initial.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ExecutableInv view code result.2.2.2.2.2.1 ∧
         RecordedLoopResult memory hooks floats allocator initial result ⦄div :=
   recorded_inv_loop_results memory hooks floats allocator (ExecutableInv view code)

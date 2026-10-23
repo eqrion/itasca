@@ -9,7 +9,7 @@ open Exec.Store
 retains its byte length. This includes bounds failures whose writeback callback
 chooses a different representation of the same bytes. -/
 def MemoryMutation {M : Type} (view : M → Slice U8) (before after : runtime.store.Store M)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) : Prop :=
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) : Prop :=
   ∃ buffer, after = {before with memories := before.memories.set address.index {object with buf := buffer}} ∧
     (view buffer).length = (view object.buf).length
 
@@ -22,8 +22,8 @@ theorem MemoryMutation.frame_metadata {M : Type} {view : M → Slice U8}
 theorem execute_store_mutation {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (instanceIndex base : Usize)
-    (opcode : U16) (address value offset : U32) (inst : runtime.store.Instance)
-    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.Memory M) (addressWord valueWord : U64)
+    (opcode : U16) (address value offset : U32) (inst : runtime.store.ModuleInst)
+    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M) (addressWord valueWord : U64)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
@@ -49,8 +49,8 @@ theorem execute_store_mutation {M : Type} (memory : runtime.platform.MemoryBuffe
 theorem MemoryDescriptor.execute_store_core {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (instanceIndex base : Usize)
-    (op : Abs.Memory.Store) (address value offset : U32) (inst : runtime.store.Instance)
-    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.Memory M) (addressWord valueWord : U64)
+    (op : Abs.Memory.Store) (address value offset : U32) (inst : runtime.store.ModuleInst)
+    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M) (addressWord valueWord : U64)
     (ambient : frame) (argument : memarg)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)

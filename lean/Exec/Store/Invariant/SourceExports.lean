@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Runtime export decoding resolves the same namespace entry as the generated
 module allocator, using the validated index and the completed instance map. -/
-theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (entry : Itasca.module.Export) (ty : types.ExternType)
     (shape : InstanceShape store inst)
     (resolved : ModuleExternals.ExportResolves inst.module.module.env entry ty)
@@ -89,7 +89,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
       List.getElem?_eq_getElem mapped, Option.getD_some] using source
 
 /-- All source-ordered exports satisfy the generated allocator's resolutions. -/
-theorem exports_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+theorem exports_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (shape : InstanceShape store inst)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (code : CodeInterpretation) (instanceIndex : Nat) (sourceSyntax : InstanceSyntax code instanceIndex inst) :
@@ -107,7 +107,7 @@ theorem exports_source {M : Type} (store : runtime.store.Store M) (inst : runtim
 
 /-- The exact canonical source export list resolves to the decoded instance's
 export records. -/
-theorem exports_source_raw {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+theorem exports_source_raw {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (shape : InstanceShape store inst)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (code : CodeInterpretation) (instanceIndex : Nat) (sourceSyntax : InstanceSyntax code instanceIndex inst)

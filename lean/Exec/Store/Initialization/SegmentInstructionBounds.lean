@@ -10,7 +10,7 @@ theorem segment_instruction_bounds {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (instIndex function : Usize) (position : U32) (inst : runtime.store.Instance)
+    (instIndex function : Usize) (position : U32) (inst : runtime.store.ModuleInst)
     (code : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)

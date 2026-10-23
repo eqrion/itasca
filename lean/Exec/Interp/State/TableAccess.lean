@@ -28,20 +28,20 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 /-- Table reads either report the precise bounds trap without mutation, or
 copy the stored reference word into the requested operand slot. -/
 theorem table_get_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst index table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (position : U32)
+    (instanceIndex base : Usize) (dst index table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)
     (input : UScalar.cast .U32 exec.slots.val[base.val+index.val]! = position)
     (indexBound : base.val+index.val < exec.slots.length)
     (dstBound : base.val+dst.val < exec.slots.length) :
-    runtime.interp.admin_table_get memory hooks floats allocator exec store instanceIndex base dst index table ⦃ out =>
+    runtime.interp.execute_table_get memory exec store instanceIndex base dst index table ⦃ out =>
       if position.val < object.elements.length then
         out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
           (exec.slots.val.set (base.val+dst.val) object.elements.val[position.val]!)
       else out = (.Err (.Trap .TableOutOfBounds),exec,store) ⦄ := by
-  unfold runtime.interp.admin_table_get
+  unfold runtime.interp.execute_table_get
   rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
   rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address
@@ -73,19 +73,19 @@ theorem table_get_effect (exec : runtime.interp.Execution) (store : runtime.stor
 /-- Table writes check the unsigned index before reading the replacement
 reference and preserve every field outside the selected element. -/
 theorem table_set_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (position : U32)
+    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)
     (input : UScalar.cast .U32 exec.slots.val[base.val+index.val]! = position)
     (indexBound : base.val+index.val < exec.slots.length)
     (valueBound : base.val+value.val < exec.slots.length) :
-    runtime.interp.admin_table_set memory hooks floats allocator exec store instanceIndex base index value table ⦃ out =>
+    runtime.interp.execute_table_set memory exec store instanceIndex base index value table ⦃ out =>
       if position.val < object.elements.length then
         out = (.Ok (),exec,{store with tables := store.tables.set address.index ({object with elements := object.elements.set (UScalar.cast .Usize position) exec.slots.val[base.val+value.val]!})})
       else out = (.Err (.Trap .TableOutOfBounds),exec,store) ⦄ := by
-  unfold runtime.interp.admin_table_set
+  unfold runtime.interp.execute_table_set
   rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
   rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address
@@ -125,16 +125,16 @@ theorem table_set_effect (exec : runtime.interp.Execution) (store : runtime.stor
 
 /-- Table size exposes its exact element count as one unsigned slot word. -/
 theorem table_size_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table)
+    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)
     (dstBound : base.val+dst.val < exec.slots.length) :
-    runtime.interp.admin_table_size memory hooks floats allocator exec store instanceIndex base dst table ⦃ out =>
+    runtime.interp.execute_table_size memory exec store instanceIndex base dst table ⦃ out =>
       out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
         (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 object.elements.len)) ⦄ := by
-  unfold runtime.interp.admin_table_size
+  unfold runtime.interp.execute_table_size
   rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
   rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address

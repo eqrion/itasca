@@ -15,7 +15,7 @@ def prepareIndirect
   := do
   let i ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-      _root_.Exec.runtime.store.Instance) store.instances inst
+      _root_.Exec.runtime.store.ModuleInst) store.instances inst
   let cf ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
       _root_.Exec.runtime.bytecode.CompiledFunction) i.module.functions
@@ -37,7 +37,7 @@ def prepareIndirect
   let i7 ← lift (UScalar.cast .Usize i6)
   let t ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-      _root_.Exec.runtime.store.Table) store.tables ta.index
+      _root_.Exec.runtime.store.TableInst) store.tables ta.index
   let i8 := alloc.vec.Vec.len t.elements
   if i7 >= i8
   then
@@ -60,7 +60,7 @@ def prepareIndirect
       let f ← i9 - 1#usize
       let f1 ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          _root_.Exec.runtime.store.Function) store.funcs f
+          _root_.Exec.runtime.store.FuncInst) store.funcs f
       let i10 ← lift (UScalar.cast .Usize ty)
       let i11 ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.Usize)
@@ -92,7 +92,7 @@ def prepareDirect
   := do
   let i ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-      _root_.Exec.runtime.store.Instance) store.instances inst
+      _root_.Exec.runtime.store.ModuleInst) store.instances inst
   let i1 ← lift (UScalar.cast .Usize func)
   let addr ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
@@ -103,52 +103,19 @@ def prepareDirect
       platformFloatOpsInst platformAllocInst exec store platform addr i3
 
 
-private theorem call_identity {M P : Type} (run : Result (Answer M P)) :
-    (do let (r,e,s,p) ← run
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | .Continue _ => .ok (.Ok (),e,s,p)
-        | .Break residual => do
-          let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame runtime.ExecError) residual
-          .ok (r1,e,s,p))=run := by
-  have identity : (fun answer : Answer M P => do
-      let (r,e,s,p) := answer
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | .Continue _ => .ok (.Ok (),e,s,p)
-      | .Break residual => do
-        let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame runtime.ExecError) residual
-        .ok (r1,e,s,p)) = Result.ok := by
-    funext answer
-    rcases answer with ⟨status,e,s,p⟩
-    cases status with
-    | Ok unit => cases unit; simp [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from,bind_ok]
-  change Std.bind run _=run
-  trans Std.bind run Result.ok
-  · apply congrArg (fun continuation=>Std.bind run continuation)
-    funext answer
-    rcases answer with ⟨r,e,s,p⟩
-    exact congrFun identity (r,e,s,p)
-  · simp
-
-
 theorem erase_direct {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (inst base : Usize) (func callee : U32) :
     (do let phase ← prepareDirect memory hooks floats allocator exec store platform inst base func callee
         resume memory hooks phase)=
-      runtime.interp.admin_call memory hooks floats allocator exec store platform inst base func callee := by
-  simp only [prepareDirect,runtime.interp.admin_call,Std.bind_assoc,erase,call_identity]
+      runtime.interp.execute_call memory hooks floats allocator exec store platform inst base func callee := by
+  simp only [prepareDirect,runtime.interp.execute_call,Std.bind_assoc,erase]
   repeat' first | rfl | (congr 1; funext x) |
     (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from]) |
     (split <;> simp_all only [Std.bind_assoc,bind_ok])
-
-  all_goals exact (call_identity _).symm
+  all_goals exact erase memory hooks floats allocator exec store platform _ _
 
 theorem erase_indirect {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -156,15 +123,12 @@ theorem erase_indirect {M P F A : Type} (memory : runtime.platform.MemoryBuffer 
     (store : runtime.store.Store M) (platform : P) (inst function base : Usize) (entry index callee : U32) :
     (do let phase ← prepareIndirect memory hooks floats allocator exec store platform inst function base entry index callee
         resume memory hooks phase)=
-      runtime.interp.admin_call_indirect memory hooks floats allocator exec store platform inst function base entry index callee := by
-  simp only [prepareIndirect,runtime.interp.admin_call_indirect,Std.bind_assoc,erase,resume,bind_ok,call_identity]
+      runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform inst function base entry index callee := by
+  simp only [prepareIndirect,runtime.interp.execute_call_indirect,Std.bind_assoc,erase,resume,bind_ok]
   repeat' first | rfl | (congr 1; funext x) |
     (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,resume,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from]) |
     (split <;> simp_all only [Std.bind_assoc,bind_ok,resume,erase])
-  all_goals
-    calc
-      _ = _ := erase memory hooks floats allocator exec store platform _ _
-      _ = _ := (call_identity _).symm
+  all_goals exact erase memory hooks floats allocator exec store platform _ _
 
 end Exec.Interp.OpenCall

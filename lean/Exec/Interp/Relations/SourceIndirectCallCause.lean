@@ -11,8 +11,8 @@ def SourceIndirectCallCause {A M P : Type} (allocator : runtime.platform.Alloc A
     (raw : runtime.interp.Frame) (callerCode : runtime.bytecode.CompiledFunction)
     (source : Abs.AState) (error : runtime.ExecError) : Prop :=
   ∃ (entry selector offset table type pc : U32) (address base : Usize)
-    (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction),
+    (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction),
     callerCode.code.val[raw.pc.val]?=some (.CallIndirect entry selector offset) ∧
     callerCode.indirect.val[entry.val]?=some (table,type) ∧
     store.funcs.val[address.val]?=some function ∧ function.code=.Wasm instanceIndex functionIndex ∧

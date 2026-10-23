@@ -10,13 +10,13 @@ set_option maxRecDepth 4096
     (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
     (limit : Nat) (limitFits : limit ≤ Usize.max)
     (held : status = .Ok () → TableLoopSafe compiler index.val limit) :
-    runtime.compiler.FunctionCompiler.lower_table_branches_loop ops compiler index status ⦃ _ => True ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop
+    runtime.compiler.control.FunctionCompiler.lower_table_branches_loop ops compiler index status ⦃ _ => True ⦄ := by
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
   apply loop.spec_decr_nat (fun p => Usize.max - p.2.1.val)
     (fun p => p.2.2 = .Ok () → TableLoopSafe p.1 p.2.1.val limit)
   · rintro ⟨current,i,result⟩ safe
     dsimp only at safe
-    unfold runtime.compiler.FunctionCompiler.lower_table_branches_loop.body
+    unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body
     simp only
     split
     · rename_i more
@@ -54,7 +54,7 @@ set_option maxRecDepth 4096
         step as ⟨nextIndex,increment⟩
         refine ⟨?_,by scalar_tac⟩
         intro accepted
-        have exactCall : runtime.compiler.FunctionCompiler.table_branch ops current i = .ok (.Ok (),next) := by
+        have exactCall : runtime.compiler.control.FunctionCompiler.table_branch ops current i = .ok (.Ok (),next) := by
           simpa only [accepted] using called
         have advanced := held.advance ops law inside exactCall
         have progress : nextIndex.val = i.val+1 := by scalar_tac

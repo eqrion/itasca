@@ -36,7 +36,7 @@ theorem widen_loop (width i : U32) (extmul high signed : Bool) (x y initial : U1
       widenWord width extmul signed a b ⦃ value => R j (value.bv.setWidth (width.val*2)) ⦄)
     (position : i.val ≤ 64/width.val)
     (initializedPrefix : ∀ j, j < i.val → R j (laneBits (width.val*2) j initial.bv)) :
-    runtime.interp.simd.widen_lanes_loop width extmul high signed y x initial i ⦃ result =>
+    runtime.interp.simd.widen_lanes_loop x width extmul high signed y initial i ⦃ result =>
       ∀ j, j < 64/width.val → R j (laneBits (width.val*2) j result.bv) ⦄ := by
   unfold runtime.interp.simd.widen_lanes_loop
   apply loop.spec_decr_nat (fun p => 64/width.val-p.2.val)

@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
 /-- The function and signature selected by one public function handle. -/
 structure ExecutableCallEntry {M : Type} (store : runtime.store.Store M)
     (address : runtime.FuncAddr) where
-  function : runtime.store.Function
+  function : runtime.store.FuncInst
   signature : Itasca.types.FuncType
   functionLookup : store.funcs.val[address.index.val]? = some function
   signatureLookup : store.types.val[function.signature.val]? = some signature

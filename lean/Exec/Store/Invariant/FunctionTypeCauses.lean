@@ -15,9 +15,9 @@ def FunctionAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
 
 theorem add_function_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex index : Usize)
     (bound : objectCount store ≤ Usize.max) (error : runtime.ExecError)
-    (after : runtime.store.Store M) (next : runtime.store.Instance)
+    (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_function memory allocator store inst instanceIndex index =
       .ok (.Err error,after,next)) :
     after = store ∧ next = inst ∧ FunctionAllocationCause allocator store error := by
@@ -52,9 +52,9 @@ theorem add_function_resource_cause {M A : Type} (memory : runtime.platform.Memo
 interning refusal, including absence from the pre-existing canonical pool. -/
 theorem add_type_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (bound : objectCount store ≤ Usize.max) (error : runtime.ExecError)
-    (after : runtime.store.Store M) (next : runtime.store.Instance)
+    (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_type memory allocator store inst index = .ok (.Err error,after,next)) :
     ∃ ty, inst.module.module.env.types.val[index.val]? = some ty ∧
       after = store ∧ next = inst ∧ ty ∉ store.types.val ∧ TypeInternResourceCause allocator store ty error := by

@@ -61,7 +61,7 @@ theorem world_loop_stops {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
     (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => ∃state,WorldLoopInvariant memory hooks floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
   apply execution_loop_stops memory hooks floats allocator
@@ -141,7 +141,7 @@ theorem world_loop_results {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
     (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => WorldLoopResult Inv initial result ∧
         ∃state,WorldLoopInvariant memory hooks floats allocator Inv initial state ∧ ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
   apply WP.dspec_mono (world_loop_stops memory hooks floats allocator Inv steps initial valid)

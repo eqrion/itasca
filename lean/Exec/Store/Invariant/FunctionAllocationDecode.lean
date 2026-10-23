@@ -4,10 +4,10 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 theorem FunctionAllocatedAt.decode {M : Type}
-    {seed : runtime.store.Instance} {instanceIndex : Usize} {ordinal : Nat}
-    {function : runtime.store.Function}
+    {seed : runtime.store.ModuleInst} {instanceIndex : Usize} {ordinal : Nat}
+    {function : runtime.store.FuncInst}
     (allocated : FunctionAllocatedAt seed instanceIndex ordinal function)
-    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (types : inst.types = seed.types)
     (source : func) (typeIndex : U32)
@@ -26,9 +26,9 @@ theorem FunctionAllocatedAt.decode {M : Type}
 entry's type and source body have been attached. This is only a list decoding
 lemma; the attachment premise is discharged by `FunctionAllocatedAt.decode`. -/
 theorem FunctionPayload.decode {M : Type} {before after : runtime.store.Store M}
-    {seed : runtime.store.Instance} {instanceIndex : Usize} {count : Nat}
+    {seed : runtime.store.ModuleInst} {instanceIndex : Usize} {count : Nat}
     (payload : FunctionPayload before after seed instanceIndex count)
-    (decode : runtime.store.Function → funcinst) (source : Nat → funcinst)
+    (decode : runtime.store.FuncInst → funcinst) (source : Nat → funcinst)
     (entry : ∀ index function, FunctionAllocatedAt seed instanceIndex index function →
       decode function = source index) :
     after.funcs.val.map decode = before.funcs.val.map decode ++ (List.range count).map source := by

@@ -18,7 +18,7 @@ theorem WordsAt.end_le {words : List U64} {base : Nat} {bits : List Nat}
 theorem FrameBinding.capacity {M : Type} {store : runtime.store.Store M}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
     (binding : FrameBinding store exec raw source)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (instanceLookup : store.instances.val[raw.instance.val]? = some inst)
     (functionLookup : inst.module.functions.val[raw.function.val]? = some compiled) :
     raw.base.val + compiled.slot_count.val ≤ exec.slots.length := by
@@ -47,7 +47,7 @@ theorem FrameSlots.capacity {M : Type} {store : runtime.store.Store M}
 theorem FrameBinding.range_bound {M : Type} {store : runtime.store.Store M}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
     (binding : FrameBinding store exec raw source)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (instanceLookup : store.instances.val[raw.instance.val]? = some inst)
     (functionLookup : inst.module.functions.val[raw.function.val]? = some compiled)
     (start count : Nat) (range : start + count ≤ compiled.slot_count.val) :

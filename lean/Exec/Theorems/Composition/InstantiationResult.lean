@@ -17,7 +17,7 @@ def InstantiationExecution (initial : config) (store : _root_.store) (ambient : 
 outcome; all start error prefixes retain the initialized store. -/
 theorem TailSourceResult.initialized_execution {M : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
-    {inst : runtime.store.Instance} {store : runtime.store.Store M}
+    {inst : runtime.store.ModuleInst} {store : runtime.store.Store M}
     {identity : runtime.InstanceAddr} {result : core.result.Result runtime.InstanceAddr runtime.ExecError}
     (outcome : TailSourceResult view code inst store identity (.Ok ()) result)
     (initial : config)

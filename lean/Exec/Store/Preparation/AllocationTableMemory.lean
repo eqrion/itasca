@@ -23,7 +23,7 @@ theorem decode_memory_allocation {M : Type} (view : M → Slice U8) (ty : types.
   norm_num [Ki]
 
 theorem TableStageEffect.decoded {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty out}
+    {inst : runtime.store.ModuleInst} {ty out}
     (effect : TableStageEffect store inst ty out) (success : out.1 = .Ok ()) :
     out.2.1.tables.val.map decodeTable = store.tables.val.map decodeTable ++
       [Spec.allocationTable (EnvTranslation.tableType ty)] := by
@@ -32,7 +32,7 @@ theorem TableStageEffect.decoded {M : Type} {store : runtime.store.Store M}
   · simp only [appended, List.map_append, List.map_singleton, decode_table_allocation ty elements zeros]
 
 theorem MemoryStageEffect.decoded {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty out}
+    {inst : runtime.store.ModuleInst} {ty out}
     (effect : MemoryStageEffect view store inst ty out) (success : out.1 = .Ok ()) :
     out.2.1.memories.val.map (decodeMemory view) = store.memories.val.map (decodeMemory view) ++
       [Spec.allocationMemory (EnvTranslation.memType ty)] := by

@@ -8,7 +8,7 @@ theorem stateful_table_grow_dispatch {M P F A : Type} (memory : runtime.platform
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (index : Nat) (first second a b entry : U32)
     (signature : Abs.Stateful.Signature C (.tableGrow index) input output)
@@ -62,7 +62,7 @@ theorem stateful_table_grow_dispatch {M P F A : Type} (memory : runtime.platform
       reference_word_value _ _ _ (by simpa only [objectType] using xType) (by rw [referenceValue];exact referenceEncoded)
     have amountSlot := frame_read_scalar slots values position encoded 1 (by simp) amount (by simpa using amountValue)
     obtain ⟨out,run,success,metadata,result,written,growth,represented,transition⟩ := WP.spec_imp_exists
-      (stateful_table_grow_slots memory hooks floats allocator allocation view code exec store raw first a inst address object referenceWord amount
+      (stateful_table_grow_slots memory allocator allocation view code exec store raw first a inst address object referenceWord amount
         state f rest after front found mapped issued referenceSlot amountSlot sizes sourceStore moduleEq
         (by rw [←referenceEq,deltaValue];exact values) slots position)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]

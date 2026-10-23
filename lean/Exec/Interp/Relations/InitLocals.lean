@@ -1,4 +1,4 @@
-import Exec.Interp.Relations.Admin
+import Exec.Interp.Relations.Execute
 
 /-! Function entry clears precisely the non-parameter local words. -/
 namespace Exec.Interp
@@ -41,9 +41,9 @@ theorem zeroWords_effect (words : List U64) (start n : Nat)
     (base : Usize) (locals : U32) (start : Usize)
     (bound : base.val + locals.val ≤ exec.slots.length)
     (range : start.val ≤ base.val + locals.val) :
-    runtime.interp.call_loop5 exec base locals start ⦃ out => SlotsEffect exec out
+    runtime.interp.call_loop3 exec base locals start ⦃ out => SlotsEffect exec out
       (zeroWords exec.slots.val start.val (base.val + locals.val - start.val)) ⦄ := by
-  unfold runtime.interp.call_loop5
+  unfold runtime.interp.call_loop3
   apply loop.spec_decr_nat (fun p => base.val + locals.val - p.2.val)
     (fun p => p.2.val ≤ base.val + locals.val ∧
       p.1.slots.length = exec.slots.length ∧
@@ -52,7 +52,7 @@ theorem zeroWords_effect (words : List U64) (start n : Nat)
         zeroWords exec.slots.val start.val (base.val + locals.val - start.val))
   · rintro ⟨current, index⟩ ⟨hindex, hlen, hrest, hwords⟩
     dsimp only at hindex hlen hrest hwords
-    unfold runtime.interp.call_loop5.body
+    unfold runtime.interp.call_loop3.body
     simp only [lift, bind_ok]
     step as ⟨last, hlast⟩
     split

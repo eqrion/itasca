@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std SpecExt
 /-- The source outcome after segment initialization. A successful initializer
  either has no start, or executes the exact installed source function index. -/
 def TailSourceResult {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (inst : runtime.store.Instance) (store : runtime.store.Store M) (identity : runtime.InstanceAddr)
+    (inst : runtime.store.ModuleInst) (store : runtime.store.Store M) (identity : runtime.InstanceAddr)
     (initialized : core.result.Result Unit runtime.ExecError)
     (result : core.result.Result runtime.InstanceAddr runtime.ExecError) : Prop :=
   match initialized with
@@ -31,7 +31,7 @@ theorem instantiate_tail_slice_cases {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -39,7 +39,7 @@ theorem instantiate_tail_slice_cases {M P F A : Type}
     (imports : Store.InitializerImports store inst) (types : Store.SegmentTypeBindings store inst)
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType)) :
     ∃ initialized status,
-      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+      runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
         .ok (status, initialized, platform) ∧
       CertifiedSliceStore view code initialized ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view code initialized) ∧
@@ -108,7 +108,7 @@ theorem instantiate_tail_slice {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -120,7 +120,7 @@ theorem instantiate_tail_slice {M P F A : Type}
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.1) ∧
         Store.SegmentObjectMetadata view store out.2.1 ∧
         (∀ returned, out.1 = .Ok returned → returned = identity) ∧
-        ∃ status, runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+        ∃ status, runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
           .ok (status, out.2.1, platform) ∧ TailSourceResult view code inst out.2.1 identity status out.1 ⦄div := by
   obtain ⟨initialized, status, initRun, certifiedAfter, extension, metadata, outcome⟩ :=
     instantiate_tail_slice_cases memory hooks floats allocator view laws law store platform identity inst bytes profile limits accepted found code certified imports types table
@@ -149,7 +149,7 @@ theorem instantiate_tail_slice_divergence {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -158,7 +158,7 @@ theorem instantiate_tail_slice_divergence {M P F A : Type}
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType))
     (divergent : Store.instantiate_tail memory hooks floats allocator identity store platform = .div) :
     ∃ initialized index address,
-      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+      runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
         .ok (.Ok (), initialized, platform) ∧
       CertifiedSliceStore view code initialized ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view code initialized) ∧

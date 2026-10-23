@@ -20,10 +20,10 @@ theorem step_host_call_structured_chosen_world {choices : Spec.SourceChoices} (a
     (valid : Inv code store)
     (entryTyped : Store_ok (Store.decodeStore view code store))
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (caller : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (caller : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (index offset : U32) (after : List instr)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (host : U64)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
     (expected : List valtype)
     (last : frameIndex.val+1=exec.frames.length)
     (hf : exec.frames.val[frameIndex.val]?=some raw)

@@ -15,8 +15,7 @@ theorem float_resize_body_eq {F : Type} (floats : runtime.platform.FloatOps F)
         let next ← index + 1#u32
         Result.ok (ControlFlow.cont (updated,next))
       else do
-        let result ← runtime.interp.simd.vector current
-        Result.ok (ControlFlow.done (core.result.Result.Ok result))) := by
+        Result.ok (ControlFlow.done (core.result.Result.Ok current))) := by
   cases kind
   all_goals unfold runtime.interp.simd.convert_lanes_loop.body floatResizeOpcode
   all_goals with_unfolding_all simp only [floatResizeWord,floatCompareWidth,lift,bind_ok,Std.bind_assoc]
@@ -74,8 +73,6 @@ theorem float_resize_loop {F : Type} (floats : runtime.platform.FloatOps F)
         exact zeroed j above bound
       · omega
     · have finished : index.val = 2 := by scalar_tac
-      unfold runtime.interp.simd.vector
-      simp only [bind_ok]
       exact ⟨current,rfl,by simpa [finished] using initialized,zeroed⟩
   · exact ⟨position,initializedPrefix,initializedSuffix⟩
 

@@ -8,9 +8,9 @@ This is an explicit state relation, not a law of arbitrary host callbacks. -/
 structure SegmentPublication {M : Type} (before after : runtime.store.Store M) : Prop where
   instances : after.instances.val.take before.instances.length = before.instances.val
   elements : after.elems.length = before.elems.length +
-    ((after.instances.val.drop before.instances.length).map fun inst => inst.elements.length).sum
+    ((after.instances.val.drop before.instances.length).map fun inst => inst.elems.length).sum
   datas : after.datas.length = before.datas.length +
-    ((after.instances.val.drop before.instances.length).map fun inst => inst.data.length).sum
+    ((after.instances.val.drop before.instances.length).map fun inst => inst.datas.length).sum
 
 private theorem sum_retained {T : Type} (measure : T → Nat) {before after : List T}
     (retained : after.take before.length = before) :
@@ -44,14 +44,14 @@ theorem SegmentPublication.trans {M : Type} {a b c : runtime.store.Store M}
     (first : SegmentPublication a b) (second : SegmentPublication b c) : SegmentPublication a c := by
   refine ⟨prefix_trans first.instances second.instances,?_,?_⟩
   · rw [second.elements,first.elements]
-    have sums := suffix_sum (fun inst : runtime.store.Instance => inst.elements.length) first.instances second.instances
-    change _ = _ + ((c.instances.val.drop a.instances.val.length).map fun inst => inst.elements.length).sum
+    have sums := suffix_sum (fun inst : runtime.store.ModuleInst => inst.elems.length) first.instances second.instances
+    change _ = _ + ((c.instances.val.drop a.instances.val.length).map fun inst => inst.elems.length).sum
     rw [sums]
     simp only [alloc.vec.Vec.length]
     omega
   · rw [second.datas,first.datas]
-    have sums := suffix_sum (fun inst : runtime.store.Instance => inst.data.length) first.instances second.instances
-    change _ = _ + ((c.instances.val.drop a.instances.val.length).map fun inst => inst.data.length).sum
+    have sums := suffix_sum (fun inst : runtime.store.ModuleInst => inst.datas.length) first.instances second.instances
+    change _ = _ + ((c.instances.val.drop a.instances.val.length).map fun inst => inst.datas.length).sum
     rw [sums]
     simp only [alloc.vec.Vec.length]
     omega
@@ -87,7 +87,7 @@ theorem SegmentPublication.data_count {M : Type} {before after : runtime.store.S
   omega
 
 theorem SegmentPublication.instance_lookup {M : Type} {before after : runtime.store.Store M}
-    (published : SegmentPublication before after) {index : Nat} {inst : runtime.store.Instance}
+    (published : SegmentPublication before after) {index : Nat} {inst : runtime.store.ModuleInst}
     (found : before.instances.val[index]? = some inst) : after.instances.val[index]? = some inst := by
   have bound := (List.getElem?_eq_some_iff.mp found).1
   have same := congrArg (fun instances => instances[index]?) published.instances

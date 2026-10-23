@@ -42,7 +42,7 @@ theorem MemoryInitializationEffect.object_metadata {M : Type} {view : M → Slic
   · rw [effect]; exact .refl _ _
 
 theorem SegmentObjectMetadata.data_drop {M : Type} (view : M → Slice U8)
-    (store : runtime.store.Store M) (index : Usize) (old : runtime.store.DataInstance)
+    (store : runtime.store.Store M) (index : Usize) (old : runtime.store.DataInst)
     (target : store.datas.val[index.val]? = some old) :
     SegmentObjectMetadata view store {store with datas := store.datas.set index ⟨alloc.vec.Vec.new U8⟩} := by
   refine ⟨by constructor <;> simp, ?_, ?_, ?_, ?_⟩
@@ -55,7 +55,7 @@ theorem SegmentObjectMetadata.data_drop {M : Type} (view : M → Slice U8)
       (fun _ => Or.inl rfl) (Or.inr rfl)
 
 theorem SegmentObjectMetadata.element_drop {M : Type} (view : M → Slice U8)
-    (store : runtime.store.Store M) (index : Usize) (old : runtime.store.ElemInstance)
+    (store : runtime.store.Store M) (index : Usize) (old : runtime.store.ElemInst)
     (target : store.elems.val[index.val]? = some old) :
     SegmentObjectMetadata view store {store with elems := store.elems.set index {old with refs := alloc.vec.Vec.new U64}} := by
   refine ⟨by constructor <;> simp, ?_, ?_, ?_, ?_⟩

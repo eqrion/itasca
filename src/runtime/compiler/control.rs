@@ -19,13 +19,6 @@ fn block_signature(signatures: &[Signature], bt: BlockType) -> Signature {
     }
 }
 
-fn stack_width(ty: StackType) -> u32 {
-    match ty {
-        StackType::Val(ty) => width(ty),
-        StackType::Bot => 1,
-    }
-}
-
 fn stack_height(values: &[StackType], count: usize, initial: u32) -> u32 {
     let mut height = initial;
     let mut i = 0;
@@ -36,15 +29,25 @@ fn stack_height(values: &[StackType], count: usize, initial: u32) -> u32 {
     height
 }
 
-fn is_then(kind: LabelKind) -> bool {
-    matches!(kind, LabelKind::Then)
-}
-
-fn is_loop(kind: LabelKind) -> bool {
-    matches!(kind, LabelKind::Loop)
-}
-
 impl<A: Alloc> FunctionCompiler<'_, A> {
+    pub(super) fn lower_table_branches(&mut self) -> VisitResult {
+        let start = bounded_index(self.function.jump_tables.len())?;
+        let len = bounded_index(self.table_depths.len())?;
+        let index = self.operand(1)?;
+        self.emit(Instr::JumpTable { index, start, len })?;
+        let mut i = 0;
+        let mut result = Ok(());
+        while i < self.table_depths.len() && result.is_ok() {
+            result = self.table_branch(i);
+            i += 1;
+        }
+        result
+    }
+    fn table_branch(&mut self, index: usize) -> VisitResult {
+        let target = self.pc()?;
+        self.budget.push(&mut self.function.jump_tables, target)?;
+        self.branch(self.table_depths[index], 1, false)
+    }
     pub(super) fn branch(&mut self, depth: u32, skip: u32, conditional: bool) -> VisitResult {
         let index = self.frames.len() - 1 - depth as usize;
         let frame = &self.frames[index];
@@ -117,8 +120,8 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
         let signature = block_signature(self.signatures, bt);
         let height = stack_height(&st.vals, value_height, self.function.local_slots);
         let source_start = self.function.body_start + self.next_source;
-        let then_label = is_then(kind);
-        let loop_label = is_loop(kind);
+        let then_label = matches!(kind, LabelKind::Then);
+        let loop_label = matches!(kind, LabelKind::Loop);
         let if_pc = if self.reachable && then_label {
             let pc = self.function.code.len();
             let cond = self.operand(1)?;

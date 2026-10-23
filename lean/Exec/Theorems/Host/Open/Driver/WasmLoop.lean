@@ -9,7 +9,7 @@ through every tick; this divergence occurs inside Wasm, not host control. -/
 theorem wasm_loop_waiting_host {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A) (select : Selector)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (index : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (last : index.val+1=exec.frames.length) (hf : exec.frames.val[index.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst)
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)

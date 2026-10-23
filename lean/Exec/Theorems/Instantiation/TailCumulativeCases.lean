@@ -4,7 +4,7 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 def TailCumulativeSourceResult {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (inst : runtime.store.Instance) (store after : runtime.store.Store M) (identity : runtime.InstanceAddr)
+    (inst : runtime.store.ModuleInst) (store after : runtime.store.Store M) (identity : runtime.InstanceAddr)
     (initialized : core.result.Result Unit runtime.ExecError)
     (result : core.result.Result runtime.InstanceAddr runtime.ExecError) : Prop :=
   match initialized with
@@ -28,7 +28,7 @@ theorem instantiate_tail_cumulative_cases {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -36,7 +36,7 @@ theorem instantiate_tail_cumulative_cases {M P F A : Type}
     (imports : Store.InitializerImports store inst) (types : Store.SegmentTypeBindings store inst)
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType)) :
     ∃ initialized status,
-      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+      runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
         .ok (status, initialized, platform) ∧
       CertifiedCumulativeStore view code initialized ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view code initialized) ∧

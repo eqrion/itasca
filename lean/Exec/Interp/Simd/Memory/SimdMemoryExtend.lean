@@ -23,7 +23,7 @@ def memoryExtendLoop (ty : WidenWidth) (signed : Bool) : U128 → Result U128 :=
 theorem memory_extend_unfold (ty : WidenWidth) (signed : Bool)
     (offset lane : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op (memoryExtendOpcode ty signed) offset lane address value memory = (do
-      let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset 8#usize
+      let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset 8#usize (Slice.len memory)
       match result with
       | .Err error => .ok (.Err error,memory)
       | .Ok start =>
@@ -33,6 +33,8 @@ theorem memory_extend_unfold (ty : WidenWidth) (signed : Bool)
   cases ty <;> cases signed
   all_goals dsimp only [memoryExtendOpcode,memoryExtendLoop]
   all_goals unfold runtime.interp.simd.memory_op
+  all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _
+  all_goals rw [bind_ok]
   all_goals rw [if_neg (by decide),if_neg (by decide)]
   all_goals simp only [lift,bind_ok]
   all_goals split <;> try contradiction

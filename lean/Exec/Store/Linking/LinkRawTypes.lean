@@ -45,7 +45,7 @@ theorem link_imports_raw_typed {M : Type} (memory : runtime.platform.MemoryBuffe
       (imports.val.map decodeExternal)
       (raw.imports.map (fun entry => ModuleElaboration.importType raw.types entry.desc)))
     (handles : ∀ external ∈ imports.val, ExternalIssued store external)
-    (inst : runtime.store.Instance) (maps : LinkedMaps view store module [] inst) :
+    (inst : runtime.store.ModuleInst) (maps : LinkedMaps view store module [] inst) :
     runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports (.Ok ()) 0#usize inst
       ⦃ out => out.1 = store ∧ out.2.2.module = module ∧
         (out.2.1 = .Ok () ∨ out.2.1 = .Err .WrongStore) ∧

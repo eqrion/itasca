@@ -93,15 +93,15 @@ impl<M: MemoryBuffer> Store<M> {
         if !within(self.instance_items, items, self.limits.max_instance_items) {
             return Err(ExecError::Exhausted(ResourceLimit::Objects));
         }
-        let mut inst = Instance {
+        let mut inst = ModuleInst {
             module,
             types: Vec::new(),
             funcs: Vec::new(),
             tables: Vec::new(),
             memories: Vec::new(),
             globals: Vec::new(),
-            elements: Vec::new(),
-            data: Vec::new(),
+            elems: Vec::new(),
+            datas: Vec::new(),
         };
         reserve::<A, _>(&mut inst.funcs, inst.module.env().func_types().len())?;
         reserve::<A, _>(&mut inst.tables, inst.module.env().table_types().len())?;
@@ -151,7 +151,7 @@ impl<M: MemoryBuffer> Store<M> {
         }
         status?;
         let element_count = self.instances[identity.index].module.env().elements().len();
-        reserve::<A, _>(&mut self.instances[identity.index].elements, element_count)?;
+        reserve::<A, _>(&mut self.instances[identity.index].elems, element_count)?;
         i = 0;
         while i < self.instances[identity.index].module.env().elements().len() && status.is_ok() {
             status = self.add_instance_element::<P, F, A>(platform, identity.index, i);
@@ -159,7 +159,7 @@ impl<M: MemoryBuffer> Store<M> {
         }
         status?;
         let data_count = self.instances[identity.index].module.tail().data.len();
-        reserve::<A, _>(&mut self.instances[identity.index].data, data_count)?;
+        reserve::<A, _>(&mut self.instances[identity.index].datas, data_count)?;
         i = 0;
         while i < self.instances[identity.index].module.tail().data.len() && status.is_ok() {
             status = self.add_instance_data::<A>(identity.index, i);
@@ -170,19 +170,13 @@ impl<M: MemoryBuffer> Store<M> {
             i = 0;
             while i < self.instances[identity.index].module.env().elements().len() && status.is_ok()
             {
-                status = match self.element_range_for::<P, F, A>(platform, identity.index, i) {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(e),
-                };
+                status = self.check_element_bounds::<P, F, A>(platform, identity.index, i);
                 i += 1;
             }
             status?;
             i = 0;
             while i < self.instances[identity.index].module.tail().data.len() && status.is_ok() {
-                status = match self.data_range_for::<P, F, A>(platform, identity.index, i) {
-                    Ok(_) => Ok(()),
-                    Err(e) => Err(e),
-                };
+                status = self.check_data_bounds::<P, F, A>(platform, identity.index, i);
                 i += 1;
             }
             status?;
@@ -207,7 +201,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     fn link_import(
         &mut self,
-        inst: &mut Instance,
+        inst: &mut ModuleInst,
         i: usize,
         import: Extern,
     ) -> Result<(), ExecError> {
@@ -256,7 +250,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     fn add_instance_type<A: Alloc>(
         &mut self,
-        inst: &mut Instance,
+        inst: &mut ModuleInst,
         i: usize,
     ) -> Result<(), ExecError> {
         inst.types
@@ -265,7 +259,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     fn add_instance_function<A: Alloc>(
         &mut self,
-        inst: &mut Instance,
+        inst: &mut ModuleInst,
         instance: usize,
         i: usize,
     ) -> Result<(), ExecError> {
@@ -275,10 +269,10 @@ impl<M: MemoryBuffer> Store<M> {
             store: self.id,
             index: self.funcs.len(),
         };
-        self.funcs.push(Function {
+        self.funcs.push(FuncInst {
             signature: inst.types[inst.module.env().func_type_indices()[i] as usize],
-            code: FunctionCode::Wasm {
-                instance: instance,
+            code: FuncCode::Wasm {
+                instance,
                 function: i,
             },
         });
@@ -287,7 +281,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     fn add_instance_table<A: Alloc>(
         &mut self,
-        inst: &mut Instance,
+        inst: &mut ModuleInst,
         i: usize,
     ) -> Result<(), ExecError> {
         inst.tables
@@ -296,7 +290,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     fn add_instance_memory<A: Alloc>(
         &mut self,
-        inst: &mut Instance,
+        inst: &mut ModuleInst,
         i: usize,
     ) -> Result<(), ExecError> {
         let ty = inst.module.env().mem_types()[i];
@@ -321,8 +315,7 @@ impl<M: MemoryBuffer> Store<M> {
     ) -> Result<(), ExecError> {
         let g = self.instances[instance].module.env().globals()[i];
         let initializer = self.instances[instance].module.global_initializers[i];
-        let v =
-            eval_const_exec::<M, P, F, A>(self, platform, instance, initializer, g.gtype.valtype)?;
+        let v = eval_const::<M, P, F, A>(self, platform, instance, initializer, g.gtype.valtype)?;
         let addr = self.define_global_with::<A>(g.gtype, v)?;
         self.instances[instance].globals.push(addr);
         Ok(())
@@ -345,7 +338,7 @@ impl<M: MemoryBuffer> Store<M> {
             let ty = self.instances[instance].module.env().elements()[i]
                 .elem
                 .value_type();
-            match eval_const_exec::<M, P, F, A>(self, platform, instance, initializer, ty) {
+            match eval_const::<M, P, F, A>(self, platform, instance, initializer, ty) {
                 Ok(v) => values.push(value::encode(v).0),
                 Err(e) => status = Err(e),
             }
@@ -354,11 +347,11 @@ impl<M: MemoryBuffer> Store<M> {
         status?;
         reserve::<A, _>(&mut self.elems, 1)?;
         let address = self.elems.len();
-        self.elems.push(ElemInstance {
+        self.elems.push(ElemInst {
             ty: self.instances[instance].module.env().elements()[i].elem,
             refs: values,
         });
-        self.instances[instance].elements.push(address);
+        self.instances[instance].elems.push(address);
         Ok(())
     }
     fn add_instance_data<A: Alloc>(&mut self, instance: usize, i: usize) -> Result<(), ExecError> {
@@ -366,78 +359,66 @@ impl<M: MemoryBuffer> Store<M> {
         let bytes = copy_bytes::<A>(source)?;
         reserve::<A, _>(&mut self.datas, 1)?;
         let address = self.datas.len();
-        self.datas.push(DataInstance { bytes });
-        self.instances[instance].data.push(address);
+        self.datas.push(DataInst { bytes });
+        self.instances[instance].datas.push(address);
         Ok(())
     }
-    fn element_range_for<P: Platform<M>, F: FloatOps, A: Alloc>(
+    /// Wasm 1.0 checks every active element segment before any table write.
+    fn check_element_bounds<P: Platform<M>, F: FloatOps, A: Alloc>(
         &mut self,
         platform: &mut P,
         instance: usize,
         index: usize,
-    ) -> Result<Option<core::ops::Range<usize>>, ExecError> {
+    ) -> Result<(), ExecError> {
         let mode = self.instances[instance].module.env().elements()[index].mode;
-        match mode {
-            ElementMode::Active { table_idx, .. } => {
-                let initializer = match self.instances[instance].module.element_offsets[index] {
-                    Some(i) => i,
-                    None => return Err(ExecError::BadArguments),
-                };
-                let start = eval_const_exec::<M, P, F, A>(
-                    self,
-                    platform,
-                    instance,
-                    initializer,
-                    ValueType::I32,
-                )?
-                .i32()?;
-                let len = self.instances[instance].module.env().elements()[index]
-                    .init
-                    .len();
-                let table = self.instances[instance].tables[table_idx as usize].index;
-                Ok(Some(range(
-                    start as u64,
-                    len as u64,
-                    self.tables[table].elements.len(),
-                    Trap::TableOutOfBounds,
-                )?))
-            }
-            _ => Ok(None),
+        if let ElementMode::Active { table_idx, .. } = mode {
+            let initializer = match self.instances[instance].module.element_offsets[index] {
+                Some(i) => i,
+                None => return Err(ExecError::Internal),
+            };
+            let start =
+                eval_const::<M, P, F, A>(self, platform, instance, initializer, ValueType::I32)?
+                    .i32()?;
+            let len = self.instances[instance].module.env().elements()[index]
+                .init
+                .len();
+            let table = self.instances[instance].tables[table_idx as usize].index;
+            range(
+                start as u64,
+                len as u64,
+                self.tables[table].elements.len(),
+                Trap::TableOutOfBounds,
+            )?;
         }
+        Ok(())
     }
-    fn data_range_for<P: Platform<M>, F: FloatOps, A: Alloc>(
+    /// Wasm 1.0 checks every active data segment before any memory write.
+    fn check_data_bounds<P: Platform<M>, F: FloatOps, A: Alloc>(
         &mut self,
         platform: &mut P,
         instance: usize,
         index: usize,
-    ) -> Result<Option<core::ops::Range<usize>>, ExecError> {
+    ) -> Result<(), ExecError> {
         let mode = self.instances[instance].module.tail().data[index].mode;
-        match mode {
-            DataMode::Active { memory_idx, .. } => {
-                let initializer = match self.instances[instance].module.data_offsets[index] {
-                    Some(i) => i,
-                    None => return Err(ExecError::BadArguments),
-                };
-                let start = eval_const_exec::<M, P, F, A>(
-                    self,
-                    platform,
-                    instance,
-                    initializer,
-                    ValueType::I32,
-                )?
-                .i32()?;
-                let len = self.instances[instance].module.tail().data[index]
-                    .init
-                    .len();
-                let memory = self.instances[instance].memories[memory_idx as usize].index;
-                Ok(Some(range(
-                    start as u64,
-                    len as u64,
-                    self.memories[memory].buf.bytes().len(),
-                    Trap::MemoryOutOfBounds,
-                )?))
-            }
-            _ => Ok(None),
+        if let DataMode::Active { memory_idx, .. } = mode {
+            let initializer = match self.instances[instance].module.data_offsets[index] {
+                Some(i) => i,
+                None => return Err(ExecError::Internal),
+            };
+            let start =
+                eval_const::<M, P, F, A>(self, platform, instance, initializer, ValueType::I32)?
+                    .i32()?;
+            let len = self.instances[instance].module.tail().data[index]
+                .init
+                .len();
+            let memory = self.instances[instance].memories[memory_idx as usize].index;
+            range(
+                start as u64,
+                len as u64,
+                self.memories[memory].buf.bytes().len(),
+                Trap::MemoryOutOfBounds,
+            )?;
         }
+        Ok(())
     }
 }

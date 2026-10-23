@@ -37,7 +37,7 @@ theorem AddressOrder.trans {a b c : Nat} {initial middle final : List Nat}
   simpa only [Nat.one_mul] using (List.range'_append (s := a) (m := n) (n := m) (step := 1))
 
 theorem FunctionStageEffect.address_order {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out} {start initial}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out} {start initial}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     (ordered : AddressOrder start initial store.funcs.length (inst.funcs.val.map fun address => address.index.val)) :
     AddressOrder start initial out.2.1.funcs.length (out.2.2.funcs.val.map fun address => address.index.val) := by
@@ -46,7 +46,7 @@ theorem FunctionStageEffect.address_order {M : Type} {store : runtime.store.Stor
   · simpa [stored, mapped] using ordered.append
 
 theorem GlobalStageEffect.address_order {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {instIndex : Usize} {start initial}
+    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {start initial}
     (effect : GlobalStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (nextFound : after.instances.val[instIndex.val]? = some next)
@@ -63,12 +63,12 @@ theorem GlobalStageEffect.address_order {M : Type} {store after : runtime.store.
     simpa [stored, mapped] using ordered.append
 
 theorem ElementStageEffect.address_order {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {instIndex : Usize} {start initial}
+    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {start initial}
     (effect : ElementStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (nextFound : after.instances.val[instIndex.val]? = some next)
-    (ordered : AddressOrder start initial store.elems.length (inst.elements.val.map (UScalar.val))) :
-    AddressOrder start initial after.elems.length (next.elements.val.map (UScalar.val)) := by
+    (ordered : AddressOrder start initial store.elems.length (inst.elems.val.map (UScalar.val))) :
+    AddressOrder start initial after.elems.length (next.elems.val.map (UScalar.val)) := by
   cases effect with
   | unchanged =>
     have same := Option.some.inj (found.symm.trans nextFound)
@@ -80,12 +80,12 @@ theorem ElementStageEffect.address_order {M : Type} {store after : runtime.store
     simpa [stored, mapped] using ordered.append
 
 theorem DataStageEffect.address_order {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {instIndex : Usize} {start initial}
+    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {start initial}
     (effect : DataStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (nextFound : after.instances.val[instIndex.val]? = some next)
-    (ordered : AddressOrder start initial store.datas.length (inst.data.val.map (UScalar.val))) :
-    AddressOrder start initial after.datas.length (next.data.val.map (UScalar.val)) := by
+    (ordered : AddressOrder start initial store.datas.length (inst.datas.val.map (UScalar.val))) :
+    AddressOrder start initial after.datas.length (next.datas.val.map (UScalar.val)) := by
   cases effect with
   | unchanged =>
     have same := Option.some.inj (found.symm.trans nextFound)

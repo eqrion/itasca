@@ -21,9 +21,9 @@ theorem stackWords_take_succ (values : List Itasca.code.StackType) (i : Nat) (bo
   simp only [stackWords, List.map_append, List.sum_append, List.map_singleton, List.sum_singleton]
 
 @[step] theorem control_stack_width (ty : Itasca.code.StackType) :
-    runtime.compiler.control.stack_width ty ⦃ out => out.val = compilerStackWidth ty ⦄ := by
+    runtime.compiler.stack_width ty ⦃ out => out.val = compilerStackWidth ty ⦄ := by
   cases ty with
-  | Bot => simp [runtime.compiler.control.stack_width, compilerStackWidth, WP.spec_ok]
+  | Bot => simp [runtime.compiler.stack_width, compilerStackWidth, WP.spec_ok]
   | Val ty => exact compiler_width ty
 
 @[step] theorem control_stack_height (values : Slice Itasca.code.StackType) (count : Usize) (initial : U32)

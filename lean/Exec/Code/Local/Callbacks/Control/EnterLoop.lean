@@ -46,7 +46,7 @@ open Aeneas Aeneas.Std
   subst sig
   step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots (by simpa [alloc.vec.Vec.deref] using valuesFit) (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height, hheight⟩
   step as ⟨source, hsource⟩
-  simp only [runtime.compiler.control.is_then, runtime.compiler.control.is_loop, bind_ok,
+  simp only [bind_ok,
     reachable, Bool.false_eq_true, ite_false, ite_true]
   rw [compiler_pc_eq ops compiler pc position]
   simp only [bind_ok, core.result.Result.Insts.CoreOpsTry.branch, reachable,

@@ -13,7 +13,7 @@ theorem staged_functions_typed_old {M : Type} (view : M → Slice U8) (code : Co
     (beforeSyntax : StoreSyntax code before) (afterSyntax : StoreSyntax code after)
     (retained : StagedPrefix before after)
     (typed : Abs.FunctionsTyped (decodeStore view code before))
-    (function : runtime.store.Function) (member : function ∈ before.funcs.val) :
+    (function : runtime.store.FuncInst) (member : function ∈ before.funcs.val) :
     let fn := decodeFunction code after function
     match fn.CODE with
     | .HOST _ => Functype_ok fn.TYPE
@@ -34,7 +34,7 @@ theorem staged_functions_typed_old_wf {M : Type} (view : M → Slice U8) (code :
     (afterWf : wf_store (decodeStore view code after))
     (retained : StagedPrefix before after)
     (typed : Abs.FunctionsTyped (decodeStore view code before))
-    (function : runtime.store.Function) (member : function ∈ before.funcs.val) :
+    (function : runtime.store.FuncInst) (member : function ∈ before.funcs.val) :
     let fn := decodeFunction code after function
     match fn.CODE with
     | .HOST _ => Functype_ok fn.TYPE

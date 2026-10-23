@@ -33,7 +33,7 @@ theorem erase_loop_body {M P F A : Type} (memory : runtime.platform.MemoryBuffer
     (allocator : runtime.platform.Alloc A) (state : ExecutionState M P) :
     (do let phase ← prepareLoop memory hooks floats allocator state
         resumeLoop memory hooks phase)=executionBody memory hooks floats allocator state := by
-  unfold prepareLoop executionBody runtime.interp.invoke_with_loop2.body
+  unfold prepareLoop executionBody runtime.interp.invoke_with_loop1.body
   dsimp only
   split
   · simp only [Std.bind_assoc]

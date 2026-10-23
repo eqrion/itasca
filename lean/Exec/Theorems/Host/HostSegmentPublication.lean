@@ -28,11 +28,11 @@ theorem ExecutableInv.segment_publication {M : Type} {view : M → Slice U8}
 kinds of issued segment addresses remain in bounds even after publication. -/
 theorem retained_instance_segment_maps {M : Type} {view : M → Slice U8}
     {before after : runtime.store.Store M} (published : Store.SegmentPublication before after)
-    (shape : Store.Shape view before) {index : Nat} {inst : runtime.store.Instance}
+    (shape : Store.Shape view before) {index : Nat} {inst : runtime.store.ModuleInst}
     (found : before.instances.val[index]? = some inst) :
     after.instances.val[index]? = some inst ∧
-    (∀ address ∈ inst.elements.val, address.val < after.elems.length) ∧
-    (∀ address ∈ inst.data.val, address.val < after.datas.length) := by
+    (∀ address ∈ inst.elems.val, address.val < after.elems.length) ∧
+    (∀ address ∈ inst.datas.val, address.val < after.datas.length) := by
   obtain ⟨_,_,_,_,_,_,_,_,_,_,_,_,elements,datas⟩ := shape.instances inst (List.mem_of_getElem? found)
   exact ⟨published.instance_lookup found,
     fun address member => (elements address member).trans_le published.element_count,

@@ -29,8 +29,8 @@ indexing is excluded by normal return here, and by issued-handle invariants in
 the surrounding total staging theorem. -/
 theorem link_import_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (profile : Itasca.ValidationProfile) (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (index : Usize) (external : runtime.Extern)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.link_import memory store inst index external = .ok out) :
     ErrorAllowed (PrecommitError profile) out.1 ∧ out.2.1 = store ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.link_import at run

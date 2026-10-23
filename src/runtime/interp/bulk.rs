@@ -1,5 +1,11 @@
-//! Bulk operations share their bounds checks with segment initialization.
+//! Bulk memory and table operations and segment drops.
+//!
+//! Active segment initialization is compiled into these instructions, so it
+//! shares their bounds checks.
 use super::*;
+
+/// Executes a bulk instruction. Fill, copy, and init read their destination,
+/// source or value, and length from three consecutive slots starting at `d`.
 pub(super) fn execute<M: MemoryBuffer>(
     store: &mut Store<M>,
     inst: usize,
@@ -10,11 +16,11 @@ pub(super) fn execute<M: MemoryBuffer>(
 ) -> Result<(), ExecError> {
     match instruction {
         Instr::DataDrop { data } => {
-            let address = store.instances[inst].data[data as usize];
+            let address = store.instances[inst].datas[data as usize];
             store.datas[address].bytes = Vec::new();
         }
         Instr::ElemDrop { elem } => {
-            let address = store.instances[inst].elements[elem as usize];
+            let address = store.instances[inst].elems[elem as usize];
             store.elems[address].refs = Vec::new();
         }
         Instr::MemoryFill { d } | Instr::MemoryCopy { d } | Instr::MemoryInit { d, .. } => {
@@ -26,7 +32,7 @@ pub(super) fn execute<M: MemoryBuffer>(
             let dst = range(destination, len, bytes, Trap::MemoryOutOfBounds)?;
             match instruction {
                 Instr::MemoryInit { data, .. } => {
-                    let address = store.instances[inst].data[data as usize];
+                    let address = store.instances[inst].datas[data as usize];
                     let data = &store.datas[address].bytes;
                     let src = range(source as u64, len, data.len(), Trap::MemoryOutOfBounds)?;
                     let target = store.memories[memory].buf.bytes_mut();
@@ -82,7 +88,7 @@ pub(super) fn execute<M: MemoryBuffer>(
                 let src = range(
                     source,
                     len,
-                    store.elems[store.instances[inst].elements[a as usize]]
+                    store.elems[store.instances[inst].elems[a as usize]]
                         .refs
                         .len(),
                     Trap::TableOutOfBounds,
@@ -90,7 +96,7 @@ pub(super) fn execute<M: MemoryBuffer>(
                 let mut i = 0;
                 while i < len as usize {
                     store.tables[table].elements[dst.start + i] =
-                        store.elems[store.instances[inst].elements[a as usize]].refs[src.start + i];
+                        store.elems[store.instances[inst].elems[a as usize]].refs[src.start + i];
                     i += 1;
                 }
             } else {
@@ -135,7 +141,7 @@ pub(super) fn execute<M: MemoryBuffer>(
                 i += 1;
             }
         }
-        _ => return Err(ExecError::BadArguments),
+        _ => return Err(ExecError::Internal),
     }
     Ok(())
 }

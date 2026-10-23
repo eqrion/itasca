@@ -5,7 +5,7 @@ namespace Exec.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt
 
 theorem table_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (C : context) (index : Nat) (type : tabletype)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (index : Nat) (type : tabletype)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.TABLES[index]?=some type) :
     ∃ address object, inst.tables.val[index]?=some address ∧ store.tables.val[address.index.val]?=some object ∧
@@ -20,7 +20,7 @@ theorem table_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeI
   exact objectType
 
 theorem memory_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (C : context) (type : memtype)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (type : memtype)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.MEMS[0]?=some type) :
     ∃ address object, inst.memories.val[0]?=some address ∧ store.memories.val[address.index.val]?=some object := by
@@ -32,7 +32,7 @@ theorem memory_binding_raw {M : Type} (view : M → Slice U8) (code : Store.Code
   exact ⟨address,object,rawMapped,by simpa only [addressEq] using rawFound⟩
 
 theorem function_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (C : context) (index : Nat) (type : functype)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (index : Nat) (type : functype)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.FUNCS[index]?=some type) :
     ∃ address, inst.funcs.val[index]?=some address ∧ address.index.val<store.funcs.length := by

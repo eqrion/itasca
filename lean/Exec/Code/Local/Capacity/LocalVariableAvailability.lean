@@ -30,7 +30,7 @@ theorem lower_local_get_live_available {A : Type} (ops : runtime.platform.Alloc 
       let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
       let j ← lift (UScalar.cast .Usize index)
       let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
-      let count ← runtime.compiler.width rawType
+      let count ← runtime.value.width rawType
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
       let branch ← core.result.Result.Insts.CoreOpsTry.branch result
       match branch with
@@ -93,7 +93,7 @@ theorem lower_local_write_live_available {A : Type} (ops : runtime.platform.Allo
       | .Continue src =>
         let j ← lift (UScalar.cast .Usize index)
         let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
-        let count ← runtime.compiler.width rawType
+        let count ← runtime.value.width rawType
         let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
         let branch ← core.result.Result.Insts.CoreOpsTry.branch result
         match branch with

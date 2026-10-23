@@ -1,13 +1,8 @@
 # Execution proofs
 
-Start with the [public theorem map](../../docs/EXECUTION_VERIFICATION.md#public-theorem-map)
-for guarantees and premises. This guide explains how the proofs are assembled.
+Start with the [execution boundary](../README.md#execution-boundary) for
+guarantees and premises. This guide explains how the proofs are assembled.
 The [Lean guide](../README.md) covers tool setup and the independent validator.
-The [review map](../../docs/EXECUTION_REVIEW.md) gives an order for reviewing
-the execution-proof addition.
-
-The [maintenance plan](MAINTENANCE_PLAN.md) sequences theorem consolidation and
-changes to make the execution proofs easier to maintain.
 
 ## Canonical public constructions
 
@@ -225,9 +220,7 @@ recovers the ordinary returning callback package for the finite action subclass.
 
 These callback implementations are Lean models of the interface. Arbitrary
 Rust callbacks still need a refinement contract. Concrete publication currently
-supports modules with empty imports and no start function. The
-[execution reference](../../docs/EXECUTION_VERIFICATION.md#checked-callback-implementations)
-records the precise guarantees and restrictions.
+supports modules with empty imports and no start function.
 
 ## Reading and extending the proofs
 

@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 
 /-- Source syntax attached to one compiled instance and its ghost source bodies. -/
 structure InstanceSyntax (code : CodeInterpretation) (index : Nat)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   exportNames : ∀ entry ∈ inst.module.module.env.exports.val,
     wf_name (decodeName entry.name.val)
   functionCodes : ∀ function, function < inst.module.module.env.func_type_indices.length →
@@ -76,7 +76,7 @@ theorem decodeBytes_wf (bytes : List U8) : Forall wf_byte (decodeBytes bytes) :=
   scalar_tac
 
 theorem decodeInstance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (h : InstanceSyntax code index inst) :
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (h : InstanceSyntax code index inst) :
     wf_moduleinst (decodeInstance s inst) := by
   constructor
   intro entry hentry
@@ -86,7 +86,7 @@ theorem decodeInstance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
 
 theorem decodeFunction_wf {M : Type} (code : CodeInterpretation)
     (s : runtime.store.Store M) (hsyntax : StoreSyntax code s)
-    (function : runtime.store.Function) (hshape : FunctionShape s function) :
+    (function : runtime.store.FuncInst) (hshape : FunctionShape s function) :
     wf_funcinst (decodeFunction code s function) := by
   unfold decodeFunction
   dsimp only

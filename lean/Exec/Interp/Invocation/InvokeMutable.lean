@@ -8,7 +8,7 @@ theorem invoke_with_mutable_resource_composition_mode {M P F A : Type}
     (allowDivergence : Bool)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -28,7 +28,7 @@ theorem invoke_with_mutable_resource_composition_mode {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       InvocationWP allowDivergence
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,
@@ -57,7 +57,7 @@ theorem invoke_with_mutable_error_composition_mode {M P F A : Type}
     (allowDivergence : Bool)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -77,7 +77,7 @@ theorem invoke_with_mutable_error_composition_mode {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       InvocationWP allowDivergence
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,
@@ -99,7 +99,7 @@ theorem invoke_with_mutable_error_composition {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -119,7 +119,7 @@ theorem invoke_with_mutable_error_composition {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       WP.dspec
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,
@@ -139,7 +139,7 @@ theorem invoke_with_mutable_resource_composition {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
@@ -159,7 +159,7 @@ theorem invoke_with_mutable_resource_composition {M P F A : Type}
           (∀ error, out.1 = .Err error → errorProperty store error) ⦄)
     (executed : ∀ prepared p, entry prepared →
       WP.dspec
-        (runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()))
+        (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           afterStore.id = store.id ∧ afterStore.funcs = store.funcs ∧ afterStore.types = store.types ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,

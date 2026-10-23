@@ -22,8 +22,8 @@ theorem lane_word_cast (width j : Nat) (x : BitVec 128) (a : U64)
   rw [value,Nat.mod_eq_of_lt (BitVec.isLt _)]
 
 theorem integer_arithmetic_loop (ty : Jnn) (kind : IntegerArithmetic) (x y : U128) :
-    runtime.interp.simd.integer_binary_lanes_loop (integerArithmeticOpcode ty kind) (integerCompareWidth ty)
-      y x 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
+    runtime.interp.simd.integer_binary_lanes_loop (integerArithmeticOpcode ty kind) x
+      y (integerCompareWidth ty) 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerArithmeticBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
   have widthEq := integerCompareWidth_val ty
@@ -45,8 +45,8 @@ theorem integer_arithmetic_loop (ty : Jnn) (kind : IntegerArithmetic) (x y : U12
 
 theorem integer_arithmetic_dispatch_eq (ty : Jnn) (kind : IntegerArithmetic) (x y : U128) :
     runtime.interp.simd.integer_binary_lanes (integerArithmeticOpcode ty kind) x y =
-      Aeneas.Std.bind (runtime.interp.simd.integer_binary_lanes_loop (integerArithmeticOpcode ty kind)
-        (integerCompareWidth ty) y x 0#u128 0#u32) runtime.interp.simd.vector := by
+      (runtime.interp.simd.integer_binary_lanes_loop (integerArithmeticOpcode ty kind)
+        x y (integerCompareWidth ty) 0#u128 0#u32) := by
   cases ty <;> cases kind
   all_goals unfold runtime.interp.simd.integer_binary_lanes integerArithmeticOpcode integerCompareWidth
   all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _
@@ -63,7 +63,8 @@ theorem integer_arithmetic_dispatch_eq (ty : Jnn) (kind : IntegerArithmetic) (x 
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerArithmeticBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
   rw [integer_arithmetic_dispatch_eq]
-  step with integer_arithmetic_loop ty kind x y as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (integer_arithmetic_loop ty kind x y)
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

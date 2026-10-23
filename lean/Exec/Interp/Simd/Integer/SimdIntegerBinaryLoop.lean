@@ -62,7 +62,7 @@ theorem integer_binary_loop
       integerBinaryWord remainder width a b sa sb ⦃ value => R j (value.bv.setWidth width.val) ⦄)
     (position : i.val ≤ 128/width.val)
     (initializedPrefix : ∀ j, j < i.val → R j (laneBits width.val j initial.bv)) :
-    runtime.interp.simd.integer_binary_lanes_loop op width y x initial i ⦃ result =>
+    runtime.interp.simd.integer_binary_lanes_loop op x y width initial i ⦃ result =>
       ∀ j, j < 128/width.val → R j (laneBits width.val j result.bv) ⦄ := by
   unfold runtime.interp.simd.integer_binary_lanes_loop
   apply loop.spec_decr_nat (fun p => 128/width.val-p.2.val)

@@ -47,7 +47,7 @@ theorem FrameStoreMetadata.prefix {M : Type} {before after : runtime.store.Store
   exact ⟨same.identity,by simp [same.functions],by simp [same.types],by simp [same.instances]⟩
 
 theorem FrameStorePrefix.function_lookup {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) {index : Nat} {function : runtime.store.Function}
+    (retained : FrameStorePrefix before after) {index : Nat} {function : runtime.store.FuncInst}
     (found : before.funcs.val[index]? = some function) : after.funcs.val[index]? = some function :=
   retained_lookup retained.functions found
 
@@ -57,12 +57,12 @@ theorem FrameStorePrefix.type_lookup {M : Type} {before after : runtime.store.St
   retained_lookup retained.types found
 
 theorem FrameStorePrefix.instance_lookup {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) {index : Nat} {inst : runtime.store.Instance}
+    (retained : FrameStorePrefix before after) {index : Nat} {inst : runtime.store.ModuleInst}
     (found : before.instances.val[index]? = some inst) : after.instances.val[index]? = some inst :=
   retained_lookup retained.instances found
 
 theorem FrameStorePrefix.decodeInstance {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) (inst : runtime.store.Instance)
+    (retained : FrameStorePrefix before after) (inst : runtime.store.ModuleInst)
     (typeBounds : ∀ index ∈ inst.types.val, index.val < before.types.length) :
     Store.decodeInstance after inst = Store.decodeInstance before inst := by
   unfold Store.decodeInstance

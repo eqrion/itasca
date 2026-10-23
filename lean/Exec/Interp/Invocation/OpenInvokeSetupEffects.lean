@@ -11,7 +11,7 @@ theorem prepare_invoke_checked_effects {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store=store.id) (hf : store.funcs.val[address.index.val]?=some function)
     (hs : store.types.val[function.signature.val]?=some signature)
@@ -92,7 +92,13 @@ theorem prepare_invoke_checked_effects {M P F A : Type}
       | Ok unit =>
         cases unit
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-        step with clear_frames grown as ⟨words, frames, hostArgs, hostResults, wordsEq, empty, argsEq, resultsEq⟩
+        step with runtime_clear grown.frames as ⟨frames, empty⟩
+        generalize sameWords : grown.slots = words
+        generalize sameArgs : grown.host_args = hostArgs
+        generalize sameResults : grown.host_results = hostResults
+        have wordsEq := sameWords.symm
+        have argsEq := sameArgs.symm
+        have resultsEq := sameResults.symm
         have capacity : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length := by
           have length : grown.slots.length = exec.slots.length + ((core.cmp.impls.OrdUsize.max params returns).val - exec.slots.length) := by
             change grown.slots.val.length = _

@@ -21,10 +21,10 @@ theorem compiler_lower_table_available {A : Type} (ops : runtime.platform.Alloc 
     (tables : compiler.function.jump_tables.val.length ≤ compiler.function.code.val.length)
     (depthCount : compiler.table_depths.length ≤ U32.max) (selector : U32)
     (selectorAt : compiler.before.val[compiler.before.val.length-1]? = some selector) :
-    runtime.compiler.FunctionCompiler.lower_table_branches ops compiler ⦃ out =>
+    runtime.compiler.control.FunctionCompiler.lower_table_branches ops compiler ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2*compiler.table_depths.val.length+1 else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches
   step with bounded_index_available (alloc.vec.Vec.len compiler.function.jump_tables)
     (by have room := capacity.pc; simp only [alloc.vec.Vec.length] at room; change compiler.function.jump_tables.val.length ≤ U32.max; omega)
     as ⟨status,start,accepted,_⟩

@@ -24,7 +24,7 @@ variable {M P F A : Type}
 
 def executionBody (state : ExecutionState M P) :
     Result (ControlFlow (ExecutionState M P) (ExecutionResult M P)) :=
-  runtime.interp.invoke_with_loop2.body memory hooks floats allocator
+  runtime.interp.invoke_with_loop1.body memory hooks floats allocator
     state.1 state.2.1 state.2.2.1 state.2.2.2
 
 /-- A running iteration invokes exactly one instruction step. -/
@@ -35,7 +35,7 @@ theorem executionBody_active (state : ExecutionState M P) (active : ActiveExecut
       .ok (.cont (exec, store, platform, status))) := by
   obtain ⟨frames, status⟩ := active
   have hframes : state.1.frames.len > 0#usize := by scalar_tac
-  simp [executionBody, runtime.interp.invoke_with_loop2.body, hframes, status,
+  simp [executionBody, runtime.interp.invoke_with_loop1.body, hframes, status,
     core.result.Result.is_ok]
 
 /-- Finite returns have exact concrete step histories; divergence is allowed,
@@ -50,13 +50,13 @@ theorem execution_loop_trace_safe
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (status : core.result.Result Unit runtime.ExecError)
     (initial : invariant (exec, store, platform, status)) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator exec store platform status
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator exec store platform status
       ⦃ result => ∃ count, NormalTrace (executionBody memory hooks floats allocator)
         count (exec, store, platform, status) result ∧ post result ⦄div := by
   change loop (executionBody memory hooks floats allocator) (exec, store, platform, status) ⦃ _ ⦄div
   apply loop_trace_dspec _ invariant post ?_ _ initial
   rintro ⟨current, currentStore, currentPlatform, currentStatus⟩ hinv
-  unfold executionBody runtime.interp.invoke_with_loop2.body
+  unfold executionBody runtime.interp.invoke_with_loop1.body
   dsimp only
   split
   · have hframes : 0 < current.frames.length := by scalar_tac
@@ -80,7 +80,7 @@ theorem execution_loop_diverges (states : Nat → ExecutionState M P)
       (states n).1 (states n).2.1 (states n).2.2.1 =
       .ok ((states (n + 1)).2.2.2, (states (n + 1)).1,
         (states (n + 1)).2.1, (states (n + 1)).2.2.1)) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator
       (states 0).1 (states 0).2.1 (states 0).2.2.1 (states 0).2.2.2 = .div := by
   change loop (executionBody memory hooks floats allocator) (states 0) = .div
   apply loop_diverges_of_stream
@@ -100,7 +100,7 @@ theorem execution_loop_stops
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (status : core.result.Result Unit runtime.ExecError)
     (initial : invariant (exec, store, platform, status)) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator exec store platform status
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator exec store platform status
       ⦃ result => ∃ state, invariant state ∧ ¬ActiveExecution state ∧ finishExecution state = result ⦄div := by
   apply WP.dspec_mono (execution_loop_trace_safe memory hooks floats allocator invariant
     (fun result => ∃ state, invariant state ∧ ¬ActiveExecution state ∧ finishExecution state = result)

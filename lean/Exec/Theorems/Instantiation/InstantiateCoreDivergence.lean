@@ -22,7 +22,7 @@ theorem instantiate_compiled_core_divergence {M P F A : Type}
       ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
       ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       inst.module.module.env.start = some index ∧ inst.funcs.val[index.val]? = some address ∧
-      runtime.instantiate.initialize_segments memory hooks floats allocator ready platform before.instances.len =
+      runtime.interp.initialize_segments memory hooks floats allocator ready platform before.instances.len =
         .ok (.Ok (), initialized, platform) ∧
       (∀ requested, ∃ final count, Spec.StepsHN count
         (moduleStartConfiguration view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) initialized inst index)

@@ -78,7 +78,7 @@ theorem ReferenceShape.mono {M : Type} (before after : runtime.store.Store M)
 theorem GlobalShape.mono {M : Type} (before after : runtime.store.Store M)
     (hfunc : before.funcs.length ≤ after.funcs.length)
     (hextern : before.externs.length ≤ after.externs.length)
-    (global : runtime.store.GlobalInstance) : GlobalShape before global → GlobalShape after global := by
+    (global : runtime.store.GlobalInst) : GlobalShape before global → GlobalShape after global := by
   intro h
   cases ht : global.ty.valtype <;> simp only [GlobalShape, ht] at h ⊢
   all_goals try exact h
@@ -87,7 +87,7 @@ theorem GlobalShape.mono {M : Type} (before after : runtime.store.Store M)
 theorem TableShape.mono {M : Type} (before after : runtime.store.Store M)
     (hfunc : before.funcs.length ≤ after.funcs.length)
     (hextern : before.externs.length ≤ after.externs.length)
-    (table : runtime.store.Table) (h : TableShape before table) : TableShape after table := by
+    (table : runtime.store.TableInst) (h : TableShape before table) : TableShape after table := by
   refine ⟨h.1, h.2.1, ?_⟩
   intro word hword
   exact ReferenceShape.mono before after hfunc hextern _ _ (h.2.2 word hword)
@@ -145,7 +145,7 @@ theorem InstanceShape.mono {M : Type} (before after : runtime.store.Store M)
     (hglob : before.globals.length ≤ after.globals.length)
     (helem : before.elems.length ≤ after.elems.length)
     (hdata : before.datas.length ≤ after.datas.length)
-    (inst : runtime.store.Instance) (h : InstanceShape before inst) :
+    (inst : runtime.store.ModuleInst) (h : InstanceShape before inst) :
     InstanceShape after inst := by
   rcases h with ⟨htypes, hfuncs, htables, hmemories, hglobals, helems, hdatas,
     types, funcs, tables, memories, globals, elems, datas⟩
@@ -171,7 +171,7 @@ theorem define_global_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M
     (hv : ValueInStore s value) :
     runtime.store.Store.define_global_with ops allocator s ty value ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨
-      ∃ globals : alloc.vec.Vec runtime.store.GlobalInstance, ∃ words : U64 × U64,
+      ∃ globals : alloc.vec.Vec runtime.store.GlobalInst, ∃ words : U64 × U64,
         runtime.value.encode value = .ok words ∧
         globals.val = s.globals.val ++ [{ty, lo := words.1, hi := words.2}] ∧
         objectCount s < s.limits.max_objects.val ∧

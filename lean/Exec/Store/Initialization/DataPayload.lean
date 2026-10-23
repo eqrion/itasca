@@ -7,10 +7,10 @@ def sourceDataPayload (segment : Itasca.module.Data) : datainst :=
 
 theorem add_instance_data_payload {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (instIndex index : Usize) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bound : index.val < inst.module.module.tail.data.val.length)
-    (room : store.datas.length < Usize.max) (mapRoom : inst.data.length < Usize.max) :
+    (room : store.datas.length < Usize.max) (mapRoom : inst.datas.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_data memory allocator store instIndex index
       ⦃ out => DataResultEffect store instIndex inst out.1 out.2 ∧
         (out.1 = .Ok () → out.2.datas.val.map decodeData =

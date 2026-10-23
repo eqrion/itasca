@@ -17,9 +17,9 @@ theorem recorded_inv_divergent_next {M P F A : Type}
     (Inv : runtime.store.Store M → Prop)
     (steps : RecordedInvStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv)
     (machine : EventfulMachine emission allowed M P view code expected) (valid : Inv machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div) :
     ∃events next, RecordedEventfulTransition memory hooks floats allocator machine events next ∧ Inv next.store ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator next.exec next.store next.platform (.Ok ())=.div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator next.exec next.store next.platform (.Ok ())=.div := by
   have active := execution_loop_divergent_active memory hooks floats allocator machine.exec machine.store machine.platform divergent
   obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,returned,fresh,outcome,rest⟩ := WP.spec_imp_exists (steps machine valid active)
   change loop (executionBody memory hooks floats allocator) (machine.exec,machine.store,machine.platform,.Ok ())=.div at divergent
@@ -46,17 +46,17 @@ theorem recorded_inv_loop_prefixes {M P F A : Type}
     (Inv : runtime.store.Store M → Prop)
     (steps : RecordedInvStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv)
     (initial : EventfulMachine emission allowed M P view code expected) (valid : Inv initial.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
     ∃ (states : Nat → EventfulMachine emission allowed M P view code expected) (events : Nat → List HostEvent),
       states 0=initial ∧
       (∀n,Inv (states n).store ∧ RecordedEventfulTransition memory hooks floats allocator (states n) (events n) (states (n+1))) ∧
-      (∀n,runtime.interp.invoke_with_loop2 memory hooks floats allocator (states n).exec (states n).store (states n).platform (.Ok ())=.div) ∧
+      (∀n,runtime.interp.invoke_with_loop1 memory hooks floats allocator (states n).exec (states n).store (states n).platform (.Ok ())=.div) ∧
       (∀n prior,recordedSteps memory hooks floats allocator n initial.exec initial.store initial.platform prior=
         .ok ((.Ok (),(states n).exec,(states n).store,(states n).platform),prior++recordedPrefixEvents events n)) ∧
       (∀n,∃count,Spec.StepsHN count (Abs.decode initial.source) (recordedPrefixEvents events n) (Abs.decode (states n).source)) := by
   classical
   let running (machine : EventfulMachine emission allowed M P view code expected) :=
-    Inv machine.store ∧ runtime.interp.invoke_with_loop2 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div
+    Inv machine.store ∧ runtime.interp.invoke_with_loop1 memory hooks floats allocator machine.exec machine.store machine.platform (.Ok ())=.div
   have successor (current : {machine // running machine}) : ∃events,∃after : {machine // running machine},
       RecordedEventfulTransition memory hooks floats allocator current.val events after.val := by
     obtain ⟨events,next,edge,valid,divergent⟩ := recorded_inv_divergent_next memory hooks floats allocator Inv steps current.val current.property.1 current.property.2

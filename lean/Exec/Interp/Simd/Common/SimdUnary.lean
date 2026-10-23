@@ -72,9 +72,13 @@ def UnaryOutcome (ty : Jnn) (action : UnaryAction) (x result : U128) : Prop :=
     show (1#u32=3#u32) ↔ False by decide, show (1#u32=4#u32) ↔ False by decide,
     show (2#u32=3#u32) ↔ False by decide, show (2#u32=4#u32) ↔ False by decide,
     show (4#u32=3#u32) ↔ False by decide, ite_false,ite_true,
-    lift,bind_ok,runtime.interp.simd.vector,runtime.interp.simd.from_u32,WP.spec_ok,UnaryOutcome]
+    lift,bind_ok,WP.spec_ok,UnaryOutcome]
   case absolute | negate | population => cases ty <;> with_unfolding_all exact lanes
   case allTrue =>
+    have bridge : ∀ answer : Bool, UScalar.cast_fromBool .U128 answer =
+        UScalar.cast .U128 (UScalar.cast_fromBool .U32 answer) := by
+      intro answer; cases answer <;> decide
+    rw [bridge]
     apply congrArg (fun answer => UScalar.cast .U128 (UScalar.cast_fromBool .U32 answer))
     cases ty <;> with_unfolding_all exact allEq
   case bitmask =>

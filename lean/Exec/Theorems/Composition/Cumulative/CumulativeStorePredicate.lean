@@ -14,7 +14,7 @@ theorem cumulative_loop_store_predicate {M P F A : Type}
     {expected : List valtype} (initial : CumulativeMachine M P view code expected)
     (predicate : runtime.store.Store M → Prop) (initialPredicate : predicate initial.store)
     (preserved : ∀ before after, CumulativeStoreMutation view code before after → predicate before → predicate after) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ out => predicate out.2.2.2.2.2.1 ⦄div := by
   let invariant (state : ExecutionState M P) :=
     CumulativeLoopInvariant memory hooks floats allocator initial state ∧ predicate state.2.1

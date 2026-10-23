@@ -11,7 +11,7 @@ theorem readback_values {M P A : Type} (memory : runtime.platform.MemoryBuffer M
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (exec : runtime.interp.Execution) (token : P)
     (address : runtime.FuncAddr) (owner : address.store=store.id)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (hf : store.funcs.val[address.index.val]?=some function)
     (hs : store.types.val[function.signature.val]?=some signature)
     (results : alloc.vec.Vec runtime.Value) (values : List val)
@@ -42,7 +42,7 @@ theorem readback_values {M P A : Type} (memory : runtime.platform.MemoryBuffer M
     exact ⟨_,reserved⟩
   | true =>
     simp only [ite_true,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with clear_results results as ⟨cleared,empty⟩
+    step with runtime_clear results as ⟨cleared,empty⟩
     have tags : signature.results.val.map sourceType=values.map Code.valueType := by
       simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using
         (Abs.results_type_of_typed typed).symm

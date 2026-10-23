@@ -28,7 +28,7 @@ theorem invoke_start_executable_world_ambient {M P F A : Type}
     (issued : ∀ c store, ExecutableInv view c store → ∀ host p args results answer,
       hooks.call_host p store host args results = .ok answer → ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (empty : args.val = [])
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)
@@ -99,7 +99,7 @@ theorem instantiate_start_executable_world_ambient {M P F A : Type}
       hooks.call_host p store host args results = .ok answer → ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (identity : runtime.InstanceAddr) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)

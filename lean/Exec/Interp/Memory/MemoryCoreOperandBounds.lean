@@ -2,7 +2,7 @@ import Exec.Interp.Memory.MemoryCoreOperands
 namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
  theorem load_typed_operands_full {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (after : List instr) (op : Abs.Memory.Load) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} []) :
@@ -20,7 +20,7 @@ open Aeneas Aeneas.Std SpecExt
     exact ⟨front,bits,address,object,split,bitsBound,rawMapped,rawFound,frontWf,heights⟩
 
  theorem store_typed_operands_full {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (after : List instr) (op : Abs.Memory.Store) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} []) :

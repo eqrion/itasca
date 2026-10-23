@@ -39,8 +39,7 @@ theorem splatWidth_val (ty : lanetype) : (splatWidth ty).val = lsize ty := by
 
 theorem splat_lanes_eq (ty : lanetype) (a : U128) :
     runtime.interp.simd.splat_lanes (splatOpcode ty) a =
-      Aeneas.Std.bind (runtime.interp.simd.splat (splatInput ty a) (splatWidth ty))
-        runtime.interp.simd.vector := by
+      (runtime.interp.simd.splat (splatInput ty a) (splatWidth ty)) := by
   cases ty <;> unfold runtime.interp.simd.splat_lanes splatOpcode splatInput splatWidth
   all_goals simp only [lift, bind_ok]
   all_goals try simp only [
@@ -53,27 +52,27 @@ theorem splat_lanes_eq (ty : lanetype) (a : U128) :
   all_goals try simp only [bind_ok]
   case I8 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 (UScalar.cast .U32 a), 8#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
   case I16 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 (UScalar.cast .U32 a), 16#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
   case I32 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 (UScalar.cast .U32 a), 32#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
   case I64 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 a, 64#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
   case F32 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 (UScalar.cast .U32 a), 32#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
   case F64 =>
     with_unfolding_all change (Aeneas.Std.bind (Result.ok (UScalar.cast .U64 a, 64#u32))
-      (fun p => Aeneas.Std.bind (runtime.interp.simd.splat p.1 p.2) runtime.interp.simd.vector) = _)
+      (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
 
 theorem splatInput_source (ty : lanetype) (a : U128) :
@@ -95,9 +94,8 @@ theorem splatInput_source (ty : lanetype) (a : U128) :
       Step_pure [.CONST (unpack ty) (Spec.Simd.scalarInput ty (UScalar.cast .U64 a).bv),
         .VSPLAT (Spec.Simd.shapeOf ty)] [.VCONST .V128 (.mk_uN result.val)] ⦄ := by
   rw [splat_lanes_eq]
-  step with splat_sound ty (splatInput ty a) (splatWidth ty) (splatWidth_val ty) as ⟨result, source⟩
-  rw [runtime.interp.simd.vector]
-  simp only [WP.spec_ok]
+  apply WP.spec_mono (splat_sound ty (splatInput ty a) (splatWidth ty) (splatWidth_val ty))
+  intro result source
   rw [splatInput_source] at source
   exact source
 

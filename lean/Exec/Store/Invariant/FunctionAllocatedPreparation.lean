@@ -11,7 +11,7 @@ Its premises are the maps already established by linking/type interning. -/
 theorem prepare_function_allocated {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex : Usize)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (objectBound : objectCount store ≤ Usize.max)
     (allocated : AllocationShape view store)

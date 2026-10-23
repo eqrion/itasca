@@ -48,7 +48,7 @@ theorem core_local_get_storage_capacity {M : Type}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution}
     {raw : runtime.interp.Frame} {source : Abs.AFrame}
     (binding : FrameBinding store exec raw source)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true)

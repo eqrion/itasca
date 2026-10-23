@@ -8,8 +8,8 @@ namespace Exec.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_width (ty : Itasca.types.ValueType) :
-    runtime.compiler.width ty ⦃ word => word.val = width (Itasca.Translate.valueType ty) ⦄ := by
-  cases ty <;> simp [runtime.compiler.width, Itasca.Translate.valueType, width, WP.spec_ok]
+    runtime.value.width ty ⦃ word => word.val = width (Itasca.Translate.valueType ty) ⦄ := by
+  cases ty <;> simp [runtime.value.width, Itasca.Translate.valueType, width, WP.spec_ok]
 
 @[step] theorem operand_at (before : Slice U32) (depth : Usize)
     (positive : 0 < depth.val) (fits : depth.val ≤ before.val.length) :
@@ -59,7 +59,7 @@ open Aeneas Aeneas.Std
   unfold runtime.compiler.observe_value
   step with budget_push ops law budget before height fits as ⟨r, budget1, before1, hp⟩
   rcases hp with ⟨rfl, rfl, appended⟩ | ⟨rfl, rfl, rejected⟩
-  · cases ty <;> step* <;> cases ‹Option U32› <;>
+  · cases ty <;> simp only [runtime.compiler.stack_width] <;> step* <;> cases ‹Option U32› <;>
       simp_all [compilerStackWidth, core.option.Option.ok_or,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

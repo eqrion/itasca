@@ -24,7 +24,7 @@ theorem quiet_boundary_atomic_terminates {choices : Spec.SourceChoices} (admissi
     let trapped : Spec.SourceChoices:={choices with host:=Spec.trappingHostChoice}
     let Inv:=ReentrantCallbacks.FloorInv view world.machine.store.externs.length
     let initial : ChosenWorld Executable.emission Abs.ExecutableInstr M Unit view expected:=⟨world,occurrence⟩
-    runtime.interp.invoke_with_loop2 memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory (inert memory) floats allocator world.machine.exec world.machine.store world.machine.platform (.Ok ())
       ⦃result=>∃state,ChosenWorldLoopInvariant trapped memory (inert memory) floats allocator Inv initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result⦄ := by
   dsimp only

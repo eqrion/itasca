@@ -15,15 +15,15 @@ theorem chosen_supported_loop_terminates {choices : SourceChoices} (admissible :
     {events : List HostEvent} {target : config}
     (run : ChoiceSteps choices initial.occurrence (Abs.decode initial.source) events target)
     (terminal : SourceTerminal target) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ∃ state, ChosenSupportedLoopInvariant (choices:=choices) memory hooks floats allocator initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄ := by
-  have notdiv : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())≠.div := by
+  have notdiv : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())≠.div := by
     intro divergent
     exact chosen_terminating_no_infinite admissible run terminal
       (chosen_supported_loop_infinite memory hooks floats allocator steps initial divergent)
   have safe := chosen_supported_loop_stops memory hooks floats allocator steps initial
-  generalize answerEq : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=answer at safe notdiv ⊢
+  generalize answerEq : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=answer at safe notdiv ⊢
   cases safe with
   | ret post => exact .ret post
   | div => exact False.elim (notdiv rfl)

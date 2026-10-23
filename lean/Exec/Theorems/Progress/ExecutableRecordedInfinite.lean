@@ -21,11 +21,11 @@ theorem executable_recorded_loop_prefixes
     {expected : List valtype}
     (initial : EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected)
     (valid : ExecutableInv view code initial.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())=.div) :
     ∃ (states : Nat → EventfulMachine Interp.Executable.emission Abs.ExecutableInstr M P view code expected) (events : Nat → List HostEvent),
       states 0=initial ∧
       (∀n,ExecutableInv view code (states n).store ∧ RecordedEventfulTransition memory hooks floats allocator (states n) (events n) (states (n+1))) ∧
-      (∀n,runtime.interp.invoke_with_loop2 memory hooks floats allocator (states n).exec (states n).store (states n).platform (.Ok ())=.div) ∧
+      (∀n,runtime.interp.invoke_with_loop1 memory hooks floats allocator (states n).exec (states n).store (states n).platform (.Ok ())=.div) ∧
       (∀n prior,recordedSteps memory hooks floats allocator n initial.exec initial.store initial.platform prior=
         .ok ((.Ok (),(states n).exec,(states n).store,(states n).platform),prior++recordedPrefixEvents events n)) ∧
       (∀n,∃count,Spec.StepsHN count (Abs.decode initial.source) (recordedPrefixEvents events n) (Abs.decode (states n).source)) :=

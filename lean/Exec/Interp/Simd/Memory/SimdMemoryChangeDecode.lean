@@ -12,8 +12,8 @@ theorem MemoryBufferChange.well_formed {s : store} {f : frame} {before after : S
 
 /-- The structured byte effect decodes an actual opaque buffer replacement exactly. -/
 theorem MemoryBufferChange.decoded {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (buffer : M) (sourceAfter : _root_.store)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (buffer : M) (sourceAfter : _root_.store)
     (moduleEq : ambient.MODULE = Store.decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some address)
     (found : store.memories.val[address.index.val]? = some object)

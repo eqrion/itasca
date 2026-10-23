@@ -36,7 +36,7 @@ certificate, including source operand safety from its accepted checked arithmeti
 theorem compiler_table_target_code {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]? = some depth)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     ∃ target,
       target.val = before.function.code.val.length ∧
       after.function.jump_tables.val = before.function.jump_tables.val ++ [target] ∧

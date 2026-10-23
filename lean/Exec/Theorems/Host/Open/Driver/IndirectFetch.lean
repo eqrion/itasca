@@ -10,8 +10,8 @@ theorem prepare_indirect_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (instanceIndex functionIndex base : Usize) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (instanceFound : store.instances.val[instanceIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[functionIndex.val]? = some compiled)
@@ -23,7 +23,7 @@ theorem prepare_indirect_effect {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = base.val+callee.val)
     (targets : ∀ reference : U64, object.elements.val[position.val]? = some reference →
-      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.Function,
+      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.FuncInst,
         (UScalar.cast .Usize reference).val = address.val+1 ∧
         store.funcs.val[address.val]? = some function)
     (post : CallPhase M P → Prop)
@@ -31,12 +31,12 @@ theorem prepare_indirect_effect {M P F A : Type}
       post (.done (.Err (.Trap .TableOutOfBounds),exec,store,platform)))
     (null : object.elements.val[position.val]? = some (0#u64) →
       post (.done (.Err (.Trap .UninitializedElement),exec,store,platform)))
-    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature ≠ signature →
       post (.done (.Err (.Trap .IndirectCallTypeMismatch),exec,store,platform)))
-    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature = signature →
@@ -114,8 +114,8 @@ theorem prepare_step_indirect_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (frame : runtime.interp.Frame) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (last : frameIndex.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[frameIndex.val]? = some frame)
@@ -131,7 +131,7 @@ theorem prepare_step_indirect_effect {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = frame.base.val+callee.val)
     (targets : ∀ reference : U64, object.elements.val[position.val]? = some reference →
-      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.Function,
+      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.FuncInst,
         (UScalar.cast .Usize reference).val = address.val+1 ∧
         store.funcs.val[address.val]? = some function)
     (post : CallPhase M P → Prop)
@@ -139,12 +139,12 @@ theorem prepare_step_indirect_effect {M P F A : Type}
       post (.done (.Err (.Trap .TableOutOfBounds),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
     (null : ∀ next : U32, next.val = frame.pc.val+1 → object.elements.val[position.val]? = some (0#u64) →
       post (.done (.Err (.Trap .UninitializedElement),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
-    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature ≠ signature →
       post (.done (.Err (.Trap .IndirectCallTypeMismatch),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
-    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature = signature →
@@ -171,8 +171,8 @@ theorem prepare_indirect_shaped {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (instanceIndex functionIndex base : Usize) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (expected : Itasca.types.FuncType) (shape : Store.Shape view store)
     (funcref : object.ty = .FuncRef)
@@ -191,12 +191,12 @@ theorem prepare_indirect_shaped {M P F A : Type}
       post (.done (.Err (.Trap .TableOutOfBounds),exec,store,platform)))
     (null : object.elements.val[position.val]? = some (0#u64) →
       post (.done (.Err (.Trap .UninitializedElement),exec,store,platform)))
-    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE ≠ Store.decodeFuncType expected →
       post (.done (.Err (.Trap .IndirectCallTypeMismatch),exec,store,platform)))
-    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE = Store.decodeFuncType expected →
@@ -233,8 +233,8 @@ theorem prepare_step_indirect_shaped {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (frame : runtime.interp.Frame) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (expected : Itasca.types.FuncType) (shape : Store.Shape view store)
     (funcref : object.ty = .FuncRef)
@@ -257,12 +257,12 @@ theorem prepare_step_indirect_shaped {M P F A : Type}
       post (.done (.Err (.Trap .TableOutOfBounds),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
     (null : ∀ next : U32, next.val = frame.pc.val+1 → object.elements.val[position.val]? = some (0#u64) →
       post (.done (.Err (.Trap .UninitializedElement),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
-    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE ≠ Store.decodeFuncType expected →
       post (.done (.Err (.Trap .IndirectCallTypeMismatch),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform)))
-    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE = Store.decodeFuncType expected →

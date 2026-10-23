@@ -25,7 +25,7 @@ private theorem related_lookup {T U : Type} {relation : T → U → Prop}
       exact ih (by simpa only [List.getElem?_cons_succ] using found)
 
 theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (index : Usize) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (index : Usize) (global : Itasca.module.Global)
     (compiled : Code.InitializerMappings inst.module)
     (found : inst.module.module.env.globals.val[index.val]? = some global)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env global.init global.gtype.valtype)
@@ -40,7 +40,7 @@ theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M
   exact ⟨function, code, words, mapped, read, certificate, resolved⟩
 
 theorem element_initializer_certificates {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (index : Usize) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
     (compiled : Code.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
@@ -62,14 +62,14 @@ theorem element_initializer_certificates {M : Type} (store : runtime.store.Store
 /-- Issued table and memory maps cover the validated module index spaces.
 These are structural link/staging facts, with no execution postcondition. -/
 structure InitializerSegmentBindings {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   tableCount : inst.module.module.env.table_types.val.length ≤ inst.tables.val.length
   memoryCount : inst.module.module.env.mem_types.val.length ≤ inst.memories.val.length
   tables : ∀ addr ∈ inst.tables.val, addr.index.val < store.tables.val.length
   memories : ∀ addr ∈ inst.memories.val, addr.index.val < store.memories.val.length
 
 theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (index : Usize) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
     (compiled : Code.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
@@ -100,7 +100,7 @@ theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
       exact List.getElem?_eq_getElem issued
 
 theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (index : Usize) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Data)
     (compiled : Code.InitializerMappings inst.module)
     (found : inst.module.module.tail.data.val[index.val]? = some segment)
     (valid : Itasca.ModuleData.Valid inst.module.module.env segment)

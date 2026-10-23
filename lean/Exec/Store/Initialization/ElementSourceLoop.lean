@@ -12,7 +12,7 @@ theorem element_initializers_source_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -72,7 +72,7 @@ theorem element_initializers_source_loop {M P F A : Type}
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
         rw [elem_value_type_eq, bind_ok]
-        step with eval_const_exec_source memory hooks floats allocator law store platform instIndex function
+        step with eval_const_source memory hooks floats allocator law store platform instIndex function
           inst code expr (elementValueType segment.elem) words hi hcode compiled resolved bindings
           sourceStore sourceInstance storeWf frameWf context
           (valid expr (List.mem_of_getElem? hexpr))

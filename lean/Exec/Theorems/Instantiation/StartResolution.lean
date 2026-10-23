@@ -5,15 +5,15 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- Module-start execution uses the newly installed module and no ambient locals. -/
-def moduleStartFrame {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance) : frame :=
+def moduleStartFrame {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) : frame :=
   ⟨[], Store.decodeInstance store inst⟩
 
 def moduleStartConfiguration {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : U32) : config :=
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : U32) : config :=
   ⟨⟨Store.decodeStore view code store, moduleStartFrame store inst⟩, [.CALL (.mk_uN index.val)]⟩
 
 theorem moduleStartFrame_wf {M : Type} (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (index : Usize) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (index : Usize) (inst : runtime.store.ModuleInst)
     (sourceSyntax : Store.StoreSyntax code store) (found : store.instances.val[index.val]? = some inst) :
     wf_frame (moduleStartFrame store inst) := by
   apply wf_frame.frame_case_
@@ -21,7 +21,7 @@ theorem moduleStartFrame_wf {M : Type} (code : Store.CodeInterpretation)
   · exact Store.decodeInstance_wf code index.val store inst (sourceSyntax index.val inst found)
 
 theorem module_start_resolve {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : U32) (address : runtime.FuncAddr)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : U32) (address : runtime.FuncAddr)
     (storeWf : wf_store (Store.decodeStore view code store))
     (frameWf : wf_frame (moduleStartFrame store inst))
     (mapped : inst.funcs.val[index.val]? = some address) :

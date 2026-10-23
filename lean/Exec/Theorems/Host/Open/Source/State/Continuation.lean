@@ -68,7 +68,7 @@ theorem source_continuation_of_prepared {M : Type}
       ⟨Store.decodeStore view code store,ambient,{f with code := after,vals := front}::rest,[]⟩ returns)
     (memory : runtime.platform.MemoryBuffer M)
     (padded : runtime.interp.Execution)
-    (function : runtime.store.Function)
+    (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType)
     (identity : Nat)
     (params : List valtype)

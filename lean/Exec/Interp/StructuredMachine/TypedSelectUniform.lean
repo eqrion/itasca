@@ -14,7 +14,7 @@ theorem step_execution_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame)
     (f : Abs.AFrame) (rest : List Abs.AFrame) (declared : valtype) (after : List instr)

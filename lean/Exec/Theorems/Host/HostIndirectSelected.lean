@@ -40,7 +40,7 @@ theorem call_indirect_host_structured {M P F A : Type} {emission : FunctionEmiss
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (params results : List valtype) (pc : U32) (base : Usize)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (host : U64) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]?=some function) (hostCode : function.code=.Host host)
     (signatureAt : store.types.val[function.signature.val]?=some signature)
     (signatureTypes : signature.params.val.map sourceType=params ∧ signature.results.val.map sourceType=results)

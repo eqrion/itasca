@@ -81,7 +81,7 @@ theorem recorded_inv_loop_results {M P F A : Type}
     (Inv : runtime.store.Store M → Prop)
     (steps : RecordedInvStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv)
     (initial : EventfulMachine emission allowed M P view code expected) (valid : Inv initial.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => Inv result.2.2.2.2.2.1 ∧ RecordedLoopResult memory hooks floats allocator initial result ⦄div := by
   apply WP.dspec_mono (recorded_inv_loop_stops memory hooks floats allocator Inv steps initial valid)
   rintro result ⟨state,valid,invariant,stopped,same⟩

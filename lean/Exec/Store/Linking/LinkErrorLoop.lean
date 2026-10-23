@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 theorem link_staging_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (profile : Itasca.ValidationProfile) (imports : Slice runtime.Extern)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed (PrecommitError profile) status)
     {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop2 memory store imports status index inst = .ok out) :
     ErrorAllowed (PrecommitError profile) out.2.1 := by

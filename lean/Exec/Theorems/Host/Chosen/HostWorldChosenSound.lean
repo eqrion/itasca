@@ -15,7 +15,7 @@ def HostWorldChosenSound {M P : Type} (memory : runtime.platform.MemoryBuffer M)
       Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
       Store_ok (Store.decodeStore view afterCode answer.2.2.1) ∧
-      ∀ (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType),
+      ∀ (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType),
         store.funcs.val[address.index.val]?=some function → function.code=.Host identity →
         store.types.val[function.signature.val]?=some signature →
         choices.host occurrence (Store.decodeStore view code store) address.index.val identity.val

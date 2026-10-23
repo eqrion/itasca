@@ -19,14 +19,14 @@ def externalGlobals (externals : List runtime.Extern) : List runtime.GlobalAddr 
 
 /-- Exact address subsequences of the caller's external list, including ownership
 bits. This complements the signature-indexed import map. -/
-structure ExternalMaps (externals : List runtime.Extern) (inst : runtime.store.Instance) : Prop where
+structure ExternalMaps (externals : List runtime.Extern) (inst : runtime.store.ModuleInst) : Prop where
   funcs : inst.funcs.val = externalFunctions externals
   tables : inst.tables.val = externalTables externals
   memories : inst.memories.val = externalMemories externals
   globals : inst.globals.val = externalGlobals externals
 
 theorem LinkedStep.external_maps {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {before after : runtime.store.Instance} {desc external externals}
+    {before after : runtime.store.ModuleInst} {desc external externals}
     (effect : LinkedStep view store before desc external after)
     (maps : ExternalMaps externals before) : ExternalMaps (externals ++ [external]) after := by
   cases effect <;> constructor <;>

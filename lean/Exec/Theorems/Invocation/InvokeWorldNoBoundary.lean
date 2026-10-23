@@ -19,7 +19,7 @@ theorem invoke_defined_world_no_boundary {choices : SourceChoices} (admissible :
     (certify : ∀c store,Inv c store → CertifiedSupportedStore emission allowed view c store)
     (capacities : ∀c store,Inv c store → Store.FunctionCapacities c store)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (valid : Inv code store)
-    (ambient : frame) (ambientWf : wf_frame ambient) (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (ambient : frame) (ambientWf : wf_frame ambient) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value) (owner : address.store=store.id)
     (owned : ∀value∈args.val,Store.ValueInStore store value)

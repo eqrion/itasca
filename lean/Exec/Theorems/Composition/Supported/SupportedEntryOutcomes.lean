@@ -16,7 +16,7 @@ theorem call_defined_supported_entry_outcomes {emission : Interp.StructuredMachi
     (coveredFunctions : Abs.FunctionsSupported allowed (Store.decodeStore view code store))
     (compiledFunctions : Interp.StructuredMachine.CompiledFunctions emission code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value)
     (empty : before.frames.val = []) (identity : before.store = store.id)

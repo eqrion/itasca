@@ -6,9 +6,9 @@ open Aeneas Aeneas.Std
 
 /-- A successful type-map entry names the exact canonical type; rejection
 leaves both the store and provisional instance unchanged. -/
-def TypeStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+def TypeStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (ty : Itasca.types.FuncType)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance) : Prop :=
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst) : Prop :=
   (∃ error, out = (.Err error, store, inst)) ∨
   (∃ index addresses,
     InternEffect store ty (.Ok index, out.2.1) ∧
@@ -17,7 +17,7 @@ def TypeStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.s
 
 theorem add_instance_type_effect {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (bound : index.val < inst.module.module.env.types.val.length)
     (objectBound : objectCount store ≤ Usize.max) (room : inst.types.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_type memory allocator store inst index
@@ -98,7 +98,7 @@ theorem TypeEntries.extend {M : Type} {store after : runtime.store.Store M}
   simpa [bound] using found
 
 theorem TypeStageEffect.context {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty : Itasca.types.FuncType} {out}
+    {inst : runtime.store.ModuleInst} {ty : Itasca.types.FuncType} {out}
     (effect : TypeStageEffect store inst ty out) (bound : objectCount store ≤ Usize.max) :
     out.2.1 = {store with types := out.2.1.types, signature_values := out.2.1.signature_values} ∧
     out.2.2 = {inst with types := out.2.2.types} ∧ StagedPrefix store out.2.1 ∧
@@ -108,7 +108,7 @@ theorem TypeStageEffect.context {M : Type} {store : runtime.store.Store M}
   · exact ⟨interned.only_types, by rw [next], interned.staged, interned.object_bound bound⟩
 
 theorem TypeStageEffect.entries {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty : Itasca.types.FuncType} {out}
+    {inst : runtime.store.ModuleInst} {ty : Itasca.types.FuncType} {out}
     (effect : TypeStageEffect store inst ty out) (success : out.1 = .Ok ())
     {source : List Itasca.types.FuncType} (entries : TypeEntries store source inst.types.val) :
     TypeEntries out.2.1 (source ++ [ty]) out.2.2.types.val := by

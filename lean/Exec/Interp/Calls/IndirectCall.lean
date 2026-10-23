@@ -6,13 +6,13 @@ open Aeneas Aeneas.Std
 
 /-- Actual indirect resolution checks the table position, null reference, and
 interned signature before delegating to the ordinary call implementation. -/
-theorem admin_call_indirect_effect {M P F A : Type}
+theorem execute_call_indirect_effect {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (instanceIndex functionIndex base : Usize) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (instanceFound : store.instances.val[instanceIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[functionIndex.val]? = some compiled)
@@ -24,7 +24,7 @@ theorem admin_call_indirect_effect {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = base.val+callee.val)
     (targets : ∀ reference : U64, object.elements.val[position.val]? = some reference →
-      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.Function,
+      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.FuncInst,
         (UScalar.cast .Usize reference).val = address.val+1 ∧
         store.funcs.val[address.val]? = some function)
     (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
@@ -33,20 +33,20 @@ theorem admin_call_indirect_effect {M P F A : Type}
       post (.Err (.Trap .TableOutOfBounds),exec,store,platform))
     (null : object.elements.val[position.val]? = some (0#u64) →
       post (.Err (.Trap .UninitializedElement),exec,store,platform))
-    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature ≠ signature →
       post (.Err (.Trap .IndirectCallTypeMismatch),exec,store,platform))
-    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature = signature →
       runtime.interp.call memory hooks floats allocator exec store platform
         {store := store.id,index := address} calleeBase ⦃ post ⦄) :
-    runtime.interp.admin_call_indirect memory hooks floats allocator exec store platform
+    runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
       instanceIndex functionIndex base entry index callee ⦃ post ⦄ := by
-  unfold runtime.interp.admin_call_indirect
+  unfold runtime.interp.execute_call_indirect
   step with vec_index_given store.instances instanceIndex inst instanceFound as ⟨found,hfound⟩
   subst found
   step with vec_index_given inst.module.functions functionIndex compiled functionFound as ⟨found,hfound⟩
@@ -108,13 +108,7 @@ theorem admin_call_indirect_effect {M P F A : Type}
           apply UScalar.eq_of_val_eq
           simpa only [U32.cast_Usize_val_eq,baseOffset] using hbase
         subst actualBase
-        step with called reference address function selected nonzero addressEq targetFound eq
-          as ⟨result,after,afterStore,afterPlatform,hout⟩
-        cases result with
-        | Ok value => cases value; simpa [core.result.Result.Insts.CoreOpsTry.branch] using hout
-        | Err error => simpa [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            core.convert.FromSame.from] using hout
+        exact called reference address function selected nonzero addressEq targetFound eq
 
 /-- Fetch preserves the resolved-call checks and advances the suspended caller PC. -/
 theorem step_indirect_call_effect {M P F A : Type}
@@ -122,8 +116,8 @@ theorem step_indirect_call_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (frame : runtime.interp.Frame) (entry index callee : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
     (position : U32) (signature calleeBase : Usize)
     (last : frameIndex.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[frameIndex.val]? = some frame)
@@ -139,7 +133,7 @@ theorem step_indirect_call_effect {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = frame.base.val+callee.val)
     (targets : ∀ reference : U64, object.elements.val[position.val]? = some reference →
-      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.Function,
+      reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.FuncInst,
         (UScalar.cast .Usize reference).val = address.val+1 ∧
         store.funcs.val[address.val]? = some function)
     (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
@@ -148,12 +142,12 @@ theorem step_indirect_call_effect {M P F A : Type}
       post (.Err (.Trap .TableOutOfBounds),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform))
     (null : ∀ next : U32, next.val = frame.pc.val+1 → object.elements.val[position.val]? = some (0#u64) →
       post (.Err (.Trap .UninitializedElement),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform))
-    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (mismatch : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature ≠ signature →
       post (.Err (.Trap .IndirectCallTypeMismatch),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform))
-    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.Function),
+    (called : ∀ next : U32, next.val = frame.pc.val+1 → ∀ (reference : U64) (address : Usize) (function : runtime.store.FuncInst),
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature = signature →
@@ -165,7 +159,7 @@ theorem step_indirect_call_effect {M P F A : Type}
     inst compiled (.CallIndirect entry index callee) last frameFound instanceFound functionFound
     opcodeFound pcBound post
   intro next nextEq
-  exact admin_call_indirect_effect memory hooks floats allocator
+  exact execute_call_indirect_effect memory hooks floats allocator
     {exec with frames := exec.frames.set frameIndex {frame with pc := next}} store platform
     frame.instance frame.function frame.base entry index callee inst compiled table type
     tableAddress object position signature calleeBase instanceFound functionFound pairFound

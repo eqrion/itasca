@@ -1,4 +1,5 @@
 import Exec.Code.Local.Relations.Table.BranchTableLower
+import Exec.Representation.Collection
 namespace Exec.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
@@ -22,21 +23,6 @@ theorem compiler_table_label_success {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨rfl,rfl⟩ := rest
     exact ⟨finalBudget,depths,rfl,(budget_push_success ops law budget finalBudget before.table_depths depths depth pushed).2⟩
 
-@[step] theorem compiler_clear_table_depths (before : alloc.vec.Vec U32) :
-    runtime.compiler.clear_depths before ⦃ out => out.val = [] ⦄ := by
-  unfold runtime.compiler.clear_depths runtime.compiler.clear_depths_loop
-  apply loop.spec_decr_nat (fun v => v.val.length) (fun _ => True)
-  · intro v _
-    simp only [runtime.compiler.clear_depths_loop.body,alloc.vec.Vec.is_empty,bind_ok]
-    split
-    · rename_i empty
-      simpa using empty
-    · rename_i nonempty
-      simp [alloc.vec.Vec.pop]
-      have : 0 < v.val.length := List.length_pos_iff.mpr (by simpa using nonempty)
-      omega
-  · trivial
-
 /-- The final callback lowers all previously collected labels plus the default,
 clears its private buffer, and observes the unreachable validator continuation. -/
 theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
@@ -47,7 +33,7 @@ theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
       ops before state default types = .ok (.Ok (),after)) :
     ∃ budget depths lowered cleared,
       depths.val = before.table_depths.val ++ [default] ∧
-      runtime.compiler.FunctionCompiler.lower_table_branches ops
+      runtime.compiler.control.FunctionCompiler.lower_table_branches ops
         {before with budget,table_depths := depths} = .ok (.Ok (),lowered) ∧
       cleared.val = [] ∧
       runtime.compiler.FunctionCompiler.observe ops
@@ -69,7 +55,7 @@ theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
       cases unit
       simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
       obtain ⟨cleared,clearCalled,observeCalled⟩ := bind_ok_inv _ _ _ rest
-      have empty := compiler_clear_table_depths lowered.table_depths
+      have empty := runtime_clear lowered.table_depths
       rw [clearCalled,WP.spec_ok] at empty
       exact ⟨budget,depths,lowered,cleared,depthEq,by simpa only [live] using lowerCalled,empty,observeCalled⟩
 /-- Every successful terminal table callback restores the empty collection
@@ -99,7 +85,7 @@ theorem compiler_br_table_clears {A : Type} (ops : runtime.platform.Alloc A)
       obtain ⟨budget,depths,rfl,_⟩ := compiler_table_label_success ops law before labeled state default labeledCall
       simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,dead,Bool.false_eq_true,ite_false] at rest
       obtain ⟨cleared,clearCalled,observed⟩ := bind_ok_inv _ _ _ rest
-      have empty := compiler_clear_table_depths depths
+      have empty := runtime_clear depths
       rw [clearCalled,WP.spec_ok] at empty
       have kept := compiler_observe_frame ops law {before with budget,table_depths := cleared} state
       simp only [dead] at kept

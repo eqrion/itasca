@@ -47,6 +47,7 @@ theorem CumulativeFailure.eventful_error {M P A : Type} {allocator : runtime.pla
   | Exhausted limit => exact ⟨_,StepsH.refl typed.decode_wf⟩
   | Terminated => exact ⟨_,StepsH.refl typed.decode_wf⟩
   | BadArguments => simp at kind
+  | Internal => simp at kind
   | WrongStore => simp at kind
   | Link reason => simp at kind
 

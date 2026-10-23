@@ -9,7 +9,7 @@ theorem prepareCall_wasm {M P F A : Type} (memory : runtime.platform.MemoryBuffe
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
+    (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
     (found : store.funcs.val[address.index.val]?=some function)
     (wasm : function.code=.Wasm instanceIndex functionIndex)
     (interrupts : hooks.interrupt platform ⦃ _=>True ⦄) :

@@ -33,11 +33,11 @@ def recordedInstantiateTail {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (identity : runtime.InstanceAddr) (store : runtime.store.Store M) (platform : P)
     (prior : List HostEvent) : Result (InstantiateInnerResult M P × List HostEvent) := do
-  let (result, store, platform) ← runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index
+  let (result, store, platform) ← runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index
   let branch ← core.result.Result.Insts.CoreOpsTry.branch result
   match branch with
   | core.ops.control_flow.ControlFlow.Continue _ =>
-    let inst ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.Instance) store.instances identity.index
+    let inst ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.ModuleInst) store.instances identity.index
     let env ← runtime.compiler.ExecutableModule.env inst.module
     let start ← module.Env.start env
     match start with

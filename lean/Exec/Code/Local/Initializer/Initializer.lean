@@ -16,7 +16,7 @@ theorem initializerWidth_value (ty : Itasca.types.ValueType) :
   cases ty <;> rfl
 
 theorem compiler_width_eq (ty : Itasca.types.ValueType) :
-    runtime.compiler.width ty = .ok (initializerWidth ty) := by
+    runtime.value.width ty = .ok (initializerWidth ty) := by
   cases ty <;> rfl
 
 def initializerBits (lo hi : U64) : U128 :=

@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 function's decoded source unchanged, including absent-instance fallbacks. -/
 theorem decodeFunction_code_agrees {M : Type} {store : runtime.store.Store M}
     {before after : CodeInterpretation} (agrees : CodeAgreesOn store before after)
-    (function : runtime.store.Function) :
+    (function : runtime.store.FuncInst) :
     decodeFunction after store function = decodeFunction before store function := by
   cases kind : function.code with
   | Host id => simp only [decodeFunction, kind]

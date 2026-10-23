@@ -42,5 +42,5 @@ theorem chosen_completed_only_trap {choices : Spec.SourceChoices} (admissible : 
     | Values => exact False.elim (excluded (Or.inr (Or.inr (Or.inl rfl))))
     | Allocation => exact False.elim (excluded (Or.inr (Or.inr (Or.inr (Or.inl rfl)))))
     | Objects => exact False.elim (excluded (Or.inr (Or.inr (Or.inr (Or.inr rfl)))))
-  | BadArguments | WrongStore | Link reason => cases path
+  | BadArguments | WrongStore | Internal | Link reason => cases path
 end Exec.Theorems.OpenReentrantControl

@@ -20,7 +20,7 @@ inductive RootCallReady {M : Type} (view : M → Slice U8) (code : Store.CodeInt
       (source : StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals arguments++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode entry)) :
       RootCallReady view code store ambient address signature arguments (.done answer)
   | host (ready : runtime.interp.Execution) (token : Unit) (identity : U64)
-      (args defaults : alloc.vec.Vec runtime.Value) (function : runtime.store.Function)
+      (args defaults : alloc.vec.Vec runtime.Value) (function : runtime.store.FuncInst)
       (functionAt : store.funcs.val[address.index.val]?=some function)
       (host : function.code=.Host identity)
       (signatureAt : store.types.val[function.signature.val]?=some signature)
@@ -38,7 +38,7 @@ theorem prepare_root_call {M F A : Type} (memory : runtime.platform.MemoryBuffer
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (token : Unit)
     (held : ExecutableInv view code store) (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (empty : exec.frames.val=[]) (owner : exec.store=store.id)
     (words : ValuesAt exec.slots.val 0 (args.val.map sourceValue))
     (accepted : runtime.interp.check_values memory store args signature.params.deref=.ok (.Ok ()))

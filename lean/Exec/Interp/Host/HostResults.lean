@@ -10,11 +10,11 @@ open Aeneas Aeneas.Std
     (indexBound : index.val ≤ args.length)
     (position : slot.val = base.val + (argumentWords args.val index.val).length)
     (initialWords : WordsAt words.val base.val (argumentWords args.val index.val)) :
-    runtime.interp.call_loop4 words args index slot types ⦃ after =>
+    runtime.interp.call_loop2 words args index slot types ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val base.val (args.val.map sourceValue) ∧
       ∀ j, j < base.val ∨ base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ j →
         after.val[j]? = words.val[j]? ⦄ := by
-  unfold runtime.interp.call_loop4
+  unfold runtime.interp.call_loop2
   apply loop.spec_decr_nat (fun p => args.length - p.2.1.val)
     (fun p => p.1.length = words.length ∧ p.2.1.val ≤ args.length ∧
       p.2.2.val = base.val + (argumentWords args.val p.2.1.val).length ∧
@@ -23,7 +23,7 @@ open Aeneas Aeneas.Std
         p.1.val[j]? = words.val[j]?)
   · rintro ⟨current, i, offset⟩ ⟨hlen, hi, hoffset, hpref, preserved⟩
     dsimp only at hlen hi hoffset hpref
-    unfold runtime.interp.call_loop4.body
+    unfold runtime.interp.call_loop2.body
     dsimp only
     split
     · have hib : i.val < args.val.length := by change i.val < args.length; scalar_tac
@@ -73,7 +73,7 @@ open Aeneas Aeneas.Std
     (store base : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
     (bound : base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
-    runtime.interp.call_loop4 words args 0#usize base types ⦃ after =>
+    runtime.interp.call_loop2 words args 0#usize base types ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val base.val (args.val.map sourceValue) ∧
       ∀ j, j < base.val ∨ base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ j →
         after.val[j]? = words.val[j]? ⦄ := by

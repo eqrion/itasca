@@ -6,11 +6,11 @@ set_option maxRecDepth 4096
 
 theorem add_table_errors_metadata {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (ty : Itasca.types.TableType)
     (found : inst.module.module.env.table_types.val[index.val]? = some ty)
     (fit : LimitsFit ty.limits core.num.U32.MAX)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok out) :
     ErrorAllowed ResourceError out.1 ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
@@ -27,11 +27,11 @@ theorem add_table_errors_metadata {M A : Type} (memory : runtime.platform.Memory
 theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (ty : Itasca.types.MemType)
     (found : inst.module.module.env.mem_types.val[index.val]? = some ty)
     (fit : LimitsFit ty.limits 65536#u32)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index = .ok out) :
     ErrorAllowed ResourceError out.1 ∧ out.2.2.module = inst.module := by
   have multiply : (UScalar.cast .U64 ty.limits.min) * 65536#u64

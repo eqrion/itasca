@@ -16,7 +16,7 @@ theorem step_loop {M P F A : Type} {emission : FunctionEmission}
     (law : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (bt : blocktype) (body after : List instr)

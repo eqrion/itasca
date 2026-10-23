@@ -10,7 +10,7 @@ def narrowLane (width : Nat) (signed : Bool) (x y : BitVec 128) (j : Nat) : BitV
 theorem narrow_loop (x y initial : U128) (width i : U32) (signedFlag : Bool)
     (supported : width.val ∈ [8,16]) (position : i.val ≤ 128/width.val)
     (initializedPrefix : ∀ j, j < i.val → laneBits width.val j initial.bv = narrowLane width.val signedFlag x.bv y.bv j) :
-    runtime.interp.simd.narrow_lanes_loop width signedFlag y x initial i ⦃ result =>
+    runtime.interp.simd.narrow_lanes_loop x y width signedFlag initial i ⦃ result =>
       ∀ j, j < 128/width.val → laneBits width.val j result.bv = narrowLane width.val signedFlag x.bv y.bv j ⦄ := by
   have positive : 0 < width.val := by simp_all; omega
   have widthBound : width.val ≤ 64 := by simp_all; omega

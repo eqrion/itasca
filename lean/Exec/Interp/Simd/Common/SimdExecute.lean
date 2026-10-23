@@ -9,7 +9,7 @@ theorem execute_simd_pure {M F : Type}
     (interpretation : Exec.Store.CodeInterpretation) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (instIndex function base : Usize) (op dst a entry : U32)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (imm : runtime.bytecode.SimdImmediate) (wa wb wc wr : U32)
     (value : U128)
     (found : store.instances.val[instIndex.val]? = some inst)

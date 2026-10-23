@@ -1,22 +1,13 @@
 //! Shared flat-operator inventory for bytecode construction and dispatch.
-// The numeric tags are the core Wasm binary opcodes (SIMD tags omit 0xfd).
+//!
+//! Each operator is tagged with its Wasm binary opcode. Single-byte opcodes
+//! use their byte, and `0xfc`-prefixed opcodes use `0x100 + subopcode`. SIMD
+//! tags are the bare `0xfd` subopcode; the compiler's `op` callback receives
+//! them as `0x200 + subopcode` so that one `u16` covers every operator.
 macro_rules! with_ops {
     ($target:ident) => {
         $target! {
             scalar {
-                I32Extend8S = 0xc0;
-                I32Extend16S = 0xc1;
-                I64Extend8S = 0xc2;
-                I64Extend16S = 0xc3;
-                I64Extend32S = 0xc4;
-                I32TruncSatF32S = 0x100;
-                I32TruncSatF32U = 0x101;
-                I32TruncSatF64S = 0x102;
-                I32TruncSatF64U = 0x103;
-                I64TruncSatF32S = 0x104;
-                I64TruncSatF32U = 0x105;
-                I64TruncSatF64S = 0x106;
-                I64TruncSatF64U = 0x107;
                 I32Eqz = 0x45;
                 I32Eq = 0x46;
                 I32Ne = 0x47;
@@ -51,6 +42,10 @@ macro_rules! with_ops {
                 F64Gt = 0x64;
                 F64Le = 0x65;
                 F64Ge = 0x66;
+                I32Clz = 0x67;
+                I32Ctz = 0x68;
+                I32Popcnt = 0x69;
+                I32Add = 0x6a;
                 I32Sub = 0x6b;
                 I32Mul = 0x6c;
                 I32DivS = 0x6d;
@@ -65,6 +60,9 @@ macro_rules! with_ops {
                 I32ShrU = 0x76;
                 I32Rotl = 0x77;
                 I32Rotr = 0x78;
+                I64Clz = 0x79;
+                I64Ctz = 0x7a;
+                I64Popcnt = 0x7b;
                 I64Add = 0x7c;
                 I64Sub = 0x7d;
                 I64Mul = 0x7e;
@@ -80,27 +78,6 @@ macro_rules! with_ops {
                 I64ShrU = 0x88;
                 I64Rotl = 0x89;
                 I64Rotr = 0x8a;
-                F32Add = 0x92;
-                F32Sub = 0x93;
-                F32Mul = 0x94;
-                F32Div = 0x95;
-                F32Min = 0x96;
-                F32Max = 0x97;
-                F32Copysign = 0x98;
-                F64Add = 0xa0;
-                F64Sub = 0xa1;
-                F64Mul = 0xa2;
-                F64Div = 0xa3;
-                F64Min = 0xa4;
-                F64Max = 0xa5;
-                F64Copysign = 0xa6;
-                I32Clz = 0x67;
-                I32Ctz = 0x68;
-                I32Popcnt = 0x69;
-                I32Add = 0x6a;
-                I64Clz = 0x79;
-                I64Ctz = 0x7a;
-                I64Popcnt = 0x7b;
                 F32Abs = 0x8b;
                 F32Neg = 0x8c;
                 F32Ceil = 0x8d;
@@ -108,6 +85,13 @@ macro_rules! with_ops {
                 F32Trunc = 0x8f;
                 F32Nearest = 0x90;
                 F32Sqrt = 0x91;
+                F32Add = 0x92;
+                F32Sub = 0x93;
+                F32Mul = 0x94;
+                F32Div = 0x95;
+                F32Min = 0x96;
+                F32Max = 0x97;
+                F32Copysign = 0x98;
                 F64Abs = 0x99;
                 F64Neg = 0x9a;
                 F64Ceil = 0x9b;
@@ -115,6 +99,13 @@ macro_rules! with_ops {
                 F64Trunc = 0x9d;
                 F64Nearest = 0x9e;
                 F64Sqrt = 0x9f;
+                F64Add = 0xa0;
+                F64Sub = 0xa1;
+                F64Mul = 0xa2;
+                F64Div = 0xa3;
+                F64Min = 0xa4;
+                F64Max = 0xa5;
+                F64Copysign = 0xa6;
                 I32WrapI64 = 0xa7;
                 I32TruncF32S = 0xa8;
                 I32TruncF32U = 0xa9;
@@ -140,6 +131,19 @@ macro_rules! with_ops {
                 I64ReinterpretF64 = 0xbd;
                 F32ReinterpretI32 = 0xbe;
                 F64ReinterpretI64 = 0xbf;
+                I32Extend8S = 0xc0;
+                I32Extend16S = 0xc1;
+                I64Extend8S = 0xc2;
+                I64Extend16S = 0xc3;
+                I64Extend32S = 0xc4;
+                I32TruncSatF32S = 0x100;
+                I32TruncSatF32U = 0x101;
+                I32TruncSatF64S = 0x102;
+                I32TruncSatF64U = 0x103;
+                I64TruncSatF32S = 0x104;
+                I64TruncSatF32U = 0x105;
+                I64TruncSatF64S = 0x106;
+                I64TruncSatF64U = 0x107;
             }
             load {
                 I32Load = 0x28;

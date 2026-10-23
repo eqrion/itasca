@@ -21,11 +21,11 @@ theorem instantiate_start_executable_recorded_resolved {M P F A : Type}
       hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length)
     (issued : ∀ store, ExecutableInv view code store → ∀ host p args results answer,
       hooks.call_host p store host args results = .ok answer → ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value)
-    (identity : runtime.InstanceAddr) (inst : runtime.store.Instance)
+    (identity : runtime.InstanceAddr) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[identity.index.val]? = some inst)
     (index : U32) (address : runtime.FuncAddr)
     (mapped : inst.funcs.val[index.val]? = some address)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)

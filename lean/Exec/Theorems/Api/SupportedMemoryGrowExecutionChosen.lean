@@ -12,7 +12,7 @@ theorem stateful_memory_grow_execution_supported_chosen {choices : Exec.Spec.Sou
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)

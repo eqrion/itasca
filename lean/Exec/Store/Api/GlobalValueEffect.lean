@@ -7,10 +7,10 @@ open Aeneas Aeneas.Std
 
 /-- The appended global retains its validated type and exact decoded initializer value. -/
 inductive GlobalValueEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) (ty : Itasca.types.GlobalType) (value : val) :
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.types.GlobalType) (value : val) :
     core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : GlobalValueEffect store instIndex inst ty value (.Err error) store
-  | appended (globals : alloc.vec.Vec runtime.store.GlobalInstance)
+  | appended (globals : alloc.vec.Vec runtime.store.GlobalInst)
       (addresses : alloc.vec.Vec runtime.GlobalAddr) (lo hi : U64)
       (globalValues : globals.val = store.globals.val ++ [{ty := ty, lo := lo, hi := hi}])
       (addressValues : addresses.val = inst.globals.val ++ [⟨store.id, store.globals.len⟩])
@@ -33,7 +33,7 @@ theorem add_instance_global_value_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -47,10 +47,10 @@ theorem add_instance_global_value_effect {M P F A : Type}
     runtime.store.instantiate.Store.add_instance_global memory hooks floats allocator store platform instIndex index
       ⦃ out => GlobalValueEffect store instIndex inst global.gtype
         (decodeWords global.gtype.valtype ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64)) out.1 out.2.1 ∧ out.2.2 = platform ⦄ := by
-  have exactValue := eval_const_exec_effect memory hooks floats allocator law store platform instIndex function
+  have exactValue := eval_const_effect memory hooks floats allocator law store platform instIndex function
     inst code global.init global.gtype.valtype words hi hc compiled resolved (initializer_reference_bound resolved bindings)
   obtain ⟨constantResult, constantRun, constantOwned⟩ := WP.spec_imp_exists
-    (eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+    (eval_const_owned memory hooks floats allocator law store platform instIndex function
       inst code global.init global.gtype.valtype words hi hc compiled resolved bindings)
   rw [constantRun] at exactValue
   simp only [WP.spec_ok] at exactValue

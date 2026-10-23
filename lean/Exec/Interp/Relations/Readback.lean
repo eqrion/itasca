@@ -128,19 +128,19 @@ only the independent issued-address bound remains explicit. -/
     (bound : index.val ≤ values.length)
     (position : slot.val = Code.offset (values.map Code.valueType) index.val)
     (prior : results.val.map sourceValue = values.take index.val) :
-    runtime.interp.invoke_with_loop4 words store results index slot types ⦃ (afterStore, after) =>
+    runtime.interp.invoke_with_loop2 words store results index slot types ⦃ (afterStore, after) =>
       afterStore = store ∧ after.val.map sourceValue = values ⦄ := by
   have lengths : types.length = values.length := by
     have h := congrArg List.length typed
     simpa using h
-  unfold runtime.interp.invoke_with_loop4
+  unfold runtime.interp.invoke_with_loop2
   apply loop.spec_decr_nat (fun p => values.length - p.2.1.val)
     (fun p => p.2.1.val ≤ values.length ∧
       p.2.2.val = Code.offset (values.map Code.valueType) p.2.1.val ∧
       p.1.val.map sourceValue = values.take p.2.1.val)
   · rintro ⟨current, i, offset⟩ ⟨hi, hoffset, hprior⟩
     dsimp only at hi hoffset hprior
-    unfold runtime.interp.invoke_with_loop4.body
+    unfold runtime.interp.invoke_with_loop2.body
     dsimp only
     split
     · have hib : i.val < values.length := by scalar_tac
@@ -198,7 +198,7 @@ results and leaves the store unchanged. -/
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt words.val 0 values) :
-    runtime.interp.invoke_with_loop4 words store results 0#usize 0#usize types
+    runtime.interp.invoke_with_loop2 words store results 0#usize 0#usize types
       ⦃ (afterStore, after) => afterStore = store ∧ after.val.map sourceValue = values ⦄ := by
   apply read_results_loop words store results 0#usize 0#usize types values typed wellFormed fits represented
   · simp

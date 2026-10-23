@@ -95,16 +95,16 @@ theorem copy_bytes_errors {A : Type} (allocator : runtime.platform.Alloc A)
 
 theorem add_type_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_type memory allocator store inst index = .ok out) : ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_type at run
   repeat' allocation_error_step run using allocator, law
 
 theorem add_function_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex index : Usize)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex index : Usize)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_function memory allocator store inst instanceIndex index = .ok out) : ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_function at run
   repeat' allocation_error_step run using allocator, law

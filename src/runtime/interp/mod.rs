@@ -1,7 +1,7 @@
 //! Generic slot interpreter and synchronous call boundary.
 use super::bytecode::Instr;
 use super::platform::Alloc;
-use super::store::FunctionCode;
+use super::store::FuncCode;
 use super::*;
 
 mod bulk;
@@ -119,18 +119,7 @@ fn decode_slot(slots: &[u64], position: usize, ty: ValueType, store: usize) -> V
     value::decode(ty, slots[position], hi, store)
 }
 fn type_slots(types: &[ValueType]) -> Result<usize, ExecError> {
-    let mut n = 0usize;
-    let mut i = 0;
-    let mut status = Ok(());
-    while i < types.len() && status.is_ok() {
-        match n.checked_add(value::width(types[i]) as usize) {
-            Some(next) => n = next,
-            None => status = Err(ExecError::Exhausted(ResourceLimit::Values)),
-        }
-        i += 1;
-    }
-    status?;
-    Ok(n)
+    value::type_slots(types).ok_or(ExecError::Exhausted(ResourceLimit::Values))
 }
 pub(crate) fn invoke_with<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     exec: &mut Execution,
@@ -144,9 +133,7 @@ pub(crate) fn invoke_with<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc
     check_values(store, args, &ty.params)?;
     let needed = type_slots(&ty.params)?.max(type_slots(&ty.results)?);
     exec.ensure::<A>(needed, store.limits.max_values)?;
-    while exec.frames.len() > 0 {
-        exec.frames.pop();
-    }
+    clear(&mut exec.frames);
     exec.store = store.id;
     let mut i = 0;
     let mut slot = 0;
@@ -163,9 +150,7 @@ pub(crate) fn invoke_with<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc
     status?;
     let ty = store.func_type(func)?;
     reserve::<A, _>(results, ty.results.len().saturating_sub(results.len()))?;
-    while results.len() > 0 {
-        results.pop();
-    }
+    clear(results);
     i = 0;
     slot = 0;
     while i < ty.results.len() {
@@ -186,7 +171,7 @@ fn call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
 ) -> Result<(), ExecError> {
     interrupt::<M, P>(platform)?;
     match store.funcs[func.index].code {
-        FunctionCode::Wasm { instance, function } => {
+        FuncCode::Wasm { instance, function } => {
             if exec.frames.len() >= store.limits.max_frames {
                 return Err(ExecError::Exhausted(ResourceLimit::CallStack));
             }
@@ -209,7 +194,7 @@ fn call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
                 base,
             });
         }
-        FunctionCode::Host(id) => {
+        FuncCode::Host(id) => {
             let ty = &store.types[store.funcs[func.index].signature];
             let size = type_slots(&ty.results)?.max(type_slots(&ty.params)?);
             let end = match base.checked_add(size) {
@@ -221,12 +206,8 @@ fn call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
             reserve::<A, _>(&mut exec.host_args, args_add)?;
             let results_add = ty.results.len().saturating_sub(exec.host_results.len());
             reserve::<A, _>(&mut exec.host_results, results_add)?;
-            while exec.host_args.len() > 0 {
-                exec.host_args.pop();
-            }
-            while exec.host_results.len() > 0 {
-                exec.host_results.pop();
-            }
+            clear(&mut exec.host_args);
+            clear(&mut exec.host_results);
             let mut i = 0;
             let mut pos = base;
             while i < ty.params.len() {
@@ -283,63 +264,34 @@ fn vector(slots: &[u64], pos: usize) -> u128 {
     get(slots, pos) as u128 | ((get(slots, pos + 1) as u128) << 64)
 }
 #[inline(always)]
-fn execute_simd<M: MemoryBuffer, F: FloatOps>(
+fn step<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     exec: &mut Execution,
     store: &mut Store<M>,
-    inst: usize,
-    function: usize,
-    base: usize,
-    op: u32,
-    dst: u32,
-    a: u32,
-    entry: u32,
+    platform: &mut P,
 ) -> Result<(), ExecError> {
-    let imm = store.instances[inst].module.functions[function].simd[entry as usize];
-    let shape = match super::bytecode::simd_shape(op) {
-        Some(s) => s,
-        None => return Err(ExecError::BadArguments),
+    let frame_index = exec.frames.len() - 1;
+    let frame = &exec.frames[frame_index];
+    let inst = frame.instance;
+    let function = frame.function;
+    let base = frame.base;
+    let pc = frame.pc;
+    let instruction = store.instances[inst].module.functions[function].code[pc as usize];
+    exec.frames[frame_index].pc = match pc.checked_add(1) {
+        Some(next) => next,
+        None => return Err(ExecError::Internal),
     };
-    let pos = base + a as usize;
-    let x = if shape.0 == 2 {
-        vector(&exec.slots, pos)
-    } else {
-        get(&exec.slots, pos) as u128
-    };
-    let y_pos = pos + shape.0 as usize;
-    let y = if shape.1 == 2 {
-        vector(&exec.slots, y_pos)
-    } else {
-        get(&exec.slots, y_pos) as u128
-    };
-    let z_pos = y_pos + shape.1 as usize;
-    let z = if shape.2 == 2 {
-        vector(&exec.slots, z_pos)
-    } else {
-        get(&exec.slots, z_pos) as u128
-    };
-    let result = if store.instances[inst].memories.len() > 0 {
-        let m = store.instances[inst].memories[0].index;
-        simd::simd::<F>(
-            op,
-            imm.offset,
-            imm.lane,
-            imm.bits,
-            x,
-            y,
-            z,
-            Some(store.memories[m].buf.bytes_mut()),
-        )?
-    } else {
-        simd::simd::<F>(op, imm.offset, imm.lane, imm.bits, x, y, z, None)?
-    };
-    if shape.3 > 0 {
-        exec.slots[base + dst as usize] = result as u64;
-    }
-    if shape.3 == 2 {
-        exec.slots[base + dst as usize + 1] = (result >> 64) as u64;
-    }
-    Ok(())
+    dispatch::<M, P, F, A>(
+        exec,
+        store,
+        platform,
+        frame_index,
+        inst,
+        function,
+        base,
+        instruction,
+    )
 }
+
 #[inline(always)]
 fn execute_scalar<F: FloatOps>(
     exec: &mut Execution,
@@ -399,102 +351,117 @@ fn execute_store<M: MemoryBuffer>(
     )
 }
 #[inline(always)]
-fn step<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_simd<M: MemoryBuffer, F: FloatOps>(
     exec: &mut Execution,
     store: &mut Store<M>,
-    platform: &mut P,
+    inst: usize,
+    function: usize,
+    base: usize,
+    op: u32,
+    dst: u32,
+    a: u32,
+    entry: u32,
 ) -> Result<(), ExecError> {
-    let frame_index = exec.frames.len() - 1;
-    let frame = &exec.frames[frame_index];
-    let inst = frame.instance;
-    let function = frame.function;
-    let base = frame.base;
-    let pc = frame.pc;
-    let instruction = store.instances[inst].module.functions[function].code[pc as usize];
-    exec.frames[frame_index].pc = match pc.checked_add(1) {
-        Some(next) => next,
-        None => return Err(ExecError::BadArguments),
+    let imm = store.instances[inst].module.functions[function].simd[entry as usize];
+    let shape = match super::bytecode::simd_shape(op) {
+        Some(s) => s,
+        None => return Err(ExecError::Internal),
     };
-    dispatch::<M, P, F, A>(
-        exec,
-        store,
-        platform,
-        frame_index,
-        inst,
-        function,
-        base,
-        instruction,
-    )
-}
-#[inline(always)]
-fn admin_copy<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    base: usize,
-    dst: u32,
-    src: u32,
-) -> Result<(), ExecError> {
-    {
-        Ok(exec.slots[base + dst as usize] = exec.slots[base + src as usize])
+    let pos = base + a as usize;
+    let x = if shape.0 == 2 {
+        vector(&exec.slots, pos)
+    } else {
+        get(&exec.slots, pos) as u128
+    };
+    let y_pos = pos + shape.0 as usize;
+    let y = if shape.1 == 2 {
+        vector(&exec.slots, y_pos)
+    } else {
+        get(&exec.slots, y_pos) as u128
+    };
+    let z_pos = y_pos + shape.1 as usize;
+    let z = if shape.2 == 2 {
+        vector(&exec.slots, z_pos)
+    } else {
+        get(&exec.slots, z_pos) as u128
+    };
+    let result = if store.instances[inst].memories.len() > 0 {
+        let m = store.instances[inst].memories[0].index;
+        simd::simd::<F>(
+            op,
+            imm.offset,
+            imm.lane,
+            imm.bits,
+            x,
+            y,
+            z,
+            Some(store.memories[m].buf.bytes_mut()),
+        )?
+    } else {
+        simd::simd::<F>(op, imm.offset, imm.lane, imm.bits, x, y, z, None)?
+    };
+    if shape.3 > 0 {
+        exec.slots[base + dst as usize] = result as u64;
     }
+    if shape.3 == 2 {
+        exec.slots[base + dst as usize + 1] = (result >> 64) as u64;
+    }
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_copy2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    base: usize,
-    dst: u32,
-    src: u32,
-) -> Result<(), ExecError> {
-    {
-        Ok(copy(
-            &mut exec.slots,
-            base + dst as usize,
-            base + src as usize,
-            2,
-        ))
-    }
+fn execute_copy(exec: &mut Execution, base: usize, dst: u32, src: u32) -> Result<(), ExecError> {
+    exec.slots[base + dst as usize] = exec.slots[base + src as usize];
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_copy_n<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_copy2(exec: &mut Execution, base: usize, dst: u32, src: u32) -> Result<(), ExecError> {
+    copy(&mut exec.slots, base + dst as usize, base + src as usize, 2);
+    Ok(())
+}
+
+#[inline(always)]
+fn execute_copy_n(
     exec: &mut Execution,
     base: usize,
     dst: u32,
     src: u32,
     n: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        copy(
-            &mut exec.slots,
-            base + dst as usize,
-            base + src as usize,
-            n as usize,
-        )
-    })
+    copy(
+        &mut exec.slots,
+        base + dst as usize,
+        base + src as usize,
+        n as usize,
+    );
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_const32<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_const32(
     exec: &mut Execution,
     base: usize,
     dst: u32,
     value: u32,
 ) -> Result<(), ExecError> {
-    Ok(exec.slots[base + dst as usize] = value as u64)
+    exec.slots[base + dst as usize] = value as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_const64<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_const64(
     exec: &mut Execution,
     base: usize,
     dst: u32,
     value: u64,
 ) -> Result<(), ExecError> {
-    Ok(exec.slots[base + dst as usize] = value)
+    exec.slots[base + dst as usize] = value;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_const_v128<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_const_v128<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -503,54 +470,48 @@ fn admin_const_v128<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     pool: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let v = store.instances[inst].module.functions[function].v128_pool[pool as usize];
-        exec.slots[base + dst as usize] = v as u64;
-        exec.slots[base + dst as usize + 1] = (v >> 64) as u64;
-    })
+    let v = store.instances[inst].module.functions[function].v128_pool[pool as usize];
+    exec.slots[base + dst as usize] = v as u64;
+    exec.slots[base + dst as usize + 1] = (v >> 64) as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_jump<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    frame_index: usize,
-    target: u32,
-) -> Result<(), ExecError> {
-    Ok(exec.frames[frame_index].pc = target)
+fn execute_jump(exec: &mut Execution, frame_index: usize, target: u32) -> Result<(), ExecError> {
+    exec.frames[frame_index].pc = target;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_jump_if_zero<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_jump_if_zero(
     exec: &mut Execution,
     frame_index: usize,
     base: usize,
     cond: u32,
     target: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        if exec.slots[base + cond as usize] as u32 == 0 {
-            exec.frames[frame_index].pc = target;
-        }
-    })
+    if exec.slots[base + cond as usize] as u32 == 0 {
+        exec.frames[frame_index].pc = target;
+    }
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_jump_if_non_zero<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_jump_if_non_zero(
     exec: &mut Execution,
     frame_index: usize,
     base: usize,
     cond: u32,
     target: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        if exec.slots[base + cond as usize] as u32 != 0 {
-            exec.frames[frame_index].pc = target;
-        }
-    })
+    if exec.slots[base + cond as usize] as u32 != 0 {
+        exec.frames[frame_index].pc = target;
+    }
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_jump_table<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_jump_table<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     frame_index: usize,
@@ -561,24 +522,21 @@ fn admin_jump_table<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     start: u32,
     len: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let index = exec.slots[base + index as usize] as u32;
-        let selected = if index < len - 1 { index } else { len - 1 };
-        let target = store.instances[inst].module.functions[function].jump_tables
-            [(start + selected) as usize];
-        exec.frames[frame_index].pc = target;
-    })
+    let index = exec.slots[base + index as usize] as u32;
+    let selected = if index < len - 1 { index } else { len - 1 };
+    let target =
+        store.instances[inst].module.functions[function].jump_tables[(start + selected) as usize];
+    exec.frames[frame_index].pc = target;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_loop_head<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    platform: &mut P,
-) -> Result<(), ExecError> {
-    Ok(interrupt::<M, P>(platform)?)
+fn execute_loop_head<M: MemoryBuffer, P: Platform<M>>(platform: &mut P) -> Result<(), ExecError> {
+    interrupt::<M, P>(platform)
 }
 
 #[inline(always)]
-fn admin_call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     exec: &mut Execution,
     store: &mut Store<M>,
     platform: &mut P,
@@ -587,14 +545,12 @@ fn admin_call<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     func: u32,
     callee: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let addr = store.instances[inst].funcs[func as usize];
-        call::<M, P, F, A>(exec, store, platform, addr, base + callee as usize)?;
-    })
+    let addr = store.instances[inst].funcs[func as usize];
+    call::<M, P, F, A>(exec, store, platform, addr, base + callee as usize)
 }
 
 #[inline(always)]
-fn admin_call_indirect<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_call_indirect<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     exec: &mut Execution,
     store: &mut Store<M>,
     platform: &mut P,
@@ -605,85 +561,74 @@ fn admin_call_indirect<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     index: u32,
     callee: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let (table, ty) = store.instances[inst].module.functions[function].indirect[entry as usize];
-        let t = store.instances[inst].tables[table as usize].index;
-        let i = exec.slots[base + index as usize] as u32 as usize;
-        if i >= store.tables[t].elements.len() {
-            return Err(Trap::TableOutOfBounds.into());
-        }
-        let reference = store.tables[t].elements[i];
-        if reference == 0 {
-            return Err(Trap::UninitializedElement.into());
-        }
-        let f = reference as usize - 1;
-        if store.funcs[f].signature != store.instances[inst].types[ty as usize] {
-            return Err(Trap::IndirectCallTypeMismatch.into());
-        }
-        call::<M, P, F, A>(
-            exec,
-            store,
-            platform,
-            FuncAddr {
-                store: store.id,
-                index: f,
-            },
-            base + callee as usize,
-        )?;
-    })
+    let (table, ty) = store.instances[inst].module.functions[function].indirect[entry as usize];
+    let t = store.instances[inst].tables[table as usize].index;
+    let i = exec.slots[base + index as usize] as u32 as usize;
+    if i >= store.tables[t].elements.len() {
+        return Err(Trap::TableOutOfBounds.into());
+    }
+    let reference = store.tables[t].elements[i];
+    if reference == 0 {
+        return Err(Trap::UninitializedElement.into());
+    }
+    let f = reference as usize - 1;
+    if store.funcs[f].signature != store.instances[inst].types[ty as usize] {
+        return Err(Trap::IndirectCallTypeMismatch.into());
+    }
+    call::<M, P, F, A>(
+        exec,
+        store,
+        platform,
+        FuncAddr {
+            store: store.id,
+            index: f,
+        },
+        base + callee as usize,
+    )
 }
 
 #[inline(always)]
-fn admin_return<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    base: usize,
-    src: u32,
-    n: u32,
-) -> Result<(), ExecError> {
-    Ok({
-        copy(&mut exec.slots, base, base + src as usize, n as usize);
-        exec.frames.pop();
-    })
+fn execute_return(exec: &mut Execution, base: usize, src: u32, n: u32) -> Result<(), ExecError> {
+    copy(&mut exec.slots, base, base + src as usize, n as usize);
+    exec.frames.pop();
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_unreachable<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-) -> Result<(), ExecError> {
+fn execute_unreachable() -> Result<(), ExecError> {
     Err(Trap::Unreachable.into())
 }
 
 #[inline(always)]
-fn admin_select<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_select(
     exec: &mut Execution,
     base: usize,
     a: u32,
     b: u32,
     cond: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        if exec.slots[base + cond as usize] as u32 == 0 {
-            exec.slots[base + a as usize] = exec.slots[base + b as usize];
-        }
-    })
+    if exec.slots[base + cond as usize] as u32 == 0 {
+        exec.slots[base + a as usize] = exec.slots[base + b as usize];
+    }
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_select2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_select2(
     exec: &mut Execution,
     base: usize,
     a: u32,
     b: u32,
     cond: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        if exec.slots[base + cond as usize] as u32 == 0 {
-            copy(&mut exec.slots, base + a as usize, base + b as usize, 2);
-        }
-    })
+    if exec.slots[base + cond as usize] as u32 == 0 {
+        copy(&mut exec.slots, base + a as usize, base + b as usize, 2);
+    }
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_global_get<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_global_get<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -691,14 +636,13 @@ fn admin_global_get<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     global: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let g = &store.globals[store.instances[inst].globals[global as usize].index];
-        exec.slots[base + dst as usize] = g.lo;
-    })
+    let g = &store.globals[store.instances[inst].globals[global as usize].index];
+    exec.slots[base + dst as usize] = g.lo;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_global_get2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_global_get2<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -706,15 +650,14 @@ fn admin_global_get2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     global: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let g = &store.globals[store.instances[inst].globals[global as usize].index];
-        exec.slots[base + dst as usize] = g.lo;
-        exec.slots[base + dst as usize + 1] = g.hi;
-    })
+    let g = &store.globals[store.instances[inst].globals[global as usize].index];
+    exec.slots[base + dst as usize] = g.lo;
+    exec.slots[base + dst as usize + 1] = g.hi;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_global_set<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_global_set<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -722,14 +665,13 @@ fn admin_global_set<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     src: u32,
     global: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let g = &mut store.globals[store.instances[inst].globals[global as usize].index];
-        g.lo = exec.slots[base + src as usize];
-    })
+    let g = &mut store.globals[store.instances[inst].globals[global as usize].index];
+    g.lo = exec.slots[base + src as usize];
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_global_set2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_global_set2<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -737,69 +679,62 @@ fn admin_global_set2<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     src: u32,
     global: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let g = &mut store.globals[store.instances[inst].globals[global as usize].index];
-        g.lo = exec.slots[base + src as usize];
-        g.hi = exec.slots[base + src as usize + 1];
-    })
+    let g = &mut store.globals[store.instances[inst].globals[global as usize].index];
+    g.lo = exec.slots[base + src as usize];
+    g.hi = exec.slots[base + src as usize + 1];
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_memory_size<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_memory_size<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
     base: usize,
     dst: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let m = store.instances[inst].memories[0].index;
-        exec.slots[base + dst as usize] = (store.memories[m].buf.bytes().len() / 65536) as u64;
-    })
+    let m = store.instances[inst].memories[0].index;
+    exec.slots[base + dst as usize] = (store.memories[m].buf.bytes().len() / 65536) as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_memory_grow<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_memory_grow<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
     base: usize,
     dst: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let m = store.instances[inst].memories[0].index;
-        exec.slots[base + dst as usize] =
-            store.grow_memory_index(m, exec.slots[base + dst as usize] as u32) as u64;
-    })
+    let m = store.instances[inst].memories[0].index;
+    exec.slots[base + dst as usize] =
+        store.grow_memory_index(m, exec.slots[base + dst as usize] as u32) as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_ref_null<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    base: usize,
-    dst: u32,
-) -> Result<(), ExecError> {
-    Ok(exec.slots[base + dst as usize] = 0)
+fn execute_ref_null(exec: &mut Execution, base: usize, dst: u32) -> Result<(), ExecError> {
+    exec.slots[base + dst as usize] = 0;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_ref_is_null<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_ref_is_null(
     exec: &mut Execution,
     base: usize,
     dst: u32,
     a: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        exec.slots[base + dst as usize] = if exec.slots[base + a as usize] == 0 {
-            1
-        } else {
-            0
-        }
-    })
+    exec.slots[base + dst as usize] = if exec.slots[base + a as usize] == 0 {
+        1
+    } else {
+        0
+    };
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_ref_func<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_ref_func<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -807,17 +742,16 @@ fn admin_ref_func<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     func: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        exec.slots[base + dst as usize] =
-            match (store.instances[inst].funcs[func as usize].index as u64).checked_add(1) {
-                Some(reference) => reference,
-                None => return Err(ExecError::BadArguments),
-            }
-    })
+    exec.slots[base + dst as usize] =
+        match (store.instances[inst].funcs[func as usize].index as u64).checked_add(1) {
+            Some(reference) => reference,
+            None => return Err(ExecError::Internal),
+        };
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_table_get<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_table_get<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -826,18 +760,17 @@ fn admin_table_get<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     index: u32,
     table: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let t = store.instances[inst].tables[table as usize].index;
-        let i = exec.slots[base + index as usize] as u32 as usize;
-        if i >= store.tables[t].elements.len() {
-            return Err(Trap::TableOutOfBounds.into());
-        }
-        exec.slots[base + dst as usize] = store.tables[t].elements[i];
-    })
+    let t = store.instances[inst].tables[table as usize].index;
+    let i = exec.slots[base + index as usize] as u32 as usize;
+    if i >= store.tables[t].elements.len() {
+        return Err(Trap::TableOutOfBounds.into());
+    }
+    exec.slots[base + dst as usize] = store.tables[t].elements[i];
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_table_set<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_table_set<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -846,18 +779,17 @@ fn admin_table_set<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     value: u32,
     table: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let t = store.instances[inst].tables[table as usize].index;
-        let i = exec.slots[base + index as usize] as u32 as usize;
-        if i >= store.tables[t].elements.len() {
-            return Err(Trap::TableOutOfBounds.into());
-        }
-        store.tables[t].elements[i] = exec.slots[base + value as usize];
-    })
+    let t = store.instances[inst].tables[table as usize].index;
+    let i = exec.slots[base + index as usize] as u32 as usize;
+    if i >= store.tables[t].elements.len() {
+        return Err(Trap::TableOutOfBounds.into());
+    }
+    store.tables[t].elements[i] = exec.slots[base + value as usize];
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_table_size<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_table_size<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -865,14 +797,13 @@ fn admin_table_size<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     table: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let t = store.instances[inst].tables[table as usize].index;
-        exec.slots[base + dst as usize] = store.tables[t].elements.len() as u64;
-    })
+    let t = store.instances[inst].tables[table as usize].index;
+    exec.slots[base + dst as usize] = store.tables[t].elements.len() as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_table_grow<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_table_grow<M: MemoryBuffer, A: Alloc>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -880,16 +811,15 @@ fn admin_table_grow<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     dst: u32,
     table: u32,
 ) -> Result<(), ExecError> {
-    Ok({
-        let t = store.instances[inst].tables[table as usize].index;
-        let v = exec.slots[base + dst as usize];
-        let delta = exec.slots[base + dst as usize + 1] as u32;
-        exec.slots[base + dst as usize] = store.grow_table_index::<A>(t, delta, v) as u64;
-    })
+    let t = store.instances[inst].tables[table as usize].index;
+    let v = exec.slots[base + dst as usize];
+    let delta = exec.slots[base + dst as usize + 1] as u32;
+    exec.slots[base + dst as usize] = store.grow_table_index::<A>(t, delta, v) as u64;
+    Ok(())
 }
 
 #[inline(always)]
-fn admin_memory_fill<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+fn execute_bulk<M: MemoryBuffer>(
     exec: &mut Execution,
     store: &mut Store<M>,
     inst: usize,
@@ -897,130 +827,196 @@ fn admin_memory_fill<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     base: usize,
     instruction: Instr,
 ) -> Result<(), ExecError> {
-    {
-        Ok(bulk::execute(
-            store,
-            inst,
-            function,
-            base,
-            &exec.slots,
-            instruction,
-        )?)
-    }
+    bulk::execute(store, inst, function, base, &exec.slots, instruction)
 }
 
-macro_rules! define_step {
+macro_rules! define_dispatch {
     (scalar {$($scalar:ident = $scalar_op:expr;)*}
      load {$($load:ident = $load_op:expr;)*}
      store {$($store:ident = $store_op:expr;)*}
      simd {$($simd:ident = $simd_op:expr;)*}) => {
-#[inline(always)]
-fn scalar_operands(instruction: Instr) -> (u32, u32, u32) {
-    match instruction { $(Instr::$scalar {dst,a,b})|* => (dst,a,b), _ => (0,0,0) }
-}
-#[inline(always)]
-fn load_operands(instruction: Instr) -> (u32, u32, u32) {
-    match instruction { $(Instr::$load {dst,addr,offset})|* => (dst,addr,offset), _ => (0,0,0) }
-}
-#[inline(always)]
-fn store_operands(instruction: Instr) -> (u32, u32, u32) {
-    match instruction { $(Instr::$store {addr,value,offset})|* => (addr,value,offset), _ => (0,0,0) }
-}
-#[inline(always)]
-fn simd_operands(instruction: Instr) -> (u32, u32, u32) {
-    match instruction { $(Instr::$simd {dst,a,entry})|* => (dst,a,entry), _ => (0,0,0) }
-}
-#[inline(always)]
-fn dispatch_scalar<F: FloatOps>(exec: &mut Execution, base: usize, op: u16, instruction: Instr) -> Result<(), ExecError> {
-    let (dst,a,b) = scalar_operands(instruction);
-    execute_scalar::<F>(exec,base,op,dst,a,b)
-}
-#[inline(always)]
-fn dispatch_load<M: MemoryBuffer>(exec: &mut Execution, store: &Store<M>, inst: usize, base: usize, op: u16, instruction: Instr) -> Result<(), ExecError> {
-    let (dst,addr,offset) = load_operands(instruction);
-    execute_load(exec,store,inst,base,op,dst,addr,offset)
-}
-#[inline(always)]
-fn dispatch_store<M: MemoryBuffer>(exec: &Execution, store: &mut Store<M>, inst: usize, base: usize, op: u16, instruction: Instr) -> Result<(), ExecError> {
-    let (addr,value,offset) = store_operands(instruction);
-    execute_store(exec,store,inst,base,op,addr,value,offset)
-}
-#[inline(always)]
-fn dispatch_simd<M: MemoryBuffer,F:FloatOps>(exec: &mut Execution, store: &mut Store<M>, inst: usize, function: usize, base: usize, op: u32, instruction: Instr) -> Result<(), ExecError> {
-    let (dst,a,entry) = simd_operands(instruction);
-    execute_simd::<M,F>(exec,store,inst,function,base,op,dst,a,entry)
-}
-#[inline(always)]
-fn dispatch<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
-    exec: &mut Execution,
-    store: &mut Store<M>,
-    platform: &mut P,
-    frame_index: usize,
-    inst: usize,
-    function: usize,
-    base: usize,
-    instruction: Instr,
-) -> Result<(), ExecError> {
-    match instruction {
-        $(Instr::$scalar{..} => return dispatch_scalar::<F>(exec,base,$scalar_op,instruction),)*
-        $(Instr::$load{..}=>return dispatch_load(exec,store,inst,base,$load_op,instruction),)*
-        $(Instr::$store{..}=>return dispatch_store(exec,store,inst,base,$store_op,instruction),)*
-        $(Instr::$simd{..}=>return dispatch_simd::<M,F>(exec,store,inst,function,base,$simd_op,instruction),)*
-        Instr::Copy { dst, src } => return admin_copy::<M,P,F,A>(exec, base, dst, src),
-        Instr::Copy2 { dst, src } => return admin_copy2::<M,P,F,A>(exec, base, dst, src),
-        Instr::CopyN { dst, src, n } => return admin_copy_n::<M,P,F,A>(exec, base, dst, src, n),
-        Instr::Const32 { dst, value } => return admin_const32::<M,P,F,A>(exec, base, dst, value),
-        Instr::Const64 { dst, value } => return admin_const64::<M,P,F,A>(exec, base, dst, value),
-        Instr::ConstV128 { dst, pool } => return admin_const_v128::<M,P,F,A>(exec, store, inst, function, base, dst, pool),
-        Instr::Jump { target } => return admin_jump::<M,P,F,A>(exec, frame_index, target),
-        Instr::JumpIfZero { cond, target } => return admin_jump_if_zero::<M,P,F,A>(exec, frame_index, base, cond, target),
-        Instr::JumpIfNonZero { cond, target } => return admin_jump_if_non_zero::<M,P,F,A>(exec, frame_index, base, cond, target),
-        Instr::JumpTable { index, start, len } => return admin_jump_table::<M,P,F,A>(exec, store, frame_index, inst, function, base, index, start, len),
-        Instr::LoopHead => return admin_loop_head::<M,P,F,A>(platform),
-        Instr::Call { func, base: callee } => return admin_call::<M,P,F,A>(exec, store, platform, inst, base, func, callee),
-        Instr::CallIndirect {
-            entry,
-            index,
-            base: callee,
-        } => return admin_call_indirect::<M,P,F,A>(exec, store, platform, inst, function, base, entry, index, callee),
-        Instr::Return { src, n } => return admin_return::<M,P,F,A>(exec, base, src, n),
-        Instr::Unreachable => return admin_unreachable::<M,P,F,A>(),
-        Instr::Select { a, b, cond } => return admin_select::<M,P,F,A>(exec, base, a, b, cond),
-        Instr::Select2 { a, b, cond } => return admin_select2::<M,P,F,A>(exec, base, a, b, cond),
-        Instr::GlobalGet { dst, global } => return admin_global_get::<M,P,F,A>(exec, store, inst, base, dst, global),
-        Instr::GlobalGet2 { dst, global } => return admin_global_get2::<M,P,F,A>(exec, store, inst, base, dst, global),
-        Instr::GlobalSet { src, global } => return admin_global_set::<M,P,F,A>(exec, store, inst, base, src, global),
-        Instr::GlobalSet2 { src, global } => return admin_global_set2::<M,P,F,A>(exec, store, inst, base, src, global),
-        Instr::MemorySize { dst } => return admin_memory_size::<M,P,F,A>(exec, store, inst, base, dst),
-        Instr::MemoryGrow { dst } => return admin_memory_grow::<M,P,F,A>(exec, store, inst, base, dst),
-        Instr::RefNull { dst } => return admin_ref_null::<M,P,F,A>(exec, base, dst),
-        Instr::RefIsNull { dst, a } => return admin_ref_is_null::<M,P,F,A>(exec, base, dst, a),
-        Instr::RefFunc { dst, func } => return admin_ref_func::<M,P,F,A>(exec, store, inst, base, dst, func),
-        Instr::TableGet { dst, index, table } => return admin_table_get::<M,P,F,A>(exec, store, inst, base, dst, index, table),
-        Instr::TableSet {
-            index,
-            value,
-            table,
-        } => return admin_table_set::<M,P,F,A>(exec, store, inst, base, index, value, table),
-        Instr::TableSize { dst, table } => return admin_table_size::<M,P,F,A>(exec, store, inst, base, dst, table),
-        Instr::TableGrow { dst, table } => return admin_table_grow::<M,P,F,A>(exec, store, inst, base, dst, table),
-        Instr::MemoryFill { .. }
-        | Instr::MemoryCopy { .. }
-        | Instr::MemoryInit { .. }
-        | Instr::DataDrop { .. }
-        | Instr::TableFill { .. }
-        | Instr::TableCopy { .. }
-        | Instr::TableInit { .. }
-        | Instr::ElemDrop { .. } => return admin_memory_fill::<M,P,F,A>(exec, store, inst, function, base, instruction),
-    }
-}
-
+        #[inline(always)]
+        fn scalar_operands(instruction: Instr) -> (u32, u32, u32) {
+            match instruction {
+                $(Instr::$scalar { dst, a, b })|* => (dst, a, b),
+                _ => (0, 0, 0),
+            }
+        }
+        #[inline(always)]
+        fn load_operands(instruction: Instr) -> (u32, u32, u32) {
+            match instruction {
+                $(Instr::$load { dst, addr, offset })|* => (dst, addr, offset),
+                _ => (0, 0, 0),
+            }
+        }
+        #[inline(always)]
+        fn store_operands(instruction: Instr) -> (u32, u32, u32) {
+            match instruction {
+                $(Instr::$store { addr, value, offset })|* => (addr, value, offset),
+                _ => (0, 0, 0),
+            }
+        }
+        #[inline(always)]
+        fn simd_operands(instruction: Instr) -> (u32, u32, u32) {
+            match instruction {
+                $(Instr::$simd { dst, a, entry })|* => (dst, a, entry),
+                _ => (0, 0, 0),
+            }
+        }
+        #[inline(always)]
+        fn dispatch_scalar<F: FloatOps>(
+            exec: &mut Execution,
+            base: usize,
+            op: u16,
+            instruction: Instr,
+        ) -> Result<(), ExecError> {
+            let (dst, a, b) = scalar_operands(instruction);
+            execute_scalar::<F>(exec, base, op, dst, a, b)
+        }
+        #[inline(always)]
+        fn dispatch_load<M: MemoryBuffer>(
+            exec: &mut Execution,
+            store: &Store<M>,
+            inst: usize,
+            base: usize,
+            op: u16,
+            instruction: Instr,
+        ) -> Result<(), ExecError> {
+            let (dst, addr, offset) = load_operands(instruction);
+            execute_load(exec, store, inst, base, op, dst, addr, offset)
+        }
+        #[inline(always)]
+        fn dispatch_store<M: MemoryBuffer>(
+            exec: &Execution,
+            store: &mut Store<M>,
+            inst: usize,
+            base: usize,
+            op: u16,
+            instruction: Instr,
+        ) -> Result<(), ExecError> {
+            let (addr, value, offset) = store_operands(instruction);
+            execute_store(exec, store, inst, base, op, addr, value, offset)
+        }
+        #[inline(always)]
+        fn dispatch_simd<M: MemoryBuffer, F: FloatOps>(
+            exec: &mut Execution,
+            store: &mut Store<M>,
+            inst: usize,
+            function: usize,
+            base: usize,
+            op: u32,
+            instruction: Instr,
+        ) -> Result<(), ExecError> {
+            let (dst, a, entry) = simd_operands(instruction);
+            execute_simd::<M, F>(exec, store, inst, function, base, op, dst, a, entry)
+        }
+        #[inline(always)]
+        fn dispatch<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+            exec: &mut Execution,
+            store: &mut Store<M>,
+            platform: &mut P,
+            frame_index: usize,
+            inst: usize,
+            function: usize,
+            base: usize,
+            instruction: Instr,
+        ) -> Result<(), ExecError> {
+            match instruction {
+                $(Instr::$scalar { .. } => dispatch_scalar::<F>(exec, base, $scalar_op, instruction),)*
+                $(Instr::$load { .. } => dispatch_load(exec, store, inst, base, $load_op, instruction),)*
+                $(Instr::$store { .. } => dispatch_store(exec, store, inst, base, $store_op, instruction),)*
+                $(Instr::$simd { .. } => {
+                    dispatch_simd::<M, F>(exec, store, inst, function, base, $simd_op, instruction)
+                })*
+                Instr::Copy { dst, src } => execute_copy(exec, base, dst, src),
+                Instr::Copy2 { dst, src } => execute_copy2(exec, base, dst, src),
+                Instr::CopyN { dst, src, n } => execute_copy_n(exec, base, dst, src, n),
+                Instr::Const32 { dst, value } => execute_const32(exec, base, dst, value),
+                Instr::Const64 { dst, value } => execute_const64(exec, base, dst, value),
+                Instr::ConstV128 { dst, pool } => {
+                    execute_const_v128(exec, store, inst, function, base, dst, pool)
+                }
+                Instr::Jump { target } => execute_jump(exec, frame_index, target),
+                Instr::JumpIfZero { cond, target } => {
+                    execute_jump_if_zero(exec, frame_index, base, cond, target)
+                }
+                Instr::JumpIfNonZero { cond, target } => {
+                    execute_jump_if_non_zero(exec, frame_index, base, cond, target)
+                }
+                Instr::JumpTable { index, start, len } => execute_jump_table(
+                    exec,
+                    store,
+                    frame_index,
+                    inst,
+                    function,
+                    base,
+                    index,
+                    start,
+                    len,
+                ),
+                Instr::LoopHead => execute_loop_head::<M, P>(platform),
+                Instr::Call { func, base: callee } => {
+                    execute_call::<M, P, F, A>(exec, store, platform, inst, base, func, callee)
+                }
+                Instr::CallIndirect {
+                    entry,
+                    index,
+                    base: callee,
+                } => execute_call_indirect::<M, P, F, A>(
+                    exec, store, platform, inst, function, base, entry, index, callee,
+                ),
+                Instr::Return { src, n } => execute_return(exec, base, src, n),
+                Instr::Unreachable => execute_unreachable(),
+                Instr::Select { a, b, cond } => execute_select(exec, base, a, b, cond),
+                Instr::Select2 { a, b, cond } => execute_select2(exec, base, a, b, cond),
+                Instr::GlobalGet { dst, global } => {
+                    execute_global_get(exec, store, inst, base, dst, global)
+                }
+                Instr::GlobalGet2 { dst, global } => {
+                    execute_global_get2(exec, store, inst, base, dst, global)
+                }
+                Instr::GlobalSet { src, global } => {
+                    execute_global_set(exec, store, inst, base, src, global)
+                }
+                Instr::GlobalSet2 { src, global } => {
+                    execute_global_set2(exec, store, inst, base, src, global)
+                }
+                Instr::MemorySize { dst } => execute_memory_size(exec, store, inst, base, dst),
+                Instr::MemoryGrow { dst } => execute_memory_grow(exec, store, inst, base, dst),
+                Instr::RefNull { dst } => execute_ref_null(exec, base, dst),
+                Instr::RefIsNull { dst, a } => execute_ref_is_null(exec, base, dst, a),
+                Instr::RefFunc { dst, func } => execute_ref_func(exec, store, inst, base, dst, func),
+                Instr::TableGet { dst, index, table } => {
+                    execute_table_get(exec, store, inst, base, dst, index, table)
+                }
+                Instr::TableSet {
+                    index,
+                    value,
+                    table,
+                } => execute_table_set(exec, store, inst, base, index, value, table),
+                Instr::TableSize { dst, table } => {
+                    execute_table_size(exec, store, inst, base, dst, table)
+                }
+                Instr::TableGrow { dst, table } => {
+                    execute_table_grow::<M, A>(exec, store, inst, base, dst, table)
+                }
+                Instr::MemoryFill { .. }
+                | Instr::MemoryCopy { .. }
+                | Instr::MemoryInit { .. }
+                | Instr::DataDrop { .. }
+                | Instr::TableFill { .. }
+                | Instr::TableCopy { .. }
+                | Instr::TableInit { .. }
+                | Instr::ElemDrop { .. } => execute_bulk(exec, store, inst, function, base, instruction),
+            }
+        }
     };
 }
-super::operators::with_ops!(define_step);
+super::operators::with_ops!(define_dispatch);
 
-/// Runs precompiled initialization code through the ordinary step loop.
-pub(crate) fn synthetic<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+/// Runs compiler-generated initialization code through the ordinary step loop
+/// and returns the first two result slots.
+fn run_synthetic<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     store: &mut Store<M>,
     platform: &mut P,
     instance: usize,
@@ -1043,4 +1039,27 @@ pub(crate) fn synthetic<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
     }
     status?;
     Ok((get(&exec.slots, 0), get(&exec.slots, 1)))
+}
+
+/// Evaluates a compiled constant expression of type `ty`.
+pub(crate) fn eval_const<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+    store: &mut Store<M>,
+    platform: &mut P,
+    instance: usize,
+    function: usize,
+    ty: ValueType,
+) -> Result<Value, ExecError> {
+    let (lo, hi) = run_synthetic::<M, P, F, A>(store, platform, instance, function)?;
+    Ok(value::decode(ty, lo, hi, store.id))
+}
+
+/// Runs the instance's compiled active-segment writes and segment drops.
+pub(crate) fn initialize_segments<M: MemoryBuffer, P: Platform<M>, F: FloatOps, A: Alloc>(
+    store: &mut Store<M>,
+    platform: &mut P,
+    instance: usize,
+) -> Result<(), ExecError> {
+    let function = store.instances[instance].module.initialization;
+    run_synthetic::<M, P, F, A>(store, platform, instance, function)?;
+    Ok(())
 }

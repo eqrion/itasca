@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 theorem segment_bulk_bounds {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (instIndex function : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)

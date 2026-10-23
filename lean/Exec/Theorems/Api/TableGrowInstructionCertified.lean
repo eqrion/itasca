@@ -7,13 +7,13 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 /-- Actual TABLE_GROW is total under allocator correctness, preserves the
 Core store certificate, and follows the generated success/failure source rule. -/
-theorem table_grow_instruction_certified {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem table_grow_instruction_certified {M A : Type}
+    (memory : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (reference amount : U64) (ambient : frame)
+    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (reference amount : U64) (ambient : frame)
     (certified : CertifiedCoreStore view code store)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
@@ -22,7 +22,7 @@ theorem table_grow_instruction_certified {M P F A : Type}
     (amountSlot : exec.slots.val[base.val+dst.val+1]? = some amount)
     (moduleEq : ambient.MODULE = decodeInstance store inst) (ambientWf : wf_frame ambient)
     (owned : ReferenceShape store object.ty reference) :
-    runtime.interp.admin_table_grow memory hooks floats allocator exec store instanceIndex base dst table ⦃ out =>
+    runtime.interp.execute_table_grow memory allocator exec store instanceIndex base dst table ⦃ out =>
       out.1 = .Ok () ∧ CertifiedCoreStore view code out.2.2 ∧ FrameStoreMetadata store out.2.2 ∧
       Extend_store (decodeStore view code store) (decodeStore view code out.2.2) ∧
       ∃ result : U32, SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 result)) ∧
@@ -49,7 +49,7 @@ theorem table_grow_instruction_certified {M P F A : Type}
     · rcases effect with ⟨_,unchanged⟩ | ⟨old,elements,count,lookup,values,capacity,used,limit,maximum,changed⟩
       · rw [unchanged]; exact .refl _
       · rw [changed]; exact ⟨rfl,rfl,rfl,rfl⟩
-  apply WP.spec_mono (table_grow_handler memory hooks floats allocator exec store instanceIndex base dst table inst address reference amount
+  apply WP.spec_mono (table_grow_handler memory allocator exec store instanceIndex base dst table inst address reference amount
     found mapped referenceSlot amountSlot post primitive)
   intro out effect
   obtain ⟨result,success,⟨fresh,metadata,extension,source⟩,slots⟩ := effect

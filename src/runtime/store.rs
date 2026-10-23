@@ -1,7 +1,7 @@
 //! Store representation, issued handles, and object access.
 mod instantiate;
 
-use super::instantiate::{eval_const_exec, initialize_segments};
+use super::interp::{eval_const, initialize_segments};
 use super::platform::Alloc;
 use super::*;
 use crate::{
@@ -48,44 +48,51 @@ impl Default for StoreLimits {
         }
     }
 }
-pub(super) enum FunctionCode {
+/// A function's body: a host identity or a compiled function of an instance.
+pub(super) enum FuncCode {
     Host(u64),
     Wasm { instance: usize, function: usize },
 }
-pub(super) struct Function {
+/// A function and its index into the store's canonical signatures.
+pub(super) struct FuncInst {
     pub signature: usize,
-    pub code: FunctionCode,
+    pub code: FuncCode,
 }
-pub(super) struct Memory<M> {
+pub(super) struct MemInst<M> {
     pub buf: M,
     pub maximum: Option<u32>,
 }
-pub(super) struct Table {
+/// A table whose elements use the slot encoding of references.
+pub(super) struct TableInst {
     pub elements: Vec<u64>,
     pub ty: ElemType,
     pub maximum: Option<u32>,
 }
-pub(super) struct GlobalInstance {
+/// A global value in slot encoding; `hi` is zero unless the type is `v128`.
+pub(super) struct GlobalInst {
     pub lo: u64,
     pub hi: u64,
     pub ty: GlobalType,
 }
-pub(super) struct ElemInstance {
+/// An element segment's references in slot encoding, emptied by `elem.drop`.
+pub(super) struct ElemInst {
     pub ty: ElemType,
     pub refs: Vec<u64>,
 }
-pub(super) struct DataInstance {
+/// A data segment's bytes, emptied by `data.drop`.
+pub(super) struct DataInst {
     pub bytes: Vec<u8>,
 }
-pub(super) struct Instance {
+/// A module instance: its code and the store indices of its index spaces.
+pub(super) struct ModuleInst {
     pub module: ExecutableModule,
     pub types: Vec<usize>,
     pub funcs: Vec<FuncAddr>,
     pub tables: Vec<TableAddr>,
     pub memories: Vec<MemoryAddr>,
     pub globals: Vec<GlobalAddr>,
-    pub elements: Vec<usize>,
-    pub data: Vec<usize>,
+    pub elems: Vec<usize>,
+    pub datas: Vec<usize>,
 }
 /// An append-only owner of runtime objects and their defining module instances.
 ///
@@ -94,14 +101,14 @@ pub(super) struct Instance {
 pub struct Store<M = VecMemory> {
     pub(super) id: usize,
     pub(super) limits: StoreLimits,
-    pub(super) funcs: Vec<Function>,
+    pub(super) funcs: Vec<FuncInst>,
     pub(super) types: Vec<FuncType>,
-    pub(super) tables: Vec<Table>,
-    pub(super) memories: Vec<Memory<M>>,
-    pub(super) globals: Vec<GlobalInstance>,
-    pub(super) instances: Vec<Instance>,
-    pub(super) elems: Vec<ElemInstance>,
-    pub(super) datas: Vec<DataInstance>,
+    pub(super) tables: Vec<TableInst>,
+    pub(super) memories: Vec<MemInst<M>>,
+    pub(super) globals: Vec<GlobalInst>,
+    pub(super) instances: Vec<ModuleInst>,
+    pub(super) elems: Vec<ElemInst>,
+    pub(super) datas: Vec<DataInst>,
     externs: Vec<u64>,
     instance_items: usize,
     signature_values: usize,
@@ -168,9 +175,9 @@ impl<M: MemoryBuffer> Store<M> {
             store: self.id,
             index: self.funcs.len(),
         };
-        self.funcs.push(Function {
+        self.funcs.push(FuncInst {
             signature,
-            code: FunctionCode::Host(host_id),
+            code: FuncCode::Host(host_id),
         });
         Ok(a)
     }
@@ -217,7 +224,7 @@ impl<M: MemoryBuffer> Store<M> {
             store: self.id,
             index: self.memories.len(),
         };
-        self.memories.push(Memory {
+        self.memories.push(MemInst {
             buf,
             maximum: ty.limits.max,
         });
@@ -232,7 +239,7 @@ impl<M: MemoryBuffer> Store<M> {
         self.room()?;
         check_limits(ty.limits, u32::MAX)?;
         if !within(
-            self.table_elements(),
+            self.table_elements,
             ty.limits.min as usize,
             self.limits.max_table_elements,
         ) {
@@ -250,7 +257,7 @@ impl<M: MemoryBuffer> Store<M> {
             store: self.id,
             index: self.tables.len(),
         };
-        self.tables.push(Table {
+        self.tables.push(TableInst {
             elements,
             ty: ty.elem,
             maximum: ty.limits.max,
@@ -275,7 +282,7 @@ impl<M: MemoryBuffer> Store<M> {
             index: self.globals.len(),
         };
         let (lo, hi) = value::encode(value);
-        self.globals.push(GlobalInstance { lo, hi, ty });
+        self.globals.push(GlobalInst { lo, hi, ty });
         Ok(a)
     }
     /// Returns the structural signature of a function in this store.
@@ -336,6 +343,7 @@ impl<M: MemoryBuffer> Store<M> {
     }
     /// Borrows memory bytes for embedding mutation without changing its size.
     pub fn memory_mut(&mut self, a: MemoryAddr) -> Result<&mut [u8], ExecError> {
+        // Using `check` here produces a borrow join that extraction rejects.
         if a.store != self.id {
             return Err(ExecError::WrongStore);
         }
@@ -395,12 +403,6 @@ impl<M: MemoryBuffer> Store<M> {
         }
         Ok(found)
     }
-    fn memory_bytes(&self) -> usize {
-        self.memory_bytes
-    }
-    fn table_elements(&self) -> usize {
-        self.table_elements
-    }
     pub(crate) fn grow_memory_with(
         &mut self,
         addr: MemoryAddr,
@@ -432,7 +434,7 @@ impl<M: MemoryBuffer> Store<M> {
         if add > usize::MAX as u64
             || pages * 65536 > usize::MAX as u64
             || !within(
-                self.memory_bytes(),
+                self.memory_bytes,
                 add as usize,
                 self.limits.max_memory_bytes,
             )
@@ -452,7 +454,7 @@ impl<M: MemoryBuffer> Store<M> {
         if n > u32::MAX as u64
             || n > self.tables[index].maximum.unwrap_or(u32::MAX) as u64
             || !within(
-                self.table_elements(),
+                self.table_elements,
                 delta as usize,
                 self.limits.max_table_elements,
             )

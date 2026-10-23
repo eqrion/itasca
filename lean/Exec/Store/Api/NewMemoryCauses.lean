@@ -17,11 +17,11 @@ failure, a refused zeroed buffer, or the definition's exact resource cause. -/
 theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (ty : Itasca.types.MemType)
     (found : inst.module.module.env.mem_types.val[index.val]? = some ty)
     (bound : objectCount store ≤ Usize.max)
-    (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.Instance)
+    (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index =
       .ok (.Err (.Exhausted limit),after,next)) :
     after = store ∧ next = inst ∧ NewMemoryResourceCause memory allocator store ty limit := by

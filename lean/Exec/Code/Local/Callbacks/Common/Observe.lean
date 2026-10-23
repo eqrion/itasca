@@ -1,5 +1,6 @@
 import Exec.Code.Local.Relations.Common.LayoutProofs
 import Exec.Code.Local.Relations.Common.CompileInv
+import Exec.Representation.Collection
 
 /-! The extracted compiler rebuilds operand offsets from the validator's current
 stack before each callback. These proofs cover the allocation-aware loop, its
@@ -88,22 +89,6 @@ def observedHeight (height : Nat) : List Itasca.code.StackType → Nat
         out.2.2.2.val = observedHeight height.val values.val ⦄ := by
   simpa [runtime.compiler.observe_values] using
     observe_values_loop ops law budget before height values 0#usize (by simp) (by simpa using fits)
-
-@[step] theorem observe_clear (before : alloc.vec.Vec U32) :
-    runtime.compiler.FunctionCompiler.observe_loop before ⦃ out => out.val = [] ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.observe_loop
-  apply loop.spec_decr_nat (fun v => v.val.length) (fun _ => True)
-  · intro v _
-    simp only [runtime.compiler.FunctionCompiler.observe_loop.body,
-      alloc.vec.Vec.is_empty, bind_ok]
-    split
-    · rename_i empty
-      simpa using empty
-    · rename_i nonempty
-      simp [alloc.vec.Vec.pop]
-      have : 0 < v.val.length := List.length_pos_iff.mpr (by simpa using nonempty)
-      omega
-  · trivial
 
 @[step] theorem compiler_observe {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)

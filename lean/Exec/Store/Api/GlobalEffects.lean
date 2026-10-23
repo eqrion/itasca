@@ -8,10 +8,10 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 inductive GlobalStageEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) : runtime.store.Store M → Prop where
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) : runtime.store.Store M → Prop where
   | unchanged : GlobalStageEffect store instIndex inst store
-  | appended (globals : alloc.vec.Vec runtime.store.GlobalInstance)
-      (addresses : alloc.vec.Vec runtime.GlobalAddr) (global : runtime.store.GlobalInstance)
+  | appended (globals : alloc.vec.Vec runtime.store.GlobalInst)
+      (addresses : alloc.vec.Vec runtime.GlobalAddr) (global : runtime.store.GlobalInst)
       (globalValues : globals.val = store.globals.val ++ [global])
       (addressValues : addresses.val = inst.globals.val ++ [⟨store.id, store.globals.len⟩])
       (canonical : GlobalShape store global)
@@ -24,7 +24,7 @@ theorem add_instance_global_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -47,7 +47,7 @@ theorem add_instance_global_effect {M P F A : Type}
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
     as ⟨found, hfound⟩
   subst found
-  step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+  step with eval_const_owned memory hooks floats allocator law store platform instIndex function
     inst code global.init global.gtype.valtype words hi hc compiled resolved bindings
     as ⟨evaluated, store', platform', hs, hp, hvalue⟩
   subst store' platform'
@@ -88,7 +88,7 @@ theorem add_instance_global_effect {M P F A : Type}
 /-- The exact append effect preserves constant contexts and their source module,
 and grows the instance global map by at most one address. -/
 theorem GlobalStageEffect.context {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : GlobalStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -96,7 +96,7 @@ theorem GlobalStageEffect.context {M : Type} {store after : runtime.store.Store 
     ∃ next, after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
       InitializerBindings after next ∧ InitializerImports after next ∧
       InitializerSegmentBindings after next ∧ next.globals.length ≤ inst.globals.length + 1 ∧
-      next.elements = inst.elements ∧ next.data = inst.data := by
+      next.elems = inst.elems ∧ next.datas = inst.datas := by
   cases effect with
   | unchanged => exact ⟨inst, found, rfl, bindings, imports, segments, by omega, rfl, rfl⟩
   | appended globals addresses global globalValues addressValues canonical room =>
@@ -118,13 +118,13 @@ theorem GlobalStageEffect.context {M : Type} {store after : runtime.store.Store 
     · simp [addressValues]
 
 theorem GlobalStageEffect.segments {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : GlobalStageEffect store instIndex inst after) :
     after.elems = store.elems ∧ after.datas = store.datas := by
   cases effect <;> exact ⟨rfl, rfl⟩
 
 theorem GlobalStageEffect.object_bound {M : Type} {store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : GlobalStageEffect store instIndex inst after)
     (bound : objectCount store ≤ Usize.max) : objectCount after ≤ Usize.max := by
   cases effect with
@@ -134,7 +134,7 @@ theorem GlobalStageEffect.object_bound {M : Type} {store after : runtime.store.S
     scalar_tac
 
 theorem GlobalStageEffect.staged {M : Type} {before store after : runtime.store.Store M}
-    {instIndex : Usize} {inst : runtime.store.Instance}
+    {instIndex : Usize} {inst : runtime.store.ModuleInst}
     (effect : GlobalStageEffect store instIndex inst after)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val) :
     StagedPrefix before after := by

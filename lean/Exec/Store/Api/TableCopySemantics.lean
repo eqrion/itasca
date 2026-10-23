@@ -5,9 +5,9 @@ namespace Exec.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem table_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
     (targetIndex sourceIndex : U32) (address sourceAddress : runtime.TableAddr)
-    (table sourceTable : runtime.store.Table) (destination source count : Nat) (words : alloc.vec.Vec U64)
+    (table sourceTable : runtime.store.TableInst) (destination source count : Nat) (words : alloc.vec.Vec U64)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[targetIndex.val]? = some address)
     (sourceMapped : inst.tables.val[sourceIndex.val]? = some sourceAddress)
@@ -41,9 +41,9 @@ theorem table_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   rfl
 
 theorem TableCopyEffect.refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
     (targetIndex sourceIndex : U32) (address sourceAddress : runtime.TableAddr)
-    (table sourceTable : runtime.store.Table) (destination source count : U64)
+    (table sourceTable : runtime.store.TableInst) (destination source count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : TableCopyEffect store address.index table sourceTable destination source count out)
     (moduleEq : ambient.MODULE = decodeInstance store inst)

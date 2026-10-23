@@ -7,7 +7,7 @@ theorem q15_loop (x y initial : U128) (i : U32)
     (position : i.val ≤ 8)
     (initializedPrefix : ∀ j, j < i.val → laneBits 16 j initial.bv =
       q15Bits (laneBits 16 j x.bv) (laneBits 16 j y.bv)) :
-    runtime.interp.simd.multiply_lanes_loop 130#u32 y x initial i ⦃ result =>
+    runtime.interp.simd.multiply_lanes_loop 130#u32 x y initial i ⦃ result =>
       ∀ j, j < 8 → laneBits 16 j result.bv = q15Bits (laneBits 16 j x.bv) (laneBits 16 j y.bv) ⦄ := by
   unfold runtime.interp.simd.multiply_lanes_loop
   apply loop.spec_decr_nat (fun p => 8-p.2.val)
@@ -60,7 +60,8 @@ theorem q15_loop (x y initial : U128) (i : U32)
     runtime.interp.simd.multiply_lanes 130#u32 x y ⦃ result =>
       ∀ j, j < 8 → laneBits 16 j result.bv = q15Bits (laneBits 16 j x.bv) (laneBits 16 j y.bv) ⦄ := by
   unfold runtime.interp.simd.multiply_lanes
-  step with q15_loop x y 0#u128 0#u32 (by decide) (by simp) as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (q15_loop x y 0#u128 0#u32 (by decide) (by simp))
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

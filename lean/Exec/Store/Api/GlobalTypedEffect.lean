@@ -6,10 +6,10 @@ open Aeneas Aeneas.Std
 
 /-- The appended global retains the exact validated source type. -/
 inductive GlobalTypedEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.Instance) (ty : Itasca.types.GlobalType) :
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.types.GlobalType) :
     core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : GlobalTypedEffect store instIndex inst ty (.Err error) store
-  | appended (globals : alloc.vec.Vec runtime.store.GlobalInstance)
+  | appended (globals : alloc.vec.Vec runtime.store.GlobalInst)
       (addresses : alloc.vec.Vec runtime.GlobalAddr) (lo hi : U64)
       (globalValues : globals.val = store.globals.val ++ [{ty := ty, lo := lo, hi := hi}])
       (addressValues : addresses.val = inst.globals.val ++ [⟨store.id, store.globals.len⟩])
@@ -31,7 +31,7 @@ theorem add_instance_global_typed_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -54,7 +54,7 @@ theorem add_instance_global_typed_effect {M P F A : Type}
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
     as ⟨found, hfound⟩
   subst found
-  step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+  step with eval_const_owned memory hooks floats allocator law store platform instIndex function
     inst code global.init global.gtype.valtype words hi hc compiled resolved bindings
     as ⟨evaluated, store', platform', hs, hp, hvalue⟩
   subst store' platform'

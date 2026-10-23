@@ -13,8 +13,8 @@ set_option maxRecDepth 4096
     (room : compiler.function.code.val.length + 1 + 2*compiler.table_depths.val.length ≤ Usize.max)
     (tables : compiler.function.jump_tables.val.length ≤ compiler.function.code.val.length)
     (coordinate : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.lower_table_branches ops compiler ⦃ _ => True ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches
+    runtime.compiler.control.FunctionCompiler.lower_table_branches ops compiler ⦃ _ => True ⦄ := by
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches
   step as ⟨startResult,_⟩
   cases startResult with
   | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,

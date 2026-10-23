@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca.ModuleEnv
 existing bodies keep their old certificate. Charging instance items changes no
 field involved in code interpretation or function lookup. -/
 theorem InstantiationCode.cumulative_compiled {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (shape : Shape view before) (oldCompiled : Interp.CumulativeCompiledFunctions oldCode before)
     (found : ready.instances.val[before.instances.len.val]? = some inst)

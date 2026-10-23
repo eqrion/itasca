@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 /-- An issued raw host entry decodes to the host identity and its exact signature. -/
 theorem decode_host_function {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (found : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureFound : store.types.val[function.signature.val]? = some signature) :
@@ -24,7 +24,7 @@ post-callback lookup therefore recovers the original raw signature, even if
 its internal type-table index changed. -/
 theorem host_signature_extension {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (before after : runtime.store.Store M) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (found : before.funcs.val[address.index.val]? = some function)
     (signatureFound : before.types.val[function.signature.val]? = some signature)
     (shape : Shape view after)

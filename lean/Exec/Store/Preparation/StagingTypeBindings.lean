@@ -5,7 +5,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 theorem InitializerFunctionMetadata.table_types {M : Type}
-    {store after : runtime.store.Store M} {inst next : runtime.store.Instance}
+    {store after : runtime.store.Store M} {inst next : runtime.store.ModuleInst}
     (metadata : InitializerFunctionMetadata store inst after next)
     {source : List Itasca.types.TableType} (matching : TableTypeMap store source inst.tables.val) :
     TableTypeMap after source next.tables.val := by
@@ -13,16 +13,16 @@ theorem InitializerFunctionMetadata.table_types {M : Type}
 
 /-- Fully populated source/raw type maps supply the structural compatibility
 certificate consumed by the actual segment execution proof. -/
-theorem segment_type_bindings_of_maps {M : Type} {store : runtime.store.Store M} {inst : runtime.store.Instance}
+theorem segment_type_bindings_of_maps {M : Type} {store : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (tables : TableTypeMap store inst.module.module.env.table_types.val inst.tables.val)
-    (elements : ElementTypeMap store inst.module.module.env.elements.val inst.elements.val) :
+    (elements : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val) :
     SegmentTypeBindings store inst := ⟨tables.bindings, elements.bindings⟩
 
 theorem data_staging_type_bindings {M A : Type}
     (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -30,8 +30,8 @@ theorem data_staging_type_bindings {M A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.tail.data.val.length)
     (storeCapacity : store.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.data.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
-    (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elements.val)
+    (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
+    (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val)
     (tables : TableTypeMap store inst.module.module.env.table_types.val inst.tables.val) :
     runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status start instIndex
       ⦃ out => ∃ after finalStatus next,

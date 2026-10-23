@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 /-- Structural store validity provides the finite constant-read bindings needed
 by the compiler's synthetic initialization code. -/
 theorem Shape.initializer_bindings {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {inst : runtime.store.Instance}
+    {store : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (shape : Shape view store) (found : inst ∈ store.instances.val) :
     InitializerBindings store inst := by
   have instanceShape := shape.instances inst found
@@ -24,7 +24,7 @@ theorem instantiate_tail_no_start {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)

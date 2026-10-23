@@ -25,7 +25,7 @@ theorem invoke_defined_executable_eventful_causes
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)

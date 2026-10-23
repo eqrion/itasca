@@ -58,7 +58,7 @@ theorem compiler_op32_capacity {A : Type} (ops : runtime.platform.Alloc A)
         let vt ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
             _root_.Itasca.types.ValueType) before.function.locals i1
-        let n ← runtime.compiler.width vt
+        let n ← runtime.value.width vt
         let (r, self1) ←
           runtime.compiler.FunctionCompiler.copy ops before
             before.height src n
@@ -103,7 +103,7 @@ theorem compiler_op33_capacity {A : Type} (ops : runtime.platform.Alloc A)
           let vt ←
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
               _root_.Itasca.types.ValueType) before.function.locals i1
-          let n ← runtime.compiler.width vt
+          let n ← runtime.value.width vt
           let (r1, self1) ←
             runtime.compiler.FunctionCompiler.copy ops before dst val
               n
@@ -154,7 +154,7 @@ theorem compiler_op34_capacity {A : Type} (ops : runtime.platform.Alloc A)
           let vt ←
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
               _root_.Itasca.types.ValueType) before.function.locals i1
-          let n ← runtime.compiler.width vt
+          let n ← runtime.value.width vt
           let (r1, self1) ←
             runtime.compiler.FunctionCompiler.copy ops before dst val
               n

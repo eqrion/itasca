@@ -14,7 +14,7 @@ theorem float_core_compiled_functions_publish {M : Type} {view : M → Slice U8}
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
     (oldCompiled : Interp.FloatCoreCompiledFunctions oldCode before)
-    (inst : runtime.store.Instance) (sources : List funccode)
+    (inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     (certificate : Code.FloatCoreModuleFunctions inst.module sources)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
@@ -27,7 +27,7 @@ theorem float_core_compiled_functions_publish {M : Type} {view : M → Slice U8}
   rcases staged function present with old | ⟨index, bound, encoded, signatureFound⟩
   · exact float_core_function_compiled_prefix shape retained (installCode_agrees before oldCode sources) (oldCompiled function old)
   · intro instanceIndex functionIndex defined
-    obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FunctionCode.Wasm.inj (defined.symm.trans encoded)
+    obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FuncCode.Wasm.inj (defined.symm.trans encoded)
     subst instanceIndex
     subst functionIndex
     let imported := (importedFuncs inst.module.module.env.imports.val).length

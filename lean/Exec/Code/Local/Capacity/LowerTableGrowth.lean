@@ -8,7 +8,7 @@ elab "growth_table_effect " h:ident " using " ops:term ", " law:term : tactic =>
   let hyp ← elabTerm h none
   let ty ← inferType hyp
   let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.FunctionCompiler.lower_table_branches_loop then
+  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.lower_table_branches_loop then
     evalTactic (← `(tactic| have effect := compiler_table_loop_growth $ops $law _ _ _ _ $h))
     evalTactic (← `(tactic| obtain ⟨depthsEq, growth⟩ := effect))
   else
@@ -36,9 +36,9 @@ macro "growth_table_step " h:ident " using " ops:term ", " law:term : tactic => 
 theorem compiler_lower_table_growth {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (status, after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (status, after)) :
     after.function.code.val.length ≤ before.function.code.val.length + 1 + 2 * before.table_depths.val.length := by
-  unfold runtime.compiler.FunctionCompiler.lower_table_branches at accepted
+  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches at accepted
   repeat' growth_table_step accepted using ops, law
   rename_i signature tail called depthsEq growth
   rcases tail with ⟨functionSlots, budget, batchStart, function, frames, reachable,

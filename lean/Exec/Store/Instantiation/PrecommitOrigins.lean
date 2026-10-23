@@ -18,7 +18,7 @@ bounded item count. This ghost counter update does not change decoded state. -/
 def PrecommitStageEvidence {M : Type} (view : M → Slice U8)
     (before staged : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (error : runtime.ExecError) : Prop :=
-  ∀ trap, error = .Trap trap → ∃ (charged : Usize) (inst : runtime.store.Instance),
+  ∀ trap, error = .Trap trap → ∃ (charged : Usize) (inst : runtime.store.ModuleInst),
     Shape view {staged with instance_items := charged} ∧
     staged.instances.length = before.instances.length + 1 ∧
     staged.instances.val[before.instances.length]? = some inst ∧ inst.module = module ∧
@@ -52,7 +52,7 @@ theorem PrecommitOrigins.wrong_store {M : Type} {memory : runtime.platform.Memor
 
 theorem PrecommitOrigins.linked {M : Type} {memory : runtime.platform.MemoryBuffer M}
     {view : M → Slice U8} {before staged : runtime.store.Store M} {module imports error}
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (linked : runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
       (.Ok ()) 0#usize (emptyInstance module) = .ok (before, .Err error, inst))
     (cause : PrecommitError .Wasm2 error) :
@@ -69,7 +69,7 @@ theorem PrecommitOrigins.linked {M : Type} {memory : runtime.platform.MemoryBuff
 
 theorem PrecommitOrigins.precheck {M : Type} {memory : runtime.platform.MemoryBuffer M}
     {view : M → Slice U8} {before staged : runtime.store.Store M} {module imports error}
-    (index : Usize) (inst : runtime.store.Instance)
+    (index : Usize) (inst : runtime.store.ModuleInst)
     (found : staged.instances.val[index.val]? = some inst) (source : inst.module = module)
     (cause : PrecheckCause view staged inst error)
     (staging : PrecommitStageEvidence view before staged module error) :

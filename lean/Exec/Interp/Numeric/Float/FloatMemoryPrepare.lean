@@ -7,7 +7,7 @@ open Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem coreFramePoint_load_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (raw : runtime.interp.Frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (raw : runtime.interp.Frame)
     (f : Abs.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (after : List instr) (op : Abs.Memory.Load) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
@@ -38,7 +38,7 @@ theorem coreFramePoint_load_prepare {M : Type} (view : M → Slice U8) (code : S
     · simpa only [typesEq] using tail
 
 theorem coreFramePoint_store_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (raw : runtime.interp.Frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (raw : runtime.interp.Frame)
     (f : Abs.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (after : List instr) (op : Abs.Memory.Store) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)

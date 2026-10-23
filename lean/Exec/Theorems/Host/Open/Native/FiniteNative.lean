@@ -51,7 +51,7 @@ theorem finite_reentry_native_invoke {M F A : Type}
       .ok (.done (finishExecution (w.caller,store,(),(.Err (.Trap .Host) : Status)))) := by
     rw [←erase_loop_body]
     simp [prepareLoop,core.result.Result.is_ok,resumeLoop]
-  have nativeLoop : runtime.interp.invoke_with_loop2 memory hooks floats allocator w.entry store () (.Ok ())=
+  have nativeLoop : runtime.interp.invoke_with_loop1 memory hooks floats allocator w.entry store () (.Ok ())=
       .ok (finishExecution (w.caller,store,(),(.Err (.Trap .Host) : Status))) := by
     change loop (executionBody memory hooks floats allocator) (w.entry,store,(),(.Ok () : Status))=_
     exact (NormalTrace.next nativeStep (.done stopped)).result

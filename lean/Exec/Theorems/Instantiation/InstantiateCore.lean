@@ -21,12 +21,12 @@ def InstantiationCoreOutcome {M P F A : Type}
   ∃ ready inst initialized status,
     ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
     after.id = before.id ∧ after.instances = ready.instances ∧
-    runtime.instantiate.initialize_segments memory hooks floats allocator ready platform before.instances.len =
+    runtime.interp.initialize_segments memory hooks floats allocator ready platform before.instances.len =
       .ok (status, initialized, platform) ∧
     TailCoreSourceResult view code inst initialized after ⟨before.id, before.instances.len⟩ status result
 
 theorem TailCoreSourceResult.success {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {inst : runtime.store.Instance} {store after : runtime.store.Store M} {identity : runtime.InstanceAddr}
+    {inst : runtime.store.ModuleInst} {store after : runtime.store.Store M} {identity : runtime.InstanceAddr}
     {initialized result} (outcome : TailCoreSourceResult view code inst store after identity initialized result)
     {address : runtime.InstanceAddr} (success : result = .Ok address) : address = identity := by
   cases initialized with

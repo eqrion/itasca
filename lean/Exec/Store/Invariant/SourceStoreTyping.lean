@@ -14,7 +14,7 @@ private theorem getD_member {α : Type} (values : List α) (index : Nat) (fallba
 
 /-- Each validated export resolves to one of its owning instance's actual
 address maps, rather than merely some well-typed address in the store. -/
-theorem decoded_export_member {M : Type} (s : runtime.store.Store M) (inst : runtime.store.Instance)
+theorem decoded_export_member {M : Type} (s : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (bounds : ModuleExportBounds inst.module.module.env) (shape : InstanceShape s inst)
     (entry : Itasca.module.Export) (member : entry ∈ inst.module.module.env.exports.val) :
     (decodeExport inst entry).ADDR ∈ Abs.moduleAddresses (decodeInstance s inst) := by

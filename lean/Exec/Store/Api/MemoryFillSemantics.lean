@@ -21,8 +21,8 @@ private theorem fill_map_set_modify {T U : Type} (decode : T → U) (change : U 
       simpa using ih index found
 
 theorem memory_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (memory : runtime.store.Memory M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M)
     (destination count : Nat) (value : U32) (buffer : M)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some address)
@@ -60,8 +60,8 @@ theorem memory_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   rfl
 
 theorem MemoryFillEffect.refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (memory : runtime.store.Memory M) (destination count : U64) (value : U32)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M) (destination count : U64) (value : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : MemoryFillEffect view store address.index memory destination count (UScalar.cast .U8 value) out)
     (moduleEq : ambient.MODULE = decodeInstance store inst)

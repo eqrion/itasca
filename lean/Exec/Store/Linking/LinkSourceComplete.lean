@@ -10,7 +10,7 @@ its canonical environment, independently of the runtime comparison. -/
 theorem link_import_source_complete {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (code : CodeInterpretation) (store : runtime.store.Store M) (shape : Shape view store)
-    (inst : runtime.store.Instance) (index : Usize) (external : runtime.Extern)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
     (bound : index.val < inst.module.module.env.imports.length)
     (required : types.ExternType)
     (resolved : ModuleExternals.ImportResolves inst.module.module.env
@@ -107,7 +107,7 @@ theorem source_import_kind {M : Type} (view : M → Slice U8) (code : CodeInterp
 /-- A foreign handle of the right namespace reports ownership failure, rather
 than incompatible-import typing. -/
 theorem link_foreign_matching {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (external : runtime.Extern) (bound : index.val < inst.module.module.env.imports.length)
     (foreign : ForeignExtern store external)
     (kind : ImportKindMatches inst.module.module.env.imports.val[index.val].desc external) :
@@ -130,7 +130,7 @@ the existing WrongStore outcome without adding an ownership premise. -/
 theorem link_import_source_typed {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (code : CodeInterpretation) (store : runtime.store.Store M) (shape : Shape view store)
-    (inst : runtime.store.Instance) (index : Usize) (external : runtime.Extern)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
     (bound : index.val < inst.module.module.env.imports.length)
     (required : types.ExternType)
     (resolved : ModuleExternals.ImportResolves inst.module.module.env

@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std SpecExt
 /-- Canonical source type bindings reconstruct the actual instance signature
 index and its checked store lookup. -/
 theorem signature_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (C : context)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context)
     (shape : Store.Shape view store) (present : inst ∈ store.instances.val)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (index : Nat) (type : functype) (selected : C.TYPES[index]? = some type) :
@@ -26,7 +26,7 @@ theorem signature_binding_raw {M : Type} (view : M → Slice U8) (code : Store.C
 
 /-- The runtime type map and the generated `fun_type` select the same signature. -/
 theorem signature_lookup_decodes {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
     (index : U32) (signature : Usize) (type : Itasca.types.FuncType)
     (moduleEq : ambient.MODULE = Store.decodeInstance store inst)
     (mapped : inst.types.val[index.val]? = some signature)
@@ -38,7 +38,7 @@ theorem signature_lookup_decodes {M : Type} (view : M → Slice U8) (code : Stor
 /-- Both independent namespaces of CALL_INDIRECT resolve to actual retained
 objects, with exact source lookup equations. -/
 theorem indirect_bindings_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame) (C : context)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame) (C : context)
     (shape : Store.Shape view store) (present : inst ∈ store.instances.val)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (moduleEq : ambient.MODULE = Store.decodeInstance store inst)

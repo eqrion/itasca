@@ -16,8 +16,8 @@ set_option maxRecDepth 4096
     (codeFits : compiler.function.code.val.length + 2 ≤ Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length + 2 ≤ Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
-    runtime.compiler.FunctionCompiler.table_branch ops compiler index ⦃ _ => True ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.table_branch
+    runtime.compiler.control.FunctionCompiler.table_branch ops compiler index ⦃ _ => True ⦄ := by
+  unfold runtime.compiler.control.FunctionCompiler.table_branch
   step with compiler_pc ops compiler as ⟨status,current,_,_,budget,same⟩
   subst current
   cases status with

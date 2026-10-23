@@ -20,21 +20,19 @@ theorem encode_decoded_ref (ty : Itasca.types.ElemType) (word : U64) :
 
 /-- The extracted null test produces the exact canonical Boolean whose source
 instruction has the generated pure transition. -/
-theorem ref_is_null_source_effect {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem ref_is_null_source_effect
     (exec : runtime.interp.Execution) (base : Usize) (dst src : U32)
     (ty : Itasca.types.ElemType) (s : _root_.store) (ambient : frame)
     (sourceBound : base.val+src.val < exec.slots.length)
     (destinationBound : base.val+dst.val < exec.slots.length)
     (storeWf : wf_store s) (ambientWf : wf_frame ambient) :
-    runtime.interp.admin_ref_is_null memory hooks floats allocator exec base dst src ⦃ out =>
+    runtime.interp.execute_ref_is_null exec base dst src ⦃ out =>
       out.1 = .Ok () ∧ ∃ result : U64,
         result.val = Spec.referenceIsNull (decodeRef ty exec.slots.val[base.val+src.val]!) ∧
         SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) result) ∧
         StepH ⟨⟨s,ambient⟩,[admininstr_ref (decodeRef ty exec.slots.val[base.val+src.val]!),.REF_IS_NULL]⟩ []
           ⟨⟨s,ambient⟩,[Spec.Segment.i32 result.val]⟩ ⦄ := by
-  apply WP.spec_mono (ref_is_null_effect memory hooks floats allocator exec base dst src sourceBound destinationBound)
+  apply WP.spec_mono (ref_is_null_effect exec base dst src sourceBound destinationBound)
   intro out effect
   obtain ⟨success,written⟩ := effect
   let result : U64 := if exec.slots.val[base.val+src.val]! = 0#u64 then 1#u64 else 0#u64

@@ -37,7 +37,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 
 theorem step_opcode_structured (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -100,7 +100,7 @@ theorem step_opcode_structured (exec : runtime.interp.Execution) (store : runtim
 /-- The actual ordinary dispatch preserves the complete concrete/source frame
 stack, together with generated typing and counted source simulation. -/
 theorem step_opcode_stack (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

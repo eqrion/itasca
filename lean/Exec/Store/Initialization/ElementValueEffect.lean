@@ -5,17 +5,17 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 inductive ElementValueEffect {M : Type} (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (store : runtime.store.Store M) (instIndex : Usize) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (instIndex : Usize) (inst : runtime.store.ModuleInst)
     (source : Itasca.module.Element) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : ElementValueEffect sourceStore sourceInstance store instIndex inst source (.Err error) store
-  | appended (elements : alloc.vec.Vec runtime.store.ElemInstance) (addresses : alloc.vec.Vec Usize)
+  | appended (elements : alloc.vec.Vec runtime.store.ElemInst) (addresses : alloc.vec.Vec Usize)
       (values : alloc.vec.Vec U64)
       (elementValues : elements.val = store.elems.val ++ [{ty := source.elem, refs := values}])
-      (addressValues : addresses.val = inst.elements.val ++ [store.elems.len])
+      (addressValues : addresses.val = inst.elems.val ++ [store.elems.len])
       (canonical : ∀ word ∈ values.val, ReferenceShape store source.elem word)
       (evaluated : ElementSourceValues sourceStore sourceInstance source.elem source.init.val values.val) :
       ElementValueEffect sourceStore sourceInstance store instIndex inst source (.Ok ())
-        {store with elems := elements, instances := store.instances.set instIndex {inst with elements := addresses}}
+        {store with elems := elements, instances := store.instances.set instIndex {inst with elems := addresses}}
 
 theorem ElementValueEffect.content {M : Type} {sourceStore sourceInstance}
     {store after : runtime.store.Store M} {instIndex inst source status}
@@ -31,12 +31,12 @@ theorem add_instance_element_value_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
     (bindings : InitializerBindings store inst)
-    (room : store.elems.length < Usize.max) (mapRoom : inst.elements.length < Usize.max)
+    (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max)
     (sourceStore : _root_.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (context : InitializerSourceContext sourceStore sourceInstance store inst)

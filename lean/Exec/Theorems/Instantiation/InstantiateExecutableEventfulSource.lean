@@ -15,7 +15,7 @@ def EventfulInstantiationSourceOutcome {M P : Type} (view : M → Slice U8)
     (after : runtime.store.Store M) (host : P) : Prop :=
   (∃ error, result = .Err error ∧ PrecommitError module.profile error ∧ after = before ∧ host = platform ∧
     ∀ trap, error = .Trap trap → module.profile = .Wasm1 ∧
-      ∃ (staged : runtime.store.Store M) (inst : runtime.store.Instance),
+      ∃ (staged : runtime.store.Store M) (inst : runtime.store.ModuleInst),
         staged.instances.val[before.instances.length]? = some inst ∧ inst.module = module ∧
         SpecExt.Wasm1.BoundsRollback (decodeStore view oldCode before) (decodeStore view code staged)
           (decodeInstance staged inst) (raw.elements.map ModuleElaboration.element)

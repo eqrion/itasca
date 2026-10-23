@@ -10,7 +10,7 @@ consecutive fresh addresses, preserving all previous objects. -/
 theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize)
     (startBound : start.val ≤ seed.module.module.env.mem_types.val.length)
     (changed : store = {before with memories := store.memories, memory_bytes := store.memory_bytes})
@@ -49,7 +49,7 @@ theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.M
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentIssued, indexLower, currentOrder, indexBound, counting, typed⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentIssued indexLower currentOrder indexBound counting typed ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop6.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
@@ -116,7 +116,7 @@ and the consecutive address map required by module allocation. -/
 theorem memory_allocation_success {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before after : runtime.store.Store M) (inst next : runtime.store.Instance) (start : Usize)
+    (before after : runtime.store.Store M) (inst next : runtime.store.ModuleInst) (start : Usize)
     (bound : start.val ≤ inst.module.module.env.mem_types.val.length)
     (objectBound : objectCount before ≤ Usize.max)
     (issued : ∀ address ∈ inst.memories.val, address.index.val < before.memories.length)

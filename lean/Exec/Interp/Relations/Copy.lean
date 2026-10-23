@@ -1,4 +1,4 @@
-import Exec.Interp.Relations.Admin
+import Exec.Interp.Relations.Execute
 
 /-! The interpreter copies slots from low to high. The mathematical operation
 retains that order, including the behavior of overlapping source/destination
@@ -105,10 +105,10 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hd : base.val + dst.val + n.val ≤ exec.slots.length)
     (hsrc : base.val + src.val ≤ Usize.max)
     (hdst : base.val + dst.val ≤ Usize.max) :
-    runtime.interp.admin_copy_n memory platform floats allocator exec base dst src n
+    runtime.interp.execute_copy_n exec base dst src n
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2
         (copyWords exec.slots.val (base.val + dst.val) (base.val + src.val) n.val) ⦄ := by
-  unfold runtime.interp.admin_copy_n
+  unfold runtime.interp.execute_copy_n
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut]
   step* <;> simp_all [SlotsEffect] <;> first | assumption | omega
 
@@ -116,10 +116,10 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (base : Usize) (dst src : U32)
     (hs : base.val + src.val + 2 ≤ exec.slots.length)
     (hd : base.val + dst.val + 2 ≤ exec.slots.length) :
-    runtime.interp.admin_copy2 memory platform floats allocator exec base dst src
+    runtime.interp.execute_copy2 exec base dst src
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2
         (copyWords exec.slots.val (base.val + dst.val) (base.val + src.val) 2) ⦄ := by
-  unfold runtime.interp.admin_copy2
+  unfold runtime.interp.execute_copy2
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut]
   step* <;> simp_all [SlotsEffect] <;> first | assumption | omega
 
@@ -134,12 +134,12 @@ def ReturnEffect (before after : runtime.interp.Execution) (base src n : Nat) : 
     (base : Usize) (src n : U32)
     (hs : base.val + src.val + n.val ≤ exec.slots.length)
     (hsrc : base.val + src.val ≤ Usize.max) :
-    runtime.interp.admin_return memory platform floats allocator exec base src n
+    runtime.interp.execute_return exec base src n
       ⦃ out => out.1 = .Ok () ∧ ReturnEffect exec out.2 base.val src.val n.val ⦄ := by
   have hd : base.val + n.val ≤ exec.slots.slice.length := by
     change base.val + n.val ≤ exec.slots.length
     omega
-  unfold runtime.interp.admin_return
+  unfold runtime.interp.execute_return
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut]
   step* <;> simp_all [alloc.vec.Vec.pop, ReturnEffect] <;> first | assumption | omega
 

@@ -103,8 +103,8 @@ def instantiateInnerAtTail
                         tables := v1,
                         memories := v2,
                         globals := v3,
-                        elements := (alloc.vec.Vec.new Std.Usize),
-                        data := (alloc.vec.Vec.new Std.Usize)
+                        elems := (alloc.vec.Vec.new Std.Usize),
+                        datas := (alloc.vec.Vec.new Std.Usize)
                       }
                   let cf5 ←
                     core.result.Result.Insts.CoreOpsTry.branch status2
@@ -141,8 +141,8 @@ def instantiateInnerAtTail
                               tables := v7,
                               memories := v8,
                               globals := v9,
-                              elements := v10,
-                              data := v11
+                              elems := v10,
+                              datas := v11
                             } i14
                         let cf8 ←
                           core.result.Result.Insts.CoreOpsTry.branch status4
@@ -161,8 +161,8 @@ def instantiateInnerAtTail
                                 tables := v14,
                                 memories := v15,
                                 globals := v16,
-                                elements := v17,
-                                data := v18
+                                elems := v17,
+                                datas := v18
                               }
                           let cf9 ←
                             core.result.Result.Insts.CoreOpsTry.branch status5
@@ -181,8 +181,8 @@ def instantiateInnerAtTail
                                   tables := v21,
                                   memories := v22,
                                   globals := v23,
-                                  elements := v24,
-                                  data := v25
+                                  elems := v24,
+                                  datas := v25
                                 }
                             let cf10 ←
                               core.result.Result.Insts.CoreOpsTry.branch
@@ -205,9 +205,9 @@ def instantiateInnerAtTail
                                        tables := v28,
                                        memories := v29,
                                        globals := v30,
-                                       elements := v31,
-                                       data := v32
-                                     } : _root_.Exec.runtime.store.Instance)
+                                       elems := v31,
+                                       datas := v32
+                                     } : _root_.Exec.runtime.store.ModuleInst)
                                 let (i18, sl, v35, v36, v37, v38, v39, v40,
                                   v41, v42, v43, i19, i20, i21, i22, platform1,
                                   status7) ←
@@ -226,7 +226,7 @@ def instantiateInnerAtTail
                                   let i23 ←
                                     alloc.vec.Vec.index
                                       (core.slice.index.SliceIndexUsizeSlice
-                                      _root_.Exec.runtime.store.Instance) v40
+                                      _root_.Exec.runtime.store.ModuleInst) v40
                                       i14
                                   let e3 ←
                                     runtime.compiler.ExecutableModule.env
@@ -236,11 +236,11 @@ def instantiateInnerAtTail
                                   let (i24, index_mut_back) ←
                                     alloc.vec.Vec.index_mut
                                       (core.slice.index.SliceIndexUsizeSlice
-                                      _root_.Exec.runtime.store.Instance) v40
+                                      _root_.Exec.runtime.store.ModuleInst) v40
                                       i14
                                   let (r6, v44) ←
                                     runtime.reserve platformAllocInst
-                                      i24.elements element_count
+                                      i24.elems element_count
                                   let cf13 ←
                                     core.result.Result.Insts.CoreOpsTry.branch
                                       r6
@@ -249,7 +249,7 @@ def instantiateInnerAtTail
                                     _ =>
                                     let v45 :=
                                       index_mut_back
-                                        { i24 with elements := v44 }
+                                        { i24 with elems := v44 }
                                     let (i25, sl1, v46, v47, v48, v49, v50,
                                       v51, v52, v53, v54, i26, i27, i28, i29,
                                       platform2, status8) ←
@@ -284,7 +284,7 @@ def instantiateInnerAtTail
                                       let i30 ←
                                         alloc.vec.Vec.index
                                           (core.slice.index.SliceIndexUsizeSlice
-                                          _root_.Exec.runtime.store.Instance)
+                                          _root_.Exec.runtime.store.ModuleInst)
                                           v51 i14
                                       let t1 ←
                                         runtime.compiler.ExecutableModule.tail
@@ -294,11 +294,11 @@ def instantiateInnerAtTail
                                       let (i31, index_mut_back1) ←
                                         alloc.vec.Vec.index_mut
                                           (core.slice.index.SliceIndexUsizeSlice
-                                          _root_.Exec.runtime.store.Instance)
+                                          _root_.Exec.runtime.store.ModuleInst)
                                           v51 i14
                                       let (r7, v55) ←
                                         runtime.reserve platformAllocInst
-                                          i31.data data_count
+                                          i31.datas data_count
                                       let cf15 ←
                                         core.result.Result.Insts.CoreOpsTry.branch
                                           r7
@@ -308,7 +308,7 @@ def instantiateInnerAtTail
                                         _ =>
                                         let v56 :=
                                           index_mut_back1
-                                            { i31 with data := v55 }
+                                            { i31 with datas := v55 }
                                         let (i32, sl2, v57, v58, v59, v60, v61,
                                           v62, v63, v64, v65, i33, i34, i35,
                                           i36, status9) ←
@@ -342,7 +342,7 @@ def instantiateInnerAtTail
                                           let i37 ←
                                             alloc.vec.Vec.index
                                               (core.slice.index.SliceIndexUsizeSlice
-                                              _root_.Exec.runtime.store.Instance)
+                                              _root_.Exec.runtime.store.ModuleInst)
                                               v62 i14
                                           let vp ←
                                             runtime.compiler.ExecutableModule.impl.profile
@@ -547,7 +547,7 @@ def instantiateInnerAtTail
                                             residual
                                         let v56 :=
                                           index_mut_back1
-                                            { i31 with data := v55 }
+                                            { i31 with datas := v55 }
                                         rejected (r8,
                                           {
                                             id := i25,
@@ -601,7 +601,7 @@ def instantiateInnerAtTail
                                         _root_.Exec.runtime.ExecError) residual
                                     let v45 :=
                                       index_mut_back
-                                        { i24 with elements := v44 }
+                                        { i24 with elems := v44 }
                                     rejected (r7,
                                       {
                                         id := i18,

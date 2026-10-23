@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- A finite straight-line initialization body. Every instruction carries only
 syntactic bounds and issued-address facts, and the final instruction returns. -/
 structure SegmentCodeReady {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) (width : Nat) : Prop where
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) (width : Nat) : Prop where
   size : code.code.length < U32.max
   returnLast : code.code.val.getLast? = some (.Return 0#u32 0#u32)
   instructions : ∀ instruction ∈ code.code.val, SegmentInstructionReady store inst code width instruction
@@ -17,7 +17,7 @@ theorem SegmentCodeReady.transport {M : Type} {store after : runtime.store.Store
   ⟨ready.size, ready.returnLast, fun instruction member => (ready.instructions instruction member).transport metadata⟩
 
 theorem segment_program_ready {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (program : Code.SegmentProgram inst.module code)
     (pcBound : code.code.length < U32.max)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)

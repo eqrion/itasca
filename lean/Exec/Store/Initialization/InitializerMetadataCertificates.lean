@@ -6,14 +6,14 @@ open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
 theorem InitializerFunctionMetadata.type_entries {M : Type}
-    {store after : runtime.store.Store M} {inst next : runtime.store.Instance}
+    {store after : runtime.store.Store M} {inst next : runtime.store.ModuleInst}
     (metadata : InitializerFunctionMetadata store inst after next)
     {source : List Itasca.types.FuncType} (entries : TypeEntries store source inst.types.val) :
     TypeEntries after source next.types.val := by
   simpa only [TypeEntries, metadata.signatures, metadata.typeMap] using entries
 
 theorem InitializerFunctionMetadata.function_table {M : Type}
-    {store after : runtime.store.Store M} {inst next : runtime.store.Instance}
+    {store after : runtime.store.Store M} {inst next : runtime.store.ModuleInst}
     (metadata : InitializerFunctionMetadata store inst after next)
     {types : List functype} (table : Interp.FunctionTable store inst types) :
     Interp.FunctionTable after next types := by
@@ -21,7 +21,7 @@ theorem InitializerFunctionMetadata.function_table {M : Type}
     metadata.signatures, metadata.functionMap] using table
 
 theorem InitializerFunctionMetadata.staged_functions {M : Type}
-    {before store after : runtime.store.Store M} {inst next : runtime.store.Instance}
+    {before store after : runtime.store.Store M} {inst next : runtime.store.ModuleInst}
     (metadata : InitializerFunctionMetadata store inst after next) {index : Usize}
     {types : List Itasca.types.FuncType} (staged : StagedFunctionSignatures before store index types) :
     StagedFunctionSignatures before after index types := by
@@ -34,7 +34,7 @@ theorem compiled_functions_after_initializers {M : Type} {view : M → Slice U8}
     (before prepared after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
     (oldCompiled : Interp.CompiledFunctions oldCode before)
-    (seed inst : runtime.store.Instance) (sources : List funccode)
+    (seed inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     (metadata : InitializerFunctionMetadata prepared seed after inst)
     (certificate : Code.ModuleFunctions seed.module sources)

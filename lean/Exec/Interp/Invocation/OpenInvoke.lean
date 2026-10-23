@@ -28,9 +28,9 @@ def readback {M P A : Type} (platformMemoryBufferInst : runtime.platform.MemoryB
       let cf8 ← core.result.Result.Insts.CoreOpsTry.branch r7
       match cf8 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
-        let results2 ← runtime.interp.invoke_with_loop3 results1
+        let results2 ← runtime.clear results1
         let (store3, results3) ←
-          runtime.interp.invoke_with_loop4 v5 store2 results2
+          runtime.interp.invoke_with_loop2 v5 store2 results2
             0#usize 0#usize val3.results
         ok (core.result.Result.Ok (),
           {
@@ -89,7 +89,7 @@ def afterInitialCall {M P F A : Type} (platformMemoryBufferInst : runtime.platfo
   match cf5 with
   | core.ops.control_flow.ControlFlow.Continue _ =>
     let (i, v5, v6, v7, v8, store2, platform2, status) ←
-      runtime.interp.invoke_with_loop2 platformMemoryBufferInst
+      runtime.interp.invoke_with_loop1 platformMemoryBufferInst
         platformPlatformInst platformFloatOpsInst platformAllocInst
         exec2 store1 platform1 (core.result.Result.Ok ())
     readback platformMemoryBufferInst platformAllocInst func results
@@ -153,19 +153,13 @@ def prepareInvoke
           let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
           match cf4 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let (v, v1, v2, v3) ← runtime.interp.invoke_with_loop0 exec1
-            let v4 ←
-              runtime.interp.invoke_with_loop1 v args val.params 0#usize
+            let v ← runtime.clear exec1.frames
+            let v1 ←
+              runtime.interp.invoke_with_loop0 exec1.slots args val.params 0#usize
                 0#usize
             let phase ← prepareCall platformMemoryBufferInst platformPlatformInst
                 platformFloatOpsInst platformAllocInst
-                {
-                  store := store.id,
-                  slots := v4,
-                  frames := v1,
-                  host_args := v2,
-                  host_results := v3
-                } store platform func 0#usize
+                { exec1 with store := store.id, slots := v1, frames := v } store platform func 0#usize
             ok (.waiting phase func results)
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r5 ←

@@ -9,7 +9,7 @@ theorem step_integer_values {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (op : Instruction) (left right : U32) (front : List val)
     (a b : BitVec (sizenn (numtype_Inn op.input)))
     (last : index.val + 1 = exec.frames.length)

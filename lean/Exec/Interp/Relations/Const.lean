@@ -1,4 +1,4 @@
-import Exec.Interp.Relations.Admin
+import Exec.Interp.Relations.Execute
 import Exec.Interp.Relations.Regions
 import Exec.Abs.Sim.Instruction
 
@@ -41,7 +41,7 @@ theorem dispatch_const32_refines
     (.CONST .I32 (.mk_num__0 .I32 (.mk_uN value.val))) after _ (.const .I32 _) typed step
   simp only [runtime.interp.dispatch]
   obtain ⟨out, result, success, written, unchanged⟩ := WP.spec_imp_exists
-    (const32_effect memory hooks floats allocator exec raw.base dst value capacity)
+    (const32_effect exec raw.base dst value capacity)
   rw [result, bind_ok]
   rcases out with ⟨answer, next⟩
   with_unfolding_all apply WP.spec.ret
@@ -83,7 +83,7 @@ theorem dispatch_const64_refines
     (.CONST .I64 (.mk_num__0 .I64 (.mk_uN value.val))) after _ (.const .I64 _) typed step
   simp only [runtime.interp.dispatch]
   obtain ⟨out, result, success, written, unchanged⟩ := WP.spec_imp_exists
-    (const64_effect memory hooks floats allocator exec raw.base dst value capacity)
+    (const64_effect exec raw.base dst value capacity)
   rw [result, bind_ok]
   rcases out with ⟨answer, next⟩
   with_unfolding_all apply WP.spec.ret

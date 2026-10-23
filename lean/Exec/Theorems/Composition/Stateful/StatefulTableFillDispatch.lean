@@ -9,7 +9,7 @@ theorem stateful_table_fill_dispatch {M P F A : Type} (memory : runtime.platform
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (index : Nat) (first second a b entry : U32)
     (signature : Abs.Stateful.Signature C (.tableFill index) input output)
@@ -67,7 +67,7 @@ theorem stateful_table_fill_dispatch {M P F A : Type} (memory : runtime.platform
       rw [←referenceEq]
       simpa [bulkWord,destination,count,Nat.mod_eq_of_lt (show destinationBits<4294967296 from destinationBound),Nat.mod_eq_of_lt (show countBits<4294967296 from countBound)] using values
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
-      (segment_admin_bulk memory hooks floats allocator exec store raw.instance raw.function raw.base (.TableFill first a) _
+      (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.TableFill first a) _
         (stateful_table_fill_effect memory view code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots)
           first a inst address object (UScalar.cast .U64 destination) value (UScalar.cast .U64 count)
           state f rest after front found mapped issued (by simpa [alloc.vec.Vec.deref] using destinationSlot)

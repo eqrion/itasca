@@ -9,8 +9,8 @@ open Exec.Store
 /-- The two-word concrete replacement decodes to the generated global update.
 The same identity covers scalar writes by retaining the original high word. -/
 theorem global_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index : U32) (address : runtime.GlobalAddr) (old : runtime.store.GlobalInstance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index : U32) (address : runtime.GlobalAddr) (old : runtime.store.GlobalInst)
     (low high : U64) (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (found : store.globals.val[address.index.val]? = some old) :
@@ -31,8 +31,8 @@ theorem global_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
 /-- Global lookup follows the generated source rule for every value type,
 including references and vectors. -/
 theorem global_read_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index : U32) (address : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index : U32) (address : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (found : store.globals.val[address.index.val]? = some value)
@@ -47,8 +47,8 @@ theorem global_read_source {M : Type} (view : M → Slice U8) (code : CodeInterp
 /-- Concrete global replacement performs the source GLOBAL_SET transition.
 Input value well-formedness is a structural obligation of the active stack. -/
 theorem global_write_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (index : U32) (address : runtime.GlobalAddr) (old : runtime.store.GlobalInstance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (index : U32) (address : runtime.GlobalAddr) (old : runtime.store.GlobalInst)
     (low high : U64) (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (found : store.globals.val[address.index.val]? = some old)

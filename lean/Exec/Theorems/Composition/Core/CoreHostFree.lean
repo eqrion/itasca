@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 /-- Function allocation only appends defined Wasm entries; content staging and
 publication cannot introduce a host into a defined-only store. -/
 theorem CoreHostFree.instantiation {M : Type} {before after : runtime.store.Store M}
-    {inst : runtime.store.Instance} (free : CoreHostFree before)
+    {inst : runtime.store.ModuleInst} (free : CoreHostFree before)
     (metadata : Store.InstantiationCode before after inst) : CoreHostFree after := by
   obtain ⟨staged,count,rfl,retained,entries,table,signatures⟩ := metadata
   intro function member host

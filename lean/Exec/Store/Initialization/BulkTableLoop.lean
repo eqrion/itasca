@@ -40,14 +40,14 @@ theorem copySegment_effect (before source : List U64) (dst src count : Nat)
       have different : dst + n ≠ j := by omega
       simpa only [copySegment, List.getElem?_set, different, if_false] using outside j (by omega)
 
-theorem table_init_loop (tables : alloc.vec.Vec runtime.store.Table)
-    (instances : alloc.vec.Vec runtime.store.Instance)
-    (elements : alloc.vec.Vec runtime.store.ElemInstance)
+theorem table_init_loop (tables : alloc.vec.Vec runtime.store.TableInst)
+    (instances : alloc.vec.Vec runtime.store.ModuleInst)
+    (elements : alloc.vec.Vec runtime.store.ElemInst)
     (instIndex : Usize) (elemIndex : U32) (len : U64) (tableIndex : Usize)
-    (dst src : core.ops.range.Range Usize) (inst : runtime.store.Instance)
-    (address : Usize) (segment : runtime.store.ElemInstance) (table : runtime.store.Table)
+    (dst src : core.ops.range.Range Usize) (inst : runtime.store.ModuleInst)
+    (address : Usize) (segment : runtime.store.ElemInst) (table : runtime.store.TableInst)
     (found : instances.val[instIndex.val]? = some inst)
-    (mapped : inst.elements.val[elemIndex.val]? = some address)
+    (mapped : inst.elems.val[elemIndex.val]? = some address)
     (resolved : elements.val[address.val]? = some segment)
     (target : tables.val[tableIndex.val]? = some table)
     (sourceBound : src.start.val + len.val ≤ segment.refs.length)
@@ -82,7 +82,7 @@ theorem table_init_loop (tables : alloc.vec.Vec runtime.store.Table)
       have less : index.val < len.val := by simpa only [UScalar.lt_equiv, castLength] using more
       step with Interp.vec_index_given instances instIndex inst found as ⟨actual, actualEq⟩
       subst actual
-      step with Interp.vec_index_given inst.elements (UScalar.cast .Usize elemIndex) address
+      step with Interp.vec_index_given inst.elems (UScalar.cast .Usize elemIndex) address
         (by simpa using mapped) as ⟨actual, actualEq⟩
       subst actual
       step with Interp.vec_index_given elements address segment resolved as ⟨actual, actualEq⟩

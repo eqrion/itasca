@@ -8,8 +8,7 @@ def pairwiseOpcode (ty : PairwiseWidth) (signed : Bool) : U32 :=
 
 theorem pairwise_dispatch_eq (ty : PairwiseWidth) (signed : Bool) (x : U128) :
     runtime.interp.simd.pairwise_add_lanes (pairwiseOpcode ty signed) x =
-      Aeneas.Std.bind (runtime.interp.simd.pairwise_add_lanes_loop (widenWidth ty.widen) signed x 0#u128 0#u32)
-        runtime.interp.simd.vector := by
+      (runtime.interp.simd.pairwise_add_lanes_loop x (widenWidth ty.widen) signed 0#u128 0#u32) := by
   cases ty <;> cases signed
   all_goals unfold runtime.interp.simd.pairwise_add_lanes pairwiseOpcode widenWidth PairwiseWidth.widen
   all_goals repeat (with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _;rw [bind_ok])
@@ -27,7 +26,7 @@ theorem pairwise_dispatch_eq (ty : PairwiseWidth) (signed : Bool) (x : U128) :
       (laneBits (widenWidth ty.widen).val (2*j) x.bv) (laneBits (widenWidth ty.widen).val (2*j+1) x.bv))
     (by intro j valid a b aEq bEq; exact pairwise_word _ _ _ _ _ _ (by cases ty <;> decide) aEq bEq)
     (by simp) (by simp)
-  step with loopLaw as ⟨out,lanes⟩
-  simp only [runtime.interp.simd.vector,WP.spec_ok]
+  apply WP.spec_mono loopLaw
+  intro out lanes
   cases ty <;> with_unfolding_all exact lanes
 end Exec.Interp.Simd

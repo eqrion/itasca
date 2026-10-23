@@ -35,7 +35,7 @@ theorem same_bytes_total (left right : Slice U8) :
 /-- Export scanning terminates and only returns handles from the completed
 instance maps. Name comparison cannot authorize an unchecked descriptor. -/
 theorem export_loop_issued {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (shape : InstanceShape store inst)
+    (inst : runtime.store.ModuleInst) (shape : InstanceShape store inst)
     (bounds : ModuleExportBounds inst.module.module.env) (query : Slice U8)
     (index : Usize) (found : Option runtime.Extern)
     (position : index.val ≤ inst.module.module.env.exports.length)

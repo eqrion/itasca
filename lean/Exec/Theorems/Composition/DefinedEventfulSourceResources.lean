@@ -33,7 +33,7 @@ theorem DefinedEventfulInvocationCause.source_resources {M P F A : Type}
     {instanceIndex functionIndex : Usize} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     {after : runtime.store.Store M} {error : runtime.ExecError}
     (valid : Inv store) (typed : CoreFunctionsTyped view code store)
-    (function : runtime.store.Function)
+    (function : runtime.store.FuncInst)
     (hf : store.funcs.val[address.index.val]?=some function) (hw : function.code=.Wasm instanceIndex functionIndex)
     (cause : DefinedEventfulInvocationCause (emission:=emission) (allowed:=allowed)
       memory hooks floats allocator view code Inv exec store ambient address signature instanceIndex functionIndex args results after error) :

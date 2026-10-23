@@ -36,7 +36,7 @@ theorem call_host_chosen_retained {choices : Spec.SourceChoices} (occurrence : N
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : invariant store)
     (address : runtime.FuncAddr) (base : Usize) (ambient : frame) (wfAmbient : wf_frame ambient)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)

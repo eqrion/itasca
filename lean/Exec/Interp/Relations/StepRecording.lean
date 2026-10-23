@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std SpecExt
 null references, and indirect signature mismatches select no host site. -/
 def hostInstructionAddress {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) : Option runtime.FuncAddr := do
   let address ← match instruction with
     | .Call index _ => inst.funcs.val[index.val]?

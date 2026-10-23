@@ -74,7 +74,7 @@ theorem core_loop {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (initial : CoreMachine M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => CoreLoopOutcome memory hooks floats allocator initial result ⦄div := by
   apply WP.dspec_mono (core_loop_stops memory hooks floats allocator allocation interrupts view laws code initial)
   rintro result ⟨state,invariant,stopped,same⟩

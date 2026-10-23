@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (fits : ∀ ty ∈ inst.module.module.env.table_types.val, LimitsFit ty.limits core.num.U32.MAX)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
     {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop5 memory allocator store status index inst = .ok out) :
@@ -54,7 +54,7 @@ theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
 theorem memory_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (fits : ∀ ty ∈ inst.module.module.env.mem_types.val, LimitsFit ty.limits 65536#u32)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
     {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop6 memory allocator store status index inst = .ok out) :

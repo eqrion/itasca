@@ -19,8 +19,11 @@ pub(super) fn compare_int(op: u16, x: u64, y: u64, width: u32) -> bool {
     }
 }
 
-/// Executes a scalar opcode; FC trunc_sat instructions use 0x100..0x107.
-/// Operands follow Wasm source order and i32 results have zero upper bits.
+/// Executes any scalar numeric opcode, using the tags from `operators`.
+///
+/// Integer operators are handled here and the rest are delegated to
+/// `float::scalar`. Operands follow Wasm source order and i32 results have
+/// zero upper bits.
 #[inline(always)]
 pub(super) fn scalar<F: FloatOps>(opcode: u16, a: u64, b: u64) -> Result<u64, ExecError> {
     let x = a as u32;

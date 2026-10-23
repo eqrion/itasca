@@ -8,8 +8,8 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 theorem stateful_table_growth_chosen {choices : Exec.Spec.SourceChoices} (occurrence : Nat) {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (table : U32) (address : runtime.TableAddr)
-    (object : runtime.store.Table) (delta : U32) (reference : U64) (out : U32 × runtime.store.Store M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (table : U32) (address : runtime.TableAddr)
+    (object : runtime.store.TableInst) (delta : U32) (reference : U64) (out : U32 × runtime.store.Store M)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)

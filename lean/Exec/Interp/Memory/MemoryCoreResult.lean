@@ -4,8 +4,8 @@ namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem core_load_next_shape {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (memoryAddress : runtime.MemoryAddr)
-    (object : runtime.store.Memory M) (s : Abs.AState) (f nextFrame : Abs.AFrame) (rest : List Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (memoryAddress : runtime.MemoryAddr)
+    (object : runtime.store.MemInst M) (s : Abs.AState) (f nextFrame : Abs.AFrame) (rest : List Abs.AFrame)
     (after : List instr) (front : List val) (bits : Nat) (op : Abs.Memory.Load) (argument : memarg) (offset : U32)
     (storeEq : s.store = Store.decodeStore view code store) (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)

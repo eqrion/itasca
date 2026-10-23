@@ -40,14 +40,14 @@ theorem recordedCall_returned {M P F A : Type}
   Platform.Recording.returned _ _ _ _ _
 
 theorem callHostEvents_host {M P : Type} {store : runtime.store.Store M} {address : runtime.FuncAddr}
-    {function : runtime.store.Function} {identity : U64}
+    {function : runtime.store.FuncInst} {identity : U64}
     (found : store.funcs.val[address.index.val]?=some function) (host : function.code=.Host identity)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P) :
     callHostEvents store address out = hostCallEvents address out := by
   simp only [callHostEvents,found,host]
 
 theorem callHostEvents_wasm {M P : Type} {store : runtime.store.Store M} {address : runtime.FuncAddr}
-    {function : runtime.store.Function} {instanceIndex functionIndex : Usize}
+    {function : runtime.store.FuncInst} {instanceIndex functionIndex : Usize}
     (found : store.funcs.val[address.index.val]?=some function) (defined : function.code=.Wasm instanceIndex functionIndex)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P) :
     callHostEvents store address out = [] := by

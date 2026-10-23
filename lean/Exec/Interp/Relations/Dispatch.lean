@@ -44,7 +44,7 @@ instance; typed abstract operands supply the source reduction. -/
 theorem step_integer_add_refines
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (left right : U32) (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (front : List val) (ty : Inn) (a b : Nat)
     (last : index.val + 1 = exec.frames.length)

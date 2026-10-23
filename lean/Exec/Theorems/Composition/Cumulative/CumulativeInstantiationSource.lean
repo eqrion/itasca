@@ -3,7 +3,7 @@ import Exec.Theorems.Composition.SourceCumulative
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 theorem InstantiationCode.source_cumulative {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (raw : ModuleBinary.Module) (shape : Shape view before)
     (oldSlice : Abs.CumulativeFunctions (decodeStore view oldCode before))

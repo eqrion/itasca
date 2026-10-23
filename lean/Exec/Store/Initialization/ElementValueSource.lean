@@ -3,7 +3,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 def ElementSourceSegments (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (source : List Itasca.module.Element) (values : List runtime.store.ElemInstance) : Prop :=
+    (source : List Itasca.module.Element) (values : List runtime.store.ElemInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.elem ∧
     ElementSourceValues sourceStore sourceInstance original.elem original.init.val actual.refs.val) source values
 
@@ -29,7 +29,7 @@ theorem ElementValueEffect.source_values {M : Type} {store after : runtime.store
     {instIndex inst sourceStore sourceInstance status}
     {original : Itasca.module.Element}
     (effect : ElementValueEffect sourceStore sourceInstance store instIndex inst original status after)
-    {sources : List Itasca.module.Element} {base produced : List runtime.store.ElemInstance}
+    {sources : List Itasca.module.Element} {base produced : List runtime.store.ElemInst}
     (stored : store.elems.val = base ++ produced)
     (previous : ElementSourceSegments sourceStore sourceInstance sources produced)
     (success : status = .Ok ()) :

@@ -31,7 +31,7 @@ theorem prepared_source_resume_at {M : Type} {emission : FunctionEmission} {allo
     (memory : runtime.platform.MemoryBuffer M)
     (padded : runtime.interp.Execution) (freshStore : runtime.store.Store M)
     (afterCode : Store.CodeInterpretation) (agrees : Store.CodeAgreesOn store code afterCode)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (identity : Nat) (params : List valtype) (copied values : alloc.vec.Vec runtime.Value)
     (status : core.result.Result Unit runtime.platform.HostError)
     (host : HostFunction (Store.decodeStore view code store) address.index.val identity params

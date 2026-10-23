@@ -6,14 +6,14 @@ namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Source segment syntax comes directly from retained canonical metadata. -/
-def sourceElements (inst : runtime.store.Instance) : List elem :=
+def sourceElements (inst : runtime.store.ModuleInst) : List elem :=
   inst.module.module.env.elements.val.map (ModuleElaboration.element ∘ ModuleEnv.rawElement)
 
-def sourceDatas (inst : runtime.store.Instance) : List data :=
+def sourceDatas (inst : runtime.store.ModuleInst) : List data :=
   inst.module.module.tail.data.val.map (ModuleData.translate ∘ ModuleData.raw)
 
 theorem ElementBoundsFailure.source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (failure : ElementBoundsFailure store inst)
     (storeWf : wf_store (decodeStore view code store))
     (frameWf : wf_frame ⟨[], decodeInstance store inst⟩) :
@@ -36,7 +36,7 @@ theorem ElementBoundsFailure.source {M : Type} (view : M → Slice U8) (code : C
   · simpa [decodeTable] using outside
 
 theorem DataBoundsFailure.source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (failure : DataBoundsFailure view store inst)
     (storeWf : wf_store (decodeStore view code store))
     (frameWf : wf_frame ⟨[], decodeInstance store inst⟩) :
@@ -57,7 +57,7 @@ theorem DataBoundsFailure.source {M : Type} (view : M → Slice U8) (code : Code
   · simpa [decodeMemory, decodeBytes] using outside
 
 theorem PrecheckCause.source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (trap : runtime.Trap)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (trap : runtime.Trap)
     (cause : PrecheckCause view store inst (.Trap trap))
     (storeWf : wf_store (decodeStore view code store))
     (frameWf : wf_frame ⟨[], decodeInstance store inst⟩) :
@@ -69,7 +69,7 @@ theorem PrecheckCause.source {M : Type} (view : M → Slice U8) (code : CodeInte
   · exact data.source view code store inst storeWf frameWf
 
 /-- The source statement names the independently decoded module's segments. -/
-theorem source_segments_raw (inst : runtime.store.Instance) (raw : ModuleBinary.Module)
+theorem source_segments_raw (inst : runtime.store.ModuleInst) (raw : ModuleBinary.Module)
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw) :
     sourceElements inst = raw.elements.map ModuleElaboration.element ∧
     sourceDatas inst = raw.data.map ModuleData.translate := by

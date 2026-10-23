@@ -4,14 +4,14 @@ namespace Exec.Interp
 open Aeneas Aeneas.Std
 
 theorem hostInstructionAddress_callTag {M : Type} (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (address : runtime.FuncAddr) (selected : hostInstructionAddress exec store raw inst compiled instruction=some address) :
     Code.callTag instruction≠0 := by
   cases instruction <;> first | (simp [Code.callTag]; done) | (simp only [hostInstructionAddress,Bind.bind,Option.bind] at selected; cases selected)
 
 theorem hostInstructionAddress_direct_inv {M : Type} (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (index offset : U32)
     (address : runtime.FuncAddr) (selected : hostInstructionAddress exec store raw inst compiled (.Call index offset)=some address) :
     ∃function host, inst.funcs.val[index.val]?=some address ∧
@@ -30,9 +30,9 @@ theorem hostInstructionAddress_direct_inv {M : Type} (exec : runtime.interp.Exec
         exact ⟨function,host,rfl,functionAt,hostCode⟩
 
 theorem hostInstructionAddress_indirect_inv {M : Type} (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (entry selector offset table type : U32)
-    (tableAddress : runtime.TableAddr) (object : runtime.store.Table) (word : U64) (signature : Usize)
+    (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst) (word : U64) (signature : Usize)
     (pairAt : compiled.indirect.val[entry.val]?=some (table,type))
     (tableAt : inst.tables.val[table.val]?=some tableAddress)
     (objectAt : store.tables.val[tableAddress.index.val]?=some object)
@@ -55,9 +55,9 @@ theorem hostInstructionAddress_indirect_inv {M : Type} (exec : runtime.interp.Ex
       · simp at selected
       · rename_i positive
         let target : Usize := UScalar.ofNatCore ((UScalar.cast .Usize reference).val-1) (by have := (UScalar.cast .Usize reference).hBounds;omega)
-        change (Option.bind (store.funcs.val[target.val]?) (fun (function : runtime.store.Function) =>
+        change (Option.bind (store.funcs.val[target.val]?) (fun (function : runtime.store.FuncInst) =>
           Option.bind (inst.types.val[type.val]?) (fun wanted => if function.signature=wanted then
-            Option.bind (store.funcs.val[target.val]?) (fun (function : runtime.store.Function) =>
+            Option.bind (store.funcs.val[target.val]?) (fun (function : runtime.store.FuncInst) =>
               match function.code with | .Host _ => some (⟨store.id,target⟩ : runtime.FuncAddr) | .Wasm .. => none)
             else none)))=some address at selected
         cases functionAt : store.funcs.val[target.val]? with
@@ -77,7 +77,7 @@ theorem hostInstructionAddress_indirect_inv {M : Type} (exec : runtime.interp.Ex
           · simp at selected
 theorem hostStepAddress_instruction {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (last : index.val+1=exec.frames.length) (frameAt : exec.frames.val[index.val]?=some raw)
     (instanceAt : store.instances.val[raw.instance.val]?=some inst)
     (compiledAt : inst.module.functions.val[raw.function.val]?=some compiled)

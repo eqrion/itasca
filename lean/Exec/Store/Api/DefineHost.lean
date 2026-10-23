@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 an existing canonical signature to the new function. -/
 theorem Shape.append_host {M : Type} (view : M → Slice U8)
     (s : runtime.store.Store M) (hs : Shape view s) (signature : Usize) (identity : U64)
-    (functions : alloc.vec.Vec runtime.store.Function)
+    (functions : alloc.vec.Vec runtime.store.FuncInst)
     (hfunctions : functions.val = s.funcs.val ++ [{signature, code := .Host identity}])
     (hsignature : signature.val < s.types.length)
     (hroom : objectCount s < s.limits.max_objects.val) :

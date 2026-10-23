@@ -18,9 +18,9 @@ theorem invoke_defined_slice_no_silent_divergence {M P F A : Type}
     (functionsTyped : Abs.FunctionsTyped (Store.decodeStore view code store))
     (slice : Abs.StoreSlice (Store.decodeStore view code store))
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (functions : List functype) (declared : List valtype) (body : List instr) (epilogue : U32)
     (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value)
@@ -55,7 +55,7 @@ theorem invoke_defined_slice_no_silent_divergence {M P F A : Type}
   have accepted := Interp.invoke_divergent_arguments memory hooks floats allocator exec store platform address
     function signature args results owner hf hs divergent
   have reached : ∃ prepared p, entry prepared ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared store p (.Ok ()) = .div := by
     apply Interp.invoke_divergent_entry memory hooks floats allocator allocation exec store platform address
       function signature args results owner hf hs accepted (fun value member => (owned value member).1)
       entry (fun _ => True) ?_ ?_ divergent

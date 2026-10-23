@@ -12,7 +12,7 @@ theorem store_slice_publish {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
     (oldSlice : Abs.StoreSlice (decodeStore view oldCode before))
-    (inst : runtime.store.Instance) (sources : List funccode)
+    (inst : runtime.store.ModuleInst) (sources : List funccode)
     (sourceCount : sources.length = inst.module.module.env.func_type_indices.val.length)
     (supported : ∀ source ∈ sources, match source with
       | .HOST _ => False | .FUNC _ _ body => Forall Abs.SliceInstr body)

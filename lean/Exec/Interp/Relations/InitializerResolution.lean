@@ -28,7 +28,7 @@ theorem initializerBits_high (lo hi : U64) :
   simp [h, show 64 + i < 128 by omega, show i < 128 by omega]
 
 inductive InitializerResolution {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) :
+    (inst : runtime.store.ModuleInst) :
     Itasca.types.ConstExpr → Itasca.types.ValueType → List U64 → Prop where
   | i32 (value : I32) : InitializerResolution store inst (.I32 value) .I32
       [UScalar.cast .U64 (IScalar.hcast .U32 value)]
@@ -43,12 +43,12 @@ inductive InitializerResolution {M : Type} (store : runtime.store.Store M)
       (lookup : inst.funcs.val[index.val]? = some addr)
       (encoded : reference.val = addr.index.val + 1) :
       InitializerResolution store inst (.RefFunc index) .FuncRef [reference]
-  | global (ty : Itasca.types.ValueType) (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+  | global (ty : Itasca.types.ValueType) (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (lookup : inst.globals.val[index.val]? = some addr)
       (resolved : store.globals.val[addr.index.val]? = some value)
       (typed : value.ty.valtype = ty) (scalar : ty ≠ .V128) :
       InitializerResolution store inst (.GlobalGet index) ty [value.lo]
-  | global2 (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+  | global2 (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (lookup : inst.globals.val[index.val]? = some addr)
       (resolved : store.globals.val[addr.index.val]? = some value)
       (vector : value.ty.valtype = .V128) :
@@ -85,13 +85,13 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 synthetic entry point; no interpreter-correctness premise is hidden in either. -/
 theorem synthetic_resolved_initializer (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : InitializerResolution store inst expr ty words) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         ∀ pair, out.1 = .Ok pair → pair = ((words[0]?).getD 0#u64, (words[1]?).getD 0#u64) ⦄ := by
   obtain ⟨instruction, hop, hcode⟩ := compiled.code

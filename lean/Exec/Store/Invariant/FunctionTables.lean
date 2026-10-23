@@ -14,14 +14,14 @@ theorem StagedPrefix.type_lookup {M : Type} {before after : runtime.store.Store 
 
 /-- Updating unrelated instance maps does not change its function signatures. -/
 theorem function_table_instance {M : Type} {store : runtime.store.Store M}
-    {before after : runtime.store.Instance} {types : List functype}
+    {before after : runtime.store.ModuleInst} {types : List functype}
     (functions : after.funcs = before.funcs) (table : Interp.FunctionTable store before types) :
     Interp.FunctionTable store after types := by
   simpa only [Interp.FunctionTable, functions] using table
 
 /-- Signature lookup tables survive extension of all raw store vectors. -/
 theorem function_table_prefix {M : Type} {before after : runtime.store.Store M}
-    (retained : StagedPrefix before after) {inst : runtime.store.Instance} {types : List functype}
+    (retained : StagedPrefix before after) {inst : runtime.store.ModuleInst} {types : List functype}
     (table : Interp.FunctionTable before inst types) : Interp.FunctionTable after inst types := by
   apply table.imp
   intro address ty matching
@@ -31,7 +31,7 @@ theorem function_table_prefix {M : Type} {before after : runtime.store.Store M}
 
 /-- Every address in a concrete signature table denotes an existing function. -/
 theorem function_table_issued {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {types : List functype}
+    {inst : runtime.store.ModuleInst} {types : List functype}
     (table : Interp.FunctionTable store inst types) :
     ∀ address ∈ inst.funcs.val, address.index.val < store.funcs.length := by
   intro address present
@@ -78,7 +78,7 @@ private theorem imports_table {M : Type} {store : runtime.store.Store M}
 /-- Completed linking constructs the interpreter's actual signature table for
 the imported function prefix, directly from the validator's canonical cache. -/
 theorem LinkedMaps.function_table {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {module : runtime.compiler.ExecutableModule} {inst : runtime.store.Instance}
+    {module : runtime.compiler.ExecutableModule} {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories) :
     Interp.FunctionTable store inst
@@ -99,7 +99,7 @@ certificates when store vectors and the ghost code interpretation extend. -/
 theorem function_compiled_prefix {M : Type} {view : M → Slice U8}
     {before after : runtime.store.Store M} {oldCode newCode : CodeInterpretation}
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.Function}
+    (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.FuncInst}
     (compiled : Interp.FunctionCompiled oldCode before function) :
     Interp.FunctionCompiled newCode after function := by
   intro instanceIndex functionIndex defined

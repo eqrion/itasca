@@ -12,7 +12,7 @@ while retaining all old store objects and all other provisional maps. -/
 theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize)
     (startBound : start.val ≤ seed.module.module.env.table_types.val.length)
     (changed : store = {before with tables := store.tables, table_elements := store.table_elements})
@@ -45,7 +45,7 @@ theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffe
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentAllocated, currentIssued, currentOwners, indexBound, counting, typed⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentAllocated currentIssued currentOwners indexBound counting typed ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop5.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

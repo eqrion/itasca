@@ -9,7 +9,7 @@ theorem execute_simd_average {M F : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (instIndex function base : Usize) (ty : Jnn) (dst a entry : U32)
     (supported : Spec.Simd.averageSupported ty)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (imm : runtime.bytecode.SimdImmediate)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : inst.module.functions.val[function.val]? = some code)

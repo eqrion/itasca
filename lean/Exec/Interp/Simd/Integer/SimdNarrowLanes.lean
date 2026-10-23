@@ -14,8 +14,7 @@ theorem narrowWidth_val (ty : NarrowWidth) : (narrowWidth ty).val = ty.width := 
 
 theorem narrow_dispatch_eq (ty : NarrowWidth) (signed : Bool) (x y : U128) :
     runtime.interp.simd.narrow_lanes (narrowOpcode ty signed) x y =
-      Aeneas.Std.bind (runtime.interp.simd.narrow_lanes_loop (narrowWidth ty) signed y x 0#u128 0#u32)
-        runtime.interp.simd.vector := by
+      (runtime.interp.simd.narrow_lanes_loop x y (narrowWidth ty) signed 0#u128 0#u32) := by
   cases ty <;> cases signed
   all_goals unfold runtime.interp.simd.narrow_lanes narrowOpcode narrowWidth
   all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _
@@ -28,9 +27,8 @@ theorem narrow_dispatch_eq (ty : NarrowWidth) (signed : Bool) (x y : U128) :
     runtime.interp.simd.narrow_lanes (narrowOpcode ty signed) x y ⦃ result =>
       ∀ j, j < 128/ty.width → laneBits ty.width j result.bv = narrowLane ty.width signed x.bv y.bv j ⦄ := by
   rw [narrow_dispatch_eq]
-  step with narrow_loop x y 0#u128 (narrowWidth ty) 0#u32 signed (by cases ty <;> decide) (by simp) (by simp) as ⟨result,lanes⟩
-  unfold runtime.interp.simd.vector
-  rw [WP.spec_ok]
+  apply WP.spec_mono (narrow_loop x y 0#u128 (narrowWidth ty) 0#u32 signed (by cases ty <;> decide) (by simp) (by simp))
+  intro result lanes
   cases ty <;> with_unfolding_all exact lanes
 
 end Exec.Interp.Simd

@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 
 theorem link_function_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (s : runtime.store.Store M) (hs : Shape view s)
-    (inst : runtime.store.Instance) (i : Usize) (typeIndex : U32) (address : runtime.FuncAddr)
+    (inst : runtime.store.ModuleInst) (i : Usize) (typeIndex : U32) (address : runtime.FuncAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Func typeIndex)
     (htype : typeIndex.val < inst.module.module.env.types.length)
@@ -39,7 +39,7 @@ theorem link_function_complete {M : Type} (ops : runtime.platform.MemoryBuffer M
 
 theorem link_memory_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (required : Itasca.types.MemType) (address : runtime.MemoryAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Memory required)
@@ -69,7 +69,7 @@ theorem link_memory_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
   step
 
 theorem link_table_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (required : Itasca.types.TableType) (address : runtime.TableAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Table required)
@@ -101,7 +101,7 @@ theorem link_table_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
   step
 
 theorem link_global_complete {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (required : Itasca.types.GlobalType) (address : runtime.GlobalAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Global required)

@@ -22,7 +22,7 @@ theorem dispatch_move_effect {M P F A : Type}
     have hd : base.val + dst.val + 2 ≤ exec.slots.length := by omega
     simp only [Code.move, if_pos vector, runtime.interp.dispatch]
     obtain ⟨out, result, success, slots⟩ := WP.spec_imp_exists
-      (copy2_effect memory hooks floats allocator exec base dst src hs hd)
+      (copy2_effect exec base dst src hs hd)
     rw [result, bind_ok]
     rcases out with ⟨answer, next⟩
     with_unfolding_all apply WP.spec.ret
@@ -32,7 +32,7 @@ theorem dispatch_move_effect {M P F A : Type}
     have hd : base.val + dst.val < exec.slots.length := by omega
     simp only [Code.move, if_neg vector, runtime.interp.dispatch]
     obtain ⟨out, result, success, slots⟩ := WP.spec_imp_exists
-      (copy_effect memory hooks floats allocator exec base dst src hs hd)
+      (copy_effect exec base dst src hs hd)
     rw [result, bind_ok]
     rcases out with ⟨answer, next⟩
     with_unfolding_all apply WP.spec.ret

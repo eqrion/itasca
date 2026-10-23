@@ -11,7 +11,7 @@ theorem execution_loop_error {M P F A : Type}
     loop (executionBody memory hooks floats allocator) (exec, store, platform, .Err error) =
       .ok (finishExecution (exec, store, platform, .Err error)) := by
   rw [loop.eq_def]
-  simp [executionBody, runtime.interp.invoke_with_loop2.body, core.result.Result.is_ok, finishExecution]
+  simp [executionBody, runtime.interp.invoke_with_loop1.body, core.result.Result.is_ok, finishExecution]
 
 theorem execution_loop_divergent_active {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -22,7 +22,7 @@ theorem execution_loop_divergent_active {M P F A : Type}
   by_contra inactive
   have empty : ¬exec.frames.len > 0#usize := by scalar_tac
   rw [loop.eq_def] at divergent
-  simp [executionBody, runtime.interp.invoke_with_loop2.body, empty] at divergent
+  simp [executionBody, runtime.interp.invoke_with_loop1.body, empty] at divergent
 
 theorem slice_divergent_next {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -67,10 +67,10 @@ theorem slice_divergent_history {M P F A : Type}
     {expected : List valtype} {bound : Nat}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (dispatches : Nat) (initial : SliceMachine P store sourceStore ambient expected bound)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator
       initial.exec store initial.platform (.Ok ()) = .div) :
     ∃ final, Spec.Iterations (SliceTransition memory hooks floats allocator) dispatches initial [] final ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator final.exec store final.platform (.Ok ()) = .div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator final.exec store final.platform (.Ok ()) = .div := by
   induction dispatches generalizing initial with
   | zero => exact ⟨initial, .refl initial, divergent⟩
   | succ count ih =>
@@ -92,7 +92,7 @@ theorem slice_no_silent_divergence {M P F A : Type}
     {expected : List valtype} {bound : Nat}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (initial : SliceMachine P store sourceStore ambient expected bound)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator
       initial.exec store initial.platform (.Ok ()) = .div) (requested : Nat) :
     ∃ final count,
       Spec.Iterations (SliceTransition memory hooks floats allocator)

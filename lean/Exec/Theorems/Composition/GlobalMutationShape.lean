@@ -53,7 +53,7 @@ private theorem encoded_reference_shape {M : Type} (store : runtime.store.Store 
       simpa [represented,Code.encodeValue,Abs.Ownership.ValueOwned] using owned
 
 theorem global_encoded_shape {M : Type} (store : runtime.store.Store M)
-    (old : runtime.store.GlobalInstance) (lo hi : U64) (value : val)
+    (old : runtime.store.GlobalInst) (lo hi : U64) (value : val)
     (prior : GlobalShape store old) (wellFormed : wf_val value)
     (typed : sourceType old.ty.valtype = Code.valueType value)
     (represented : pairWords old.ty.valtype (lo,hi) = Code.encodeValue value)

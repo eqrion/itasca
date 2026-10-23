@@ -20,7 +20,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : invariant code store) (sourceWf : wf_store (Store.decodeStore view code store))
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (identity : U64)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
     (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (functionAt : store.funcs.val[address.index.val]? = some function)
@@ -138,10 +138,10 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     obtain ⟨kept,empty,values,represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩ := enteredProof
     have stopped : ¬0#usize < entered.frames.len := by simp [alloc.vec.Vec.len,empty,alloc.vec.Vec.length]
     simp only [InvocationWP,ite_false]
-    simp only [runtime.interp.invoke_with_loop2]
+    simp only [runtime.interp.invoke_with_loop1]
     apply loop.spec_decr_nat (fun _ => 0) (fun state => state = (entered,after,p,.Ok ()))
     · rintro state rfl
-      simp only [runtime.interp.invoke_with_loop2.body,stopped,ite_false,WP.spec_ok]
+      simp only [runtime.interp.invoke_with_loop1.body,stopped,ite_false,WP.spec_ok]
       exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm),Spec.resultsTyped_wf typed,
         fun value member => Store.owned_result_fits after value (ownedResults value member),represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩,
         fun error impossible => by cases impossible⟩

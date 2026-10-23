@@ -20,7 +20,7 @@ theorem native_loop_partial {M F A : Type} (memory : runtime.platform.MemoryBuff
     (code : Store.CodeInterpretation) (state : ExecutionState M Unit)
     (root : runtime.FuncAddr) (signature : Itasca.types.FuncType)
     (held : ExecutableInv view code state.2.1) (task : WasmTask view code state.2.1 state.1 state.2.2.2 root signature) :
-    runtime.interp.invoke_with_loop2 memory (platform memory floats allocator select) floats allocator state.1 state.2.1 state.2.2.1 state.2.2.2
+    runtime.interp.invoke_with_loop1 memory (platform memory floats allocator select) floats allocator state.1 state.2.1 state.2.2.1 state.2.2.2
       ⦃finished=>∃count,NormalTrace (executionBody memory (platform memory floats allocator select) floats allocator) count state finished ∧
         ∃last,NativeRunningFrom view code state.2.1 root signature last ∧ ¬ActiveExecution last ∧ finished=finishExecution last⦄div := by
   let invariant:=NativeRunningFrom view code state.2.1 root signature

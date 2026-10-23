@@ -8,7 +8,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem synthetic_loop_initializer (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) (words : List U64) (width : U32)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
@@ -17,7 +17,7 @@ theorem synthetic_loop_initializer (exec : runtime.interp.Execution)
     (returnCapacity : width.val ≤ exec.slots.length)
     (hf : exec.frames.val = [initializerFrame instIndex function 0#u32])
     (hcode : code.code.val = [instruction, .Return 0#u32 width]) :
-    runtime.interp.synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
+    runtime.interp.run_synthetic_loop memory hooks floats allocator store platform exec (.Ok ())
       ⦃ out => out.1 = store ∧ out.2.1 = platform ∧
         out.2.2.1.val = initialSlots exec.slots.val words ∧ out.2.2.2 = .Ok () ⦄ := by
   obtain ⟨⟨status1, exec1, store1, platform1⟩, first, hok1, slots1, frames1, hs1, hp1⟩ :=
@@ -43,7 +43,7 @@ theorem synthetic_loop_initializer (exec : runtime.interp.Execution)
   have body2 := synthetic_body_done memory hooks floats allocator exec2 store platform frames2
   have trace : NormalTrace (fun state : runtime.store.Store M × P × runtime.interp.Execution ×
       core.result.Result Unit runtime.ExecError =>
-      runtime.interp.synthetic_loop.body memory hooks floats allocator state.1 state.2.1
+      runtime.interp.run_synthetic_loop.body memory hooks floats allocator state.1 state.2.1
         state.2.2.1 state.2.2.2) 2
       (store, platform, exec, .Ok ()) (store, platform, exec2.slots, .Ok ()) :=
     .next body0 (.next body1 (.done body2))
@@ -75,17 +75,17 @@ constant initializer. Allocation failure is permitted; every result preserves
 the raw Store and platform exactly. Successful results are the resolved words. -/
 theorem synthetic_initializer (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (read : InitialRead store inst code instruction words)
     (width : code.slot_count.val = words.length)
     (hcode : code.code.val = [instruction, .Return 0#u32 code.slot_count]) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         ∀ pair, out.1 = .Ok pair → pair = ((words[0]?).getD 0#u64, (words[1]?).getD 0#u64) ⦄ := by
-  unfold runtime.interp.synthetic
+  unfold runtime.interp.run_synthetic
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   step with vec_index_given inst.module.functions function code hc as ⟨found, hfound⟩

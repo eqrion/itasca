@@ -121,7 +121,7 @@ theorem intern_type_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
 theorem FunctionShape.more_types {M : Type} (before after : runtime.store.Store M)
     (htypes : before.types.length ≤ after.types.length)
     (hinstances : before.instances = after.instances)
-    (function : runtime.store.Function) (h : FunctionShape before function) :
+    (function : runtime.store.FuncInst) (h : FunctionShape before function) :
     FunctionShape after function := by
   refine ⟨Nat.lt_of_lt_of_le h.1 htypes, ?_⟩
   have hcode := h.2

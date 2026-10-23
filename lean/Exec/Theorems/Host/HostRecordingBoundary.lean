@@ -46,7 +46,7 @@ theorem recording_frame_host_site {M : Type} {emission : StructuredMachine.Funct
     (language : Abs.Supported.Language allowed)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

@@ -14,7 +14,7 @@ theorem start_frame_wf : wf_frame Spec.invocationFrame := by
 
 theorem certified_start_invocation {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (certified : CertifiedSliceStore view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (found : store.funcs.val[address.index.val]? = some function)
     (typed : store.types.val[function.signature.val]? = some signature)
     (params : signature.params.val = []) (results : signature.results.val = []) :
@@ -61,7 +61,7 @@ theorem invoke_start_slice {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSliceStore view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (empty : args.val = [])
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)

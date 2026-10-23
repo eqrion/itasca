@@ -5,7 +5,7 @@ import Exec.Store.Invariant.FunctionTables
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 
-theorem decodeGlobal_type_source (global : runtime.store.GlobalInstance) :
+theorem decodeGlobal_type_source (global : runtime.store.GlobalInst) :
     (decodeGlobal global).TYPE = Translate.globalType global.ty := by
   cases global.ty.valtype <;> cases global.ty.mutability <;> rfl
 

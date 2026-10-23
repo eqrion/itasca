@@ -4,7 +4,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std Exec.Interp
 
 theorem MemoryFillEffect.mutation {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (address : runtime.MemoryAddr) (memory : runtime.store.Memory M) (destination count : U64) (value : U8)
+    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M) (destination count : U64) (value : U8)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : MemoryFillEffect view store address.index memory destination count value out) :
     FrameStoreMetadata store out.2 ∧

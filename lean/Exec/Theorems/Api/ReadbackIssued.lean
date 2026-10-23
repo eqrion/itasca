@@ -24,7 +24,7 @@ theorem read_results_issued {M : Type} (words : alloc.vec.Vec U64)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (owned : Abs.Ownership.ValuesOwned (Store.ownershipBounds store) values)
     (represented : ValuesAt words.val 0 values) :
-    runtime.interp.invoke_with_loop4 words store results 0#usize 0#usize types ⦃ out =>
+    runtime.interp.invoke_with_loop2 words store results 0#usize 0#usize types ⦃ out =>
       out.1 = store ∧ out.2.val.map sourceValue = values ∧
       (∀ value ∈ out.2.val, Store.ValueInStore store value) ⦄ := by
   apply WP.spec_mono (read_results_owned words store results types values empty typed wellFormed

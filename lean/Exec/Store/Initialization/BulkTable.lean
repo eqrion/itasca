@@ -17,7 +17,7 @@ theorem bulk_zero_cast : UScalar.cast .Usize 0#u32 = 0#usize := by scalar_tac
 abbrev bulkWord (word : U64) : U64 := UScalar.cast .U64 (UScalar.cast .U32 word)
 
 def TableInitializationEffect {M : Type} (store : runtime.store.Store M)
-    (tableIndex : Usize) (table : runtime.store.Table) (segment : runtime.store.ElemInstance)
+    (tableIndex : Usize) (table : runtime.store.TableInst) (segment : runtime.store.ElemInst)
     (destination source count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M) : Prop :=
   if destination.val + count.val ≤ table.elements.length ∧ source.val + count.val ≤ segment.refs.length then
@@ -27,14 +27,14 @@ def TableInitializationEffect {M : Type} (store : runtime.store.Store M)
 
 theorem bulk_table_init {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (instIndex function : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (entry element tableId : U32) (address : Usize) (tableAddress : runtime.TableAddr)
-    (table : runtime.store.Table) (segment : runtime.store.ElemInstance)
+    (table : runtime.store.TableInst) (segment : runtime.store.ElemInst)
     (destination source count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (descriptor : code.indirect.val[entry.val]? = some (element, tableId))
-    (mapped : inst.elements.val[element.val]? = some address)
+    (mapped : inst.elems.val[element.val]? = some address)
     (resolved : store.elems.val[address.val]? = some segment)
     (tableMapped : inst.tables.val[tableId.val]? = some tableAddress)
     (target : store.tables.val[tableAddress.index.val]? = some table)
@@ -69,7 +69,7 @@ theorem bulk_table_init {M : Type} (memory : runtime.platform.MemoryBuffer M)
     rw [if_pos fitsTarget] at rangeEffect
     obtain ⟨dst, rfl, dstStart, dstEnd⟩ := rangeEffect
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with Interp.vec_index_given inst.elements (UScalar.cast .Usize element) address
+    step with Interp.vec_index_given inst.elems (UScalar.cast .Usize element) address
       (by simpa using mapped) as ⟨actual, actualEq⟩
     subst actual
     step with Interp.vec_index_given store.elems address segment resolved as ⟨actual, actualEq⟩

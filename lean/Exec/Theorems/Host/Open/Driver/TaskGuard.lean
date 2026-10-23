@@ -122,7 +122,7 @@ results create a terminal source machine; rejected results retain a trap. -/
 theorem suspended_root_host_task {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (ready : runtime.interp.Execution) (empty : ready.frames.val=[])
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (identity : U64)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
     (signature : Itasca.types.FuncType) (metadata : RootMetadata store address signature)
     (functionAt : store.funcs.val[address.index.val]?=some function)
     (host : function.code=.Host identity) (signatureAt : store.types.val[function.signature.val]?=some signature)

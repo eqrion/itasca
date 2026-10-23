@@ -17,7 +17,7 @@ theorem StoreReachable.prepend_steps {initial next : config} {store : _root_.sto
 
 theorem TailCoreSourceResult.initialized_execution_same {M : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
-    {inst : runtime.store.Instance} {store : runtime.store.Store M}
+    {inst : runtime.store.ModuleInst} {store : runtime.store.Store M}
     {identity : runtime.InstanceAddr} {result : core.result.Result runtime.InstanceAddr runtime.ExecError}
     (outcome : TailCoreSourceResult view code inst store store identity (.Ok ()) result)
     (initial : config)

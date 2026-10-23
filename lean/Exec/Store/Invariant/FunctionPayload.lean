@@ -6,23 +6,23 @@ open Aeneas Aeneas.Std
 /-- Exact source ordinal and interned type index stored in a freshly allocated
 Wasm function. The function body is supplied later by the compiled module's
 source interpretation. -/
-def FunctionAllocatedAt (seed : runtime.store.Instance) (instanceIndex : Usize)
-    (ordinal : Nat) (function : runtime.store.Function) : Prop :=
+def FunctionAllocatedAt (seed : runtime.store.ModuleInst) (instanceIndex : Usize)
+    (ordinal : Nat) (function : runtime.store.FuncInst) : Prop :=
   ∃ index : Usize, index.val = ordinal ∧ function.code = .Wasm instanceIndex index ∧
     ∃ typeIndex, seed.module.module.env.func_type_indices.val[ordinal]? = some typeIndex ∧
       seed.types.val[typeIndex.val]? = some function.signature
 
 def FunctionPayload {M : Type} (before after : runtime.store.Store M)
-    (seed : runtime.store.Instance) (instanceIndex : Usize) (count : Nat) : Prop :=
+    (seed : runtime.store.ModuleInst) (instanceIndex : Usize) (count : Nat) : Prop :=
   ∃ fresh, after.funcs.val = before.funcs.val ++ fresh ∧
     List.Forall₂ (FunctionAllocatedAt seed instanceIndex) (List.range count) fresh
 
 theorem FunctionPayload.initial {M : Type} (store : runtime.store.Store M)
-    (seed : runtime.store.Instance) (instanceIndex : Usize) :
+    (seed : runtime.store.ModuleInst) (instanceIndex : Usize) :
     FunctionPayload store store seed instanceIndex 0 := ⟨[], by simp, .nil⟩
 
 theorem FunctionStageEffect.payload {M : Type} {before store : runtime.store.Store M}
-    {inst seed : runtime.store.Instance} {instanceIndex index signature out}
+    {inst seed : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     (success : out.1 = .Ok ())
     (payload : FunctionPayload before store seed instanceIndex index.val)

@@ -25,7 +25,7 @@ theorem staging_type_certificates {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (index : Usize)
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -36,7 +36,7 @@ theorem staging_type_certificates {M P F A : Type}
     (globalCapacity : inst.globals.length + inst.module.module.env.globals.val.length ≤ Usize.max)
     (elementCapacity : store.elems.length + inst.module.module.env.elements.val.length ≤ Usize.max)
     (dataCapacity : store.datas.length + inst.module.module.tail.data.val.length ≤ Usize.max)
-    (emptyElements : inst.elements.val = []) (emptyData : inst.data.val = [])
+    (emptyElements : inst.elems.val = []) (emptyData : inst.datas.val = [])
     (tables : TableTypeMap store inst.module.module.env.table_types.val inst.tables.val)
     (contents : ElementContents store)
     (globalStore elementStore after : runtime.store.Store M)
@@ -61,12 +61,12 @@ theorem staging_type_certificates {M P F A : Type}
     have funcs := (globalMetadata.resolve globalFound).functions
     have externs := globalStaged.externs.trans staged.externs.symm
     simpa only [ElementContents, ReferenceShape, globalElements, funcs, externs] using contents
-  have globalEmpty : globalInst.elements.val = [] := by rw [globalElementMap, emptyElements]
-  have initialTypes : ElementTypeMap globalStore (globalInst.module.module.env.elements.val.take 0#usize.val) globalInst.elements.val := by
+  have globalEmpty : globalInst.elems.val = [] := by rw [globalElementMap, emptyElements]
+  have initialTypes : ElementTypeMap globalStore (globalInst.module.module.env.elements.val.take 0#usize.val) globalInst.elems.val := by
     simp [ElementTypeMap, globalEmpty]
   have elementRoom : globalStore.elems.length + (globalInst.module.module.env.elements.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [globalElements, globalSource] using elementCapacity
-  have mapRoom : globalInst.elements.length + (globalInst.module.module.env.elements.val.length - 0#usize.val) ≤ Usize.max := by
+  have mapRoom : globalInst.elems.length + (globalInst.module.module.env.elements.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [globalEmpty, globalSource] using inst.module.module.env.elements.property
   have elements := element_content_staging_loop memory hooks floats allocator law before globalStore platform index 0#usize globalInst (.Ok ())
     globalStaged fresh globalFound (by simpa only [globalSource] using compiled)
@@ -79,10 +79,10 @@ theorem staging_type_certificates {M P F A : Type}
     elementData, elementDataMap, elementTypes⟩ := elements
   obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
   have elementTables := (elementMetadata.resolve elementFound).table_types globalTables
-  have elementEmpty : elementInst.data.val = [] := by rw [elementDataMap, globalDataMap, emptyData]
+  have elementEmpty : elementInst.datas.val = [] := by rw [elementDataMap, globalDataMap, emptyData]
   have dataRoom : elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [elementData, globalData, elementSource, globalSource] using dataCapacity
-  have dataMapRoom : elementInst.data.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
+  have dataMapRoom : elementInst.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [elementEmpty, elementSource, globalSource] using inst.module.module.tail.data.property
   have data := data_content_staging_loop memory allocator law before elementStore index 0#usize elementInst (.Ok ())
     elementStaged fresh elementFound elementBindings elementImports elementSegments elementBound

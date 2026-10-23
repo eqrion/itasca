@@ -6,12 +6,12 @@ open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem preparation_function_payload {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (view : M → Slice U8) (before : runtime.store.Store M) (seed : runtime.store.Instance)
+    (view : M → Slice U8) (before : runtime.store.Store M) (seed : runtime.store.ModuleInst)
     (shape : Shape view before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
     (instanceIndex : Usize) (typed functions : runtime.store.Store M)
-    (typeInst funcInst : runtime.store.Instance)
+    (typeInst funcInst : runtime.store.ModuleInst)
     (typeRun : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator before (.Ok ()) 0#usize seed =
       .ok (typeParts typed (.Ok ()) typeInst))
     (functionRun : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator typed (.Ok ()) 0#usize typeInst instanceIndex =
@@ -47,23 +47,23 @@ theorem preparation_function_payload {M A : Type} (memory : runtime.platform.Mem
   dsimp only at typeStore_elems
   have typeStore_datas := congrArg runtime.store.Store.datas typeStore
   dsimp only at typeStore_datas
-  have typeMap_module := congrArg runtime.store.Instance.module typeMap
+  have typeMap_module := congrArg runtime.store.ModuleInst.module typeMap
   dsimp only at typeMap_module
-  have typeMap_tables := congrArg runtime.store.Instance.tables typeMap
+  have typeMap_tables := congrArg runtime.store.ModuleInst.tables typeMap
   dsimp only at typeMap_tables
-  have typeMap_memories := congrArg runtime.store.Instance.memories typeMap
+  have typeMap_memories := congrArg runtime.store.ModuleInst.memories typeMap
   dsimp only at typeMap_memories
-  have typeMap_globals := congrArg runtime.store.Instance.globals typeMap
+  have typeMap_globals := congrArg runtime.store.ModuleInst.globals typeMap
   dsimp only at typeMap_globals
-  have typeMap_elements := congrArg runtime.store.Instance.elements typeMap
+  have typeMap_elements := congrArg runtime.store.ModuleInst.elems typeMap
   dsimp only at typeMap_elements
-  have typeMap_data := congrArg runtime.store.Instance.data typeMap
+  have typeMap_data := congrArg runtime.store.ModuleInst.datas typeMap
   dsimp only at typeMap_data
   have typeSource : typeInst.module = seed.module := by
-    have h := congrArg runtime.store.Instance.module typeMap
+    have h := congrArg runtime.store.ModuleInst.module typeMap
     exact h
   have typeFuncs : typeInst.funcs = seed.funcs := by
-    have h := congrArg runtime.store.Instance.funcs typeMap
+    have h := congrArg runtime.store.ModuleInst.funcs typeMap
     exact h
   have typesComplete : typeInst.types.length = seed.module.module.env.types.length :=
     (typeEntries rfl).length_eq.symm

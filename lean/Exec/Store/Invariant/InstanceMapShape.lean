@@ -46,7 +46,7 @@ theorem function_table_addresses {M : Type} {store : runtime.store.Store M} {ins
 
 /-- Exact type/signature tables and issued address maps assemble the structural
 instance invariant. Every premise is a finite source count or concrete lookup. -/
-theorem instance_shape_of_maps {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+theorem instance_shape_of_maps {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (types : TypeEntries store inst.module.module.env.types.val inst.types.val)
     (functions : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map decodeFuncType))
     (tables : TableTypeMap store inst.module.module.env.table_types.val inst.tables.val)
@@ -55,9 +55,9 @@ theorem instance_shape_of_maps {M : Type} (store : runtime.store.Store M) (inst 
     (memoryAddresses : ∀ address ∈ inst.memories.val, address.store = store.id ∧ address.index.val < store.memories.length)
     (globalCount : inst.globals.length = inst.module.module.env.global_types.length)
     (globalAddresses : ∀ address ∈ inst.globals.val, address.store = store.id ∧ address.index.val < store.globals.length)
-    (elements : ElementTypeMap store inst.module.module.env.elements.val inst.elements.val)
-    (dataCount : inst.data.length = inst.module.module.tail.data.length)
-    (dataAddresses : ∀ address ∈ inst.data.val, address.val < store.datas.length) :
+    (elements : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val)
+    (dataCount : inst.datas.length = inst.module.module.tail.data.length)
+    (dataAddresses : ∀ address ∈ inst.datas.val, address.val < store.datas.length) :
     InstanceShape store inst := by
   refine ⟨types.length_eq.symm, ?_, tables.length_eq.symm, memoryCount, globalCount,
     elements.length_eq.symm, dataCount, types.issued, function_table_addresses functions,

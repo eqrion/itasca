@@ -8,7 +8,7 @@ open Itasca.ModuleEnv
 /-- Successful defined-function insertion extends the concrete signature table
 by the exact canonical signature stored in the new function entry. -/
 theorem FunctionStageEffect.function_table {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     {types : List functype} (table : Interp.FunctionTable store inst types)
     {rawType : Itasca.types.FuncType} (typed : store.types.val[signature.val]? = some rawType)
@@ -73,7 +73,7 @@ theorem StagedFunctionSignatures.rebase {M : Type} {before stagedFrom after : ru
 /-- Defined-function allocation records the compiler index and signature even
 when a later function allocation rejects and the public wrapper rolls back. -/
 theorem FunctionStageEffect.signatures {M : Type} {before store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     {definedTypes : List Itasca.types.FuncType}
     (staged : StagedFunctionSignatures before store instanceIndex definedTypes)

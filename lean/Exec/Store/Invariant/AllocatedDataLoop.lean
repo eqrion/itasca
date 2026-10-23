@@ -17,7 +17,7 @@ theorem data_allocated_loop {M A : Type}
     (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
     (before store : runtime.store.Store M) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -26,33 +26,33 @@ theorem data_allocated_loop {M A : Type}
     (allocated : AllocationShape view store)
     (startBound : start.val ≤ inst.module.module.tail.data.val.length)
     (storeCapacity : store.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.data.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
-    (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elements.val)
+    (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
+    (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val)
     (contents : ElementContents store)
-    (issued : ∀ address ∈ inst.data.val, address.val < store.datas.length) :
+    (issued : ∀ address ∈ inst.datas.val, address.val < store.datas.length) :
     runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧ StagedPrefix before after ∧
         objectCount after ≤ Usize.max ∧ AllocationShape view after ∧ ElementContents after ∧ after.globals = store.globals ∧ (SegmentAccounting store → SegmentAccounting after) ∧
         InitializerFunctionMetadataAt store inst after instIndex ∧ ∃ next,
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
-          (∀ address ∈ next.data.val, address.val < after.datas.length) ∧ next.globals = inst.globals ∧
+          (∀ address ∈ next.datas.val, address.val < after.datas.length) ∧ next.globals = inst.globals ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          ElementTypeMap after inst.module.module.env.elements.val next.elements.val ∧
-          (finalStatus = .Ok () → next.data.length = inst.data.length + (inst.module.module.tail.data.val.length - start.val)) ⦄ := by
+          ElementTypeMap after inst.module.module.env.elements.val next.elems.val ∧
+          (finalStatus = .Ok () → next.datas.length = inst.datas.length + (inst.module.module.tail.data.val.length - start.val)) ⦄ := by
   unfold runtime.store.instantiate.Store.instantiate_inner_loop9
   apply loop.spec_decr_nat (fun state => inst.module.module.tail.data.val.length - state.2.2.val)
     (fun state => StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ AllocationShape view state.1 ∧ ElementContents state.1 ∧ state.1.globals = store.globals ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
       InitializerFunctionMetadataAt store inst state.1 instIndex ∧
       state.2.2.val ≤ inst.module.module.tail.data.val.length ∧
       ∃ currentInst, state.1.instances.val[instIndex.val]? = some currentInst ∧ currentInst.module = inst.module ∧
-        (∀ address ∈ currentInst.data.val, address.val < state.1.datas.length) ∧ currentInst.globals = inst.globals ∧
+        (∀ address ∈ currentInst.datas.val, address.val < state.1.datas.length) ∧ currentInst.globals = inst.globals ∧
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
-        currentInst.data.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max ∧
+        currentInst.datas.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max ∧
         state.1.datas.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max ∧
-        ElementTypeMap state.1 inst.module.module.env.elements.val currentInst.elements.val ∧
-        (state.2.1 = .Ok () → currentInst.data.length + start.val = inst.data.length + state.2.2.val))
+        ElementTypeMap state.1 inst.module.module.env.elements.val currentInst.elems.val ∧
+        (state.2.1 = .Ok () → currentInst.datas.length + start.val = inst.datas.length + state.2.2.val))
   · rintro ⟨current, result, index⟩ ⟨hstaged, hobjects, hallocated, hcontents, hglobals, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hissued, hglobalMap, hbindings, himports, hsegments, hcapacity, hstoreCapacity, htyped, hcount⟩
     dsimp only at hstaged hobjects hallocated hcontents hglobals haccounted hmetadata hindex hfound hsource hissued hglobalMap hbindings himports hsegments hcapacity hstoreCapacity htyped hcount ⊢
@@ -73,7 +73,7 @@ theorem data_allocated_loop {M A : Type}
         cases unitValue
         simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
         have room : current.datas.length < Usize.max := by omega
-        have mapRoom : currentInst.data.length < Usize.max := by omega
+        have mapRoom : currentInst.datas.length < Usize.max := by omega
         step with add_instance_data_result_effect memory allocator law current instIndex index currentInst
           hfound (by simpa only [hsource] using hmore) room mapRoom
           as ⟨state, after, resultEffect⟩

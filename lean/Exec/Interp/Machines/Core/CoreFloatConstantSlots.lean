@@ -27,7 +27,7 @@ theorem dispatch_float32_slots {M P F A : Type}
   rw [length] at represented
   simp only [runtime.interp.dispatch]
   obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
-    (const32_effect memory hooks floats allocator exec raw.base dst bits capacity)
+    (const32_effect exec raw.base dst bits capacity)
   rw [result,bind_ok]
   rcases out with ⟨answer,next⟩
   with_unfolding_all apply WP.spec.ret
@@ -61,7 +61,7 @@ theorem dispatch_float64_slots {M P F A : Type}
   rw [length] at represented
   simp only [runtime.interp.dispatch]
   obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
-    (const64_effect memory hooks floats allocator exec raw.base dst bits capacity)
+    (const64_effect exec raw.base dst bits capacity)
   rw [result,bind_ok]
   rcases out with ⟨answer,next⟩
   with_unfolding_all apply WP.spec.ret

@@ -75,7 +75,7 @@ theorem recorded_inv_loop_stops {M P F A : Type}
     (Inv : runtime.store.Store M → Prop)
     (steps : RecordedInvStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv)
     (initial : EventfulMachine emission allowed M P view code expected) (valid : Inv initial.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ∃state, Inv state.2.1 ∧ RecordedLoopInvariant memory hooks floats allocator initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
   let loopInv := fun (state : ExecutionState M P) => Inv state.2.1 ∧ RecordedLoopInvariant memory hooks floats allocator initial state

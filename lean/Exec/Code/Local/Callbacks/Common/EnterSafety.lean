@@ -53,7 +53,7 @@ open Aeneas Aeneas.Std
   subst sig
   step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots (by simpa [alloc.vec.Vec.deref] using valuesFit) (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height, hheight⟩
   step as ⟨source, hsource⟩
-  simp only [runtime.compiler.control.is_then, runtime.compiler.control.is_loop, bind_ok,
+  simp only [bind_ok,
     reachable, Bool.false_eq_true, ite_false, ite_true]
   step with compiler_condition ops compiler conditionWord conditionAt as ⟨result, exactResult⟩
   subst result
@@ -139,7 +139,7 @@ private theorem enter_if_empty {A : Type} (ops : runtime.platform.Alloc A)
   step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots
     (by simpa [alloc.vec.Vec.deref] using valuesFit) (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height, hheight⟩
   step as ⟨source, hsource⟩
-  simp only [runtime.compiler.control.is_then, runtime.compiler.control.is_loop, bind_ok,
+  simp only [bind_ok,
     reachable, Bool.false_eq_true, ite_false, ite_true]
   simp [runtime.compiler.FunctionCompiler.operand, runtime.compiler.operand_at,
     alloc.vec.Vec.deref, Slice.len, empty, core.result.Result.Insts.CoreOpsTry.branch,

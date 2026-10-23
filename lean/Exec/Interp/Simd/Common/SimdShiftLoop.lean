@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Exec.Spec.Simd
     (positive : 0 < width.val) (widthBound : width.val ≤ 64) (amountBound : amount.val < width.val)
     (operation : op.val%32=shiftCode kind) (position : i.val ≤ 128/width.val)
     (initializedPrefix : ∀ j, j < i.val → laneBits width.val j initial.bv = shiftBits kind (laneBits width.val j x.bv) amount.val) :
-    runtime.interp.simd.shift_lanes_loop op width amount x initial i ⦃ result =>
+    runtime.interp.simd.shift_lanes_loop op x width amount initial i ⦃ result =>
       ∀ j, j < 128/width.val → laneBits width.val j result.bv = shiftBits kind (laneBits width.val j x.bv) amount.val ⦄ := by
   unfold runtime.interp.simd.shift_lanes_loop
   apply loop.spec_decr_nat (fun p => 128/width.val-p.2.val)

@@ -12,9 +12,9 @@ theorem world_divergent_next {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
     (before : EventfulWorld emission allowed M P view expected) (valid : Inv before.code before.machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div) :
     ∃events next,WorldRecordedTransition memory hooks floats allocator before events next ∧ Inv next.code next.machine.store ∧
-      runtime.interp.invoke_with_loop2 memory hooks floats allocator next.machine.exec next.machine.store next.machine.platform (.Ok ())=.div := by
+      runtime.interp.invoke_with_loop1 memory hooks floats allocator next.machine.exec next.machine.store next.machine.platform (.Ok ())=.div := by
   have active := execution_loop_divergent_active memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform divergent
   obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,returned,outcome⟩ := WP.spec_imp_exists (steps before valid active)
   change loop (executionBody memory hooks floats allocator) (before.machine.exec,before.machine.store,before.machine.platform,.Ok ())=.div at divergent
@@ -41,10 +41,10 @@ theorem world_loop_infinite {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (steps : WorldStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view expected Inv)
     (initial : EventfulWorld emission allowed M P view expected) (valid : Inv initial.code initial.machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     Spec.InfiniteSourceWithEvents (Abs.decode initial.machine.source) := by
   let running := fun state : EventfulWorld emission allowed M P view expected => Inv state.code state.machine.store ∧
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator state.machine.exec state.machine.store state.machine.platform (.Ok ())=.div
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator state.machine.exec state.machine.store state.machine.platform (.Ok ())=.div
   let next := fun (before : {s // running s}) events (after : {s // running s}) =>
     WorldRecordedTransition memory hooks floats allocator before.val events after.val
   apply Spec.infinite_source_of_decreasing_stutter next

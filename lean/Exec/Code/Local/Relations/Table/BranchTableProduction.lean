@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 fragments, with the side-table entries and default count tied to actual buffers. -/
 theorem compiler_lower_table_production {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     ∃ start len selector emitted targets,
       start.val = before.function.jump_tables.val.length ∧
       len.val = before.table_depths.val.length ∧

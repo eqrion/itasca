@@ -1,6 +1,7 @@
 //! Float bit operations and wrappers around the embedding's IEEE rounding ops.
 use super::super::{ExecError, FloatOps, Trap};
 
+/// Replaces any NaN with the positive canonical NaN, keeping other bits.
 pub(super) fn quiet32(bits: u32) -> u32 {
     if bits & 0x7fff_ffff > 0x7f80_0000 {
         0x7fc0_0000
@@ -8,6 +9,7 @@ pub(super) fn quiet32(bits: u32) -> u32 {
         bits
     }
 }
+/// Replaces any NaN with the positive canonical NaN, keeping other bits.
 pub(super) fn quiet64(bits: u64) -> u64 {
     if bits & 0x7fff_ffff_ffff_ffff > 0x7ff0_0000_0000_0000 {
         0x7ff8_0000_0000_0000
@@ -275,7 +277,7 @@ pub(super) fn scalar<F: FloatOps>(opcode: u16, a: u64, b: u64) -> Result<u64, Ex
         0xbb => promote(a as u32),
         0xbc | 0xbe => a as u32 as u64,
         0xbd | 0xbf => a,
-        _ => return Err(ExecError::BadArguments),
+        _ => return Err(ExecError::Internal),
     };
     Ok(result)
 }

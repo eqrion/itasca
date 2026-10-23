@@ -24,7 +24,7 @@ theorem executionBody_stopped {M P F A : Type}
     (state : ExecutionState M P) (stopped : ¬ActiveExecution state) :
     executionBody memory hooks floats allocator state=.ok (.done (finishExecution state)) := by
   rcases state with ⟨exec,store,platform,status⟩
-  unfold executionBody runtime.interp.invoke_with_loop2.body
+  unfold executionBody runtime.interp.invoke_with_loop1.body
   dsimp only
   split
   · have positive : 0<exec.frames.length := by scalar_tac

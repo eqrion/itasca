@@ -18,7 +18,7 @@ private theorem mapped_objects {A B : Type} [Inhabited B] (f : A → B)
   simpa only [List.getElem!_eq_getElem?_getD, List.getElem?_map, found, lookup,
     Option.map_some, Option.getD_some] using relation
 
-private theorem table_extension (before after : runtime.store.Table)
+private theorem table_extension (before after : runtime.store.TableInst)
     (ty : after.ty = before.ty) (maximum : after.maximum = before.maximum)
     (length : after.elements.length = before.elements.length)
     (old : wf_tableinst (decodeTable before)) (fresh : wf_tableinst (decodeTable after)) :
@@ -29,7 +29,7 @@ private theorem table_extension (before after : runtime.store.Table)
   exact .mk_Extend_tableinst _ _ _ _ _ _ (Nat.le_refl _)
     (by simpa only [List.length_map] using length.ge) old fresh
 
-private theorem memory_extension {M : Type} (view : M → Slice U8) (before after : runtime.store.Memory M)
+private theorem memory_extension {M : Type} (view : M → Slice U8) (before after : runtime.store.MemInst M)
     (maximum : after.maximum = before.maximum) (length : (view after.buf).length = (view before.buf).length)
     (old : wf_meminst (decodeMemory view before)) (fresh : wf_meminst (decodeMemory view after)) :
     Extend_meminst (decodeMemory view before) (decodeMemory view after) := by
@@ -39,7 +39,7 @@ private theorem memory_extension {M : Type} (view : M → Slice U8) (before afte
   exact .mk_Extend_meminst _ _ _ _ _ (Nat.le_refl _)
     (by simpa only [decodeBytes, List.length_map] using length.ge) old fresh
 
-private theorem element_extension (before after : runtime.store.ElemInstance)
+private theorem element_extension (before after : runtime.store.ElemInst)
     (ty : after.ty = before.ty) (contents : after.refs.val = before.refs.val ∨ after.refs.val = []) :
     Extend_eleminst (decodeElement before) (decodeElement after) := by
   unfold decodeElement
@@ -49,7 +49,7 @@ private theorem element_extension (before after : runtime.store.ElemInstance)
   · exact Or.inl (by rw [same])
   · exact Or.inr (by rw [empty]; rfl)
 
-private theorem data_extension (before after : runtime.store.DataInstance)
+private theorem data_extension (before after : runtime.store.DataInst)
     (contents : after.bytes.val = before.bytes.val ∨ after.bytes.val = [])
     (old : wf_datainst (decodeData before)) (fresh : wf_datainst (decodeData after)) :
     Extend_datainst (decodeData before) (decodeData after) := by

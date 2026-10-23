@@ -10,7 +10,7 @@ theorem prepared_resume_source {M : Type} (memory : runtime.platform.MemoryBuffe
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (before after : runtime.store.Store M) (ambient : frame)
     (exec padded : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (identity : Nat) (params : List valtype) (arguments : List val)
     (args values : alloc.vec.Vec runtime.Value) (status : core.result.Result Unit runtime.platform.HostError)
     (host : HostFunction (Store.decodeStore view code before) address.index.val identity params (signature.results.val.map sourceType))

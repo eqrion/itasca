@@ -14,7 +14,7 @@ theorem host_resume_chosen_owned {choices : Spec.SourceChoices} (occurrence : Na
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (before after : runtime.store.Store M) (ambient : frame)
     (exec : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (identity : Nat) (params : List valtype) (args : List val)
     (results : alloc.vec.Vec runtime.Value)
     (status : core.result.Result Unit runtime.platform.HostError)

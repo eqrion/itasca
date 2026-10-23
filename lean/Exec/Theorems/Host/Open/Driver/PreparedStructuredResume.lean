@@ -31,7 +31,7 @@ theorem prepared_structured_resume {M : Type} {emission : FunctionEmission} {all
       ⟨Store.decodeStore view code store,ambient,{f with code := after,vals := front}::rest,[]⟩ returns)
     (memory : runtime.platform.MemoryBuffer M)
     (padded : runtime.interp.Execution) (freshStore : runtime.store.Store M)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (identity : Nat) (params : List valtype) (copied values : alloc.vec.Vec runtime.Value)
     (status : core.result.Result Unit runtime.platform.HostError)
     (host : HostFunction (Store.decodeStore view code store) address.index.val identity params

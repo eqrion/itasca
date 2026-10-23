@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Exec.Spec.Simd
 theorem dot_loop (x y initial : U128) (i : U32)
     (position : i.val ≤ 4)
     (initializedPrefix : ∀ j, j < i.val → laneBits 32 j initial.bv = dotBits x.bv y.bv j) :
-    runtime.interp.simd.multiply_lanes_loop 186#u32 y x initial i ⦃ result =>
+    runtime.interp.simd.multiply_lanes_loop 186#u32 x y initial i ⦃ result =>
       ∀ j, j < 4 → laneBits 32 j result.bv = dotBits x.bv y.bv j ⦄ := by
   unfold runtime.interp.simd.multiply_lanes_loop
   apply loop.spec_decr_nat (fun p => 4-p.2.val)
@@ -81,7 +81,8 @@ theorem dot_loop (x y initial : U128) (i : U32)
     runtime.interp.simd.multiply_lanes 186#u32 x y ⦃ result =>
       ∀ j, j < 4 → laneBits 32 j result.bv = dotBits x.bv y.bv j ⦄ := by
   unfold runtime.interp.simd.multiply_lanes
-  step with dot_loop x y 0#u128 0#u32 (by decide) (by simp) as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (dot_loop x y 0#u128 0#u32 (by decide) (by simp))
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

@@ -22,7 +22,7 @@ theorem observe_value_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
   cases ty with
   | Bot =>
-    simp only [bind_ok]
+    simp only [runtime.compiler.stack_width, bind_ok]
     step as ⟨added,addSpec⟩
     cases added with
     | none => simp [compilerStackWidth] at slotsFit; scalar_tac
@@ -30,6 +30,7 @@ theorem observe_value_available {A : Type} (ops : runtime.platform.Alloc A)
       simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,compilerStackWidth,appended]
       scalar_tac
   | Val type =>
+    simp only [runtime.compiler.stack_width]
     step with compiler_width type as ⟨width,widthEq⟩
     step as ⟨added,addSpec⟩
     cases added with
@@ -116,7 +117,7 @@ theorem compiler_observe_available {A : Type} (ops : runtime.platform.Alloc A)
   rintro ⟨function,otherState⟩ ⟨locals,sameState⟩
   dsimp only at locals sameState
   subst otherState
-  step with observe_clear compiler.before as ⟨cleared,empty⟩
+  step with runtime_clear compiler.before as ⟨cleared,empty⟩
   have capacity : cleared.length + (alloc.vec.Vec.deref state.vals).val.length ≤ Usize.max := by
     simpa [alloc.vec.Vec.length,empty,alloc.vec.Vec.deref] using state.vals.property
   have reserve : cleared.length + (alloc.vec.Vec.deref state.vals).val.length ≤ bound := by

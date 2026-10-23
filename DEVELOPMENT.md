@@ -97,8 +97,8 @@ build to compile the compared specification and `Itasca.Spec.Checks`.
 The implementation stays within the verified extraction subset:
 
 These constraints apply to the validator and its extracted dependencies. The
-[execution contracts](docs/EXECUTION_VERIFICATION.md)
-state the runtime premises. Runtime code additionally supports integer bitwise
+[execution boundary](lean/README.md#execution-boundary) and
+[execution proof guide](lean/Exec/README.md) state the runtime premises. Runtime code additionally supports integer bitwise
 operations and generic platform traits. Runtime extraction and the conditional
 T1–T7 execution proofs are checked. Keep the boundary one-way: audited
 validator code must not depend on runtime code. Native rounding operations,

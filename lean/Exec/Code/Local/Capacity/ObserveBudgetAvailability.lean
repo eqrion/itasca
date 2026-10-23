@@ -22,7 +22,7 @@ theorem compiler_observe_available_budget {A : Type} (ops : runtime.platform.All
   rintro ⟨function,otherState⟩ ⟨locals,sameState⟩
   dsimp only at locals sameState
   subst otherState
-  step with observe_clear compiler.before as ⟨cleared,empty⟩
+  step with runtime_clear compiler.before as ⟨cleared,empty⟩
   have capacity : cleared.length + (alloc.vec.Vec.deref state.vals).val.length ≤ Usize.max := by
     simpa [alloc.vec.Vec.length,empty,alloc.vec.Vec.deref] using state.vals.property
   have reserve : cleared.length + (alloc.vec.Vec.deref state.vals).val.length ≤ bound := by

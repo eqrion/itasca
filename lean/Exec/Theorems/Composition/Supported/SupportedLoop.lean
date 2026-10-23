@@ -86,7 +86,7 @@ theorem supported_loop_stops
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     {expected : List valtype} (initial : SupportedMachine emission allowed M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ∃ state, SupportedLoopInvariant memory hooks floats allocator initial state ∧
         ¬ActiveExecution state ∧ finishExecution state = result ⦄div := by
   apply execution_loop_stops memory hooks floats allocator

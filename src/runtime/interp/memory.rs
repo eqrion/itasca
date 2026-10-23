@@ -1,11 +1,21 @@
 //! Bounds-checked scalar memory operations in little-endian byte order.
 use super::*;
-fn address(addr: u32, offset: u32, len: usize, bytes: usize) -> Result<usize, ExecError> {
-    let start = addr as u64 + offset as u64;
-    if start > bytes as u64 || len as u64 > bytes as u64 - start {
-        return Err(Trap::MemoryOutOfBounds.into());
-    }
-    Ok(start as usize)
+
+/// Returns the effective address `addr + offset` if `len` bytes fit in memory.
+pub(super) fn address(
+    addr: u32,
+    offset: u32,
+    len: usize,
+    bytes: usize,
+) -> Result<usize, ExecError> {
+    let start = range(
+        addr as u64 + offset as u64,
+        len as u64,
+        bytes,
+        Trap::MemoryOutOfBounds,
+    )?
+    .start;
+    Ok(start)
 }
 #[inline(always)]
 pub(super) fn load(op: u16, addr: u32, offset: u32, bytes: &[u8]) -> Result<u64, ExecError> {

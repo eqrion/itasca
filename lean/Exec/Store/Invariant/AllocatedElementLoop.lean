@@ -14,7 +14,7 @@ theorem element_allocated_loop {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8)
     (before store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -26,8 +26,8 @@ theorem element_allocated_loop {M P F A : Type}
     (allocated : AllocationShape view store)
     (startBound : start.val ≤ inst.module.module.env.elements.val.length)
     (storeCapacity : store.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.elements.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
-    (matching : status = .Ok () → ElementTypeMap store (inst.module.module.env.elements.val.take start.val) inst.elements.val)
+    (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
+    (matching : status = .Ok () → ElementTypeMap store (inst.module.module.env.elements.val.take start.val) inst.elems.val)
     (contents : ElementContents store) :
     runtime.store.instantiate.Store.instantiate_inner_loop8 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ after finalStatus,
@@ -36,8 +36,8 @@ theorem element_allocated_loop {M P F A : Type}
         InitializerFunctionMetadataAt store inst after instIndex ∧ ∃ next,
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧ next.globals = inst.globals ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          after.datas = store.datas ∧ next.data = inst.data ∧
-          (finalStatus = .Ok () → ElementTypeMap after inst.module.module.env.elements.val next.elements.val) ⦄ := by
+          after.datas = store.datas ∧ next.datas = inst.datas ∧
+          (finalStatus = .Ok () → ElementTypeMap after inst.module.module.env.elements.val next.elems.val) ⦄ := by
   unfold runtime.store.instantiate.Store.instantiate_inner_loop8
   apply loop.spec_decr_nat (fun state => inst.module.module.env.elements.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧ StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ AllocationShape view state.1 ∧ ElementContents state.1 ∧ state.1.globals = store.globals ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
@@ -46,10 +46,10 @@ theorem element_allocated_loop {M P F A : Type}
       ∃ currentInst, state.1.instances.val[instIndex.val]? = some currentInst ∧ currentInst.module = inst.module ∧ currentInst.globals = inst.globals ∧
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
-        currentInst.elements.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
+        currentInst.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
         state.1.elems.length + (inst.module.module.env.elements.val.length - state.2.2.2.val) ≤ Usize.max ∧
-        state.1.datas = store.datas ∧ currentInst.data = inst.data ∧
-        (state.2.2.1 = .Ok () → ElementTypeMap state.1 (inst.module.module.env.elements.val.take state.2.2.2.val) currentInst.elements.val))
+        state.1.datas = store.datas ∧ currentInst.datas = inst.datas ∧
+        (state.2.2.1 = .Ok () → ElementTypeMap state.1 (inst.module.module.env.elements.val.take state.2.2.2.val) currentInst.elems.val))
   · rintro ⟨current, host, result, index⟩ ⟨hhost, hstaged, hobjects, hallocated, hcontents, hglobals, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hglobalMap, hbindings, himports, hsegments, hcapacity, hstoreCapacity, hdatas, hmapData, htyped⟩
     dsimp only at hhost hstaged hobjects hallocated hcontents hglobals haccounted hmetadata hindex hfound hsource hglobalMap hbindings himports hsegments hcapacity hstoreCapacity hdatas hmapData htyped ⊢
@@ -81,7 +81,7 @@ theorem element_allocated_loop {M P F A : Type}
         have certificates := element_initializer_certificates current currentInst index segment
           (by simpa [hsource] using compiled) hsegment hvalid hbindings himports
         have room : current.elems.length < Usize.max := by omega
-        have mapRoom : currentInst.elements.length < Usize.max := by omega
+        have mapRoom : currentInst.elems.length < Usize.max := by omega
         step with add_instance_element_content_effect memory hooks floats allocator law current platform instIndex index
           currentInst segment hfound hsegment certificates hbindings room mapRoom
           as ⟨state, after, host', contentEffect, hhost'⟩

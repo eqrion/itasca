@@ -31,7 +31,7 @@ theorem element_initializers_shape_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -80,7 +80,7 @@ theorem element_initializers_shape_loop {M P F A : Type}
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
         rw [elem_value_type_eq, bind_ok]
-        step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+        step with eval_const_owned memory hooks floats allocator law store platform instIndex function
           inst code expr (elementValueType segment.elem) words hi hcode compiled resolved bindings
           as ⟨result, after, host', hs, hp, hvalue⟩
         subst after host'

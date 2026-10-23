@@ -14,7 +14,7 @@ theorem segment_loop_source {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (sourceCode : CodeInterpretation)
     (store : runtime.store.Store M) (platform : P) (exec : runtime.interp.Execution)
-    (instIndex function : Usize) (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (instIndex function : Usize) (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (position : U32) (pending : Nat)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
@@ -27,11 +27,11 @@ theorem segment_loop_source {M P F A : Type}
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some value → value.ty.valtype = .I32)
     (shape : Shape view store) (sourceSyntax : StoreSyntax sourceCode store) (bounds : SegmentBounds store)
     (ambient : frame) (ambientWf : wf_frame ambient) (moduleEq : ambient.MODULE = decodeInstance store inst) :
-    runtime.interp.synthetic_loop memory hooks floats allocator store platform exec (.Ok ()) ⦃ out =>
+    runtime.interp.run_synthetic_loop memory hooks floats allocator store platform exec (.Ok ()) ⦃ out =>
       StepsH (segmentState view sourceCode store ambient code exec.slots.val pending (code.code.val.drop position.val)) []
         ⟨⟨decodeStore view sourceCode out.1,ambient⟩,segmentResult out.2.2.2⟩ ⦄ := by
   let origin := segmentState view sourceCode store ambient code exec.slots.val pending (code.code.val.drop position.val)
-  unfold runtime.interp.synthetic_loop
+  unfold runtime.interp.run_synthetic_loop
   apply loop.spec_decr_nat (fun state => segmentRemaining code state.2.2.1 state.2.2.2)
     (fun state => Shape view state.1 ∧ SegmentTypes store state.1 ∧ SegmentObjectMetadata view store state.1 ∧
       state.2.1 = platform ∧ state.2.2.1.slots.length = exec.slots.length ∧ SegmentStatus state.2.2.2 ∧
@@ -45,7 +45,7 @@ theorem segment_loop_source {M P F A : Type}
     subst host
     cases result with
     | Err error =>
-      simp only [runtime.interp.synthetic_loop.body,core.result.Result.is_ok,bind_ok,Bool.false_eq_true,↓reduceIte,ite_self,WP.spec_ok]
+      simp only [runtime.interp.run_synthetic_loop.body,core.result.Result.is_ok,bind_ok,Bool.false_eq_true,↓reduceIte,ite_self,WP.spec_ok]
       rcases cursor with ⟨_,history⟩ | ⟨pc,n,_,_,_,history⟩
       · exact history
       · exact history

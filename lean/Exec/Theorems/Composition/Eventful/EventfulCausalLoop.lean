@@ -119,7 +119,7 @@ theorem eventful_causal_loop_results {M P F A : Type}
     (Cause : EventfulMachine emission allowed M P view code expected → EventfulDispatchResult M P → runtime.ExecError → Prop)
     (steps : EventfulCausalStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv Cause)
     (initial : EventfulMachine emission allowed M P view code expected) (valid : Inv initial.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => Inv result.2.2.2.2.2.1 ∧ EventfulLoopResult initial result ∧
         ∀error,result.2.2.2.2.2.2.2=.Err error → EventfulLoopFailure memory hooks floats allocator Inv Cause initial result error ⦄div := by
   apply WP.dspec_mono (execution_loop_stops memory hooks floats allocator

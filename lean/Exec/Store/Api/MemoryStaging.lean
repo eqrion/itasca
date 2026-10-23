@@ -4,8 +4,8 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 def MemoryStageEffect {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (ty : Itasca.types.MemType)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance) : Prop :=
+    (inst : runtime.store.ModuleInst) (ty : Itasca.types.MemType)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst) : Prop :=
   (∃ error, out = (.Err error, store, inst)) ∨
   (∃ memories buffer addresses count,
     (view buffer).val = List.replicate (ty.limits.min.val * 65536) 0#u8 ∧
@@ -18,7 +18,7 @@ def MemoryStageEffect {M : Type} (view : M → Slice U8) (store : runtime.store.
 theorem add_instance_memory_effect {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (bound : index.val < inst.module.module.env.mem_types.val.length)
     (objectBound : objectCount store ≤ Usize.max) (room : inst.memories.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index
@@ -67,7 +67,7 @@ theorem add_instance_memory_effect {M A : Type} (memory : runtime.platform.Memor
           exact Or.inr ⟨memories, buffer, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
 
 theorem MemoryStageEffect.context {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty out} (effect : MemoryStageEffect view store inst ty out)
+    {inst : runtime.store.ModuleInst} {ty out} (effect : MemoryStageEffect view store inst ty out)
     (bound : objectCount store ≤ Usize.max) :
     out.2.1 = {store with memories := out.2.1.memories, memory_bytes := out.2.1.memory_bytes} ∧
     out.2.2 = {inst with memories := out.2.2.memories} ∧ StagedPrefix store out.2.1 ∧ objectCount out.2.1 ≤ Usize.max := by
@@ -82,7 +82,7 @@ theorem MemoryStageEffect.context {M : Type} {view : M → Slice U8} {store : ru
       omega
 
 theorem MemoryStageEffect.issued {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty out} (effect : MemoryStageEffect view store inst ty out)
+    {inst : runtime.store.ModuleInst} {ty out} (effect : MemoryStageEffect view store inst ty out)
     (issued : ∀ address ∈ inst.memories.val, address.index.val < store.memories.length) :
     ∀ address ∈ out.2.2.memories.val, address.index.val < out.2.1.memories.length := by
   rcases effect with ⟨error, rfl⟩ | ⟨memories, buffer, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
@@ -98,7 +98,7 @@ theorem MemoryStageEffect.issued {M : Type} {view : M → Slice U8} {store : run
       simp [count]
 
 theorem MemoryStageEffect.count {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {ty out} (effect : MemoryStageEffect view store inst ty out)
+    {inst : runtime.store.ModuleInst} {ty out} (effect : MemoryStageEffect view store inst ty out)
     (success : out.1 = .Ok ()) : out.2.2.memories.length = inst.memories.length + 1 := by
   rcases effect with ⟨error, failed⟩ | ⟨memories, buffer, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, output⟩
   · rw [failed] at success; cases success

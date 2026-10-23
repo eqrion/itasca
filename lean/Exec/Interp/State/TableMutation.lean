@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Exec.Store
 /-- A table content update retains the object's reference type, maximum and
 length; every word is either retained or the explicit replacement reference. -/
 def TableMutation {M : Type} (before after : runtime.store.Store M)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64) : Prop :=
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64) : Prop :=
   ∃ words, after = {before with tables := before.tables.set address.index {object with elements := words}} ∧
     words.length = object.elements.length ∧
     ∀ word ∈ words.val, word ∈ object.elements.val ∨ word = replacement
@@ -18,12 +18,11 @@ theorem TableMutation.frame_metadata {M : Type} {before after : runtime.store.St
 
 /-- The actual table write either has the precise content update or leaves
 both execution and store untouched on the source bounds trap. -/
-theorem table_set_mutation {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem table_set_mutation {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (position : U32)
+    (instanceIndex base : Usize) (index value table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address)
     (issued : store.tables.val[address.index.val]? = some object)
@@ -31,11 +30,11 @@ theorem table_set_mutation {M P F A : Type}
     (indexBound : base.val+index.val < exec.slots.length)
     (valueBound : base.val+value.val < exec.slots.length)
  :
-    runtime.interp.admin_table_set memory hooks floats allocator exec store instanceIndex base index value table ⦃ out =>
+    runtime.interp.execute_table_set memory exec store instanceIndex base index value table ⦃ out =>
       out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
       ((out.1 = .Ok () ∧ TableMutation store out.2.2 address object exec.slots.val[base.val+value.val]!) ∨
        (out.1 = .Err (.Trap .TableOutOfBounds) ∧ out.2.2 = store)) ⦄ := by
-  apply WP.spec_mono (table_set_effect memory hooks floats allocator exec store instanceIndex base index value table
+  apply WP.spec_mono (table_set_effect memory exec store instanceIndex base index value table
     inst address object position found mapped issued input indexBound valueBound)
   intro out effect
   split at effect

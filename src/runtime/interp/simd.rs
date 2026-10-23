@@ -1,19 +1,10 @@
 //! Portable Core 2.0 SIMD. Lane zero occupies the least significant bits.
-use super::super::{ExecError, FloatOps, Trap};
+use super::super::{ExecError, FloatOps};
 use super::float::{
     binary32, binary64, compare_float, promote, quiet32, quiet64, trunc_int, unary32, unary64,
 };
 use super::int::compare_int;
-
-fn vector(value: u128) -> u128 {
-    value
-}
-fn from_u32(value: u32) -> u128 {
-    value as u128
-}
-fn from_u64(value: u64) -> u128 {
-    value as u128
-}
+use super::memory::address;
 
 fn mask(width: u32) -> u128 {
     (1u128 << width) - 1
@@ -56,14 +47,6 @@ fn sat(x: i128, width: u32, is_signed: bool) -> u64 {
         x as u64
     }
 }
-fn range(memory: &[u8], address: u32, offset: u32, size: usize) -> Result<usize, ExecError> {
-    let start = address as u64 + offset as u64;
-    if start + size as u64 > memory.len() as u64 {
-        Err(ExecError::Trap(Trap::MemoryOutOfBounds))
-    } else {
-        Ok(start as usize)
-    }
-}
 fn read(memory: &[u8], start: usize, size: usize) -> u128 {
     let mut x = 0;
     let mut i = 0;
@@ -84,25 +67,23 @@ fn memory_op(
     op: u32,
     offset: u32,
     lane_index: u32,
-    x_in: u128,
-    y_in: u128,
+    x: u128,
+    y: u128,
     memory: &mut [u8],
 ) -> Result<u128, ExecError> {
+    let addr = x as u32;
     if op == 0x0b {
-        let value = y_in;
-        let address = x_in as u32;
-        let start = range(memory, address, offset, 16)?;
-        write(memory, start, 16, value);
+        let start = address(addr, offset, 16, memory.len())?;
+        write(memory, start, 16, y);
         return Ok(0);
     }
     if op >= 0x54 && op <= 0x5b {
         let width = 8 << ((op - 0x54) % 4);
         if lane_index >= 128 / width {
-            return Err(ExecError::BadArguments);
+            return Err(ExecError::Internal);
         }
-        let mut value = y_in;
-        let address = x_in as u32;
-        let start = range(memory, address, offset, (width / 8) as usize)?;
+        let mut value = y;
+        let start = address(addr, offset, (width / 8) as usize, memory.len())?;
         if op >= 0x58 {
             write(
                 memory,
@@ -121,16 +102,15 @@ fn memory_op(
         }
         return Ok(0);
     }
-    let address = x_in as u32;
     let size = match op {
         0 => 16,
         0x1 | 0x2 | 0x3 | 0x4 | 0x5 | 0x6 => 8,
         0x7 | 0x8 | 0x9 | 0xa => 1 << (op - 7),
         0x5c => 4,
         0x5d => 8,
-        _ => return Err(ExecError::BadArguments),
+        _ => return Err(ExecError::Internal),
     };
-    let start = range(memory, address, offset, size)?;
+    let start = address(addr, offset, size, memory.len())?;
     let value = read(memory, start, size);
     let result = match op {
         0 | 0x5c | 0x5d => value,
@@ -164,66 +144,64 @@ pub(super) fn simd<F: FloatOps>(
     offset: u32,
     lane_index: u32,
     bits: u128,
-    x_in: u128,
-    y_in: u128,
-    z_in: u128,
+    x: u128,
+    y: u128,
+    z: u128,
     memory: Option<&mut [u8]>,
 ) -> Result<u128, ExecError> {
     if op <= 0x0b || (op >= 0x54 && op <= 0x5d) {
         return match memory {
-            Some(bytes) => memory_op(op, offset, lane_index, x_in, y_in, bytes),
-            None => Err(ExecError::BadArguments),
+            Some(bytes) => memory_op(op, offset, lane_index, x, y, bytes),
+            None => Err(ExecError::Internal),
         };
     }
     let result = match op {
-        0x0c => vector(bits),
-        0x0d | 0x0e => shuffle_lanes(op, bits, x_in, y_in),
-        0xf | 0x10 | 0x11 | 0x12 | 0x13 | 0x14 => splat_lanes(op, x_in),
+        0x0c => bits,
+        0x0d | 0x0e => shuffle_lanes(op, bits, x, y),
+        0xf | 0x10 | 0x11 | 0x12 | 0x13 | 0x14 => splat_lanes(op, x),
         0x15 | 0x16 | 0x17 | 0x18 | 0x19 | 0x1a | 0x1b | 0x1c | 0x1d | 0x1e | 0x1f | 0x20
-        | 0x21 | 0x22 => return access_lane(op, lane_index, x_in, y_in),
+        | 0x21 | 0x22 => return access_lane(op, lane_index, x, y),
         0x23 | 0x24 | 0x25 | 0x26 | 0x27 | 0x28 | 0x29 | 0x2a | 0x2b | 0x2c | 0x2d | 0x2e
         | 0x2f | 0x30 | 0x31 | 0x32 | 0x33 | 0x34 | 0x35 | 0x36 | 0x37 | 0x38 | 0x39 | 0x3a
         | 0x3b | 0x3c | 0x3d | 0x3e | 0x3f | 0x40 | 0x41 | 0x42 | 0x43 | 0x44 | 0x45 | 0x46
         | 0x47 | 0x48 | 0x49 | 0x4a | 0x4b | 0x4c | 0xd6 | 0xd7 | 0xd8 | 0xd9 | 0xda | 0xdb => {
-            compare_lanes(op, x_in, y_in)
+            compare_lanes(op, x, y)
         }
-        0x4d => vector(!x_in),
-        0x4e | 0x4f | 0x50 | 0x51 => bitwise_lanes(op, x_in, y_in),
-        0x52 => select_bits(x_in, y_in, z_in),
-        0x53 => from_u32((x_in != 0) as u32),
+        0x4d => !x,
+        0x4e | 0x4f | 0x50 | 0x51 => bitwise_lanes(op, x, y),
+        0x52 => select_bits(x, y, z),
+        0x53 => (x != 0) as u128,
         0x5e | 0x5f | 0xf8 | 0xf9 | 0xfa | 0xfb | 0xfc | 0xfd | 0xfe | 0xff => {
-            return convert_lanes::<F>(op, x_in);
+            return convert_lanes::<F>(op, x);
         }
         0x67 | 0x68 | 0x69 | 0x6a | 0x74 | 0x75 | 0x7a | 0x94 | 0xe0 | 0xe1 | 0xe3 | 0xec
-        | 0xed | 0xef => float_unary_lanes::<F>(op, x_in),
+        | 0xed | 0xef => float_unary_lanes::<F>(op, x),
         0xe4 | 0xe5 | 0xe6 | 0xe7 | 0xe8 | 0xe9 | 0xea | 0xeb | 0xf0 | 0xf1 | 0xf2 | 0xf3
-        | 0xf4 | 0xf5 | 0xf6 | 0xf7 => float_binary_lanes::<F>(op, x_in, y_in),
+        | 0xf4 | 0xf5 | 0xf6 | 0xf7 => float_binary_lanes::<F>(op, x, y),
         0x60 | 0x61 | 0x62 | 0x63 | 0x64 | 0x80 | 0x81 | 0x83 | 0x84 | 0xa0 | 0xa1 | 0xa3
-        | 0xa4 | 0xc0 | 0xc1 | 0xc3 | 0xc4 => integer_unary_lanes(op, x_in),
-        0x65 | 0x66 | 0x85 | 0x86 => narrow_lanes(op, x_in, y_in),
-        0x7c | 0x7d | 0x7e | 0x7f => pairwise_add_lanes(op, x_in),
+        | 0xa4 | 0xc0 | 0xc1 | 0xc3 | 0xc4 => integer_unary_lanes(op, x),
+        0x65 | 0x66 | 0x85 | 0x86 => narrow_lanes(op, x, y),
+        0x7c | 0x7d | 0x7e | 0x7f => pairwise_add_lanes(op, x),
         0x87 | 0x88 | 0x89 | 0x8a | 0xa7 | 0xa8 | 0xa9 | 0xaa | 0xc7 | 0xc8 | 0xc9 | 0xca
         | 0x9c | 0x9d | 0x9e | 0x9f | 0xbc | 0xbd | 0xbe | 0xbf | 0xdc | 0xdd | 0xde | 0xdf => {
-            widen_lanes(op, x_in, y_in)
+            widen_lanes(op, x, y)
         }
         0x6b | 0x6c | 0x6d | 0x8b | 0x8c | 0x8d | 0xab | 0xac | 0xad | 0xcb | 0xcc | 0xcd => {
-            shift_lanes(op, x_in, y_in)
+            shift_lanes(op, x, y)
         }
-        0x82 | 0xba => multiply_lanes(op, x_in, y_in),
+        0x82 | 0xba => multiply_lanes(op, x, y),
         0x6e | 0x6f | 0x70 | 0x71 | 0x72 | 0x73 | 0x76 | 0x77 | 0x78 | 0x79 | 0x7b | 0x8e
         | 0x8f | 0x90 | 0x91 | 0x92 | 0x93 | 0x95 | 0x96 | 0x97 | 0x98 | 0x99 | 0x9b | 0xae
         | 0xb1 | 0xb5 | 0xb6 | 0xb7 | 0xb8 | 0xb9 | 0xce | 0xd1 | 0xd5 => {
-            integer_binary_lanes(op, x_in, y_in)
+            integer_binary_lanes(op, x, y)
         }
-        _ => return Err(ExecError::BadArguments),
+        _ => return Err(ExecError::Internal),
     };
     Ok(result)
 }
 
 #[inline(always)]
-fn shuffle_lanes(op: u32, bits: u128, x_in: u128, y_in: u128) -> u128 {
-    let y = y_in;
-    let x = x_in;
+fn shuffle_lanes(op: u32, bits: u128, x: u128, y: u128) -> u128 {
     let mut result = 0;
     let mut i = 0;
     while i < 16 {
@@ -238,59 +216,55 @@ fn shuffle_lanes(op: u32, bits: u128, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, 8, i, v);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn splat_lanes(op: u32, x_in: u128) -> u128 {
-    let (x, width) = match op {
-        0xf | 0x10 | 0x11 => (x_in as u32 as u64, 8 << (op - 0x0f)),
-        0x12 => (x_in as u64, 64),
-        0x13 => (x_in as u32 as u64, 32),
-        _ => (x_in as u64, 64),
+fn splat_lanes(op: u32, x: u128) -> u128 {
+    let (value, width) = match op {
+        0xf | 0x10 | 0x11 => (x as u32 as u64, 8 << (op - 0x0f)),
+        0x12 => (x as u64, 64),
+        0x13 => (x as u32 as u64, 32),
+        _ => (x as u64, 64),
     };
-    vector(splat(x, width))
+    splat(value, width)
 }
 
 #[inline(always)]
-fn access_lane(op: u32, lane_index: u32, x_in: u128, y_in: u128) -> Result<u128, ExecError> {
-    Ok({
-        let width = match op {
-            0x15 | 0x16 | 0x17 => 8,
-            0x18 | 0x19 | 0x1a => 16,
-            0x1b | 0x1c | 0x1f | 0x20 => 32,
-            _ => 64,
+fn access_lane(op: u32, lane_index: u32, x: u128, y: u128) -> Result<u128, ExecError> {
+    let width = match op {
+        0x15 | 0x16 | 0x17 => 8,
+        0x18 | 0x19 | 0x1a => 16,
+        0x1b | 0x1c | 0x1f | 0x20 => 32,
+        _ => 64,
+    };
+    if lane_index >= 128 / width {
+        return Err(ExecError::Internal);
+    }
+    if matches!(op, 0x17 | 0x1a | 0x1c | 0x1e | 0x20 | 0x22) {
+        let replacement = match op {
+            0x1e => y as u64,
+            0x20 => y as u32 as u64,
+            0x22 => y as u64,
+            _ => y as u32 as u64,
         };
-        if lane_index >= 128 / width {
-            return Err(ExecError::BadArguments);
-        }
-        if matches!(op, 0x17 | 0x1a | 0x1c | 0x1e | 0x20 | 0x22) {
-            let x = match op {
-                0x1e => y_in as u64,
-                0x20 => y_in as u32 as u64,
-                0x22 => y_in as u64,
-                _ => y_in as u32 as u64,
-            };
-            let mut v = x_in;
-            put(&mut v, width, lane_index, x);
-            vector(v)
-        } else {
-            let x = lane(x_in, width, lane_index);
-            match op {
-                0x15 | 0x18 => from_u32(signed(x, width) as u32),
-                0x1d => from_u64(x),
-                0x1f => from_u32(x as u32),
-                0x21 => from_u64(x),
-                _ => from_u32(x as u32),
-            }
-        }
-    })
+        let mut v = x;
+        put(&mut v, width, lane_index, replacement);
+        Ok(v)
+    } else {
+        let value = lane(x, width, lane_index);
+        Ok(match op {
+            0x15 | 0x18 => signed(value, width) as u32 as u128,
+            0x1d => value as u128,
+            0x1f => value as u32 as u128,
+            0x21 => value as u128,
+            _ => value as u32 as u128,
+        })
+    }
 }
 
 #[inline(always)]
-fn compare_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
-    let y = y_in;
-    let x = x_in;
+fn compare_lanes(op: u32, x: u128, y: u128) -> u128 {
     let (width, cmp, float) = match op {
         0x23 | 0x24 | 0x25 | 0x26 | 0x27 | 0x28 | 0x29 | 0x2a | 0x2b | 0x2c => {
             (8, op - 0x23, false)
@@ -331,66 +305,58 @@ fn compare_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         }
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn bitwise_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
-    let y = y_in;
-    let x = x_in;
-    vector(match op {
+fn bitwise_lanes(op: u32, x: u128, y: u128) -> u128 {
+    match op {
         0x4e => x & y,
         0x4f => x & !y,
         0x50 => x | y,
         _ => x ^ y,
-    })
+    }
 }
 
 #[inline(always)]
-fn select_bits(x_in: u128, y_in: u128, z_in: u128) -> u128 {
-    let c = z_in;
-    let y = y_in;
-    let x = x_in;
-    vector((x & c) | (y & !c))
+fn select_bits(x: u128, y: u128, c: u128) -> u128 {
+    (x & c) | (y & !c)
 }
 
 #[inline(always)]
-fn convert_lanes<F: FloatOps>(op: u32, x_in: u128) -> Result<u128, ExecError> {
-    Ok({
-        let x = x_in;
-        let mut result = 0;
-        let mut i = 0;
-        let count = if op == 0x5e || op == 0x5f || op >= 0xfc {
-            2
-        } else {
-            4
+fn convert_lanes<F: FloatOps>(op: u32, x: u128) -> Result<u128, ExecError> {
+    let mut result = 0;
+    let mut i = 0;
+    let count = if op == 0x5e || op == 0x5f || op >= 0xfc {
+        2
+    } else {
+        4
+    };
+    while i < count {
+        let (width, bits) = match op {
+            0x5e => (32, quiet32(F::f32_demote_f64(lane(x, 64, i))) as u64),
+            0x5f => (64, promote(lane(x, 32, i) as u32)),
+            0xf8 | 0xf9 => (32, trunc_int(lane(x, 32, i), true, 32, op == 0xf8, true)?),
+            0xfa => (
+                32,
+                quiet32(F::f32_convert_i32_s(lane(x, 32, i) as i32)) as u64,
+            ),
+            0xfb => (
+                32,
+                quiet32(F::f32_convert_i32_u(lane(x, 32, i) as u32)) as u64,
+            ),
+            0xfc | 0xfd => (32, trunc_int(lane(x, 64, i), false, 32, op == 0xfc, true)?),
+            0xfe => (64, quiet64(F::f64_convert_i32_s(lane(x, 32, i) as i32))),
+            _ => (64, quiet64(F::f64_convert_i32_u(lane(x, 32, i) as u32))),
         };
-        while i < count {
-            let (width, bits) = match op {
-                0x5e => (32, quiet32(F::f32_demote_f64(lane(x, 64, i))) as u64),
-                0x5f => (64, promote(lane(x, 32, i) as u32)),
-                0xf8 | 0xf9 => (32, trunc_int(lane(x, 32, i), true, 32, op == 0xf8, true)?),
-                0xfa => (
-                    32,
-                    quiet32(F::f32_convert_i32_s(lane(x, 32, i) as i32)) as u64,
-                ),
-                0xfb => (
-                    32,
-                    quiet32(F::f32_convert_i32_u(lane(x, 32, i) as u32)) as u64,
-                ),
-                0xfc | 0xfd => (32, trunc_int(lane(x, 64, i), false, 32, op == 0xfc, true)?),
-                0xfe => (64, quiet64(F::f64_convert_i32_s(lane(x, 32, i) as i32))),
-                _ => (64, quiet64(F::f64_convert_i32_u(lane(x, 32, i) as u32))),
-            };
-            put(&mut result, width, i, bits);
-            i += 1;
-        }
-        vector(result)
-    })
+        put(&mut result, width, i, bits);
+        i += 1;
+    }
+    Ok(result)
 }
 
 #[inline(always)]
-fn float_unary_lanes<F: FloatOps>(op: u32, x_in: u128) -> u128 {
+fn float_unary_lanes<F: FloatOps>(op: u32, x: u128) -> u128 {
     let (width, unary) = match op {
         0x67 | 0x68 | 0x69 | 0x6a => (32, op - 0x65),
         0x74 => (64, 2),
@@ -404,7 +370,6 @@ fn float_unary_lanes<F: FloatOps>(op: u32, x_in: u128) -> u128 {
         0xed => (64, 1),
         _ => (64, 6),
     };
-    let x = x_in;
     let mut result = 0;
     let mut i = 0;
     while i < 128 / width {
@@ -417,15 +382,13 @@ fn float_unary_lanes<F: FloatOps>(op: u32, x_in: u128) -> u128 {
         put(&mut result, width, i, b);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn float_binary_lanes<F: FloatOps>(op: u32, x_in: u128, y_in: u128) -> u128 {
+fn float_binary_lanes<F: FloatOps>(op: u32, x: u128, y: u128) -> u128 {
     let width = if op < 0xf0 { 32 } else { 64 };
     let bin = if width == 32 { op - 0xe4 } else { op - 0xf0 };
-    let y = y_in;
-    let x = x_in;
     let mut result = 0;
     let mut i = 0;
     while i < 128 / width {
@@ -449,14 +412,13 @@ fn float_binary_lanes<F: FloatOps>(op: u32, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, width, i, c);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn integer_unary_lanes(op: u32, x_in: u128) -> u128 {
+fn integer_unary_lanes(op: u32, x: u128) -> u128 {
     let width = 8 << ((op - 0x60) / 0x20);
     let action = op % 0x20;
-    let x = x_in;
     let mut result = 0;
     let mut all = true;
     let mut signs = 0;
@@ -482,20 +444,18 @@ fn integer_unary_lanes(op: u32, x_in: u128) -> u128 {
         i += 1;
     }
     if action == 3 {
-        from_u32(all as u32)
+        all as u128
     } else if action == 4 {
-        from_u32(signs)
+        signs as u128
     } else {
-        vector(result)
+        result
     }
 }
 
 #[inline(always)]
-fn narrow_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
+fn narrow_lanes(op: u32, x: u128, y: u128) -> u128 {
     let width = if op < 0x80 { 8 } else { 16 };
     let is_signed = op % 2 == 1;
-    let y = y_in;
-    let x = x_in;
     let mut result = 0;
     let mut i = 0;
     while i < 128 / width {
@@ -504,14 +464,13 @@ fn narrow_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, width, i, sat(a as i128, width, is_signed));
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn pairwise_add_lanes(op: u32, x_in: u128) -> u128 {
+fn pairwise_add_lanes(op: u32, x: u128) -> u128 {
     let width = if op < 0x7e { 8 } else { 16 };
     let is_signed = op % 2 == 0;
-    let x = x_in;
     let mut result = 0;
     let mut i = 0;
     while i < 64 / width {
@@ -525,18 +484,17 @@ fn pairwise_add_lanes(op: u32, x_in: u128) -> u128 {
         put(&mut result, width * 2, i, sum);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn widen_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
+fn widen_lanes(op: u32, x: u128, y: u128) -> u128 {
     let width = 8 << ((op - 0x80) / 0x20);
     let extmul = op % 0x20 >= 0x1c;
     let variant = op % 0x20 - if extmul { 0x1c } else { 7 };
     let high = variant % 2 == 1;
     let is_signed = variant < 2;
-    let y = if extmul { y_in } else { 0 };
-    let x = x_in;
+    let y = if extmul { y } else { 0 };
     let mut result = 0;
     let mut i = 0;
     while i < 64 / width {
@@ -557,14 +515,13 @@ fn widen_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, width * 2, i, product);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn shift_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
+fn shift_lanes(op: u32, x: u128, y: u128) -> u128 {
     let width = 8 << ((op - 0x60) / 0x20);
-    let shift = y_in as u32 % width;
-    let x = x_in;
+    let shift = y as u32 % width;
     let mut result = 0;
     let mut i = 0;
     while i < 128 / width {
@@ -577,13 +534,11 @@ fn shift_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, width, i, b);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn multiply_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
-    let y = y_in;
-    let x = x_in;
+fn multiply_lanes(op: u32, x: u128, y: u128) -> u128 {
     let mut result = 0;
     let mut i = 0;
     while i < if op == 0x82 { 8 } else { 4 } {
@@ -603,14 +558,12 @@ fn multiply_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         }
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[inline(always)]
-fn integer_binary_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
+fn integer_binary_lanes(op: u32, x: u128, y: u128) -> u128 {
     let width = 8 << ((op - 0x60) / 0x20);
-    let y = y_in;
-    let x = x_in;
     let mut result = 0;
     let mut i = 0;
     while i < 128 / width {
@@ -659,12 +612,13 @@ fn integer_binary_lanes(op: u32, x_in: u128, y_in: u128) -> u128 {
         put(&mut result, width, i, c);
         i += 1;
     }
-    vector(result)
+    result
 }
 
 #[cfg(all(test, not(charon)))]
 mod tests {
     use super::super::super::native::NativeFloat;
+    use super::super::super::Trap;
     use super::*;
     #[test]
     fn narrow_q15_and_dot_boundaries() {

@@ -48,23 +48,23 @@ def decodeWords (ty : Itasca.types.ValueType) (lo hi : U64) : val :=
   | .FuncRef => refVal (decodeRef .FuncRef lo)
   | .ExternRef => refVal (decodeRef .ExternRef lo)
 
-def decodeGlobal (g : runtime.store.GlobalInstance) : globalinst :=
+def decodeGlobal (g : runtime.store.GlobalInst) : globalinst :=
   ⟨.mk_globaltype (decodeMut g.ty.mutability) (Interp.sourceType g.ty.valtype),
     decodeWords g.ty.valtype g.lo g.hi⟩
 
-def decodeTable (t : runtime.store.Table) : tableinst :=
+def decodeTable (t : runtime.store.TableInst) : tableinst :=
   ⟨.mk_tabletype (decodeLimits t.elements.length t.maximum) (decodeElemType t.ty),
     t.elements.val.map (decodeRef t.ty)⟩
 
 def decodeBytes (bytes : List U8) : List byte := bytes.map fun b => .mk_byte b.val
 
-def decodeMemory {M : Type} (view : M → Slice U8) (m : runtime.store.Memory M) : meminst :=
+def decodeMemory {M : Type} (view : M → Slice U8) (m : runtime.store.MemInst M) : meminst :=
   ⟨.PAGE (decodeLimits ((view m.buf).length / 65536) m.maximum), decodeBytes (view m.buf).val⟩
 
-def decodeElement (e : runtime.store.ElemInstance) : eleminst :=
+def decodeElement (e : runtime.store.ElemInst) : eleminst :=
   ⟨decodeElemType e.ty, e.refs.val.map (decodeRef e.ty)⟩
 
-def decodeData (d : runtime.store.DataInstance) : datainst := ⟨decodeBytes d.bytes.val⟩
+def decodeData (d : runtime.store.DataInst) : datainst := ⟨decodeBytes d.bytes.val⟩
 
 def decodeNameChars : List U8 → List char
   | [] => []
@@ -88,22 +88,22 @@ def decodeNameChars : List U8 → List char
 
 def decodeName (bytes : List U8) : «name» := .mk_name (decodeNameChars bytes)
 
-def decodeExport (inst : runtime.store.Instance) (e : Itasca.module.Export) : exportinst :=
+def decodeExport (inst : runtime.store.ModuleInst) (e : Itasca.module.Export) : exportinst :=
   ⟨decodeName e.name.val, match e.desc with
     | .Func i => .FUNC ((inst.funcs.val.map fun a => a.index.val).getD i.val 0)
     | .Table i => .TABLE ((inst.tables.val.map fun a => a.index.val).getD i.val 0)
     | .Memory i => .MEM ((inst.memories.val.map fun a => a.index.val).getD i.val 0)
     | .Global i => .GLOBAL ((inst.globals.val.map fun a => a.index.val).getD i.val 0)⟩
 
-def decodeInstance {M : Type} (s : runtime.store.Store M) (inst : runtime.store.Instance) : moduleinst :=
+def decodeInstance {M : Type} (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) : moduleinst :=
   ⟨inst.types.val.map (fun i => (s.types.val.map decodeFuncType).getD i.val default),
     inst.funcs.val.map (fun a => a.index.val), inst.globals.val.map (fun a => a.index.val),
     inst.tables.val.map (fun a => a.index.val), inst.memories.val.map (fun a => a.index.val),
-    inst.elements.val.map UScalar.val, inst.data.val.map UScalar.val,
+    inst.elems.val.map UScalar.val, inst.datas.val.map UScalar.val,
     inst.module.module.env.exports.val.map (decodeExport inst)⟩
 
 def decodeFunction {M : Type} (code : CodeInterpretation) (s : runtime.store.Store M)
-    (f : runtime.store.Function) : funcinst :=
+    (f : runtime.store.FuncInst) : funcinst :=
   let ty := (s.types.val.map decodeFuncType).getD f.signature.val default
   match f.code with
   | .Host id => ⟨ty, default, .HOST id.val⟩
@@ -131,7 +131,7 @@ theorem decodeStore_lengths {M : Type} (view : M → Slice U8) (code : CodeInter
 component; function and module decoding do not depend on its opaque buffers. -/
 theorem decodeStore_memory_update {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (s : runtime.store.Store M)
-    (memories : alloc.vec.Vec (runtime.store.Memory M)) :
+    (memories : alloc.vec.Vec (runtime.store.MemInst M)) :
     decodeStore view code {s with memories := memories} =
       {decodeStore view code s with MEMS := memories.val.map (decodeMemory view)} := by
   rfl

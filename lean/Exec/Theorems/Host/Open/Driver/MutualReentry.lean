@@ -8,11 +8,11 @@ open Aeneas Aeneas.Std Exec.Interp Exec.Interp.OpenCall
 immediately calls an empty-signature host. No invocation outcome is assumed. -/
 structure EmptyReentry {M : Type} (store : runtime.store.Store M) where
   wasmIndex : Usize
-  wasmFunction : runtime.store.Function
+  wasmFunction : runtime.store.FuncInst
   signature : Itasca.types.FuncType
   instanceIndex : Usize
   functionIndex : Usize
-  inst : runtime.store.Instance
+  inst : runtime.store.ModuleInst
   compiled : runtime.bytecode.CompiledFunction
   wasmAt : store.funcs.val[wasmIndex.val]?=some wasmFunction
   wasmKind : wasmFunction.code=.Wasm instanceIndex functionIndex
@@ -27,7 +27,7 @@ structure EmptyReentry {M : Type} (store : runtime.store.Store M) where
   valueCapacity : compiled.slot_count.val≤store.limits.max_values.val
   hostIndex : U32
   hostAddress : runtime.FuncAddr
-  hostFunction : runtime.store.Function
+  hostFunction : runtime.store.FuncInst
   identity : U64
   hostSignature : Itasca.types.FuncType
   fetched : compiled.code.val[0]?=some (.Call hostIndex 0#u32)

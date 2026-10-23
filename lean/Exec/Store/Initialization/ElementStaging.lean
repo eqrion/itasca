@@ -13,13 +13,13 @@ theorem add_instance_element_staged {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (hprefix : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
     (bindings : InitializerBindings store inst)
-    (room : store.elems.length < Usize.max) (mapRoom : inst.elements.length < Usize.max) :
+    (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index
       ⦃ out => StagedPrefix before out.2.1 ∧ out.2.2 = platform ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_element
@@ -76,7 +76,7 @@ theorem add_instance_element_staged {M P F A : Type}
         have appended : StagedPrefix store { store with elems := elements } := by
           constructor <;> simp [helements]
         have staged := (hprefix.trans appended).set_fresh_instance instIndex
-          { inst with elements := addresses } fresh
+          { inst with elems := addresses } fresh
         have instanceRead : store.instances.val[instIndex.val] = inst :=
           Option.some.inj ((List.getElem?_eq_getElem instanceBound).symm.trans hi)
         simpa [hback, instanceRead] using And.intro staged (rfl : platform = platform)

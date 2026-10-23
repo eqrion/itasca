@@ -5,9 +5,9 @@ open Aeneas Aeneas.Std
 
 /-- The exact defined-function append, including its future instance identity
 and canonical type index. No execution property of its body is assumed. -/
-def FunctionStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.Instance)
+def FunctionStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (instanceIndex index signature : Usize)
-    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.Instance) : Prop :=
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst) : Prop :=
   (∃ error, out = (.Err error, store, inst)) ∨
   (∃ functions addresses,
     functions.val = store.funcs.val ++ [{signature, code := .Wasm instanceIndex index}] ∧
@@ -17,7 +17,7 @@ def FunctionStageEffect {M : Type} (store : runtime.store.Store M) (inst : runti
 
 theorem add_instance_function_effect {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex index : Usize)
     (objectBound : objectCount store ≤ Usize.max)
     (bound : index.val < inst.module.module.env.func_type_indices.val.length)
     (typeBound : inst.module.module.env.func_type_indices.val[index.val].val < inst.types.val.length)
@@ -59,7 +59,7 @@ theorem add_instance_function_effect {M A : Type} (memory : runtime.platform.Mem
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, FunctionStageEffect]
 
 theorem FunctionStageEffect.context {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     (bound : objectCount store ≤ Usize.max) :
     out.2.1 = {store with funcs := out.2.1.funcs} ∧
@@ -77,7 +77,7 @@ theorem FunctionStageEffect.context {M : Type} {store : runtime.store.Store M}
     · exact le_of_eq (by simpa using congrArg List.length mapped)
 
 theorem FunctionStageEffect.issued {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     (issued : ∀ address ∈ inst.funcs.val, address.index.val < store.funcs.length) :
     ∀ address ∈ out.2.2.funcs.val, address.index.val < out.2.1.funcs.length := by
@@ -94,7 +94,7 @@ theorem FunctionStageEffect.issued {M : Type} {store : runtime.store.Store M}
       simpa [count]
 
 theorem FunctionStageEffect.count {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance} {instanceIndex index signature out}
+    {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out) (success : out.1 = .Ok ()) :
     out.2.2.funcs.length = inst.funcs.length + 1 := by
   rcases effect with ⟨error, failed⟩ | ⟨functions, addresses, appended, mapped, capacity, output⟩

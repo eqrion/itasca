@@ -43,7 +43,7 @@ theorem define_table_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.define_table_with ops allocator s ty ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨
-      ∃ tables : alloc.vec.Vec runtime.store.Table, ∃ elements : alloc.vec.Vec U64,
+      ∃ tables : alloc.vec.Vec runtime.store.TableInst, ∃ elements : alloc.vec.Vec U64,
       ∃ count : Usize,
         elements.val = List.replicate ty.limits.min.val 0#u64 ∧
         tables.val = s.tables.val ++ [{elements, ty := ty.elem, maximum := ty.limits.max}] ∧
@@ -62,8 +62,7 @@ theorem define_table_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     step with check_limits_spec ty.limits core.num.U32.MAX as ⟨limits, hlimits⟩
     rw [hlimits]
     by_cases hfit : LimitsFit ty.limits core.num.U32.MAX
-    · simp [hfit, core.result.Result.Insts.CoreOpsTry.branch,
-        runtime.store.Store.impl.table_elements, lift]
+    · simp [hfit, core.result.Result.Insts.CoreOpsTry.branch, lift]
       step with within_spec s.table_elements (UScalar.cast .Usize ty.limits.min)
         s.limits.max_table_elements as ⟨fits, hfits⟩
       rw [hfits]

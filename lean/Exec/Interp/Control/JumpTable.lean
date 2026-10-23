@@ -4,12 +4,11 @@ open Aeneas Aeneas.Std
 
 /-- The extracted jump table performs exactly one unsigned selection and
 changes only the current frame's PC. The last table entry is the default. -/
-theorem jump_table_effect {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem jump_table_effect {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (frameIndex instanceIndex functionIndex base : Usize) (index start len : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (slot : U64) (target : U32)
     (frameBound : frameIndex.val < exec.frames.length)
     (slotLookup : exec.slots.val[base.val + index.val]? = some slot)
@@ -18,12 +17,12 @@ theorem jump_table_effect {M P F A : Type}
     (nonempty : 0 < len.val)
     (tableBound : start.val + (len.val - 1) ≤ U32.max)
     (targetLookup : compiled.jump_tables.val[start.val + Nat.min (UScalar.cast .U32 slot).val (len.val - 1)]? = some target) :
-    runtime.interp.admin_jump_table memory hooks floats allocator exec store frameIndex
+    runtime.interp.execute_jump_table memory exec store frameIndex
       instanceIndex functionIndex base index start len ⦃ out =>
       out.1 = .Ok () ∧ JumpEffect exec out.2.1 frameIndex.val target ∧ out.2.2 = store ⦄ := by
   have indexCast : (UScalar.cast .Usize index).val = index.val := by scalar_tac
   have slotBound := (List.getElem?_eq_some_iff.mp slotLookup).1
-  unfold runtime.interp.admin_jump_table
+  unfold runtime.interp.execute_jump_table
   step as ⟨position,positionEq⟩
   step as ⟨slotIndex,slotIndexEq⟩
   step with vec_index_given exec.slots slotIndex slot (by simpa only [slotIndexEq,positionEq,indexCast] using slotLookup) as ⟨actual,actualEq⟩
@@ -52,7 +51,7 @@ theorem dispatch_jumpTable_exact {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (index start len target : U32) (value : Nat)
     (frameLookup : exec.frames.val[frameIndex.val]? = some raw)
     (instanceLookup : store.instances.val[raw.instance.val]? = some inst)
@@ -73,7 +72,7 @@ theorem dispatch_jumpTable_exact {M P F A : Type}
   have slotLookup : exec.slots.val[raw.base.val+index.val]? = some exec.slots.val[raw.base.val+index.val]! := by
     simp only [List.getElem?_eq_getElem slotBound,_root_.getElem!_pos exec.slots.val (raw.base.val + index.val) slotBound]
   obtain ⟨out,run,success,effect,sameStore⟩ := WP.spec_imp_exists
-    (jump_table_effect memory hooks floats allocator exec store frameIndex raw.instance raw.function raw.base
+    (jump_table_effect memory exec store frameIndex raw.instance raw.function raw.base
       index start len inst compiled _ target frameBound slotLookup instanceLookup functionLookup nonempty tableBound
       (by simpa only [cast] using targetLookup))
   have exactState := effect.exact frameLookup
@@ -86,7 +85,7 @@ theorem step_jumpTable_exact {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (selector start len target : U32) (value : Nat)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

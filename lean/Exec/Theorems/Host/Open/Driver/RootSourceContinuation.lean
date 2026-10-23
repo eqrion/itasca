@@ -19,7 +19,7 @@ as internal direct/indirect sites, using the actual empty native call stack. -/
 theorem root_source_continuation {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (ready : runtime.interp.Execution) (empty : ready.frames.val=[])
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (identity : U64)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
     (signature : Itasca.types.FuncType) (functionAt : store.funcs.val[address.index.val]?=some function)
     (hostCode : function.code=.Host identity) (signatureAt : store.types.val[function.signature.val]?=some signature)
     (ambient : frame) (ambientWf : wf_frame ambient) (arguments : List val)

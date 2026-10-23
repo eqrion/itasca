@@ -19,7 +19,7 @@ theorem pairwise_loop (width i : U32) (signed : Bool) (x initial : U128)
       pairwiseWord width signed a b ⦃ value => R j (value.bv.setWidth (width.val*2)) ⦄)
     (position : i.val ≤ 64/width.val)
     (initializedPrefix : ∀ j, j < i.val → R j (laneBits (width.val*2) j initial.bv)) :
-    runtime.interp.simd.pairwise_add_lanes_loop width signed x initial i ⦃ result =>
+    runtime.interp.simd.pairwise_add_lanes_loop x width signed initial i ⦃ result =>
       ∀ j, j < 64/width.val → R j (laneBits (width.val*2) j result.bv) ⦄ := by
   unfold runtime.interp.simd.pairwise_add_lanes_loop
   apply loop.spec_decr_nat (fun p => 64/width.val-p.2.val)

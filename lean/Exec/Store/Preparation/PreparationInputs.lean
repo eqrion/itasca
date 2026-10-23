@@ -25,7 +25,7 @@ theorem cache_defined_type_bounds {module : runtime.compiler.ExecutableModule}
 defined function-map length. No extra vector-capacity premise is needed. -/
 theorem LinkedMaps.function_capacity {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule}
-    {inst : runtime.store.Instance}
+    {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories) :
     inst.funcs.length + module.module.env.func_type_indices.val.length ≤ Usize.max := by

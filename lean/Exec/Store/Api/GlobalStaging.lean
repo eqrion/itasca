@@ -5,7 +5,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 theorem StagedPrefix.set_fresh_instance {M : Type} {before after : runtime.store.Store M}
-    (hprefix : StagedPrefix before after) (index : Usize) (inst : runtime.store.Instance)
+    (hprefix : StagedPrefix before after) (index : Usize) (inst : runtime.store.ModuleInst)
     (fresh : before.instances.length ≤ index.val) :
     StagedPrefix before { after with instances := after.instances.set index inst } := by
   constructor
@@ -27,7 +27,7 @@ theorem add_instance_global_staged {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hprefix : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -51,7 +51,7 @@ theorem add_instance_global_staged {M P F A : Type}
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
     as ⟨found, hfound⟩
   subst found
-  step with eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+  step with eval_const_owned memory hooks floats allocator law store platform instIndex function
     inst code global.init global.gtype.valtype words hi hc compiled resolved bindings
     as ⟨evaluated, store', platform', hs, hp, hvalue⟩
   subst store' platform'

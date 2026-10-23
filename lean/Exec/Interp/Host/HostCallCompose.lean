@@ -11,7 +11,7 @@ theorem call_host_composition {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)

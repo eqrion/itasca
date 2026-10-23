@@ -2,10 +2,29 @@
 use super::{ExternAddr, FuncAddr, Value};
 use crate::ValueType;
 
+/// Returns the number of 64-bit slots occupied by a value of type `ty`.
 pub(crate) fn width(ty: ValueType) -> u32 {
     match ty {
         ValueType::V128 => 2,
         _ => 1,
+    }
+}
+/// Returns the total slot width of `types`, or `None` if it exceeds `usize::MAX`.
+pub(crate) fn type_slots(types: &[ValueType]) -> Option<usize> {
+    let mut slots = 0usize;
+    let mut i = 0;
+    let mut overflow = false;
+    while i < types.len() && !overflow {
+        match slots.checked_add(width(types[i]) as usize) {
+            Some(n) => slots = n,
+            None => overflow = true,
+        }
+        i += 1;
+    }
+    if overflow {
+        None
+    } else {
+        Some(slots)
     }
 }
 pub(crate) fn encode(value: Value) -> (u64, u64) {

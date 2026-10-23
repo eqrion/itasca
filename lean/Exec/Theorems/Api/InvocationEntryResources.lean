@@ -27,8 +27,8 @@ theorem CallCause.invocation_canonical {M P A : Type}
     {signature : Itasca.types.FuncType} {error : runtime.ExecError}
     (view : M → Slice U8) (code : Store.CodeInterpretation) (initial : config)
     (capacities : Store.FunctionCapacities code store) (typed : CoreFunctionsTyped view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (hf : store.funcs.val[address.index.val]?=some function) (hw : function.code=.Wasm instanceIndex functionIndex)
     (hi : store.instances.val[instanceIndex.val]?=some inst) (hc : inst.module.functions.val[functionIndex.val]?=some compiled)
     (empty : prepared.frames.val=[])

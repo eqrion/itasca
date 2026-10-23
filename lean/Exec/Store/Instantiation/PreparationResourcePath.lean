@@ -22,7 +22,7 @@ inductive PreparationResourcePath {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (imports : Slice runtime.Extern) (platform : P) :
-    PreparationPhase → runtime.store.Store M → runtime.store.Instance → Prop where
+    PreparationPhase → runtime.store.Store M → runtime.store.ModuleInst → Prop where
   | initial : PreparationResourcePath memory hooks floats allocator before module imports platform
       .initial before (emptyInstance module)
   | linked {inst} (run : runtime.store.instantiate.Store.instantiate_inner_loop2 memory before imports
@@ -77,7 +77,7 @@ def PreparationRefusal {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule) (platform : P)
-    (phase : PreparationPhase) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (phase : PreparationPhase) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (error : runtime.ExecError) : Prop :=
   match phase with
   | .initial =>
@@ -99,10 +99,10 @@ def PreparationRefusal {M P F A : Type}
   | .memories => error = .Exhausted .Allocation ∧ allocator.reserve store.instances 1#usize = .ok (false,store.instances)
   | .published => GlobalStagingCause memory hooks floats allocator store platform before.instances.len 0#usize error
   | .globals =>
-    (error = .Exhausted .Allocation ∧ allocator.reserve inst.elements inst.module.module.env.elements.len = .ok (false,inst.elements)) ∨
+    (error = .Exhausted .Allocation ∧ allocator.reserve inst.elems inst.module.module.env.elements.len = .ok (false,inst.elems)) ∨
     ElementStagingCause memory hooks floats allocator store platform before.instances.len 0#usize error
   | .elements =>
-    (error = .Exhausted .Allocation ∧ allocator.reserve inst.data inst.module.module.tail.data.len = .ok (false,inst.data)) ∨
+    (error = .Exhausted .Allocation ∧ allocator.reserve inst.datas inst.module.module.tail.data.len = .ok (false,inst.datas)) ∨
     DataStagingCause memory allocator store before.instances.len 0#usize error
   | .data => OffsetInitializerCause allocator store inst error
 

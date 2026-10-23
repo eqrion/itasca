@@ -27,7 +27,7 @@ theorem executable_world_loop_results
     {expected : List valtype}
     (initial : EventfulWorld Interp.Executable.emission Abs.ExecutableInstr M P view expected)
     (valid : ExecutableInv view initial.code initial.machine.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())
       ⦃ result => WorldLoopResult (ExecutableInv view) initial result ⦄div := by
   apply WP.dspec_mono (world_loop_results memory hooks floats allocator (ExecutableInv view)
     (world_step_outcomes Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws
@@ -54,7 +54,7 @@ theorem executable_world_loop_infinite
     {expected : List valtype}
     (initial : EventfulWorld Interp.Executable.emission Abs.ExecutableInstr M P view expected)
     (valid : ExecutableInv view initial.code initial.machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     Spec.InfiniteSourceWithEvents (Abs.decode initial.machine.source) :=
   world_loop_infinite memory hooks floats allocator (ExecutableInv view)
     (world_step_outcomes Abs.executable_language memory hooks floats allocator correct allocation interrupts view laws

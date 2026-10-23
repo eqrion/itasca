@@ -38,21 +38,21 @@ theorem SegmentAddressSpace.trans {M : Type} {a b c : runtime.store.Store M}
 /-- Issued indices required by the four emitted bulk instruction forms. Buffer
 range bounds are deliberately absent: their failure is an ordinary Wasm trap. -/
 inductive SegmentBulkReady {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) : runtime.bytecode.Instr → Prop where
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) : runtime.bytecode.Instr → Prop where
   | memory (data : U32) (address : Usize) (memory : runtime.MemoryAddr)
-      (mapped : inst.data.val[data.val]? = some address) (issued : address.val < store.datas.length)
+      (mapped : inst.datas.val[data.val]? = some address) (issued : address.val < store.datas.length)
       (mappedMemory : inst.memories.val[0]? = some memory) (issuedMemory : memory.index.val < store.memories.length) :
       SegmentBulkReady store inst code (.MemoryInit 0#u32 data)
   | table (entry element tableId : U32) (address : Usize) (table : runtime.TableAddr)
       (descriptor : code.indirect.val[entry.val]? = some (element, tableId))
-      (mapped : inst.elements.val[element.val]? = some address) (issued : address.val < store.elems.length)
+      (mapped : inst.elems.val[element.val]? = some address) (issued : address.val < store.elems.length)
       (mappedTable : inst.tables.val[tableId.val]? = some table) (issuedTable : table.index.val < store.tables.length) :
       SegmentBulkReady store inst code (.TableInit 0#u32 entry)
   | dataDrop (data : U32) (address : Usize)
-      (mapped : inst.data.val[data.val]? = some address) (issued : address.val < store.datas.length) :
+      (mapped : inst.datas.val[data.val]? = some address) (issued : address.val < store.datas.length) :
       SegmentBulkReady store inst code (.DataDrop data)
   | elementDrop (element : U32) (address : Usize)
-      (mapped : inst.elements.val[element.val]? = some address) (issued : address.val < store.elems.length) :
+      (mapped : inst.elems.val[element.val]? = some address) (issued : address.val < store.elems.length) :
       SegmentBulkReady store inst code (.ElemDrop element)
 
 theorem SegmentBulkReady.kind {M : Type} {store : runtime.store.Store M} {inst code instruction}
@@ -103,7 +103,7 @@ private theorem table_effect_metadata {M : Type} {store : runtime.store.Store M}
 theorem segment_bulk_total {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (instIndex function : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)

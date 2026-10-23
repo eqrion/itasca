@@ -60,7 +60,7 @@ theorem dispatch_jump_exact {M P F A : Type}
   have bound : index.val < exec.frames.length := List.getElem?_eq_some_iff.mp lookup |>.1
   simp only [runtime.interp.dispatch]
   obtain ⟨out, result, success, found, foundAt, frames, unchanged⟩ := WP.spec_imp_exists
-    (jump_effect memory hooks floats allocator exec index target bound)
+    (jump_effect exec index target bound)
   have same : found = raw := Option.some.inj (foundAt.symm.trans lookup)
   subst found
   have frameEq : out.2.frames = exec.frames.set index { raw with pc := target } :=
@@ -78,7 +78,7 @@ theorem step_jump_exact {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (target : U32)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -114,7 +114,7 @@ theorem step_pendingJump_certified {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (target : U32) (next : Nat) (output : List valtype) (source : Abs.AFrame)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

@@ -7,9 +7,9 @@ set_option maxHeartbeats 2000000
 theorem compiler_table_branch_growth {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
     after.function.code.val.length ≤ before.function.code.val.length + 2 := by
-  unfold runtime.compiler.FunctionCompiler.table_branch at accepted
+  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   repeat' growth_control_step accepted using ops, law
 
 theorem compiler_table_label_code {A : Type} (ops : runtime.platform.Alloc A)

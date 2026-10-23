@@ -1,4 +1,4 @@
-import Exec.Interp.Relations.Admin
+import Exec.Interp.Relations.Execute
 import Exec.Platform.Alloc
 
 /-! Slot storage growth returns normally under the allocator law. Its only

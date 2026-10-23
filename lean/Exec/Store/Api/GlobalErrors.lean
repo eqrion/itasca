@@ -10,7 +10,7 @@ theorem add_global_errors {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -23,12 +23,12 @@ theorem add_global_errors {M P F A : Type}
     (run : runtime.store.instantiate.Store.add_instance_global memory hooks floats allocator store platform instIndex index = .ok out) :
     ErrorAllowed ResourceError out.1 := by
   obtain ⟨evaluated, evalRun, sameStore, sameHost, success⟩ := WP.spec_imp_exists
-    (eval_const_exec_owned memory hooks floats allocator law store platform instIndex function
+    (eval_const_owned memory hooks floats allocator law store platform instIndex function
       inst code global.init global.gtype.valtype words hi hc compiled resolved bindings)
   rcases evaluated with ⟨value, after, host⟩
   dsimp only at sameStore sameHost success evalRun
   subst after host
-  have errors := eval_const_exec_errors memory hooks floats allocator law store platform instIndex function
+  have errors := eval_const_errors memory hooks floats allocator law store platform instIndex function
     inst code global.init global.gtype.valtype words hi hc compiled resolved
     (initializer_reference_bound resolved bindings)
   rw [evalRun] at errors

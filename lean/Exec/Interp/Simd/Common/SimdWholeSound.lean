@@ -10,13 +10,12 @@ open Aeneas Aeneas.Std
         value.val = if a.val ≠ 0 then 1 else 0 ⦄ := by
   unfold runtime.interp.simd.simd
   with_unfolding_all change
-    (Aeneas.Std.bind (lift (UScalar.cast_fromBool .U32 (a != 0#u128)))
-      (fun x => Aeneas.Std.bind (runtime.interp.simd.from_u32 x)
-        (fun result => Result.ok (core.result.Result.Ok result, memory)))) ⦃ _ ⦄
-  rw [lift, bind_ok, runtime.interp.simd.from_u32, bind_ok]
+    (Aeneas.Std.bind (lift (UScalar.cast_fromBool .U128 (a != 0#u128)))
+      (fun result => Result.ok (core.result.Result.Ok result, memory))) ⦃ _ ⦄
+  rw [lift, bind_ok]
   simp only [WP.spec_ok]
   refine ⟨_, rfl, ?_⟩
-  simp only [UScalar.cast_val_eq, UScalar.cast_fromBool_val_eq]
+  simp only [UScalar.cast_fromBool_val_eq]
   by_cases h : a.val = 0
   · have hz : a = 0#u128 := (UScalar.eq_equiv _ _).mpr h
     subst a

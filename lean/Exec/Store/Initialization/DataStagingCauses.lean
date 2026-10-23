@@ -23,7 +23,7 @@ theorem data_staging_resource_loop {M A : Type}
     (memory : runtime.platform.MemoryBuffer M) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (instIndex start : Usize)
-    (inst : runtime.store.Instance)
+    (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -31,7 +31,7 @@ theorem data_staging_resource_loop {M A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.tail.data.val.length)
     (storeCapacity : store.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max)
-    (mapCapacity : inst.data.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max) :
+    (mapCapacity : inst.datas.length + (inst.module.module.tail.data.val.length - start.val) ≤ Usize.max) :
     runtime.store.instantiate.Store.instantiate_inner_loop9 memory allocator store (.Ok ()) start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeStateParts after finalStatus ∧
@@ -48,7 +48,7 @@ theorem data_staging_resource_loop {M A : Type}
       ∃ currentInst, state.1.instances.val[instIndex.val]? = some currentInst ∧ currentInst.module = inst.module ∧
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
-        currentInst.data.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max ∧
+        currentInst.datas.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max ∧
         state.1.datas.length + (inst.module.module.tail.data.val.length - state.2.2.val) ≤ Usize.max)
   · rintro ⟨current, result, index⟩ ⟨trace, causes, hstaged, hobjects, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, hstoreCapacity⟩
@@ -70,7 +70,7 @@ theorem data_staging_resource_loop {M A : Type}
         cases unitValue
         simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
         have room : current.datas.length < Usize.max := by omega
-        have mapRoom : currentInst.data.length < Usize.max := by omega
+        have mapRoom : currentInst.datas.length < Usize.max := by omega
         have reached := trace rfl
         obtain ⟨⟨state,after⟩,called,effect⟩ := WP.spec_imp_exists
           (add_instance_data_stage_effect memory allocator law current instIndex index currentInst

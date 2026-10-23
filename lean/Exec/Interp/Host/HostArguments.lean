@@ -12,19 +12,19 @@ open Aeneas Aeneas.Std
     (bound : index.val ≤ values.length)
     (position : slot.val = base.val + Code.offset (values.map Code.valueType) index.val)
     (prior : results.val.map sourceValue = values.take index.val) :
-    runtime.interp.call_loop2 words results store types index slot ⦃ after =>
+    runtime.interp.call_loop0 words results store types index slot ⦃ after =>
       after.val.map sourceValue = values ⦄ := by
   have lengths : types.length = values.length := by
     have h := congrArg List.length typed
     simpa using h
-  unfold runtime.interp.call_loop2
+  unfold runtime.interp.call_loop0
   apply loop.spec_decr_nat (fun p => values.length - p.2.1.val)
     (fun p => p.2.1.val ≤ values.length ∧
       p.2.2.val = base.val + Code.offset (values.map Code.valueType) p.2.1.val ∧
       p.1.val.map sourceValue = values.take p.2.1.val)
   · rintro ⟨current, i, offset⟩ ⟨hi, hoffset, hprior⟩
     dsimp only at hi hoffset hprior
-    unfold runtime.interp.call_loop2.body
+    unfold runtime.interp.call_loop0.body
     dsimp only
     split
     · have hib : i.val < values.length := by scalar_tac
@@ -80,7 +80,7 @@ open Aeneas Aeneas.Std
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt words.val base.val values) :
-    runtime.interp.call_loop2 words results store types 0#usize base ⦃ after =>
+    runtime.interp.call_loop0 words results store types 0#usize base ⦃ after =>
       after.val.map sourceValue = values ⦄ := by
   apply host_arguments_loop words store base results 0#usize base types values typed wellFormed fits represented
   · simp

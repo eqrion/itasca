@@ -10,7 +10,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem step_const32_certified
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (next : Nat) (output : List valtype) (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (value : U32)
     (last : frameIndex.val + 1 = exec.frames.length)
@@ -49,7 +49,7 @@ theorem step_const32_certified
 theorem step_const64_certified
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (next : Nat) (output : List valtype) (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (value : U64)
     (last : frameIndex.val + 1 = exec.frames.length)

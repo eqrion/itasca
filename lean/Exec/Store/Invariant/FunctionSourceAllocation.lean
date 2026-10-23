@@ -5,10 +5,10 @@ open Aeneas Aeneas.Std
 /-- Exact source-ordinal allocation and the installed body interpretation give
 all newly allocated source function instances, in declaration order. -/
 theorem FunctionPayload.source_list {M : Type} {before after : runtime.store.Store M}
-    {seed : runtime.store.Instance} {instanceIndex : Usize}
+    {seed : runtime.store.ModuleInst} {instanceIndex : Usize}
     (sources : List func)
     (payload : FunctionPayload before after seed instanceIndex sources.length)
-    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (types : inst.types = seed.types)
     (typeIndices : List.Forall₂ (fun index source => index.val = Spec.allocationFunctionIndex source)

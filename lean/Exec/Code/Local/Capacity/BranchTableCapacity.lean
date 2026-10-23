@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_table_branch_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]?=some depth)
-    (accepted : runtime.compiler.FunctionCompiler.table_branch ops before index=.ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index=.ok (.Ok (),after)) :
     capacityMetadata after=capacityMetadata before := by
   obtain ⟨target,budget,table,_,_,called⟩ := compiler_table_branch_success ops law before after index depth lookup accepted
   exact compiler_branch_capacity ops law {before with budget,function:={before.function with jump_tables:=table}}
@@ -24,7 +24,7 @@ theorem TableBranchRun.capacity {A : Type} {ops : runtime.platform.Alloc A}
 
 theorem compiler_lower_table_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
     capacityMetadata after=capacityMetadata before := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after accepted
   have retained := run.capacity law

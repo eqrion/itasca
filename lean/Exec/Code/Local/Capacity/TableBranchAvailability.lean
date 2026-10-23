@@ -19,10 +19,10 @@ theorem compiler_table_branch_available {A : Type} (ops : runtime.platform.Alloc
     (tableReserve : compiler.function.jump_tables.length+1 ≤ bound)
     (fixupsCapacity : frame.fixups.length < Usize.max)
     (fixupsReserve : frame.fixups.length+1 ≤ bound) :
-    runtime.compiler.FunctionCompiler.table_branch ops compiler index ⦃ out =>
+    runtime.compiler.control.FunctionCompiler.table_branch ops compiler index ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.table_branch
+  unfold runtime.compiler.control.FunctionCompiler.table_branch
   step with compiler_pc_available ops compiler (by have room := capacity.pc; omega)
     as ⟨status,current,same,pc,accepted,_⟩
   subst current

@@ -19,7 +19,7 @@ theorem FrameStoreMetadata.trans {M : Type} {a b c : runtime.store.Store M}
     second.types.trans first.types,second.instances.trans first.instances⟩
 
 theorem FrameStoreMetadata.decodeInstance {M : Type} {before after : runtime.store.Store M}
-    (metadata : FrameStoreMetadata before after) (inst : runtime.store.Instance) :
+    (metadata : FrameStoreMetadata before after) (inst : runtime.store.ModuleInst) :
     Store.decodeInstance after inst = Store.decodeInstance before inst := by
   simp only [Store.decodeInstance, metadata.types]
 

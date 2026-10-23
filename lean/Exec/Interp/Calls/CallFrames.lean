@@ -47,9 +47,9 @@ theorem CallEntryEffect.caller_values
 /-- Exact retained metadata for the newly pushed callee. -/
 theorem CallEntryEffect.callee_binding {M : Type}
     (store : runtime.store.Store M) (before after : runtime.interp.Execution)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex base : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (args defaults : List val) (body : List instr)
     (effect : CallEntryEffect before after instanceIndex functionIndex base compiled)
     (identity : before.store = store.id)

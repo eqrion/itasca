@@ -6,8 +6,8 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 theorem stateful_memory_growth {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (address : runtime.MemoryAddr)
-    (object : runtime.store.Memory M) (delta : U32) (out : U32 × runtime.store.Store M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.MemoryAddr)
+    (object : runtime.store.MemInst M) (delta : U32) (out : U32 × runtime.store.Store M)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
     (shape : MemoryShape view object) (sourceStore : state.store = decodeStore view code store)
@@ -46,13 +46,12 @@ theorem stateful_memory_growth {M : Type} (view : M → Slice U8) (code : CodeIn
     simp only [Abs.Stateful.evaluate,Abs.Stateful.memoryGrow,values,Abs.pop_append,sourceMapped,sourceFound,decoded]
     simp only [decodeMemory,decodeBytes,List.length_map]
 
-theorem stateful_memory_grow_effect {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem stateful_memory_grow_effect {M : Type}
+    (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.Instance)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (amount : U64)
+    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (amount : U64)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
@@ -60,7 +59,7 @@ theorem stateful_memory_grow_effect {M P F A : Type}
     (shapes : ∀ object ∈ store.memories.val, MemoryShape view object)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
     (values : f.vals = front++[Abs.integerVal .I32 (UScalar.cast .U32 amount).val]) :
-    runtime.interp.admin_memory_grow memory hooks floats allocator exec store instanceIndex base dst ⦃ out =>
+    runtime.interp.execute_memory_grow memory exec store instanceIndex base dst ⦃ out =>
       out.1 = .Ok () ∧ FrameStoreMetadata store out.2.2 ∧ ∃ result : U32,
         SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 result)) ∧
         MemoryGrowth view code store address.index (UScalar.cast .U32 amount) (result,out.2.2) ∧
@@ -70,7 +69,7 @@ theorem stateful_memory_grow_effect {M P F A : Type}
   have primitive := memory_grow_effect memory view laws code store address.index (UScalar.cast .U32 amount)
     (List.getElem?_eq_some_iff.mp issued).1
     (fun object member => (shapes object member).length_bound) (fun object member => (shapes object member).1)
-  apply WP.spec_mono (memory_grow_handler memory hooks floats allocator exec store instanceIndex base dst inst address amount
+  apply WP.spec_mono (memory_grow_handler memory exec store instanceIndex base dst inst address amount
     found mapped amountSlot _ primitive)
   rintro out ⟨result,success,growth,slots⟩
   obtain ⟨metadata,transition⟩ := stateful_memory_growth view code store inst address object (UScalar.cast .U32 amount)

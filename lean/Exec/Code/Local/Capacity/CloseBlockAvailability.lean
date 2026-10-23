@@ -46,7 +46,7 @@ theorem compiler_close_block_available {A : Type} (ops : runtime.platform.Alloc 
   step as ⟨map, back, hmap, hback⟩
   step as ⟨pcword, hpcword⟩
   step as ⟨coordinate, hcoordinate⟩
-  simp only [kind,runtime.compiler.control.is_then,bind_ok,Bool.false_eq_true,ite_false]
+  simp only [kind,bind_ok,Bool.false_eq_true,ite_false]
   split <;> try simp only [bind_ok,Bool.false_eq_true,ite_false]
   all_goals try (split <;> simp only [bind_ok,Bool.false_eq_true,ite_false])
   all_goals

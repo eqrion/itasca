@@ -52,7 +52,7 @@ theorem uniform_world_continuing_history {M P F A : Type}
       have active : 0 < initial.machine.exec.frames.length := by
         by_contra inactive
         have empty : ¬initial.machine.exec.frames.len > 0#usize := by scalar_tac
-        simp [executionBody,runtime.interp.invoke_with_loop2.body,empty] at bodyStep
+        simp [executionBody,runtime.interp.invoke_with_loop1.body,empty] at bodyStep
       obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,returned,outcome⟩ :=
         WP.spec_imp_exists (steps initial valid active)
       rw [executionBody_active memory hooks floats allocator _ ⟨active,rfl⟩,returned] at bodyStep
@@ -62,7 +62,7 @@ theorem uniform_world_continuing_history {M P F A : Type}
       | Err error =>
         cases tail with
         | nil => exact ⟨initial,0,[],.refl initial,Or.inr ⟨rfl,error,nextExec,nextStore,nextPlatform,returned,rfl⟩⟩
-        | next stopped _ => simp [executionBody,runtime.interp.invoke_with_loop2.body,core.result.Result.is_ok] at stopped
+        | next stopped _ => simp [executionBody,runtime.interp.invoke_with_loop1.body,core.result.Result.is_ok] at stopped
       | Ok value =>
         cases value
         obtain ⟨events,next,newValid,equal,edge⟩ := outcome rfl

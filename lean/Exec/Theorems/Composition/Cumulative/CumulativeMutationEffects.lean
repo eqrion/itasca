@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 theorem memory_mutation_cumulative {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
     (certified : CertifiedCumulativeStore view code before)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (issued : before.memories.val[address.index.val]? = some object)
     (mutation : Interp.MemoryMutation view before after address object) :
     CumulativeStoreMutation view code before after := by
@@ -55,7 +55,7 @@ theorem memory_mutation_cumulative {M : Type} (view : M → Slice U8)
 theorem table_mutation_cumulative {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (before after : runtime.store.Store M)
     (certified : CertifiedCumulativeStore view code before)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (replacement : U64)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
     (issued : before.tables.val[address.index.val]? = some object)
     (mutation : TableMutation before after address object replacement)
     (reference : ReferenceShape before object.ty replacement) :

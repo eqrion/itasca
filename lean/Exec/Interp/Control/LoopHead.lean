@@ -12,7 +12,7 @@ theorem dispatch_loopHead_eq {M P F A : Type}
     (hook : hooks.interrupt platform = .ok (decision, after)) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index
       raw.instance raw.function raw.base .LoopHead = .ok (interruptResult decision, exec, store, after) := by
-  simp only [runtime.interp.dispatch, runtime.interp.admin_loop_head,
+  simp only [runtime.interp.dispatch, runtime.interp.execute_loop_head,
     interrupt_eq memory hooks platform after decision hook, bind_ok]
   cases decision <;> simp [interruptResult, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, core.convert.FromSame]

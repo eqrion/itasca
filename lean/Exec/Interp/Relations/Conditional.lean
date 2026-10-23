@@ -39,7 +39,7 @@ theorem dispatch_jumpIfZero_exact {M P F A : Type}
   have zero : UScalar.cast .U32 exec.slots.val[raw.base.val + cond.val]! = 0#u32 ↔ value = 0 := by scalar_tac
   simp only [runtime.interp.dispatch]
   obtain ⟨out, result, success, effect⟩ := WP.spec_imp_exists
-    (jump_if_zero_effect memory hooks floats allocator exec index raw.base cond target frameBound slotBound)
+    (jump_if_zero_effect exec index raw.base cond target frameBound slotBound)
   simp only [zero] at effect
   have exactState : out.2 = (if value = 0 then { exec with frames := exec.frames.set index { raw with pc := target } } else exec) := by
     by_cases equal : value = 0
@@ -112,7 +112,7 @@ theorem dispatch_jumpIfNonZero_exact {M P F A : Type}
   have zero : UScalar.cast .U32 exec.slots.val[raw.base.val + cond.val]! = 0#u32 ↔ value = 0 := by scalar_tac
   simp only [runtime.interp.dispatch]
   obtain ⟨out, result, success, effect⟩ := WP.spec_imp_exists
-    (jump_if_non_zero_effect memory hooks floats allocator exec index raw.base cond target frameBound slotBound)
+    (jump_if_non_zero_effect exec index raw.base cond target frameBound slotBound)
   simp only [zero] at effect
   have exactState : out.2 = (if value = 0 then exec else { exec with frames := exec.frames.set index { raw with pc := target } }) := by
     by_cases equal : value = 0

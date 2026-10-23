@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- Every defined function has a source-derived static frame requirement.
 Host functions impose no Wasm frame requirement. -/
 def FunctionCapacity {M : Type} (code : CodeInterpretation) (store : runtime.store.Store M)
-    (function : runtime.store.Function) : Prop :=
+    (function : runtime.store.FuncInst) : Prop :=
   ∀ instanceIndex functionIndex, function.code = .Wasm instanceIndex functionIndex →
     ∃ inst compiled typeIndex,
       store.instances.val[instanceIndex.val]? = some inst ∧

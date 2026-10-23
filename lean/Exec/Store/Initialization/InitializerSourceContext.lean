@@ -9,7 +9,7 @@ addresses as the staged runtime instance. Defined globals are not in the
 constant-expression typing context. -/
 structure InitializerSourceContext {M : Type} (sourceStore : _root_.store)
     (sourceInstance : moduleinst) (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   functions : sourceInstance.FUNCS = inst.funcs.val.map (fun address => address.index.val)
   globals : ∀ (index : U32) address global,
     index.val < inst.module.module.env.global_types.val.length →
@@ -36,7 +36,7 @@ theorem InitializerSourceContext.expression {M : Type} {sourceStore sourceInstan
 
 /-- Earlier source lookups are unchanged when only defined globals append. -/
 theorem InitializerSourceContext.extend {M : Type} {sourceStore sourceInstance}
-    {before after : runtime.store.Store M} {old next : runtime.store.Instance}
+    {before after : runtime.store.Store M} {old next : runtime.store.ModuleInst}
     (context : InitializerSourceContext sourceStore sourceInstance before old)
     (imports : InitializerImports before old)
     (source : next.module = old.module) (functions : next.funcs = old.funcs)
@@ -64,7 +64,7 @@ theorem InitializerSourceContext.extend {M : Type} {sourceStore sourceInstance}
 exactly the initial source frame's global namespace. -/
 theorem InitializerSourceContext.of_maps {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (before store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (sourceInstance : moduleinst)
+    (inst : runtime.store.ModuleInst) (sourceInstance : moduleinst)
     (functions : sourceInstance.FUNCS = inst.funcs.val.map (fun address => address.index.val))
     (addresses : sourceInstance.GLOBALS = inst.globals.val.map (fun address => address.index.val))
     (globals : store.globals = before.globals) :

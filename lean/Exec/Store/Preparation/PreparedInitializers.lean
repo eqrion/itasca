@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
 theorem LinkedMaps.table_start {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.Instance}
+    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories) :
     inst.tables.length ≤ module.module.env.table_types.val.length ∧
@@ -27,7 +27,7 @@ theorem LinkedMaps.table_start {M : Type} {view : M → Slice U8}
     exact (List.getElem?_eq_some_iff.mp issued).1
 
 theorem LinkedMaps.memory_start {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.Instance}
+    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories) :
     inst.memories.length ≤ module.module.env.mem_types.val.length ∧
@@ -47,7 +47,7 @@ theorem LinkedMaps.memory_start {M : Type} {view : M → Slice U8}
 
 /-- Source global definitions extend the exact linked imported prefix. -/
 theorem LinkedMaps.global_capacity {M : Type} {view : M → Slice U8}
-    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.Instance}
+    {store : runtime.store.Store M} {module : runtime.compiler.ExecutableModule} {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories) :
     inst.globals.length + module.module.env.globals.val.length ≤ Usize.max := by
@@ -61,7 +61,7 @@ theorem LinkedMaps.global_capacity {M : Type} {view : M → Slice U8}
 The hypotheses are exact map counts/lookups and preserved fields, rather than
 assumptions about evaluation or instantiation correctness. -/
 theorem prepared_initializer_bindings {M : Type} (view : M → Slice U8)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (shape : Shape view before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)

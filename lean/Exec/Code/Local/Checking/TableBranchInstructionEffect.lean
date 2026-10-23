@@ -16,7 +16,7 @@ theorem compiler_table_branch_instruction_effect {A : Type} (ops : runtime.platf
     (safe : TableLoopSafe before index.val limit) (limitFits : limit ≤ Usize.max)
     (transfers : TableTransferBounds before)
     (heightFits : before.height.val ≤ before.function.slot_count.val)
-    (called : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     InstructionAppendEffect before after := by
   obtain ⟨target,budget,table,_,appended,branch⟩ :=
     compiler_table_branch_success ops law before after index depth lookup called

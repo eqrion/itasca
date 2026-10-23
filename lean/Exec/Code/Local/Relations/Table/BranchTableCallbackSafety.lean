@@ -47,8 +47,8 @@ set_option maxRecDepth 4096
       | Ok unit =>
         cases unit
         simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-        step with compiler_clear_table_depths lowered.table_depths as ⟨cleared,_⟩
+        step with runtime_clear lowered.table_depths as ⟨cleared,_⟩
         exact compiler_observe_stack ops law {lowered with reachable := false,table_depths := cleared} state
-    · step with compiler_clear_table_depths labels as ⟨cleared,_⟩
+    · step with runtime_clear labels as ⟨cleared,_⟩
       exact compiler_observe_stack ops law {compiler with budget,table_depths := cleared} state
 end Exec.Code

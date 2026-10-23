@@ -45,7 +45,7 @@ theorem compiler_enter_if_available {A : Type} (ops : runtime.platform.Alloc A)
     (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height,hheight⟩
   have coordinate := scope.coordinate
   step as ⟨source,hsource⟩
-  simp only [runtime.compiler.control.is_then,runtime.compiler.control.is_loop,bind_ok,
+  simp only [bind_ok,
     live,Bool.false_eq_true,ite_false,ite_true]
   obtain ⟨condition,read,_⟩ := last_operand ops compiler front .I32 layout
   rw [read]

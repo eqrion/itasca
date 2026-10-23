@@ -8,7 +8,7 @@ theorem global_source_staging_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before store : runtime.store.Store M) (platform : P) (instIndex start : Usize)
-    (inst : runtime.store.Instance) (status : core.result.Result Unit runtime.ExecError)
+    (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : Code.InitializerMappings inst.module)
@@ -22,7 +22,7 @@ theorem global_source_staging_loop {M P F A : Type}
     (sourceStore : _root_.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (sourceContext : InitializerSourceContext sourceStore sourceInstance store inst)
-    (baseGlobals : List runtime.store.GlobalInstance)
+    (baseGlobals : List runtime.store.GlobalInst)
     (matching : status = .Ok () → ∃ produced,
       store.globals.val = baseGlobals ++ produced ∧
       GlobalSourceValues sourceStore sourceInstance
@@ -34,7 +34,7 @@ theorem global_source_staging_loop {M P F A : Type}
         InitializerFunctionMetadataAt store inst after instIndex ∧ ∃ next,
           after.instances.val[instIndex.val]? = some next ∧ next.module = inst.module ∧
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
-          after.elems = store.elems ∧ after.datas = store.datas ∧ next.elements = inst.elements ∧ next.data = inst.data ∧
+          after.elems = store.elems ∧ after.datas = store.datas ∧ next.elems = inst.elems ∧ next.datas = inst.datas ∧
           InitializerSourceContext sourceStore sourceInstance after next ∧
           (finalStatus = .Ok () → ∃ produced, after.globals.val = baseGlobals ++ produced ∧
             GlobalSourceValues sourceStore sourceInstance inst.module.module.env.globals.val produced) ⦄ := by
@@ -47,7 +47,7 @@ theorem global_source_staging_loop {M P F A : Type}
         InitializerBindings state.1 currentInst ∧ InitializerImports state.1 currentInst ∧
         InitializerSegmentBindings state.1 currentInst ∧
         currentInst.globals.length + (inst.module.module.env.globals.val.length - state.2.2.2.val) ≤ Usize.max ∧
-        state.1.elems = store.elems ∧ state.1.datas = store.datas ∧ currentInst.elements = inst.elements ∧ currentInst.data = inst.data ∧
+        state.1.elems = store.elems ∧ state.1.datas = store.datas ∧ currentInst.elems = inst.elems ∧ currentInst.datas = inst.datas ∧
         InitializerSourceContext sourceStore sourceInstance state.1 currentInst ∧
         (state.2.2.1 = .Ok () → ∃ produced, state.1.globals.val = baseGlobals ++ produced ∧
           GlobalSourceValues sourceStore sourceInstance

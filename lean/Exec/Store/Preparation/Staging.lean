@@ -87,7 +87,7 @@ theorem define_global_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M
 
 theorem add_instance_type_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (hbound : objectCount s ≤ Usize.max)
     (hi : i.val < inst.module.module.env.types.length)
     (hroom : inst.types.length < Usize.max) :
@@ -108,7 +108,7 @@ theorem add_instance_type_staged {M A : Type} (ops : runtime.platform.MemoryBuff
 
 theorem add_instance_table_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (hbound : objectCount s ≤ Usize.max)
     (hi : i.val < inst.module.module.env.table_types.length)
     (hroom : inst.tables.length < Usize.max) :
@@ -130,7 +130,7 @@ theorem add_instance_table_staged {M A : Type} (ops : runtime.platform.MemoryBuf
 theorem add_instance_memory_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
     (hbound : objectCount s ≤ Usize.max)
     (hi : i.val < inst.module.module.env.mem_types.length)
     (hroom : inst.memories.length < Usize.max) :
@@ -170,7 +170,7 @@ theorem add_instance_memory_staged {M A : Type} (ops : runtime.platform.MemoryBu
 requires only unchanged retained prefixes, not a false complete-store shape. -/
 theorem add_instance_function_staged {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex i : Usize)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex i : Usize)
     (hbound : objectCount s ≤ Usize.max)
     (hi : i.val < inst.module.module.env.func_type_indices.length)
     (htype : (inst.module.module.env.func_type_indices.val[i.val]).val < inst.types.length)

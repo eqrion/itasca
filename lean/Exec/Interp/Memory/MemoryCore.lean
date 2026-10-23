@@ -5,8 +5,8 @@ namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
  theorem core_load_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (memoryAddress : runtime.MemoryAddr)
-    (object : runtime.store.Memory M) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (memoryAddress : runtime.MemoryAddr)
+    (object : runtime.store.MemInst M) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (after : List instr) (front : List val) (bits : Nat) (op : Abs.Memory.Load) (argument : memarg) (offset : U32)
     (storeEq : s.store = Store.decodeStore view code store) (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
@@ -26,8 +26,8 @@ open Aeneas Aeneas.Std SpecExt
  theorem execute_load_core {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.Instance)
-    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
+    (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)

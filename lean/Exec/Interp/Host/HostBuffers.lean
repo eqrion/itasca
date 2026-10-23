@@ -1,17 +1,8 @@
-import Exec.Interp.Relations.InvocationSetup
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
 import Exec.Interp.Relations.Readback
 namespace Exec.Interp
 open Aeneas Aeneas.Std
-
-/-- The host scratch argument buffer is cleared by the actual extracted loop. -/
-@[step] theorem clear_host_arguments (values : alloc.vec.Vec runtime.Value) :
-    runtime.interp.call_loop0 values ⦃ after => after.val = [] ⦄ := by
-  exact clear_results values
-
-/-- The host scratch result buffer is cleared independently before each call. -/
-@[step] theorem clear_host_results (values : alloc.vec.Vec runtime.Value) :
-    runtime.interp.call_loop1 values ⦃ after => after.val = [] ⦄ := by
-  exact clear_results values
 
 def zeroValue : Itasca.types.ValueType → runtime.Value
   | .I32 => .I32 0#u32
@@ -36,13 +27,13 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
     (types : alloc.vec.Vec Itasca.types.ValueType) (index : Usize)
     (bound : index.val ≤ types.length)
     (prior : values.val = (types.val.take index.val).map zeroValue) :
-    runtime.interp.call_loop3 values types index ⦃ after => after.val = types.val.map zeroValue ⦄ := by
-  unfold runtime.interp.call_loop3
+    runtime.interp.call_loop1 values types index ⦃ after => after.val = types.val.map zeroValue ⦄ := by
+  unfold runtime.interp.call_loop1
   apply loop.spec_decr_nat (fun p => types.length - p.2.val)
     (fun p => p.2.val ≤ types.length ∧ p.1.val = (types.val.take p.2.val).map zeroValue)
   · rintro ⟨current, i⟩ ⟨hi, currentEq⟩
     dsimp only at hi currentEq ⊢
-    unfold runtime.interp.call_loop3.body
+    unfold runtime.interp.call_loop1.body
     dsimp only
     split
     · have inBounds : i.val < types.length := by scalar_tac
@@ -64,6 +55,6 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
 
 @[step] theorem host_results_defaults (values : alloc.vec.Vec runtime.Value)
     (types : alloc.vec.Vec Itasca.types.ValueType) (empty : values.val = []) :
-    runtime.interp.call_loop3 values types 0#usize ⦃ after => after.val = types.val.map zeroValue ⦄ := by
+    runtime.interp.call_loop1 values types 0#usize ⦃ after => after.val = types.val.map zeroValue ⦄ := by
   exact host_results_defaults_loop values types 0#usize (by simp) (by simpa using empty)
 end Exec.Interp

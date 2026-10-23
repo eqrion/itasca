@@ -97,6 +97,11 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
         self.observe(st)
     }
 
+    /// Lowers one non-structural operator identified by its `operators` tag.
+    ///
+    /// `a` and `b` carry index or memory immediates and `bits` carries
+    /// constant, shuffle, or lane bits. Operators that only move values between
+    /// slots or need no code return early; all others emit one instruction.
     pub(super) fn op(
         &mut self,
         st: &OpIterState,
@@ -108,64 +113,52 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
         if !self.reachable {
             return self.observe(st);
         }
-        match opcode {
-            0x00 => {
-                let instruction = Instr::Unreachable;
-                return self.finish_op(st, instruction);
-            }
+        let instruction = match opcode {
+            0x00 => Instr::Unreachable,
             0x01 | 0x1a => return self.observe(st),
             0x10 => {
-                let instruction = {
-                    let slots = self.func_param_slots[a as usize];
-                    let base = self
-                        .height
-                        .checked_sub(slots)
-                        .ok_or(VisitError::OutOfMemory)?;
-                    Instr::Call { func: a, base }
-                };
-                return self.finish_op(st, instruction);
+                let slots = self.func_param_slots[a as usize];
+                let base = self
+                    .height
+                    .checked_sub(slots)
+                    .ok_or(VisitError::OutOfMemory)?;
+                Instr::Call { func: a, base }
             }
             0x11 => {
-                let instruction = {
-                    let signature = self.signatures[a as usize];
-                    let base = self
-                        .height
-                        .checked_sub(
-                            signature
-                                .param_slots
-                                .checked_add(1)
-                                .ok_or(VisitError::OutOfMemory)?,
-                        )
-                        .ok_or(VisitError::OutOfMemory)?;
-                    let entry = self.pair(b, a)?;
-                    Instr::CallIndirect {
-                        entry,
-                        index: self.operand(1)?,
-                        base,
-                    }
-                };
-                return self.finish_op(st, instruction);
+                let signature = self.signatures[a as usize];
+                let base = self
+                    .height
+                    .checked_sub(
+                        signature
+                            .param_slots
+                            .checked_add(1)
+                            .ok_or(VisitError::OutOfMemory)?,
+                    )
+                    .ok_or(VisitError::OutOfMemory)?;
+                let entry = self.pair(b, a)?;
+                Instr::CallIndirect {
+                    entry,
+                    index: self.operand(1)?,
+                    base,
+                }
             }
             0x1b | 0x1c => {
-                let instruction = {
-                    let lhs = self.operand(3)?;
-                    let rhs = self.operand(2)?;
-                    let cond = self.operand(1)?;
-                    if rhs - lhs == 2 {
-                        Instr::Select2 {
-                            a: lhs,
-                            b: rhs,
-                            cond,
-                        }
-                    } else {
-                        Instr::Select {
-                            a: lhs,
-                            b: rhs,
-                            cond,
-                        }
+                let lhs = self.operand(3)?;
+                let rhs = self.operand(2)?;
+                let cond = self.operand(1)?;
+                if rhs - lhs == 2 {
+                    Instr::Select2 {
+                        a: lhs,
+                        b: rhs,
+                        cond,
                     }
-                };
-                return self.finish_op(st, instruction);
+                } else {
+                    Instr::Select {
+                        a: lhs,
+                        b: rhs,
+                        cond,
+                    }
+                }
             }
             0x20 => {
                 let src = self.local_offsets[a as usize];
@@ -181,86 +174,55 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
                 return self.observe(st);
             }
             0x23 => {
-                let instruction = {
-                    let wide = top_is_v128(&st.vals);
-                    if wide {
-                        Instr::GlobalGet2 {
-                            dst: self.height,
-                            global: a,
-                        }
-                    } else {
-                        Instr::GlobalGet {
-                            dst: self.height,
-                            global: a,
-                        }
+                if top_is_v128(&st.vals) {
+                    Instr::GlobalGet2 {
+                        dst: self.height,
+                        global: a,
                     }
-                };
-                return self.finish_op(st, instruction);
+                } else {
+                    Instr::GlobalGet {
+                        dst: self.height,
+                        global: a,
+                    }
+                }
             }
             0x24 => {
-                let instruction = {
-                    let src = self.operand(1)?;
-                    if self.height - src == 2 {
-                        Instr::GlobalSet2 { src, global: a }
-                    } else {
-                        Instr::GlobalSet { src, global: a }
-                    }
-                };
-                return self.finish_op(st, instruction);
+                let src = self.operand(1)?;
+                if self.height - src == 2 {
+                    Instr::GlobalSet2 { src, global: a }
+                } else {
+                    Instr::GlobalSet { src, global: a }
+                }
             }
-            0x25 => {
-                let instruction = Instr::TableGet {
-                    dst: self.operand(1)?,
-                    index: self.operand(1)?,
-                    table: a,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x26 => {
-                let instruction = Instr::TableSet {
-                    index: self.operand(2)?,
-                    value: self.operand(1)?,
-                    table: a,
-                };
-                return self.finish_op(st, instruction);
-            }
+            0x25 => Instr::TableGet {
+                dst: self.operand(1)?,
+                index: self.operand(1)?,
+                table: a,
+            },
+            0x26 => Instr::TableSet {
+                index: self.operand(2)?,
+                value: self.operand(1)?,
+                table: a,
+            },
             0x28 | 0x29 | 0x2a | 0x2b | 0x2c | 0x2d | 0x2e | 0x2f | 0x30 | 0x31 | 0x32 | 0x33
-            | 0x34 | 0x35 => {
-                let instruction = Instr::make_load(opcode, self.operand(1)?, self.operand(1)?, a)
-                    .ok_or(VisitError::OutOfMemory)?;
-                return self.finish_op(st, instruction);
-            }
+            | 0x34 | 0x35 => Instr::make_load(opcode, self.operand(1)?, self.operand(1)?, a)
+                .ok_or(VisitError::OutOfMemory)?,
             0x36 | 0x37 | 0x38 | 0x39 | 0x3a | 0x3b | 0x3c | 0x3d | 0x3e => {
-                let instruction = {
-                    Instr::make_store(opcode, self.operand(2)?, self.operand(1)?, a)
-                        .ok_or(VisitError::OutOfMemory)?
-                };
-                return self.finish_op(st, instruction);
+                Instr::make_store(opcode, self.operand(2)?, self.operand(1)?, a)
+                    .ok_or(VisitError::OutOfMemory)?
             }
-            0x3f => {
-                let instruction = Instr::MemorySize { dst: self.height };
-                return self.finish_op(st, instruction);
-            }
-            0x40 => {
-                let instruction = Instr::MemoryGrow {
-                    dst: self.operand(1)?,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x41 | 0x43 => {
-                let instruction = Instr::Const32 {
-                    dst: self.height,
-                    value: bits as u32,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x42 | 0x44 => {
-                let instruction = Instr::Const64 {
-                    dst: self.height,
-                    value: bits as u64,
-                };
-                return self.finish_op(st, instruction);
-            }
+            0x3f => Instr::MemorySize { dst: self.height },
+            0x40 => Instr::MemoryGrow {
+                dst: self.operand(1)?,
+            },
+            0x41 | 0x43 => Instr::Const32 {
+                dst: self.height,
+                value: bits as u32,
+            },
+            0x42 | 0x44 => Instr::Const64 {
+                dst: self.height,
+                value: bits as u64,
+            },
             0x45 | 0x46 | 0x47 | 0x48 | 0x49 | 0x4a | 0x4b | 0x4c | 0x4d | 0x4e | 0x4f | 0x50
             | 0x51 | 0x52 | 0x53 | 0x54 | 0x55 | 0x56 | 0x57 | 0x58 | 0x59 | 0x5a | 0x5b | 0x5c
             | 0x5d | 0x5e | 0x5f | 0x60 | 0x61 | 0x62 | 0x63 | 0x64 | 0x65 | 0x66 | 0x67 | 0x68
@@ -273,101 +235,58 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
             | 0xb1 | 0xb2 | 0xb3 | 0xb4 | 0xb5 | 0xb6 | 0xb7 | 0xb8 | 0xb9 | 0xba | 0xbb | 0xbc
             | 0xbd | 0xbe | 0xbf | 0xc0 | 0xc1 | 0xc2 | 0xc3 | 0xc4 | 0x100 | 0x101 | 0x102
             | 0x103 | 0x104 | 0x105 | 0x106 | 0x107 => {
-                let instruction = {
-                    let binary = scalar_binary(opcode);
-                    let depth = if binary { 2 } else { 1 };
-                    let x = self.operand(depth)?;
-                    let y = self.operand(1)?;
-                    Instr::make_scalar(opcode, x, x, y).ok_or(VisitError::OutOfMemory)?
-                };
-                return self.finish_op(st, instruction);
+                let depth = if scalar_binary(opcode) { 2 } else { 1 };
+                let x = self.operand(depth)?;
+                let y = self.operand(1)?;
+                Instr::make_scalar(opcode, x, x, y).ok_or(VisitError::OutOfMemory)?
             }
-            0xd0 => {
-                let instruction = Instr::RefNull { dst: self.height };
-                return self.finish_op(st, instruction);
-            }
-            0xd1 => {
-                let instruction = Instr::RefIsNull {
-                    dst: self.operand(1)?,
-                    a: self.operand(1)?,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0xd2 => {
-                let instruction = Instr::RefFunc {
-                    dst: self.height,
-                    func: a,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x108 => {
-                let instruction = Instr::MemoryInit {
-                    d: self.operand(3)?,
-                    data: a,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x109 => {
-                let instruction = Instr::DataDrop { data: a };
-                return self.finish_op(st, instruction);
-            }
-            0x10a => {
-                let instruction = Instr::MemoryCopy {
-                    d: self.operand(3)?,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x10b => {
-                let instruction = Instr::MemoryFill {
-                    d: self.operand(3)?,
-                };
-                return self.finish_op(st, instruction);
-            }
+            0xd0 => Instr::RefNull { dst: self.height },
+            0xd1 => Instr::RefIsNull {
+                dst: self.operand(1)?,
+                a: self.operand(1)?,
+            },
+            0xd2 => Instr::RefFunc {
+                dst: self.height,
+                func: a,
+            },
+            0x108 => Instr::MemoryInit {
+                d: self.operand(3)?,
+                data: a,
+            },
+            0x109 => Instr::DataDrop { data: a },
+            0x10a => Instr::MemoryCopy {
+                d: self.operand(3)?,
+            },
+            0x10b => Instr::MemoryFill {
+                d: self.operand(3)?,
+            },
             0x10c => {
-                let instruction = {
-                    let entry = self.pair(a, b)?;
-                    Instr::TableInit {
-                        d: self.operand(3)?,
-                        entry,
-                    }
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x10d => {
-                let instruction = Instr::ElemDrop { elem: a };
-                return self.finish_op(st, instruction);
-            }
-            0x10e => {
-                let instruction = {
-                    let entry = self.pair(a, b)?;
-                    Instr::TableCopy {
-                        d: self.operand(3)?,
-                        entry,
-                    }
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x10f => {
-                let instruction = Instr::TableGrow {
-                    dst: self.operand(2)?,
-                    table: a,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x110 => {
-                let instruction = Instr::TableSize {
-                    dst: self.height,
-                    table: a,
-                };
-                return self.finish_op(st, instruction);
-            }
-            0x111 => {
-                let instruction = Instr::TableFill {
+                let entry = self.pair(a, b)?;
+                Instr::TableInit {
                     d: self.operand(3)?,
-                    table: a,
-                };
-                return self.finish_op(st, instruction);
+                    entry,
+                }
             }
+            0x10d => Instr::ElemDrop { elem: a },
+            0x10e => {
+                let entry = self.pair(a, b)?;
+                Instr::TableCopy {
+                    d: self.operand(3)?,
+                    entry,
+                }
+            }
+            0x10f => Instr::TableGrow {
+                dst: self.operand(2)?,
+                table: a,
+            },
+            0x110 => Instr::TableSize {
+                dst: self.height,
+                table: a,
+            },
+            0x111 => Instr::TableFill {
+                d: self.operand(3)?,
+                table: a,
+            },
             0x200 | 0x201 | 0x202 | 0x203 | 0x204 | 0x205 | 0x206 | 0x207 | 0x208 | 0x209
             | 0x20a | 0x20b | 0x20c | 0x20d | 0x20e | 0x20f | 0x210 | 0x211 | 0x212 | 0x213
             | 0x214 | 0x215 | 0x216 | 0x217 | 0x218 | 0x219 | 0x21a | 0x21b | 0x21c | 0x21d
@@ -397,6 +316,7 @@ impl<A: Alloc> FunctionCompiler<'_, A> {
                 return self.simd_op(st, opcode, a, bits);
             }
             _ => return Err(VisitError::OutOfMemory),
-        }
+        };
+        self.finish_op(st, instruction)
     }
 }

@@ -19,7 +19,7 @@ theorem stateful_drop_dispatch {M P F A : Type} (memory : runtime.platform.Memor
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (op : Abs.Stateful.Instruction)
     (first second a b entry : U32) (isDrop : statefulIsDrop op=true)
@@ -45,7 +45,7 @@ theorem stateful_drop_dispatch {M P F A : Type} (memory : runtime.platform.Memor
     obtain ⟨address,mapped,issued⟩ := Stateful.element_binding_raw view code store inst C index _ bindings selected
     rw [←indexEq] at mapped
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
-      (segment_admin_bulk memory hooks floats allocator exec store raw.instance raw.function raw.base (.ElemDrop a) _
+      (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.ElemDrop a) _
         (stateful_element_drop_effect memory view code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots) inst a address
           state f rest after found mapped issued sourceStore moduleEq))
     have status := congrArg Prod.fst effect
@@ -61,7 +61,7 @@ theorem stateful_drop_dispatch {M P F A : Type} (memory : runtime.platform.Memor
     obtain ⟨address,mapped,issued⟩ := Stateful.data_binding_raw view code store inst C index _ bindings selected
     rw [←indexEq] at mapped
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
-      (segment_admin_bulk memory hooks floats allocator exec store raw.instance raw.function raw.base (.DataDrop a) _
+      (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.DataDrop a) _
         (stateful_data_drop_effect memory view code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots) inst a address
           state f rest after found mapped issued sourceStore moduleEq))
     have status := congrArg Prod.fst effect

@@ -16,8 +16,8 @@ theorem binary_lanes_eq (op : vvbinop) (a b : U128) :
       .ok ⟨Spec.Simd.binary op a.bv b.bv⟩ := by
   cases op <;> unfold runtime.interp.simd.bitwise_lanes binaryOpcode
   all_goals simp only [lift, bind_ok]
-  all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) runtime.interp.simd.vector = _)
-  all_goals rw [bind_ok]; rfl
+  all_goals with_unfolding_all change ((Result.ok _) = _)
+  all_goals rfl
 
 @[step] theorem binary_lanes (op : vvbinop) (a b : U128) :
     runtime.interp.simd.bitwise_lanes (binaryOpcode op) a b ⦃ result =>
@@ -28,7 +28,7 @@ theorem binary_lanes_eq (op : vvbinop) (a b : U128) :
 @[step] theorem select_bits (a b c : U128) :
     runtime.interp.simd.select_bits a b c ⦃ result =>
       result.bv = (a.bv &&& c.bv) ||| (b.bv &&& ~~~c.bv) ⦄ := by
-  simp only [runtime.interp.simd.select_bits, runtime.interp.simd.vector,
+  simp only [runtime.interp.simd.select_bits,
     lift, bind_ok, WP.spec_ok, UScalar.bv_and, UScalar.bv_or, UScalar.bv_not]
 
 theorem not_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
@@ -36,9 +36,9 @@ theorem not_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     runtime.interp.simd.simd floats 77#u32 offset laneIndex bits a b c memory =
       .ok (.Ok (~~~a), memory) := by
   unfold runtime.interp.simd.simd
-  with_unfolding_all change (Aeneas.Std.bind (lift (~~~a)) (fun x => Aeneas.Std.bind (runtime.interp.simd.vector x)
-      (fun result => Result.ok (core.result.Result.Ok result, memory))) = _)
-  rw [lift, bind_ok, runtime.interp.simd.vector, bind_ok]
+  with_unfolding_all change (Aeneas.Std.bind (lift (~~~a))
+      (fun result => Result.ok (core.result.Result.Ok result, memory)) = _)
+  rw [lift, bind_ok]
 
 theorem binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     (op : vvbinop) (offset laneIndex : U32) (bits a b c : U128)
@@ -83,10 +83,7 @@ theorem binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     runtime.interp.simd.simd floats 12#u32 offset laneIndex bits a b c memory
       ⦃ result => result = (.Ok bits, memory) ⦄ := by
   unfold runtime.interp.simd.simd
-  with_unfolding_all change
-    (Aeneas.Std.bind (runtime.interp.simd.vector bits)
-      (fun result => Result.ok (core.result.Result.Ok result, memory))) ⦃ _ ⦄
-  rw [runtime.interp.simd.vector, bind_ok]
+  with_unfolding_all change (Result.ok (core.result.Result.Ok bits, memory)) ⦃ _ ⦄
   simp only [WP.spec_ok]
 
 end Exec.Interp.Simd

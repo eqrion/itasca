@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} (compiledFunctions : CompiledFunctions emission code store)
     (view : M → Slice U8) (typed : CoreFunctionsTyped view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (instanceIndex functionIndex : Usize)
     (lookup : store.funcs.val[address.index.val]? = some function)
     (defined : function.code = .Wasm instanceIndex functionIndex) :

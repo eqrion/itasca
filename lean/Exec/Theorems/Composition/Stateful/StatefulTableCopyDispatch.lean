@@ -10,7 +10,7 @@ theorem stateful_table_copy_dispatch {M P F A : Type} (memory : runtime.platform
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (tableIndex sourceIndex : Nat) (first second a b entry : U32)
     (signature : Abs.Stateful.Signature C (.tableCopy tableIndex sourceIndex) input output)
@@ -48,7 +48,7 @@ theorem stateful_table_copy_dispatch {M P F A : Type} (memory : runtime.platform
         Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 source)).val,Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 count)).val] := by
       simpa [bulkWord] using values
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
-      (segment_admin_bulk memory hooks floats allocator exec store raw.instance raw.function raw.base (.TableCopy first entry) _
+      (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.TableCopy first entry) _
         (stateful_table_copy_effect memory view code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots)
           first entry a b inst compiled address sourceAddress object sourceObject (UScalar.cast .U64 destination) (UScalar.cast .U64 source) (UScalar.cast .U64 count)
           state f rest after front found functionFound pair sourceMapped sourceFound sameType mapped issued (by simpa [alloc.vec.Vec.deref] using destinationSlot) (by simpa [alloc.vec.Vec.deref] using sourceSlot) (by simpa [alloc.vec.Vec.deref] using countSlot) sourceStore moduleEq normalized))

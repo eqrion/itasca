@@ -19,7 +19,7 @@ theorem HostDefinitionEffect.intern {M : Type} {before after : runtime.store.Sto
 
 theorem HostDefinitionEffect.append {M : Type} {before after : runtime.store.Store M}
     (effect : HostDefinitionEffect before after) (signature : Usize) (identity : U64)
-    (functions : alloc.vec.Vec runtime.store.Function)
+    (functions : alloc.vec.Vec runtime.store.FuncInst)
     (appended : functions.val = after.funcs.val ++ [⟨signature,.Host identity⟩]) :
     HostDefinitionEffect before {after with funcs := functions} := by
   have added : StagedPrefix after {after with funcs := functions} := by

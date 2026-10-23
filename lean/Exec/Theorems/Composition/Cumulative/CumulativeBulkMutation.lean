@@ -72,14 +72,14 @@ theorem table_init_cumulative_mutation {M : Type} {view : M → Slice U8} {code 
   exact certified.shape.elements segment (List.mem_of_getElem? sourceFound) word member
 
 theorem data_drop_cumulative_mutation {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.DataInstance}
+    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.DataInst}
     (certified : CertifiedCumulativeStore view code store)
     (issued : store.datas.val[index.val]? = some object) :
     CumulativeStoreMutation view code store {store with datas := store.datas.set index ⟨alloc.vec.Vec.new U8⟩} :=
   segment_mutation_cumulative certified (.data_drop view store index object issued) (certified.shape.data_drop index)
 
 theorem element_drop_cumulative_mutation {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
-    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.ElemInstance}
+    {store : runtime.store.Store M} {index : Usize} {object : runtime.store.ElemInst}
     (certified : CertifiedCumulativeStore view code store)
     (issued : store.elems.val[index.val]? = some object) :
     CumulativeStoreMutation view code store {store with elems := store.elems.set index {object with refs := alloc.vec.Vec.new U64}} :=

@@ -13,11 +13,11 @@ theorem step_indirect_host_structured_world {M P F A : Type} {emission : Functio
     (certify : ∀ c s, Inv c s → CertifiedSupportedStore emission allowed view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
-    (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [IndirectProjection (emission compiled) compiled.indirect.val]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type : U32) (after : List instr)
-    (position : Nat) (sourceOperands : List val) (address : runtime.FuncAddr) (function : runtime.store.Function) (host : U64)
+    (position : Nat) (sourceOperands : List val) (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
     (positionSplit : f.vals=sourceOperands++[Abs.integerVal .I32 position])
     (selectedSource : Abs.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.index.val)
     (functionAt : store.funcs.val[address.index.val]?=some function) (hostCode : function.code=.Host host)

@@ -62,7 +62,7 @@ theorem eventful_loop_stops {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : EventfulStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected)
     (initial : EventfulMachine emission allowed M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => ∃state, EventfulLoopInvariant memory hooks floats allocator initial state ∧
         ¬ActiveExecution state ∧ finishExecution state=result ⦄div := by
   apply execution_loop_stops memory hooks floats allocator
@@ -135,7 +135,7 @@ theorem eventful_loop_results {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
     (steps : EventfulStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected)
     (initial : EventfulMachine emission allowed M P view code expected) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => EventfulLoopResult initial result ⦄div := by
   apply WP.dspec_mono (eventful_loop_stops memory hooks floats allocator steps initial)
   rintro result ⟨state,invariant,stopped,same⟩

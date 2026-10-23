@@ -10,7 +10,7 @@ theorem step_loop_stack {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

@@ -13,7 +13,7 @@ theorem instantiate_tail_float_core {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -28,7 +28,7 @@ theorem instantiate_tail_float_core {M P F A : Type}
         (∀ returned, out.1 = .Ok returned → returned = identity) ∧
         ∃ initialized status, Store.SegmentObjectMetadata view store initialized ∧
           out.2.1.elems = initialized.elems ∧ out.2.1.datas = initialized.datas ∧
-          runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+          runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
             .ok (status,initialized,platform) ∧ TailFloatCoreSourceResult view code inst initialized out.2.1 identity status out.1 ⦄div := by
   obtain ⟨initialized,status,initRun,certifiedAfter,extension,metadata,outcome⟩ :=
     instantiate_tail_float_core_cases memory hooks floats allocator view laws law store platform identity inst bytes profile limits

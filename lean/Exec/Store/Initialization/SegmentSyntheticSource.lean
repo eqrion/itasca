@@ -20,7 +20,7 @@ theorem segment_synthetic_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (ready : SegmentCodeReady store inst code code.slot_count.val)
@@ -30,11 +30,11 @@ theorem segment_synthetic_source {M P F A : Type}
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some value → value.ty.valtype = .I32)
     (shape : Shape view store) (sourceSyntax : StoreSyntax sourceCode store) (bounds : SegmentBounds store)
     (ambient : frame) (ambientWf : wf_frame ambient) (moduleEq : ambient.MODULE = decodeInstance store inst) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Code.segmentSource code code.code.val⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩, match out.1 with | .Ok _ => [] | .Err _ => [.TRAP]⟩ ⦄ := by
-  unfold runtime.interp.synthetic
+  unfold runtime.interp.run_synthetic
   step with vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
   subst actual
   step with vec_index_given inst.module.functions function code functionFound as ⟨actual, equal⟩

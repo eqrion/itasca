@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- Constant/segment staging changes only value and segment maps. The exact
 metadata used by retained function certificates remains unchanged. -/
 structure InitializerFunctionMetadata {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (after : runtime.store.Store M) (next : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) (after : runtime.store.Store M) (next : runtime.store.ModuleInst) : Prop where
   identity : after.id = store.id
   functions : after.funcs = store.funcs
   signatures : after.types = store.types
@@ -20,11 +20,11 @@ structure InitializerFunctionMetadata {M : Type} (store : runtime.store.Store M)
   instanceCount : after.instances.length = store.instances.length
 
 theorem InitializerFunctionMetadata.refl {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) : InitializerFunctionMetadata store inst store inst := by
+    (inst : runtime.store.ModuleInst) : InitializerFunctionMetadata store inst store inst := by
   constructor <;> rfl
 
 theorem InitializerFunctionMetadata.trans {M : Type} {a b c : runtime.store.Store M}
-    {i j k : runtime.store.Instance} (first : InitializerFunctionMetadata a i b j)
+    {i j k : runtime.store.ModuleInst} (first : InitializerFunctionMetadata a i b j)
     (second : InitializerFunctionMetadata b j c k) : InitializerFunctionMetadata a i c k := by
   exact ⟨second.identity.trans first.identity, second.functions.trans first.functions,
     second.signatures.trans first.signatures, second.source.trans first.source,
@@ -34,11 +34,11 @@ theorem InitializerFunctionMetadata.trans {M : Type} {a b c : runtime.store.Stor
     second.instanceCount.trans first.instanceCount⟩
 
 def InitializerFunctionMetadataAt {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (after : runtime.store.Store M) (index : Usize) : Prop :=
+    (inst : runtime.store.ModuleInst) (after : runtime.store.Store M) (index : Usize) : Prop :=
   ∃ next, after.instances.val[index.val]? = some next ∧ InitializerFunctionMetadata store inst after next
 
 theorem InitializerFunctionMetadataAt.resolve {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.Instance} {index : Usize}
+    {inst next : runtime.store.ModuleInst} {index : Usize}
     (metadata : InitializerFunctionMetadataAt store inst after index)
     (found : after.instances.val[index.val]? = some next) : InitializerFunctionMetadata store inst after next := by
   obtain ⟨actual, lookup, matching⟩ := metadata
@@ -46,7 +46,7 @@ theorem InitializerFunctionMetadataAt.resolve {M : Type} {store after : runtime.
   exact same ▸ matching
 
 theorem GlobalStageEffect.function_metadata {M : Type} {store after : runtime.store.Store M}
-    {index : Usize} {inst next : runtime.store.Instance}
+    {index : Usize} {inst next : runtime.store.ModuleInst}
     (effect : GlobalStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
     (nextFound : after.instances.val[index.val]? = some next) :
@@ -65,7 +65,7 @@ theorem GlobalStageEffect.function_metadata {M : Type} {store after : runtime.st
     simp [alloc.vec.Vec.length, alloc.vec.Vec.set_val_eq]
 
 theorem ElementStageEffect.function_metadata {M : Type} {store after : runtime.store.Store M}
-    {index : Usize} {inst next : runtime.store.Instance}
+    {index : Usize} {inst next : runtime.store.ModuleInst}
     (effect : ElementStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
     (nextFound : after.instances.val[index.val]? = some next) :
@@ -84,7 +84,7 @@ theorem ElementStageEffect.function_metadata {M : Type} {store after : runtime.s
     simp [alloc.vec.Vec.length, alloc.vec.Vec.set_val_eq]
 
 theorem DataStageEffect.function_metadata {M : Type} {store after : runtime.store.Store M}
-    {index : Usize} {inst next : runtime.store.Instance}
+    {index : Usize} {inst next : runtime.store.ModuleInst}
     (effect : DataStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
     (nextFound : after.instances.val[index.val]? = some next) :

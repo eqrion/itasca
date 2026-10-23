@@ -53,15 +53,15 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
     (hinstance : instanceIndex.val < s.instances.length)
     (hi : i.val < (s.instances.val[instanceIndex.val]).module.module.tail.data.length)
     (hroom : s.datas.length < Usize.max)
-    (hmaproom : (s.instances.val[instanceIndex.val]).data.length < Usize.max) :
+    (hmaproom : (s.instances.val[instanceIndex.val]).datas.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_data ops allocator s instanceIndex i ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨
-      ∃ bytes : alloc.vec.Vec U8, ∃ datas : alloc.vec.Vec runtime.store.DataInstance,
+      ∃ bytes : alloc.vec.Vec U8, ∃ datas : alloc.vec.Vec runtime.store.DataInst,
       ∃ addresses : alloc.vec.Vec Usize,
         bytes.val = (s.instances.val[instanceIndex.val]).module.module.tail.data.val[i.val].init.val ∧
         datas.val = s.datas.val ++ [⟨bytes⟩] ∧
-        addresses.val = (s.instances.val[instanceIndex.val]).data.val ++ [alloc.vec.Vec.len s.datas] ∧
-        result = (.Ok (), {s with datas := datas, instances := s.instances.set instanceIndex {(s.instances.val[instanceIndex.val]) with data := addresses}}) ⦄ := by
+        addresses.val = (s.instances.val[instanceIndex.val]).datas.val ++ [alloc.vec.Vec.len s.datas] ∧
+        result = (.Ok (), {s with datas := datas, instances := s.instances.set instanceIndex {(s.instances.val[instanceIndex.val]) with datas := addresses}}) ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_data
   step as ⟨inst, hinst⟩
   simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
@@ -82,7 +82,7 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
     · simp [core.result.Result.Insts.CoreOpsTry.branch]
       step as ⟨datas, hdatas⟩
       step as ⟨inst', back, hinst', hback⟩
-      have hm : inst'.data.length < Usize.max := by simpa [hinst'] using hmaproom
+      have hm : inst'.datas.length < Usize.max := by simpa [hinst'] using hmaproom
       step as ⟨addresses, haddresses⟩
       right
       refine ⟨bytes, ?_, datas, hdatas, addresses, ?_, ?_⟩
@@ -99,7 +99,7 @@ theorem add_instance_data_staged {M A : Type} (ops : runtime.platform.MemoryBuff
     (hinstance : instanceIndex.val < s.instances.length)
     (hi : i.val < (s.instances.val[instanceIndex.val]).module.module.tail.data.length)
     (hroom : s.datas.length < Usize.max)
-    (hmaproom : (s.instances.val[instanceIndex.val]).data.length < Usize.max) :
+    (hmaproom : (s.instances.val[instanceIndex.val]).datas.length < Usize.max) :
     runtime.store.instantiate.Store.add_instance_data ops allocator s instanceIndex i
       ⦃ _ after => StagedPrefix before after ⦄ := by
   apply WP.spec_mono (add_instance_data_effect ops allocator ha s instanceIndex i hinstance hi hroom hmaproom)

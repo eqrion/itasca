@@ -3,7 +3,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 def MemoryFillEffect {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (address : Usize) (memory : runtime.store.Memory M) (destination count : U64) (value : U8)
+    (address : Usize) (memory : runtime.store.MemInst M) (destination count : U64) (value : U8)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M) : Prop :=
   if destination.val+count.val ≤ (view memory.buf).length then
     ∃ buffer, out = (.Ok (),{store with memories := store.memories.set address {memory with buf := buffer}}) ∧
@@ -15,8 +15,8 @@ its complete destination range. -/
 theorem bulk_memory_fill {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (operand : U32) (inst : runtime.store.Instance) (address : runtime.MemoryAddr)
-    (memory : runtime.store.Memory M) (destination value count : U64)
+    (operand : U32) (inst : runtime.store.ModuleInst) (address : runtime.MemoryAddr)
+    (memory : runtime.store.MemInst M) (destination value count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address)
     (target : store.memories.val[address.index.val]? = some memory)

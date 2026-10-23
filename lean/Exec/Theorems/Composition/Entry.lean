@@ -46,9 +46,9 @@ theorem checked_arguments_typed {M : Type} (memory : runtime.platform.MemoryBuff
 /-- Concrete function, signature, and owning-instance lookups resolve the
 source function selected by the retained interpretation. -/
 theorem decoded_defined_lookup {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (store : runtime.store.Store M) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (sourceCode : funccode)
+    (inst : runtime.store.ModuleInst) (sourceCode : funccode)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
     (hw : function.code = .Wasm instanceIndex functionIndex)
@@ -68,9 +68,9 @@ theorem defined_entry_source {M : Type} (memory : runtime.platform.MemoryBuffer 
     (functions : Abs.FunctionsTyped (Store.decodeStore view code store))
     (slice : Abs.StoreSlice (Store.decodeStore view code store))
     (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (typeIndex : idx) (localTypes : List valtype) (body : List instr)
+    (inst : runtime.store.ModuleInst) (typeIndex : idx) (localTypes : List valtype) (body : List instr)
     (args : Slice runtime.Value)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
@@ -98,7 +98,7 @@ theorem defined_entry_source {M : Type} (memory : runtime.platform.MemoryBuffer 
 
 def EntryData {M : Type} (store : runtime.store.Store M) (after : runtime.interp.Execution)
     (address : runtime.FuncAddr) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (signature : Itasca.types.FuncType)
+    (inst : runtime.store.ModuleInst) (signature : Itasca.types.FuncType)
     (args defaults : List val) (body : List instr) : Prop :=
     let raw : runtime.interp.Frame := ⟨instanceIndex, functionIndex, 0#u32, 0#usize⟩
     let source : Abs.AFrame := ⟨address.index.val, signature.results.val.map Interp.sourceType,
@@ -113,9 +113,9 @@ binding and local-slot representation. The emitted-code certificate is attached
 separately by compiler correctness. -/
 theorem defined_entry_storage {M : Type}
     (store : runtime.store.Store M) (before after : runtime.interp.Execution)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (args defaults : List val) (localTypes : List valtype) (body : List instr)
     (effect : Interp.CallEntryEffect before after instanceIndex functionIndex 0#usize compiled)
     (empty : before.frames.val = []) (identity : before.store = store.id)
@@ -176,9 +176,9 @@ theorem call_defined_entry {M P F A : Type}
     (allocation : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (args : Slice runtime.Value) (defaults : List val) (localTypes : List valtype) (body : List instr)
     (empty : before.frames.val = []) (identity : before.store = store.id)
     (arguments : Interp.ValuesAt before.slots.val 0 (args.val.map Interp.sourceValue))

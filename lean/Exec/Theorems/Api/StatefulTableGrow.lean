@@ -6,8 +6,8 @@ namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 
 theorem stateful_table_growth {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (table : U32) (address : runtime.TableAddr)
-    (object : runtime.store.Table) (delta : U32) (reference : U64) (out : U32 × runtime.store.Store M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (table : U32) (address : runtime.TableAddr)
+    (object : runtime.store.TableInst) (delta : U32) (reference : U64) (out : U32 × runtime.store.Store M)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
@@ -52,13 +52,13 @@ theorem stateful_table_growth {M : Type} (view : M → Slice U8) (code : CodeInt
       decoded,Abs.Stateful.asReference_value]
     simp only [decodeTable,List.length_map]
 
-theorem stateful_table_grow_effect {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+theorem stateful_table_grow_effect {M A : Type}
+    (memory : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.Instance)
-    (address : runtime.TableAddr) (object : runtime.store.Table) (reference amount : U64)
+    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (reference amount : U64)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
@@ -67,7 +67,7 @@ theorem stateful_table_grow_effect {M P F A : Type}
     (sizes : ∀ object ∈ store.tables.val, object.elements.length ≤ U32.max)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
     (values : f.vals = front++[val_ref (decodeRef object.ty reference),Abs.integerVal .I32 (UScalar.cast .U32 amount).val]) :
-    runtime.interp.admin_table_grow memory hooks floats allocator exec store instanceIndex base dst table ⦃ out =>
+    runtime.interp.execute_table_grow memory allocator exec store instanceIndex base dst table ⦃ out =>
       out.1 = .Ok () ∧ FrameStoreMetadata store out.2.2 ∧ ∃ result : U32,
         SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 result)) ∧
         TableGrowth store address.index (UScalar.cast .U32 amount) reference (result,out.2.2) ∧
@@ -76,7 +76,7 @@ theorem stateful_table_grow_effect {M P F A : Type}
             {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} rest) ⦄ := by
   have primitive := table_grow_effect memory allocator allocation store address.index (UScalar.cast .U32 amount) reference
     (List.getElem?_eq_some_iff.mp issued).1 sizes
-  apply WP.spec_mono (table_grow_handler memory hooks floats allocator exec store instanceIndex base dst table inst address reference amount
+  apply WP.spec_mono (table_grow_handler memory allocator exec store instanceIndex base dst table inst address reference amount
     found mapped referenceSlot amountSlot _ primitive)
   rintro out ⟨result,success,growth,slots⟩
   obtain ⟨metadata,transition⟩ := stateful_table_growth view code store inst table address object (UScalar.cast .U32 amount) reference

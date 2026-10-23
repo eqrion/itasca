@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.Copy
 
-/-! Exact effects of the read-only administrative instructions used by retained
+/-! Exact effects of the read-only instruction handlers used by retained
 constant-initializer functions. Store lookups are explicit premises, independent
 of any execution-correctness certificate. -/
 namespace Exec.Interp
@@ -12,23 +12,23 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 @[step] theorem ref_null_effect (exec : runtime.interp.Execution)
     (base : Usize) (dst : U32) (hd : base.val + dst.val < exec.slots.length) :
-    runtime.interp.admin_ref_null memory hooks floats allocator exec base dst
+    runtime.interp.execute_ref_null exec base dst
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2
         (exec.slots.val.set (base.val + dst.val) 0#u64) ⦄ := by
-  unfold runtime.interp.admin_ref_null
+  unfold runtime.interp.execute_ref_null
   step* <;> simp_all [SlotsEffect]
 
 @[step] theorem global_get_effect (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (instIndex : Usize) (base : Usize) (dst global : U32)
-    (inst : runtime.store.Instance) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (inst : runtime.store.ModuleInst) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (ha : inst.globals.val[global.val]? = some addr)
     (hv : store.globals.val[addr.index.val]? = some value)
     (hd : base.val + dst.val < exec.slots.length) :
-    runtime.interp.admin_global_get memory hooks floats allocator exec store instIndex base dst global
+    runtime.interp.execute_global_get memory exec store instIndex base dst global
       ⦃ out => out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
         (exec.slots.val.set (base.val + dst.val) value.lo) ⦄ := by
-  unfold runtime.interp.admin_global_get
+  unfold runtime.interp.execute_global_get
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [lift, bind_ok]
@@ -40,15 +40,15 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 @[step] theorem global_get2_effect (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (instIndex : Usize) (base : Usize) (dst global : U32)
-    (inst : runtime.store.Instance) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+    (inst : runtime.store.ModuleInst) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (ha : inst.globals.val[global.val]? = some addr)
     (hv : store.globals.val[addr.index.val]? = some value)
     (hd : base.val + dst.val + 1 < exec.slots.length) :
-    runtime.interp.admin_global_get2 memory hooks floats allocator exec store instIndex base dst global
+    runtime.interp.execute_global_get2 memory exec store instIndex base dst global
       ⦃ out => out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
         ((exec.slots.val.set (base.val + dst.val) value.lo).set (base.val + dst.val + 1) value.hi) ⦄ := by
-  unfold runtime.interp.admin_global_get2
+  unfold runtime.interp.execute_global_get2
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [lift, bind_ok]
@@ -60,16 +60,16 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 @[step] theorem const_v128_effect (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (instIndex function base : Usize) (dst pool : U32)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) (value : U128)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) (value : U128)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (hv : code.v128_pool.val[pool.val]? = some value)
     (hd : base.val + dst.val + 1 < exec.slots.length) :
-    runtime.interp.admin_const_v128 memory hooks floats allocator exec store instIndex function base dst pool
+    runtime.interp.execute_const_v128 memory exec store instIndex function base dst pool
       ⦃ out => out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
         ((exec.slots.val.set (base.val + dst.val) (UScalar.cast .U64 value)).set
           (base.val + dst.val + 1) (UScalar.cast .U64 (⟨value.bv >>> 64⟩ : U128))) ⦄ := by
-  unfold runtime.interp.admin_const_v128
+  unfold runtime.interp.execute_const_v128
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   step with vec_index_given inst.module.functions function code hc as ⟨found, hfound⟩
@@ -84,16 +84,16 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 @[step] theorem ref_func_effect (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (instIndex base : Usize) (dst func : U32)
-    (inst : runtime.store.Instance) (addr : runtime.FuncAddr)
+    (inst : runtime.store.ModuleInst) (addr : runtime.FuncAddr)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (ha : inst.funcs.val[func.val]? = some addr)
     (href : addr.index.val < U64.max)
     (hd : base.val + dst.val < exec.slots.length) :
-    runtime.interp.admin_ref_func memory hooks floats allocator exec store instIndex base dst func
+    runtime.interp.execute_ref_func memory exec store instIndex base dst func
       ⦃ out => out.1 = .Ok () ∧ out.2.2 = store ∧ ∃ reference : U64,
         reference.val = addr.index.val + 1 ∧ SlotsEffect exec out.2.1
           (exec.slots.val.set (base.val + dst.val) reference) ⦄ := by
-  unfold runtime.interp.admin_ref_func
+  unfold runtime.interp.execute_ref_func
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [lift, bind_ok]
@@ -126,11 +126,11 @@ theorem copyWords_self (words : List U64) (src n : Nat) (h : src + n ≤ words.l
 
 @[step] theorem initializer_return_effect (exec : runtime.interp.Execution)
     (width : U32) (hwidth : width.val ≤ exec.slots.length) :
-    runtime.interp.admin_return memory hooks floats allocator exec 0#usize 0#u32 width
+    runtime.interp.execute_return exec 0#usize 0#u32 width
       ⦃ out => out.1 = .Ok () ∧ out.2.slots = exec.slots ∧
         out.2.frames.val = exec.frames.val.dropLast ∧
         { out.2 with frames := exec.frames } = exec ⦄ := by
-  apply WP.spec_mono (return_effect memory hooks floats allocator exec 0#usize 0#u32 width
+  apply WP.spec_mono (return_effect exec 0#usize 0#u32 width
     (by simpa using hwidth) (by scalar_tac))
   rintro out ⟨hok, hslots, hframes, hrest⟩
   have he : out.2.slots = exec.slots := by

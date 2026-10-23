@@ -142,12 +142,12 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem admin_const64_prefix (exec : runtime.interp.Execution) (base : Usize)
+theorem execute_const64_prefix (exec : runtime.interp.Execution) (base : Usize)
     (dst : U32) (value : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_const64 memory hooks floats allocator exec base dst value = .ok out) :
+    (returned : runtime.interp.execute_const64 exec base dst value = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_const64 at returned
+  unfold runtime.interp.execute_const64 at returned
   simp only [lift, bind_ok] at returned
   obtain ⟨pd, hpd, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨write, hwrite, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -158,12 +158,12 @@ theorem admin_const64_prefix (exec : runtime.interp.Execution) (base : Usize)
   have sum := add_observed base (UScalar.cast .Usize dst) pd hpd
   omega
 
-theorem admin_const32_prefix (exec : runtime.interp.Execution) (base : Usize)
+theorem execute_const32_prefix (exec : runtime.interp.Execution) (base : Usize)
     (dst : U32) (value : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_const32 memory hooks floats allocator exec base dst value = .ok out) :
+    (returned : runtime.interp.execute_const32 exec base dst value = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_const32 at returned
+  unfold runtime.interp.execute_const32 at returned
   simp only [lift, bind_ok] at returned
   obtain ⟨pd, hpd, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨write, hwrite, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -174,12 +174,12 @@ theorem admin_const32_prefix (exec : runtime.interp.Execution) (base : Usize)
   have sum := add_observed base (UScalar.cast .Usize dst) pd hpd
   omega
 
-theorem admin_copy_prefix (exec : runtime.interp.Execution) (base : Usize)
+theorem execute_copy_prefix (exec : runtime.interp.Execution) (base : Usize)
     (dst : U32) (value : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_copy memory hooks floats allocator exec base dst value = .ok out) :
+    (returned : runtime.interp.execute_copy exec base dst value = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_copy at returned
+  unfold runtime.interp.execute_copy at returned
   simp only [lift, bind_ok] at returned
   obtain ⟨ps, hps, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨source, hsource, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -192,12 +192,12 @@ theorem admin_copy_prefix (exec : runtime.interp.Execution) (base : Usize)
   have sum := add_observed base (UScalar.cast .Usize dst) pd hpd
   omega
 
-theorem admin_copy2_prefix (exec : runtime.interp.Execution) (base : Usize)
+theorem execute_copy2_prefix (exec : runtime.interp.Execution) (base : Usize)
     (dst src : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_copy2 memory hooks floats allocator exec base dst src = .ok out) :
+    (returned : runtime.interp.execute_copy2 exec base dst src = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_copy2 at returned
+  unfold runtime.interp.execute_copy2 at returned
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut] at returned
   obtain ⟨pd, hpd, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨ps, hps, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -211,12 +211,12 @@ theorem admin_copy2_prefix (exec : runtime.interp.Execution) (base : Usize)
   have sum := add_observed base (UScalar.cast .Usize dst) pd hpd
   omega
 
-theorem admin_copy_n_prefix (exec : runtime.interp.Execution) (base : Usize)
+theorem execute_copy_n_prefix (exec : runtime.interp.Execution) (base : Usize)
     (dst src count : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_copy_n memory hooks floats allocator exec base dst src count = .ok out) :
+    (returned : runtime.interp.execute_copy_n exec base dst src count = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_copy_n at returned
+  unfold runtime.interp.execute_copy_n at returned
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut] at returned
   obtain ⟨pd, hpd, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨ps, hps, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned

@@ -3,7 +3,7 @@ import Exec.Store.Invariant.SourceFloatCore
 namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 theorem InstantiationCode.source_float_core {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (raw : ModuleBinary.Module) (shape : Shape view before)
     (oldSlice : Abs.FloatCoreFunctions (decodeStore view oldCode before))

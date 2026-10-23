@@ -4,7 +4,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 def TableFillEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
-    (table : runtime.store.Table) (destination value count : U64)
+    (table : runtime.store.TableInst) (destination value count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M) : Prop :=
   if destination.val+count.val ≤ table.elements.length then
     ∃ words, out = (.Ok (),{store with tables := store.tables.set address {table with elements := words}}) ∧
@@ -15,8 +15,8 @@ def TableFillEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
 then fills the requested interval with the full reference word. -/
 theorem bulk_table_fill {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (operand tableId : U32) (inst : runtime.store.Instance) (address : runtime.TableAddr)
-    (table : runtime.store.Table) (destination value count : U64)
+    (operand tableId : U32) (inst : runtime.store.ModuleInst) (address : runtime.TableAddr)
+    (table : runtime.store.TableInst) (destination value count : U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (mapped : inst.tables.val[tableId.val]? = some address)
     (target : store.tables.val[address.index.val]? = some table)

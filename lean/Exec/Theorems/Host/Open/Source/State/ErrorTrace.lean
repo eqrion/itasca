@@ -39,5 +39,5 @@ theorem error_source_trace {H : Type} (model : Spec.OpenExecution.HostModel H)
   | Terminated=>
     obtain ⟨body,path⟩ := prefixSteps
     exact cutoff .interrupt rfl body path
-  | BadArguments | WrongStore | Link reason=>cases prefixSteps
+  | BadArguments | WrongStore | Internal | Link reason=>cases prefixSteps
 end Exec.Theorems.OpenReentrantControl

@@ -30,7 +30,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (op : Abs.Stateful.Instruction)
     (first second a b entry : U32)
@@ -54,7 +54,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     subst front
     let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
     have typeEq : decodeElemType rawType=type := by cases type <;> rfl
-    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (ref_null_slots memory hooks floats allocator exec raw first rawType state f rest after slots position capacity)
+    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (ref_null_slots exec raw first rawType state f rest after slots position capacity)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     refine ⟨rfl,rfl,Or.inl ⟨[.REF_NULL type],0#u64,effect.1,?_,effect.2.1,?_,?_⟩⟩
     · cases type <;> rfl
@@ -69,7 +69,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     obtain ⟨address,mapped,issued⟩ := function_binding_raw view code store inst C index type bindings selected
     rw [←indexEq] at mapped
     obtain ⟨out,run,success,same,word,wordEq,written,represented,transition⟩ := WP.spec_imp_exists
-      (ref_func_slots memory hooks floats allocator exec store raw first a inst address state f rest after found mapped issued slots position capacity moduleEq)
+      (ref_func_slots memory exec store raw first a inst address state f rest after found mapped issued slots position capacity moduleEq)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,Or.inl ⟨[.REF_FUNC_ADDR address.index.val],word,success,rfl,written,represented,by simpa only [indexEq] using transition⟩⟩
   case refIsNull type =>
@@ -80,7 +80,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
     have typeEq : decodeElemType rawType=type := by cases type <;> rfl
     obtain ⟨out,run,success,word,wordEq,written,represented,transition⟩ := WP.spec_imp_exists
-      (ref_is_null_value_slots memory hooks floats allocator exec raw first rawType state f rest after front reference slots values (by simpa only [typeEq] using valueType) position)
+      (ref_is_null_value_slots exec raw first rawType state f rest after front reference slots values (by simpa only [typeEq] using valueType) position)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨rfl,rfl,Or.inl ⟨[Abs.integerVal .I32 word.val],word,success,rfl,written,represented,transition⟩⟩
   case tableGet index type limits selected =>
@@ -94,7 +94,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     have indexEq : a.val=index := arguments.1
     rw [←indexEq] at mapped
     obtain ⟨out,run,effect⟩ := WP.spec_imp_exists
-      (table_get_slots memory hooks floats allocator view code exec store raw first a inst address object state f rest after front positionValue found mapped issued slots (by simpa only [bitsEq] using values) position sourceStore moduleEq)
+      (table_get_slots memory view code exec store raw first a inst address object state f rest after front positionValue found mapped issued slots (by simpa only [bitsEq] using values) position sourceStore moduleEq)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     split at effect
     · obtain ⟨success,same,written,represented,transition⟩ := effect
@@ -115,7 +115,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     obtain ⟨address,object,mapped,issued,objectType⟩ := table_binding_raw view code store inst C index type bindings selected
     rw [←indexEq] at mapped
     obtain ⟨out,run,success,same,written,represented,transition⟩ := WP.spec_imp_exists
-      (table_size_slots memory hooks floats allocator view code exec store raw first a inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
+      (table_size_slots memory view code exec store raw first a inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,Or.inl ⟨[Abs.integerVal .I32 object.elements.length],_,success,rfl,written,represented,by simpa only [indexEq] using transition⟩⟩
   case memorySize type selected =>
@@ -125,7 +125,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     subst front
     obtain ⟨address,object,mapped,issued⟩ := memory_binding_raw view code store inst C type bindings selected
     obtain ⟨out,run,success,same,pages,pagesEq,written,represented,transition⟩ := WP.spec_imp_exists
-      (memory_size_slots memory hooks floats allocator view laws code exec store raw first inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
+      (memory_size_slots memory view laws code exec store raw first inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,Or.inl ⟨[Abs.integerVal .I32 pages.val],_,success,rfl,written,represented,transition⟩⟩
 end Exec.Interp.Stateful

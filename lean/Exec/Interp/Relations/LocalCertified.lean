@@ -12,7 +12,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem step_localGet_certified
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (next : Nat) (output : List valtype) (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (index : U32) (value : val)
     (last : frameIndex.val + 1 = exec.frames.length)
@@ -53,7 +53,7 @@ theorem step_localGet_certified
 theorem step_localWrite_certified
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (next : Nat) (output : List valtype) (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (index : U32) (keep : Bool)
     (front : List val) (value old : val)

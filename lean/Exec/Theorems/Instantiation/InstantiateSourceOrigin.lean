@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca Store
 /-- The generated instantiation configuration at the actual publication
 cutpoint: source element/data initialization followed by the optional start. -/
 def sourceInstantiationConfiguration {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (raw : ModuleBinary.Module) : config :=
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (raw : ModuleBinary.Module) : config :=
   ⟨⟨decodeStore view code store, ⟨[], decodeInstance store inst⟩⟩,
     (Spec.Segment.elementPrograms (raw.elements.map ModuleElaboration.element)).flatten.map admininstr_instr ++
     ((Spec.Segment.dataPrograms (raw.data.map ModuleData.translate)).flatten.map admininstr_instr ++

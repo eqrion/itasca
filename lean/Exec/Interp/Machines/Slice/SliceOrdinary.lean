@@ -10,7 +10,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 
 theorem step_opcode_advance (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -45,7 +45,7 @@ theorem step_loop_advance {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -80,7 +80,7 @@ theorem step_loop_advance {M P F A : Type}
   · exact Or.inr terminated
 
 theorem step_forwardSkip_advance (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -111,7 +111,7 @@ theorem step_forwardSkip_advance (exec : runtime.interp.Execution) (store : runt
     nextStack typed slice ⟨rfl, rfl, rfl, rfl⟩ simulation (fun _ h => h) (fun _ h => h)⟩
 
 theorem step_pendingJump_advance (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (functions : List functype)
     (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

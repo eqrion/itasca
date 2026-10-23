@@ -18,7 +18,7 @@ theorem TableTargetsBuilt.fixup_budget {A}
 theorem compiler_lower_table_fixup_budget {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (budget : FixupBudget before.frames.val before.function.code.val.length)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     FixupBudget after.frames.val after.function.code.val.length := by
   obtain ⟨start,len,selector,emitted,targets,_,_,_,emission,built,_⟩ :=
     compiler_lower_table_production ops law before after accepted

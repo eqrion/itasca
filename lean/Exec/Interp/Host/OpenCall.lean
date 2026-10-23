@@ -43,9 +43,9 @@ def prepareCall
   | core.ops.control_flow.ControlFlow.Continue _ =>
     let f ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        _root_.Exec.runtime.store.Function) store.funcs func.index
+        _root_.Exec.runtime.store.FuncInst) store.funcs func.index
     match f.code with
-    | runtime.store.FunctionCode.Host id =>
+    | runtime.store.FuncCode.Host id =>
       let ty ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
           _root_.Itasca.types.FuncType) store.types f.signature
@@ -89,12 +89,12 @@ def prepareCall
                 let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
                 match cf5 with
                 | core.ops.control_flow.ControlFlow.Continue _ =>
-                  let v2 ← runtime.interp.call_loop0 v
-                  let v3 ← runtime.interp.call_loop1 v1
+                  let v2 ← runtime.clear v
+                  let v3 ← runtime.clear v1
                   let v4 ←
-                    runtime.interp.call_loop2 exec1.slots v2 store.id
+                    runtime.interp.call_loop0 exec1.slots v2 store.id
                       ty.params 0#usize base
-                  let v5 ← runtime.interp.call_loop3 v3 ty.results 0#usize
+                  let v5 ← runtime.interp.call_loop1 v3 ty.results 0#usize
                   let s2 := alloc.vec.Vec.deref v4
                   let (s3, deref_mut_back) ←
                     lift (alloc.vec.Vec.deref_mut v5)
@@ -129,7 +129,7 @@ def prepareCall
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
         ok (.done (r2, exec, store, platform1))
-    | runtime.store.FunctionCode.Wasm «instance» function =>
+    | runtime.store.FuncCode.Wasm «instance» function =>
       let i := alloc.vec.Vec.len exec.frames
       if i >= store.limits.max_frames
       then
@@ -138,7 +138,7 @@ def prepareCall
       else
         let i1 ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Exec.runtime.store.Instance) store.instances «instance»
+            _root_.Exec.runtime.store.ModuleInst) store.instances «instance»
         let code1 ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
             _root_.Exec.runtime.bytecode.CompiledFunction) i1.module.functions
@@ -159,7 +159,7 @@ def prepareCall
             let i3 ← lift (UScalar.cast .Usize code1.param_slots)
             let i4 ← base + i3
             let exec2 ←
-              runtime.interp.call_loop5 exec1 base code1.local_slots i4
+              runtime.interp.call_loop3 exec1 base code1.local_slots i4
             let (r2, v) ←
               runtime.reserve platformAllocInst exec2.frames 1#usize
             let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2

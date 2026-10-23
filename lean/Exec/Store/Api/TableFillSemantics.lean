@@ -21,8 +21,8 @@ private theorem fill_map_set_modify {T U : Type} (decode : T → U) (change : U 
       simpa using ih index found
 
 theorem table_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (tableIndex : U32) (address : runtime.TableAddr) (table : runtime.store.Table)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (tableIndex : U32) (address : runtime.TableAddr) (table : runtime.store.TableInst)
     (destination count : Nat) (value : U64) (words : alloc.vec.Vec U64)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.tables.val[tableIndex.val]? = some address)
@@ -49,8 +49,8 @@ theorem table_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
 /-- Actual bounds-checked table fill implements the generated sequence of
 per-element writes, or the generated bounds trap without a partial write. -/
 theorem TableFillEffect.refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (tableIndex : U32) (address : runtime.TableAddr) (table : runtime.store.Table)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (tableIndex : U32) (address : runtime.TableAddr) (table : runtime.store.TableInst)
     (destination value count : U64) (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : TableFillEffect store address.index table destination value count out)
     (moduleEq : ambient.MODULE = decodeInstance store inst)

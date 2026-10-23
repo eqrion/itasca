@@ -71,7 +71,7 @@ theorem call_host_composition_causes {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)
@@ -213,8 +213,8 @@ theorem call_host_composition_causes {M P F A : Type}
                 exact Or.inl (Or.inr (Or.inr ⟨resultsAdd,by simpa [resultsAdd] using saturating_sub_le signature.results.len ready.host_results.len,by simpa only [resultsSame] using resultsRaw⟩))
               | true =>
                 simp only [ite_true,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-                step with clear_host_arguments ready.host_args as ⟨clearedArgs,argsEmpty⟩
-                step with clear_host_results ready.host_results as ⟨clearedResults,resultsEmpty⟩
+                step with runtime_clear ready.host_args as ⟨clearedArgs,argsEmpty⟩
+                step with runtime_clear ready.host_results as ⟨clearedResults,resultsEmpty⟩
                 step with host_arguments ready.slots store.id base clearedArgs signature.params values
                   argsEmpty typed wellFormed fits argumentSlots as ⟨args,argsEq⟩
                 step with host_results_defaults clearedResults signature.results resultsEmpty as ⟨results,resultsEq⟩

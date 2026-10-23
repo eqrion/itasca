@@ -20,7 +20,7 @@ private theorem prefix_getD_map {T U : Type} (before after : List T) (f : T → 
 /-- Canonical signature insertion does not change the types in an existing
 instance's decoded module environment. -/
 theorem decodeInstance_prefix {M : Type} (before after : runtime.store.Store M)
-    (hprefix : StagedPrefix before after) (inst : runtime.store.Instance)
+    (hprefix : StagedPrefix before after) (inst : runtime.store.ModuleInst)
     (hinst : InstanceShape before inst) : decodeInstance after inst = decodeInstance before inst := by
   unfold decodeInstance
   congr 1
@@ -33,7 +33,7 @@ when new objects and canonical signatures are appended during instantiation. -/
 theorem decodeFunction_prefix {M : Type} (code : CodeInterpretation)
     (before after : runtime.store.Store M) (hprefix : StagedPrefix before after)
     (view : M → Slice U8) (shape : Shape view before)
-    (function : runtime.store.Function) (hfunction : function ∈ before.funcs.val) :
+    (function : runtime.store.FuncInst) (hfunction : function ∈ before.funcs.val) :
     decodeFunction code after function = decodeFunction code before function := by
   have hf := shape.functions function hfunction
   unfold decodeFunction

@@ -3,9 +3,9 @@ import Exec.Store.Initialization.SegmentCopySlice
 namespace Exec.Store
 open Aeneas Aeneas.Std
 
-theorem table_copy_distinct (tables : alloc.vec.Vec runtime.store.Table)
+theorem table_copy_distinct (tables : alloc.vec.Vec runtime.store.TableInst)
     (len : U64) (tableIndex sourceIndex : Usize)
-    (dst src : core.ops.range.Range Usize) (sourceTable table : runtime.store.Table)
+    (dst src : core.ops.range.Range Usize) (sourceTable table : runtime.store.TableInst)
     (different : tableIndex.val ≠ sourceIndex.val)
     (resolved : tables.val[sourceIndex.val]? = some sourceTable)
     (target : tables.val[tableIndex.val]? = some table)

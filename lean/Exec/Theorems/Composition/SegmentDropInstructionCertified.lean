@@ -8,9 +8,9 @@ open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
 theorem data_drop_core_certified {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (index : U32) (address : Usize) (ambient : frame)
+    (inst : runtime.store.ModuleInst) (index : U32) (address : Usize) (ambient : frame)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (mapped : inst.data.val[index.val]? = some address) (issued : address.val < store.datas.length)
+    (mapped : inst.datas.val[index.val]? = some address) (issued : address.val < store.datas.length)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (certified : CertifiedCoreStore view code store) (ambientWf : wf_frame ambient) :
     runtime.interp.bulk.execute memory store instIndex function base slots (.DataDrop index) ⦃ out =>
@@ -29,9 +29,9 @@ theorem data_drop_core_certified {M : Type} (memory : runtime.platform.MemoryBuf
 theorem element_drop_core_certified {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
-    (inst : runtime.store.Instance) (index : U32) (address : Usize) (ambient : frame)
+    (inst : runtime.store.ModuleInst) (index : U32) (address : Usize) (ambient : frame)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (mapped : inst.elements.val[index.val]? = some address) (issued : address.val < store.elems.length)
+    (mapped : inst.elems.val[index.val]? = some address) (issued : address.val < store.elems.length)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (certified : CertifiedCoreStore view code store) (ambientWf : wf_frame ambient) :
     runtime.interp.bulk.execute memory store instIndex function base slots (.ElemDrop index) ⦃ out =>

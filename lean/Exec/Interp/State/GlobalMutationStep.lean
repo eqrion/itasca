@@ -8,8 +8,8 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem dispatch_global_set_mutation
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (src index : U32) (inst : runtime.store.Instance) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInstance) (f : Abs.AFrame) (front : List val) (value : val)
+    (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
+    (object : runtime.store.GlobalInst) (f : Abs.AFrame) (front : List val) (value : val)
     (platform : P) (frameIndex : Usize)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
@@ -23,16 +23,16 @@ theorem dispatch_global_set_mutation
       ⦃ out => GlobalMutation store out.2.2.1 value ⦄ := by
   classical
   have handler : (if decide (Code.width (sourceType object.ty.valtype) = 2) then
-      runtime.interp.admin_global_set2 memory hooks floats allocator exec store raw.instance raw.base src index
-      else runtime.interp.admin_global_set memory hooks floats allocator exec store raw.instance raw.base src index)
+      runtime.interp.execute_global_set2 memory exec store raw.instance raw.base src index
+      else runtime.interp.execute_global_set memory exec store raw.instance raw.base src index)
       ⦃ out => GlobalMutation store out.2.2 value ⦄ := by
     simp only [sourceType_width_two]
     by_cases vector : object.ty.valtype = .V128
     · simp only [vector,decide_true,ite_true]
-      exact global_set2_mutation memory hooks floats allocator exec store raw src index inst address object f front value
+      exact global_set2_mutation memory exec store raw src index inst address object f front value
         found mapped issued slots values position vector mutable typed
     · simp only [vector,decide_false,ite_false]
-      exact global_set_mutation memory hooks floats allocator exec store raw src index inst address object f front value
+      exact global_set_mutation memory exec store raw src index inst address object f front value
         found mapped issued slots values position vector mutable typed
   apply WP.spec_mono (dispatch_globalSet memory hooks floats allocator exec store platform frameIndex raw.instance raw.function raw.base
     (decide (Code.width (sourceType object.ty.valtype) = 2)) src index handler)
@@ -40,8 +40,8 @@ theorem dispatch_global_set_mutation
 
 theorem step_global_set_mutation
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (src index : U32) (inst : runtime.store.Instance) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInstance) (f : Abs.AFrame) (front : List val) (value : val)
+    (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
+    (object : runtime.store.GlobalInst) (f : Abs.AFrame) (front : List val) (value : val)
     (platform : P) (frameIndex : Usize)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
@@ -69,7 +69,7 @@ jump or a write of the original source stack's top value. -/
 theorem coreFramePoint_globalSet_mutation (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (index : Nat)
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst)

@@ -14,13 +14,13 @@ theorem segment_synthetic_object_metadata {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (ready : SegmentCodeReady store inst code code.slot_count.val) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => SegmentObjectMetadata view store out.2.1 ⦄ := by
-  unfold runtime.interp.synthetic
+  unfold runtime.interp.run_synthetic
   step with vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
   subst actual
   step with vec_index_given inst.module.functions function code functionFound as ⟨actual, equal⟩

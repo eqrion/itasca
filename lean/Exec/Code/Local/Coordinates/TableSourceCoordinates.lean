@@ -20,7 +20,7 @@ theorem compiler_table_branch_source_coordinates {A : Type} (ops : runtime.platf
     (index : Usize) (depth : U32) (lookup : before.table_depths.val[index.val]? = some depth)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
-    (called : runtime.compiler.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (.Ok (),after)) :
     SourceCoordinates after := by
   obtain ⟨target,budget,table,_,_,branch⟩ := compiler_table_branch_success ops law before after index depth lookup called
   let staged := {before with budget,function := {before.function with jump_tables := table}}
@@ -53,7 +53,7 @@ theorem compiler_lower_table_source_coordinates {A : Type} (ops : runtime.platfo
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
-    (called : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     SourceCoordinates after ∧ after.next_source = before.next_source := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
   have coordinates := emission.sourceCoordinates held inside

@@ -34,7 +34,7 @@ theorem execute_simd_lane_values {M F : Type}
     (interpretation : Store.CodeInterpretation) (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (instIndex function base : Usize) (opcode operand entry : U32)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (imm : runtime.bytecode.SimdImmediate) (op : LaneOperation) (front values : List val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : inst.module.functions.val[function.val]? = some code)

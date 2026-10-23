@@ -9,15 +9,15 @@ inductive SourceRootCallCause {M A : Type} (allocator : runtime.platform.Alloc A
     (hooks : runtime.platform.Platform Unit M) (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (token : Unit) (address : runtime.FuncAddr)
     (signature : Itasca.types.FuncType) (error : runtime.ExecError) : Prop
-  | defined (function : runtime.store.Function) (instanceIndex functionIndex : Usize)
-      (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
+  | defined (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
+      (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
       (functionAt : store.funcs.val[address.index.val]?=some function)
       (kind : function.code=.Wasm instanceIndex functionIndex)
       (instanceAt : store.instances.val[instanceIndex.val]?=some inst)
       (compiledAt : inst.module.functions.val[functionIndex.val]?=some compiled)
       (cause : CallCause allocator hooks exec store token 0#usize compiled error) :
       SourceRootCallCause allocator hooks exec store token address signature error
-  | host (function : runtime.store.Function) (identity : U64)
+  | host (function : runtime.store.FuncInst) (identity : U64)
       (functionAt : store.funcs.val[address.index.val]?=some function) (kind : function.code=.Host identity)
       (cause : HostPreparationCause allocator hooks exec store token signature 0#usize error) :
       SourceRootCallCause allocator hooks exec store token address signature error
@@ -42,7 +42,7 @@ inductive SourceRootCallReady {M A : Type} (allocator : runtime.platform.Alloc A
       (source : StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals arguments++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode entry)) :
       SourceRootCallReady allocator hooks exec store token view code ambient address signature arguments (.done answer)
   | host (ready : runtime.interp.Execution) (nextToken : Unit) (identity : U64)
-      (args defaults : alloc.vec.Vec runtime.Value) (function : runtime.store.Function)
+      (args defaults : alloc.vec.Vec runtime.Value) (function : runtime.store.FuncInst)
       (functionAt : store.funcs.val[address.index.val]?=some function) (kind : function.code=.Host identity)
       (signatureAt : store.types.val[function.signature.val]?=some signature)
       (empty : ready.frames.val=[]) (scratch : ready.host_args=args)
@@ -60,7 +60,7 @@ theorem prepare_source_root_call {M F A : Type} (memory : runtime.platform.Memor
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (token : Unit)
     (held : ExecutableInv view code store) (ambient : frame) (ambientWf : wf_frame ambient)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (empty : exec.frames.val=[]) (owner : exec.store=store.id)
     (words : ValuesAt exec.slots.val 0 (args.val.map sourceValue))
     (accepted : runtime.interp.check_values memory store args signature.params.deref=.ok (.Ok ()))

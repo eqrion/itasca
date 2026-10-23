@@ -6,7 +6,7 @@ not assert preservation, simulation, or any desired API theorem. -/
 namespace Exec.Store
 open Aeneas Aeneas.Std
 
-def MemoryShape {M : Type} (view : M → Slice U8) (m : runtime.store.Memory M) : Prop :=
+def MemoryShape {M : Type} (view : M → Slice U8) (m : runtime.store.MemInst M) : Prop :=
   (view m.buf).length % 65536 = 0 ∧
   (view m.buf).length / 65536 ≤ 65536 ∧
   ∀ maximum, m.maximum = some maximum →
@@ -18,7 +18,7 @@ def ReferenceShape {M : Type} (s : runtime.store.Store M)
     | .FuncRef => word.val - 1 < s.funcs.length
     | .ExternRef => word.val - 1 < s.externs.length
 
-def GlobalShape {M : Type} (s : runtime.store.Store M) (g : runtime.store.GlobalInstance) : Prop :=
+def GlobalShape {M : Type} (s : runtime.store.Store M) (g : runtime.store.GlobalInst) : Prop :=
   match g.ty.valtype with
   | .I32 | .F32 => g.lo.val < 2^32 ∧ g.hi = 0#u64
   | .I64 | .F64 => g.hi = 0#u64
@@ -26,28 +26,28 @@ def GlobalShape {M : Type} (s : runtime.store.Store M) (g : runtime.store.Global
   | .FuncRef => ReferenceShape s .FuncRef g.lo ∧ g.hi = 0#u64
   | .ExternRef => ReferenceShape s .ExternRef g.lo ∧ g.hi = 0#u64
 
-def TableShape {M : Type} (s : runtime.store.Store M) (t : runtime.store.Table) : Prop :=
+def TableShape {M : Type} (s : runtime.store.Store M) (t : runtime.store.TableInst) : Prop :=
   t.elements.length ≤ U32.max ∧
   (∀ maximum, t.maximum = some maximum → t.elements.length ≤ maximum.val) ∧
   ∀ word ∈ t.elements.val, ReferenceShape s t.ty word
 
-def InstanceShape {M : Type} (s : runtime.store.Store M) (i : runtime.store.Instance) : Prop :=
+def InstanceShape {M : Type} (s : runtime.store.Store M) (i : runtime.store.ModuleInst) : Prop :=
   i.types.length = i.module.module.env.types.length ∧
   i.funcs.length = i.module.module.env.func_types.length ∧
   i.tables.length = i.module.module.env.table_types.length ∧
   i.memories.length = i.module.module.env.mem_types.length ∧
   i.globals.length = i.module.module.env.global_types.length ∧
-  i.elements.length = i.module.module.env.elements.length ∧
-  i.data.length = i.module.module.tail.data.length ∧
+  i.elems.length = i.module.module.env.elements.length ∧
+  i.datas.length = i.module.module.tail.data.length ∧
   (∀ index ∈ i.types.val, index.val < s.types.length) ∧
   (∀ address ∈ i.funcs.val, address.store = s.id ∧ address.index.val < s.funcs.length) ∧
   (∀ address ∈ i.tables.val, address.store = s.id ∧ address.index.val < s.tables.length) ∧
   (∀ address ∈ i.memories.val, address.store = s.id ∧ address.index.val < s.memories.length) ∧
   (∀ address ∈ i.globals.val, address.store = s.id ∧ address.index.val < s.globals.length) ∧
-  (∀ index ∈ i.elements.val, index.val < s.elems.length) ∧
-  (∀ index ∈ i.data.val, index.val < s.datas.length)
+  (∀ index ∈ i.elems.val, index.val < s.elems.length) ∧
+  (∀ index ∈ i.datas.val, index.val < s.datas.length)
 
-def FunctionShape {M : Type} (s : runtime.store.Store M) (f : runtime.store.Function) : Prop :=
+def FunctionShape {M : Type} (s : runtime.store.Store M) (f : runtime.store.FuncInst) : Prop :=
   f.signature.val < s.types.length ∧
   match f.code with
   | .Host _ => True
@@ -55,9 +55,9 @@ def FunctionShape {M : Type} (s : runtime.store.Store M) (f : runtime.store.Func
     ∃ i, s.instances.val[inst.val]? = some i ∧
       function.val < i.module.module.env.func_type_indices.length
 
-def instanceItems (i : runtime.store.Instance) : Nat :=
+def instanceItems (i : runtime.store.ModuleInst) : Nat :=
   i.types.length + i.funcs.length + i.tables.length + i.memories.length + i.globals.length +
-    i.elements.length + i.data.length +
+    i.elems.length + i.datas.length +
     (i.module.module.env.elements.val.map fun e => e.init.length).sum
 
 structure Shape {M : Type} (view : M → Slice U8) (s : runtime.store.Store M) : Prop where
@@ -83,7 +83,7 @@ structure Shape {M : Type} (view : M → Slice U8) (s : runtime.store.Store M) :
   tableLimit : s.table_elements.val ≤ s.limits.max_table_elements.val
 
 theorem MemoryShape.length_bound {M : Type} {view : M → Slice U8}
-    {m : runtime.store.Memory M} (h : MemoryShape view m) :
+    {m : runtime.store.MemInst M} (h : MemoryShape view m) :
     (view m.buf).length ≤ 4294967296 := by
   have hdiv := Nat.mod_add_div (view m.buf).length 65536
   rcases h with ⟨halign, hpages, _⟩
@@ -100,7 +100,7 @@ theorem new_shape {M : Type} (ops : runtime.platform.MemoryBuffer M)
 store invariant when the aggregate byte counter is updated consistently. -/
 theorem Shape.memory_replace {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (memory : runtime.store.Memory M) (hm : MemoryShape view memory)
+    (memory : runtime.store.MemInst M) (hm : MemoryShape view memory)
     (total : Usize)
     (hcount : total.val = ((s.memories.set index memory).val.map fun m => (view m.buf).length).sum)
     (hlimit : total.val ≤ s.limits.max_memory_bytes.val) :
@@ -131,7 +131,7 @@ theorem Shape.memory_replace {M : Type} {view : M → Slice U8}
 
 theorem Shape.memory_replace_same_length {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (hindex : index.val < s.memories.length) (memory : runtime.store.Memory M)
+    (hindex : index.val < s.memories.length) (memory : runtime.store.MemInst M)
     (hlen : (view memory.buf).length = (view (s.memories.val[index.val]).buf).length)
     (hmax : memory.maximum = (s.memories.val[index.val]).maximum) :
     Shape view {s with memories := s.memories.set index memory} := by
@@ -148,7 +148,7 @@ theorem Shape.memory_replace_same_length {M : Type} {view : M → Slice U8}
 store invariant when the aggregate element counter is updated consistently. -/
 theorem Shape.table_replace {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (table : runtime.store.Table) (ht : TableShape s table)
+    (table : runtime.store.TableInst) (ht : TableShape s table)
     (total : Usize)
     (hcount : total.val = ((s.tables.set index table).val.map fun t => t.elements.length).sum)
     (hlimit : total.val ≤ s.limits.max_table_elements.val) :
@@ -182,7 +182,7 @@ theorem Shape.table_replace {M : Type} {view : M → Slice U8}
 /-- Replacing a global by a canonical value preserves structural validity. -/
 theorem Shape.global_replace {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (global : runtime.store.GlobalInstance) (hg : GlobalShape s global) :
+    (global : runtime.store.GlobalInst) (hg : GlobalShape s global) :
     Shape view {s with globals := s.globals.set index global} where
   identity := h.identity
   functions := by simpa [FunctionShape] using h.functions
@@ -211,7 +211,7 @@ theorem Shape.global_replace {M : Type} {view : M → Slice U8}
 
 theorem Shape.table_replace_same_length {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (hindex : index.val < s.tables.length) (table : runtime.store.Table)
+    (hindex : index.val < s.tables.length) (table : runtime.store.TableInst)
     (ht : TableShape s table)
     (hlen : table.elements.length = (s.tables.val[index.val]).elements.length) :
     Shape view {s with tables := s.tables.set index table} := by
@@ -237,7 +237,7 @@ theorem sum_set_add (values : List Nat) (index extra : Nat) (hi : index < values
 
 theorem Shape.memory_extend {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (hindex : index.val < s.memories.length) (memory : runtime.store.Memory M)
+    (hindex : index.val < s.memories.length) (memory : runtime.store.MemInst M)
     (hm : MemoryShape view memory) (extra : Nat)
     (hlen : (view memory.buf).length = (view (s.memories.val[index.val]).buf).length + extra)
     (total : Usize) (hcount : total.val = s.memory_bytes.val + extra)
@@ -251,7 +251,7 @@ theorem Shape.memory_extend {M : Type} {view : M → Slice U8}
 
 theorem Shape.table_extend {M : Type} {view : M → Slice U8}
     {s : runtime.store.Store M} (h : Shape view s) (index : Usize)
-    (hindex : index.val < s.tables.length) (table : runtime.store.Table)
+    (hindex : index.val < s.tables.length) (table : runtime.store.TableInst)
     (hm : TableShape s table) (extra : Nat)
     (hlen : table.elements.length = (s.tables.val[index.val]).elements.length + extra)
     (total : Usize) (hcount : total.val = s.table_elements.val + extra)

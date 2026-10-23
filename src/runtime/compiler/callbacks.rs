@@ -1,4 +1,5 @@
-//! Operator callbacks and their lowering into slot bytecode.
+//! Validator operator callbacks for structured control and the forwarding of
+//! every other operator to `op` with its opcode tag and immediates.
 use super::*;
 
 macro_rules! simple_hooks {
@@ -155,7 +156,7 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         if self.reachable {
             self.lower_table_branches()?;
         }
-        clear_depths(&mut self.table_depths);
+        clear(&mut self.table_depths);
         self.reachable = false;
         self.observe(st)
     }
@@ -255,17 +256,9 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_table_size => 0x110; on_table_fill => 0x111;
     }
     simple_hooks! {
-        on_nop => 0x01; on_memory_size => 0x3f; on_memory_grow => 0x40;
-        on_ref_is_null => 0xd1;
-        on_memory_copy => 0x10a; on_memory_fill => 0x10b;
-        on_i32_extend8_s => 0xc0; on_i32_extend16_s => 0xc1;
-        on_i64_extend8_s => 0xc2; on_i64_extend16_s => 0xc3; on_i64_extend32_s => 0xc4;
-        on_i32_trunc_sat_f32_s => 0x100; on_i32_trunc_sat_f32_u => 0x101;
-        on_i32_trunc_sat_f64_s => 0x102; on_i32_trunc_sat_f64_u => 0x103;
-        on_i64_trunc_sat_f32_s => 0x104; on_i64_trunc_sat_f32_u => 0x105;
-        on_i64_trunc_sat_f64_s => 0x106; on_i64_trunc_sat_f64_u => 0x107;
-    }
-    simple_hooks! {
+        on_nop => 0x01;
+        on_memory_size => 0x3f;
+        on_memory_grow => 0x40;
         on_i32_eqz => 0x45;
         on_i32_eq => 0x46;
         on_i32_ne => 0x47;
@@ -300,6 +293,10 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_f64_gt => 0x64;
         on_f64_le => 0x65;
         on_f64_ge => 0x66;
+        on_i32_clz => 0x67;
+        on_i32_ctz => 0x68;
+        on_i32_popcnt => 0x69;
+        on_i32_add => 0x6a;
         on_i32_sub => 0x6b;
         on_i32_mul => 0x6c;
         on_i32_div_s => 0x6d;
@@ -314,6 +311,9 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_i32_shr_u => 0x76;
         on_i32_rotl => 0x77;
         on_i32_rotr => 0x78;
+        on_i64_clz => 0x79;
+        on_i64_ctz => 0x7a;
+        on_i64_popcnt => 0x7b;
         on_i64_add => 0x7c;
         on_i64_sub => 0x7d;
         on_i64_mul => 0x7e;
@@ -329,27 +329,6 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_i64_shr_u => 0x88;
         on_i64_rotl => 0x89;
         on_i64_rotr => 0x8a;
-        on_f32_add => 0x92;
-        on_f32_sub => 0x93;
-        on_f32_mul => 0x94;
-        on_f32_div => 0x95;
-        on_f32_min => 0x96;
-        on_f32_max => 0x97;
-        on_f32_copysign => 0x98;
-        on_f64_add => 0xa0;
-        on_f64_sub => 0xa1;
-        on_f64_mul => 0xa2;
-        on_f64_div => 0xa3;
-        on_f64_min => 0xa4;
-        on_f64_max => 0xa5;
-        on_f64_copysign => 0xa6;
-        on_i32_clz => 0x67;
-        on_i32_ctz => 0x68;
-        on_i32_popcnt => 0x69;
-        on_i32_add => 0x6a;
-        on_i64_clz => 0x79;
-        on_i64_ctz => 0x7a;
-        on_i64_popcnt => 0x7b;
         on_f32_abs => 0x8b;
         on_f32_neg => 0x8c;
         on_f32_ceil => 0x8d;
@@ -357,6 +336,13 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_f32_trunc => 0x8f;
         on_f32_nearest => 0x90;
         on_f32_sqrt => 0x91;
+        on_f32_add => 0x92;
+        on_f32_sub => 0x93;
+        on_f32_mul => 0x94;
+        on_f32_div => 0x95;
+        on_f32_min => 0x96;
+        on_f32_max => 0x97;
+        on_f32_copysign => 0x98;
         on_f64_abs => 0x99;
         on_f64_neg => 0x9a;
         on_f64_ceil => 0x9b;
@@ -364,6 +350,13 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_f64_trunc => 0x9d;
         on_f64_nearest => 0x9e;
         on_f64_sqrt => 0x9f;
+        on_f64_add => 0xa0;
+        on_f64_sub => 0xa1;
+        on_f64_mul => 0xa2;
+        on_f64_div => 0xa3;
+        on_f64_min => 0xa4;
+        on_f64_max => 0xa5;
+        on_f64_copysign => 0xa6;
         on_i32_wrap_i64 => 0xa7;
         on_i32_trunc_f32_s => 0xa8;
         on_i32_trunc_f32_u => 0xa9;
@@ -389,6 +382,22 @@ impl<A: Alloc> OpVisitor for FunctionCompiler<'_, A> {
         on_i64_reinterpret_f64 => 0xbd;
         on_f32_reinterpret_i32 => 0xbe;
         on_f64_reinterpret_i64 => 0xbf;
+        on_i32_extend8_s => 0xc0;
+        on_i32_extend16_s => 0xc1;
+        on_i64_extend8_s => 0xc2;
+        on_i64_extend16_s => 0xc3;
+        on_i64_extend32_s => 0xc4;
+        on_ref_is_null => 0xd1;
+        on_i32_trunc_sat_f32_s => 0x100;
+        on_i32_trunc_sat_f32_u => 0x101;
+        on_i32_trunc_sat_f64_s => 0x102;
+        on_i32_trunc_sat_f64_u => 0x103;
+        on_i64_trunc_sat_f32_s => 0x104;
+        on_i64_trunc_sat_f32_u => 0x105;
+        on_i64_trunc_sat_f64_s => 0x106;
+        on_i64_trunc_sat_f64_u => 0x107;
+        on_memory_copy => 0x10a;
+        on_memory_fill => 0x10b;
     }
     memory_hooks! {
         on_i32_load => 0x28;

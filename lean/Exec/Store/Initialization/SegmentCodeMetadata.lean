@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 /-- Initialization bulk operations retain every function and signature lookup
 used by an installed compiler certificate. -/
 theorem SegmentAddressSpace.function_table {M : Type} {before after : runtime.store.Store M}
-    (metadata : SegmentAddressSpace before after) {inst : runtime.store.Instance} {types : List functype}
+    (metadata : SegmentAddressSpace before after) {inst : runtime.store.ModuleInst} {types : List functype}
     (table : Interp.FunctionTable before inst types) : Interp.FunctionTable after inst types := by
   simpa only [Interp.FunctionTable, metadata.identity, metadata.functions, metadata.signatures] using table
 
@@ -20,7 +20,7 @@ theorem SegmentAddressSpace.compiled {M : Type} {before after : runtime.store.St
 /-- Source start validation and the constructed instance function table resolve
 the start function to an owned actual function with no parameters or results. -/
 theorem start_function_resolves {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.Instance}
+    {inst : runtime.store.ModuleInst}
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map decodeFuncType))
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (index : U32) (start : inst.module.module.env.start = some index) :

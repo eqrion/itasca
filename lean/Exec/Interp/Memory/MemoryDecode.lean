@@ -6,8 +6,8 @@ open Aeneas Aeneas.Std SpecExt
 open Exec.Store
 
 theorem memory_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some address)
     (found : store.memories.val[address.index.val]? = some object) :
@@ -17,7 +17,7 @@ theorem memory_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInt
 /-- Replacing an opaque buffer with an equal byte view preserves the complete
 source store, regardless of the callback's representation of that buffer. -/
 theorem memory_unchanged_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (store : runtime.store.Store M) (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (buffer : M) (found : store.memories.val[address.index.val]? = some object)
     (unchanged : view buffer = view object.buf) :
     decodeStore view code {store with memories := store.memories.set address.index {object with buf := buffer}} =
@@ -33,8 +33,8 @@ theorem memory_unchanged_decodes {M : Type} (view : M → Slice U8) (code : Code
 /-- A byte-exact write decodes to the generated memory update. The unchanged
 length retains the source memory type and every unrelated object. -/
 theorem memory_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (buffer : M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (buffer : M)
     (start : Nat) (payload : List byte)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some address)

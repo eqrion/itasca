@@ -17,9 +17,9 @@ theorem memoryLaneBytes_small (ty : Jnn) : (memoryLaneBytes ty).val ≤ 16 := by
 
 theorem memory_lane_unfold (ty : Jnn) (store : Bool) (offset index : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op (memoryLaneOpcode ty store) offset index address value memory = (do
-      if index.val ≥ 128/(shiftWidth ty).val then .ok (.Err runtime.ExecError.BadArguments,memory)
+      if index.val ≥ 128/(shiftWidth ty).val then .ok (.Err runtime.ExecError.Internal,memory)
       else
-        let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset (memoryLaneBytes ty)
+        let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset (memoryLaneBytes ty) (Slice.len memory)
         match result with
         | .Err error => .ok (.Err error,memory)
         | .Ok start =>
@@ -42,9 +42,11 @@ theorem memory_lane_unfold (ty : Jnn) (store : Bool) (offset index : U32) (addre
     | with_unfolding_all change (if index.val ≥ 2 then (_ : Result (core.result.Result U128 runtime.ExecError × Slice U8)) else _) = (if index.val ≥ 2 then _ else _)
   all_goals split <;> try rfl
   all_goals repeat (with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _;rw [bind_ok])
+  all_goals try simp only []
   all_goals congr 1
   all_goals try (with_unfolding_all rfl)
   all_goals try (solve | congr 1; scalar_tac)
+  all_goals try dsimp only
   all_goals funext result;cases result <;>
     simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,

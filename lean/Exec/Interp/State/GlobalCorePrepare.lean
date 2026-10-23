@@ -4,7 +4,7 @@ namespace Exec.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem coreFramePoint_globalGet_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (raw : runtime.interp.Frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (raw : runtime.interp.Frame)
     (f : Abs.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (after : List instr) (index : Nat)
     (moduleEq : f.module = Store.decodeInstance store inst)
@@ -26,7 +26,7 @@ theorem coreFramePoint_globalGet_prepare {M : Type} (view : M → Slice U8) (cod
     · simpa only [typeEq] using tail
 
 theorem coreFramePoint_globalSet_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (raw : runtime.interp.Frame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (raw : runtime.interp.Frame)
     (f : Abs.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
     (next : Nat) (output : List valtype) (after : List instr) (index : Nat)
     (moduleEq : f.module = Store.decodeInstance store inst)

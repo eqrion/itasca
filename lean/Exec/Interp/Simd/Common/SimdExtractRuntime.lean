@@ -29,7 +29,7 @@ def extractOpcode (ty : lanetype) : U32 :=
   all_goals rw [bind_ok]
   all_goals simp only [Bool.false_eq_true, ite_false]
   all_goals step with lane as ⟨value, valueEq⟩
-  all_goals simp only [runtime.interp.simd.from_u32, runtime.interp.simd.from_u64, lift, bind_ok]
+  all_goals simp only [lift, bind_ok]
   all_goals with_unfolding_all change (Result.ok _) ⦃ _ ⦄
   all_goals simp only [WP.spec_ok]
   all_goals refine ⟨_, rfl, ?_⟩

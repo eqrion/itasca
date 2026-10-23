@@ -8,7 +8,7 @@ set_option maxHeartbeats 1000000
 normal-return statement, so it does not assume any unchecked index is valid. -/
 theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
     {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop3 memory allocator store status index inst = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by
@@ -49,7 +49,7 @@ theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
 
 theorem function_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (instanceIndex index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (instanceIndex index : Usize)
     (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed ResourceError status)
     {out} (run : runtime.store.instantiate.Store.instantiate_inner_loop4 memory allocator store status index inst instanceIndex = .ok out) :
     ErrorAllowed ResourceError out.2.1 := by

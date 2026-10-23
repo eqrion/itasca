@@ -5,7 +5,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem InstantiationCode.source_typed {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (raw : ModuleBinary.Module) (shape : Shape view before)
     (oldSyntax : StoreSyntax oldCode before)
@@ -24,7 +24,7 @@ theorem InstantiationCode.source_typed {M : Type} {view : M → Slice U8}
     oldTyped inst found elaborated typed matched bindings signatures
 
 theorem InstantiationCode.source_slice {M : Type} {view : M → Slice U8}
-    {before ready : runtime.store.Store M} {inst : runtime.store.Instance}
+    {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (raw : ModuleBinary.Module) (shape : Shape view before)
     (oldSlice : Abs.StoreSlice (decodeStore view oldCode before))

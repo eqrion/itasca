@@ -35,23 +35,23 @@ def ImportedGlobal {M : Type} (store : runtime.store.Store M)
 structural lookup and type equalities, not an execution-correctness premise. -/
 structure LinkedMaps {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
     (module : runtime.compiler.ExecutableModule) (entries : List Itasca.module.Import)
-    (inst : runtime.store.Instance) : Prop where
+    (inst : runtime.store.ModuleInst) : Prop where
   source : inst.module = module
   types : inst.types.val = []
-  elements : inst.elements.val = []
-  data : inst.data.val = []
+  elements : inst.elems.val = []
+  data : inst.datas.val = []
   funcs : List.Forall₂ (ImportedFunction store module) (importedFuncs entries) inst.funcs.val
   tables : List.Forall₂ (ImportedTable store) (importedTables entries) inst.tables.val
   memories : List.Forall₂ (ImportedMemory view store) (importedMems entries) inst.memories.val
   globals : List.Forall₂ (ImportedGlobal store) (importedGlobals entries) inst.globals.val
 
 theorem LinkedStep.source {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {before after : runtime.store.Instance} {desc external}
+    {before after : runtime.store.ModuleInst} {desc external}
     (effect : LinkedStep view store before desc external after) : after.module = before.module := by
   cases effect <;> rfl
 
 theorem LinkedStep.maps {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {before after : runtime.store.Instance} {entry : Itasca.module.Import} {external}
+    {before after : runtime.store.ModuleInst} {entry : Itasca.module.Import} {external}
     (effect : LinkedStep view store before entry.desc external after)
     {module : runtime.compiler.ExecutableModule} {entries : List Itasca.module.Import}
     (maps : LinkedMaps view store module entries before) :
@@ -111,7 +111,7 @@ theorem LinkedStep.maps {M : Type} {view : M → Slice U8} {store : runtime.stor
 
 theorem LinkedMaps.lengths {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
     {module : runtime.compiler.ExecutableModule} {entries : List Itasca.module.Import}
-    {inst : runtime.store.Instance} (maps : LinkedMaps view store module entries inst) :
+    {inst : runtime.store.ModuleInst} (maps : LinkedMaps view store module entries inst) :
     inst.funcs.length ≤ entries.length ∧ inst.tables.length ≤ entries.length ∧
     inst.memories.length ≤ entries.length ∧ inst.globals.length ≤ entries.length := by
   constructor
@@ -128,7 +128,7 @@ theorem LinkedMaps.lengths {M : Type} {view : M → Slice U8} {store : runtime.s
 
 theorem LinkedMaps.bindings {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
     {module : runtime.compiler.ExecutableModule} {entries : List Itasca.module.Import}
-    {inst : runtime.store.Instance} (maps : LinkedMaps view store module entries inst)
+    {inst : runtime.store.ModuleInst} (maps : LinkedMaps view store module entries inst)
     (shape : Shape view store) : InitializerBindings store inst := by
   refine ⟨?_, shape.globals⟩
   intro address member
@@ -141,7 +141,7 @@ theorem LinkedMaps.bindings {M : Type} {view : M → Slice U8} {store : runtime.
 /-- The canonical validator cache identifies the linked globals with exactly
 the imported prefix allowed in constant expressions. -/
 theorem LinkedMaps.global_resolution {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
-    {module : runtime.compiler.ExecutableModule} {inst : runtime.store.Instance}
+    {module : runtime.compiler.ExecutableModule} {inst : runtime.store.ModuleInst}
     (maps : LinkedMaps view store module module.module.env.imports.val inst)
     {tables memories} (cache : Cache module.module.env tables memories)
     (index : U32) (ty : Itasca.types.GlobalType)

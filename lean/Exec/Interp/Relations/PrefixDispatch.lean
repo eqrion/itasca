@@ -10,21 +10,21 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem admin_jump_prefix (exec : runtime.interp.Execution) (base index : Usize) (target : U32)
+theorem execute_jump_prefix (exec : runtime.interp.Execution) (base index : Usize) (target : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_jump memory hooks floats allocator exec index target = .ok out) :
+    (returned : runtime.interp.execute_jump exec index target = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_jump at returned
+  unfold runtime.interp.execute_jump at returned
   obtain ⟨frame, lookup, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   have same := Result.ok_injective returned
   rw [← same]
   exact .refl _ _
 
-theorem admin_jump_if_zero_prefix (exec : runtime.interp.Execution) (base index : Usize) (cond target : U32)
+theorem execute_jump_if_zero_prefix (exec : runtime.interp.Execution) (base index : Usize) (cond target : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_jump_if_zero memory hooks floats allocator exec index base cond target = .ok out) :
+    (returned : runtime.interp.execute_jump_if_zero exec index base cond target = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_jump_if_zero at returned
+  unfold runtime.interp.execute_jump_if_zero at returned
   simp only [lift, bind_ok] at returned
   obtain ⟨position, address, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨value, lookup, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -37,11 +37,11 @@ theorem admin_jump_if_zero_prefix (exec : runtime.interp.Execution) (base index 
     rw [← same]
     exact .refl _ _
 
-theorem admin_jump_if_non_zero_prefix (exec : runtime.interp.Execution) (base index : Usize) (cond target : U32)
+theorem execute_jump_if_non_zero_prefix (exec : runtime.interp.Execution) (base index : Usize) (cond target : U32)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
-    (returned : runtime.interp.admin_jump_if_non_zero memory hooks floats allocator exec index base cond target = .ok out) :
+    (returned : runtime.interp.execute_jump_if_non_zero exec index base cond target = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
-  unfold runtime.interp.admin_jump_if_non_zero at returned
+  unfold runtime.interp.execute_jump_if_non_zero at returned
   simp only [lift, bind_ok] at returned
   obtain ⟨position, address, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
   obtain ⟨value, lookup, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -113,35 +113,35 @@ theorem dispatch_prefix (exec : runtime.interp.Execution) (store : runtime.store
   | const32 dst value =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_const32_prefix memory hooks floats allocator exec base dst value) out returned
+      (execute_const32_prefix exec base dst value) out returned
   | const64 dst value =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_const64_prefix memory hooks floats allocator exec base dst value) out returned
+      (execute_const64_prefix exec base dst value) out returned
   | copy dst src =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_copy_prefix memory hooks floats allocator exec base dst src) out returned
+      (execute_copy_prefix exec base dst src) out returned
   | copy2 dst src =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_copy2_prefix memory hooks floats allocator exec base dst src) out returned
+      (execute_copy2_prefix exec base dst src) out returned
   | copyN dst src count =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_copy_n_prefix memory hooks floats allocator exec base dst src count) out returned
+      (execute_copy_n_prefix exec base dst src count) out returned
   | jump target =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_jump_prefix memory hooks floats allocator exec base index target) out returned
+      (execute_jump_prefix exec base index target) out returned
   | jumpZero cond target =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_jump_if_zero_prefix memory hooks floats allocator exec base index cond target) out returned
+      (execute_jump_if_zero_prefix exec base index cond target) out returned
   | jumpNonzero cond target =>
     simp only [runtime.interp.dispatch] at returned
     exact pair_result_prefix exec base store platform _
-      (admin_jump_if_non_zero_prefix memory hooks floats allocator exec base index cond target) out returned
+      (execute_jump_if_non_zero_prefix exec base index cond target) out returned
   | loopHead =>
     simp only [runtime.interp.dispatch] at returned
     obtain ⟨result, run, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
@@ -149,7 +149,7 @@ theorem dispatch_prefix (exec : runtime.interp.Execution) (store : runtime.store
     rw [← same]
     exact .refl _ _
   | unreachable =>
-    simp only [runtime.interp.dispatch, runtime.interp.admin_unreachable] at returned
+    simp only [runtime.interp.dispatch, runtime.interp.execute_unreachable] at returned
     obtain ⟨result, run, returned⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ returned
     have same := Result.ok_injective returned
     rw [← same]
@@ -161,7 +161,7 @@ theorem spec_value_eq {T : Type} (computation : Result T) (value : T)
   simpa only [same] using returned
 
 theorem step_prefix (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.Instance)
+    (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (instruction : Code.Bytecode)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -182,7 +182,7 @@ theorem step_prefix (exec : runtime.interp.Execution) (store : runtime.store.Sto
   have hinstruction := spec_value_eq _ _ (vec_index_given compiled.code (UScalar.cast .Usize raw.pc) instruction
     (by simpa only [U32.cast_Usize_val_eq] using hop))
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.interp.Frame) exec.frames index = .ok raw at hframe
-  change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.Instance) store.instances raw.instance = .ok inst at hinst
+  change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.ModuleInst) store.instances raw.instance = .ok inst at hinst
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.bytecode.CompiledFunction) inst.module.functions raw.function = .ok compiled at hcompiled
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Code.Bytecode) compiled.code (UScalar.cast .Usize raw.pc) = .ok instruction at hinstruction
   unfold runtime.interp.step at returned

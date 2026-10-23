@@ -39,7 +39,7 @@ that this particular resumption returned, not that host control terminates. -/
 theorem host_resume_events {M P : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (exec : runtime.interp.Execution) (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (hf : store.funcs.val[address.index.val]?=some function) (hs : store.types.val[function.signature.val]?=some signature)
     (values : alloc.vec.Vec runtime.Value) (status : core.result.Result Unit runtime.platform.HostError)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution) (token : P)
@@ -80,7 +80,7 @@ theorem host_resume_events {M P : Type} (memory : runtime.platform.MemoryBuffer 
 the raw function/type tables; no dynamic result-typing assumption is needed. -/
 theorem pending_signature_results {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (pending : Spec.OpenHost.Pending) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (beforeEq : pending.before=Store.decodeStore view code store) (addressEq : pending.address=address.index.val)
     (hf : store.funcs.val[address.index.val]?=some function) (hs : store.types.val[function.signature.val]?=some signature) :
     pending.results=signature.results.val.map sourceType := by
@@ -100,7 +100,7 @@ theorem pending_checked_compress {M P : Type} (memory : runtime.platform.MemoryB
     (before after : runtime.store.Store M)
     (effect : ReturnedWorldEffect view (ExecutableInv view) beforeCode before afterCode after)
     (pending : Spec.OpenHost.Pending) (address : runtime.FuncAddr)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (beforeEq : pending.before=Store.decodeStore view beforeCode before) (addressEq : pending.address=address.index.val)
     (hf : before.funcs.val[address.index.val]?=some function) (hs : before.types.val[function.signature.val]?=some signature)
     (exec : runtime.interp.Execution) (base : Usize) (values : alloc.vec.Vec runtime.Value)

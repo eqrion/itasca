@@ -22,7 +22,7 @@ structure CertifiedSliceStore {M : Type} (view : M → Slice U8) (code : Store.C
 coverage. Host functions are excluded by the independent source restriction. -/
 theorem CertifiedSliceStore.resolve {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} (certified : CertifiedSliceStore view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature) :
@@ -58,7 +58,7 @@ theorem invoke_certified_slice {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSliceStore view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)
@@ -97,7 +97,7 @@ theorem invoke_certified_slice_divergence {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (certified : CertifiedSliceStore view code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)

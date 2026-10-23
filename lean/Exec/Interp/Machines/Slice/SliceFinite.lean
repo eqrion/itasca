@@ -45,7 +45,7 @@ theorem slice_continuing_history {M P F A : Type}
       have active : 0 < initial.exec.frames.length := by
         by_contra inactive
         have empty : ¬initial.exec.frames.len > 0#usize := by scalar_tac
-        simp [executionBody, runtime.interp.invoke_with_loop2.body, empty] at bodyStep
+        simp [executionBody, runtime.interp.invoke_with_loop1.body, empty] at bodyStep
       obtain ⟨⟨status, nextExec, nextStore, nextPlatform⟩, returned, unchanged, outcome⟩ :=
         WP.spec_imp_exists (step_slice memory hooks floats allocator allocation interrupts view code
           initial.exec store initial.platform initial.source expected initial.pc initial.pending
@@ -60,7 +60,7 @@ theorem slice_continuing_history {M P F A : Type}
         cases tail with
         | nil => exact ⟨initial, 0, .refl initial, Or.inr ⟨rfl, error, nextExec, nextPlatform, returned, outcome, rfl⟩⟩
         | next stopped _ =>
-          simp [executionBody, runtime.interp.invoke_with_loop2.body, core.result.Result.is_ok] at stopped
+          simp [executionBody, runtime.interp.invoke_with_loop1.body, core.result.Result.is_ok] at stopped
       | Ok u =>
         cases u
         obtain ⟨source, pc, pending, invariant, sameStore, sameAmbient, simulation, bounded, references⟩ := outcome

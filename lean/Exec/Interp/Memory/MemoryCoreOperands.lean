@@ -3,7 +3,7 @@ namespace Exec.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
  theorem memory_lookup_back {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (sourceAddress : Nat) (sourceObject : meminst)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : f.module.MEMS[0]? = some sourceAddress)
@@ -18,7 +18,7 @@ open Aeneas Aeneas.Std SpecExt
   exact ⟨address,object,rawMapped,by simpa only [addressEq] using rawIssued⟩
 
  theorem load_typed_operands {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (after : List instr) (op : Abs.Memory.Load) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} []) :
@@ -36,7 +36,7 @@ open Aeneas Aeneas.Std SpecExt
     exact ⟨front,bits,address,object,split,bitsBound,rawMapped,rawFound⟩
 
  theorem store_typed_operands {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (f : Abs.AFrame)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
     (after : List instr) (op : Abs.Memory.Store) (argument : memarg)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (typed : Abs.FrameTyped (Store.decodeStore view code store) {f with code := op.source argument :: after} []) :

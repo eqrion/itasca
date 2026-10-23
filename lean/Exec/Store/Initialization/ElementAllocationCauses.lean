@@ -9,7 +9,7 @@ set_option maxRecDepth 8192
 /-- Segment storage refusals retain their exact source-sized initial request,
 final store-vector request, or source initializer witness. -/
 def ElementAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (segment : Itasca.module.Element) (error : runtime.ExecError) : Prop :=
   (error = .Exhausted .Allocation ∧
     (allocator.reserve (alloc.vec.Vec.new U64) segment.init.len = .ok (false,alloc.vec.Vec.new U64) ∨
@@ -21,7 +21,7 @@ theorem add_element_resource_cause {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.Instance) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
     (found : store.instances.val[instIndex.val]? = some inst)
     (element : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)

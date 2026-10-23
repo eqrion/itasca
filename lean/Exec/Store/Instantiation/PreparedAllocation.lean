@@ -7,13 +7,13 @@ open Aeneas Aeneas.Std Itasca
 /-- The source initializer frame contains imported globals and the complete
 function address map, before any defined global or segment is allocated. -/
 def allocationInitial {M : Type} (raw : ModuleBinary.Module) (before : runtime.store.Store M)
-    (seed : runtime.store.Instance) : moduleinst :=
+    (seed : runtime.store.ModuleInst) : moduleinst :=
   ⟨raw.types.map EnvTranslation.funcType,
     seed.funcs.val.map (fun address => address.index.val) ++ List.range' before.funcs.length raw.functions.length,
     seed.globals.val.map (fun address => address.index.val), [], [], [], [], []⟩
 
 theorem allocationInitial_wf {M : Type} (raw : ModuleBinary.Module) (before : runtime.store.Store M)
-    (seed : runtime.store.Instance) : wf_moduleinst (allocationInitial raw before seed) := by
+    (seed : runtime.store.ModuleInst) : wf_moduleinst (allocationInitial raw before seed) := by
   constructor
   simp [Forall]
 

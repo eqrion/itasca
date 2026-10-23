@@ -11,7 +11,7 @@ theorem stateful_memory_init_dispatch {M P F A : Type} (memory : runtime.platfor
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
-    (raw : runtime.interp.Frame) (inst : runtime.store.Instance) (C : context)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (index : Nat) (first second a b entry : U32)
     (signature : Abs.Stateful.Signature C (.memoryInit index) input output)
@@ -47,7 +47,7 @@ theorem stateful_memory_init_dispatch {M P F A : Type} (memory : runtime.platfor
         Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 source)).val,Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 count)).val] := by
       simpa [bulkWord] using values
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
-      (segment_admin_bulk memory hooks floats allocator exec store raw.instance raw.function raw.base (.MemoryInit first a) _
+      (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.MemoryInit first a) _
         (stateful_memory_init_effect memory view laws code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots)
           first a inst address dataAddress object segment (UScalar.cast .U64 destination) (UScalar.cast .U64 source) (UScalar.cast .U64 count)
           state f rest after front found mapped issued (by simpa [alloc.vec.Vec.deref] using destinationSlot) (by simpa [alloc.vec.Vec.deref] using sourceSlot) (by simpa [alloc.vec.Vec.deref] using countSlot) dataMapped resolved (shapes object (List.mem_of_getElem? issued)).length_bound (Nat.le_of_lt dataBound) sourceStore moduleEq normalized))

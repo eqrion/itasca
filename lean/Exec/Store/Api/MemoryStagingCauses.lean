@@ -5,11 +5,11 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 abbrev memoryStageCall {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (state : runtime.store.Store M × runtime.store.Instance) (index : Usize) :=
+    (allocator : runtime.platform.Alloc A) (state : runtime.store.Store M × runtime.store.ModuleInst) (index : Usize) :=
   runtime.store.instantiate.Store.add_instance_memory memory allocator state.1 state.2 index
 
 def MemoryStagingCause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (allocator : runtime.platform.Alloc A) (store : runtime.store.Store M) (inst : runtime.store.Instance)
+    (allocator : runtime.platform.Alloc A) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (start : Usize) (limit : runtime.ResourceLimit) : Prop :=
   ∃ current currentInst index ty,
     PreparationCalls (memoryStageCall memory allocator) (store,inst) start (current,currentInst) index ∧
@@ -22,7 +22,7 @@ while retaining all old store objects and all other provisional maps. -/
 theorem memory_staging_resource_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before store : runtime.store.Store M) (seed inst : runtime.store.Instance)
+    (before store : runtime.store.Store M) (seed inst : runtime.store.ModuleInst)
     (start : Usize)
     (startBound : start.val ≤ seed.module.module.env.mem_types.val.length)
     (changed : store = {before with memories := store.memories, memory_bytes := store.memory_bytes})
@@ -52,7 +52,7 @@ theorem memory_staging_resource_loop {M A : Type} (memory : runtime.platform.Mem
   · rintro ⟨current, status, index, currentInst⟩ ⟨currentChanged, mapChanged, prefixStore, bound, currentIssued, indexBound, counting, trace, cause⟩
     dsimp only at currentChanged mapChanged prefixStore bound currentIssued indexBound counting ⊢
     have source : currentInst.module = seed.module := by
-      have eq := congrArg runtime.store.Instance.module mapChanged
+      have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.instantiate_inner_loop6.body
     simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,

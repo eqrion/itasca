@@ -7,18 +7,18 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem synthetic_initializer_errors (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (instruction : runtime.bytecode.Instr) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (read : InitialRead store inst code instruction words)
     (width : code.slot_count.val = words.length)
     (hcode : code.code.val = [instruction, .Return 0#u32 code.slot_count]) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         (∀ pair, out.1 = .Ok pair → pair = ((words[0]?).getD 0#u64, (words[1]?).getD 0#u64)) ∧
         (∀ error, out.1 = .Err error → ∃ resource, error = .Exhausted resource) ⦄ := by
-  unfold runtime.interp.synthetic
+  unfold runtime.interp.run_synthetic
   step with vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   step with vec_index_given inst.module.functions function code hc as ⟨found, hfound⟩
@@ -76,13 +76,13 @@ theorem synthetic_initializer_errors (law : Platform.AllocCorrect allocator)
 
 theorem synthetic_resolved_initializer_errors (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Code.InitializerCode code expr ty)
     (resolved : InitializerResolution store inst expr ty words) :
-    runtime.interp.synthetic memory hooks floats allocator store platform instIndex function
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧
         (∀ pair, out.1 = .Ok pair → pair = ((words[0]?).getD 0#u64, (words[1]?).getD 0#u64)) ∧
         (∀ error, out.1 = .Err error → ∃ resource, error = .Exhausted resource) ⦄ := by

@@ -20,7 +20,7 @@ theorem SlotPrefix.simd_result (base : Nat) (words : List U64) (position : Nat)
     | exact (SlotPrefix.set _ _ _ _ above).trans (.set _ _ _ _ (by omega))
 
 theorem module_memories_issued {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (C : context)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context)
     (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C) :
     ∀ address, inst.memories.val[0]? = some address →
       ∃ object, store.memories.val[address.index.val]? = some object := by

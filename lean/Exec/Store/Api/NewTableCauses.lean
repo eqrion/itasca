@@ -8,10 +8,10 @@ open Aeneas Aeneas.Std
 quota or allocation refusal before changing either map or store. -/
 theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (index : Usize)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
     (ty : Itasca.types.TableType) (found : inst.module.module.env.table_types.val[index.val]? = some ty)
     (bound : objectCount store ≤ Usize.max)
-    (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.Instance)
+    (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok (.Err (.Exhausted limit),after,next)) :
     after = store ∧ next = inst ∧ TableAllocationCause allocator store ty limit := by
   unfold runtime.store.instantiate.Store.add_instance_table at run

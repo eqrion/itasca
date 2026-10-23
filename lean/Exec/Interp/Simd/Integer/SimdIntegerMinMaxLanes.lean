@@ -15,8 +15,8 @@ theorem integerMinMaxOpcode_index (ty : Jnn) (kind : IntegerMinMax) :
   cases ty <;> cases kind <;> decide
 
 theorem integer_minmax_loop (ty : Jnn) (kind : IntegerMinMax) (x y : U128) :
-    runtime.interp.simd.integer_binary_lanes_loop (integerMinMaxOpcode ty kind) (integerCompareWidth ty)
-      y x 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
+    runtime.interp.simd.integer_binary_lanes_loop (integerMinMaxOpcode ty kind) x
+      y (integerCompareWidth ty) 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerMinMaxBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
   have widthEq := integerCompareWidth_val ty
@@ -39,8 +39,8 @@ theorem integer_minmax_loop (ty : Jnn) (kind : IntegerMinMax) (x y : U128) :
 
 theorem integer_minmax_dispatch_eq (ty : Jnn) (kind : IntegerMinMax) (x y : U128) :
     runtime.interp.simd.integer_binary_lanes (integerMinMaxOpcode ty kind) x y =
-      Aeneas.Std.bind (runtime.interp.simd.integer_binary_lanes_loop (integerMinMaxOpcode ty kind)
-        (integerCompareWidth ty) y x 0#u128 0#u32) runtime.interp.simd.vector := by
+      (runtime.interp.simd.integer_binary_lanes_loop (integerMinMaxOpcode ty kind)
+        x y (integerCompareWidth ty) 0#u128 0#u32) := by
   cases ty <;> cases kind
   all_goals unfold runtime.interp.simd.integer_binary_lanes integerMinMaxOpcode integerCompareWidth
   all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _
@@ -57,7 +57,8 @@ theorem integer_minmax_dispatch_eq (ty : Jnn) (kind : IntegerMinMax) (x y : U128
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerMinMaxBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
   rw [integer_minmax_dispatch_eq]
-  step with integer_minmax_loop ty kind x y as ⟨result,lanes⟩
-  simpa [runtime.interp.simd.vector] using lanes
+  apply WP.spec_mono (integer_minmax_loop ty kind x y)
+  intro result lanes
+  simpa using lanes
 
 end Exec.Interp.Simd

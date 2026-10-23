@@ -26,7 +26,7 @@ theorem LinkedPreparedRun.external_maps {M P F A : Type}
   simp only [WP.spec_ok] at checked
   exact (checked.2.2 True.intro).2
 
-theorem ExternalMaps.source (externals : List runtime.Extern) (inst : runtime.store.Instance)
+theorem ExternalMaps.source (externals : List runtime.Extern) (inst : runtime.store.ModuleInst)
     (maps : ExternalMaps externals inst) :
     fun_funcs (externals.map decodeExternal) (inst.funcs.val.map fun a => a.index.val) ∧
     fun_globals (externals.map decodeExternal) (inst.globals.val.map fun a => a.index.val) ∧

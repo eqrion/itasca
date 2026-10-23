@@ -37,7 +37,7 @@ theorem CallCause.kind {A M P : Type} {allocator : runtime.platform.Alloc A}
 theorem DirectCallCause.kind {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {index : Usize}
-    {raw : runtime.interp.Frame} {inst : runtime.store.Instance}
+    {raw : runtime.interp.Frame} {inst : runtime.store.ModuleInst}
     {compiled : runtime.bytecode.CompiledFunction} {error : runtime.ExecError}
     (cause : DirectCallCause allocator hooks exec store platform index raw inst compiled error) :
     error = .Terminated ∨ error = .Exhausted .CallStack ∨

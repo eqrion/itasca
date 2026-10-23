@@ -13,8 +13,8 @@ theorem widenWidth_val (ty : WidenWidth) : (widenWidth ty).val = ty.width := by 
 
 theorem widen_dispatch_eq (ty : WidenWidth) (multiply high signed : Bool) (x y : U128) :
     runtime.interp.simd.widen_lanes (widenOpcode ty multiply high signed) x y =
-      Aeneas.Std.bind (runtime.interp.simd.widen_lanes_loop (widenWidth ty) multiply high signed
-        (if multiply then y else 0#u128) x 0#u128 0#u32) runtime.interp.simd.vector := by
+      (runtime.interp.simd.widen_lanes_loop x (widenWidth ty) multiply high
+        signed (if multiply then y else 0#u128) 0#u128 0#u32) := by
   cases ty <;> cases multiply <;> cases high <;> cases signed
   all_goals unfold runtime.interp.simd.widen_lanes widenOpcode widenWidth
   all_goals repeat (with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _; rw [bind_ok])
@@ -34,9 +34,8 @@ theorem widen_dispatch_eq (ty : WidenWidth) (multiply high signed : Bool) (x y :
       (laneBits (widenWidth ty).val (j+if high then 64/(widenWidth ty).val else 0) (if multiply then y else 0#u128).bv))
     (by intro j valid a b aEq bEq; exact widen_word _ _ _ _ _ _ _ (by cases ty <;> decide) (by cases ty <;> decide) aEq bEq)
     (by simp) (by simp)
-  step with loopLaw as ⟨out,lanes⟩
-  simp only [runtime.interp.simd.vector,WP.spec_ok]
-  intro j valid
+  apply WP.spec_mono loopLaw
+  intro out lanes j valid
   rw [widthEq] at lanes
   have result := lanes j valid
   cases multiply <;> simpa only [Bool.false_eq_true,Bool.true_eq,↓reduceIte,widenBits,WidenWidth.count] using result

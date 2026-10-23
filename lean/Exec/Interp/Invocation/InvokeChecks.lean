@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem func_type_lookup {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (func : runtime.FuncAddr)
-    (function : runtime.store.Function) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (owner : func.store = store.id)
     (hf : store.funcs.val[func.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature) :
@@ -71,7 +71,7 @@ theorem invoke_wrong_store (foreign : func.store ≠ store.id) :
 
 /-- For an issued function/signature lookup, an argument-count mismatch
 returns BadArguments and preserves all caller-visible state. -/
-theorem invoke_argument_count (function : runtime.store.Function)
+theorem invoke_argument_count (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (owner : func.store = store.id)
     (hf : store.funcs.val[func.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)

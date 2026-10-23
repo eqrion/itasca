@@ -29,7 +29,7 @@ theorem source_values_owned {M : Type} (store : runtime.store.Store M) (values :
   exact source_value_owned store raw (owned raw present)
 
 theorem global_value_owned {M : Type} (store : runtime.store.Store M)
-    (global : runtime.store.GlobalInstance) (shape : GlobalShape store global) :
+    (global : runtime.store.GlobalInst) (shape : GlobalShape store global) :
     Abs.Ownership.ValueOwned (ownershipBounds store) (decodeGlobal global).VALUE := by
   cases type : global.ty.valtype <;>
     simp only [GlobalShape,type] at shape <;>

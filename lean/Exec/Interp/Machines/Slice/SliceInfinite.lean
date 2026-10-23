@@ -16,13 +16,13 @@ theorem slice_infinite_source {M P F A : Type}
     {expected : List valtype} {bound : Nat}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (initial : SliceMachine P store sourceStore ambient expected bound)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator
       initial.exec store initial.platform (.Ok ()) = .div) :
     ∃ states : Nat → config, states 0 = Abs.decode initial.source ∧ ∀ n,
       ∃ count, 0 < count ∧ Spec.StepsHN count (states n) [] (states (n + 1)) := by
   classical
   let Running := { machine : SliceMachine P store sourceStore ambient expected bound //
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator
       machine.exec store machine.platform (.Ok ()) = .div }
   have successor (current : Running) : ∃ next : Running, ∃ count, 0 < count ∧
       Spec.StepsHN count (Abs.decode current.val.source) [] (Abs.decode next.val.source) := by

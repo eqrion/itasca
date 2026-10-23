@@ -8,7 +8,7 @@ store certificate. -/
 theorem memory_mutation_float_core_certified {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
     (certified : CertifiedFloatCoreStore view code before)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (issued : before.memories.val[address.index.val]? = some object)
     (mutation : Interp.MemoryMutation view before after address object) :
     CertifiedFloatCoreStore view code after ∧

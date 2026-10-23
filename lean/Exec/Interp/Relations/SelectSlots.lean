@@ -71,7 +71,7 @@ theorem select_slots {M P F A : Type}
     rw [show Code.selectInstruction (decide (Code.width ty = 2)) a b condition = .Select a b condition by simp [narrow,Code.selectInstruction]]
     simp only [runtime.interp.dispatch]
     obtain ⟨out,result,success,changed,fields⟩ := WP.spec_imp_exists
-      (select_effect memory hooks floats allocator exec raw.base a b condition hc (by omega) (by omega))
+      (select_effect exec raw.base a b condition hc (by omega) (by omega))
     rw [result,bind_ok]
     rcases out with ⟨status,updated⟩
     with_unfolding_all apply WP.spec.ret
@@ -83,7 +83,7 @@ theorem select_slots {M P F A : Type}
     rw [show Code.selectInstruction (decide (Code.width ty = 2)) a b condition = .Select2 a b condition by simp [wide,Code.selectInstruction]]
     simp only [runtime.interp.dispatch]
     obtain ⟨out,result,success,changed,fields⟩ := WP.spec_imp_exists
-      (select2_effect memory hooks floats allocator exec raw.base a b condition hc (by omega) (by omega))
+      (select2_effect exec raw.base a b condition hc (by omega) (by omega))
     rw [result,bind_ok]
     rcases out with ⟨status,updated⟩
     with_unfolding_all apply WP.spec.ret

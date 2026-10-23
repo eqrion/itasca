@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std SpecExt
 /-- An actual table range failure is an unresolved source indirect call. -/
 theorem indirect_resolve_outside {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (f : Abs.AFrame) (table type position : Nat)
-    (object : runtime.store.Table)
+    (object : runtime.store.TableInst)
     (tableEq : fun_table ⟨Store.decodeStore view code store,f.toFrame⟩ (.mk_uN table) = Store.decodeTable object)
     (outside : object.elements.length ≤ position) :
     Abs.Indirect.resolve (Store.decodeStore view code store) f table type position = none := by
@@ -16,7 +16,7 @@ theorem indirect_resolve_outside {M : Type} (view : M → Slice U8) (code : Stor
 /-- A null runtime table word is exactly a null source reference. -/
 theorem indirect_resolve_null {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (f : Abs.AFrame) (table type position : Nat)
-    (object : runtime.store.Table)
+    (object : runtime.store.TableInst)
     (tableEq : fun_table ⟨Store.decodeStore view code store,f.toFrame⟩ (.mk_uN table) = Store.decodeTable object)
     (selected : object.elements.val[position]? = some (0#u64)) :
     Abs.Indirect.resolve (Store.decodeStore view code store) f table type position = none := by
@@ -26,8 +26,8 @@ theorem indirect_resolve_null {M : Type} (view : M → Slice U8) (code : Store.C
 the exact source type comparison of the selected runtime function. -/
 theorem indirect_resolve_reference {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (f : Abs.AFrame) (table type position : Nat)
-    (object : runtime.store.Table) (reference : U64) (address : Usize)
-    (function : runtime.store.Function)
+    (object : runtime.store.TableInst) (reference : U64) (address : Usize)
+    (function : runtime.store.FuncInst)
     (tableEq : fun_table ⟨Store.decodeStore view code store,f.toFrame⟩ (.mk_uN table) = Store.decodeTable object)
     (funcref : object.ty = .FuncRef)
     (selected : object.elements.val[position]? = some reference)

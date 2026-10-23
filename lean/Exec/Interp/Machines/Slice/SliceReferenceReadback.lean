@@ -17,7 +17,7 @@ theorem slice_loop_readback_references {M P F A : Type}
     (decoded : sourceStore = Store.decodeStore view code store) (compiled : CompiledFunctions code store)
     (initial : SliceMachine P store sourceStore ambient expected bound)
     (references : Abs.StateReferencesBound Usize.max initial.source) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec store initial.platform (.Ok ())
       ⦃ (_, words, _, _, _, afterStore, _, status) => afterStore = store ∧
         (status = .Ok () → ∃ values,
           expected = values.map Code.valueType ∧

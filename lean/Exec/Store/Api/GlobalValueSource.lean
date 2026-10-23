@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Every appended runtime global has its declared type and its source
 initializer's value in the unchanged initial source state. -/
 def GlobalSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (source : List Itasca.module.Global) (values : List runtime.store.GlobalInstance) : Prop :=
+    (source : List Itasca.module.Global) (values : List runtime.store.GlobalInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.gtype ∧
     Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (ModuleConstants.expression original.init)
       ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [(decodeGlobal actual).VALUE]) source values
@@ -36,7 +36,7 @@ theorem GlobalValueEffect.source_values {M : Type} {store after : runtime.store.
     (effect : GlobalValueEffect store instIndex inst original.gtype value status after)
     (evaluated : Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩
       (ModuleConstants.expression original.init) ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [value])
-    {sources : List Itasca.module.Global} {base produced : List runtime.store.GlobalInstance}
+    {sources : List Itasca.module.Global} {base produced : List runtime.store.GlobalInst}
     (stored : store.globals.val = base ++ produced)
     (previous : GlobalSourceValues sourceStore sourceInstance sources produced)
     (success : status = .Ok ()) :

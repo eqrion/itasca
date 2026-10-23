@@ -23,7 +23,7 @@ theorem dispatch_transfer_effect {M P F A : Type}
   by_cases one : count.val = 1
   · simp only [transferInstruction, Code.transferInstruction, if_pos one, runtime.interp.dispatch]
     obtain ⟨out, result, success, effect⟩ := WP.spec_imp_exists
-      (copy_effect memory hooks floats allocator exec base dst src (by omega) (by omega))
+      (copy_effect exec base dst src (by omega) (by omega))
     rw [result, bind_ok]
     rcases out with ⟨answer, next⟩
     with_unfolding_all apply WP.spec.ret
@@ -31,14 +31,14 @@ theorem dispatch_transfer_effect {M P F A : Type}
   · by_cases two : count.val = 2
     · simp only [transferInstruction, Code.transferInstruction, if_neg one, if_pos two, runtime.interp.dispatch]
       obtain ⟨out, result, success, effect⟩ := WP.spec_imp_exists
-        (copy2_effect memory hooks floats allocator exec base dst src (by omega) (by omega))
+        (copy2_effect exec base dst src (by omega) (by omega))
       rw [result, bind_ok]
       rcases out with ⟨answer, next⟩
       with_unfolding_all apply WP.spec.ret
       exact ⟨success, by simpa only [two] using effect, rfl, rfl⟩
     · simp only [transferInstruction, Code.transferInstruction, if_neg one, if_neg two, runtime.interp.dispatch]
       obtain ⟨out, result, success, effect⟩ := WP.spec_imp_exists
-        (copy_n_effect memory hooks floats allocator exec base dst src count source destination
+        (copy_n_effect exec base dst src count source destination
           (by scalar_tac) (by scalar_tac))
       rw [result, bind_ok]
       rcases out with ⟨answer, next⟩

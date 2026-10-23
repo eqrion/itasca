@@ -16,7 +16,7 @@ theorem PlainLoad.small (op : PlainLoad) : op.bytes.val ≤ 16 := by cases op <;
 
 theorem plain_load_unfold (op : PlainLoad) (offset lane : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op op.opcode offset lane address value memory = (do
-      let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset op.bytes
+      let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset op.bytes (Slice.len memory)
       match result with
       | .Err error => .ok (.Err error,memory)
       | .Ok start =>
@@ -26,7 +26,7 @@ theorem plain_load_unfold (op : PlainLoad) (offset lane : U32) (address value : 
   all_goals simp only [lift, bind_ok]
   all_goals with_unfolding_all change
     (do
-      let result ← runtime.interp.simd.range memory (UScalar.cast .U32 address) offset _
+      let result ← runtime.interp.memory.address (UScalar.cast .U32 address) offset _ (Slice.len memory)
       let cf ← core.result.Result.Insts.CoreOpsTry.branch result
       match cf with
       | core.ops.control_flow.ControlFlow.Continue start => do

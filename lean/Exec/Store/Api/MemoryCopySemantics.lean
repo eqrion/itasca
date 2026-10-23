@@ -5,8 +5,8 @@ namespace Exec.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (memory : runtime.store.Memory M)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M)
     (destination source count : Nat) (buffer : M)
     (moduleEq : ambient.MODULE = decodeInstance store inst)
     (mapped : inst.memories.val[0]? = some address)
@@ -35,8 +35,8 @@ theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   rfl
 
 theorem MemoryCopyEffect.refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.Instance) (ambient : frame)
-    (address : runtime.MemoryAddr) (memory : runtime.store.Memory M) (destination source count : U64)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
+    (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M) (destination source count : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M)
     (effect : MemoryCopyEffect view store address.index memory destination source count out)
     (moduleEq : ambient.MODULE = decodeInstance store inst)

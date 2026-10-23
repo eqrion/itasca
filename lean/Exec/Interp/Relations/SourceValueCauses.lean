@@ -28,8 +28,8 @@ def SourceFunctionCapacity (store : _root_.store) (address : funcaddr) (words : 
 theorem function_capacity_decoded {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (capacities : Store.FunctionCapacities code store)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
-    (instanceIndex functionIndex : Usize) (inst : runtime.store.Instance)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
+    (instanceIndex functionIndex : Usize) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction)
     (found : store.funcs.val[address.index.val]? = some function)
     (defined : function.code = .Wasm instanceIndex functionIndex)
@@ -61,7 +61,7 @@ requirement. No internal slot count remains in this conclusion. -/
 theorem SourceDirectCallCause.source_values {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {index : Usize}
-    {raw : runtime.interp.Frame} {inst : runtime.store.Instance}
+    {raw : runtime.interp.Frame} {inst : runtime.store.ModuleInst}
     {compiled : runtime.bytecode.CompiledFunction} {source : Abs.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store = Store.decodeStore view code store)

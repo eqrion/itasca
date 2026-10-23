@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- A concrete failed table-growth decision retains either a source ceiling,
 a store-wide budget violation, or the actual allocator refusal. -/
 def TableGrowRefusal {M A : Type} (allocator : runtime.platform.Alloc A)
-    (s : runtime.store.Store M) (table : runtime.store.Table) (delta : U32) : Prop :=
+    (s : runtime.store.Store M) (table : runtime.store.TableInst) (delta : U32) : Prop :=
   U32.max < table.elements.length + delta.val ∨
   (core.option.Option.unwrap_or table.maximum core.num.U32.MAX).val < table.elements.length + delta.val ∨
   s.limits.max_table_elements.val < s.table_elements.val + delta.val ∨
@@ -48,8 +48,7 @@ theorem table_grow_refusal {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     · simp only [WP.spec_ok]
       intro _
       exact ⟨t, lookup, Or.inl (Or.inr (Or.inl (by scalar_tac)))⟩
-    · simp [runtime.store.Store.impl.table_elements]
-      step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
+    · step with within_spec s.table_elements (UScalar.cast .Usize delta) s.limits.max_table_elements as ⟨fits, hfits⟩
       split
       · step as ⟨t', back, ht', hback⟩
         have hsame : t' = t := by simp [ht, ht']

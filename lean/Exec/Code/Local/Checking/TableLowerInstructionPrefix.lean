@@ -21,7 +21,7 @@ theorem compiler_lower_table_open_instructions {A : Type} (ops : runtime.platfor
     (transfers : TableTransferBounds before)
     (heightFits : before.height.val ≤ before.function.slot_count.val)
     (held : CompilerInstructionPrefix before)
-    (called : runtime.compiler.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     CompilerInstructionPrefix after := by
   obtain ⟨start,len,selector,emitted,startAt,count,operand,emission,run⟩ :=
     compiler_lower_table_success ops law before after called

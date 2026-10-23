@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 by the concrete frame's instance index. -/
 theorem FrameBinding.module_lookup {M : Type} {store : runtime.store.Store M}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
-    (binding : FrameBinding store exec raw source) (inst : runtime.store.Instance)
+    (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst) :
     source.module = Store.decodeInstance store inst := by
   obtain ⟨actual, fn, compiled, signature, _, _, found, _, _, _, _, moduleEq, _⟩ := binding
@@ -18,7 +18,7 @@ theorem FrameBinding.module_lookup {M : Type} {store : runtime.store.Store M}
 instance function map. -/
 theorem FrameBinding.resolve_call {M : Type} {store : runtime.store.Store M}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
-    (binding : FrameBinding store exec raw source) (inst : runtime.store.Instance)
+    (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst)
     (index : Nat) (address : runtime.FuncAddr)
     (found : inst.funcs.val[index]? = some address) :
@@ -30,7 +30,7 @@ theorem FrameBinding.resolve_call {M : Type} {store : runtime.store.Store M}
 address used by direct-call dispatch. -/
 theorem FrameBinding.resolve_call_back {M : Type} {store : runtime.store.Store M}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
-    (binding : FrameBinding store exec raw source) (inst : runtime.store.Instance)
+    (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst)
     (index address : Nat) (found : source.module.FUNCS[index]? = some address) :
     ∃ rawAddress, inst.funcs.val[index]? = some rawAddress ∧ rawAddress.index.val = address := by
@@ -42,9 +42,9 @@ theorem FrameBinding.resolve_call_back {M : Type} {store : runtime.store.Store M
 body and owning module in the decoded store. -/
 theorem defined_function_lookup {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (store : runtime.store.Store M)
-    (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
-    (inst : runtime.store.Instance) (sourceCode : funccode)
+    (inst : runtime.store.ModuleInst) (sourceCode : funccode)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
     (hw : function.code = .Wasm instanceIndex functionIndex)

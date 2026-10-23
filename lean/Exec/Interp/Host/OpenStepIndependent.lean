@@ -39,7 +39,7 @@ theorem prepareDispatch_independent {M P F A : Type} (memory : runtime.platform.
       prepareDispatch memory right floats allocator exec store platform frameIndex inst function base instruction := by
   cases instruction
   case LoopHead =>
-    simp only [prepareDispatch,runtime.interp.dispatch,runtime.interp.admin_loop_head,runtime.interp.interrupt,interrupts]
+    simp only [prepareDispatch,runtime.interp.dispatch,runtime.interp.execute_loop_head,runtime.interp.interrupt,interrupts]
   case Call func callee =>
     exact prepareDirect_independent memory left right floats allocator exec store platform inst base func callee interrupts
   case CallIndirect entry index callee =>

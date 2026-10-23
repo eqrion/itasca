@@ -10,7 +10,7 @@ theorem instantiate_tail_core_divergence {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.Instance) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
     (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]? = some inst)
@@ -21,7 +21,7 @@ theorem instantiate_tail_core_divergence {M P F A : Type}
     (divergent : Store.instantiate_tail memory hooks floats allocator identity store platform = .div) :
     ∃ initialized index address,
       CertifiedCoreStore view code initialized ∧ Store.SegmentObjectMetadata view store initialized ∧
-      runtime.instantiate.initialize_segments memory hooks floats allocator store platform identity.index =
+      runtime.interp.initialize_segments memory hooks floats allocator store platform identity.index =
         .ok (.Ok (),initialized,platform) ∧
       inst.module.module.env.start = some index ∧ inst.funcs.val[index.val]? = some address ∧
       Store.instantiate_start memory hooks floats allocator identity address initialized platform = .div ∧

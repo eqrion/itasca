@@ -9,7 +9,7 @@ def executeAndReadback {M P F A : Type} (memory : runtime.platform.MemoryBuffer 
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (root : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value)
     (state : ExecutionState M P) : Result (InvokeAnswer M P) := do
-  let finished←runtime.interp.invoke_with_loop2 memory hooks floats allocator state.1 state.2.1 state.2.2.1 state.2.2.2
+  let finished←runtime.interp.invoke_with_loop1 memory hooks floats allocator state.1 state.2.1 state.2.2.1 state.2.2.2
   readback memory allocator root results finished
 
 theorem executeAndReadback_error {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -18,7 +18,7 @@ theorem executeAndReadback_error {M P F A : Type} (memory : runtime.platform.Mem
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (token : P) (error : runtime.ExecError) :
     executeAndReadback memory hooks floats allocator root results (exec,store,token,.Err error)=
       .ok (.Err error,exec,store,token,results) := by
-  have stopped : runtime.interp.invoke_with_loop2 memory hooks floats allocator exec store token (.Err error)=
+  have stopped : runtime.interp.invoke_with_loop1 memory hooks floats allocator exec store token (.Err error)=
       .ok (finishExecution (exec,store,token,.Err error)) := by
     change loop (executionBody memory hooks floats allocator) (exec,store,token,.Err error)=_
     rw [loop.eq_def,←erase_loop_body]

@@ -7,11 +7,11 @@ open Exec.Interp
 /-- Syntactic and issued-address requirements of one initializer instruction.
 There are no interpreter executions or semantic postconditions in this record. -/
 inductive SegmentInstructionReady {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction) (width : Nat) :
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction) (width : Nat) :
     runtime.bytecode.Instr → Prop where
   | constant (dst bits : U32) (bound : dst.val < width) :
       SegmentInstructionReady store inst code width (.Const32 dst bits)
-  | global (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInstance)
+  | global (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (mapped : inst.globals.val[index.val]? = some addr)
       (issued : store.globals.val[addr.index.val]? = some value) (capacity : 1 ≤ width) :
       SegmentInstructionReady store inst code width (.GlobalGet 0#u32 index)
@@ -50,7 +50,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem segment_instruction_total (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (instIndex function : Usize) (position : U32) (inst : runtime.store.Instance)
+    (instIndex function : Usize) (position : U32) (inst : runtime.store.ModuleInst)
     (code : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)

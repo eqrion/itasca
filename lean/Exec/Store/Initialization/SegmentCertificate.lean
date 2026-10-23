@@ -7,7 +7,7 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (expr : Itasca.types.ConstExpr) (instruction : runtime.bytecode.Instr) (width : Nat)
     (typed : Itasca.ModuleConstants.Valid inst.module.module.env expr .I32)
     (imports : InitializerImports store inst) (bindings : InitializerBindings store inst)
@@ -24,7 +24,7 @@ private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store
 
 /-- A retained element block uses only indices already issued by staging. -/
 theorem element_program_ready {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
     (width : Nat) (program : Code.ElementProgram code index segment instructions)
     (sourceBound : index < inst.module.module.env.elements.length)
@@ -34,9 +34,9 @@ theorem element_program_ready {M : Type} (store : runtime.store.Store M)
     (capacity : instructions.length = 5 → 3 ≤ width) :
     ∀ instruction ∈ instructions, SegmentInstructionReady store inst code width instruction := by
   rcases shape with ⟨_, _, tableCount, _, _, elementCount, _, _, _, tables, _, _, elements, _⟩
-  have localBound : index < inst.elements.val.length := by simp only [alloc.vec.Vec.length] at *; omega
-  let address := inst.elements.val[index]
-  have mapped : inst.elements.val[index]? = some address := List.getElem?_eq_getElem localBound
+  have localBound : index < inst.elems.val.length := by simp only [alloc.vec.Vec.length] at *; omega
+  let address := inst.elems.val[index]
+  have mapped : inst.elems.val[index]? = some address := List.getElem?_eq_getElem localBound
   have issued := elements address (List.mem_of_getElem? mapped)
   cases program with
   | passive mode => simp
@@ -69,7 +69,7 @@ theorem element_program_ready {M : Type} (store : runtime.store.Store M)
 
 /-- Data-block safety needs a present memory, not a successful range check. -/
 theorem data_program_ready {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (code : runtime.bytecode.CompiledFunction)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
     (width : Nat) (program : Code.DataProgram code index segment instructions)
     (sourceBound : index < inst.module.module.tail.data.length)
@@ -79,9 +79,9 @@ theorem data_program_ready {M : Type} (store : runtime.store.Store M)
     (capacity : instructions.length = 5 → 3 ≤ width) :
     ∀ instruction ∈ instructions, SegmentInstructionReady store inst code width instruction := by
   rcases shape with ⟨_, _, _, memoryCount, _, _, dataCount, _, _, _, memories, _, _, datas⟩
-  have localBound : index < inst.data.val.length := by simp only [alloc.vec.Vec.length] at *; omega
-  let address := inst.data.val[index]
-  have mapped : inst.data.val[index]? = some address := List.getElem?_eq_getElem localBound
+  have localBound : index < inst.datas.val.length := by simp only [alloc.vec.Vec.length] at *; omega
+  let address := inst.datas.val[index]
+  have mapped : inst.datas.val[index]? = some address := List.getElem?_eq_getElem localBound
   have issued := datas address (List.mem_of_getElem? mapped)
   cases program with
   | passive mode => simp

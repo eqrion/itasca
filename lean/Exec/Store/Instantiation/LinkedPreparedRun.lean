@@ -3,11 +3,11 @@ namespace Exec.Store
 open Aeneas Aeneas.Std
 
 /-- Empty address maps before linking the supplied external values. -/
-def emptyInstance (module : runtime.compiler.ExecutableModule) : runtime.store.Instance := {
+def emptyInstance (module : runtime.compiler.ExecutableModule) : runtime.store.ModuleInst := {
   module := module, types := alloc.vec.Vec.new Usize,
   funcs := alloc.vec.Vec.new runtime.FuncAddr, tables := alloc.vec.Vec.new runtime.TableAddr,
   memories := alloc.vec.Vec.new runtime.MemoryAddr, globals := alloc.vec.Vec.new runtime.GlobalAddr,
-  elements := alloc.vec.Vec.new Usize, data := alloc.vec.Vec.new Usize }
+  elems := alloc.vec.Vec.new Usize, datas := alloc.vec.Vec.new Usize }
 
 /-- Preparation additionally retains the actual import-linking computation.
 The supplied externals remain the caller's exact list, rather than an inferred

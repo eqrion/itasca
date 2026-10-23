@@ -1,4 +1,4 @@
-import Exec.Interp.Host.OpenAdminCall
+import Exec.Interp.Host.OpenExecuteCall
 noncomputable section
 namespace Exec.Interp.OpenCall
 open Aeneas Aeneas.Std
@@ -54,7 +54,7 @@ def prepareStep
       _root_.Exec.runtime.interp.Frame) exec.frames frame_index
   let i1 ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-      _root_.Exec.runtime.store.Instance) store.instances frame.instance
+      _root_.Exec.runtime.store.ModuleInst) store.instances frame.instance
   let cf ←
     alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
       _root_.Exec.runtime.bytecode.CompiledFunction) i1.module.functions
@@ -66,7 +66,7 @@ def prepareStep
   let o ← lift (U32.checked_add frame.pc 1#u32)
   match o with
   | none =>
-    .ok (.done (core.result.Result.Err runtime.ExecError.BadArguments, exec, store,
+    .ok (.done (core.result.Result.Err runtime.ExecError.Internal, exec, store,
       platform))
   | some next =>
     let (f, index_mut_back) ←

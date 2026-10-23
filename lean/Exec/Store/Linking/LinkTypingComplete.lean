@@ -30,7 +30,7 @@ private theorem func_translation (ty : types.FuncType) : decodeFuncType ty = Env
 
 /-- A source-typed function import selects the exact raw signature compared by linking. -/
 theorem source_function_import_signature {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.FuncAddr) (function : runtime.store.Function)
+    (store : runtime.store.Store M) (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature required : types.FuncType)
     (found : store.funcs.val[address.index.val]? = some function)
     (signatureFound : store.types.val[function.signature.val]? = some signature)
@@ -56,7 +56,7 @@ private theorem global_translation_injective : Function.Injective Translate.glob
 
 /-- Global external typing fixes both value type and mutability. -/
 theorem source_global_import_type {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.GlobalAddr) (global : runtime.store.GlobalInstance)
+    (store : runtime.store.Store M) (address : runtime.GlobalAddr) (global : runtime.store.GlobalInst)
     (required : types.GlobalType) (found : store.globals.val[address.index.val]? = some global)
     (typed : Externaddr_ok (decodeStore view code store) (.GLOBAL address.index.val)
       (.GLOBAL (Translate.globalType required))) : global.ty = required := by
@@ -68,7 +68,7 @@ theorem source_global_import_type {M : Type} (view : M → Slice U8) (code : Cod
 
 /-- Memory external typing supplies the current-size/maximum comparison. -/
 theorem source_memory_import_limits {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.MemoryAddr) (memory : runtime.store.Memory M)
+    (store : runtime.store.Store M) (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M)
     (required : types.MemType) (found : store.memories.val[address.index.val]? = some memory)
     (typed : Externaddr_ok (decodeStore view code store) (.MEM address.index.val)
       (.MEM (EnvTranslation.memType required))) :
@@ -81,7 +81,7 @@ theorem source_memory_import_limits {M : Type} (view : M → Slice U8) (code : C
 
 /-- Table external typing fixes its reference kind and compatible limits. -/
 theorem source_table_import_type {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (store : runtime.store.Store M) (address : runtime.TableAddr) (table : runtime.store.Table)
+    (store : runtime.store.Store M) (address : runtime.TableAddr) (table : runtime.store.TableInst)
     (required : types.TableType) (found : store.tables.val[address.index.val]? = some table)
     (typed : Externaddr_ok (decodeStore view code store) (.TABLE address.index.val)
       (.TABLE (EnvTranslation.tableType required))) :

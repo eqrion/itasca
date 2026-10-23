@@ -61,7 +61,7 @@ theorem eventful_inv_loop_results {M P F A : Type}
     (Inv : runtime.store.Store M → Prop)
     (steps : EventfulInvStepOutcomes (emission:=emission) (allowed:=allowed) memory hooks floats allocator view code expected Inv)
     (initial : EventfulMachine emission allowed M P view code expected) (valid : Inv initial.store) :
-    runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
+    runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.exec initial.store initial.platform (.Ok ())
       ⦃ result => Inv result.2.2.2.2.2.1 ∧ EventfulLoopResult initial result ⦄div := by
   let loopInv := fun (state : ExecutionState M P) => Inv state.2.1 ∧ EventfulLoopInvariant memory hooks floats allocator initial state
   apply WP.dspec_mono (execution_loop_stops memory hooks floats allocator loopInv

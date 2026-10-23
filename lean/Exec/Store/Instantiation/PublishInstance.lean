@@ -7,11 +7,11 @@ open Aeneas Aeneas.Std
 /-- The actual vector publication after preparation adds one fresh provisional
 instance. It does not yet claim that the incomplete instance has full Shape. -/
 theorem publish_prepared_instance {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.Instance) (room : store.instances.length < Usize.max)
+    (inst : runtime.store.ModuleInst) (room : store.instances.length < Usize.max)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (accounted : SegmentAccounting store)
-    (emptyElements : inst.elements.val = []) (emptyData : inst.data.val = []) :
+    (emptyElements : inst.elems.val = []) (emptyData : inst.datas.val = []) :
     alloc.vec.Vec.push store.instances inst ⦃ instances =>
       let after := {store with instances}
       instances.val = store.instances.val ++ [inst] ∧

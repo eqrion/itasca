@@ -21,7 +21,7 @@ theorem compiler_lower_table_layout_prefix {A : Type} (ops : runtime.platform.Al
     (dominance : before.function.jump_tables.val.length ≤ before.function.code.val.length)
     (sites : ∀ frame ∈ before.frames.val, FrameSites before.function.code.val frame)
     (plans : FramePlans after.function.code.val.length locals after.frames.val labels groups)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
     ∃ previous start len selector,
       FramePlans before.function.code.val.length locals before.frames.val labels previous ∧
       BranchTableLayout after.function.jump_tables.val locals labels stack
@@ -97,7 +97,7 @@ theorem compiler_lower_table_layout {A : Type} (ops : runtime.platform.Alloc A)
     (dominance : before.function.jump_tables.val.length ≤ before.function.code.val.length)
     (sites : ∀ frame ∈ before.frames.val, FrameSites before.function.code.val frame)
     (plans : FramePlans after.function.code.val.length locals after.frames.val labels groups)
-    (accepted : runtime.compiler.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before=.ok (.Ok (),after)) :
     ∃ previous start len selector,
       FramePlans before.function.code.val.length locals before.frames.val labels previous ∧
       BranchTableLayout after.function.jump_tables.val locals labels stack

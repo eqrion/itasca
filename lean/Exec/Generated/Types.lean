@@ -28,7 +28,7 @@ namespace Exec
 def core.marker.PhantomData (T : Type) := Unit
 
 /-- [itasca::runtime::compiler::ControlMap]
-    Source: 'src/runtime/compiler/mod.rs', lines 180:0-194:1
+    Source: 'src/runtime/compiler/mod.rs', lines 190:0-204:1
     Visibility: public -/
 structure runtime.compiler.ControlMap where
   kind : _root_.Itasca.code.LabelKind
@@ -65,19 +65,6 @@ inductive runtime.bytecode.Instr where
 | GlobalGet2 : Std.U32 → Std.U32 → runtime.bytecode.Instr
 | GlobalSet : Std.U32 → Std.U32 → runtime.bytecode.Instr
 | GlobalSet2 : Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Extend32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Eqz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -112,6 +99,10 @@ inductive runtime.bytecode.Instr where
 | F64Gt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Le : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Ge : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32DivS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -126,6 +117,9 @@ inductive runtime.bytecode.Instr where
 | I32ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Rotl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Rotr : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -141,27 +135,6 @@ inductive runtime.bytecode.Instr where
 | I64ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Rotl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Rotr : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F32Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| F64Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
-| I64Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -169,6 +142,13 @@ inductive runtime.bytecode.Instr where
 | F32Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -176,6 +156,13 @@ inductive runtime.bytecode.Instr where
 | F64Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F64Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32WrapI64 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32TruncF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32TruncF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -217,6 +204,19 @@ inductive runtime.bytecode.Instr where
   Std.U32 →
   Std.U32 →
   runtime.bytecode.Instr
+| I32Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I32Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | I64Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
 | F32Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -710,7 +710,7 @@ structure runtime.platform.Alloc (Self : Type) where
     × (alloc.vec.Vec T))
 
 /-- [itasca::runtime::compiler::Frame]
-    Source: 'src/runtime/compiler/mod.rs', lines 565:0-576:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 553:0-564:1 -/
 structure runtime.compiler.Frame where
   map : Std.Usize
   kind : _root_.Itasca.code.LabelKind
@@ -724,7 +724,7 @@ structure runtime.compiler.Frame where
   fixups : alloc.vec.Vec Std.Usize
 
 /-- [itasca::runtime::compiler::Signature]
-    Source: 'src/runtime/compiler/mod.rs', lines 519:0-524:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 514:0-519:1 -/
 structure runtime.compiler.Signature where
   params : Std.Usize
   results : Std.Usize
@@ -732,7 +732,7 @@ structure runtime.compiler.Signature where
   result_slots : Std.U32
 
 /-- [itasca::runtime::compiler::CompileResource]
-    Source: 'src/runtime/compiler/mod.rs', lines 56:0-65:1
+    Source: 'src/runtime/compiler/mod.rs', lines 64:0-73:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.compiler.CompileResource where
@@ -746,7 +746,7 @@ inductive runtime.compiler.CompileResource where
 | Allocation : runtime.compiler.CompileResource
 
 /-- [itasca::runtime::compiler::CompileLimits]
-    Source: 'src/runtime/compiler/mod.rs', lines 29:0-37:1
+    Source: 'src/runtime/compiler/mod.rs', lines 37:0-45:1
     Visibility: public -/
 structure runtime.compiler.CompileLimits where
   max_module_bytes : Std.Usize
@@ -758,7 +758,7 @@ structure runtime.compiler.CompileLimits where
   max_locals : Std.Usize
 
 /-- [itasca::runtime::compiler::Budget]
-    Source: 'src/runtime/compiler/mod.rs', lines 87:0-95:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 95:0-103:1 -/
 structure runtime.compiler.Budget (A : Type) where
   marker : _root_.Exec.core.marker.PhantomData A
   limits : _root_.Exec.runtime.compiler.CompileLimits
@@ -769,7 +769,7 @@ structure runtime.compiler.Budget (A : Type) where
   error : Option _root_.Exec.runtime.compiler.CompileResource
 
 /-- [itasca::runtime::compiler::FunctionCompiler]
-    Source: 'src/runtime/compiler/mod.rs', lines 578:0-591:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 566:0-579:1 -/
 structure runtime.compiler.FunctionCompiler (A : Type) where
   signatures : Slice _root_.Exec.runtime.compiler.Signature
   func_param_slots : Slice Std.U32
@@ -785,7 +785,7 @@ structure runtime.compiler.FunctionCompiler (A : Type) where
   table_depths : alloc.vec.Vec Std.U32
 
 /-- [itasca::runtime::compiler::ExecutableModule]
-    Source: 'src/runtime/compiler/mod.rs', lines 143:0-152:1
+    Source: 'src/runtime/compiler/mod.rs', lines 151:0-162:1
     Visibility: public -/
 structure runtime.compiler.ExecutableModule where
   module : _root_.Itasca.module.Module
@@ -798,7 +798,7 @@ structure runtime.compiler.ExecutableModule where
   initialization : Std.Usize
 
 /-- [itasca::runtime::compiler::CompileError]
-    Source: 'src/runtime/compiler/mod.rs', lines 70:0-73:1
+    Source: 'src/runtime/compiler/mod.rs', lines 78:0-81:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.compiler.CompileError where
@@ -808,7 +808,7 @@ inductive runtime.compiler.CompileError where
   runtime.compiler.CompileError
 
 /-- [itasca::runtime::compiler::FunctionStats]
-    Source: 'src/runtime/compiler/mod.rs', lines 157:0-175:1
+    Source: 'src/runtime/compiler/mod.rs', lines 167:0-185:1
     Visibility: public -/
 structure runtime.compiler.FunctionStats where
   type_index : Std.U32
@@ -823,7 +823,7 @@ structure runtime.compiler.FunctionStats where
   body_end : Std.Usize
 
 /-- [itasca::runtime::compiler::CompileScheduler]
-    Source: 'src/runtime/compiler/mod.rs', lines 444:0-452:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 439:0-447:1 -/
 structure runtime.compiler.CompileScheduler (A : Type) where
   signatures : alloc.vec.Vec _root_.Exec.runtime.compiler.Signature
   func_param_slots : alloc.vec.Vec Std.U32
@@ -835,115 +835,95 @@ structure runtime.compiler.CompileScheduler (A : Type) where
   budget : _root_.Exec.runtime.compiler.Budget A
 
 /-- [itasca::runtime::compiler::CompileSource]
-    Source: 'src/runtime/compiler/mod.rs', lines 375:0-379:1 -/
+    Source: 'src/runtime/compiler/mod.rs', lines 376:0-380:1 -/
 structure runtime.compiler.CompileSource where
   bytes : Slice Std.U8
   code_start : Std.Usize
   code_end : Std.Usize
 
-/-- [itasca::runtime::ExternAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
-    Visibility: public -/
-structure runtime.ExternAddr where
-  store : Std.Usize
-  index : Std.Usize
-
-/-- [itasca::runtime::FuncAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
-    Visibility: public -/
-structure runtime.FuncAddr where
-  store : Std.Usize
-  index : Std.Usize
-
-/-- [itasca::runtime::Value]
-    Source: 'src/runtime/mod.rs', lines 51:0-59:1
-    Visibility: public -/
-@[discriminant isize]
-inductive runtime.Value where
-| I32 : Std.U32 → runtime.Value
-| I64 : Std.U64 → runtime.Value
-| F32 : Std.U32 → runtime.Value
-| F64 : Std.U64 → runtime.Value
-| V128 : Std.U128 → runtime.Value
-| FuncRef : Option _root_.Exec.runtime.FuncAddr → runtime.Value
-| ExternRef : Option _root_.Exec.runtime.ExternAddr → runtime.Value
-
 /-- [itasca::runtime::GlobalAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
     Visibility: public -/
 structure runtime.GlobalAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::MemoryAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
     Visibility: public -/
 structure runtime.MemoryAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::TableAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
     Visibility: public -/
 structure runtime.TableAddr where
   store : Std.Usize
   index : Std.Usize
 
-/-- [itasca::runtime::store::Instance]
-    Source: 'src/runtime/store.rs', lines 80:0-89:1 -/
-structure runtime.store.Instance where
+/-- [itasca::runtime::FuncAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.FuncAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::store::ModuleInst]
+    Source: 'src/runtime/store.rs', lines 87:0-96:1 -/
+structure runtime.store.ModuleInst where
   module : _root_.Exec.runtime.compiler.ExecutableModule
   types : alloc.vec.Vec Std.Usize
   funcs : alloc.vec.Vec _root_.Exec.runtime.FuncAddr
   tables : alloc.vec.Vec _root_.Exec.runtime.TableAddr
   memories : alloc.vec.Vec _root_.Exec.runtime.MemoryAddr
   globals : alloc.vec.Vec _root_.Exec.runtime.GlobalAddr
-  elements : alloc.vec.Vec Std.Usize
-  data : alloc.vec.Vec Std.Usize
+  elems : alloc.vec.Vec Std.Usize
+  datas : alloc.vec.Vec Std.Usize
 
-/-- [itasca::runtime::store::DataInstance]
-    Source: 'src/runtime/store.rs', lines 77:0-79:1 -/
-structure runtime.store.DataInstance where
+/-- [itasca::runtime::store::DataInst]
+    Source: 'src/runtime/store.rs', lines 83:0-85:1 -/
+structure runtime.store.DataInst where
   bytes : alloc.vec.Vec Std.U8
 
-/-- [itasca::runtime::store::ElemInstance]
-    Source: 'src/runtime/store.rs', lines 73:0-76:1 -/
-structure runtime.store.ElemInstance where
+/-- [itasca::runtime::store::ElemInst]
+    Source: 'src/runtime/store.rs', lines 78:0-81:1 -/
+structure runtime.store.ElemInst where
   ty : _root_.Itasca.types.ElemType
   refs : alloc.vec.Vec Std.U64
 
-/-- [itasca::runtime::store::GlobalInstance]
-    Source: 'src/runtime/store.rs', lines 68:0-72:1 -/
-structure runtime.store.GlobalInstance where
+/-- [itasca::runtime::store::GlobalInst]
+    Source: 'src/runtime/store.rs', lines 72:0-76:1 -/
+structure runtime.store.GlobalInst where
   lo : Std.U64
   hi : Std.U64
   ty : _root_.Itasca.types.GlobalType
 
-/-- [itasca::runtime::store::Table]
-    Source: 'src/runtime/store.rs', lines 63:0-67:1 -/
-structure runtime.store.Table where
+/-- [itasca::runtime::store::TableInst]
+    Source: 'src/runtime/store.rs', lines 66:0-70:1 -/
+structure runtime.store.TableInst where
   elements : alloc.vec.Vec Std.U64
   ty : _root_.Itasca.types.ElemType
   maximum : Option Std.U32
 
-/-- [itasca::runtime::store::Memory]
-    Source: 'src/runtime/store.rs', lines 59:0-62:1 -/
-structure runtime.store.Memory (M : Type) where
+/-- [itasca::runtime::store::MemInst]
+    Source: 'src/runtime/store.rs', lines 61:0-64:1 -/
+structure runtime.store.MemInst (M : Type) where
   buf : M
   maximum : Option Std.U32
 
-/-- [itasca::runtime::store::FunctionCode]
-    Source: 'src/runtime/store.rs', lines 51:0-54:1 -/
+/-- [itasca::runtime::store::FuncCode]
+    Source: 'src/runtime/store.rs', lines 52:0-55:1 -/
 @[discriminant isize]
-inductive runtime.store.FunctionCode where
-| Host : Std.U64 → runtime.store.FunctionCode
-| Wasm : Std.Usize → Std.Usize → runtime.store.FunctionCode
+inductive runtime.store.FuncCode where
+| Host : Std.U64 → runtime.store.FuncCode
+| Wasm : Std.Usize → Std.Usize → runtime.store.FuncCode
 
-/-- [itasca::runtime::store::Function]
-    Source: 'src/runtime/store.rs', lines 55:0-58:1 -/
-structure runtime.store.Function where
+/-- [itasca::runtime::store::FuncInst]
+    Source: 'src/runtime/store.rs', lines 57:0-60:1 -/
+structure runtime.store.FuncInst where
   signature : Std.Usize
-  code : _root_.Exec.runtime.store.FunctionCode
+  code : _root_.Exec.runtime.store.FuncCode
 
 /-- [itasca::runtime::store::StoreLimits]
     Source: 'src/runtime/store.rs', lines 16:0-36:1
@@ -959,24 +939,79 @@ structure runtime.store.StoreLimits where
   max_values : Std.Usize
 
 /-- [itasca::runtime::store::Store]
-    Source: 'src/runtime/store.rs', lines 94:0-110:1
+    Source: 'src/runtime/store.rs', lines 101:0-117:1
     Visibility: public -/
 structure runtime.store.Store (M : Type) where
   id : Std.Usize
   limits : _root_.Exec.runtime.store.StoreLimits
-  funcs : alloc.vec.Vec _root_.Exec.runtime.store.Function
+  funcs : alloc.vec.Vec _root_.Exec.runtime.store.FuncInst
   types : alloc.vec.Vec _root_.Itasca.types.FuncType
-  tables : alloc.vec.Vec _root_.Exec.runtime.store.Table
-  memories : alloc.vec.Vec (_root_.Exec.runtime.store.Memory M)
-  globals : alloc.vec.Vec _root_.Exec.runtime.store.GlobalInstance
-  instances : alloc.vec.Vec _root_.Exec.runtime.store.Instance
-  elems : alloc.vec.Vec _root_.Exec.runtime.store.ElemInstance
-  datas : alloc.vec.Vec _root_.Exec.runtime.store.DataInstance
+  tables : alloc.vec.Vec _root_.Exec.runtime.store.TableInst
+  memories : alloc.vec.Vec (_root_.Exec.runtime.store.MemInst M)
+  globals : alloc.vec.Vec _root_.Exec.runtime.store.GlobalInst
+  instances : alloc.vec.Vec _root_.Exec.runtime.store.ModuleInst
+  elems : alloc.vec.Vec _root_.Exec.runtime.store.ElemInst
+  datas : alloc.vec.Vec _root_.Exec.runtime.store.DataInst
   externs : alloc.vec.Vec Std.U64
   instance_items : Std.Usize
   signature_values : Std.Usize
   memory_bytes : Std.Usize
   table_elements : Std.Usize
+
+/-- Trait declaration: [itasca::runtime::platform::MemoryBuffer]
+    Source: 'src/runtime/platform.rs', lines 46:0-51:1
+    Visibility: public -/
+structure runtime.platform.MemoryBuffer (Self : Type) where
+  new_zeroed : Std.Usize → Result (Option Self)
+  bytes : Self → Result (Slice Std.U8)
+  bytes_mut : Self → Result ((Slice Std.U8) × (Slice Std.U8 → Self))
+  grow : Self → Std.Usize → Result (Bool × Self)
+
+/-- [itasca::runtime::ResourceLimit]
+    Source: 'src/runtime/mod.rs', lines 129:0-134:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.ResourceLimit where
+| CallStack : runtime.ResourceLimit
+| Values : runtime.ResourceLimit
+| Allocation : runtime.ResourceLimit
+| Objects : runtime.ResourceLimit
+
+/-- [itasca::runtime::LinkError]
+    Source: 'src/runtime/mod.rs', lines 122:0-125:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.LinkError where
+| MissingImport : runtime.LinkError
+| IncompatibleImportType : runtime.LinkError
+
+/-- [itasca::runtime::Trap]
+    Source: 'src/runtime/mod.rs', lines 108:0-118:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.Trap where
+| Unreachable : runtime.Trap
+| IntegerDivideByZero : runtime.Trap
+| IntegerOverflow : runtime.Trap
+| InvalidConversionToInteger : runtime.Trap
+| MemoryOutOfBounds : runtime.Trap
+| TableOutOfBounds : runtime.Trap
+| UninitializedElement : runtime.Trap
+| IndirectCallTypeMismatch : runtime.Trap
+| Host : runtime.Trap
+
+/-- [itasca::runtime::ExecError]
+    Source: 'src/runtime/mod.rs', lines 138:0-148:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.ExecError where
+| Trap : _root_.Exec.runtime.Trap → runtime.ExecError
+| Link : _root_.Exec.runtime.LinkError → runtime.ExecError
+| Exhausted : _root_.Exec.runtime.ResourceLimit → runtime.ExecError
+| BadArguments : runtime.ExecError
+| WrongStore : runtime.ExecError
+| Terminated : runtime.ExecError
+| Internal : runtime.ExecError
 
 /-- Trait declaration: [itasca::runtime::platform::FloatOps]
     Source: 'src/runtime/platform.rs', lines 58:0-86:1
@@ -1010,14 +1045,43 @@ structure runtime.platform.FloatOps (Self : Type) where
   f64_convert_i64_u : Std.U64 → Result Std.U64
   f32_demote_f64 : Std.U64 → Result Std.U32
 
-/-- Trait declaration: [itasca::runtime::platform::MemoryBuffer]
-    Source: 'src/runtime/platform.rs', lines 46:0-51:1
+/-- [itasca::runtime::interp::Frame]
+    Source: 'src/runtime/interp/mod.rs', lines 13:0-18:1 -/
+structure runtime.interp.Frame where
+  «instance» : Std.Usize
+  function : Std.Usize
+  pc : Std.U32
+  base : Std.Usize
+
+/-- [itasca::runtime::ExternAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
     Visibility: public -/
-structure runtime.platform.MemoryBuffer (Self : Type) where
-  new_zeroed : Std.Usize → Result (Option Self)
-  bytes : Self → Result (Slice Std.U8)
-  bytes_mut : Self → Result ((Slice Std.U8) × (Slice Std.U8 → Self))
-  grow : Self → Std.Usize → Result (Bool × Self)
+structure runtime.ExternAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::Value]
+    Source: 'src/runtime/mod.rs', lines 54:0-62:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.Value where
+| I32 : Std.U32 → runtime.Value
+| I64 : Std.U64 → runtime.Value
+| F32 : Std.U32 → runtime.Value
+| F64 : Std.U64 → runtime.Value
+| V128 : Std.U128 → runtime.Value
+| FuncRef : Option _root_.Exec.runtime.FuncAddr → runtime.Value
+| ExternRef : Option _root_.Exec.runtime.ExternAddr → runtime.Value
+
+/-- [itasca::runtime::interp::Execution]
+    Source: 'src/runtime/interp/mod.rs', lines 20:0-26:1
+    Visibility: public -/
+structure runtime.interp.Execution where
+  store : Std.Usize
+  slots : alloc.vec.Vec Std.U64
+  frames : alloc.vec.Vec _root_.Exec.runtime.interp.Frame
+  host_args : alloc.vec.Vec _root_.Exec.runtime.Value
+  host_results : alloc.vec.Vec _root_.Exec.runtime.Value
 
 /-- [itasca::runtime::platform::HostError]
     Source: 'src/runtime/platform.rs', lines 17:0-20:1
@@ -1048,78 +1112,15 @@ structure runtime.platform.Platform (Self : Type) (M : Type) where
     × (_root_.Exec.runtime.store.Store M) × (Slice
     _root_.Exec.runtime.Value))
 
-/-- [itasca::runtime::ResourceLimit]
-    Source: 'src/runtime/mod.rs', lines 126:0-131:1
-    Visibility: public -/
-@[discriminant isize]
-inductive runtime.ResourceLimit where
-| CallStack : runtime.ResourceLimit
-| Values : runtime.ResourceLimit
-| Allocation : runtime.ResourceLimit
-| Objects : runtime.ResourceLimit
-
-/-- [itasca::runtime::LinkError]
-    Source: 'src/runtime/mod.rs', lines 119:0-122:1
-    Visibility: public -/
-@[discriminant isize]
-inductive runtime.LinkError where
-| MissingImport : runtime.LinkError
-| IncompatibleImportType : runtime.LinkError
-
-/-- [itasca::runtime::Trap]
-    Source: 'src/runtime/mod.rs', lines 105:0-115:1
-    Visibility: public -/
-@[discriminant isize]
-inductive runtime.Trap where
-| Unreachable : runtime.Trap
-| IntegerDivideByZero : runtime.Trap
-| IntegerOverflow : runtime.Trap
-| InvalidConversionToInteger : runtime.Trap
-| MemoryOutOfBounds : runtime.Trap
-| TableOutOfBounds : runtime.Trap
-| UninitializedElement : runtime.Trap
-| IndirectCallTypeMismatch : runtime.Trap
-| Host : runtime.Trap
-
-/-- [itasca::runtime::ExecError]
-    Source: 'src/runtime/mod.rs', lines 135:0-142:1
-    Visibility: public -/
-@[discriminant isize]
-inductive runtime.ExecError where
-| Trap : _root_.Exec.runtime.Trap → runtime.ExecError
-| Link : _root_.Exec.runtime.LinkError → runtime.ExecError
-| Exhausted : _root_.Exec.runtime.ResourceLimit → runtime.ExecError
-| BadArguments : runtime.ExecError
-| WrongStore : runtime.ExecError
-| Terminated : runtime.ExecError
-
-/-- [itasca::runtime::interp::Frame]
-    Source: 'src/runtime/interp/mod.rs', lines 13:0-18:1 -/
-structure runtime.interp.Frame where
-  «instance» : Std.Usize
-  function : Std.Usize
-  pc : Std.U32
-  base : Std.Usize
-
-/-- [itasca::runtime::interp::Execution]
-    Source: 'src/runtime/interp/mod.rs', lines 20:0-26:1
-    Visibility: public -/
-structure runtime.interp.Execution where
-  store : Std.Usize
-  slots : alloc.vec.Vec Std.U64
-  frames : alloc.vec.Vec _root_.Exec.runtime.interp.Frame
-  host_args : alloc.vec.Vec _root_.Exec.runtime.Value
-  host_results : alloc.vec.Vec _root_.Exec.runtime.Value
-
 /-- [itasca::runtime::InstanceAddr]
-    Source: 'src/runtime/mod.rs', lines 35:8-38:9
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
     Visibility: public -/
 structure runtime.InstanceAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::Extern]
-    Source: 'src/runtime/mod.rs', lines 95:0-100:1
+    Source: 'src/runtime/mod.rs', lines 98:0-103:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Extern where

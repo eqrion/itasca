@@ -38,10 +38,10 @@ theorem chosen_world_loop_infinite {choices : SourceChoices} {M P F A : Type}
     (steps : ChosenWorldStepOutcomes (emission:=emission) (allowed:=allowed) choices memory hooks floats allocator view expected Inv)
     (initial : ChosenWorld emission allowed M P view expected)
     (valid : Inv initial.code initial.machine.store)
-    (divergent : runtime.interp.invoke_with_loop2 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
+    (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
     InfiniteChosenSource choices initial.occurrence (Abs.decode initial.machine.source) := by
   let Running := {before : ChosenWorld emission allowed M P view expected //
-    Inv before.code before.machine.store ∧ runtime.interp.invoke_with_loop2 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div}
+    Inv before.code before.machine.store ∧ runtime.interp.invoke_with_loop1 memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ())=.div}
   let edge := fun (before : Running) (events : List HostEvent) (after : Running) =>
     ChosenWorldTransition choices memory hooks floats allocator before.val events after.val
   apply infinite_chosen_of_decreasing_stutter choices edge (fun p=>Abs.decode p.val.machine.source)

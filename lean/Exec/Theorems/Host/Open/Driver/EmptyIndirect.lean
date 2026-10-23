@@ -12,9 +12,9 @@ theorem prepare_empty_indirect {M F A : Type}
     (available : Platform.AllocationAvailable allocator (2*Usize.max))
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (frameIndex : Usize) (frame : runtime.interp.Frame) (entry index : U32)
-    (inst : runtime.store.Instance) (compiled : runtime.bytecode.CompiledFunction)
-    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.Table)
-    (position : U32) (reference : U64) (address : Usize) (function : runtime.store.Function)
+    (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    (table type : U32) (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst)
+    (position : U32) (reference : U64) (address : Usize) (function : runtime.store.FuncInst)
     (identity : U64) (signature : Itasca.types.FuncType)
     (last : frameIndex.val+1=exec.frames.length) (frameAt : exec.frames.val[frameIndex.val]?=some frame)
     (fetched : compiled.code.val[frame.pc.val]?=some (.CallIndirect entry index 0#u32))
@@ -41,7 +41,7 @@ theorem prepare_empty_indirect {M F A : Type}
     phase=.pending {exec with frames:=exec.frames.set frameIndex {frame with pc:=next}}
       store () ⟨store.id,address⟩ 0#usize identity (alloc.vec.Vec.new _) (alloc.vec.Vec.new _)
   have selectedBound : position.val<object.elements.length := (List.getElem?_eq_some_iff.mp selected).1
-  have targetUnique : ∀r : U64,∀a : Usize,∀f : runtime.store.Function,
+  have targetUnique : ∀r : U64,∀a : Usize,∀f : runtime.store.FuncInst,
       object.elements.val[position.val]?=some r → (UScalar.cast .Usize r).val=a.val+1 →
       store.funcs.val[a.val]?=some f → r=reference ∧ a=address ∧ f=function := by
     intro r a f found bits target

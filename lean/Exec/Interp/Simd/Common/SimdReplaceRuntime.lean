@@ -30,7 +30,8 @@ def replaceOpcode (ty : lanetype) : U32 :=
   all_goals with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) ⦃ _ ⦄
   all_goals rw [bind_ok]
   all_goals step with put as ⟨value, bits⟩
-  all_goals simp only [runtime.interp.simd.vector, bind_ok, WP.spec_ok]
-  all_goals exact ⟨value, rfl, bits⟩
+  all_goals first
+    | exact ⟨value, rfl, bits⟩
+    | (simp only [bind_ok, WP.spec_ok]; exact ⟨value, rfl, bits⟩)
 
 end Exec.Interp.Simd

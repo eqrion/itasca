@@ -10,8 +10,8 @@ theorem stateful_memory_grow_effect_chosen {choices : Exec.Spec.SourceChoices} (
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (compatible : GrowthChoicesCompatible memory allocator view choices)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.Instance)
-    (address : runtime.MemoryAddr) (object : runtime.store.Memory M) (amount : U64)
+    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M) (amount : U64)
     (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
@@ -19,7 +19,7 @@ theorem stateful_memory_grow_effect_chosen {choices : Exec.Spec.SourceChoices} (
     (shapes : ∀ object ∈ store.memories.val, MemoryShape view object)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
     (values : f.vals = front++[Abs.integerVal .I32 (UScalar.cast .U32 amount).val]) :
-    runtime.interp.admin_memory_grow memory hooks floats allocator exec store instanceIndex base dst ⦃ out =>
+    runtime.interp.execute_memory_grow memory exec store instanceIndex base dst ⦃ out =>
       out.1 = .Ok () ∧ FrameStoreMetadata store out.2.2 ∧ ∃ result : U32,
         SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 result)) ∧
         MemoryGrowth view code store address.index (UScalar.cast .U32 amount) (result,out.2.2) ∧
@@ -33,7 +33,7 @@ theorem stateful_memory_grow_effect_chosen {choices : Exec.Spec.SourceChoices} (
     obtain ⟨out,actual,effect⟩ := WP.spec_imp_exists primitive
     rw [actual,WP.spec_ok]
     exact ⟨effect,compatible.memoryReply occurrence store address.index (UScalar.cast .U32 amount) object out issued actual⟩
-  apply WP.spec_mono (memory_grow_handler memory hooks floats allocator exec store instanceIndex base dst inst address amount
+  apply WP.spec_mono (memory_grow_handler memory exec store instanceIndex base dst inst address amount
     found mapped amountSlot _ chosenPrimitive)
   rintro out ⟨result,success,⟨growth,matched⟩,slots⟩
   obtain ⟨metadata,transition⟩ := stateful_memory_growth_chosen occurrence view code store inst address object (UScalar.cast .U32 amount)

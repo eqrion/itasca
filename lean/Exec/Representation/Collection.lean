@@ -38,3 +38,24 @@ theorem map_set_modify {T U : Type} (decode : T → U) (change : U → U)
       simpa using ih index found
 
 end Exec.Representation
+
+namespace Exec
+open Aeneas Aeneas.Std
+
+/-- The shared runtime `clear` helper empties any vector. -/
+@[step] theorem runtime_clear {T : Type} (values : alloc.vec.Vec T) :
+    runtime.clear values ⦃ out => out.val = [] ⦄ := by
+  unfold runtime.clear runtime.clear_loop
+  apply loop.spec_decr_nat (fun v => v.val.length) (fun _ => True)
+  · intro v _
+    simp only [runtime.clear_loop.body, alloc.vec.Vec.is_empty, bind_ok]
+    split
+    · rename_i empty
+      simpa using empty
+    · rename_i nonempty
+      simp [alloc.vec.Vec.pop]
+      have : 0 < v.val.length := List.length_pos_iff.mpr (by simpa using nonempty)
+      omega
+  · trivial
+
+end Exec

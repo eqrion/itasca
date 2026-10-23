@@ -9,7 +9,7 @@ theorem DataStageEffect.elements {M : Type} {store after : runtime.store.Store M
 theorem DataStageEffect.element_map {M : Type} {store after : runtime.store.Store M}
     {index inst next} (effect : DataStageEffect store index inst after)
     (found : store.instances.val[index.val]? = some inst)
-    (nextFound : after.instances.val[index.val]? = some next) : next.elements = inst.elements := by
+    (nextFound : after.instances.val[index.val]? = some next) : next.elems = inst.elems := by
   cases effect with
   | unchanged =>
     have same := Option.some.inj (found.symm.trans nextFound)

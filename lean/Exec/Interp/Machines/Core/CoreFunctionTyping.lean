@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std
 /-- Source typing uses the exact canonical context retained by the compiler,
 not an existential alternative with unrelated global or memory declarations. -/
 def CoreFunctionTyped {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (function : runtime.store.Function) : Prop :=
+    (store : runtime.store.Store M) (function : runtime.store.FuncInst) : Prop :=
   match function.code with
   | .Host _ => Functype_ok (Store.decodeFunction code store function).TYPE
   | .Wasm instanceIndex functionIndex =>

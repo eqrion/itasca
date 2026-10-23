@@ -334,4 +334,74 @@ theorem owned_slots_roundtrip (slots : Slice U64) (position : Usize)
   subst result
   exact slots_roundtrip slots position (rawType value) value store lo hi he hd hz hb
 
+/-- The total slot width of a signature component, as computed by `value::type_slots`. -/
+def valueTypeSlots (types : List Itasca.types.ValueType) : Nat :=
+  Code.slots (types.map sourceType)
+
+def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
+    (amount : Usize) (index : Usize) (overflow : Bool) : Prop :=
+  if overflow then Usize.max < total
+  else amount.val + valueTypeSlots (types.drop index.val) = total
+
+@[step] theorem value_type_slots_loop (types : Slice Itasca.types.ValueType)
+    (amount : Usize) (index : Usize) (overflow : Bool) (total : Nat)
+    (bound : index.val ≤ types.val.length)
+    (state : ValueTypeSlotsState types.val total amount index overflow) :
+    runtime.value.type_slots_loop types amount index overflow ⦃ out =>
+      if out.2 then Usize.max < total else out.1.val = total ⦄ := by
+  unfold runtime.value.type_slots_loop
+  apply loop.spec_decr_nat (fun p => types.val.length - p.2.1.val)
+    (fun p => p.2.1.val ≤ types.val.length ∧ ValueTypeSlotsState types.val total p.1 p.2.1 p.2.2)
+  · rintro ⟨amount, i, overflow⟩ ⟨hi, hs⟩
+    dsimp only at hi hs
+    unfold runtime.value.type_slots_loop.body
+    dsimp only
+    split
+    · rename_i more
+      have hb : i.val < types.val.length := by scalar_tac
+      cases overflow with
+      | true => simpa [ValueTypeSlotsState] using hs
+      | false =>
+        simp only [Bool.false_eq_true, ite_false]
+        simp only [ValueTypeSlotsState, Bool.false_eq_true, ite_false] at hs
+        rw [List.drop_eq_getElem_cons hb] at hs
+        simp only [valueTypeSlots, List.map_cons, Code.slots] at hs
+        step as ⟨ty, hty⟩
+        step with width_spec ty as ⟨word, hword⟩
+        simp only [lift, bind_ok]
+        have hw : (UScalar.cast .Usize word).val = Code.width (sourceType ty) := by
+          simpa only [U32.cast_Usize_val_eq] using hword
+        have hc := Usize.checked_add_bv_spec amount (UScalar.cast .Usize word)
+        cases he : Usize.checked_add amount (UScalar.cast .Usize word) with
+        | none =>
+          simp only [he] at hc ⊢
+          simp only [bind_ok, uncurry_apply_pair]
+          step as ⟨next, hnext⟩
+          refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+          simp only [ValueTypeSlotsState, ite_true]
+          rw [← hty] at hs
+          scalar_tac
+        | some sum =>
+          simp only [he] at hc ⊢
+          simp only [bind_ok, uncurry_apply_pair]
+          step as ⟨next, hnext⟩
+          refine ⟨by scalar_tac, ?_, by scalar_tac⟩
+          simp only [ValueTypeSlotsState, Bool.false_eq_true, ite_false, hnext, valueTypeSlots]
+          rw [← hty] at hs
+          scalar_tac
+    · rename_i finished
+      have same : i.val = types.val.length := by scalar_tac
+      cases overflow <;> simpa [ValueTypeSlotsState, same, valueTypeSlots, Code.slots] using hs
+  · exact ⟨bound, state⟩
+
+@[step] theorem value_type_slots (types : Slice Itasca.types.ValueType) :
+    runtime.value.type_slots types ⦃ result =>
+      match result with
+      | some word => word.val = valueTypeSlots types.val
+      | none => Usize.max < valueTypeSlots types.val ⦄ := by
+  unfold runtime.value.type_slots
+  step with value_type_slots_loop types 0#usize 0#usize false (valueTypeSlots types.val)
+    (by simp) (by simp [ValueTypeSlotsState]) as ⟨amount, overflow, hs⟩
+  cases overflow <;> simpa using hs
+
 end Exec.Interp
