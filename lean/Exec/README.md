@@ -47,7 +47,7 @@ with proof fields, against the standard logical axiom allowlist.
 | `Exec/Interp/` | Concrete interpreter operations, machine preservation, source correspondence, and invocation. |
 | `Exec/Store/` | Issued-object API, linking, preparation, publication, initialization, and instantiation. |
 | `Exec/Theorems/` | Public API composition and specialized corollaries. |
-| `Exec/Contracts` | Definitions of the host obligations defined beside their proofs; it links the rest. |
+| `Exec/Contracts` | The host-law bundle `HostLaws` and its parts; it links the platform-law bundle `Platform.Laws` and the rest. |
 | `Exec/Results/`, `Exec/Main` | The headline theorems. Only `Main` and `Examples/` import them, and examples import only `Main`. |
 
 Store decoding and capacity contracts belong to `Representation`, below both
@@ -180,8 +180,8 @@ exclude modules whose actual output would fit exactly at a configured limit.
 ## Host composition
 
 The atomic host-call proofs live directly in `Theorems/Host/`. They take the
-callback laws of [Contracts](Contracts.lean) as premises and never model a
-particular callback. [Examples/TrapHost](Examples/TrapHost.lean) shows the laws
+per-host `HostRetention` laws of [Contracts](Contracts.lean) as premises and
+never model a particular callback; the world layers above take `HostLaws`. [Examples/TrapHost](Examples/TrapHost.lean) shows the laws
 are satisfiable: a trapping callback, continuing interrupts and a granting
 allocator discharge every host, interrupt and allocator premise of
 `no_spurious_errors`.
