@@ -2,7 +2,12 @@ import Exec.Theorems.Composition.Certified.CertifiedSupported
 import Exec.Store.Invariant.SupportedFunctionTables
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Theorems.Composition.Certified.CertifiedSupportedCode
-import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Composition.Certified.CertifiedSupportedSegments
+import Exec.Interp.StructuredMachine.StatefulProjection
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.StructuredMachine.SimdPoint
+import Exec.Interp.StructuredMachine.IndirectPoint
+import Exec.Abs.BinaryInstr
 import Exec.Store.Invariant.TypeStaging
 import Exec.Store.Invariant.InternTypes
 import Exec.Store.Invariant.CoreTypingExtension

@@ -1,6 +1,12 @@
 import Exec.Theorems.Api.CertifiedApi
 import Exec.Theorems.Composition.Certified.CertifiedSupported
-import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Composition.Certified.CertifiedSupportedCode
+import Exec.Theorems.Composition.Certified.CertifiedSupportedSegments
+import Exec.Interp.StructuredMachine.StatefulProjection
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.StructuredMachine.SimdPoint
+import Exec.Interp.StructuredMachine.IndirectPoint
+import Exec.Abs.BinaryInstr
 import Exec.Store.Initialization.SegmentAccounting
 import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Invariant.TypeStaging

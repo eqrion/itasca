@@ -43,6 +43,7 @@ fn instance(store: &mut Store, wat: &str, imports: &[Extern]) -> InstanceAddr {
             &mut Hooks::new(),
         )
         .unwrap()
+        .instance
 }
 fn func<M: MemoryBuffer>(store: &Store<M>, i: InstanceAddr, name: &str) -> FuncAddr {
     match store.export(i, name.as_bytes()).unwrap().unwrap() {
@@ -414,7 +415,8 @@ fn embedder_memory_growth_preserves_bytes_and_zero_fills() {
             &[Extern::Memory(m)],
             &mut Hooks::new(),
         )
-        .unwrap();
+        .unwrap()
+        .instance;
     let f = func(&store, i, "grow");
     let mut results = Vec::new();
     let mut e = Execution::new();
@@ -430,7 +432,7 @@ fn embedder_memory_growth_preserves_bytes_and_zero_fills() {
 }
 
 #[test]
-fn synchronous_start_calls_host_once_after_segment_initialization() {
+fn start_function_runs_after_segment_initialization() {
     struct Start {
         memory: MemoryAddr,
         calls: usize,
@@ -471,7 +473,7 @@ fn synchronous_start_calls_host_once_after_segment_initialization() {
         )
         .unwrap();
     let mut platform = Start { memory, calls: 0 };
-    store
+    let instantiated = store
         .instantiate(
             module(
                 r#"(module (import "h" "m" (memory 1))
@@ -481,6 +483,12 @@ fn synchronous_start_calls_host_once_after_segment_initialization() {
             &[Extern::Memory(memory), Extern::Func(host)],
             &mut platform,
         )
+        .unwrap();
+    assert_eq!(platform.calls, 0);
+    assert_eq!(store.memory(memory).unwrap()[0], b'A');
+    let start = instantiated.start.unwrap();
+    Execution::new()
+        .invoke(&mut store, &mut platform, start, &[], &mut Vec::new())
         .unwrap();
     assert_eq!(platform.calls, 1);
     assert_eq!(&store.memory(memory).unwrap()[..2], b"AB");

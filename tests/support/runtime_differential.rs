@@ -5,7 +5,9 @@
 //! NaN results. The returned coverage distinguishes limits from equivalence.
 #![allow(dead_code)]
 
-use itasca::runtime::{self as rt, ExecError, Extern, MemoryBuffer, Store, Trap, Value};
+use itasca::runtime::{
+    self as rt, ExecError, Execution, Extern, Instantiated, MemoryBuffer, Store, Trap, Value,
+};
 use itasca::{ElemType, ImportDesc, Mut, ValidationProfile, ValueType};
 use wasmi::{Nullable, Val};
 
@@ -595,7 +597,16 @@ impl Pair {
             trace: &mut self.trace,
             unsupported: false,
         };
-        let ours = self.ours.instantiate(module, &our_imports, &mut platform);
+        let ours = match self.ours.instantiate(module, &our_imports, &mut platform) {
+            Ok(Instantiated {
+                instance,
+                start: Some(start),
+            }) => Execution::new()
+                .invoke(&mut self.ours, &mut platform, start, &[], &mut Vec::new())
+                .map(|()| instance),
+            Ok(instantiated) => Ok(instantiated.instance),
+            Err(error) => Err(error),
+        };
         if platform.unsupported {
             return Coverage::UnsupportedReference;
         }

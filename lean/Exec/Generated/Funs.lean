@@ -5337,7 +5337,7 @@ def runtime.compiler.FunctionCompiler.operand
   runtime.compiler.operand_at s depth
 
 /-- [itasca::runtime::clear]: loop body 0:
-    Source: 'src/runtime/mod.rs', lines 173:4-175:5 -/
+    Source: 'src/runtime/mod.rs', lines 182:4-184:5 -/
 @[rust_loop_body]
 def runtime.clear_loop.body
   {T : Type} (values : alloc.vec.Vec T) :
@@ -5350,7 +5350,7 @@ def runtime.clear_loop.body
        ok (cont values1)
 
 /-- [itasca::runtime::clear]: loop 0:
-    Source: 'src/runtime/mod.rs', lines 173:4-175:5 -/
+    Source: 'src/runtime/mod.rs', lines 182:4-184:5 -/
 @[rust_loop]
 def runtime.clear_loop
   {T : Type} (values : alloc.vec.Vec T) : Result (alloc.vec.Vec T) := do
@@ -5359,7 +5359,7 @@ def runtime.clear_loop
     values
 
 /-- [itasca::runtime::clear]:
-    Source: 'src/runtime/mod.rs', lines 172:0-176:1 -/
+    Source: 'src/runtime/mod.rs', lines 181:0-185:1 -/
 @[reducible]
 def runtime.clear
   {T : Type} (values : alloc.vec.Vec T) : Result (alloc.vec.Vec T) := do
@@ -23593,7 +23593,7 @@ def runtime.compiler.compile_default_with
         _root_.Itasca.error.VisitError.OutOfMemory))
 
 /-- [itasca::runtime::range]:
-    Source: 'src/runtime/mod.rs', lines 196:0-206:1 -/
+    Source: 'src/runtime/mod.rs', lines 205:0-215:1 -/
 def runtime.range
   (start : Std.U64) (len : Std.U64) (size : Std.Usize)
   (trap : _root_.Exec.runtime.Trap) :
@@ -27721,7 +27721,7 @@ def runtime.interp.Execution.source_offset
         _root_.Exec.runtime.ExecError) residual
 
 /-- [itasca::runtime::reserve]:
-    Source: 'src/runtime/mod.rs', lines 164:0-170:1 -/
+    Source: 'src/runtime/mod.rs', lines 173:0-179:1 -/
 def runtime.reserve
   {A : Type} {T : Type} (platformAllocInst : runtime.platform.Alloc A)
   (v : alloc.vec.Vec T) (n : Std.Usize) :
@@ -27839,7 +27839,7 @@ def runtime.store.Store.check_value
     | some a => runtime.store.Store.check platformMemoryBufferInst self a.store
 
 /-- [itasca::runtime::{itasca::runtime::Value}::value_type]:
-    Source: 'src/runtime/mod.rs', lines 65:4-75:5
+    Source: 'src/runtime/mod.rs', lines 74:4-84:5
     Visibility: public -/
 def runtime.Value.value_type
   (self : _root_.Exec.runtime.Value) :
@@ -41125,14 +41125,14 @@ def runtime.interp.execute_table_size
   ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::{impl core::convert::From<itasca::runtime::Trap> for itasca::runtime::ExecError}::from]:
-    Source: 'src/runtime/mod.rs', lines 150:4-152:5
+    Source: 'src/runtime/mod.rs', lines 159:4-161:5
     Visibility: public -/
 def runtime.ExecError.Insts.CoreConvertFromTrap.from
   (t : _root_.Exec.runtime.Trap) : Result _root_.Exec.runtime.ExecError := do
   ok (runtime.ExecError.Trap t)
 
 /-- Trait implementation: [itasca::runtime::{impl core::convert::From<itasca::runtime::Trap> for itasca::runtime::ExecError}]
-    Source: 'src/runtime/mod.rs', lines 149:0-153:1 -/
+    Source: 'src/runtime/mod.rs', lines 158:0-162:1 -/
 @[reducible]
 def runtime.ExecError.Insts.CoreConvertFromTrap : core.convert.From
   _root_.Exec.runtime.ExecError _root_.Exec.runtime.Trap := {
@@ -41686,7 +41686,7 @@ def runtime.interp.execute_return
   ok (core.result.Result.Ok (), { exec with slots := v1, frames := v })
 
 /-- [itasca::runtime::{itasca::runtime::Value}::zero]:
-    Source: 'src/runtime/mod.rs', lines 76:4-86:5 -/
+    Source: 'src/runtime/mod.rs', lines 85:4-95:5 -/
 def runtime.Value.zero
   (t : _root_.Itasca.types.ValueType) : Result _root_.Exec.runtime.Value := do
   match t with
@@ -45088,7 +45088,7 @@ def runtime.interp.initialize_segments
     ok (r1, store1, platform1)
 
 /-- [itasca::runtime::{itasca::runtime::Value}::i32]:
-    Source: 'src/runtime/mod.rs', lines 87:4-92:5 -/
+    Source: 'src/runtime/mod.rs', lines 96:4-101:5 -/
 def runtime.Value.i32
   (self : _root_.Exec.runtime.Value) :
   Result (core.result.Result Std.U32 _root_.Exec.runtime.ExecError)
@@ -45109,7 +45109,7 @@ def runtime.Value.i32
     ok (core.result.Result.Err runtime.ExecError.Internal)
 
 /-- [itasca::runtime::copy_type]: loop body 0:
-    Source: 'src/runtime/mod.rs', lines 184:4-187:5 -/
+    Source: 'src/runtime/mod.rs', lines 193:4-196:5 -/
 @[rust_loop_body]
 def runtime.copy_type_loop0.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -45129,7 +45129,7 @@ def runtime.copy_type_loop0.body
   else ok (done params)
 
 /-- [itasca::runtime::copy_type]: loop 0:
-    Source: 'src/runtime/mod.rs', lines 184:4-187:5 -/
+    Source: 'src/runtime/mod.rs', lines 193:4-196:5 -/
 @[rust_loop]
 def runtime.copy_type_loop0
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -45141,7 +45141,7 @@ def runtime.copy_type_loop0
     (params, i)
 
 /-- [itasca::runtime::copy_type]: loop body 1:
-    Source: 'src/runtime/mod.rs', lines 189:4-192:5 -/
+    Source: 'src/runtime/mod.rs', lines 198:4-201:5 -/
 @[rust_loop_body]
 def runtime.copy_type_loop1.body
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -45161,7 +45161,7 @@ def runtime.copy_type_loop1.body
   else ok (done results)
 
 /-- [itasca::runtime::copy_type]: loop 1:
-    Source: 'src/runtime/mod.rs', lines 189:4-192:5 -/
+    Source: 'src/runtime/mod.rs', lines 198:4-201:5 -/
 @[rust_loop]
 def runtime.copy_type_loop1
   (v : alloc.vec.Vec _root_.Itasca.types.ValueType)
@@ -45173,7 +45173,7 @@ def runtime.copy_type_loop1
     (results, i)
 
 /-- [itasca::runtime::copy_type]:
-    Source: 'src/runtime/mod.rs', lines 178:0-194:1 -/
+    Source: 'src/runtime/mod.rs', lines 187:0-203:1 -/
 def runtime.copy_type
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (t : _root_.Itasca.types.FuncType) :
@@ -45286,7 +45286,7 @@ def runtime.platform.VecMemory.as_bytes_mut
 /-- [itasca::runtime::store::instantiation_failed]:
     Source: 'src/runtime/store.rs', lines 489:0-494:1 -/
 def runtime.store.instantiation_failed
-  (result : core.result.Result _root_.Exec.runtime.InstanceAddr
+  (result : core.result.Result _root_.Exec.runtime.Instantiated
   _root_.Exec.runtime.ExecError) :
   Result Bool
   := do
@@ -45295,7 +45295,7 @@ def runtime.store.instantiation_failed
   | core.result.Result.Err _ => ok true
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::commit_instance]:
-    Source: 'src/runtime/store/instantiate.rs', lines 202:4-224:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 202:4-218:5 -/
 def runtime.store.instantiate.Store.commit_instance
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -45303,7 +45303,7 @@ def runtime.store.instantiate.Store.commit_instance
   runtime.platform.FloatOps F) (platformAllocInst : runtime.platform.Alloc A)
   (self : _root_.Exec.runtime.store.Store M) (platform : P)
   (identity : _root_.Exec.runtime.InstanceAddr) (committed : Bool) :
-  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
+  Result ((core.result.Result _root_.Exec.runtime.Instantiated
     _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P
     × Bool)
   := do
@@ -45320,33 +45320,21 @@ def runtime.store.instantiate.Store.commit_instance
     let e ← runtime.compiler.ExecutableModule.env mi.module
     let o ← module.Env.start e
     match o with
-    | none => ok (core.result.Result.Ok identity, self1, platform1, true)
+    | none =>
+      ok (core.result.Result.Ok { «instance» := identity, start := none },
+        self1, platform1, true)
     | some f =>
       let i ← lift (UScalar.cast .Usize f)
-      let func ←
+      let fa ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
           _root_.Exec.runtime.FuncAddr) mi.funcs i
-      let execution ← runtime.interp.Execution.new
-      let s ←
-        lift (Array.to_slice (Std.Array.empty _root_.Exec.runtime.Value))
-      let (r1, _, self2, platform2, _) ←
-        runtime.interp.invoke_with platformMemoryBufferInst
-          platformPlatformInst platformFloatOpsInst platformAllocInst execution
-          self1 platform1 func s (alloc.vec.Vec.new _root_.Exec.runtime.Value)
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        ok (core.result.Result.Ok identity, self2, platform2, true)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
-            _root_.Exec.runtime.ExecError) residual
-        ok (r2, self2, platform2, true)
+      ok (core.result.Result.Ok
+        { «instance» := identity, start := (some fa) }, self1, platform1,
+        true)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
+        _root_.Exec.runtime.Instantiated (core.convert.FromSame
         _root_.Exec.runtime.ExecError) residual
     ok (r1, self1, platform1, true)
 
@@ -45372,7 +45360,7 @@ def runtime.store.wasm1
   | _root_.Itasca.ValidationProfile.Wasm2 => ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_data_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 419:4-446:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 413:4-440:5 -/
 def runtime.store.instantiate.Store.check_data_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -45456,7 +45444,7 @@ def runtime.store.instantiate.Store.check_data_bounds
     ok (core.result.Result.Ok (), self, platform)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_element_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 390:4-417:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 384:4-411:5 -/
 def runtime.store.instantiate.Store.check_element_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -45588,7 +45576,7 @@ def runtime.store.copy_bytes
       _root_.Exec.runtime.ExecError) residual
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_data]:
-    Source: 'src/runtime/store/instantiate.rs', lines 380:4-388:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 374:4-382:5 -/
 def runtime.store.instantiate.Store.add_instance_data
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -45635,7 +45623,7 @@ def runtime.store.instantiate.Store.add_instance_data
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 359:8-369:9 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 353:8-363:9 -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.add_instance_element_loop.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -45688,7 +45676,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop.body
   else ok (done (self, platform, values, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 359:8-369:9 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 353:8-363:9 -/
 @[rust_loop]
 def runtime.store.instantiate.Store.add_instance_element_loop
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -45711,7 +45699,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop
     (self, platform, values, j, status)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]:
-    Source: 'src/runtime/store/instantiate.rs', lines 346:4-379:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 340:4-373:5 -/
 def runtime.store.instantiate.Store.add_instance_element
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -45860,7 +45848,7 @@ def runtime.store.Store.define_global_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_global]:
-    Source: 'src/runtime/store/instantiate.rs', lines 333:4-345:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 327:4-339:5 -/
 def runtime.store.instantiate.Store.add_instance_global
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -45996,7 +45984,7 @@ def runtime.store.Store.define_memory_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_memory]:
-    Source: 'src/runtime/store/instantiate.rs', lines 314:4-332:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 308:4-326:5 -/
 def runtime.store.instantiate.Store.add_instance_memory
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -46152,7 +46140,7 @@ def runtime.store.Store.define_table_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_table]:
-    Source: 'src/runtime/store/instantiate.rs', lines 305:4-313:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 299:4-307:5 -/
 def runtime.store.instantiate.Store.add_instance_table
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -46180,7 +46168,7 @@ def runtime.store.instantiate.Store.add_instance_table
     ok (r1, self1, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_function]:
-    Source: 'src/runtime/store/instantiate.rs', lines 283:4-304:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 277:4-298:5 -/
 def runtime.store.instantiate.Store.add_instance_function
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -46597,7 +46585,7 @@ def runtime.store.Store.intern_type
         })
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_type]:
-    Source: 'src/runtime/store/instantiate.rs', lines 274:4-282:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 268:4-276:5 -/
 def runtime.store.instantiate.Store.add_instance_type
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -46651,7 +46639,7 @@ def runtime.store.matches_limits
   else ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::link_import]:
-    Source: 'src/runtime/store/instantiate.rs', lines 225:4-273:5 -/
+    Source: 'src/runtime/store/instantiate.rs', lines 219:4-267:5 -/
 def runtime.store.instantiate.Store.link_import
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : _root_.Exec.runtime.store.Store M)
@@ -48372,7 +48360,7 @@ def runtime.store.instantiate.Store.instantiate_inner
   (module1 : _root_.Exec.runtime.compiler.ExecutableModule)
   (imports : Slice _root_.Exec.runtime.Extern) (platform : P)
   (committed : Bool) :
-  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
+  Result ((core.result.Result _root_.Exec.runtime.Instantiated
     _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P
     × Bool)
   := do
@@ -48391,7 +48379,7 @@ def runtime.store.instantiate.Store.instantiate_inner
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        _root_.Exec.runtime.InstanceAddr (core.convert.FromSame
+        _root_.Exec.runtime.Instantiated (core.convert.FromSame
         _root_.Exec.runtime.ExecError) residual
     ok (r1, self1, platform1, committed)
 
@@ -48645,7 +48633,7 @@ def runtime.store.instantiate.Store.instantiate_with
   (self : _root_.Exec.runtime.store.Store M)
   (module1 : _root_.Exec.runtime.compiler.ExecutableModule)
   (imports : Slice _root_.Exec.runtime.Extern) (platform : P) :
-  Result ((core.result.Result _root_.Exec.runtime.InstanceAddr
+  Result ((core.result.Result _root_.Exec.runtime.Instantiated
     _root_.Exec.runtime.ExecError) × (_root_.Exec.runtime.store.Store M) × P)
   := do
   let functions := alloc.vec.Vec.len self.funcs

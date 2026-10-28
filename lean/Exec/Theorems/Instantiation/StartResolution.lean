@@ -1,4 +1,5 @@
-import Exec.Theorems.Instantiation.StartEquation
+import Exec.Store.Instantiation.InstantiateNoStart
+import Exec.Store.Initialization.SegmentCodeMetadata
 import Exec.Theorems.Composition.Entry
 import Exec.Code.Local.Relations.Common.Function
 import Exec.Interp.Calls.CallRefinement
@@ -21,7 +22,6 @@ import Exec.Interp.Machines.Slice.SliceDivergence
 import Exec.Interp.Relations.TypedArguments
 import Exec.Spec.Invocation
 import Exec.Store.Invariant.Typing
-import Exec.Store.Instantiation.InstantiateStart
 import Exec.Theorems.Instantiation.StartAmbient
 import Exec.Abs.Sim.Call
 

@@ -968,7 +968,7 @@ structure runtime.platform.MemoryBuffer (Self : Type) where
   grow : Self → Std.Usize → Result (Bool × Self)
 
 /-- [itasca::runtime::ResourceLimit]
-    Source: 'src/runtime/mod.rs', lines 129:0-134:1
+    Source: 'src/runtime/mod.rs', lines 138:0-143:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.ResourceLimit where
@@ -978,7 +978,7 @@ inductive runtime.ResourceLimit where
 | Objects : runtime.ResourceLimit
 
 /-- [itasca::runtime::LinkError]
-    Source: 'src/runtime/mod.rs', lines 122:0-125:1
+    Source: 'src/runtime/mod.rs', lines 131:0-134:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.LinkError where
@@ -986,7 +986,7 @@ inductive runtime.LinkError where
 | IncompatibleImportType : runtime.LinkError
 
 /-- [itasca::runtime::Trap]
-    Source: 'src/runtime/mod.rs', lines 108:0-118:1
+    Source: 'src/runtime/mod.rs', lines 117:0-127:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Trap where
@@ -1001,7 +1001,7 @@ inductive runtime.Trap where
 | Host : runtime.Trap
 
 /-- [itasca::runtime::ExecError]
-    Source: 'src/runtime/mod.rs', lines 138:0-148:1
+    Source: 'src/runtime/mod.rs', lines 147:0-157:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.ExecError where
@@ -1061,7 +1061,7 @@ structure runtime.ExternAddr where
   index : Std.Usize
 
 /-- [itasca::runtime::Value]
-    Source: 'src/runtime/mod.rs', lines 54:0-62:1
+    Source: 'src/runtime/mod.rs', lines 63:0-71:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Value where
@@ -1119,8 +1119,15 @@ structure runtime.InstanceAddr where
   store : Std.Usize
   index : Std.Usize
 
+/-- [itasca::runtime::Instantiated]
+    Source: 'src/runtime/mod.rs', lines 55:0-58:1
+    Visibility: public -/
+structure runtime.Instantiated where
+  «instance» : _root_.Exec.runtime.InstanceAddr
+  start : Option _root_.Exec.runtime.FuncAddr
+
 /-- [itasca::runtime::Extern]
-    Source: 'src/runtime/mod.rs', lines 98:0-103:1
+    Source: 'src/runtime/mod.rs', lines 107:0-112:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Extern where

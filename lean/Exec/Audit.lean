@@ -1,4 +1,3 @@
-import Exec.Code.Local.Capacity.LowerTableGrowth
 import Exec.Examples.TrapHost
 import Exec.Spec.ModuleMembership
 import Mathlib.Data.List.Forall2

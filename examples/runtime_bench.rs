@@ -314,7 +314,8 @@ fn our_instance(
     if let Some(provider) = provider {
         let instance = store
             .instantiate(compile(provider, profile).unwrap(), &[], &mut BenchPlatform)
-            .unwrap();
+            .unwrap()
+            .instance;
         imports.push(store.export(instance, b"inc").unwrap().unwrap());
     }
     let instance = store
@@ -323,7 +324,8 @@ fn our_instance(
             &imports,
             &mut BenchPlatform,
         )
-        .unwrap();
+        .unwrap()
+        .instance;
     let Some(Extern::Func(function)) = store.export(instance, b"run").unwrap() else {
         panic!("missing run export")
     };

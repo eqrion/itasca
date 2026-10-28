@@ -48,6 +48,15 @@ address!(GlobalAddr);
 address!(ExternAddr);
 address!(InstanceAddr);
 
+/// A published instance and its start function. Instantiation does not run the
+/// start function; invoking it with no arguments completes Wasm instantiation.
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub struct Instantiated {
+    pub instance: InstanceAddr,
+    pub start: Option<FuncAddr>,
+}
+
 /// A typed Wasm value. Integer and floating-point payloads preserve raw bits.
 #[derive(Clone, Copy)]
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]

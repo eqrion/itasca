@@ -486,7 +486,7 @@ fn same_bytes(left: &[u8], right: &[u8]) -> bool {
     }
     same
 }
-fn instantiation_failed(result: &Result<InstanceAddr, ExecError>) -> bool {
+fn instantiation_failed(result: &Result<Instantiated, ExecError>) -> bool {
     match result {
         Ok(_) => false,
         Err(_) => true,

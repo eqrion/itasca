@@ -72,7 +72,8 @@ impl<M: MemoryBuffer> Store<M> {
     pub fn define_global(&mut self, ty: GlobalType, value: Value) -> Result<GlobalAddr, ExecError> {
         self.define_global_with::<StdAlloc>(ty, value)
     }
-    /// Links, initializes segments, and synchronously executes the start function.
+    /// Links and initializes segments, returning the start function for the
+    /// caller to invoke.
     ///
     /// Link errors and Wasm 1.0 segment bounds errors leave the store unchanged.
     /// Wasm 2.0 traps preserve completed segment writes and allocated objects.
@@ -81,7 +82,7 @@ impl<M: MemoryBuffer> Store<M> {
         module: ExecutableModule,
         imports: &[Extern],
         platform: &mut P,
-    ) -> Result<InstanceAddr, ExecError> {
+    ) -> Result<Instantiated, ExecError> {
         self.instantiate_with::<P, NativeFloat, StdAlloc>(module, imports, platform)
     }
     /// Grows a memory, returning its previous page count or `u32::MAX` on failure.

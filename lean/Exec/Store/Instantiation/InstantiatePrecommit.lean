@@ -41,22 +41,4 @@ theorem instantiate_compiled_precommit_origins {M P F A : Type}
       ready platform _ tail
     contradiction
 
-theorem instantiate_compiled_precommit_error {M P F A : Type}
-    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
-    (imports : Slice runtime.Extern) (platform : P)
-    (shape : Shape view before) (accounted : SegmentAccounting before)
-    (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
-    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (error : runtime.ExecError) (staged : runtime.store.Store M) (host : P)
-    (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
-      .ok (.Err error, staged, host, false)) :
-    PrecommitError profile error ∧ host = platform ∧ StagedPrefix before staged := by
-  obtain ⟨cause, sameHost, retained, _⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator
-    law view laws before module imports platform shape accounted bytes profile limits accepted handles error staged host run
-  exact ⟨cause, sameHost, retained⟩
-
 end Exec.Store

@@ -279,7 +279,21 @@ impl Script {
             imports.push(item.ok_or(ExecError::Link(LinkError::MissingImport))?);
         }
         let mut platform = SpectestPlatform::new();
-        let result = self.store.instantiate(code, &imports, &mut platform);
+        let result = self
+            .store
+            .instantiate(code, &imports, &mut platform)
+            .and_then(|instantiated| {
+                if let Some(start) = instantiated.start {
+                    Execution::new().invoke(
+                        &mut self.store,
+                        &mut platform,
+                        start,
+                        &[],
+                        &mut Vec::new(),
+                    )?;
+                }
+                Ok(instantiated.instance)
+            });
         platform.check()?;
         result.map_err(Failure::Runtime)
     }

@@ -18,7 +18,7 @@ operations, host callbacks, compiler eligibility and source resources) are liste
 - `runtime.compiler.compile_default_with.profile_spec`
 
 [Results/Instantiate](Results/Instantiate.lean), instantiation of a compiled module:
-- `runtime.store.instantiate.Store.instantiate_with.sound`, `recorded_sound`
+- `runtime.store.instantiate.Store.instantiate_with.spec`
 
 [Results/Invoke](Results/Invoke.lean), invocation of an issued function:
 - soundness: `runtime.interp.invoke_with.sound`, `recorded_sound`, `recorder_sound`

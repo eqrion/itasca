@@ -7,7 +7,7 @@ impl<M: MemoryBuffer> Store<M> {
         module: ExecutableModule,
         imports: &[Extern],
         platform: &mut P,
-    ) -> Result<InstanceAddr, ExecError> {
+    ) -> Result<Instantiated, ExecError> {
         let functions = self.funcs.len();
         let tables = self.tables.len();
         let memories = self.memories.len();
@@ -60,7 +60,7 @@ impl<M: MemoryBuffer> Store<M> {
         imports: &[Extern],
         platform: &mut P,
         committed: &mut bool,
-    ) -> Result<InstanceAddr, ExecError> {
+    ) -> Result<Instantiated, ExecError> {
         let (identity, items) = self.prepare_instance::<P, F, A>(module, imports, platform)?;
         self.instance_items += items;
         self.commit_instance::<P, F, A>(platform, identity, committed)
@@ -198,29 +198,23 @@ impl<M: MemoryBuffer> Store<M> {
         Ok((identity, items))
     }
     /// Publishes a prepared instance: writes active segments into possibly
-    /// imported objects and runs the start function. Effects are not rolled back.
+    /// imported objects. Effects are not rolled back.
     fn commit_instance<P: Platform<M>, F: FloatOps, A: Alloc>(
         &mut self,
         platform: &mut P,
         identity: InstanceAddr,
         committed: &mut bool,
-    ) -> Result<InstanceAddr, ExecError> {
+    ) -> Result<Instantiated, ExecError> {
         *committed = true;
         initialize_segments::<M, P, F, A>(self, platform, identity.index)?;
-        if let Some(f) = self.instances[identity.index].module.env().start() {
-            let func = self.instances[identity.index].funcs[f as usize];
-            let mut execution = Execution::new();
-            let mut results = Vec::new();
-            interp::invoke_with::<M, P, F, A>(
-                &mut execution,
-                self,
-                platform,
-                func,
-                &[],
-                &mut results,
-            )?;
-        }
-        Ok(identity)
+        let start = match self.instances[identity.index].module.env().start() {
+            Some(f) => Some(self.instances[identity.index].funcs[f as usize]),
+            None => None,
+        };
+        Ok(Instantiated {
+            instance: identity,
+            start,
+        })
     }
     fn link_import(
         &mut self,

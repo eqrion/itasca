@@ -24,7 +24,7 @@ fn module(text: &str) -> ExecutableModule {
     compile(&ast.encode().unwrap(), ValidationProfile::Wasm2).unwrap()
 }
 fn finish(store: &mut Store, code: ExecutableModule) -> InstanceAddr {
-    store.instantiate(code, &[], &mut Hooks).unwrap()
+    store.instantiate(code, &[], &mut Hooks).unwrap().instance
 }
 
 fn function(store: &Store, instance: InstanceAddr, name: &[u8]) -> FuncAddr {

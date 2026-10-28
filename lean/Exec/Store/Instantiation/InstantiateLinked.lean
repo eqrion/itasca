@@ -20,7 +20,7 @@ theorem instantiate_inner_linked_decomposition {M P F A : Type}
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
     (compiled : Code.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (outcome : Result (core.result.Result runtime.InstanceAddr runtime.ExecError × runtime.store.Store M × P × Bool))
+    (outcome : Result (core.result.Result runtime.Instantiated runtime.ExecError × runtime.store.Store M × P × Bool))
     (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false = outcome) :
     (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged) ∨
     ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
