@@ -359,9 +359,10 @@ it need not accept every module exactly at a configured output limit.
 and host handles. On return it retains the full `ExecutableInv` with the final
 code interpretation, proves unchanged-state API rejection, relates returned
 values, errors and final stores to source runs that use the actual recorded
-event log, and classifies every resource error. Divergence yields a coherent
-infinite source execution. `terminates` gives a return when the source has no
-infinite run.
+event log, and classifies every resource error. Callbacks may diverge. Divergence
+yields a coherent infinite source execution, or a source run that reaches a
+store on which a callback diverges. `terminates` gives a return when neither
+exists.
 [Instantiation](Exec/Results/Instantiate.lean) is total and runs no callback.
 It links, allocates and initializes the module, retains rollback before
 publication, classifies every resource error, and returns the resolved start
