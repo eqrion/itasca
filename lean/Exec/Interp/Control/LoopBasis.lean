@@ -2,7 +2,7 @@ import Exec.Generated.Equations
 
 /-! Compositional loop facts for the extracted interpreter. These lemmas are
 independent of the Wasm simulation; callers must discharge the body contract. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 inductive NormalTrace {α β : Type} (body : α → Result (ControlFlow α β)) : Nat → α → β → Prop
@@ -52,4 +52,4 @@ theorem loop_trace_dspec {α β : Type} (body : α → Result (ControlFlow α β
       rintro result ⟨count, trace, hpost⟩
       exact ⟨count + 1, .next hbody trace, hpost⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

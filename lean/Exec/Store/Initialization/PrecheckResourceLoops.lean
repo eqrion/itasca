@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.PrecheckWitness
 import Exec.Store.Initialization.PrecheckResourceCauses
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 /-- Synthetic setup failure belongs to an active source-segment offset. -/
 def OffsetInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
@@ -115,8 +115,8 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
     unfold runtime.store.instantiate.Store.prepare_instance_loop10.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.length := by
@@ -161,7 +161,7 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
     unfold runtime.store.instantiate.Store.prepare_instance_loop11.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
-    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok]
     split
     · rename_i more
@@ -183,4 +183,4 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
       exact ⟨_, rfl, hallowed⟩
   · exact ⟨rfl, rfl, hstart, allowed⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

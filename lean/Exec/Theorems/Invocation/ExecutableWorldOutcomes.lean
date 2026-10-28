@@ -6,8 +6,8 @@ import Exec.Interp.Relations.ArgumentRejectionKind
 
 /-! Shared public invocation outcomes and erasure. These predicates retain a
 single final code interpretation and sit below the public API constructions. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The public entry checks that reject a call before any state changes: a handle from
 another store, or arguments that fail the callee signature check. -/
@@ -71,4 +71,4 @@ theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
     obtain ⟨body,steps⟩ := outcome.reachable
     exact ⟨body,steps⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

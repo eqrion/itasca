@@ -4,7 +4,7 @@ Every listed branch receives the exit PC, including duplicate fixup addresses;
 branch conditions, code length, unrelated instructions, and compiler layout are
 preserved. The initial branch-shape premise is a syntactic hole invariant. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def retarget (instruction : runtime.bytecode.Instr) (target : U32) : runtime.bytecode.Instr :=
@@ -138,4 +138,4 @@ theorem patchCode_other (code : List runtime.bytecode.Instr) (sites : List Usize
       simp [Ne.symm different]
     · exact ih code restSeparate
 
-end Exec.Code
+end Itasca.Runtime.Code

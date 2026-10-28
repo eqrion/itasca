@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdShuffleSelect
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -55,4 +55,4 @@ def shuffleByte (op : U32) (bits x y : U128) (index : Nat) : BitVec 8 :=
   unfold runtime.interp.simd.shuffle_lanes
   exact shuffle_loop op bits x y 0#u128 0#u32 (by simp) (by simp)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -4,8 +4,8 @@ import Exec.Theorems.Composition.Stateful.StatefulMemoryFillStep
 import Exec.Theorems.Composition.Stateful.StatefulMemoryCopyStep
 import Exec.Theorems.Composition.Stateful.StatefulMemoryInitStep
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 
 theorem stateful_memory_fill_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -135,4 +135,4 @@ theorem stateful_memory_init_execution_supported
     · apply SupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) error (by rw [sameStore])
       exact Or.inl ⟨⟨.MemoryOutOfBounds,rfl,by simp [CumulativeTrap,FloatCoreTrap]⟩,transition.trap_simulation_supported machine.typed machine.core⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

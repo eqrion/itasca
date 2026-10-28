@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.OperandBounds
 import Exec.Abs.Numeric.TransitionSafety
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem transition_simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
@@ -76,4 +76,4 @@ theorem astep_trap_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [astep_typed_eq ⟨s, ambient, [], []⟩ f rest after op hf] at step
   exact transition_trap_simulation s ambient f rest after op typed step
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

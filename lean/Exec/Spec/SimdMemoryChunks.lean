@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryStore
 import Exec.Spec.SimdWiden
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem integerBytes_take (count total value : Nat) (le : count â‰¤ total) :
@@ -30,4 +30,4 @@ theorem integerBytes_chunk (width index value : Nat) (fit : index*width+width â‰
     (integerBytes 8 value |>.drop (index*width) |>.take width) =
       integerBytes width ((value/256^(index*width))%256^width) := by
   rw [integerBytes_drop _ _ _ (by omega),integerBytes_take _ _ _ (by omega),integerBytes_mod]
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

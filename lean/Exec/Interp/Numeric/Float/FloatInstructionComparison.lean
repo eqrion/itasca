@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatInstructionOutcome
 import Exec.Interp.Numeric.Float.FloatComparisonBounded
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 theorem scalar_f32_eq_instruction {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -123,4 +123,4 @@ theorem scalar_i32_reinterpret_f32_instruction {F : Type} (ops : runtime.platfor
     simp only [U32.cast_U64_val_eq]
     exact source
 
-end Exec.Interp
+end Itasca.Runtime.Interp

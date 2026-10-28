@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.SimdPrefixAcceptance
 import Exec.Code.Body.Reader.Acceptance.RecordedReaderAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem reader_source_event {R : Type}
@@ -46,4 +46,4 @@ theorem source_simd_callback (st out : code.BodyState) (data : Slice U8) (env : 
         · exact reader_source_event _ (fun bits : U64 × U64 => .simd_shuffle bits.1 bits.2) before after out.core raw
         · simp at raw
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.IssuedValues
 import Exec.Store.Invariant.Typing
 import Exec.Interp.Relations.Arguments
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- Ownership checks plus issued-address provenance imply the full value
@@ -58,4 +58,4 @@ theorem check_values_source_typed {M : Type} (memory : runtime.platform.MemoryBu
   step with Interp.check_values_accepts_iff memory store values types as ⟨status, accepted⟩
   rename_i success
   exact matched_issued_source_typed view code store sourceWf (accepted.mp success) issued
-end Exec.Store
+end Itasca.Runtime.Store

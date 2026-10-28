@@ -1,6 +1,6 @@
 import Exec.Abs.Float.Transition
-namespace Exec.Abs.Float
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Float
+open SpecExt Itasca.Runtime.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
     (typed : ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
@@ -19,4 +19,4 @@ theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     simpa only [values] using op.simulation s ambient f rest after front a b bits first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

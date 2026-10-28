@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Common.CoreBasicEmissions
 import Exec.Code.Local.Relations.Common.CoreLoweringEffects
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
@@ -110,4 +110,4 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
   exact ⟨index, ty, values, types.map Translate.valueType, found, mutable, beforeTypes, post,
     emitted, ⟨lower, SourceStack.of_map types concrete rfl⟩, emission⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

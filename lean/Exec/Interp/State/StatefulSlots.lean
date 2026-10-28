@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulReference
 import Exec.Interp.State.StatefulReads
 import Exec.Interp.Relations.Regions
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std
 
 theorem frame_write_result {exec out : runtime.interp.Execution} {raw : runtime.interp.Frame}
@@ -23,10 +23,10 @@ theorem frame_write_result {exec out : runtime.interp.Execution} {raw : runtime.
   rw [offset]
   simpa only [ValuesAt,Code.encodeValues_append,Code.encodeValues,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,
     List.append_nil,encoded,List.append_assoc] using result
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful
 
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -106,10 +106,10 @@ theorem memory_size_slots (view : M → Slice U8) (laws : Platform.MemoryLaws me
   obtain ⟨success,same,pages,pagesEq,written,transition⟩ := effect
   refine ⟨success,same,pages,pagesEq,written,frame_write_result (consumed := []) slots (by simp) position bound written ?_,transition⟩
   simp [Code.encodeValue,Abs.integerVal,numtype_Inn]
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful
 
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 theorem frame_read_word {exec : runtime.interp.Execution} {raw : runtime.interp.Frame}
     {f : Abs.AFrame} {front : List val} {value : val} {bits : Nat} {src : U32}
@@ -179,4 +179,4 @@ theorem ref_is_null_slots (exec : runtime.interp.Execution) (raw : runtime.inter
   intro out effect
   obtain ⟨success,word,wordEq,written,transition⟩ := effect
   exact ⟨success,word,wordEq,written,frame_write_result slots values position bound written rfl,transition⟩
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

@@ -1,6 +1,6 @@
 import Exec.Abs.Typing
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 open SpecExt
 open Itasca.DeclarativeComplete
 
@@ -229,4 +229,4 @@ theorem codeStack_after_bounds {C : context} {labels : List Label}
     · have hh := nesting target ht
       simp only [List.length_append, height]; omega
 
-end Exec.Abs
+end Itasca.Runtime.Abs

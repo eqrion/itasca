@@ -1,5 +1,5 @@
 import Exec.Spec.SegmentCopySlice
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 /-- A write in the left half of a split buffer reconstructs the corresponding
 write in the original buffer. -/
@@ -23,4 +23,4 @@ theorem setSlice_split_right {T : Type} (before payload : List T) (split : Nat)
     before.take split ++ (before.drop split).setSlice! 0 payload = before.setSlice! split payload := by
   have room : payload.length ≤ before.length-split := by omega
   simp [List.setSlice!,room,List.drop_drop,Nat.min_eq_left room,List.append_assoc]
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

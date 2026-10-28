@@ -6,7 +6,7 @@ import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Capacity.BodyReplay
 import Exec.Code.Local.Demand.RecordedDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -99,4 +99,4 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk_available_from_source
     ⟨sourceLocals,ft.results⟩ subopcode prefixEnd member decoded demand C matched state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) ledger.indirect byte canonical
 
-end Exec.Code
+end Itasca.Runtime.Code

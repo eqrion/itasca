@@ -1,6 +1,6 @@
 import Exec.Spec.IntegerShift
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem extend_signed_bitvec (small large : Nat) (bits : BitVec small) :
     extend__ small large .S (.mk_uN bits.toNat) = .mk_uN (bits.signExtend large).toNat := by
@@ -45,4 +45,4 @@ theorem integer_extendu_relation (bits : BitVec 32) :
   have wf := unsigned_num_wf .I64 bits.toNat (by have := bits.isLt; change bits.toNat < 2^64; omega)
   exact .fun_cvtop___case_2 .U _ wf
 
-end Exec.Spec
+end Itasca.Runtime.Spec

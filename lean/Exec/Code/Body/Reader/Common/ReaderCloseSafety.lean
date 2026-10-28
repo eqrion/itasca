@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderBodySafety
 import Exec.Code.Body.Relations.Control.ReachedControlSafety
 import Itasca.Wasm2.Visitor.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -35,4 +35,4 @@ theorem StructuredCompilerPrefix.close_reader_total {jumpTables : List U32} {A}
       apply invariant.end_total ops law bounded out.core kind bt _ emitCoordinate
       simpa only [data.2.2.2] using coordinate
     | true => exact invariant.else_total ops law bounded fixups out.core bt emitCoordinate
-end Exec.Code
+end Itasca.Runtime.Code

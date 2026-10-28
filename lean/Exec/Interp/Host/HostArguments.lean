@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.Readback
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem host_arguments_loop (words : alloc.vec.Vec U64)
@@ -86,4 +86,4 @@ open Aeneas Aeneas.Std
   · simp
   · simp [Code.offset, Code.slots]
   · simp [empty]
-end Exec.Interp
+end Itasca.Runtime.Interp

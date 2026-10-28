@@ -1,7 +1,7 @@
 import Exec.Interp.Machines.Uniform.UniformSourceControl
 import Exec.Interp.Control.BranchCondition
-namespace Exec.Interp
-open Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp
+open Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 /-- A fused conditional branch always performs the source test and, when
 selected, the positive branch transfer. -/
@@ -31,4 +31,4 @@ theorem branchIf_source_positive (s : _root_.store) (ambient : frame) (f : Abs.A
       after depth _ typedNext branch
     refine ⟨1+(depth+1),by omega,?_⟩
     simpa only [branchIfFrame,if_neg zero,List.nil_append] using counted.trans branchCounted
-end Exec.Interp
+end Itasca.Runtime.Interp

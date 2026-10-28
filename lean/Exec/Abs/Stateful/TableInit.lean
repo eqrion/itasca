@@ -4,8 +4,8 @@ import Exec.Abs.Stateful.BulkSimulation
 import Exec.Abs.Stateful.ReferenceOperands
 import Exec.Abs.Stateful.Operands
 import Exec.Abs.Core.Trap
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def tableInit (s : AState) (f : AFrame) (rest : List AFrame) (index sourceIndex : Nat) (after : List instr) : AResult :=
   match popThree f.vals, f.module.TABLES[index]?, f.module.ELEMS[sourceIndex]? with
@@ -97,4 +97,4 @@ theorem tableInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
               [integerVal .I32 destination,integerVal .I32 sourceOffset,integerVal .I32 count] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

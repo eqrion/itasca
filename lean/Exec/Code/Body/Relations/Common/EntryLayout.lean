@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderEnterStacks
 import Exec.Code.Local.Relations.Control.ControlLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std Itasca
 
 /-- The compiler and canonical validator use the same word width, even for a
@@ -67,4 +67,4 @@ theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.Func
   rw [words, layout.localSlots]
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

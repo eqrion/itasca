@@ -17,8 +17,8 @@ import Exec.Interp.Core.OwnershipClosure
 import Exec.Interp.Control.NormalizeCompose
 import Exec.Theorems.Composition.Cumulative.CumulativeExecutionOutcome
 import Exec.Interp.Cumulative.Erased
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem CumulativeFailure.prepend_normalization {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
@@ -51,4 +51,4 @@ theorem CumulativeFailure.prepend_normalization {M P A : Type} {allocator : runt
     · exact Or.inl (direct.prepend steps rfl rfl)
     · exact Or.inr ⟨code,indirect.prepend steps rfl rfl⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

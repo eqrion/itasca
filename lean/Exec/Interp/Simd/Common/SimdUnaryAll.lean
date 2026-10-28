@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdUnary
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem lane_nonzero (width : Nat) (bits : BitVec width) (bound : width ≤ 64) :
@@ -30,4 +30,4 @@ theorem unary_all_iff (width : Nat) (x : BitVec 128) (count : Nat) (bound : widt
       · exact earlier j (by omega)
     · intro all
       exact ⟨fun j bound => all j (by omega),all count (by omega)⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

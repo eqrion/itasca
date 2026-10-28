@@ -2,7 +2,7 @@ import Exec.Code.Local.Checking.RootInstructionPublication
 import Exec.Code.Local.Publication.ScopeClosePublication
 import Exec.Code.Local.Relations.Table.ControlTablePreservation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual final END patches the root frame and emits a checked return.
@@ -46,4 +46,4 @@ theorem compiler_root_close_checked_instructions_of_slots {A : Type} (ops : runt
     subst instruction
     exact (CoreInstructionBounds.return_ returnFits).accepts
 
-end Exec.Code
+end Itasca.Runtime.Code

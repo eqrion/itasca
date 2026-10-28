@@ -1,6 +1,6 @@
 import Exec.Store.Api.TableCopyOverlap
 import Exec.Store.Initialization.SegmentCopySlice
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem table_copy_distinct (tables : alloc.vec.Vec runtime.store.TableInst)
@@ -80,4 +80,4 @@ theorem table_copy_distinct (tables : alloc.vec.Vec runtime.store.TableInst)
     have same : {table with elements := table.elements} = table := by cases table; rfl
     rw [same, ← tableRead, vec_set_current tables tableIndex tableBound]
 
-end Exec.Store
+end Itasca.Runtime.Store

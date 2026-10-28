@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.Transition
 
-namespace Exec.Abs.Numeric
+namespace Itasca.Runtime.Abs.Numeric
 
 theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Instruction) (next : AState)
@@ -15,4 +15,4 @@ theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [advance, AResult.next.injEq] at step
       exact ⟨_, step.symm⟩
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

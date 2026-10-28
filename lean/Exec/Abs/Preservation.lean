@@ -1,7 +1,7 @@
 import Exec.Abs.Progress
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Dropping an actual top value preserves the generated continuation type. -/
 theorem drop_frame_preservation {s : store} {f : AFrame} {code : List instr}
@@ -331,4 +331,4 @@ theorem frame_end_typed {s : store} {f : AFrame}
     change f.vals.map valueType = f.resultTypes at heq
     simpa only [heq] using values
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Float.SimdFloatResizeWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def floatResizeOpcode : FloatResize → U32 | .demote => 94#u32 | .promote => 95#u32
 
@@ -76,4 +76,4 @@ theorem float_resize_loop {F : Type} (floats : runtime.platform.FloatOps F)
       exact ⟨current,rfl,by simpa [finished] using initialized,zeroed⟩
   · exact ⟨position,initializedPrefix,initializedSuffix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

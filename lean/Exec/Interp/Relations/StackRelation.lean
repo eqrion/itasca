@@ -2,7 +2,7 @@ import Exec.Interp.Relations.FrameStack
 import Exec.Interp.Relations.ControlPoint
 import Exec.Interp.Calls.ReturnRefinement
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The compiler's code-length certificate rules out PC increment overflow
@@ -14,4 +14,4 @@ theorem FrameProgram.fetched_bound {M : Type} {store : runtime.store.Store M}
   have bound := (List.getElem?_eq_some_iff.mp fetched).1
   exact lt_of_lt_of_le bound program.fetchBound
 
-end Exec.Interp
+end Itasca.Runtime.Interp

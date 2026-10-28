@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredResolvedBranchPrefix
 import Exec.Code.Local.Relations.Common.ResolvedConditionalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredPrefix.resolved_branchIf {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals labels initial source start stack}
     {code : List Bytecode} {before after : List FixupTarget} {group : FixupTarget}
@@ -26,4 +26,4 @@ theorem StructuredPrefix.resolved_branchIf {jumpTables : List Aeneas.Std.U32} {e
   · simpa [branchIfInstructions, empty] using resumePosition
   · simpa [branchIfInstructions, empty] using resumePosition
 
-end Exec.Code
+end Itasca.Runtime.Code

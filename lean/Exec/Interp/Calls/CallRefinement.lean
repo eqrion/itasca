@@ -2,7 +2,7 @@ import Exec.Interp.Calls.DirectCall
 import Exec.Interp.Calls.CallFrames
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def callCallee (address : Nat) (moduleInst : moduleinst) (results : List valtype)
@@ -30,4 +30,4 @@ theorem call_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
   have length : params.length = args.length := by rw [← argumentTypes, List.length_map]
   simp [Abs.astep, Abs.call, resolve, lookup, length, types, default, callCallee]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

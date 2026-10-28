@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Calls.ReaderCallBounds
 import Exec.Code.Body.Reader.Common.ReaderBodySafety
 import Exec.Code.Body.Relations.Calls.OrdinaryCallbackReady
 import Exec.Code.Local.Relations.Calls.CallSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_call_wasm2_total {A} (ops : runtime.platform.Alloc A)
@@ -43,4 +43,4 @@ theorem compiler_reader_call_indirect_wasm2_total {A} (ops : runtime.platform.Al
     exact compiler_on_call_indirect_total ops law compiler state.core index table 
       (by simpa [ready.namespaces.signatures] using bound)
       ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
-end Exec.Code
+end Itasca.Runtime.Code

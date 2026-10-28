@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryCore
 import Exec.Interp.Control.StructuredPoint
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem core_load_next_shape {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -22,4 +22,4 @@ theorem core_load_next_shape {M : Type} (view : M → Slice U8) (code : Store.Co
     have frameEq := (List.cons.inj same).1
     exact ⟨_,frameEq.symm,by rw [valueType_eq_abs]; exact op.value_type _⟩
   · contradiction
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

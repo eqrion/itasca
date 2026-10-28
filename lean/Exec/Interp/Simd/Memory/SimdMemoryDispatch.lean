@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryPlain
 import Exec.Interp.Simd.Memory.SimdMemoryFullStore
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem memory_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
@@ -18,4 +18,4 @@ theorem memory_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
     rw [if_pos lower,if_pos upper]
     rfl
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

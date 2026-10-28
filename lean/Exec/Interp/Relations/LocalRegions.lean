@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Regions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A same-type local replacement changes exactly that local's encoded region.
@@ -49,4 +49,4 @@ theorem ValuesAt.copy_local {words : List U64} {base src index : Nat}
   simp only [ValuesAt, Code.encodeValues_append, updated]
   simpa only [List.append_assoc] using changed
 
-end Exec.Interp
+end Itasca.Runtime.Interp

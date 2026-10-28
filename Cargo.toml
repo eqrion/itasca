@@ -21,7 +21,7 @@ std = []
 libm = { version = "=0.2.16", default-features = false }
 
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)', 'cfg(charon_exec)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(charon)'] }
 
 [dev-dependencies]
 wasmparser = "=0.252.0"

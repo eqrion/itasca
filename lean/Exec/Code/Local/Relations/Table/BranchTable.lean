@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Common.Structured
 import Exec.Code.Local.Relations.Table.BranchTableLayout
 import Exec.Code.Local.Callbacks.Table.CompilerTables
 import Exec.Abs.BrTable
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Compatibility view of the indexed branch-table layout. -/
@@ -17,4 +17,4 @@ theorem BranchTableCode.selected {tables locals labels stack code depths fallbac
     (Abs.BrTable.select depths fallback value) (Abs.BrTable.select_table depths fallback value)
   exact ⟨entry,by simpa only [table.length,Nat.add_sub_cancel] using lookup,fragment⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

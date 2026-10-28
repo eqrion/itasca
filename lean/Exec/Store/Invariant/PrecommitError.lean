@@ -1,5 +1,5 @@
-import Exec.Generated.Types
-namespace Exec.Store
+import Itasca.Generated.Types
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The only ordinary failure class available while allocating a certified
@@ -24,4 +24,4 @@ def PrecommitError (profile : Itasca.ValidationProfile) : runtime.ExecError → 
 theorem ResourceError.precommit {profile error} (resource : ResourceError error) : PrecommitError profile error := by
   cases error <;> simp_all [ResourceError, PrecommitError]
 
-end Exec.Store
+end Itasca.Runtime.Store

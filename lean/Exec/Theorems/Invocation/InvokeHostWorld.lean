@@ -6,8 +6,8 @@ import Exec.Store.Invariant.CheckedValues
 import Exec.Theorems.Composition.Entry
 import Exec.Theorems.Composition.Eventful.EventfulErrors
 import Exec.Spec.HostCall
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem invoke_host_world_outcomes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -163,4 +163,4 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         have equal : error=reported := by simpa only [core.result.Result.Err.injEq] using failed
         subst reported
         exact ⟨events,source⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

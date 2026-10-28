@@ -1,6 +1,6 @@
 import Exec.Code.Module.ExecutableSchedulerFunctions
 import Exec.Code.Module.SchedulerSubmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem CompileEntries.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
@@ -53,4 +53,4 @@ theorem compiler_poll_executable_functions {A : Type} (allocator : runtime.platf
     PartialExecutableModuleFunctions env sources after.functions.val ∧ schedulerStatic after = schedulerStatic before := by
   rw [(compiler_poll_accepted allocator before after batch accepted).2]
   exact ⟨initial, rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

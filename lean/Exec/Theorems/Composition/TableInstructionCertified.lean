@@ -32,8 +32,8 @@ import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Store.Invariant.SemanticApi
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem table_mutation_shape {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (shape : Shape view before)
@@ -90,4 +90,4 @@ theorem table_mutation_extends {M : Type} (view : M → Slice U8)
       getElem!_pos (before.tables.val.map decodeTable) address.index.val
         (by simpa only [List.length_map] using bound),List.getElem_map] using objectExtension
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

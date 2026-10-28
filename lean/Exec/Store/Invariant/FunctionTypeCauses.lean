@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.InternTypeCauses
 import Exec.Store.Invariant.FunctionStaging
 import Exec.Store.Invariant.NormalResult
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -35,8 +35,7 @@ theorem add_function_resource_cause {M A : Type} (memory : runtime.platform.Memo
       obtain ⟨rfl,rfl,rfl⟩ := run
       exact ⟨rfl,rfl,refusal⟩
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
-        runtime.compiler.ExecutableModule.env,module.Module.env,Itasca.module.Module.impl.env,
-        module.Env.func_type_indices,Itasca.module.Env.impl.func_type_indices] at run
+        runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.func_type_indices] at run
       obtain ⟨sourceType,read,run⟩ := normal_bind_exists _ _ _ run
       simp only [lift,bind_ok] at run
       obtain ⟨signature,read,run⟩ := normal_bind_exists _ _ _ run
@@ -59,8 +58,7 @@ theorem add_type_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     ∃ ty, inst.module.module.env.types.val[index.val]? = some ty ∧
       after = store ∧ next = inst ∧ ty ∉ store.types.val ∧ TypeInternResourceCause allocator store ty error := by
   unfold runtime.store.instantiate.Store.add_instance_type at run
-  simp only [runtime.compiler.ExecutableModule.env,module.Module.env,Itasca.module.Module.impl.env,
-    module.Env.types,Itasca.module.Env.impl.types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.types,bind_ok] at run
   obtain ⟨ty,read,run⟩ := normal_bind_exists _ _ _ run
   have found : inst.module.module.env.types.val[index.val]? = some ty := by
     unfold Slice.index_usize at read
@@ -84,4 +82,4 @@ theorem add_type_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     obtain ⟨rfl,rfl,rfl⟩ := run
     obtain ⟨sameStore,absent,cause⟩ := effect rejected rfl
     exact ⟨ty,found,sameStore,rfl,absent,cause⟩
-end Exec.Store
+end Itasca.Runtime.Store

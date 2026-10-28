@@ -2,7 +2,7 @@ import Exec.Store.Linking.LinkMaps
 import Exec.Store.Api.TableStaging
 import Exec.Store.Api.MemoryStaging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev TableBindings {M : Type} (store : runtime.store.Store M)
@@ -67,4 +67,4 @@ theorem MemoryStageEffect.memory_bindings {M : Type} {view : M → Slice U8} {st
     intro bound found
     exact ⟨bound, found, le_refl _⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

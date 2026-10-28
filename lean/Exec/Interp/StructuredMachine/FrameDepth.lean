@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Abs.DecodeDepth
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 @[simp] theorem SavedFrames.length {M : Type} {store : runtime.store.Store M}
@@ -28,4 +28,4 @@ theorem FrameStackRel.depth {M : Type} {store : runtime.store.Store M}
     exec.frames.length = Spec.frameDepth (Abs.decode source) := by
   rw [Abs.decode_depth]
   exact stack.length
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

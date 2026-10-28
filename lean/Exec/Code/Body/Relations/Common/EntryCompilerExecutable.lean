@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.ExecutableEntryCompilerFinish
 import Exec.Code.Body.Control.Table.IndexedTableEntryInitial
 import Exec.Code.Body.Reader.Common.IndexedReaderCompilerBodyWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Both complete source profiles produce the same indexed function evidence;
@@ -33,4 +33,4 @@ theorem witness_compile_executable {A : Type} (ops : runtime.platform.Alloc A)
     facts.functionSlots matched rfl facts.signatures facts.bodyBound
   exact executable_witness_compiler_finish ops w facts body compiled finalBudget finished
 
-end Exec.Code
+end Itasca.Runtime.Code

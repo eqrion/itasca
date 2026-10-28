@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Stateful.StatefulBulk
 import Exec.Store.Api.TableInitSemantics
 import Exec.Store.Initialization.BulkTableAt
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_table_init_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
@@ -59,4 +59,4 @@ theorem stateful_table_init_effect {M : Type} (memory : runtime.platform.MemoryB
     intro destinationFits sourceFits
     have impossible := outside destinationFits
     omega
-end Exec.Theorems
+end Itasca.Runtime.Theorems

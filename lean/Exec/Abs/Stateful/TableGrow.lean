@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.GrowthTyping
 import Exec.Abs.Stateful.ObjectReplacement
 import Exec.Abs.Stateful.ReferenceOperands
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 /-- Refusal is permitted independently of the pure successful-growth rule. -/
 inductive TableGrowthChoice (before : tableinst) (delta : Nat) (value : ref) : Option tableinst → Prop
@@ -91,4 +91,4 @@ theorem tableGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Lis
             [val_ref reference,integerVal .I32 delta] [integerVal .I32 (object.REFS.length)] typed.typed.ambient labelsWf frontWf tailWf restWf heights
             (by simpa [AFrame.toFrame,vals,reference_admin_value,admininstr_instr,constant_admin] using source)
           simpa only [split] using full
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

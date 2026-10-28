@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.FunctionSlots
 import Exec.Code.Local.Relations.Common.PrepareFunctions
 /-! The actual scheduler environment callback constructs source type/signature
 metadata and initializes every defined-function result slot. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_environment_ready_sequence {A : Type} (ops : runtime.platform.Alloc A)
@@ -15,10 +15,10 @@ open Aeneas Aeneas.Std
         out.2.func_param_slots.val.map (fun word => word.val) = env.func_types.val.map (fun ty => signatureSlots ty.params.val) ∧
         out.2.functions.val = List.replicate env.func_type_indices.val.length none ⦄ := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
-  simp only [module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, bind_ok]
+  simp only [Itasca.module.Env.impl.func_type_indices, bind_ok]
   split
   · simp [runtime.compiler.Budget.reject]
-  · simp only [module.Env.types, Itasca.module.Env.impl.types, bind_ok]
+  · simp only [Itasca.module.Env.impl.types, bind_ok]
     split
     · simp [runtime.compiler.Budget.reject]
     · step with capture_signatures_loop_frame ops law scheduler env 0#usize (.Ok ())
@@ -55,4 +55,4 @@ open Aeneas Aeneas.Std
             refine ⟨?_, slotsExact, effect2 rfl⟩
             simpa only [sameSignatures] using sequence
 
-end Exec.Code
+end Itasca.Runtime.Code

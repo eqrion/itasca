@@ -2,7 +2,7 @@ import Exec.Store.Initialization.BulkDrop
 import Exec.Store.Invariant.InvalidWrite
 import Exec.Interp.Relations.Range
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Copy from an independent element segment. The recursion records exactly the
@@ -101,4 +101,4 @@ theorem table_init_loop (tables : alloc.vec.Vec runtime.store.TableInst)
     have same : {table with elements := table.elements} = table := by cases table; rfl
     rw [same, ← tableRead, vec_set_current tables tableIndex tableBound]
 
-end Exec.Store
+end Itasca.Runtime.Store

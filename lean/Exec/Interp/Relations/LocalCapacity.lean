@@ -3,7 +3,7 @@ import Exec.Interp.Relations.LocalCodePoint
 import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.Capacity
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem move_valid_bounds (compiled : runtime.bytecode.CompiledFunction)
@@ -13,9 +13,9 @@ theorem move_valid_bounds (compiled : runtime.bytecode.CompiledFunction)
   cases ty <;> simp only [move, width, reduceIte] at checked ⊢
   all_goals first | exact copy_valid_bounds compiled dst src checked | exact copy2_valid_bounds compiled dst src checked
 
-end Exec.Code
+end Itasca.Runtime.Code
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-end Exec.Interp
+end Itasca.Runtime.Interp

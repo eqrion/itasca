@@ -1,7 +1,7 @@
 import Exec.Code.Module.CompileSubmit
 import Mathlib.Data.List.Forall2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A queued worker retains its issued identity and a proved successful finish. -/
@@ -30,4 +30,4 @@ theorem completed_workers_append {queue workers issued worker}
     List.Forall₂ CompletedWorker (queue++[issued]) (workers++[worker]) :=
   List.rel_append held (.cons ready .nil)
 
-end Exec.Code
+end Itasca.Runtime.Code

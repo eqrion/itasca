@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Integer.SimdIntegerBinaryLoop
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def widenWord (width : U32) (extmul signed : Bool) (a b : U64) : Result U64 := do
@@ -89,4 +89,4 @@ theorem widen_loop (width i : U32) (extmul high signed : Bool) (x y initial : U1
     · have finished : index.val=64/width.val := by scalar_tac
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

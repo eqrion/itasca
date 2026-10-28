@@ -14,7 +14,7 @@ import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Api.ExportBounds
 import Exec.Store.Invariant.SourceStoreTyping
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Public API invariant. Export descriptors retain namespace bounds in
@@ -57,4 +57,4 @@ theorem CertifiedApiStore.install_code {M : Type} {view : M → Slice U8}
     CertifiedApiStore view (Store.installCode code store.instances.len.val sources) store :=
   certified.change_code (Store.installCode_agrees store code sources)
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

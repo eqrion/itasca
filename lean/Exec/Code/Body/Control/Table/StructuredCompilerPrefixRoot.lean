@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCompleted
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Control.Table.StructuredUniversalRoot
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The last source END fixes all root targets and obtains the body relation
@@ -43,4 +43,4 @@ theorem StructuredCompilerPrefix.root_relation {jumpTables : List Aeneas.Std.U32
   | dormant dead retained =>
     have impossible := retained.unentered
     simp [entered] at impossible
-end Exec.Code
+end Itasca.Runtime.Code

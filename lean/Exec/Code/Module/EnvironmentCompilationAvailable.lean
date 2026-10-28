@@ -3,7 +3,7 @@ import Exec.Code.Module.CompilerQueueAvailable
 import Exec.Code.Local.Relations.Common.Environment
 import Exec.Code.Module.EnvironmentFrame
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Fresh environment capture constructs the compiler queue, empty publication
@@ -41,4 +41,4 @@ theorem compiler_environment_compilation_available {A : Type} (ops : runtime.pla
   · rw [fields.1,emptyQueue]
     exact .nil
 
-end Exec.Code
+end Itasca.Runtime.Code

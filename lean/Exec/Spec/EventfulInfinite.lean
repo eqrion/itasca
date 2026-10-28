@@ -1,6 +1,6 @@
 import Exec.Spec.Counted
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- A coherent infinite source execution retaining the events in every positive
@@ -96,4 +96,4 @@ theorem infinite_source_of_decreasing_stutter {S : Type}
   intro n
   obtain ⟨dispatches,count,nonempty,history,positive,steps⟩ := edges n
   exact ⟨count,positive,steps⟩
-end Exec.Spec
+end Itasca.Runtime.Spec

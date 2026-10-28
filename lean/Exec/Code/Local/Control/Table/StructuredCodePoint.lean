@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredCode
 import Exec.Code.Local.Control.Common.StructuredComposition
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 def StructuredCode.Targets (emission : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -93,4 +93,4 @@ theorem StructuredCode.entry_bound {emission types functions returns locals code
     (relation : StructuredCode emission types functions returns locals code jumpTables labels stack source pc next after) :
     pc ≤ code.length := relation.pc_le_next.trans relation.next_le_length
 
-end Exec.Code
+end Itasca.Runtime.Code

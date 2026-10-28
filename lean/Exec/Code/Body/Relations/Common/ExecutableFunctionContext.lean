@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.ExecutableFunction
 import Exec.Code.Local.Control.Common.CumulativeFunctionContext
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem ExecutableEmission.context {tables C D before instruction emitted after}
@@ -57,4 +57,4 @@ theorem ExecutableFunctionCode.complete_module {module params declared results b
   | none => simp [Itasca.EnvTranslation.dataTypes,declaredCount] at found
   | some n => simpa only [Itasca.EnvTranslation.dataTypes,declaredCount,Option.map_some,
       Option.getD_some,count n declaredCount] using found
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Code.Local.Initializer.InitializerProofs
 /-! Successful synthetic initializer compilation retains its exact two-instruction
 program, literal pool, slot width, and position in the executable module. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 
@@ -134,4 +134,4 @@ theorem initializer_expression {A : Type} (ops : runtime.platform.Alloc A)
       | div =>
         rw [checked, bind_div] at success
         exact (div_not_ok success).elim
-end Exec.Code
+end Itasca.Runtime.Code

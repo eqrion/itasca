@@ -1,6 +1,6 @@
 import Exec.Code.Module.Stream
 import Itasca.Stream.DriverTotal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An oversized scanned environment is rejected before any compiler callback.
@@ -26,9 +26,9 @@ theorem compiler_stream_large_environment {V : Type} (visitor : stream.Streaming
       have count := post.1
       simp only [show (0#usize).val = 0 from rfl,Slice.len_val] at count
       omega
-  simp only [Exec.stream.validate_streaming, Itasca.stream.validate_streaming]
+  simp only [Itasca.stream.validate_streaming]
   simp only [environment]
   simp only [bind_ok,core.result.Result.Insts.CoreOpsTry.branch]
   rw [checked,rejected]
   simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-end Exec.Code
+end Itasca.Runtime.Code

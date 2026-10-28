@@ -2,7 +2,7 @@ import Exec.Code.Body.Relations.Common.ExecutableEmission
 import Exec.Code.Local.Relations.Common.StatefulInstructionAcceptance
 import Exec.Code.Local.Lowering.Simd.SimdInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Explicit select has the same width-specific checker as ordinary select. -/
@@ -36,4 +36,4 @@ theorem ExecutableEmission.ordinary_instructions_accept (function : runtime.byte
   | typedSelect head => exact head.instructions_accept function inputs outputs
   | branchTable stack depths fallback selector start len => exact False.elim (ordinary depths fallback rfl)
 
-end Exec.Code
+end Itasca.Runtime.Code

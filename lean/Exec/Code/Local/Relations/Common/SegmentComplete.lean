@@ -1,7 +1,7 @@
 import Exec.Code.Local.Initializer.InitializerComplete
 import Exec.Code.Local.Relations.Common.SegmentFinish
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual successful initializer lowering supplies both the read-only maps and
@@ -162,4 +162,4 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
                       (by simp [seedEq, initializerSeed])
                     exact program.change_module rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

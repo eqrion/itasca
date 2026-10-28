@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.SimdFrameStep
 import Exec.Interp.StructuredMachine.JumpExecution
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std
 
 /-- All supported SIMD instructions execute inside the generic compiled stack.
@@ -128,4 +128,4 @@ theorem step_execution {M P F A : Type}
     exact ⟨platformEq,mutation,metadata,extension,Or.inl ⟨ok,pc,g,fresh⟩⟩
   · exact ⟨platformEq,mutation,metadata,extension,Or.inr failed⟩
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

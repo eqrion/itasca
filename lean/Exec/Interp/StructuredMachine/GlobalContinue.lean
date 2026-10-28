@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.StructuredMachine.GlobalPrepare
-namespace Exec.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
 open Aeneas Aeneas.Std SpecExt
 
 theorem decode_words_valueType (ty : Itasca.types.ValueType) (lo hi : U64) :
@@ -39,4 +39,4 @@ theorem corePoint_globalSet_continue {before afterStore raw f compiled C targets
     rw [values] at labels
     simpa only [List.append_nil] using labels.replace_suffix (after := []) heights
   · simpa only [pcNext] using tail
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

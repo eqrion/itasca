@@ -4,7 +4,7 @@ import Exec.Store.Initialization.PrecheckWitnessLoops
 /-! Full Wasm1 precommit checks derived from retained compiler maps and canonical
 validator segment typing. Every path returns normally without changing the
 store or invoking embedding hooks. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -52,4 +52,4 @@ theorem data_precheck_certified_witness (law : Platform.AllocCorrect allocator)
   exact ⟨segment, read, data_precheck_certificate store inst index segment compiled read
     (valid segment (List.mem_of_getElem? read)) bindings imports segments⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

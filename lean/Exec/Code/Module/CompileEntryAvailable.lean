@@ -1,7 +1,7 @@
 import Exec.Code.Module.BatchEntryAvailable
 import Exec.Code.Module.CompileEntry
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler compiles and publishes an independently valid dispatched
@@ -45,17 +45,13 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (alloc.vec.Vec.deref before.signatures) (alloc.vec.Vec.deref before.func_param_slots)
     {before.budget with marker := ()} batchStart initial (by simpa [alloc.vec.Vec.deref] using signaturesMatch)
     (by simpa [alloc.vec.Vec.deref] using slotsMatch) (by omega) created demand
-  have dispatchedCall := dispatch
-  simp only [Exec.stream.CodeBatch.next_entry] at dispatchedCall
-  have validatedCall := validated
-  simp only [Exec.stream.CodeBatch.validate_func] at validatedCall
   let finalBatch := {dispatched with num_validated := count,validated_end := finish}
   let after := {before with functions := before.functions.set frame.index (some final.function),budget := final.budget}
   refine ⟨count,final,countValue,?_,w,ending,?_⟩
   · unfold runtime.compiler.CompileScheduler.compile_entry
-    simp only [Exec.stream.CodeBatch.next_entry,dispatchedCall,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-      runtime.compiler.Budget.copy_state,Exec.stream.CodeBatch.code_offset,Itasca.stream.CodeBatch.impl.code_offset,
-      uncurry_apply_pair,added,created,Exec.stream.CodeBatch.validate_func,validatedCall,finished]
+    simp only [dispatch,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
+      runtime.compiler.Budget.copy_state,Itasca.stream.CodeBatch.impl.code_offset,
+      uncurry_apply_pair,added,created,validated,finished]
     have fits : ¬ frame.index ≥ alloc.vec.Vec.len before.functions := by scalar_tac
     simp only [fits,↓reduceIte]
     have found := alloc.vec.Vec.index_usize_spec before.functions frame.index slotBound
@@ -75,4 +71,4 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     rfl
   · simpa only [CompilationBudgetEffect] using effect
 
-end Exec.Code
+end Itasca.Runtime.Code

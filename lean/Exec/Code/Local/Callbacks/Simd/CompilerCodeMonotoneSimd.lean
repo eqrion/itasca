@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
 import Exec.Code.Local.Lowering.Simd.SimdDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -25,4 +25,4 @@ theorem compiler_lower_simd_code_mono {A : Type} (ops : runtime.platform.Alloc A
   · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
     rw [if_neg reachable] at accepted
     exact compiler_observe_code_mono ops law before after state (.Ok ()) accepted
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Generated.Equations
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- An immediate normal return of a bind requires an immediate normal return
@@ -13,4 +13,4 @@ theorem normal_bind_exists {α β : Type} (input : Result α) (next : α → Res
   | vis effect continuation => simp only [bind_vis, vis_not_ok] at run
   | div => simp only [bind_div, div_not_ok] at run
 
-end Exec.Store
+end Itasca.Runtime.Store

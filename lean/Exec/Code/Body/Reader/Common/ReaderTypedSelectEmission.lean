@@ -4,7 +4,7 @@ import Exec.Code.Local.Source.TypedSelectLowering
 import Exec.Code.Local.Relations.Common.CoreLoweringEffects
 import Exec.Code.Body.Source.TypedLowering
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Accepted explicit-select bytes and their actual callback produce the typed
@@ -49,4 +49,4 @@ theorem reader_emit_typed_select_wasm2 {data env locals index st}
   exact ⟨ordinary,sources,cursor,ty,front,values,emitted,beforeTypes,post,
     ⟨lower,SourceStack.of_map types concrete output⟩,emission⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

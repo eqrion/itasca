@@ -5,7 +5,7 @@ import Exec.Code.Module.CompileSlice
 
 /-! Source-ordered executable certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.platform.Alloc A}
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
@@ -46,4 +46,4 @@ theorem compile_executable_functions {A : Type} (ops : runtime.platform.Alloc A)
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates.1, certificates.2, (w.initializers law).2.1⟩
-end Exec.Code
+end Itasca.Runtime.Code

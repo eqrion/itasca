@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Local.Checking.ScopeEntryExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-selected control signatures and live IF layouts establish actual
@@ -44,4 +44,4 @@ theorem structured_scope_entry_exit_slots {jumpTables : List U32}
     exact compiler_scope_entry_exit_slots ops law before after state kind bt (makeGeometry pc)
       (.dead kind dead rfl) held called
 
-end Exec.Code
+end Itasca.Runtime.Code

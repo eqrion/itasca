@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderPost
 import Exec.Code.Local.Capacity.StatefulAvailability
 import Exec.Code.Local.Capacity.DeadOpAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -41,4 +41,4 @@ theorem StatefulReaderPost.available {data env locals index st} {p : Wasm2.Pendi
     rw [held.2]
     exact ⟨held.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

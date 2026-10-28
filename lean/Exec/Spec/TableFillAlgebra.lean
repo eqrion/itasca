@@ -1,5 +1,5 @@
 import Exec.Spec.TableFillSource
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def fillInto {T : Type} (before : List T) (destination : Nat) (value : T) : Nat → List T
@@ -29,4 +29,4 @@ theorem tableFill_eq (s : store) (f : frame) (tableIndex destination count : Nat
     congr 1
     funext table
     simp only [List.modify_eq_set]
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

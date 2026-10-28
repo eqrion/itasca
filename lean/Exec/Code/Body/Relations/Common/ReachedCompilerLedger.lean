@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryLedger
 import Exec.Code.Body.Reader.Control.ReaderControlLedger
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The numerical callback ledger at a complete source-instruction boundary. -/
@@ -34,4 +34,4 @@ theorem ReachedCompilerLedger.reader_wasm2 {A} (ops : runtime.platform.Alloc A)
   · have fresh := reader_ordinary_ledger_wasm2 p ops law before after out ctx _ control rfl accepted
     exact held.advance observed fresh.auxiliary (fresh.fixups held.fixups)
 
-end Exec.Code
+end Itasca.Runtime.Code

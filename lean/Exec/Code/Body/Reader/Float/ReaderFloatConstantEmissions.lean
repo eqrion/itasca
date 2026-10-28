@@ -6,7 +6,7 @@ import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
 import Exec.Code.Body.Source.TypedLowering
 import Exec.Code.Body.Reader.Float.ReaderFloatConstantEncoding
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 /-- An actual successful constant reader and compiler callback extends the
 retained code prefix and the supplied source zipper together. -/
@@ -110,4 +110,4 @@ theorem reader_emit_float64_wasm2 {data env locals index st}
   apply ScalarEmission.float64
   simpa only [localTypes] using layout.height
 
-end Exec.Code
+end Itasca.Runtime.Code

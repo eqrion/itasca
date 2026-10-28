@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.BranchTableExecution
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem step_branch_table_supported
  {M P F A : Type}
@@ -51,4 +51,4 @@ theorem step_branch_table_supported
       last hf hi hc program slots point values bound table machine)
     rintro out ⟨success,sameStore,samePlatform,advance⟩
     exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore success advance
-end Exec.Theorems
+end Itasca.Runtime.Theorems

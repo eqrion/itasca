@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Simd.SimdMeaningCounts
 import Mathlib.Tactic.IntervalCases
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 8000000
@@ -22,4 +22,4 @@ theorem SimdImmediateMeaning.constructor_available {C opcode immediate input sou
       | lane _ _ _ decoded _ _ => change none = some _ at decoded; contradiction
       | memory _ _ _ decoded _ _ _ _ _ _ => change none = some _ at decoded; contradiction)
 
-end Exec.Code
+end Itasca.Runtime.Code

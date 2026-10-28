@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.ReaderAcceptance
 import Exec.Code.Local.Capacity.EndDispatchAvailability
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -61,4 +61,4 @@ theorem reached_profile_end_available_wasm2 {A V : Type}
   rintro ⟨kind,bt⟩ _ _
   exact invariant.end_available ops bound available out.core capacity coordinate kind bt
 
-end Exec.Code
+end Itasca.Runtime.Code

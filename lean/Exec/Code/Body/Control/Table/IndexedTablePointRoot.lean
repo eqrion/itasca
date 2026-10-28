@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderControlEffects
 import Exec.Code.Body.Control.Table.IndexedTablePointControl
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.finish_root {A : Type}
@@ -48,4 +48,4 @@ theorem IndexedTableReaderCompilerPointWasm2.finish_root {A : Type}
     (emit (CompilerTables.ofFunction final.function)) initial final types functions
     (ft.results.val.map Translate.valueType) locals source
   simpa only [pairs,CompilerTables.append_empty] using complete
-end Exec.Code
+end Itasca.Runtime.Code

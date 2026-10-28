@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.InstantiateLinked
 import Exec.Store.Instantiation.PreparedRunBounds
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The accepted public compiler and actual instantiation calls establish the
@@ -39,4 +39,4 @@ theorem instantiate_compiled_linked_bounded_decomposition {M P F A : Type}
   · exact Or.inl rejected
   · exact Or.inr ⟨ready, inst, readyShape, found, source, initializers, types, counts, code,
       trace.toPreparedRun.compiled_segment_bounds laws law shape accounted bounded bytes profile limits accepted, ⟨trace⟩, tail⟩
-end Exec.Store
+end Itasca.Runtime.Store

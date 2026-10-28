@@ -5,8 +5,8 @@ import Exec.Interp.Machines.Core.CoreOwnership
 import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.MemoryRun
 import Exec.Interp.StructuredMachine.OrdinaryExecution
-namespace Exec.Interp.StructuredMachine.Memory
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 theorem step_memory_load_execution_owned_uniform {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
@@ -244,4 +244,4 @@ theorem step_memory_store_execution_owned {M P F A : Type} (memory : runtime.pla
     exact ⟨platform,mutation,metadata,extension,Or.inl ⟨success,pc,g,machine,simulation,ownership,bounded⟩⟩
   · exact ⟨platform,mutation,metadata,extension,Or.inr trapped⟩
 
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

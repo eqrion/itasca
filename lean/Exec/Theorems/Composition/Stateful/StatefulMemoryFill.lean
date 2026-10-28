@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Stateful.StatefulBulk
 import Exec.Store.Api.MemoryFillSemantics
 import Exec.Store.Api.MemoryFillMutation
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_memory_fill_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
@@ -50,4 +50,4 @@ theorem stateful_memory_fill_effect {M : Type} (memory : runtime.platform.Memory
     simp [bulkWord,Slice.length,alloc.vec.Vec.length] at outside
     simp [
       decodeMemory,decodeBytes,bulk_integer_decoded,outside]
-end Exec.Theorems
+end Itasca.Runtime.Theorems

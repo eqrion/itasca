@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.CheckedValues
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem ValueInStore.issued {M : Type} {store : runtime.store.Store M} {value : runtime.Value}
@@ -19,4 +19,4 @@ theorem checked_arguments_owned {M : Type} (memory : runtime.platform.MemoryBuff
   have checked := check_values_source_typed memory view code store sourceWf args types issued
   rw [accepted,WP.spec_ok] at checked
   exact (checked rfl).2.1
-end Exec.Store
+end Itasca.Runtime.Store

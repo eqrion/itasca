@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Execute
 
 /-! Function entry clears precisely the non-parameter local words. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def zeroWords (words : List U64) (start : Nat) : Nat → List U64
@@ -72,4 +72,4 @@ theorem zeroWords_effect (words : List U64) (start n : Nat)
       exact ⟨by simpa [heq, zeroWords] using hwords, hrest⟩
   · exact ⟨range, rfl, rfl, rfl⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Store.Api.GlobalTypeMap
 import Exec.Store.Initialization.ElementTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem ElementStageEffect.global_types {M : Type} {store after : runtime.store.Store M}
@@ -37,4 +37,4 @@ theorem DataStageEffect.global_types {M : Type} {store after : runtime.store.Sto
     subst next
     exact mapping
 
-end Exec.Store
+end Itasca.Runtime.Store

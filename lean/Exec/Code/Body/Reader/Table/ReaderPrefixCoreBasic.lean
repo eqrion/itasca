@@ -4,7 +4,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Reader.Global.ReaderGlobalEmissions
 import Exec.Code.Body.Reader.Common.ReaderSelectEmissions
 import Exec.Code.Body.Reader.Common.ReaderSpan
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_global_get_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -114,4 +114,4 @@ theorem reader_prefix_select_wasm2 {jumpTables : List U32} {data env sourceLocal
   refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
-end Exec.Code
+end Itasca.Runtime.Code

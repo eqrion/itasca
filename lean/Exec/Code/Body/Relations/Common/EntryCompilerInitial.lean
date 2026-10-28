@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Common.ReaderBoundaryInitial
 import Exec.Code.Body.Callbacks.Common.CompilerPrefixStart
 import Exec.Code.Body.Relations.Common.FunctionStartFacts
 import Exec.Code.Local.Relations.Common.EntryTypedSteps
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Lookup in the canonical source table selects an actual captured compiler
@@ -83,4 +83,4 @@ theorem TypedRunWasm2.body_size {V : Type} {visitor : code.OpVisitor V}
   | done typed _ _ => exact typed.bounds.size
   | step typed _ _ _ _ _ => exact typed.bounds.size
 
-end Exec.Code
+end Itasca.Runtime.Code

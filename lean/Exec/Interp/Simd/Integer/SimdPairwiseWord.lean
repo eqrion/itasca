@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdPairwiseLoop
 import Exec.Interp.Simd.Integer.SimdWidenWord
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 @[step] theorem pairwise_word (width : U32) (signed : Bool) (a b : U64)
     (x y : BitVec width.val) (supported : width.val ∈ [8,16])
@@ -66,4 +66,4 @@ open Aeneas Aeneas.Std Exec.Spec.Simd
     rw [BitVec.setWidth_add _ _ (by omega),saExact,sbExact,
       signExtend_restrict _ _ (by omega),signExtend_restrict _ _ (by omega)]
     rfl
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

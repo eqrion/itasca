@@ -2,7 +2,7 @@ import Exec.Interp.Relations.Select
 import Exec.Interp.Relations.Regions
 import Exec.Code.Local.Relations.Common.SelectLowering
 set_option maxHeartbeats 1000000
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem select_slots {M P F A : Type}
@@ -91,4 +91,4 @@ theorem select_slots {M P F A : Type}
     simp only [zeroEq] at converted
     have fresh := representation updated.slots.val (by simpa only [width] using converted)
     exact ⟨success,rfl,rfl,fresh.1,fields,fresh.2⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

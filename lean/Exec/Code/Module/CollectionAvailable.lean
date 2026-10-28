@@ -1,7 +1,7 @@
 import Exec.Code.Module.CollectFunctions
 import Exec.Code.Local.Capacity.BudgetAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Moving a populated source slot into the dense vector succeeds when its
@@ -99,4 +99,4 @@ theorem collect_functions_available {A : Type} (ops : runtime.platform.Alloc A)
   rw [called,WP.spec_ok] at ordered ⊢
   exact ⟨same,functions,accepted,ordered functions accepted⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Code.Local.Relations.Memory.MemoryOpcode
 
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -65,4 +65,4 @@ theorem dispatch_store {Q : core.result.Result Unit runtime.ExecError × runtime
   simp only [bind_ok]
   with_unfolding_all apply WP.spec.ret
   exact ⟨property,rfl,rfl⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

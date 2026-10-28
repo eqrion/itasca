@@ -6,7 +6,7 @@ import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Exec.Code.Body.Reader.Control.ReaderBranchIfLayout
 import Exec.Code.Local.Callbacks.Common.FixupBudget
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -69,4 +69,4 @@ theorem reached_profile_br_if_available_wasm2 {jumpTables : List U32} {data env 
       (by change frame.fixups.val.length < Usize.max; omega)
       (by change frame.fixups.val.length+1 ≤ bound; omega)
 
-end Exec.Code
+end Itasca.Runtime.Code

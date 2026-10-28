@@ -11,7 +11,7 @@ import Exec.Code.Local.Control.Common.UniversalTerminal
 import Exec.Code.Local.Control.Common.UniversalDormant
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A syntactic inclusion of the existing pure bytecode emission cases. -/
@@ -19,4 +19,4 @@ def LinearEmbedding (locals : List valtype)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop) : Prop :=
   ∀ {input instruction code output}, LinearEmission locals input instruction code output → emit input instruction code output
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdQ15Word
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 theorem q15_loop (x y initial : U128) (i : U32)
     (position : i.val ≤ 8)
@@ -64,4 +64,4 @@ theorem q15_loop (x y initial : U128) (i : U32)
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

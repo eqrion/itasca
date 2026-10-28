@@ -5,7 +5,7 @@ import Exec.Code.Local.Checking.TerminalInstructionPrefix
 import Exec.Code.Local.Checking.ScalarExitSlotBounds
 import Exec.Code.Local.Callbacks.Common.CompilerTerminalMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- All scalar source reader kinds preserve both checks in unreachable code.
@@ -33,4 +33,4 @@ theorem reader_dead_scalar_checked_prefix {A : Type} (ops : runtime.platform.All
     rw [dispatch] at callback
     exact compiler_dead_op_checked_prefix ops law before after out opcode a b bits dead held exits callback
 
-end Exec.Code
+end Itasca.Runtime.Code

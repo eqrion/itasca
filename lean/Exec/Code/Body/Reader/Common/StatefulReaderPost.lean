@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderMetadataTypes
 import Exec.Abs.Stateful.SignatureTyping
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- A stateful source reader advances the exact supplied zipper in all paths;
@@ -32,4 +32,4 @@ theorem MetadataReaderPost.stateful_post {data env locals index st}
   refine ⟨front,Simd.inputTypes (pops b),Simd.outputTypes (output b),?_,beforeTypes,afterTypes,afterKnown⟩
   exact Abs.Stateful.Signature.of_typed (by simpa only [source b metadataEq] using typed C matched)
 
-end Exec.Code
+end Itasca.Runtime.Code

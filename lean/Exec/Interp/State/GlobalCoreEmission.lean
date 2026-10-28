@@ -5,7 +5,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Abs.Numeric.Decode
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem linearEmission_not_globalGet {locals before after emitted index}
@@ -59,4 +59,4 @@ theorem scalarEmission_globalSet_inv {C before after emitted} (index : Nat)
     exact ⟨_,ty,idx,src,rfl,rfl,lookup,rfl,rfl,position⟩
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLoadSource
 import Exec.Spec.SimdMemoryZero
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 theorem zero_load_source (op : PlainLoad) (zero : op ≠ .full) (address value : U128) (offset lane : U32) (bytes : Slice U8)
     (s : store) (f : frame) (argument : memarg)
@@ -36,4 +36,4 @@ theorem zero_load_source (op : PlainLoad) (zero : op ≠ .full) (address value :
   · rw [if_neg fits] at source effect
     rw [effect]
     exact ⟨rfl,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

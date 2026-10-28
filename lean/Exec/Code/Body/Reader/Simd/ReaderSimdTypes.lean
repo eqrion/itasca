@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdFixed
 import Exec.Code.Body.Relations.Common.KnownFixedStack
 import Exec.Code.Body.Reader.Common.ReaderValues
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful live SIMD operand checks expose exact complete source stacks;
@@ -41,4 +41,4 @@ theorem reader_simd_fixed_types {data env locals index st out source values posi
       rw [afterTypes,List.append_assoc]
     simpa only [concrete,Sequence.stackTypes,List.map_map,Function.comp_def] using decoded
 
-end Exec.Code
+end Itasca.Runtime.Code

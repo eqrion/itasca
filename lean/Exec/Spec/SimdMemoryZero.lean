@@ -1,5 +1,5 @@
 import Exec.Spec.SimdMemoryLoad
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 def zeroLoadResult (width : Nat) (bytes : List byte) (start : Nat) : List admininstr :=
@@ -70,4 +70,4 @@ theorem zero_load_step (width : Nat) (supported : width = 32 ∨ width = 64)
     · exact input
     · exact .admininstr_case_73
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,5 +1,5 @@
 import Exec.Interp.Calls.Call
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Each defined-call rejection has a concrete resource or interrupt cause.
@@ -124,4 +124,4 @@ theorem call_wasm_causes {M P F A : Type}
             simp
 
 
-end Exec.Interp
+end Itasca.Runtime.Interp

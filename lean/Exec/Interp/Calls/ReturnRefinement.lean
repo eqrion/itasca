@@ -3,7 +3,7 @@ import Exec.Abs.Sim.Instruction
 import Exec.Interp.Relations.Fetch
 
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The abstract state after returning either resumes the immediate caller or
@@ -115,4 +115,4 @@ theorem step_return_refines {M P F A : Type}
   intro out effect
   exact ⟨effect.1, effect.2.1.before_fetch last, effect.2.2⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

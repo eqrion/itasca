@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.CallbackCapacity
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A bounded internal lowering step consumes its numeric allowance without
@@ -25,4 +25,4 @@ theorem CallbackCapacity.after_growth {A : Type} {before after : runtime.compile
   · rw [localsSame]
     exact slots
 
-end Exec.Code
+end Itasca.Runtime.Code

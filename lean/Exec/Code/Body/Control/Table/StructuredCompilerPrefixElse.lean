@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCompleted
 import Exec.Code.Local.Control.Table.StructuredUniversalElse
 import Exec.Code.Local.Callbacks.Control.ScopeStackElse
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- ELSE retains the completed then arm and restores the sibling's exact
@@ -57,4 +57,4 @@ theorem StructuredCompilerPrefix.begin_else {jumpTables : List Aeneas.Std.U32} {
     (invariant.controlBudget.transport maps (by simp [change.afterFrames, change.beforeFrames])).advance (Nat.le_of_lt consumed), cursor⟩
   simpa only [sourceTypes.decoded] using next
 
-end Exec.Code
+end Itasca.Runtime.Code

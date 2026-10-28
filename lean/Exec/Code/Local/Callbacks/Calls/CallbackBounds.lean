@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
 import Exec.Code.Local.Source.SourceControlBudget
 import Exec.Code.Local.Source.SourceLengths
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Observation bounds every prefix, including bottom-valued dormant stacks. -/
@@ -30,4 +30,4 @@ theorem SourceCodeBudget.callback_headroom {A} {compiler : runtime.compiler.Func
   norm_num [Itasca.limits.MAX_MODULE_BYTES] at bounded
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

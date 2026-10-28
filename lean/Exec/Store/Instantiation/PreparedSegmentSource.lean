@@ -4,7 +4,7 @@ import Exec.Store.Initialization.ElementOrderLoop
 import Exec.Store.Initialization.DataPayloadLoop
 import Exec.Store.Initialization.DataOrderLoop
 import Exec.Store.Preparation.StagingTypeCertificates
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 private theorem address_order_total {start total count : Nat} {initial addresses : List Nat}
@@ -128,4 +128,4 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   · simpa only [dataElementMap, globalSource, List.nil_append] using elementAddresses
   · simpa only [dataSource, List.nil_append] using dataAddresses
   · simpa only [dataGlobalMap, elementGlobalMap] using globalAddresses
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,5 +1,5 @@
 import Exec.Interp.Memory.MemoryValueSlots
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
  theorem execute_load_footprint {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -40,4 +40,4 @@ open Aeneas Aeneas.Std
   · exact ⟨_,atBound,effect.2⟩
   · rw [effect] at success
     contradiction
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

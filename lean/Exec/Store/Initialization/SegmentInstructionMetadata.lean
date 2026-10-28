@@ -1,9 +1,9 @@
 import Exec.Store.Initialization.SegmentBulkMetadata
 import Exec.Store.Initialization.SegmentInstruction
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 theorem segment_instruction_object_metadata {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -46,4 +46,4 @@ theorem segment_instruction_object_metadata {M P F A : Type}
     rintro out ⟨success, slots, empty, rfl, rfl⟩
     exact .refl _ _
 
-end Exec.Store
+end Itasca.Runtime.Store

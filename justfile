@@ -19,23 +19,6 @@ extract:
 extract-check:
     @make extract-check
 
-# Runtime extraction first refreshes its canonical validator dependencies.
-extract-exec:
-    @make extract-exec
-
-extract-check-exec:
-    @make extract-check-exec
-
-# Keep the validator pass independently available for bootstrap and regressions.
-extract-primary:
-    @make extract-primary
-
-extract-check-primary:
-    @make extract-check-primary
-
-llbc-exec:
-    @make llbc-exec
-
 prove:
     @make prove
 

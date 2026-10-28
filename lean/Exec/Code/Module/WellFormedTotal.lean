@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.WellFormed
 import Exec.Code.Module.InstructionValidityTotal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Jump-table validation terminates for arbitrary stored entries. -/
@@ -111,4 +111,4 @@ theorem well_formed_total (f : runtime.bytecode.CompiledFunction) :
     | (split <;> try simp only [bind_ok, WP.spec_ok])
     | step
     | scalar_tac
-end Exec.Code
+end Itasca.Runtime.Code

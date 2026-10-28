@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
 import Exec.Code.Body.Reader.Common.ReaderBasic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful local parsing checks the namespace before the compiler callback,
@@ -64,4 +64,4 @@ theorem reader_local_tee_bound (st out : code.OpIterState) (data : Slice U8) (ct
       simp only [Result.ok.injEq,Prod.mk.injEq,core.result.Result.Ok.injEq] at tail
       obtain ⟨rfl,rfl⟩ := tail
       exact post.2.choose
-end Exec.Code
+end Itasca.Runtime.Code

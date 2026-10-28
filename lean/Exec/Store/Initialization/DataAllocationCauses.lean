@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Initialization.Data
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The only failure in copying a source data payload is the exact initial
@@ -21,4 +21,4 @@ theorem copy_bytes_resource_causes {A : Type} (allocator : runtime.platform.Allo
   · simp [core.result.Result.Insts.CoreOpsTry.branch]
     step with copy_bytes_loop source (alloc.vec.Vec.new U8) 0#usize (by scalar_tac) (by simp) as ⟨bytes,same⟩
     simp [same]
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdOperandCounts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem simd_opcode_reduction (opcode : U16) (sub : U32)
@@ -12,4 +12,4 @@ theorem simd_opcode_reduction (opcode : U16) (sub : U32)
   have bound := reduced.hBounds
   rw [UScalar.cast_val_eq]
   scalar_tac
-end Exec.Code
+end Itasca.Runtime.Code

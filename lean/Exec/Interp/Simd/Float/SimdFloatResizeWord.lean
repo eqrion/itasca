@@ -2,8 +2,8 @@ import Exec.Spec.SimdFloatResize
 import Exec.Interp.Numeric.Float.Float
 import Exec.Interp.Numeric.Float.FloatPromote
 import Exec.Interp.Simd.Float.SimdCompareFloatLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 def floatResizeWord {F : Type} (floats : runtime.platform.FloatOps F) (kind : FloatResize) (a : U64) : Result U64 := do
   match kind with
@@ -35,4 +35,4 @@ def floatResizeWord {F : Type} (floats : runtime.platform.FloatOps F) (kind : Fl
     · with_unfolding_all simpa only [castEq,floatResizeChoices,FloatResize.input,FloatResize.output,lanetype_Fnn,lsize,size,valtype_numtype,Option.get!_some] using chosen
     · with_unfolding_all exact value.bv.isLt
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

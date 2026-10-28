@@ -4,8 +4,8 @@ import Exec.Abs.Core.Simulation
 import Exec.Abs.Sim.Typing
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- Resolve the owning instance's global address before reading its value. -/
 def globalGet (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (after : List instr) : AResult :=
@@ -103,4 +103,4 @@ theorem globalSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
         tailWf restWf heights bound (List.getElem?_eq_some_iff.mp mapped).1
       simpa only [split,next] using source
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

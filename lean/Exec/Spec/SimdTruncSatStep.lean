@@ -1,6 +1,6 @@
 import Exec.Spec.SimdTruncSatSource
 import Exec.Spec.SimdFloatUnaryChoices
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem trunc_sat_packed (ty : Fnn) (sign : sx) (x result : BitVec 128)
@@ -47,4 +47,4 @@ theorem trunc_sat_step (ty : Fnn) (sign : sx) (x result : BitVec 128)
     · exact trunc_sat_source_wf ty sign
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

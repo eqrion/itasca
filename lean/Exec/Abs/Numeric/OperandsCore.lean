@@ -1,8 +1,8 @@
 import Exec.Abs.Safety
 import Exec.Abs.Numeric.Semantics
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem word_bound (ty : Inn) (bits : BitVec (sizenn (numtype_Inn ty))) :
     bits.toNat < 2 ^ integerWidth ty := by cases ty <;> exact bits.isLt
@@ -46,4 +46,4 @@ def Instruction.operands (op : Instruction)
         exact ⟨first, wa, wa, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa] using hsplit⟩
 
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

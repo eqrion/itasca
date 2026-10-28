@@ -1,7 +1,7 @@
 import Exec.Theorems.Host.HostCallContext
 import Exec.Abs.Indirect.HostSimulation
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The checked atomic host event composes with source call resolution and
 all surrounding contexts. This retains a positive source step count. -/
@@ -39,4 +39,4 @@ theorem HostCallSourceOutcome.indirect_frame_events {M P : Type}
     rcases failure with trapped | exhausted
     · simpa only [hostCallEvents,hostCallFrameResult,trapped,arguments] using trace
     · simpa only [hostCallEvents,hostCallFrameResult,exhausted,arguments] using trace
-end Exec.Theorems
+end Itasca.Runtime.Theorems

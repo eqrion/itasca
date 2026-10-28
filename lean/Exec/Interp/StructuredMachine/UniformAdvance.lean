@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.Advance
 import Exec.Interp.Machines.Uniform.UniformControl
 import Exec.Abs.Stateful.OwnershipStore
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- The existing mutable advance, with the same endpoint and a uniform silent rank. -/
@@ -37,4 +37,4 @@ theorem UniformAdvance.of_frame_forward {nextPC : Aeneas.Std.U32} {after : Abs.A
   ⟨nextPC.val,false,after,machine,simulation,
     simulation.uniform_forward forward (by scalar_tac),ownership,ambient,bounded⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

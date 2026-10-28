@@ -1,7 +1,7 @@
 import Exec.Abs.Core.MemoryMutation
 import Exec.Abs.Stateful.TableTyping
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem wf_store_table_set (s : store) (index : Nat) (value : tableinst)
     (old : wf_store s) (fresh : wf_tableinst value) : wf_store {s with TABLES := s.TABLES.set index value} := by
@@ -60,4 +60,4 @@ theorem memory_replacement_preserves (s : store) (index : Nat) (old fresh : memi
     simpa only [List.getElem!_eq_getElem?_getD,found,Option.getD_some] using extension
   refine ⟨extended,contents.memory_replacement extended index fresh rfl rfl rfl rfl rfl ?_⟩
   exact meminst_typed_extend extended typed
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.ElseSites
 import Exec.Code.Local.Callbacks.Control.FramePlanElse
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Exact physical ELSE update, including the optional skip selected by the
@@ -72,4 +72,4 @@ theorem ElseTransition.resolved {A : Type} {before after : runtime.compiler.Func
     rw [change.codeEq, change.fixupsEq]
     simpa using resolvedCode_guard_set _ (⟨frame.fixups.val, exit⟩ :: groups) _ _ _ noEntry change.guardCode
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.IntSigned
 import Exec.Spec.IntegerShift
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalar_i32_shrs_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -75,4 +75,4 @@ theorem scalar_i64_shrs_sound {F : Type} (ops : runtime.platform.FloatOps F) (a 
   rw [bits]
   exact Spec.integer_shrs_relation .I64 a.bv b.val
 
-end Exec.Interp
+end Itasca.Runtime.Interp

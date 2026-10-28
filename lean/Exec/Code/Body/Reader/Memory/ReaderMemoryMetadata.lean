@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem memory_size_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
@@ -80,4 +80,4 @@ theorem reader_memory_grow_wasm2 {data env locals index st}
   · intro _ _
     simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
 
-end Exec.Code
+end Itasca.Runtime.Code

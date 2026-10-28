@@ -1,6 +1,6 @@
 import Exec.Interp.Control.JumpTable
 import Exec.Abs.BrTable
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem step_brTable_refines {M P F A : Type}
@@ -44,4 +44,4 @@ theorem step_brTable_refines {M P F A : Type}
   rintro out ⟨success,exactState,sameStore,samePlatform⟩
   refine ⟨success,exactState,sameStore,samePlatform,?_,nextTyped,simulation⟩
   simpa only [exactState,FrameSlots] using allValues.locals
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Spec.TableInitSource
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Source table reads return the selected reference or the exact bounds trap. -/
@@ -38,4 +38,4 @@ theorem table_size_step (s : store) (f : frame) (index : Nat)
   exact StepH.step (Step.read _ _ _
     (Step_read.table_size ⟨s,f⟩ (.mk_uN index) _ rfl input output) input
     (wf_config_make hs hf (by simpa [Forall] using output)))
-end Exec.Spec
+end Itasca.Runtime.Spec

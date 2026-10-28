@@ -3,9 +3,9 @@ import Exec.Interp.Memory.MemoryDecode
 import Exec.Interp.Relations.PackedMemorySource
 import Exec.Abs.Memory.Descriptor
 
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
-open Exec.Store
+open Itasca.Runtime.Store
 
 /-- The abstract indexed widths and the independent source helper enumerate the
 same legal packed instructions. No execution relation is assumed by this map. -/
@@ -38,4 +38,4 @@ theorem store_width (op : Abs.Memory.Store) : (scalarStoreWidth (storeOpcode op)
   | full ty => cases ty <;> rfl
   | packed ty width => exact (PackedMemory.store_width _).trans (packed_bytes width)
 
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

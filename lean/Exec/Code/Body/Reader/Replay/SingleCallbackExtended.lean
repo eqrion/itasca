@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Replay.SingleCallbackRun
 import Itasca.Wasm2.Trace.Refinement
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -221,4 +221,4 @@ theorem reader_single_callback_extended {V : Type} (visitor : code.OpVisitor V)
     · rw [code.step_extended.base visitor st data env ctx opcode before hm prefixByte] at accepted
       exact reader_single_callback_base visitor st data env ctx opcode before after out accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

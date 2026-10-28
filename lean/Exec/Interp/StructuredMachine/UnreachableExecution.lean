@@ -4,7 +4,7 @@ import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Abs.Stateful.OwnershipStore
-namespace Exec.Interp.StructuredMachine.Unreachable
+namespace Itasca.Runtime.Interp.StructuredMachine.Unreachable
 variable {jumpTables : List Aeneas.Std.U32}
 variable {compiled : runtime.bytecode.CompiledFunction}
 open Aeneas Aeneas.Std
@@ -65,7 +65,7 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     have represented : FrameSlots out.2.1 {raw with pc := target} {f with code := .UNREACHABLE::after} := by
       simpa only [exactState,FrameSlots] using slots
     have fresh := Execution.ordinary view code ambient {f with code := .UNREACHABLE::after} {f with code := .UNREACHABLE::after}
-      rest expected raw.pc.val false machine (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store)
+      rest expected raw.pc.val false machine (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store)
       raw index target last frameFound program (.ready targetPoint) represented ⟨rfl,rfl,rfl,rfl⟩
       (by rw [exactState]) (by rw [exactState]; exact SlotPrefix.refl _ _) machine.typed machine.core
     exact ⟨sameStore,samePlatform,target,exactState,Or.inl ⟨success,fresh,
@@ -79,4 +79,4 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     intro out effect
     obtain ⟨trapped,sameStore,samePlatform,⟨pc,pcNext,exactState⟩,simulation⟩ := effect
     exact ⟨sameStore,samePlatform,pc,exactState,Or.inr ⟨trapped,simulation⟩⟩
-end Exec.Interp.StructuredMachine.Unreachable
+end Itasca.Runtime.Interp.StructuredMachine.Unreachable

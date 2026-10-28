@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.BranchSuccessForward
 import Exec.Code.Local.Relations.Control.BranchSuccessLoop
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_branch_forward_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -133,4 +133,4 @@ theorem callback_branch_loop_success {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨code, frames⟩ := effect
     exact ⟨hr, by simpa [hcode] using code, by simpa [hframes] using frames⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.NumericInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Budget, scratch labels, reachability, and operand observations do not
@@ -14,4 +14,4 @@ theorem CompilerInstructionPrefix.retained {A : Type} {before after : runtime.co
     simp only [PendingInstructionSite,frames]
   simpa only [CompilerInstructionPrefix,function,owners] using held
 
-end Exec.Code
+end Itasca.Runtime.Code

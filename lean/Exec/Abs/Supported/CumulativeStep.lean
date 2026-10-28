@@ -6,8 +6,8 @@ import Exec.Abs.Supported.Ownership
 import Exec.Abs.Supported.Bound
 import Exec.Abs.Supported.Extension
 import Exec.Abs.Supported.Terminal
-namespace Exec.Abs.Cumulative
-open SpecExt Exec.Spec Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Cumulative
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
 
 theorem Step.next_typed_supported {before next : AState} (step : Step before (.next next))
  (typed : CoreTyped before) (covered : SupportedState before) : CoreTyped next := by
@@ -117,4 +117,4 @@ theorem Step.trap_simulation_supported {before : AState} (step : Step before .tr
   | indirect equation _ => exact Indirect.trap_simulation _ _ _ _ _ _ _ typed equation
   | stateful transition _ => exact Stateful.transition_trap _ _ _ _ _ _ typed transition
 
-end Exec.Abs.Cumulative
+end Itasca.Runtime.Abs.Cumulative

@@ -12,7 +12,7 @@ import Exec.Code.Body.Callbacks.Common.CompilerPrefix
 import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
 import Exec.Code.Local.Control.Common.UniversalConditional
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.br_if_live {jumpTables : List Aeneas.Std.U32} {A : Type} (ops : runtime.platform.Alloc A)
@@ -89,4 +89,4 @@ theorem StructuredCompilerPrefix.br_if_dead {jumpTables : List Aeneas.Std.U32} {
   change ObserveFrame before after at frame
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip _ dead (reach.trans dead) ordinary code sources consumed (by rw [cursor]), reach⟩
-end Exec.Code
+end Itasca.Runtime.Code

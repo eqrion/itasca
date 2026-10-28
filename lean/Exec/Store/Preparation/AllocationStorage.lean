@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem TableStageEffect.allocated {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
@@ -80,4 +80,4 @@ theorem MemoryStageEffect.allocated {M : Type} {view : M → Slice U8} {store : 
     · exact shape.tableAccounting
     · exact shape.tableLimit
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Spec.SimdWiden
 import Exec.Spec.SimdIntegerArithmetic
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def pairwiseHalfWords (ty : PairwiseWidth) (signed : Bool) (x : BitVec 128) (offset : Nat) : List uN :=
@@ -50,4 +50,4 @@ theorem pairwise_words_wf (ty : PairwiseWidth) (signed : Bool) (x : BitVec 128) 
     (pairwiseBits signed (laneWord (lanetype_Jnn ty.widen.input) x (2*j))
       (laneWord (lanetype_Jnn ty.widen.input) x (2*j+1))).toNat (BitVec.isLt _)
   cases ty <;> exact .lane__case_0 _ _ _ wf rfl
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

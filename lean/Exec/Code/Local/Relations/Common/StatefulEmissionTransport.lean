@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StatefulEmission.map_pairs {beforePairs afterPairs C before instruction emitted after}
@@ -12,4 +12,4 @@ theorem StatefulEmission.map_pairs {beforePairs afterPairs C before instruction 
     cases op <;> simp only [StatefulPair] at pair ⊢ <;> try trivial
     all_goals exact preserve _ _ pair
 
-end Exec.Code
+end Itasca.Runtime.Code

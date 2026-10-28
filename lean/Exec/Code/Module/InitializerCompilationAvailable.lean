@@ -4,7 +4,7 @@ import Exec.Code.Module.InitializerDataOffsetsAvailable
 import Exec.Code.Module.InitializerTotal
 import Itasca.Module.Env.Basic
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent constant-expression judgments for every source initializer. -/
@@ -126,4 +126,4 @@ theorem initializer_compilation_available {A : Type} (ops : runtime.platform.All
     unfold initializerMappingCost
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxHeartbeats 2000000
 /-- Successful END/ELSE metadata belongs to the frame actually removed or switched. -/
@@ -36,4 +36,4 @@ theorem reader_end_info_metadata (st : code.BodyState) (env : module.Env) (isEls
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
            Std.uncurry, bind_ok] at accepted)
   all_goals simp_all
-end Exec.Code
+end Itasca.Runtime.Code

@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.ObserveBudgetAvailability
 import Exec.Code.Local.Capacity.CallbackAvailability
 import Exec.Code.Local.Capacity.BudgetEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual emission/observation callback tail consumes exactly one
@@ -100,4 +100,4 @@ theorem finish_op_available_effect {A : Type} (ops : runtime.platform.Alloc A)
     (by simp [ChargeCounter.used]; omega) (by simpa [ChargeCounter.used] using
       (show used.val ≤ compiler.budget.instructions.val+1 by omega))⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

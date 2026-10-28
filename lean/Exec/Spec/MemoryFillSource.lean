@@ -1,5 +1,5 @@
 import Exec.Spec.MemoryInitSource
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def fillByte (value : Nat) : byte := .mk_byte (value % 256)
@@ -108,4 +108,4 @@ theorem memory_fill_steps (s : store) (f : frame) (destination value count : Nat
           omega)
     have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,memoryFill,fresh] using combined
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

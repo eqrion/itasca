@@ -3,7 +3,7 @@ import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Machines.Slice.SliceBinary
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- Operand-bearing source forms covered by the ordinary integer slice. The
@@ -27,4 +27,4 @@ def OrdinaryOpcode.source : OrdinaryOpcode → instr
   | .branchIf depth => .BR_IF (.mk_uN depth)
   | .ifElse bt yes no => .IFELSE bt yes no
 
-end Exec.Interp
+end Itasca.Runtime.Interp

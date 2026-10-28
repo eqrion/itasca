@@ -1,7 +1,7 @@
 import Exec.Spec.TableInitSource
 import Exec.Spec.SegmentCopy
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem tableInit_eq (s : store) (f : frame) (tableIndex elementIndex destination source count : Nat) :
@@ -20,4 +20,4 @@ theorem tableInit_eq (s : store) (f : frame) (tableIndex elementIndex destinatio
     funext table
     simp only [List.modify_eq_set]
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

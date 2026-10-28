@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatResizeLoop
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 theorem float_resize_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     (kind : FloatResize) (x : U128) :
@@ -42,4 +42,4 @@ theorem float_resize_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps 
     (by simp) (by simp) (by intro j above bound; simp [laneBits])
   cases kind <;> with_unfolding_all exact spec
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

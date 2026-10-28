@@ -1,7 +1,7 @@
 import Exec.Generated.Equations
 
 /-! Shared slice lookup and list transport lemmas for concrete representations. -/
-namespace Exec.Representation
+namespace Itasca.Runtime.Representation
 open Aeneas Aeneas.Std
 
 theorem slice_index_given {T : Type} (values : Slice T) (index : Usize) (value : T)
@@ -37,9 +37,9 @@ theorem map_set_modify {T U : Type} (decode : T → U) (change : U → U)
       simp only [List.getElem?_cons_succ] at found
       simpa using ih index found
 
-end Exec.Representation
+end Itasca.Runtime.Representation
 
-namespace Exec
+namespace Itasca.Runtime
 open Aeneas Aeneas.Std
 
 /-- The shared runtime `clear` helper empties any vector. -/
@@ -58,4 +58,4 @@ open Aeneas Aeneas.Std
       omega
   · trivial
 
-end Exec
+end Itasca.Runtime

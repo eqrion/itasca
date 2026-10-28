@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Callbacks.Control.EnterElse
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -133,4 +133,4 @@ theorem compiler_else_unentered_available {A : Type} (ops : runtime.platform.All
     reachable := frame.entry_reachable}
   exact compiler_observe_available_budget ops bound available updated state request slotsFit
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Closing a block fills its inner source-continuation metadata from the
@@ -93,5 +93,5 @@ theorem StructuredPrefix.ifElse {jumpTables : List U32} {emit types functions re
   · apply noCode.relabel
     exact .cons ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ (LabelsShape.refl _)
 
-end Exec.Code
+end Itasca.Runtime.Code
 

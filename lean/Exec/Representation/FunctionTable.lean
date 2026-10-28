@@ -1,7 +1,7 @@
 import Exec.Representation.Store
 import Exec.Abs.CallSafety
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Source function signatures use the same address/type relation as the
@@ -63,4 +63,4 @@ theorem FunctionTable.source {M : Type} {store : runtime.store.Store M}
     refine ⟨Store.decodeFunction code store function, ?_, (decodeFunction_type code store function signature typed).trans decoded⟩
     simp only [Store.decodeStore, List.getElem?_map, found, Option.map_some]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

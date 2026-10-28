@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Common.WellFormed
 /-! Acceptance directions for the structural publication checker. Component
 validity is a local obligation to derive from emitted code and source bounds;
 no complete-module compilation success is assumed by these helper lemmas. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The synthetic instruction pass accepts when every remaining actual
@@ -138,4 +138,4 @@ theorem well_formed_synthetic_accepts (function : runtime.bytecode.CompiledFunct
   obtain ⟨order,bound,first,last,positive⟩ := ranges entry member
   exact ⟨order,bound,by scalar_tac,by scalar_tac,positive⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.FunctionEnvironment
 import Exec.Code.Local.Relations.Common.FunctionEntry
 import Exec.Code.Local.Relations.Table.SignatureTable
 import Exec.Code.Body.Reader.Calls.ReaderCallLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Fixed metadata and local layout obtained from actual construction and the
@@ -60,4 +60,4 @@ theorem function_body_coordinate_bound {A : Type}
   have length := span.length
   change bodyEnd.val = bodyBegin.val + body.length at length
   omega
-end Exec.Code
+end Itasca.Runtime.Code

@@ -71,6 +71,5 @@ pub enum ValidationProfile {
     Wasm2,
 }
 
-/// Instantiation and execution. This component is not covered by the validator proofs.
-#[cfg(any(not(charon), charon_exec))]
+/// Instantiation and execution.
 pub mod runtime;

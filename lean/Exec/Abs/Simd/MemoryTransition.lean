@@ -1,8 +1,8 @@
 import Exec.Abs.Simd.MemoryTyping
 import Exec.Abs.Core.Trap
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec
 
 /-- The source SIMD memory relation uses the generated local reduction and an
 exact payload update. No frame typing or preservation conclusion is assumed. -/
@@ -107,4 +107,4 @@ theorem memory_transition_trap_simulation {s : _root_.store} {ambient : frame} {
       (fun op member => codeWf op (by simp [member])) hr heights effect
     simpa only [values] using simulated
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

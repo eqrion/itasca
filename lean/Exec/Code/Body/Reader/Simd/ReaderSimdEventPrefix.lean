@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
 import Exec.Code.Body.Reader.Simd.ReaderPrefixSimdCallback
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem SimdReaderEvent.prefix {jumpTables : List U32} {A : Type} {ops : runtime.platform.Alloc A}
     {data env sourceLocals index st p initial before after out C}
@@ -19,4 +19,4 @@ theorem SimdReaderEvent.prefix {jumpTables : List U32} {A : Type} {ops : runtime
         out.vals.val out.pos.val ∧ (after.reachable = true → p.current.ctrl.polymorphic_base = false) :=
   event.post.simd_callback_prefix ops law C event.effect event.read event.capacity contextLocals invariant monomorphic
     event.opcode event.sub event.a event.b event.bits event.number event.meaning sourceBound bodyBound event.callback
-end Exec.Code
+end Itasca.Runtime.Code

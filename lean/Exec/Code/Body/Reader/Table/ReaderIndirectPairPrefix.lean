@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixIndirectCall
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals typeIndex st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals typeIndex st) {A : Type}
@@ -42,4 +42,4 @@ theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env
       rw [frame]; simp
     exact ⟨[],pairs⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

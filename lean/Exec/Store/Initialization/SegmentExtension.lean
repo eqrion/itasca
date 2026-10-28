@@ -2,7 +2,7 @@ import Exec.Store.Initialization.SegmentObjectMetadata
 import Exec.Store.Invariant.FunctionTypingExtension
 import Exec.Store.Invariant.Typing
 import Exec.Spec.Mutation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem mapped_objects {A B : Type} [Inhabited B] (f : A → B)
@@ -137,4 +137,4 @@ theorem SegmentObjectMetadata.segment_bounds {M : Type} {view : M → Slice U8}
     · rw [retained]; exact oldLength
     · simp only [dropped, List.length_nil]; norm_num
 
-end Exec.Store
+end Itasca.Runtime.Store

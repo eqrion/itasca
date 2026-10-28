@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Cumulative.CumulativeNormalizeOutcome
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem StructuredMachine.Advance.prepend_normalization {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution} {expected : List valtype} {codeLength pc : Nat}
     {count : Nat} {before middle : Abs.AFrame} {s : _root_.store} {ambient : frame} {rest : List Abs.AFrame}
@@ -31,4 +31,4 @@ theorem SupportedStepOutcome.prepend_normalization {M P A : Type} {allocator : r
   | Err error =>
     simp only [status] at transition ⊢
     exact ⟨transition.1.prepend_normalization chain typed,transition.2⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

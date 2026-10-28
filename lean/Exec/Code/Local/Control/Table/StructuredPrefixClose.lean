@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StructuredPrefix.finish {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels before source start cursor stack}
@@ -16,5 +16,5 @@ theorem StructuredDeadPrefix.finish {jumpTables : List Aeneas.Std.U32} {emit typ
   have closed := current [] [] next output order (by simpa using bound)
   simpa using closed
 
-end Exec.Code
+end Itasca.Runtime.Code
 

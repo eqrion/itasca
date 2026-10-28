@@ -4,7 +4,7 @@ import Exec.Abs.Core.Step
 import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Core.Typing
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem ErasedStep.core_sound {before after : Abs.AFrame} (step : ErasedStep before after)
     (s : store) (ambient : frame) (rest : List Abs.AFrame)
@@ -14,4 +14,4 @@ theorem ErasedStep.core_sound {before after : Abs.AFrame} (step : ErasedStep bef
   obtain ⟨afterTyped,simulation⟩ := step.sound s ambient rest typed.typed
   exact ⟨⟨afterTyped,typed.contents⟩,simulation⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

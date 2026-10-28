@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredPrefixMode.sites {jumpTables : List Aeneas.Std.U32} {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
@@ -50,4 +50,4 @@ theorem StructuredCompilerPrefix.skip {jumpTables : List Aeneas.Std.U32} {A : Ty
     exact .terminal deadAfter entered (retained.skip instruction (congrArg (fun code => code.val) unchanged) ordinary.frames localsEq)
   | dormant _ retained => exact .dormant deadAfter (retained.skip instruction unchanged ordinary.frames localsEq)
 
-end Exec.Code
+end Itasca.Runtime.Code

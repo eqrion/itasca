@@ -2,8 +2,8 @@ import Exec.Interp.Simd.Common.SimdUnary
 import Exec.Interp.Simd.Common.SimdUnaryBits
 import Exec.Spec.SimdPopcount
 import SpecExt.Builtins.LaneMap
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem popcount_packed (x result : U128)
     (lanes : ∀ j, j < 128/lsize .I8 →
@@ -60,4 +60,4 @@ theorem popcount_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   rw [popcount_dispatch_eq]
   step with popcount_lanes_sound x as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

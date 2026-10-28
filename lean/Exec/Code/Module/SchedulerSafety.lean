@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.Environment
 import Exec.Code.Module.EnvironmentFrame
 import Exec.Code.Module.SchedulerSubmission
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -60,4 +60,4 @@ structure SchedulerInitial {A : Type} (scheduler : CompileScheduler A) : Prop wh
     exact ⟨ready.signatures,ready.functionSlots,ready.functions,ready.origin,
       (by dsimp only; rw [alloc.vec.Vec.from_val]; simp only [List.length_dropLast]; have := ready.queue; omega),ready.cursorBound⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

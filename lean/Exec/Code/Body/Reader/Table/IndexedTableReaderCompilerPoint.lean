@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Local.Callbacks.Table.CompilerTableBoundary
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 structure IndexedTableReaderCompilerPointWasm2
@@ -34,4 +34,4 @@ theorem IndexedTableReaderCompilerPointWasm2.append_step {A : Type}
   intro future
   apply step future
   simpa only [tables,CompilerTables.append_assoc] using point.future (extra.append future)
-end Exec.Code
+end Itasca.Runtime.Code

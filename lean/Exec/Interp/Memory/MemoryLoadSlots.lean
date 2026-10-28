@@ -1,5 +1,5 @@
 import Exec.Interp.Memory.MemoryValueSlots
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
  theorem execute_load_slots {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -53,4 +53,4 @@ open Aeneas Aeneas.Std
   · rename_i outside
     rw [if_neg outside]
     exact effect
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerElementMappings
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def sourceElementOffset (segment : Itasca.module.Element) : Option Itasca.types.ConstExpr :=
@@ -25,7 +25,7 @@ theorem element_offset_found (env : Itasca.module.Env) (index : Usize)
     (segment : Itasca.module.Element) (found : env.elements.val[index.val]? = some segment) :
     runtime.compiler.initialize.element_offset env index = .ok (sourceElementOffset segment) := by
   unfold runtime.compiler.initialize.element_offset
-  simp only [Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+  simp only [Itasca.module.Env.impl.elements, bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok]
   unfold sourceElementOffset
   cases segment.mode <;> rfl
@@ -73,7 +73,7 @@ theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
       have oldOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets changed
       dsimp only at source oldRows oldOffsets
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env,
+        runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env,
         uncurry_apply_pair, source] at rest
       rw [element_offset_found _ _ segment found, bind_ok] at rest
       cases offsetEq : sourceElementOffset segment with
@@ -134,4 +134,4 @@ theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
             rw [functions, position]
             simp
 
-end Exec.Code
+end Itasca.Runtime.Code

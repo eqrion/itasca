@@ -1,7 +1,7 @@
 import Exec.Abs.Numeric.Instruction
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.frame_preservation (op : Instruction)
     {s : store} {f : AFrame} {after : List instr} {front : List val}
@@ -51,4 +51,4 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
   cases op with
   | binary ty binop => exact binary_trap_simulation s ambient f rest after front ty binop a b trap hs ha hf hl hv hc hr heights
   | unary | compare | eqz | conversion => simp only [apply, Option.some_ne_none] at trap
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.SegmentGlobalMetadata
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem DataStageEffect.elements {M : Type} {store after : runtime.store.Store M}
@@ -20,4 +20,4 @@ theorem DataStageEffect.element_map {M : Type} {store after : runtime.store.Stor
     simp only [alloc.vec.Vec.set_val_eq, List.getElem?_set, if_pos bound, ↓reduceIte, Option.some.injEq] at nextFound
     subst next
     rfl
-end Exec.Store
+end Itasca.Runtime.Store

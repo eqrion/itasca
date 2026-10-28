@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulPrepare
 import Exec.Abs.Stateful.TableTyping
 import Exec.Representation.Store
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt
 
 theorem table_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -47,4 +47,4 @@ theorem function_binding_raw {M : Type} (view : M → Slice U8) (code : Store.Co
   change address.index.val=(Store.decodeInstance store inst).FUNCS[index] at addressEq
   rw [←addressEq] at issued
   exact ⟨address,rawMapped,issued⟩
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

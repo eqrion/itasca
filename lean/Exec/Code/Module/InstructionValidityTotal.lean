@@ -1,6 +1,6 @@
 import Exec.Code.Module.InstructionProjectionTotal
 import Mathlib.Tactic.IntervalCases
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -62,4 +62,4 @@ theorem instruction_valid_total (f : runtime.bytecode.CompiledFunction)
         | none =>
           simp only [bind_ok]
           step*
-end Exec.Code
+end Itasca.Runtime.Code

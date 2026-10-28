@@ -1,7 +1,7 @@
 import Exec.Representation.TypeEntries
 import Exec.Representation.FunctionTable
 import Exec.Representation.FunctionCapacity
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 /-- Every defined function has a source-derived static frame requirement.
 Host functions impose no Wasm frame requirement. -/
@@ -35,4 +35,4 @@ theorem TypeEntries.capacity_decode {M : Type} {store : runtime.store.Store M}
     rw [ih]
     simp only [List.getD_eq_getElem?_getD, List.getElem?_map, found, Option.map_some, Option.getD_some]
 
-end Exec.Store
+end Itasca.Runtime.Store

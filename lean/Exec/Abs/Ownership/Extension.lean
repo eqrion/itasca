@@ -1,6 +1,6 @@
 import Exec.Abs.Ownership.Bounds
 
-namespace Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Ownership
 
 /-- Publication may enlarge either reference namespace. Existing references
 remain owned only when both address bounds are retained. -/
@@ -44,4 +44,4 @@ theorem StateOwned.host_return {before after : Bounds} {s target : store} {ambie
     rw [split] at operands
     exact (valuesOwned_append.mp operands).1
   · exact previous.2 item (List.mem_cons_of_mem _ member)
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

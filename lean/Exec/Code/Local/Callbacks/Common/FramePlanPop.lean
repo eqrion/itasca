@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.FutureFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Invert the compiler's physical push without losing the source label or
@@ -23,4 +23,4 @@ theorem FramePlans.pop {length locals frames frame labels groups}
     subst old current
     exact ⟨label, labels, groups, guardTarget, rfl, rfl, prior, future⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

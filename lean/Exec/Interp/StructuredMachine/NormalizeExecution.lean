@@ -2,8 +2,8 @@ import Exec.Interp.StructuredMachine.NormalizeClosure
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.StructuredMachine.SupportedControlSemantics
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem normalize_execution {M : Type}
  (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -35,4 +35,4 @@ theorem normalize_execution {M : Type}
   exact machine.ordinary view code ambient f g rest expected raw.pc.val false (.refl store)
     (extend_store_refl _ machine.typed.typed.store) raw index raw.pc last lookup program (.ready retained)
     represented metadata (by simpa only [same]) (.refl _ _) typed (StructuredMachine.erased_steps_supported chain machine.core)
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

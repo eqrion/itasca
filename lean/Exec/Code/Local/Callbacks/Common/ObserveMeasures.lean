@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.Observe
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- High-water marks are exactly the maxima of previously observed capacity
@@ -21,4 +21,4 @@ and the current validator stack; dead source positions do not increase them. -/
   all_goals split <;> simp_all
   all_goals split <;> simp_all
   all_goals scalar_tac
-end Exec.Code
+end Itasca.Runtime.Code

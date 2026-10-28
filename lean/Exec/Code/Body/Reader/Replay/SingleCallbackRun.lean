@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Publication.NonScopeCallbackPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Extract the actual accepted callback at the reader's returned state. The
@@ -16,4 +16,4 @@ theorem reader_single_callback_of_run {X V : Type} (visitor : code.OpVisitor V)
   obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
   exact ⟨event out arg,(supported arg).1,(supported arg).2,callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

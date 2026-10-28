@@ -10,7 +10,7 @@ import Exec.Code.Local.Callbacks.Common.FramePlanPop
 import Exec.Code.Local.Relations.Common.ResolvedGuards
 import Exec.Code.Local.Control.Common.UniversalRoot
 import Exec.Code.Local.Relations.Common.PrefixZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- END without ELSE resolves the guard at the shared exit. The missing arm
@@ -136,5 +136,5 @@ theorem StructuredCompletedPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Exec.Code
+end Itasca.Runtime.Code
 

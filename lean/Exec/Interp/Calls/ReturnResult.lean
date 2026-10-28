@@ -1,7 +1,7 @@
 import Exec.Interp.Calls.ReturnRefinement
 import Exec.Abs.Results
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem return_invocation_result (s : _root_.store) (ambient : frame)
@@ -45,4 +45,4 @@ theorem returnedState_codeBound {bound : Nat} {s : _root_.store} {ambient : fram
     · exact bounded.frames caller (by simp)
     · exact bounded.frames frame (by simp [member])
 
-end Exec.Interp
+end Itasca.Runtime.Interp

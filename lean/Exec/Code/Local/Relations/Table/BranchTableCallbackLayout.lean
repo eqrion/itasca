@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableLayoutProduction
 import Exec.Code.Local.Relations.Table.BranchTableCallback
 import Exec.Code.Local.Callbacks.Table.CompilerTableBoundary
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -57,4 +57,4 @@ theorem compiler_br_table_layout_prefix {A : Type} (ops : runtime.platform.Alloc
     · simpa only [depthsEq] using clearedEq
     · simpa only [codeEq,tablesEq] using targets
   · simpa only [codeEq] using resolved
-end Exec.Code
+end Itasca.Runtime.Code

@@ -5,8 +5,8 @@ import Exec.Abs.Stateful.CopyStore
 import Exec.Abs.Stateful.InitStore
 import Exec.Abs.Stateful.MemoryGrow
 import Exec.Abs.Stateful.TableGrow
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec Stateful
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec Stateful
 
 def ReferencesOwned (bounds : Bounds) (values : List ref) : Prop :=
   ∀ value ∈ values, ValueOwned bounds (val_ref value)
@@ -140,4 +140,4 @@ theorem StatefulHeapOwned.data_drop {bounds s} (owned : StatefulHeapOwned bounds
     (f : frame) (index : Nat) : StatefulHeapOwned bounds (droppedDataStore s f index) :=
   owned.metadata rfl rfl rfl rfl
 
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

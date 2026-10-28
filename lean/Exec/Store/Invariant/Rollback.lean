@@ -1,6 +1,6 @@
 import Exec.Representation.StoreInvariant
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private def trimBody {T : Type} (n : Usize) (v : alloc.vec.Vec T) :
@@ -187,4 +187,4 @@ theorem instantiate_rollback {M P F A : Type}
   simp [hd', hi', hf', ht', hm', hg', hty', he', hprefix.identity,
     hprefix.limits, hprefix.externs, hprefix.instanceItems]
 
-end Exec.Store
+end Itasca.Runtime.Store

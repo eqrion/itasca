@@ -1,6 +1,6 @@
 import Exec.Spec.Wf
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- A label evaluation context, preserving the inner state. -/
@@ -68,4 +68,4 @@ theorem stepsH_instrs {c c' : config} {es : List HostEvent}
   cases c
   exact wf_config_instrs hw hv ha
 
-end Exec.Spec
+end Itasca.Runtime.Spec

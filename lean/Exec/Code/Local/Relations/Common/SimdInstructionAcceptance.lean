@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.InstructionCheckAcceptance
 import Exec.Code.Local.Capacity.SimdCapacity
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- SIMD checking accepts from the independently selected opcode shape,
@@ -51,4 +51,4 @@ theorem simd_instruction_monotone (before after : runtime.bytecode.CompiledFunct
     exact simd_instruction_accepts after instruction opcode dst input entry x y z output projected shapeRun
       (by omega) (by omega) (by omega)
 
-end Exec.Code
+end Itasca.Runtime.Code

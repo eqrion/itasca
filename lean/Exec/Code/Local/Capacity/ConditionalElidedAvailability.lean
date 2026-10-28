@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.CallbackCapacity
 import Exec.Code.Local.Lowering.Control.LoweringBranchIf
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -132,4 +132,4 @@ theorem branch_if_elided_forward_available {A : Type} (ops : runtime.platform.Al
         simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
         exact ⟨trivial,jumpEffect⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

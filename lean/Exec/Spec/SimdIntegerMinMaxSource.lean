@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerMinMaxLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def integerMinMaxResult (ty : Jnn) (kind : IntegerMinMax) (x y : BitVec 128) : uN :=
@@ -40,4 +40,4 @@ theorem integer_minmax_vector_relation (ty : Jnn) (kind : IntegerMinMax) (x y : 
     | exact maskWf
     | exact relation
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

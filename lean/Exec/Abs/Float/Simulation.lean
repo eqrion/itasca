@@ -1,7 +1,7 @@
 import Exec.Abs.Float.Preservation
 import Exec.Abs.Sim.Trap
-namespace Exec.Abs.Float
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Float
+open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (front : List val)
@@ -62,4 +62,4 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [decodeFrames, operands, vals, instrContext, AFrame.toFrame, AFrame.arity, List.append_assoc] using all
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Table.BranchTableArguments
 import Exec.Code.Local.Relations.Table.BranchTableSuccess
 import Exec.Code.Local.Relations.Table.BranchTableHeight
 import Exec.Code.Local.Relations.Table.ControlTablePreservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Exact syntactic effect of a table arm. Forward destinations retain their
@@ -64,4 +64,4 @@ theorem compiler_table_target_code {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨fixups,frames,_,code,site,sitePosition,appended⟩ := compiler_branch_forward_skip_success ops law staged frame frameIndex depth source 1#u32
       found position isLoop width after branchCall
     exact .forward frameIndex frame source fixups site found position isLoop width code frames appended sitePosition
-end Exec.Code
+end Itasca.Runtime.Code

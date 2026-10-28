@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.SegmentElement
 import Exec.Code.Local.Initializer.InitializerElementLoop
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem ElementProgram.extend {before after : runtime.bytecode.CompiledFunction}
@@ -153,4 +153,4 @@ theorem data_program_append {A : Type} (ops : runtime.platform.Alloc A)
       · simp [empty] at five
       · exact three
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SegmentEmit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem valid_offset_shape {env : Itasca.module.Env} {expr : Itasca.types.ConstExpr}
@@ -28,7 +28,7 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
       (instructions = [] ∧ after.slot_count = before.slot_count ∨
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_data at success
-  simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok] at success
   cases mode : segment.mode with
@@ -112,4 +112,4 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
                   · rw [firstFields]
                   · exact .inr ⟨rfl, by rw [firstFields]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

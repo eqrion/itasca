@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.ElementContentEffect
 import Exec.Store.Initialization.DataEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem ElementStageEffect.globals {M : Type} {store after : runtime.store.Store M}
@@ -42,4 +42,4 @@ theorem DataStageEffect.global_map {M : Type} {store after : runtime.store.Store
     subst next
     rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Store.Api.GlobalLoop
 import Exec.Store.Initialization.SegmentAccounting
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem add_items_effect (items additional : Usize) :
@@ -34,8 +34,7 @@ theorem element_items_error (module : runtime.compiler.ExecutableModule) (items 
   unfold runtime.store.instantiate.Store.prepare_instance_loop1
   rw [loop.eq_def]
   simp only [runtime.store.instantiate.Store.prepare_instance_loop1.body,
-    runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env,
-    Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
   split <;> simp [core.result.Result.is_ok]
 
 /-- Passing the actual item limit supplies the store and fresh-instance vector
@@ -57,4 +56,4 @@ theorem instance_segment_capacity {M : Type} {view : M → Slice U8}
   unfold moduleItems at exactItems
   omega
 
-end Exec.Store
+end Itasca.Runtime.Store

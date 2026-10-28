@@ -1,6 +1,6 @@
 import Exec.Abs.Simd.Source
 import Exec.Abs.Core
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Source constructor tag used only to separate scalar/reference/control
 heads from SIMD heads in cumulative syntactic certificates. -/
@@ -35,4 +35,4 @@ theorem ScalarHead.simd_tag {source} (allowed : ScalarHead source) : simdSourceT
   | core old => exact old.simd_tag
   | float op => cases op <;> rfl
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdLane
 import Itasca.Wasm2.References.Step
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 /-- The explicit-select reader retains its literal declared type, exact
@@ -47,4 +47,4 @@ theorem reader_typed_select_wasm2 {data env locals index st}
         (fun C wf _ => by simpa [Wasm2.Simd.inputTypes,Wasm2.Simd.outputTypes,Translate.valueType]
           using Instr_ok.select_expl C (Translate.valueType ty) wf (.instr_case_3 _)) encoded fixed
 
-end Exec.Code
+end Itasca.Runtime.Code

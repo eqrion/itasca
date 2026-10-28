@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.KnownStackTransfer
 import Itasca.Handler.RawControl
 import Itasca.Wasm2.Control.EnterSound
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -42,4 +42,4 @@ theorem wasm2_end_concrete (st out : code.BodyState) (env : module.Env) (isElse 
   rw [accepted, WP.spec_ok] at effect
   exact concrete_end_effect known (effect rfl).2.2
 
-end Exec.Code
+end Itasca.Runtime.Code

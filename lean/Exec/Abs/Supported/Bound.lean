@@ -1,7 +1,7 @@
 import Exec.Abs.Core.Bound
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
-open Exec.Abs.Core
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Core
 
 theorem step_bound (bound : Nat) (s next : AState)
     (typed : CoreTyped s) (covered : SupportedState s) (bounded : CodeBound bound s)
@@ -37,4 +37,4 @@ theorem step_bound (bound : Nat) (s next : AState)
             change sizeOf label.after ≤ bound
             omega
           · contradiction
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

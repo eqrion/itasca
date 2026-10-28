@@ -6,7 +6,7 @@ import Exec.Abs.Invoke
 
 /-! Invocation entry bridges checked API arguments and retained function
 metadata to the typed abstract state. Compiler/body certificates remain explicit. -/
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 theorem arguments_typed {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -62,5 +62,5 @@ theorem checked_argument_type_tags {M : Type} (memory : runtime.platform.MemoryB
     simpa [alloc.vec.Vec.deref] using h.mp trivial
   exact argument_type_tags matched
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems
 

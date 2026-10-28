@@ -1,5 +1,5 @@
 import Exec.Spec.SimdWidenLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem widen_multiply_source_wf (ty : WidenWidth) (high signed : Bool) :
@@ -101,4 +101,4 @@ theorem widen_multiply_step (ty : WidenWidth) (high signed : Bool) (x y result :
   · exact const_wf y
   · exact widen_multiply_source_wf ty high signed
   · exact const_wf result
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

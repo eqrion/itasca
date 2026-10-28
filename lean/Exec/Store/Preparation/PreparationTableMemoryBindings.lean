@@ -3,7 +3,7 @@ import Exec.Store.Invariant.FunctionPreparation
 import Exec.Store.Api.TableBindingLoop
 import Exec.Store.Api.MemoryBindingLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -142,4 +142,4 @@ theorem preparation_table_memory_bindings {M A : Type} (memory : runtime.platfor
     simpa only [memorySource, tableSource, memoryTables] using retained
   · simpa only [memorySource] using memoryBindings rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

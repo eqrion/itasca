@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.StructuredMachine.JumpExecution
 import Exec.Interp.Relations.Capacity
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_return_execution {M P F A : Type}
@@ -56,7 +56,7 @@ theorem step_return_execution {M P F A : Type}
     have represented : FrameSlots out.2.1 {raw with pc := target} {f with code := .RETURN::after} := by simpa only [FrameSlots,exactState] using slots
     have preserved : SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val := by rw [exactState]; exact .refl _ _
     refine ⟨target.val,_,Execution.ordinary view code ambient {f with code := .RETURN::after} {f with code := .RETURN::after} rest expected raw.pc.val false machine
-      (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index target last hf program (.ready retained)
+      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index target last hf program (.ready retained)
       represented ⟨rfl,rfl,rfl,rfl⟩ fields preserved machine.typed machine.core,?_,(fun _ h => h),rfl,(fun _ bounded => bounded)⟩
     exact Or.inl ⟨rfl,decrease⟩
   · have result := return_invocation_result (Store.decodeStore view code store) ambient f rest after front results machine.typed.typed split types expected machine.result
@@ -65,4 +65,4 @@ theorem step_return_execution {M P F A : Type}
       width bounds nextTyped result
     exact ⟨pc,_,fresh,ConcreteSim.of_source _ _ _ _ _ simulation,
       StructuredMachine.return_owned results (by intro value member; change value ∈ f.vals; rw [split]; exact List.mem_append_right _ member),by cases rest <;> rfl,(fun _ bounded => returnedState_codeBound bounded results)⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

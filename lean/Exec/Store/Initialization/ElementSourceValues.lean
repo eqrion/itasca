@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.ElementShapeLoop
 import Exec.Store.Initialization.InitializerSourceContext
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
@@ -76,4 +76,4 @@ theorem encode_push_source {M : Type} (store : runtime.store.Store M)
   · unfold ElementSourceValues at matched ⊢
     rw [stored]
     exact List.rel_append matched (.cons (by simpa only [exactRef] using evaluated) .nil)
-end Exec.Store
+end Itasca.Runtime.Store

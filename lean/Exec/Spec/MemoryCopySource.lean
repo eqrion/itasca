@@ -1,5 +1,5 @@
 import Exec.Spec.MemoryByteCopy
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem memory_copy_trap (s : store) (f : frame) (destination source count : Nat)
@@ -77,4 +77,4 @@ theorem memory_copy_backward_expand (s : store) (f : frame) (destination source 
     loadByte_wf storeByte_wf (i32_wf _ hd) (i32_wf _ hi)
     (by simpa [i32] using i32_wf count (by omega)) .admininstr_case_65
   simpa [operands,i32,loadByte,storeByte,PackedMemory.load,PackedMemory.type,PackedMemory.bits,numtype_Inn,proj_num__0,proj_uN_0,endEq] using read
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

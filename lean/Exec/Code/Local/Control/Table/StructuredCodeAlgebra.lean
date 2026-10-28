@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Table.StructuredCodePoint
 import Exec.Code.Local.Relations.Table.BranchTableLayoutAlgebra
 import Exec.Code.Local.Relations.Common.Concatenation
 import Exec.Code.Local.Relations.Common.Extension
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredCode.extend {emission types functions returns locals code jumpTables labels stack source pc next final}
     (relation : StructuredCode emission types functions returns locals code jumpTables labels stack source pc next final)
@@ -62,4 +62,4 @@ theorem StructuredCode.relabel {emission types functions returns locals code jum
 
   | branchTable gate table bounds => exact .branchTable gate (table.relabel shape) bounds
 
-end Exec.Code
+end Itasca.Runtime.Code

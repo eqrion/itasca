@@ -1,7 +1,7 @@
 import Exec.Spec.IndirectCallSource
 import Exec.Abs.Sim.Call
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 def resolve (s : store) (f : AFrame) (table type position : Nat) : Option Nat :=
   match (fun_table ⟨s,f.toFrame⟩ (.mk_uN table)).REFS[position]? with
@@ -92,4 +92,4 @@ def step (s : AState) (f : AFrame) (rest : List AFrame) (table type : Nat) (afte
       | none => .trap
       | some address => invoke s {f with vals:=front} rest address after
 
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

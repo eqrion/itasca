@@ -1,7 +1,7 @@
 import Exec.Interp.Control.BranchCondition
 import Exec.Interp.Relations.ControlPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem frame_set_twice (frames : alloc.vec.Vec runtime.interp.Frame) (index : Usize)
@@ -100,4 +100,4 @@ theorem step_branchIfNoCopy_refines {M P F A : Type}
   · simpa only [if_pos zero] using exactState
   · simpa only [if_neg zero, frame_set_twice] using exactState
 
-end Exec.Interp
+end Itasca.Runtime.Interp

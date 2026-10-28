@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.FutureFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A future ELSE plan determines the preceding THEN plan. The completed
@@ -26,4 +26,4 @@ theorem FrameFuture.before_else {afterLength beforeLength locals frame label fix
   · simp [kind]
   · intro _; exact guardBound
 
-end Exec.Code
+end Itasca.Runtime.Code

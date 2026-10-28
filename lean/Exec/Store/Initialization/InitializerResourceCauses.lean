@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.Initializer
 import Exec.Interp.Relations.SyntheticInitializerCauses
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -37,4 +37,4 @@ theorem eval_const_resource_causes (law : Platform.AllocCorrect allocator)
       store.id referenceBound as ⟨value, hty, hvalue⟩
     simp_all
 
-end Exec.Store
+end Itasca.Runtime.Store

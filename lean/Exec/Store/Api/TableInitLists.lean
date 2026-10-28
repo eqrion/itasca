@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.BulkTableLoop
 import Exec.Spec.SegmentCopy
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem copySegment_front (before source : List U64) (dst src count : Nat) :
@@ -31,4 +31,4 @@ theorem copyInto_map {T U : Type} [Inhabited T] [Inhabited U] (decode : T → U)
     congr 1
     simp [List.map_set,List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem bound]
 
-end Exec.Store
+end Itasca.Runtime.Store

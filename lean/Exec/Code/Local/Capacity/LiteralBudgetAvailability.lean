@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Capacity.LiteralAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -68,4 +68,4 @@ theorem compiler_vector_literal_available_budget {A : Type} (ops : runtime.platf
     (.ConstV128 compiler.height index) ⦃ out => _ ⦄
   exact finish_op_available_budget ops bound available _ state fresh _
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Instruction
 import Exec.Abs.Core.Step
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem typed_loop_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (bt : blocktype) (body : List instr)
@@ -94,4 +94,4 @@ theorem typed_br_if_positive (s : store) (ambient : frame) (f : AFrame)
       (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi32
     simpa only [← hvals] using result
 
-end Exec.Abs
+end Itasca.Runtime.Abs

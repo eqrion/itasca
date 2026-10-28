@@ -1,7 +1,7 @@
 import Exec.Abs.Preservation
 
-namespace Exec.Abs
-open SpecExt Exec.Spec Itasca.DeclarativeComplete
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec Itasca.DeclarativeComplete
 
 theorem instrs_prepend {C : context} {op : instr} {front inputs outputs results : List valtype}
     {after : List instr}
@@ -294,4 +294,4 @@ theorem br_preservation (s : store) (ambient : frame) (f : AFrame)
           exact active_frame_preservation typed hf' rfl
         · contradiction
 
-end Exec.Abs
+end Itasca.Runtime.Abs

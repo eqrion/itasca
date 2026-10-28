@@ -1,6 +1,6 @@
 import Exec.Code.Body.Capacity.FunctionCapacity
 import Exec.Code.Body.Capacity.ExecutableEntryCapacity
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -28,4 +28,4 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
   · simp only [List.map_map]
   · simpa only [List.map_append] using bound
 
-end Exec.Code
+end Itasca.Runtime.Code

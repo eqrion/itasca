@@ -4,7 +4,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 import Exec.Code.Local.Relations.Control.ControlCursor
 import Exec.Code.Local.Relations.Control.ControlSources
 import Exec.Code.Local.Relations.Control.ControlMapCounts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_end_dormant_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -42,4 +42,4 @@ theorem structured_callback_end_dormant_prefix {jumpTables : List U32} {emit : L
   have cursor := compiler_end_cursor ops law before after state kind bt accepted
   exact ⟨deadAfter, invariant.close_dormant unentered deadAfter stable maps frame target instruction framesEq
     targetAt codeEq  sources consumed (by rw [cursor])⟩
-end Exec.Code
+end Itasca.Runtime.Code

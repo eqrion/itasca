@@ -2,8 +2,8 @@ import Exec.Theorems.Api.StatefulGrowthChoice
 import Exec.Interp.Memory.MemoryGrow
 import Exec.Store.Api.MemoryGrowSource
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_memory_growth {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.MemoryAddr)
@@ -75,4 +75,4 @@ theorem stateful_memory_grow_effect {M : Type}
   obtain ⟨metadata,transition⟩ := stateful_memory_growth view code store inst address object (UScalar.cast .U32 amount)
     (result,out.2.2) state f rest after front mapped issued (shapes object (List.mem_of_getElem? issued)) sourceStore moduleEq values growth
   exact ⟨success,metadata,result,slots,growth,transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Replay.SingleCallbackExtended
 import Exec.Code.Body.Reader.Simd.SingleCallbackSimd
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -60,4 +60,4 @@ theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [code.step_wasm2.base visitor st data env ctx opcode before base] at accepted
   exact reader_single_callback_extended visitor st data env ctx opcode before after out accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -4,7 +4,7 @@ import Exec.Abs.SupportedState
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Interp.StructuredMachine.ReturnStack
 import Exec.Interp.Machines.Core.CoreOwnership
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Abs.Ownership
 
 /-- A defined call keeps the active frames within the supported source grammar. -/
@@ -47,4 +47,4 @@ theorem return_owned {s ambient f rest} (results : List val) (subset : ∀ value
   have fresh := returnedState_owned results subset bounds owned.core
   cases rest <;> exact ⟨fresh.values,owned.heap⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

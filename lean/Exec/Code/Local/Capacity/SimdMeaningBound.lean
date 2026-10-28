@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdMeaningCounts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 
@@ -14,4 +14,4 @@ theorem SimdImmediateMeaning.opcode_bound {C opcode immediate input source outpu
     unfold memoryMeaning at meaning
     split at meaning <;> first | contradiction | omega
   | shuffle => decide
-end Exec.Code
+end Itasca.Runtime.Code

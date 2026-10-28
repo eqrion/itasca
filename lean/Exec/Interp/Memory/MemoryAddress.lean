@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Range
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Scalar accesses use a mathematical 33-bit effective address. Both supported
@@ -32,4 +32,4 @@ def MemoryAddressEffect (address offset : U32) (width bytes : Usize)
     simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       core.convert.FromSame.from, MemoryAddressEffect, notInside]
-end Exec.Interp
+end Itasca.Runtime.Interp

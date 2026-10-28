@@ -2,7 +2,7 @@ import Exec.Store.Initialization.Data
 import Exec.Store.Api.GlobalStaging
 import Exec.Store.Initialization.InitializerCertificates
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 inductive DataStageEffect {M : Type} (store : runtime.store.Store M)
@@ -73,4 +73,4 @@ theorem DataStageEffect.staged {M : Type} {before store after : runtime.store.St
       constructor <;> simp [dataValues]
     exact (staged.trans appended).set_fresh_instance instIndex {inst with datas := addresses} fresh
 
-end Exec.Store
+end Itasca.Runtime.Store

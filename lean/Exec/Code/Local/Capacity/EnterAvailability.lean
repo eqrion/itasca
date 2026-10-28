@@ -4,7 +4,7 @@ import Exec.Code.Local.Capacity.BudgetEffects
 import Exec.Code.Local.Capacity.EmitAvailability
 import Exec.Code.Local.Callbacks.Control.EnterBlock
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -60,4 +60,4 @@ theorem compiler_enter_without_emission_available {A : Type} (ops : runtime.plat
     exact scope_publication_available ops bound available compiler state demand _ signature height source
       ctrl.value_stack_base pc none
 
-end Exec.Code
+end Itasca.Runtime.Code

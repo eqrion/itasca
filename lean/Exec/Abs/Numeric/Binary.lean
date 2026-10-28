@@ -3,8 +3,8 @@ import Exec.Spec.IntegerBits
 import Exec.Spec.IntegerRotate
 import Exec.Spec.IntegerShift
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem binary_relation (ty : Inn) (op : binop_Inn)
     (a b : BitVec (sizenn (numtype_Inn ty))) :
@@ -79,4 +79,4 @@ theorem binary_relation (ty : Inn) (op : binop_Inn)
   | ROTL => exact integer_rotleft_relation ty a b.toNat
   | ROTR => exact integer_rotright_relation ty a b.toNat
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

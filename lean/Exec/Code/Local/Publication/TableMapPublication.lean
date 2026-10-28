@@ -2,7 +2,7 @@ import Exec.Code.Local.Publication.BranchMapPublication
 import Exec.Code.Local.Publication.OrdinaryMapPublication
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Emitted code extends the target range without changing map owners or source bounds. -/
@@ -110,4 +110,4 @@ theorem compiler_br_table_map_publication {A : Type} (ops : runtime.platform.All
       exact compiler_observe_map_publication ops law {labeled with table_depths := cleared} after state
         (coordinates.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) observed
 
-end Exec.Code
+end Itasca.Runtime.Code

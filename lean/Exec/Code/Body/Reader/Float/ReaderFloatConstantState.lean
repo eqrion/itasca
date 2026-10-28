@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Common.StructuredScalarEmbedding
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Body.Reader.Float.ReaderFloatConstantPrefix
 import Exec.Code.Body.Reader.Float.ReaderFloatConstantDead
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem StructuredReaderCompilerStateWasm2.float32 {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -56,4 +56,4 @@ theorem StructuredReaderCompilerStateWasm2.float64 {jumpTables : List U32} {A : 
       state.compiled live (by simpa only [p, ReaderBoundaryWasm2.pending, global_simps] using byte) (by simpa only [code.OP_F64_CONST] using accepted)
     exact (state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices, ScalarConst.f64]) compiled (by simp [dead])).point
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Integer.SimdWidenLoop
 import Exec.Interp.Simd.Common.SimdShiftBits
 import Exec.Spec.SimdWiden
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 theorem signExtend_restrict {width : Nat} (bits : BitVec width) (output : Nat) (le : output ≤ 64) :
     (bits.signExtend 64).setWidth output = bits.signExtend output := by
@@ -51,4 +51,4 @@ theorem signExtend_restrict {width : Nat} (bits : BitVec width) (output : Nat) (
     with_unfolding_all change (first.bv*second.bv).setWidth (width.val*2) = _
     rw [BitVec.setWidth_mul _ _ (by omega),firstEq,secondEq]
     rfl
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -70,7 +70,7 @@ Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Stor
 [`Store.ValueInStore`](Store/Invariant/ValueShape.lean).
 -/
 
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- The callback contract carries its current ghost interpretation explicitly. A call may
@@ -113,4 +113,4 @@ def NoHostStackOverflow {M P : Type} (hooks : runtime.platform.Platform P M)
   ∀ code store,Inv code store → ∀ p identity args defaults nextPlatform after returned,
     hooks.call_host p store identity args defaults≠.ok (.Err .StackOverflow,nextPlatform,after,returned)
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

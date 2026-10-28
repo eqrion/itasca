@@ -4,15 +4,15 @@ import Exec.Interp.StructuredMachine.StatefulPrepare
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Abs.Cumulative.Step
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp Exec.Interp.Stateful
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_drop_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [projection : Exec.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
+    [projection : Itasca.Runtime.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (op : Abs.Stateful.Instruction)
     (isDrop : statefulIsDrop op=true) (last : index.val+1=exec.frames.length)
@@ -68,4 +68,4 @@ theorem stateful_drop_point_step {M P F A : Type} (memory : runtime.platform.Mem
       have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,List.map_nil] using tail) pc pcNext
       simpa only [frontEq,List.append_nil] using continued
     · exact .stateful transition (by intro impossible; cases impossible)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

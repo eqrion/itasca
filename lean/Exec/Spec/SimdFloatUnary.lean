@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareFloatLists
 import SpecExt.Builtins.Float.Wf
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatUnaryChoices (width : Nat) (op : vunop_Fnn_N) (a : fN) : List fN :=
@@ -40,4 +40,4 @@ theorem float_unary_choices_wf (width : Nat) (supported : width = 32 ∨ width =
   | TRUNC => exact integral_wf width supported _ a inputWf
   | NEAREST => exact integral_wf width supported _ a inputWf
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

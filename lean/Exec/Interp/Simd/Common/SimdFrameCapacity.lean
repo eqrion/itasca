@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.SimdCapacity
 import Exec.Interp.Relations.Capacity
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem simd_frame_capacity (slots : Slice U64) (base : Usize) (count a dst wa wb wc wr : U32)
@@ -14,4 +14,4 @@ theorem simd_frame_capacity (slots : Slice U64) (base : Usize) (count a dst wa w
   · scalar_tac
   · intro two; scalar_tac
   · omega
-end Exec.Interp
+end Itasca.Runtime.Interp

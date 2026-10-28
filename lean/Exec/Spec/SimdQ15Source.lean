@@ -1,6 +1,6 @@
 import Exec.Spec.SimdQ15
 import Exec.Spec.SimdCompareFloatLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def q15Source : vbinop_ := .mk_vbinop__0 .I16 8 .Q15MULR_SATS
@@ -60,4 +60,4 @@ theorem q15_step (x y result : BitVec 128) (packed : uN.mk_uN result.toNat = q15
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) q15_source_wf
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

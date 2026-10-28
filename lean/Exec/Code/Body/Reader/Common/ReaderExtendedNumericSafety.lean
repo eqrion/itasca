@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderNumericSafety
 import Exec.Code.Body.Reader.Common.ReaderSaturating
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -58,4 +58,4 @@ theorem compiler_reader_sign_dispatch_total {A} (ops : runtime.platform.Alloc A)
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
   obtain ⟨op,extension,rfl⟩ := sign_byte_descriptor opcode lower upper
   exact compiler_reader_sign_total ops law compiler st data env ctx ready shape capacity op extension
-end Exec.Code
+end Itasca.Runtime.Code

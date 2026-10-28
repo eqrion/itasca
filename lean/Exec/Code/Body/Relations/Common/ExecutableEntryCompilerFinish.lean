@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.EntryCompilerInitial
 import Exec.Code.Body.Reader.Common.IndexedReaderCompilerFinish
 import Exec.Code.Body.Relations.Common.ExecutableFunction
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Alloc A)
@@ -45,4 +45,4 @@ theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Al
         (w.ft.results.val.map Translate.valueType) = EnvTranslation.context env w.ctx := by
       rw [← sourceFunctionContext_reader env w.ctx, w.context_locals, List.map_append, w.context_results]
     simpa only [contextEq, EnvTranslation.context, same] using certificate
-end Exec.Code
+end Itasca.Runtime.Code

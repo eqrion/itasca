@@ -1,6 +1,6 @@
 import Exec.Abs.Indirect.Definition
 import Exec.Abs.Results
-namespace Exec.Abs.Indirect
+namespace Itasca.Runtime.Abs.Indirect
 
 theorem invoke_result {s : store} {ambient : frame} {f : AFrame} {rest : List AFrame}
     {original : List instr} {values : List val} {address : Nat} {after : List instr} {next : AState} {expected : List valtype}
@@ -20,4 +20,4 @@ theorem step_result {s : store} {ambient : frame} {f : AFrame} {rest : List AFra
   unfold step at stepped
   repeat' first | split at stepped | contradiction
   exact invoke_result result stepped
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

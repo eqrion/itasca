@@ -1,6 +1,6 @@
 import Exec.Abs.Float.Descriptor
 import Exec.Generated.Equations
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def floatOpcode (op : Abs.Float.Instruction) : U16 :=
@@ -103,4 +103,4 @@ theorem floatOpcode_binary (op : Abs.Float.Instruction) :
   | reinterpretFloat source => cases source <;> rfl
   | reinterpretInt source => cases source <;> rfl
   | promote | demote => rfl
-end Exec.Code
+end Itasca.Runtime.Code

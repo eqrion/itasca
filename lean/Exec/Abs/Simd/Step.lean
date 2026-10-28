@@ -1,8 +1,8 @@
 import Exec.Abs.Simd.MemoryInvariants
 import Exec.Abs.Simd.Constant
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec Ownership
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec Ownership
 
 /-- Relational SIMD execution, preserving source nondeterminism in pure results
 and exact payload mutations for memory operations. -/
@@ -64,4 +64,4 @@ theorem Step.trap_simulation {before} (step : Step before .trap) (typed : CoreTy
   cases step with
   | memory signature transition => exact memory_transition_trap_simulation signature typed.typed transition
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

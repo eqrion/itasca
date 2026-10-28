@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdUnaryWord
 import Exec.Interp.Simd.Common.SimdPopulation
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem signExtend_low (width : Nat) (bits : BitVec width) (bound : width ≤ 64) :
@@ -44,10 +44,10 @@ theorem unaryLane_population (bits : BitVec 8) :
   have widened : (bits.setWidth 64).toNat = bits.toNat := by
     rw [BitVec.toNat_setWidth,Nat.mod_eq_of_lt (lt_trans bits.isLt (by decide : 2^8 < 2^64))]
   have same := countBits_width 8 bits.toNat (by decide) bits.isLt
-  rw [Exec.Interp.countBits_population 8] at same
+  rw [Itasca.Runtime.Interp.countBits_population 8] at same
   with_unfolding_all change
     ((BitVec.ofNat 32 (Primitive.countBits 64 (bits.setWidth 64).toNat)).setWidth 64).setWidth 8 = _
   rw [BitVec.setWidth_setWidth_of_le _ (by decide : 8 ≤ 64),
     BitVec.setWidth_ofNat_of_le (by decide : 8 ≤ 32),widened,same]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

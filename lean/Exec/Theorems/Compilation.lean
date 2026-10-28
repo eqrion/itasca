@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileExecutable
 import Exec.Code.Module.CompileExecutableCapacities
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca
 
 /-- Module-level compiler correspondence retains exact source ordering,
@@ -37,4 +37,4 @@ theorem compile_accepted_certificate {A} (ops : runtime.platform.Alloc A)
   have same := Profile.module_unique encoded otherEncoded
   subst other
   exact ⟨raw,encoded,elaborated,typed,restrictions,⟨metadata,accessors,functions,initializers,capacities⟩,selected⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

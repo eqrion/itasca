@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.Fixups
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem retarget_retarget (instruction : Bytecode) (first second : U32) :
@@ -69,4 +69,4 @@ theorem patchCode_new_branch (code emitted : List Bytecode) (sites : List Usize)
   have changed : retarget (kind.instruction old) target = kind.instruction target := by cases kind <;> rfl
   simp [changed]
 
-end Exec.Code
+end Itasca.Runtime.Code

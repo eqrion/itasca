@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SourceWellFormedAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual sourced instruction pass accepts from monotone, in-range
@@ -81,4 +81,4 @@ theorem well_formed_sourced_accepts (function : runtime.bytecode.CompiledFunctio
   apply check_control_maps_accepts function.controls function.body_start function.body_end
     (alloc.vec.Vec.len function.code) 0#usize (by scalar_tac) ranges
 
-end Exec.Code
+end Itasca.Runtime.Code

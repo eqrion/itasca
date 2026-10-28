@@ -1,6 +1,6 @@
 import Exec.Abs.Memory.Descriptor
 import Exec.Generated.Equations
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def memoryLoadOpcode : Abs.Memory.Load → U16
@@ -72,4 +72,4 @@ theorem memoryStoreInstruction_make (op : Abs.Memory.Store) (address value offse
   cases op with
   | full ty => cases ty <;> rfl
   | packed ty width => cases ty <;> cases width <;> rfl
-end Exec.Code
+end Itasca.Runtime.Code

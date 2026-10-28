@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Table.CompilerTablePreservation
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotone
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every stored jump-table target is inside the currently emitted code. -/
@@ -38,4 +38,4 @@ theorem compiler_observe_jump_table_bounds {A : Type} (ops : runtime.platform.Al
   apply held.retained (after := after) (congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called))
     (compiler_observe_code_mono ops law before after state (.Ok ()) called)
 
-end Exec.Code
+end Itasca.Runtime.Code

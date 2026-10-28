@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderTypedSelectEmission
 import Exec.Code.Body.Relations.Common.ExecutableInstructionPrefix
 import Exec.Code.Local.Checking.FrameExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed select uses the source-selected width for its instruction check. -/
@@ -35,4 +35,4 @@ theorem reader_typed_select_open_instructions_wasm2 {data env locals index st}
     (.typedSelect emission) (by intro depths fallback same; cases same) growth held stable.frames,
     exits.retained (congrArg alloc.vec.Vec.val stable.frames) stable.capacity⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

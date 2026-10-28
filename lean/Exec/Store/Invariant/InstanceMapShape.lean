@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.InitializerMetadataCertificates
 import Exec.Store.Preparation.StagingTypeBindings
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem TypeEntries.issued {M : Type} {store : runtime.store.Store M} {source addresses}
@@ -66,4 +66,4 @@ theorem instance_shape_of_maps {M : Type} (store : runtime.store.Store M) (inst 
   · intro address member
     exact ⟨tableOwners address member, tables.issued address member⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

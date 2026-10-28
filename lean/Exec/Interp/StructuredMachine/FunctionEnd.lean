@@ -4,7 +4,7 @@ import Exec.Interp.Core.EmptyInversion
 import Exec.Code.Local.Control.Table.StructuredCodeLabels
 import Exec.Interp.Relations.Epilogue
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- An empty outer source continuation either skips forward administratively
@@ -46,4 +46,4 @@ theorem function_end {M : Type} {store : runtime.store.Store M}
     exact Or.inr ⟨actualCount, actual, program.localSlots, by rw [counts]; exact width,
       program.fetched_bound _ actual⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

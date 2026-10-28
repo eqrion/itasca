@@ -1,5 +1,5 @@
 import Exec.Code.Local.Capacity.EmissionGrowth
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_emit_source_length_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -39,4 +39,4 @@ theorem compiler_emit_source_length_success {A : Type} (ops : runtime.platform.A
         simp [sourceEq]
 
 
-end Exec.Code
+end Itasca.Runtime.Code

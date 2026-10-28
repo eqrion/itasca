@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Float.SimdCompareFloatLanes
 import Exec.Interp.Simd.Common.SimdCompareMaskBits
 import Exec.Spec.SimdCompareFloatRelation
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd
 
 theorem float_comparison_masks_lanes (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 128) :
     Map (fun mask => lane_.mk_lane__0 (Jnn_Inn (floatCompareInteger ty)) (.mk_uN (proj_uN_0 mask)))
@@ -34,4 +34,4 @@ theorem float_compare_packed (ty : Fnn) (op : vrelop_Fnn_N) (x y result : U128)
   rw [floatComparisonResult,float_comparison_masks_lanes]
   exact congrArg uN.mk_uN packed.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

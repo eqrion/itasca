@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.FrameBindings
 import Exec.Code.Local.Capacity.OperandBounds
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A represented region ends within storage, including an empty region at a
@@ -43,4 +43,4 @@ theorem FrameSlots.capacity {M : Type} {store : runtime.store.Store M}
   have bound := represented.end_le binding.base_bound
   simpa only [Code.encodeValues_length] using bound
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.InstructionCheckMonotone
 import Exec.Code.Local.Callbacks.Table.CompilerTablePreservation
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every instruction in this concrete code vector passes its local checker.
@@ -35,4 +35,4 @@ theorem Emitted.instructionCheckExtends {A : Type} {before after : runtime.compi
   rw [appended,List.length_append,List.length_singleton]
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

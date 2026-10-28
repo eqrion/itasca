@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.SimdMeaningBound
 import Exec.Code.Local.Lowering.Simd.SimdBits
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Simd
 
 /-- Ordinary lane callbacks encode the checked lane index in the first scalar
@@ -56,4 +56,4 @@ theorem SimdImmediateMeaning.not_constant {C sub immediate input source output}
   | lane sub immediate op meaning lane position => rw [equal] at meaning; cases meaning
   | memory sub immediate op meaning arg lane memory available offset position => rw [equal] at meaning; cases meaning
   | shuffle => contradiction
-end Exec.Code
+end Itasca.Runtime.Code

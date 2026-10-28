@@ -1,6 +1,6 @@
 import Exec.Spec.SegmentInitCases
 import Mathlib.Data.List.Forall2
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 /-- The initialization program prescribed by the generated element rule. -/
 def elementProgram : elem → idx → List instr
@@ -150,4 +150,4 @@ theorem initialization_config_wf (s : store) (inst : moduleinst)
   | some index =>
     have indexWf : wf_uN 32 index := by simpa [Forall] using startWf
     simpa [Forall] using wf_admininstr.admininstr_case_10 index indexWf
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Control.UniversalBranch
 import Exec.Code.Local.Callbacks.Control.ElsePrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem FrameSites.set_guard {code frame} (valid : FrameSites code frame)
@@ -34,4 +34,4 @@ theorem FrameSites.else_dead {code frame} (valid : FrameSites code frame)
   have patched := valid.set_guard guard condition old noEntry found
   exact ⟨patched.branches, by simp⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

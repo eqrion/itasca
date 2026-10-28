@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.IntegerDispatch
 import Exec.Interp.Relations.Fetch
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -32,4 +32,4 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     simp [Code.integerInstruction, Code.integerOpcode, runtime.interp.dispatch,
       runtime.interp.dispatch_scalar, runtime.interp.scalar_operands, bind_ok]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

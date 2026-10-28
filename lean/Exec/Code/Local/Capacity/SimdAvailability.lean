@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.AuxiliaryAvailability
 import Exec.Code.Local.Capacity.SimdConstructorAvailability
 import Exec.Code.Local.Lowering.Simd.SimdOpcodeReduction
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -84,4 +84,4 @@ theorem compiler_simd_nonconstant_available {A : Type} (ops : runtime.platform.A
           demand.sourceReserve,demand.coordinate,demand.instruction,demand.operands,demand.slots⟩
       exact finish_op_available_effect ops bound available allocated state afterDemand instruction
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdQ15Word
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 @[step] theorem dot_mul (a b : I64)
     (aBound : -32768 ≤ a.val ∧ a.val < 32768)
@@ -23,4 +23,4 @@ theorem dot_cast (x : I64) :
   rw [← BitVec.signExtend_eq_setWidth_of_le _ (by decide : 32 ≤ 64)]
   rfl
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Interp.Calls.CallRegions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem CallEntryEffect.slots_length {before after : runtime.interp.Execution}
@@ -51,4 +51,4 @@ theorem CallEntryEffect.callee_binding {M : Type}
   · simp [effect.1]
   · exact effect.slots_length.2
 
-end Exec.Interp
+end Itasca.Runtime.Interp

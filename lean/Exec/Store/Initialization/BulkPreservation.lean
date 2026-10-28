@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.BulkMemory
 import Exec.Store.Invariant.FunctionTables
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem copySegment_all (predicate : U64 → Prop) (before source : List U64)
@@ -116,4 +116,4 @@ theorem Shape.element_drop {M : Type} {view : M → Slice U8} {store : runtime.s
   · exact shape.tableAccounting
   · exact shape.tableLimit
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -2,22 +2,22 @@ import Exec.Theorems.Composition.Certified.CertifiedSupportedCode
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Interp.Relations.FrameStorePrefix
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Changing ghost meanings only at unissued instance keys leaves the entire
 active and suspended execution relation intact. No frame is reconstructed. -/
-theorem Execution.change_code {M : Type} {view : M → Slice U8} {before after : Exec.Store.CodeInterpretation}
+theorem Execution.change_code {M : Type} {view : M → Slice U8} {before after : Itasca.Runtime.Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution}
-    {source : Exec.Abs.AState} {expected : List valtype} {pc : Nat} {pending : Bool}
+    {source : Itasca.Runtime.Abs.AState} {expected : List valtype} {pc : Nat} {pending : Bool}
     (held : Execution view before store exec source expected pc pending)
-    (agrees : Exec.Store.CodeAgreesOn store before after) :
+    (agrees : Itasca.Runtime.Store.CodeAgreesOn store before after) :
     Execution view after store exec source expected pc pending :=
-  { held with storeEq := held.storeEq.trans (Exec.Store.decodeStore_code_agrees view agrees).symm }
+  { held with storeEq := held.storeEq.trans (Itasca.Runtime.Store.decodeStore_code_agrees view agrees).symm }
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Agreement on old issued keys composes through actual retained instances. -/
@@ -29,4 +29,4 @@ theorem CodeAgreesOn.trans_prefix {M : Type} {before middle : runtime.store.Stor
   intro index inst found function
   exact (right index inst (retained.instance_lookup found) function).trans
     (left index inst found function)
-end Exec.Store
+end Itasca.Runtime.Store

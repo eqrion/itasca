@@ -1,8 +1,8 @@
 import Exec.Interp.Memory.MemoryCoreStore
 import Exec.Abs.Core.MemoryLoad
 import Exec.Abs.Core.MemoryStore
-namespace Exec.Interp.MemoryDescriptor
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.MemoryDescriptor
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
  theorem execute_load_core_simulation_exact {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
@@ -181,4 +181,4 @@ open Aeneas Aeneas.Std SpecExt Exec.Spec
   apply WP.spec_mono (dispatch_store memory hooks floats allocator _ store platform index raw.instance raw.function raw.base op address value offset handler)
   intro out effect
   exact ⟨effect.2.2,⟨pc,pcNext,effect.2.1⟩,effect.1⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

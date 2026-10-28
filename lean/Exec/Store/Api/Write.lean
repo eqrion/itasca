@@ -2,7 +2,7 @@ import Exec.Representation.StoreInvariant
 import Exec.Store.Api.Grow
 import Exec.Store.Invariant.ValueShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[simp] theorem value_type_exact (value : runtime.Value) :
@@ -31,4 +31,4 @@ theorem check_value_owned {M : Type} (ops : runtime.platform.MemoryBuffer M)
     types.ElemType.value_type ty = .ok (elementValueType ty) := by
   cases ty <;> rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

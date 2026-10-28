@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryStore
 import Exec.Spec.SimdBitwise
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt
 theorem full_store_step (s : store) (f : frame) (argument : memarg) (address : Nat) (value : BitVec 128)
     (storeWf : wf_store s) (frameWf : wf_frame f) (addressBound : address < 2^32)
@@ -43,4 +43,4 @@ theorem full_store_step (s : store) (f : frame) (argument : memarg) (address : N
     · exact input
     · exact wf_config_trap storeWf frameWf
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

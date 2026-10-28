@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeWasm2
 import Exec.Code.Local.Control.Common.Structured
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_block_signature_wasm2 (env : module.Env) (bt : signature.BlockType)
@@ -61,4 +61,4 @@ theorem SourceScopeMatchesWasm2.close_form {scope saved instruction}
   · exact .inr (.inl ⟨rfl, by rw [source]⟩)
   · exact .inr (.inr (.inl ⟨_, rfl, by rw [source], by simpa [Wasm2.Frames.Form.params, identity rfl, results] using params⟩))
   · exact .inr (.inr (.inr ⟨_, _, _, _, _, rfl, by rw [source]⟩))
-end Exec.Code
+end Itasca.Runtime.Code

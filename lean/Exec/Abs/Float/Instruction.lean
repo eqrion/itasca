@@ -2,7 +2,7 @@ import Exec.Abs.Float.Descriptor
 import Exec.Spec.FloatTrunc
 import Exec.Abs.Typing
 
-namespace Exec.Abs.Float
+namespace Itasca.Runtime.Abs.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
@@ -35,10 +35,10 @@ theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
 theorem numberOfBits_wf (ty : numtype) (bits : Nat) (bound : bits < 2^sizenn ty) :
     wf_num_ ty (numberOfBits ty bits) := by
   cases ty
-  · exact Exec.Spec.unsigned_num_wf .I32 bits bound
-  · exact Exec.Spec.unsigned_num_wf .I64 bits bound
-  · exact Exec.Spec.float_num_wf .F32 _ (floatOfBits_wf 32 (by omega) _)
-  · exact Exec.Spec.float_num_wf .F64 _ (floatOfBits_wf 64 (by omega) _)
+  · exact Itasca.Runtime.Spec.unsigned_num_wf .I32 bits bound
+  · exact Itasca.Runtime.Spec.unsigned_num_wf .I64 bits bound
+  · exact Itasca.Runtime.Spec.float_num_wf .F32 _ (floatOfBits_wf 32 (by omega) _)
+  · exact Itasca.Runtime.Spec.float_num_wf .F64 _ (floatOfBits_wf 64 (by omega) _)
 
 theorem Instruction.operands_wf (op : Instruction) (a b : Nat)
     (first : a < 2^sizenn op.input) (second : b < 2^sizenn op.input) :
@@ -63,4 +63,4 @@ theorem numberOfBits_typed (s : store) (storeWf : wf_store s) (ty : numtype) (bi
     Val_ok s (.CONST ty (numberOfBits ty bits)) (valtype_numtype ty) :=
   .numtype _ _ _ storeWf (.val_case_0 _ _ (numberOfBits_wf ty bits bound))
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

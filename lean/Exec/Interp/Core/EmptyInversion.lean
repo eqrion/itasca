@@ -1,5 +1,5 @@
 import Exec.Interp.Core.Linear
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem scalarEmission_nop_pure {C before after emitted}
@@ -20,4 +20,4 @@ theorem scalarEmission_drop_pure {C before after emitted}
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp_all [Abs.Memory.Load.source,Abs.Memory.Store.source]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

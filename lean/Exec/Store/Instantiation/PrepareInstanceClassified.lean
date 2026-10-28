@@ -23,7 +23,7 @@ import Exec.Store.Instantiation.PrecommitOrigins
 set_option maxRecDepth 8192
 set_option maxHeartbeats 2000000
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -102,8 +102,7 @@ theorem prepare_instance_classified {M P F A : Type}
     | none => trivial
     | some high => simpa [maximum] using canonical.2 high (by simp [maximum])
   unfold runtime.store.instantiate.Store.prepare_instance at run
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env, Itasca.module.Module.impl.env,
-    Exec.module.Env.imports, Itasca.module.Env.impl.imports, bind_ok, ] at run
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok, ] at run
   split at run
   · rename_i mismatch
     exact Or.inl ⟨_, _, run.symm, .refl _, by trivial, by
@@ -123,13 +122,8 @@ theorem prepare_instance_classified {M P F A : Type}
     split at run
     · exact Or.inl ⟨_, _, run.symm, .refl _, by trivial, by exact PrecommitOrigins.resource True.intro⟩
     · rename_i instanceSpace
-      simp only [Exec.module.Env.types, Itasca.module.Env.impl.types,
-        Exec.module.Env.func_types, Itasca.module.Env.impl.func_types,
-        Exec.module.Env.table_types, Itasca.module.Env.impl.table_types,
-        Exec.module.Env.mem_types, Itasca.module.Env.impl.mem_types,
-        Exec.module.Env.global_types, Itasca.module.Env.impl.global_types,
-        Exec.module.Env.elements, Itasca.module.Env.impl.elements,
-        runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail, Itasca.module.Module.impl.tail,
+      simp only [Itasca.module.Env.impl.types, Itasca.module.Env.impl.func_types, Itasca.module.Env.impl.table_types, Itasca.module.Env.impl.mem_types, Itasca.module.Env.impl.global_types, Itasca.module.Env.impl.elements,
+        runtime.compiler.ExecutableModule.tail, Itasca.module.Module.impl.tail,
         bind_ok, deref_len] at run
       obtain ⟨counted, countsRun, countsErrors, countsPost⟩ := WP.spec_imp_exists
         (item_counts_loop_errors (moduleItemCounts module) 0#usize 0#usize (by simp))
@@ -750,4 +744,4 @@ theorem prepare_instance_classified {M P F A : Type}
                                                       charged := charged, counted := counted, limited := limited, committed := rfl }⟩
                                                   · exact run.symm
 
-end Exec.Store
+end Itasca.Runtime.Store

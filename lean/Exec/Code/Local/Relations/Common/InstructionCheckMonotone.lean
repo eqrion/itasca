@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SimdInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -75,4 +75,4 @@ theorem instruction_valid_monotone (before after : runtime.bytecode.CompiledFunc
     obtain ⟨opcode,dst,input,entry⟩ := view
     exact simd_instruction_monotone before after instruction opcode dst input entry projected growth.slots growth.simd accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

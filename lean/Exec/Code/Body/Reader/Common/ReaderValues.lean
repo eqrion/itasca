@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Exec.Code.Body.Reader.Common.ReaderStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.values {data env locals index st out instruction poly values}
@@ -34,4 +34,4 @@ theorem numeric_full_stack_types {before after outer segment result : List code.
     simp only [new, Sequence.stackTypes, List.map_append] at newTypes ⊢
     simpa only [List.append_assoc, Sequence.stackTypes] using congrArg (Sequence.stackTypes outer ++ ·) newTypes
 
-end Exec.Code
+end Itasca.Runtime.Code

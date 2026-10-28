@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ScalarReaderAcceptance
 import Exec.Code.Body.Reader.Acceptance.SourceBoundBaseAcceptance
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- All ordinary scalar readers accept at a reached source/compiler prefix
@@ -46,4 +46,4 @@ theorem IndexedTableReaderCompilerPointWasm2.scalar_available_from_source {A : T
     (fun live => by simpa [Control.polymorphic,ctrls] using state.reach.current live)
     state.compiled.known (fun live => (state.compiled.live live).2.layout) raw
 
-end Exec.Code
+end Itasca.Runtime.Code

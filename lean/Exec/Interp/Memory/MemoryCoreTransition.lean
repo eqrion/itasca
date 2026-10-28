@@ -1,5 +1,5 @@
 import Exec.Abs.Core.Step
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 
 theorem core_step_load_eq (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
     (after : List instr) (op : Abs.Memory.Load) (argument : memarg) :
@@ -14,4 +14,4 @@ theorem core_step_store_eq (s : store) (ambient : frame) (f : Abs.AFrame) (rest 
       Abs.Core.store ⟨s,ambient,{f with code := op.source argument :: after}::rest,[]⟩ f rest after op argument := by
   simp only [Abs.Core.step,Abs.Core.instruction,Abs.Memory.Store.source,Abs.Memory.decodeStore_descriptor]
   rfl
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Table.StructuredCompiledBody
 import Exec.Code.Local.Control.Common.IndexedFunctionAssembly
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The final executable check turns a completed actual body compilation into
@@ -26,4 +26,4 @@ theorem StructuredCompiledBody.finish {A : Type} (ops : runtime.platform.Alloc A
     params declared results source epilogue stable signature locals parameterSlots localSlots capacity
     bound code ?_ ending accepted⟩
   exact ⟨count, by simpa only [sourceEq] using fetched⟩
-end Exec.Code
+end Itasca.Runtime.Code

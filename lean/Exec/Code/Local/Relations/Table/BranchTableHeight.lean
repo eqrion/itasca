@@ -1,7 +1,7 @@
 import Exec.Code.Local.Source.SourceLengthsTactic
 import Exec.Code.Local.Callbacks.Common.ObserveFrame
 import Exec.Code.Local.Relations.Common.ObservationLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -106,10 +106,10 @@ elab "branch_height_effect " h:ident " using " ops:term ", " law:term : tactic =
     | ``runtime.compiler.FunctionCompiler.copy =>
       `(tactic| have effect := compiler_copy_branch_height $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Exec.Code.compiler_pc_branch_height
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_branch_height
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Exec.Code.compiler_patch_branch_height
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_branch_height
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -156,4 +156,4 @@ theorem compiler_branch_height_result {A : Type} (ops : runtime.platform.Alloc A
     simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
     repeat' branch_height_step accepted using ops, law
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Abs.Float.Results
 import Exec.Abs.Sim.Typed
-namespace Exec.Abs.Float
-open SpecExt Exec.Spec SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.Runtime.Abs.Float
+open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem number_encoding (ty : numtype) (number : num_) (valid : wf_num_ ty number) :
     ∃ bits, number = numberOfBits ty bits ∧ bits < 2^sizenn ty := by
@@ -59,4 +59,4 @@ theorem Instruction.typed_operands (op : Instruction) {s : store} {f : AFrame}
         refine ⟨front, a, a, ?_, firstBound, firstBound, frontWf, heights⟩
         simpa [Instruction.operands, Instruction.arity, Instruction.input] using split
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

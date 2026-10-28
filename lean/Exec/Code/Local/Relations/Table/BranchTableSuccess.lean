@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Calls.BranchSuccessCallbacks
 import Exec.Code.Local.Capacity.TableGrowth
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- One successful table target records its current code PC before lowering
@@ -48,4 +48,4 @@ theorem compiler_table_branch_success {A : Type} (ops : runtime.platform.Alloc A
       have tableEq := (budget_push_success ops law budget finalBudget before.function.jump_tables
         table target pushed).2
       exact ⟨target,finalBudget,table,targetEq,tableEq,branchCall⟩
-end Exec.Code
+end Itasca.Runtime.Code

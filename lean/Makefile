@@ -8,7 +8,6 @@ AENEAS := $(AENEAS_DIR)/src/_build/default/main.exe
 SPECTEC := $(SPECTEC_DIR)/_build/default/src/exe-spectec/main.exe
 RUST_TOOLCHAIN := nightly-2026-09-17
 AENEAS_PATCH := $(ROOT)/patches/aeneas-lean-extraction.patch
-AENEAS_REUSE_PATCH := $(ROOT)/patches/aeneas-reuse-definitions.patch
 SPECTEC_PATCH := $(ROOT)/patches/spectec-wasm2-global-mutability.patch
 SPECTEC_MODULE_PATCH := $(ROOT)/patches/spectec-wasm2-module.patch
 SPECTEC_HOSTFUNC_PATCH := $(ROOT)/patches/spectec-wasm2-hostfunc.patch
@@ -25,17 +24,17 @@ TEST_RUNNER := $(AENEAS_DIR)/tests/test_runner/_build/default/run_test.exe
 # Keep the verified extraction configuration explicit here.
 CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 	--exclude='{impl core::clone::Clone for _}' \
-	--exclude='{impl core::marker::Copy for _}'
+	--exclude='{impl core::marker::Copy for _}' \
+	--include='core::marker::{impl core::marker::Copy for u8}' \
+	--include='core::clone::impls::{impl core::clone::Clone for u8}'
 
 .PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
- extract-primary extract-check-primary llbc-exec extract-exec extract-check-exec \
  prove prove-exec trust script-tests audit-coverage audit-imports clean checkpoint spec-build spec-generate spec-update \
  spec-compare spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
 patch-aeneas:
 	cd $(AENEAS_DIR) && { git apply --reverse --check $(AENEAS_PATCH) 2>/dev/null || git apply $(AENEAS_PATCH); }
-	cd $(AENEAS_DIR) && { git apply --reverse --check $(AENEAS_REUSE_PATCH) 2>/dev/null || git apply $(AENEAS_REUSE_PATCH); }
 
 patch-spectec:
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_PATCH) 2>/dev/null || git apply $(SPECTEC_PATCH); }
@@ -63,34 +62,16 @@ llbc:
 	mkdir -p .build
 	cd $(ROOT) && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) CARGO_TARGET_DIR=$(CURDIR)/.build/cargo $(CHARON) cargo $(CHARON_FLAGS) --dest-file=$(CURDIR)/.build/itasca.llbc
 
-extract-primary: aeneas-build llbc
+extract: aeneas-build llbc
 	$(AENEAS) -backend lean .build/itasca.llbc -dest . -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
 
 # Do not refresh checked-in files while checking their provenance.
-extract-check-primary: aeneas-build llbc
+extract-check: aeneas-build llbc
 	mkdir -p .build/extract-check
 	$(AENEAS) -backend lean .build/itasca.llbc -dest .build/extract-check -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
 	cmp .build/extract-check/Itasca/Generated/Types.lean Itasca/Generated/Types.lean
 	cmp .build/extract-check/Itasca/Generated/Funs.lean Itasca/Generated/Funs.lean
 	python3 scripts/check_externals.py .build/extract-check/Itasca/Generated/FunsExternal_Template.lean
-
-# The runtime map is derived from the canonical validator model. Keep the two
-# passes sequential, including under make -j, and retain primary-only targets
-# for bootstrap and byte-for-byte validator regression checks.
-llbc-exec: llbc
-	python3 scripts/extract_execution.py llbc
-
-extract-exec: extract-primary
-	python3 scripts/extract_execution.py llbc
-	python3 scripts/extract_execution.py translate
-
-extract-check-exec: extract-check-primary
-	python3 scripts/extract_execution.py llbc
-	python3 scripts/extract_execution.py check
-
-extract: extract-exec
-
-extract-check: extract-check-exec
 
 script-tests:
 	python3 -m unittest discover -s scripts -p 'test_*.py'
@@ -155,4 +136,3 @@ regressions: aeneas-build
 	cd $(AENEAS_DIR) && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) gmake IN_CI=1 AENEAS_EXE=$(AENEAS) CHARON_EXE=$(CHARON) TEST_RUNNER_EXE=$(TEST_RUNNER) test-namespace-shadow.rs test-deep-else-if.rs
 	lake env lean $(AENEAS_DIR)/tests/lean/NamespaceShadow.lean
 	lake env lean $(AENEAS_DIR)/tests/lean/DeepElseIf.lean
-	python3 scripts/probe_reuse.py

@@ -4,8 +4,8 @@ import Exec.Abs.Core
 import Exec.Abs.Float.Decode
 import Exec.Abs.Stateful.Descriptor
 import Exec.Abs.Stateful.OwnershipStore
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
 
 theorem invoke_metadata {s f rest address after next}
     (stepped : invoke s f rest address after=.next next) :
@@ -76,4 +76,4 @@ theorem step_stateful_owned {bounds s ambient f rest table type after next}
   rw [(step_metadata stepped).1]
   exact owned.heap
 
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Simd.CompilerSimdMetadata
 import Exec.Code.Local.Source.SourceLengthsTactic
 import Exec.Code.Local.Source.SourceCursorTactic
 import Exec.Code.Local.Capacity.CapacityTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -51,4 +51,4 @@ theorem compiler_lower_simd_effects {A : Type} (ops : runtime.platform.Alloc A)
       compiler_observe_sources ops law before after state (.Ok ()) accepted,
       compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl,
       capacity.1,capacity.2 rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

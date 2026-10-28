@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Control.ControlLayout
 /-! Raw compiler operand safety, including polymorphic bottom values. These
 facts concern every normal observation outcome; they do not assume a final
 accepted body or a concrete validator operand stack. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 structure ObservedStack {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
@@ -92,4 +92,4 @@ theorem ObservedStack.operand_le_height {A} {compiler : runtime.compiler.Functio
       cases exactValue
       exact List.getElem_mem _
 
-end Exec.Code
+end Itasca.Runtime.Code

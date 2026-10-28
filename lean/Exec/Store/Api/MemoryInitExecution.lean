@@ -1,6 +1,6 @@
 import Exec.Store.Api.MemoryInitSemantics
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem bulk_memory_init_refines {M : Type} (memoryOps : runtime.platform.MemoryBuffer M)
@@ -31,4 +31,4 @@ theorem bulk_memory_init_refines {M : Type} (memoryOps : runtime.platform.Memory
     (bulkWord destination) (bulkWord source) (bulkWord count) out moduleEq memoryMapped mapped target resolved
     shape sourceSyntax ambientWf dataBound (by scalar_tac) (by scalar_tac) (by scalar_tac)
 
-end Exec.Store
+end Itasca.Runtime.Store

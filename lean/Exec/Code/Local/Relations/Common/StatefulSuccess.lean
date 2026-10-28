@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.StatefulLowering
 import Exec.Code.Local.Relations.Common.PairSuccess
 import Exec.Code.Local.Relations.Control.BranchSuccessEmit
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Acceptance of either pair-based callback exposes its actual allocation. -/
@@ -42,4 +42,4 @@ theorem compiler_finish_indirect {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨budget,code,sources,rfl,_,_⟩ := compiler_emit_success ops law before middle instruction emitted
     exact same
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Representation.Store
 import Exec.Platform.Alloc
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem within_spec (current additional limit : Usize) :
@@ -225,4 +225,4 @@ theorem memory_grow_effect {M : Type} (ops : runtime.platform.MemoryBuffer M)
               · simp [hback, hm, hm']
           · simp [MemoryGrowth]
 
-end Exec.Store
+end Itasca.Runtime.Store

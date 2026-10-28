@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.UniversalInitial
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Saved operand segments determine the exact source prefix below every open
@@ -105,4 +105,4 @@ theorem ReaderScopeFronts.branch {parents current values}
   rw [whole, prefixEq, arguments]
   simp only [List.append_assoc]
 
-end Exec.Code
+end Itasca.Runtime.Code

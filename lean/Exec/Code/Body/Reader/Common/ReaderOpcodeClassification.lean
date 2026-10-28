@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.ReaderOpcode
 import Itasca.Wasm2.Step.Dispatch
 import Itasca.Wasm2.NumericExt.Dispatch
 import Itasca.Handler.NumericDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 16384
@@ -77,4 +77,4 @@ theorem reader_accepted_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
     · simp at accepted
     · simp [rejected,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
-end Exec.Code
+end Itasca.Runtime.Code

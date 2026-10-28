@@ -1,8 +1,8 @@
 import Exec.Abs.Progress
 import Exec.Abs.Sim.Context
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The semantic label invariant provides syntax well-formedness for every
 continuation used while lifting source reductions through nested labels. -/
@@ -71,4 +71,4 @@ theorem ATyped.decode_wf {s : AState} (h : ATyped s) : wf_config (decode s) :=
   wf_config_make h.store h.ambient
     (decodeFrames_wf s.frames (vals s.results) (framesTyped_wf h.frames) (wf_vals h.results))
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.BranchInversion
 import Exec.Interp.StructuredMachine.BranchPoint
 import Exec.Interp.StructuredMachine.ControlInversion
 import Exec.Interp.Relations.PrefixDispatch
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem loop_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [OrdinaryHeads (emission compiled)]
@@ -56,4 +56,4 @@ theorem branchIf_fetch {s raw compiled C targets next output} {f : Abs.AFrame} [
       simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [Code.branchIfInstructions,if_pos noCopy,List.getElem?_cons_zero])
     · refine ⟨.JumpIfZero cond resume,?_,.jumpZero ..⟩
       simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [Code.branchIfInstructions,if_neg noCopy,List.getElem?_cons_zero])
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

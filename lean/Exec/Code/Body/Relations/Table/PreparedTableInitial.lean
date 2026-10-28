@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.PreparedReaderInitial
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Local.Callbacks.Table.CompilerTableScratchEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem prepared_compiler_table_boundary {A : Type} (ops : runtime.platform.Alloc A)
@@ -45,4 +45,4 @@ theorem indexed_table_prepared_compiler_initial_wasm2
     ops law w bodyBound signatureTable functionTable endFits created startedCall
   exact ⟨(all .empty).1,⟨prepared_compiler_table_boundary ops law w created startedCall,fun more => (all more).2⟩⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

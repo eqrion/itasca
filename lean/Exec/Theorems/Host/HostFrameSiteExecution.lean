@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.StructuredHostSite
 import Exec.Theorems.Composition.Eventful.EventfulHistory
 import Exec.Theorems.Composition.Stateful.StatefulOwnership
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem HostFrameSite.binding {M : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
@@ -23,4 +23,4 @@ def HostFrameSite.eventful {M P : Type}
     EventfulMachine M P view code expected :=
   ⟨store,exec,platform,⟨Store.decodeStore view code store,ambient,f::rest,[]⟩,site.raw.pc.val,false,
     site.machine,certified,site.owned,certified.shape.stateful_heap_owned code⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

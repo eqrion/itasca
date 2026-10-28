@@ -1,9 +1,9 @@
 import Exec.Interp.Memory.MemoryDescriptor
 import Exec.Interp.Relations.FrameStoreMetadata
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
-open Exec.Store
+open Itasca.Runtime.Store
 
 /-- A scalar memory instruction changes only the selected opaque buffer and
 retains its byte length. This includes bounds failures whose writeback callback
@@ -19,4 +19,4 @@ theorem MemoryMutation.frame_metadata {M : Type} {view : M → Slice U8}
   obtain ⟨buffer,rfl,lengthEq⟩ := mutation
   exact ⟨rfl,rfl,rfl,rfl⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

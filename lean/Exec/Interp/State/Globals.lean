@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Fetch
 import Exec.Representation.Store
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 private theorem global_index_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
@@ -132,4 +132,4 @@ theorem global_set2_dispatch_effect (exec : runtime.interp.Execution) (store : r
     as ⟨high, hhigh⟩
   simp [hlow, hhigh]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Abs.Memory.Descriptor
 
-namespace Exec.Abs.Memory
+namespace Itasca.Runtime.Abs.Memory
 
 def decodeLoad (ty : numtype) : Option loadop_ → Option Load
   | none => some (.full ty)
@@ -35,4 +35,4 @@ theorem decodeStore_descriptor (op : Store) : decodeStore op.type op.operation =
   | full ty => rfl
   | packed ty width => cases ty <;> cases width <;> rfl
 
-end Exec.Abs.Memory
+end Itasca.Runtime.Abs.Memory

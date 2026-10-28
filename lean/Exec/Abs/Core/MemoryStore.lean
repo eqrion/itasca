@@ -3,8 +3,8 @@ import Exec.Abs.Core.MemoryTyping
 import Exec.Abs.Core.MemoryMutation
 import Exec.Abs.Core.Trap
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 theorem numeric_value_inv {s : _root_.store} {value : val} {ty : numtype}
     (typed : Val_ok s value (valtype_numtype ty)) :
@@ -88,4 +88,4 @@ theorem store_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest :
             (by simpa [vals,admininstr_val,integerVal,Spec.Segment.i32,numtype_Inn] using source)
           simpa only [split] using full
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

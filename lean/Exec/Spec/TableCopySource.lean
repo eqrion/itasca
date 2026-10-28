@@ -1,5 +1,5 @@
 import Exec.Spec.TableFillSource
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem table_copy_trap (s : store) (f : frame) (destination source count targetTable sourceTable : Nat)
@@ -76,4 +76,4 @@ theorem table_copy_backward_expand (s : store) (f : frame) (destination source c
     (.admininstr_case_48 _ (index_wf _ hy)) (.admininstr_case_49 _ (index_wf _ ht)) (i32_wf _ (by omega)) (i32_wf _ (by omega))
     (by simpa [i32] using i32_wf count (by omega)) (.admininstr_case_53 _ _ (index_wf _ ht) (index_wf _ hy))
   simpa [operands,i32,proj_num__0,proj_uN_0,proj_num__0,proj_uN_0,endEq] using read
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

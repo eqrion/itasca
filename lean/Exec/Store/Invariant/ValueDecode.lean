@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.ValueShape
 import Exec.Interp.Relations.DecodeValue
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
@@ -32,4 +32,4 @@ theorem decode_encoded_value {M : Type} (s : runtime.store.Store M)
   rw [← hwords, decode_words_code _ _ _ hfloat] at hround
   exact congrArg Prod.fst (Option.some.inj hround)
 
-end Exec.Store
+end Itasca.Runtime.Store

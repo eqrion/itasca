@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.ScopeNesting
 import Exec.Code.Local.Callbacks.Control.ScopeFrameGuard
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every physical frame is paired with its exact source scope, ordered from
@@ -149,4 +149,4 @@ theorem ScopeFrameStack.record_branch {A : Type} {locals parents current}
   rw [frames]
   exact paired_set_right (stack.frames.imp preserve) index frame _ found
     (fun _ shape => shape.record_branch fixups forward)
-end Exec.Code
+end Itasca.Runtime.Code

@@ -11,7 +11,7 @@ import Exec.Code.Body.Reader.Common.ReaderWasm2Drop
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_nop_wasm2 {data env locals index st}
@@ -105,4 +105,4 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
   rw [callback, WP.spec_ok] at lowered
   exact ⟨types.map Translate.valueType, ty, values, beforeTypes, post, ⟨lowered rfl, SourceStack.of_map types concrete rfl⟩, .drop _ _⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

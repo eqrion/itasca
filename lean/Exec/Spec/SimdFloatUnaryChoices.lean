@@ -1,5 +1,5 @@
 import Exec.Spec.SimdFloatUnarySource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem lanes_roundtrip (ty : lanetype) (bits : BitVec 128) :
@@ -39,4 +39,4 @@ theorem float_unary_step (ty : Fnn) (op : vunop_Fnn_N) (x result : BitVec 128)
   · exact .admininstr_case_25 _ _ (shapeOf_wf _) (float_unary_source_wf ty op)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,5 +1,5 @@
 import Itasca.Stream.SubmissionSound
-namespace Exec.Code.SubmissionTransfer
+namespace Itasca.Runtime.Code.SubmissionTransfer
 open Aeneas Aeneas.Std Itasca
 
 /-- Local accepted submission preserves a source-position-indexed invariant.
@@ -253,4 +253,4 @@ theorem retire_of_poll {V : Type} (visitor : stream.StreamingVisitor V) (moduleI
   intro v v' pos func pending remaining invariant accepted
   obtain ⟨batch, poll, _⟩ := stream.retire_code_batch.accepted visitor moduleId v v' pending remaining accepted
   exact polled v v' batch pos func invariant poll
-end Exec.Code.SubmissionTransfer
+end Itasca.Runtime.Code.SubmissionTransfer

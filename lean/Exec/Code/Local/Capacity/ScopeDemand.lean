@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.ObserveBudgetAvailability
 import Exec.Code.Local.Capacity.BudgetEffects
 import Exec.Code.Local.Capacity.EmitAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Bounds for the map/frame allocations common to every scope opening. -/
@@ -18,4 +18,4 @@ structure ScopeDemand {A : Type} (compiler : runtime.compiler.FunctionCompiler A
   operands : state.vals.length ≤ bound
   slots : compiler.function.local_slots.val + 2*state.vals.length ≤ U32.max
 
-end Exec.Code
+end Itasca.Runtime.Code

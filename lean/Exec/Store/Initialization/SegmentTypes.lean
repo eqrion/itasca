@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentReady
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The two reference type spaces stay fixed while segment instructions update
@@ -66,4 +66,4 @@ structure SegmentTypeBindings {M : Type} (store : runtime.store.Store M) (inst :
     inst.module.module.env.elements.val[index]? = some source → inst.elems.val[index]? = some address →
     store.elems.val[address.val]? = some segment → segment.ty = source.elem
 
-end Exec.Store
+end Itasca.Runtime.Store

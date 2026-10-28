@@ -1,5 +1,5 @@
 import Exec.Code.Body.Relations.Common.EntrySignatures
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The captured table supplies an actual readable signature at every canonical
@@ -27,4 +27,4 @@ theorem SignatureSequence.indirect_call {signatures : Slice runtime.compiler.Sig
   · have equal : r = signature := by simpa [signature] using result
     simpa only [equal] using read
   · simpa only [same.1,same.2] using matched
-end Exec.Code
+end Itasca.Runtime.Code

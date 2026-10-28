@@ -1,7 +1,7 @@
 import Exec.Theorems.Host.HostDispatchCauses
 import Exec.Interp.Invocation.InvokePrefixCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Exact initial-host invocation causes. Setup retains the initial store;
 readback retains the completed source host event and its actual refused result
@@ -103,4 +103,4 @@ theorem InitialHostInvocationCause.host_overflow {M P F A : Type}
   · simp only [HostCallCauses,failed] at cause
     obtain ⟨next,arguments,defaults,returned,actual⟩ := cause
     exact ⟨next,arguments,defaults,called.2.2.2,returned,by simpa only [same] using actual⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

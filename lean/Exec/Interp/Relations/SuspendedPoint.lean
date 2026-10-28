@@ -1,6 +1,6 @@
 import Exec.Interp.Control.StructuredPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- Appending returned values leaves every saved outer label prefix intact. -/
@@ -12,4 +12,4 @@ theorem LabelsMatch.append {values : List val} {labels targets}
   intro label member
   exact (List.take_append_of_le_length (heights label member)).symm
 
-end Exec.Interp
+end Itasca.Runtime.Interp

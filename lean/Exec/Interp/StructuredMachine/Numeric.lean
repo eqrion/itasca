@@ -10,7 +10,7 @@ import Exec.Interp.Numeric.Integer.NumericFetch
 import Exec.Interp.Numeric.Integer.NumericCodePoint
 import Exec.Abs.Numeric.TransitionSimulation
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
 theorem step_numeric {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -136,4 +136,4 @@ theorem step_numeric {M P F A : Type}
         rw [Abs.Core.instruction_slice s ambient {f with code := op.source :: after} rest op.source after (.numeric op) frameTyped]
         exact sourceStep
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

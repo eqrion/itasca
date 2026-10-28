@@ -4,15 +4,15 @@ import Exec.Interp.StructuredMachine.StatefulPrepare
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Abs.Cumulative.Step
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp Exec.Interp.Stateful
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [projection : Exec.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
+    [projection : Itasca.Runtime.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
     (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
     (last : index.val+1=exec.frames.length)
@@ -82,4 +82,4 @@ theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platf
       have sourceStep : Abs.Stateful.Transition initial {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} rest after .memoryCopy .trap := by
         simpa [statefulBulkResult,error] using transition
       exact Or.inr ⟨error,sameStore,⟨pc,pcNext,same⟩,.stateful sourceStep (by intro impossible;cases impossible)⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

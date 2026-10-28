@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryRange
 set_option maxHeartbeats 2000000
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 inductive PlainLoad where
@@ -63,4 +63,4 @@ def PlainLoadEffect (op : PlainLoad) (offset : U32) (address : U128) (memory : S
     simpa [PlainLoadEffect,fits,wordEq,startEq]
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_false] at effect
     simp only [effect,WP.spec_ok,PlainLoadEffect,if_neg fits]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

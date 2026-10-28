@@ -7,7 +7,7 @@ import Exec.Interp.StructuredMachine.SupportedHeadCoverage
 import Exec.Interp.StructuredMachine.SimdPoint
 import Exec.Interp.StructuredMachine.IndirectPoint
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -62,4 +62,4 @@ theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     · rw [installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
       simpa only [typeIndexEq] using sourceEq
 
-end Exec.Store
+end Itasca.Runtime.Store

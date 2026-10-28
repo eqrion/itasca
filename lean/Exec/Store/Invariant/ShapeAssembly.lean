@@ -3,7 +3,7 @@ import Exec.Store.Invariant.InstanceItems
 import Exec.Store.Preparation.AllocationShape
 import Exec.Store.Invariant.FunctionSignatures
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -32,7 +32,7 @@ theorem StagedPrefix.function_shape {M : Type} {before after : runtime.store.Sto
   | Wasm instanceIndex functionIndex =>
     simp only [code] at body ⊢
     obtain ⟨inst, found, bound⟩ := body
-    exact ⟨inst, Exec.Representation.lookup_prefix _ _ retained.instances found, bound⟩
+    exact ⟨inst, Itasca.Runtime.Representation.lookup_prefix _ _ retained.instances found, bound⟩
 
 /-- Retained functions and the concrete newly allocated source-index metadata
 supply FunctionShape after the provisional instance has been published. -/
@@ -127,4 +127,4 @@ theorem shape_after_staging {M : Type} (view : M → Slice U8)
   · exact allocated.tableAccounting
   · exact allocated.tableLimit
 
-end Exec.Store
+end Itasca.Runtime.Store

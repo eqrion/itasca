@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Integer.SimdIntegerSaturatingWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
 import Exec.Spec.SimdIntegerSaturatingShape
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def integerSaturatingOpcode (ty : Jnn) (kind : IntegerSaturating) : U32 :=
   match ty,kind with
@@ -65,4 +65,4 @@ theorem integer_saturating_dispatch_eq (ty : Jnn) (kind : IntegerSaturating) (x 
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

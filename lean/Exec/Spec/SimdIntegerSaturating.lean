@@ -1,5 +1,5 @@
 import Exec.Spec.SimdSaturation
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 inductive IntegerSaturating where | addS | addU | subS | subU
 
@@ -38,4 +38,4 @@ theorem integer_saturating_relation (kind : IntegerSaturating) {width : Nat}
       fun_isub_sat_.fun_isub_sat__case_0 width (.mk_uN a.toNat) (.mk_uN b.toNat)
         (by simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_toNat,proj_uN_0] using wf)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

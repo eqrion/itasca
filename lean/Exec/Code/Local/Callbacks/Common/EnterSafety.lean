@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Calls.CallbackSafety
 import Exec.Code.Local.Relations.Control.ControlObservation
 /-! The actual IF callback emits its condition guard and records its fixup
 coordinate separately from the body entry, using the live compiler slot layout. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 @[step] theorem enter_if_raw {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -196,4 +196,4 @@ private theorem enter_if_empty {A : Type} (ops : runtime.platform.Alloc A)
   rw [observed, WP.spec_ok] at result
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

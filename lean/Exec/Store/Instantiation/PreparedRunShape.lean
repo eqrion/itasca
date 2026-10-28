@@ -3,7 +3,7 @@ import Exec.Store.Instantiation.PreparedCommitShape
 import Exec.Code.Module.SegmentPayloadBounds
 import Exec.Code.Module.CompileCache
 import Exec.Code.Module.CompileSemantic
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem PreparedRun.shape_data {M P F A : Type}
@@ -31,4 +31,4 @@ theorem PreparedRun.shape_data {M P F A : Type}
       trace.globalStore trace.elementStore trace.dataStore trace.globalRun trace.elementRun trace.dataRun
   exact ⟨inst, found, source.trans trace.source, by simpa only [trace.committed] using shaped,
     segments, retained, segmentAccounting, by simpa only [trace.committed] using code⟩
-end Exec.Store
+end Itasca.Runtime.Store

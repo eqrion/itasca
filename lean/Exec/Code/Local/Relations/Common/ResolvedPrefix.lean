@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.FixupAlgebra
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- One open label's retained physical fixup sites and its eventual static exit.
@@ -62,4 +62,4 @@ theorem resolvedCode_new_branch (code emitted : List Bytecode) (before after : L
     · intro g member pc atPc
       simpa [patchCode_length] using inside g (List.mem_cons_of_mem _ member) pc atPc
 
-end Exec.Code
+end Itasca.Runtime.Code

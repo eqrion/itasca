@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdCompareMaskBits
 import Exec.Spec.SimdCompareRelation
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd
 
 theorem comparison_masks_lanes (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128) :
     Map (lane_.mk_lane__0 ty) (comparisonMasks ty op x y) =
@@ -31,4 +31,4 @@ theorem integer_compare_packed (ty : Jnn) (op : vrelop_Jnn_N) (x y result : U128
   rw [integerComparisonResult,comparison_masks_lanes]
   exact congrArg uN.mk_uN packed.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

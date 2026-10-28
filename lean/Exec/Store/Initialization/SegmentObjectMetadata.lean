@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableMemoryBindings
 import Exec.Store.Initialization.SegmentTypes
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Exact object metadata retained by initialization; payloads may be copied or dropped. -/
@@ -71,4 +71,4 @@ theorem lookup_set_relation {T : Type} (values : List T) (index : Nat) (old repl
     exact ⟨replacement, by simp [List.getElem?_set, (List.getElem?_eq_some_iff.mp found).1], changed⟩
   · exact ⟨value, by simp [List.getElem?_set, same, Ne.symm same, read], refl value⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

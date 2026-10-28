@@ -2,7 +2,7 @@ import Exec.Abs.SupportedState
 import Exec.Store.Invariant.CodeAgreement
 import Exec.Store.Invariant.FunctionSignatures
 import Exec.Store.Initialization.SegmentCodeMetadata
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 /-- The installed source subset is preserved for old functions and established
@@ -39,4 +39,4 @@ theorem store_supported_publish {M : Type} (view : M → Slice U8)
       installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
     cases same : source <;> simpa only [same] using known
 
-end Exec.Store
+end Itasca.Runtime.Store

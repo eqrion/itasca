@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.EntryCompilerExecutable
 import Exec.Code.Module.CompileEntryBounds
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler's actual entry construction, issued batch validation, and
@@ -30,4 +30,4 @@ theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platfor
     (w.end_fits reachable bounded origin entry) w.created encoded
     w.final.function w.final.budget w.finished
   simpa only [w.metadata.1] using certificate
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Local.ReaderWasm2Local
 import Itasca.Wasm2.Trace.ControlBytes
 import Itasca.Wasm2.Control.BranchStep
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- The actual control-reader dispatcher reveals its decoded callback argument. -/
@@ -64,4 +64,4 @@ theorem reader_call_wasm2 {data env locals index st}
   · exact stack
   · exact encoded.declared _
 
-end Exec.Code
+end Itasca.Runtime.Code

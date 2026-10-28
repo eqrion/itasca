@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerElementAppend
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def ElementValueMappings (functions : List runtime.bytecode.CompiledFunction)
@@ -101,8 +101,8 @@ theorem initializer_elements_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop1.body at body
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at body
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
@@ -156,4 +156,4 @@ theorem initializer_elements_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

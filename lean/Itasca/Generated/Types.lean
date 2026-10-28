@@ -19,6 +19,13 @@ set_option maxRecDepth 2048
 
 namespace Itasca
 
+/-- [core::marker::PhantomData]
+    Source: '/rustc/library/core/src/marker.rs', lines 811:0-811:39
+    Name pattern: [core::marker::PhantomData]
+    Visibility: public -/
+@[reducible, rust_type "core::marker::PhantomData"]
+def core.marker.PhantomData (T : Type) := Unit
+
 /-- [itasca::code::MemArg]
     Source: 'src/code.rs', lines 22:0-25:1
     Visibility: public -/
@@ -964,6 +971,813 @@ inductive types.ExternType where
 @[reducible]
 def module.EmptyModuleVisitor := Unit
 
+/-- [itasca::runtime::compiler::ControlMap]
+    Source: 'src/runtime/compiler/mod.rs', lines 190:0-204:1
+    Visibility: public -/
+structure runtime.compiler.ControlMap where
+  kind : _root_.Itasca.code.LabelKind
+  source_start : Std.Usize
+  source_end : Std.Usize
+  start_pc : Std.Usize
+  end_pc : Std.Usize
+  stack_height : Std.Usize
+  parameters : Std.Usize
+  results : Std.Usize
+
+/-- [itasca::runtime::bytecode::Instr]
+    Source: 'src/runtime/bytecode.rs', lines 43:8-86:9 -/
+@[discriminant isize]
+inductive runtime.bytecode.Instr where
+| Copy : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Copy2 : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| CopyN : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Const32 : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Const64 : Std.U32 → Std.U64 → runtime.bytecode.Instr
+| ConstV128 : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Jump : Std.U32 → runtime.bytecode.Instr
+| JumpIfZero : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| JumpIfNonZero : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| JumpTable : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| LoopHead : runtime.bytecode.Instr
+| Call : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| CallIndirect : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Return : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Unreachable : runtime.bytecode.Instr
+| Select : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| Select2 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| GlobalGet : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| GlobalGet2 : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| GlobalSet : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| GlobalSet2 : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Eqz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32LtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32GtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32LeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32GeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Eqz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64LtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64GtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64LeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64GeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Lt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Gt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Le : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Ge : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Lt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Gt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Le : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Ge : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32DivS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32DivU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32RemS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32RemU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32And : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Or : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Xor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Rotl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Rotr : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Clz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Ctz : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64DivS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64DivU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64RemS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64RemU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64And : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Or : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Xor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Rotl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Rotr : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Floor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Floor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Copysign : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32WrapI64 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64ExtendI32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64ExtendI32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32ConvertI32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32ConvertI32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32ConvertI64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32ConvertI64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32DemoteF64 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64ConvertI32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64ConvertI32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64ConvertI64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64ConvertI64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64PromoteF32 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32ReinterpretF32 :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64ReinterpretF64 :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F32ReinterpretI32 :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F64ReinterpretI64 :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Extend32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF64S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64TruncSatF64U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Load8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Load8U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Load16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Load16U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load8U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load16S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load16U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load32S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Load32U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Store : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Store : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32Store : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64Store : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Store8 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32Store16 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Store8 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Store16 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64Store32 : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| MemorySize : Std.U32 → runtime.bytecode.Instr
+| MemoryGrow : Std.U32 → runtime.bytecode.Instr
+| MemoryFill : Std.U32 → runtime.bytecode.Instr
+| MemoryCopy : Std.U32 → runtime.bytecode.Instr
+| MemoryInit : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| DataDrop : Std.U32 → runtime.bytecode.Instr
+| TableGet : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableSet : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableSize : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableGrow : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableFill : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableCopy : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| TableInit : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| ElemDrop : Std.U32 → runtime.bytecode.Instr
+| RefNull : Std.U32 → runtime.bytecode.Instr
+| RefIsNull : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| RefFunc : Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load8x8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load8x8U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load16x4S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load16x4U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load32x2S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load32x2U : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load8Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load16Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load32Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load64Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Store : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Shuffle : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Swizzle : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Splat : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16ExtractLaneS :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I8x16ExtractLaneU :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I8x16ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8ExtractLaneS :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtractLaneU :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ExtractLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ExtractLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4ExtractLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2ExtractLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2ReplaceLane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16LtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16GtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16LeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16GeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8LtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8GtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8LeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8GeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4LtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4GtU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4LeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4GeU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Lt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Gt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Le : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Ge : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Lt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Gt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Le : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Ge : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Not : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128And : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Andnot : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Or : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Xor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Bitselect : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128AnyTrue : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load8Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load16Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load32Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load64Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Store8Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Store16Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Store32Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Store64Lane : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load32Zero : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| V128Load64Zero : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4DemoteF64x2Zero :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F64x2PromoteLowF32x4 :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I8x16Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Popcnt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16AllTrue : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Bitmask : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16NarrowI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I8x16NarrowI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F32x4Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Floor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16AddSatS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16AddSatU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16SubSatS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16SubSatU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Ceil : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Floor : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16MinS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16MinU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16MaxS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16MaxU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Trunc : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I8x16AvgrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8ExtaddPairwiseI8x16S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtaddPairwiseI8x16U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtaddPairwiseI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtaddPairwiseI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Q15mulrSatS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8AllTrue : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Bitmask : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8NarrowI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8NarrowI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtendLowI8x16S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtendHighI8x16S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtendLowI8x16U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtendHighI8x16U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8AddSatS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8AddSatU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8SubSatS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8SubSatU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Nearest : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8MinS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8MinU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8MaxS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8MaxU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8AvgrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I16x8ExtmulLowI8x16S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtmulHighI8x16S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtmulLowI8x16U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I16x8ExtmulHighI8x16U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4AllTrue : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Bitmask : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ExtendLowI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtendHighI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtendLowI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtendHighI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4MinS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4MinU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4MaxS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4MaxU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4DotI16x8S : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4ExtmulLowI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtmulHighI16x8S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtmulLowI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4ExtmulHighI16x8U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2AllTrue : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Bitmask : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ExtendLowI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtendHighI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtendLowI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtendHighI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2Shl : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ShrS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ShrU : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Eq : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2Ne : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2LtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2GtS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2LeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2GeS : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I64x2ExtmulLowI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtmulHighI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtmulLowI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I64x2ExtmulHighI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F32x4Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Pmin : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F32x4Pmax : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Abs : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Neg : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Sqrt : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Add : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Sub : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Mul : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Div : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Min : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Max : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Pmin : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| F64x2Pmax : Std.U32 → Std.U32 → Std.U32 → runtime.bytecode.Instr
+| I32x4TruncSatF32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4TruncSatF32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F32x4ConvertI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F32x4ConvertI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4TruncSatF64x2SZero :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| I32x4TruncSatF64x2UZero :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F64x2ConvertLowI32x4S :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+| F64x2ConvertLowI32x4U :
+  Std.U32 →
+  Std.U32 →
+  Std.U32 →
+  runtime.bytecode.Instr
+
+/-- [itasca::runtime::bytecode::SimdImmediate]
+    Source: 'src/runtime/bytecode.rs', lines 29:0-33:1 -/
+structure runtime.bytecode.SimdImmediate where
+  offset : Std.U32
+  lane : Std.U32
+  bits : Std.U128
+
+/-- [itasca::runtime::bytecode::CompiledFunction]
+    Source: 'src/runtime/bytecode.rs', lines 7:0-25:1 -/
+structure runtime.bytecode.CompiledFunction where
+  locals : alloc.vec.Vec _root_.Itasca.types.ValueType
+  local_slots : Std.U32
+  param_slots : Std.U32
+  slot_count : Std.U32
+  max_stack : Std.Usize
+  code : alloc.vec.Vec _root_.Itasca.runtime.bytecode.Instr
+  jump_tables : alloc.vec.Vec Std.U32
+  v128_pool : alloc.vec.Vec Std.U128
+  indirect : alloc.vec.Vec (Std.U32 × Std.U32)
+  simd : alloc.vec.Vec _root_.Itasca.runtime.bytecode.SimdImmediate
+  source_offsets : alloc.vec.Vec Std.Usize
+  controls : alloc.vec.Vec _root_.Itasca.runtime.compiler.ControlMap
+  type_index : Std.U32
+  body_start : Std.Usize
+  body_end : Std.Usize
+
+/-- Trait declaration: [itasca::runtime::platform::Alloc]
+    Source: 'src/runtime/platform.rs', lines 91:0-93:1 -/
+structure runtime.platform.Alloc (Self : Type) where
+  reserve : forall {T : Type}, alloc.vec.Vec T → Std.Usize → Result (Bool
+    × (alloc.vec.Vec T))
+
+/-- [itasca::runtime::compiler::Frame]
+    Source: 'src/runtime/compiler/mod.rs', lines 553:0-564:1 -/
+structure runtime.compiler.Frame where
+  map : Std.Usize
+  kind : _root_.Itasca.code.LabelKind
+  height : Std.U32
+  params : Std.U32
+  results : Std.U32
+  start_pc : Std.U32
+  if_pc : Option Std.Usize
+  entry_reachable : Bool
+  end_reachable : Bool
+  fixups : alloc.vec.Vec Std.Usize
+
+/-- [itasca::runtime::compiler::Signature]
+    Source: 'src/runtime/compiler/mod.rs', lines 514:0-519:1 -/
+structure runtime.compiler.Signature where
+  params : Std.Usize
+  results : Std.Usize
+  param_slots : Std.U32
+  result_slots : Std.U32
+
+/-- [itasca::runtime::compiler::CompileResource]
+    Source: 'src/runtime/compiler/mod.rs', lines 64:0-73:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.compiler.CompileResource where
+| ModuleBytes : runtime.compiler.CompileResource
+| Functions : runtime.compiler.CompileResource
+| Types : runtime.compiler.CompileResource
+| Instructions : runtime.compiler.CompileResource
+| BranchTableEntries : runtime.compiler.CompileResource
+| Controls : runtime.compiler.CompileResource
+| Locals : runtime.compiler.CompileResource
+| Allocation : runtime.compiler.CompileResource
+
+/-- [itasca::runtime::compiler::CompileLimits]
+    Source: 'src/runtime/compiler/mod.rs', lines 37:0-45:1
+    Visibility: public -/
+structure runtime.compiler.CompileLimits where
+  max_module_bytes : Std.Usize
+  max_functions : Std.Usize
+  max_types : Std.Usize
+  max_instructions : Std.Usize
+  max_branch_table_entries : Std.Usize
+  max_controls : Std.Usize
+  max_locals : Std.Usize
+
+/-- [itasca::runtime::compiler::Budget]
+    Source: 'src/runtime/compiler/mod.rs', lines 95:0-103:1 -/
+structure runtime.compiler.Budget (A : Type) where
+  marker : _root_.Itasca.core.marker.PhantomData A
+  limits : _root_.Itasca.runtime.compiler.CompileLimits
+  instructions : Std.Usize
+  branches : Std.Usize
+  controls : Std.Usize
+  locals : Std.Usize
+  error : Option _root_.Itasca.runtime.compiler.CompileResource
+
+/-- [itasca::runtime::compiler::FunctionCompiler]
+    Source: 'src/runtime/compiler/mod.rs', lines 566:0-579:1 -/
+structure runtime.compiler.FunctionCompiler (A : Type) where
+  signatures : Slice _root_.Itasca.runtime.compiler.Signature
+  func_param_slots : Slice Std.U32
+  budget : _root_.Itasca.runtime.compiler.Budget A
+  batch_start : Std.Usize
+  function : _root_.Itasca.runtime.bytecode.CompiledFunction
+  frames : alloc.vec.Vec _root_.Itasca.runtime.compiler.Frame
+  reachable : Bool
+  next_source : Std.Usize
+  before : alloc.vec.Vec Std.U32
+  height : Std.U32
+  local_offsets : alloc.vec.Vec Std.U32
+  table_depths : alloc.vec.Vec Std.U32
+
+/-- [itasca::runtime::compiler::ExecutableModule]
+    Source: 'src/runtime/compiler/mod.rs', lines 151:0-162:1
+    Visibility: public -/
+structure runtime.compiler.ExecutableModule where
+  module : _root_.Itasca.module.Module
+  profile : _root_.Itasca.ValidationProfile
+  functions : alloc.vec.Vec _root_.Itasca.runtime.bytecode.CompiledFunction
+  global_initializers : alloc.vec.Vec Std.Usize
+  element_initializers : alloc.vec.Vec (alloc.vec.Vec Std.Usize)
+  element_offsets : alloc.vec.Vec (Option Std.Usize)
+  data_offsets : alloc.vec.Vec (Option Std.Usize)
+  initialization : Std.Usize
+
+/-- [itasca::runtime::compiler::CompileError]
+    Source: 'src/runtime/compiler/mod.rs', lines 78:0-81:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.compiler.CompileError where
+| Validation : _root_.Itasca.error.Error → runtime.compiler.CompileError
+| Resource :
+  _root_.Itasca.runtime.compiler.CompileResource →
+  runtime.compiler.CompileError
+
+/-- [itasca::runtime::compiler::FunctionStats]
+    Source: 'src/runtime/compiler/mod.rs', lines 167:0-185:1
+    Visibility: public -/
+structure runtime.compiler.FunctionStats where
+  type_index : Std.U32
+  local_count : Std.Usize
+  max_stack : Std.Usize
+  slot_count : Std.Usize
+  instruction_count : Std.Usize
+  instruction_bytes : Std.Usize
+  branch_table_entries : Std.Usize
+  branch_table_bytes : Std.Usize
+  body_start : Std.Usize
+  body_end : Std.Usize
+
+/-- [itasca::runtime::compiler::CompileScheduler]
+    Source: 'src/runtime/compiler/mod.rs', lines 439:0-447:1 -/
+structure runtime.compiler.CompileScheduler (A : Type) where
+  signatures : alloc.vec.Vec _root_.Itasca.runtime.compiler.Signature
+  func_param_slots : alloc.vec.Vec Std.U32
+  completed : alloc.vec.Vec _root_.Itasca.stream.CodeBatch
+  functions : alloc.vec.Vec (Option
+    _root_.Itasca.runtime.bytecode.CompiledFunction)
+  tail : Option _root_.Itasca.module.Tail
+  code_start : Std.Usize
+  budget : _root_.Itasca.runtime.compiler.Budget A
+
 /-- [itasca::stream::CodeEntry]
     Source: 'src/stream.rs', lines 111:0-120:1
     Visibility: public -/
@@ -972,5 +1786,313 @@ structure stream.CodeEntry where
   start : Std.Usize
   contents : Std.Usize
   «end» : Std.Usize
+
+/-- [itasca::runtime::compiler::CompileSource]
+    Source: 'src/runtime/compiler/mod.rs', lines 376:0-380:1 -/
+structure runtime.compiler.CompileSource where
+  bytes : Slice Std.U8
+  code_start : Std.Usize
+  code_end : Std.Usize
+
+/-- [itasca::runtime::GlobalAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.GlobalAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::MemoryAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.MemoryAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::TableAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.TableAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::FuncAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.FuncAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::store::ModuleInst]
+    Source: 'src/runtime/store.rs', lines 87:0-96:1 -/
+structure runtime.store.ModuleInst where
+  module : _root_.Itasca.runtime.compiler.ExecutableModule
+  types : alloc.vec.Vec Std.Usize
+  funcs : alloc.vec.Vec _root_.Itasca.runtime.FuncAddr
+  tables : alloc.vec.Vec _root_.Itasca.runtime.TableAddr
+  memories : alloc.vec.Vec _root_.Itasca.runtime.MemoryAddr
+  globals : alloc.vec.Vec _root_.Itasca.runtime.GlobalAddr
+  elems : alloc.vec.Vec Std.Usize
+  datas : alloc.vec.Vec Std.Usize
+
+/-- [itasca::runtime::store::DataInst]
+    Source: 'src/runtime/store.rs', lines 83:0-85:1 -/
+structure runtime.store.DataInst where
+  bytes : alloc.vec.Vec Std.U8
+
+/-- [itasca::runtime::store::ElemInst]
+    Source: 'src/runtime/store.rs', lines 78:0-81:1 -/
+structure runtime.store.ElemInst where
+  ty : _root_.Itasca.types.ElemType
+  refs : alloc.vec.Vec Std.U64
+
+/-- [itasca::runtime::store::GlobalInst]
+    Source: 'src/runtime/store.rs', lines 72:0-76:1 -/
+structure runtime.store.GlobalInst where
+  lo : Std.U64
+  hi : Std.U64
+  ty : _root_.Itasca.types.GlobalType
+
+/-- [itasca::runtime::store::TableInst]
+    Source: 'src/runtime/store.rs', lines 66:0-70:1 -/
+structure runtime.store.TableInst where
+  elements : alloc.vec.Vec Std.U64
+  ty : _root_.Itasca.types.ElemType
+  maximum : Option Std.U32
+
+/-- [itasca::runtime::store::MemInst]
+    Source: 'src/runtime/store.rs', lines 61:0-64:1 -/
+structure runtime.store.MemInst (M : Type) where
+  buf : M
+  maximum : Option Std.U32
+
+/-- [itasca::runtime::store::FuncCode]
+    Source: 'src/runtime/store.rs', lines 52:0-55:1 -/
+@[discriminant isize]
+inductive runtime.store.FuncCode where
+| Host : Std.U64 → runtime.store.FuncCode
+| Wasm : Std.Usize → Std.Usize → runtime.store.FuncCode
+
+/-- [itasca::runtime::store::FuncInst]
+    Source: 'src/runtime/store.rs', lines 57:0-60:1 -/
+structure runtime.store.FuncInst where
+  signature : Std.Usize
+  code : _root_.Itasca.runtime.store.FuncCode
+
+/-- [itasca::runtime::store::StoreLimits]
+    Source: 'src/runtime/store.rs', lines 16:0-36:1
+    Visibility: public -/
+structure runtime.store.StoreLimits where
+  max_objects : Std.Usize
+  max_instances : Std.Usize
+  max_instance_items : Std.Usize
+  max_signature_values : Std.Usize
+  max_memory_bytes : Std.Usize
+  max_table_elements : Std.Usize
+  max_frames : Std.Usize
+  max_values : Std.Usize
+
+/-- [itasca::runtime::store::Store]
+    Source: 'src/runtime/store.rs', lines 101:0-117:1
+    Visibility: public -/
+structure runtime.store.Store (M : Type) where
+  id : Std.Usize
+  limits : _root_.Itasca.runtime.store.StoreLimits
+  funcs : alloc.vec.Vec _root_.Itasca.runtime.store.FuncInst
+  types : alloc.vec.Vec _root_.Itasca.types.FuncType
+  tables : alloc.vec.Vec _root_.Itasca.runtime.store.TableInst
+  memories : alloc.vec.Vec (_root_.Itasca.runtime.store.MemInst M)
+  globals : alloc.vec.Vec _root_.Itasca.runtime.store.GlobalInst
+  instances : alloc.vec.Vec _root_.Itasca.runtime.store.ModuleInst
+  elems : alloc.vec.Vec _root_.Itasca.runtime.store.ElemInst
+  datas : alloc.vec.Vec _root_.Itasca.runtime.store.DataInst
+  externs : alloc.vec.Vec Std.U64
+  instance_items : Std.Usize
+  signature_values : Std.Usize
+  memory_bytes : Std.Usize
+  table_elements : Std.Usize
+
+/-- Trait declaration: [itasca::runtime::platform::MemoryBuffer]
+    Source: 'src/runtime/platform.rs', lines 46:0-51:1
+    Visibility: public -/
+structure runtime.platform.MemoryBuffer (Self : Type) where
+  new_zeroed : Std.Usize → Result (Option Self)
+  bytes : Self → Result (Slice Std.U8)
+  bytes_mut : Self → Result ((Slice Std.U8) × (Slice Std.U8 → Self))
+  grow : Self → Std.Usize → Result (Bool × Self)
+
+/-- [itasca::runtime::ResourceLimit]
+    Source: 'src/runtime/mod.rs', lines 138:0-143:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.ResourceLimit where
+| CallStack : runtime.ResourceLimit
+| Values : runtime.ResourceLimit
+| Allocation : runtime.ResourceLimit
+| Objects : runtime.ResourceLimit
+
+/-- [itasca::runtime::LinkError]
+    Source: 'src/runtime/mod.rs', lines 131:0-134:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.LinkError where
+| MissingImport : runtime.LinkError
+| IncompatibleImportType : runtime.LinkError
+
+/-- [itasca::runtime::Trap]
+    Source: 'src/runtime/mod.rs', lines 117:0-127:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.Trap where
+| Unreachable : runtime.Trap
+| IntegerDivideByZero : runtime.Trap
+| IntegerOverflow : runtime.Trap
+| InvalidConversionToInteger : runtime.Trap
+| MemoryOutOfBounds : runtime.Trap
+| TableOutOfBounds : runtime.Trap
+| UninitializedElement : runtime.Trap
+| IndirectCallTypeMismatch : runtime.Trap
+| Host : runtime.Trap
+
+/-- [itasca::runtime::ExecError]
+    Source: 'src/runtime/mod.rs', lines 147:0-157:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.ExecError where
+| Trap : _root_.Itasca.runtime.Trap → runtime.ExecError
+| Link : _root_.Itasca.runtime.LinkError → runtime.ExecError
+| Exhausted : _root_.Itasca.runtime.ResourceLimit → runtime.ExecError
+| BadArguments : runtime.ExecError
+| WrongStore : runtime.ExecError
+| Terminated : runtime.ExecError
+| Internal : runtime.ExecError
+
+/-- Trait declaration: [itasca::runtime::platform::FloatOps]
+    Source: 'src/runtime/platform.rs', lines 58:0-86:1
+    Visibility: public -/
+structure runtime.platform.FloatOps (Self : Type) where
+  f32_add : Std.U32 → Std.U32 → Result Std.U32
+  f32_sub : Std.U32 → Std.U32 → Result Std.U32
+  f32_mul : Std.U32 → Std.U32 → Result Std.U32
+  f32_div : Std.U32 → Std.U32 → Result Std.U32
+  f32_sqrt : Std.U32 → Result Std.U32
+  f32_ceil : Std.U32 → Result Std.U32
+  f32_floor : Std.U32 → Result Std.U32
+  f32_trunc : Std.U32 → Result Std.U32
+  f32_nearest : Std.U32 → Result Std.U32
+  f32_convert_i32_s : Std.I32 → Result Std.U32
+  f32_convert_i32_u : Std.U32 → Result Std.U32
+  f32_convert_i64_s : Std.I64 → Result Std.U32
+  f32_convert_i64_u : Std.U64 → Result Std.U32
+  f64_add : Std.U64 → Std.U64 → Result Std.U64
+  f64_sub : Std.U64 → Std.U64 → Result Std.U64
+  f64_mul : Std.U64 → Std.U64 → Result Std.U64
+  f64_div : Std.U64 → Std.U64 → Result Std.U64
+  f64_sqrt : Std.U64 → Result Std.U64
+  f64_ceil : Std.U64 → Result Std.U64
+  f64_floor : Std.U64 → Result Std.U64
+  f64_trunc : Std.U64 → Result Std.U64
+  f64_nearest : Std.U64 → Result Std.U64
+  f64_convert_i32_s : Std.I32 → Result Std.U64
+  f64_convert_i32_u : Std.U32 → Result Std.U64
+  f64_convert_i64_s : Std.I64 → Result Std.U64
+  f64_convert_i64_u : Std.U64 → Result Std.U64
+  f32_demote_f64 : Std.U64 → Result Std.U32
+
+/-- [itasca::runtime::interp::Frame]
+    Source: 'src/runtime/interp/mod.rs', lines 13:0-18:1 -/
+structure runtime.interp.Frame where
+  «instance» : Std.Usize
+  function : Std.Usize
+  pc : Std.U32
+  base : Std.Usize
+
+/-- [itasca::runtime::ExternAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.ExternAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::Value]
+    Source: 'src/runtime/mod.rs', lines 63:0-71:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.Value where
+| I32 : Std.U32 → runtime.Value
+| I64 : Std.U64 → runtime.Value
+| F32 : Std.U32 → runtime.Value
+| F64 : Std.U64 → runtime.Value
+| V128 : Std.U128 → runtime.Value
+| FuncRef : Option _root_.Itasca.runtime.FuncAddr → runtime.Value
+| ExternRef : Option _root_.Itasca.runtime.ExternAddr → runtime.Value
+
+/-- [itasca::runtime::interp::Execution]
+    Source: 'src/runtime/interp/mod.rs', lines 20:0-26:1
+    Visibility: public -/
+structure runtime.interp.Execution where
+  store : Std.Usize
+  slots : alloc.vec.Vec Std.U64
+  frames : alloc.vec.Vec _root_.Itasca.runtime.interp.Frame
+  host_args : alloc.vec.Vec _root_.Itasca.runtime.Value
+  host_results : alloc.vec.Vec _root_.Itasca.runtime.Value
+
+/-- [itasca::runtime::platform::HostError]
+    Source: 'src/runtime/platform.rs', lines 17:0-20:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.platform.HostError where
+| Trap : runtime.platform.HostError
+| StackOverflow : runtime.platform.HostError
+
+/-- [itasca::runtime::platform::InterruptAction]
+    Source: 'src/runtime/platform.rs', lines 9:0-12:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.platform.InterruptAction where
+| Continue : runtime.platform.InterruptAction
+| Terminate : runtime.platform.InterruptAction
+
+/-- Trait declaration: [itasca::runtime::platform::Platform]
+    Source: 'src/runtime/platform.rs', lines 28:0-37:1
+    Visibility: public -/
+structure runtime.platform.Platform (Self : Type) (M : Type) where
+  MemoryBufferInst : runtime.platform.MemoryBuffer M
+  interrupt : Self → Result (_root_.Itasca.runtime.platform.InterruptAction
+    × Self)
+  call_host : Self → _root_.Itasca.runtime.store.Store M → Std.U64 →
+    Slice _root_.Itasca.runtime.Value → Slice _root_.Itasca.runtime.Value →
+    Result ((core.result.Result Unit _root_.Itasca.runtime.platform.HostError)
+    × Self × (_root_.Itasca.runtime.store.Store M) × (Slice
+    _root_.Itasca.runtime.Value))
+
+/-- [itasca::runtime::InstanceAddr]
+    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Visibility: public -/
+structure runtime.InstanceAddr where
+  store : Std.Usize
+  index : Std.Usize
+
+/-- [itasca::runtime::Instantiated]
+    Source: 'src/runtime/mod.rs', lines 55:0-58:1
+    Visibility: public -/
+structure runtime.Instantiated where
+  «instance» : _root_.Itasca.runtime.InstanceAddr
+  start : Option _root_.Itasca.runtime.FuncAddr
+
+/-- [itasca::runtime::Extern]
+    Source: 'src/runtime/mod.rs', lines 107:0-112:1
+    Visibility: public -/
+@[discriminant isize]
+inductive runtime.Extern where
+| Func : _root_.Itasca.runtime.FuncAddr → runtime.Extern
+| Table : _root_.Itasca.runtime.TableAddr → runtime.Extern
+| Memory : _root_.Itasca.runtime.MemoryAddr → runtime.Extern
+| Global : _root_.Itasca.runtime.GlobalAddr → runtime.Extern
+
+/-- [itasca::runtime::platform::VecMemory]
+    Source: 'src/runtime/platform.rs', lines 96:0-98:1
+    Visibility: public -/
+structure runtime.platform.VecMemory where
+  data : alloc.vec.Vec Std.U8
 
 end Itasca

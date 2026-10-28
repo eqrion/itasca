@@ -3,7 +3,7 @@ import Exec.Platform.Alloc
 
 /-! Slot storage growth returns normally under the allocator law. Its only
 rejections are the requested value limit and an actual allocator rejection. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem ensure_loop_effect (before : alloc.vec.Vec U64) (bound : Usize)
@@ -79,4 +79,4 @@ def EnsureEffect {A : Type} (allocator : runtime.platform.Alloc A)
       simp [EnsureEffect, SlotsEffect, Nat.sub_eq_zero_of_le hbound]
       scalar_tac
 
-end Exec.Interp
+end Itasca.Runtime.Interp

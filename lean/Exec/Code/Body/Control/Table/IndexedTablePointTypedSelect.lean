@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.StructuredReaderCompilerTypedSelect
 import Exec.Code.Body.Reader.Common.ReaderExtendedScratch
 import Exec.Code.Body.Reader.Common.ReaderExtendedCodeMonotone
 import Exec.Code.Local.Lowering.Table.ScalarTablePreservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.typed_select {A : Type}
@@ -35,4 +35,4 @@ theorem IndexedTableReaderCompilerPointWasm2.typed_select {A : Type}
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
   exact state.typed_select ops law C (fun h => embedding _ _ _ _ _ h) contextLocals next advance inbounds out
     sourceBound bodyBound byte accepted
-end Exec.Code
+end Itasca.Runtime.Code

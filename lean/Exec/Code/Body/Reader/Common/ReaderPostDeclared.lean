@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Itasca.Binary.Wasm2.EncodingUnique
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact byte provenance identifies the retained instruction with the canonical
@@ -22,4 +22,4 @@ theorem ReaderPostWasm2.declared {data env locals index st out instruction poly 
   simpa only [Wasm2.tokensDeclared_singleton,Wasm2.Token.Declared] using
     ((Wasm2.tokensDeclared_append _ _ _).mp all).2
 
-end Exec.Code
+end Itasca.Runtime.Code

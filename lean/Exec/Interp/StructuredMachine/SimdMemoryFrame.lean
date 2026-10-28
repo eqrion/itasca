@@ -9,7 +9,7 @@ import Exec.Interp.StructuredMachine.SimdExecutionJoin
 import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
 import Exec.Code.Local.Capacity.SimdMeaningBound
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1200000
@@ -134,4 +134,4 @@ theorem step_memory_frame {M P F A : Type}
     apply Abs.Simd.Step.memory sig
     exact Interp.Simd.memory_values_trap _ _ _ after op argument lane.val front values split types source
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

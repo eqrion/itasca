@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.Function
 import Itasca.Support.Result
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- A successful actual finish retains the compiler's function and witnesses
@@ -22,4 +22,4 @@ theorem compiler_finish_accepted {A : Type} (ops : runtime.platform.Alloc A)
       obtain ⟨checked, check, accepted⟩ := bind_ok_inv _ _ _ accepted
       cases checked <;> simp_all
     · simp at accepted
-end Exec.Code
+end Itasca.Runtime.Code

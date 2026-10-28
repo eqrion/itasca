@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
 import Exec.Code.Local.Relations.Common.StatefulLowering
 import Exec.Code.Local.Relations.Calls.IndirectCallLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -31,4 +31,4 @@ theorem compiler_indirect_call_code_mono {A : Type} (ops : runtime.platform.Allo
   · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
     rw [if_neg reach] at accepted
     exact compiler_observe_code_mono ops law before after state status accepted
-end Exec.Code
+end Itasca.Runtime.Code

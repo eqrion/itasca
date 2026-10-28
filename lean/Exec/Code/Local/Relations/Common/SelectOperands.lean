@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SelectLowering
 import Exec.Code.Local.Lowering.Local.LoweringLocal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
@@ -65,4 +65,4 @@ theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
     (selectInstruction (decide (width ty = 2)) left right condition) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨left, right, condition, lp, rp, cp, by simpa only [typed] using lowered success⟩
-end Exec.Code
+end Itasca.Runtime.Code

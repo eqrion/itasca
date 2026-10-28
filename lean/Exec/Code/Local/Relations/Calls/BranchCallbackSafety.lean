@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Control.BranchSafety
 import Exec.Code.Local.Relations.Control.BranchIfSafetyComplete
 import Exec.Code.Local.Callbacks.Common.FixupBudget
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -69,4 +69,4 @@ theorem branch_depth_target (frames : alloc.vec.Vec runtime.compiler.Frame) (dep
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
       exact compiler_observe_stack ops law after state
   · exact compiler_observe_stack ops law compiler state
-end Exec.Code
+end Itasca.Runtime.Code

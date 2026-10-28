@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Initializer
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -137,4 +137,4 @@ theorem synthetic_initializer (law : Platform.AllocCorrect allocator)
       have high : hi = (words[1]?).getD 0#u64 := by simpa [alloc.vec.Vec.deref, finalWords] using hhi
       simp [low, high]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Interp.Relations.InitializerExecute
 
 /-! Exact effects of the two segment-drop instructions, including ordinary
 termination for issued local segment indices. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem bulk_data_drop {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -41,4 +41,4 @@ theorem bulk_element_drop {M : Type} (memory : runtime.platform.MemoryBuffer M)
   step as ⟨segment, back, read, write⟩
   simp [write, read]
 
-end Exec.Store
+end Itasca.Runtime.Store

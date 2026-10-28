@@ -2,7 +2,7 @@ import Exec.Abs.BrTable
 import Exec.Abs.Cumulative.Heap
 import Exec.Abs.Supported.CoreStuck
 import Exec.Abs.Bound
-namespace Exec.Abs.BrTable
+namespace Itasca.Runtime.Abs.BrTable
 open Ownership
 
 /-- Selecting a label only removes the integer selector; all owned references
@@ -43,4 +43,4 @@ theorem covered
     · exact Abs.BinaryInstr.br _
     · exact frame.1 instruction (List.mem_cons_of_mem _ member)
   · exact before.active item (List.mem_cons_of_mem _ member)
-end Exec.Abs.BrTable
+end Itasca.Runtime.Abs.BrTable

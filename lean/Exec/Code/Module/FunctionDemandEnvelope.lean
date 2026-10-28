@@ -1,7 +1,7 @@
 import Exec.Code.Module.PreparedFunctionDemand
 import Exec.Code.Module.PreparedFunctionAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Conservative per-function charges from independent source maxima. -/
@@ -69,4 +69,4 @@ theorem prepared_allowance_le_rate (ctx : code.Context) (length bodyBytes localC
   intro counter
   cases counter <;> simp only [preparedFunctionAllowance,functionDemandRate] <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

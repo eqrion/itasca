@@ -5,7 +5,7 @@ import Exec.Code.Module.CompileStreamSource
 import Exec.Code.Module.InitializerSourceTotal
 import Exec.Code.Module.CompilerLargeEnvironment
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -28,7 +28,7 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
   · simp
   · obtain ⟨⟨codeStart,codeEnd⟩,region,bounds⟩ := WP.spec_imp_exists (code_region_spec bytes)
     obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists module.Env.new.spec
-    simp only [region,Exec.module.Env.new,initialized,bind_ok,uncurry_apply_pair]
+    simp only [region,initialized,bind_ok,uncurry_apply_pair]
     obtain ⟨⟨status,scheduler,env⟩,validated,ready⟩ := WP.spec_imp_exists (streaming codeStart codeEnd storage bounds)
     simp only [initialScheduler] at validated
     simp only [validated]
@@ -63,4 +63,4 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
           rw [lowered]
           cases result <;> cases choice : finalBudget.error <;> simp [choice]
 
-end Exec.Code
+end Itasca.Runtime.Code

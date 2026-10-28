@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredFunction
 import Exec.Code.Local.Relations.Common.CoreFunction
 import Exec.Code.Local.Callbacks.Table.CompilerTables
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Contextual function syntax with the actual retained jump table. The
@@ -26,4 +26,4 @@ def DefinedIndexedFunctionCode
       (signature.results.val.map Itasca.Translate.valueType))
       (signature.params.val.map Itasca.Translate.valueType) declared
       (signature.results.val.map Itasca.Translate.valueType) body compiled epilogue
-end Exec.Code
+end Itasca.Runtime.Code

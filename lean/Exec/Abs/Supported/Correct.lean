@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Correct
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
-open Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- Every successful mutable Core step is source typed and source simulated;
 ordinary and mutable instructions share the same active/suspended-frame model. -/
@@ -26,4 +26,4 @@ theorem step_correct (s next : AState) (typed : CoreTyped s) (covered : Supporte
         · exact Core.instruction_correct source ambient frame rest op after next head typed equation
         · exact nomatch (stuck _ _ _ _ _).symm.trans equation
 
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

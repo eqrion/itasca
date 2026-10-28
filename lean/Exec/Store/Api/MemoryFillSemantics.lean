@@ -1,7 +1,7 @@
 import Exec.Store.Api.MemoryFillEffect
 import Exec.Spec.MemoryFillAlgebra
 import Exec.Store.Api.MemoryInitSemantics
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 private theorem fill_map_set_modify {T U : Type} (decode : T → U) (change : U → U)
@@ -59,4 +59,4 @@ theorem memory_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.ForwardBranchInstructionPrefix
 import Exec.Code.Local.Relations.Control.BranchSuccessConditionalTransfer
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual conditional forward branching checks its condition and transfer,
@@ -55,4 +55,4 @@ theorem compiler_branch_if_forward_open_instructions {A : Type} (ops : runtime.p
       omega
     · exact .inr (by rw [← siteAt]; exact pending)
 
-end Exec.Code
+end Itasca.Runtime.Code

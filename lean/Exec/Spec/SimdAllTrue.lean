@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShiftSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def allTrueSource (ty : Jnn) : admininstr :=
@@ -58,4 +58,4 @@ theorem all_true_step (ty : Jnn) (bits : BitVec 128) (answer : Bool)
       exact nonzero _ member
     have impossible := truth.mpr yes
     cases impossible
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

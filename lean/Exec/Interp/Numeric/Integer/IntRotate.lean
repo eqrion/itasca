@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.IntShift
 import Exec.Spec.IntegerRotate
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalar_i32_rotl_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -106,4 +106,4 @@ theorem scalar_i64_rotr_sound {F : Type} (ops : runtime.platform.FloatOps F) (a 
   rw [same]
   exact Spec.integer_rotright_relation .I64 a.bv b.val
 
-end Exec.Interp
+end Itasca.Runtime.Interp

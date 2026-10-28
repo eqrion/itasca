@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Common.NumericSafety
 import Exec.Code.Local.Lowering.Float.FloatLowering
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_float_total {A} (ops : runtime.platform.Alloc A)
@@ -43,4 +43,4 @@ open Aeneas Aeneas.Std
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Exec.Code
+end Itasca.Runtime.Code

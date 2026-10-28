@@ -1,7 +1,7 @@
 import Exec.Interp.Machines.Uniform.UniformControl
 import Exec.Abs.Core.PositiveControl
-namespace Exec.Interp
-open Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp
+open Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 /-- An unchanged source state cancels the old source potential. Hence an
 ordinary-phase silent dispatch must move forward, independent of code size. -/
@@ -27,4 +27,4 @@ theorem UniformConcreteSim.single {beforePC afterPC beforePending afterPending b
     UniformConcreteSim beforePC afterPC beforePending afterPending before after events :=
   .of_steps (by omega : 0 < 1)
     (by simpa only [List.append_nil] using StepsHN.cons step (StepsHN.refl (stepH_wf step).2))
-end Exec.Interp
+end Itasca.Runtime.Interp

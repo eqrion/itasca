@@ -2,7 +2,7 @@ import Exec.Generated.Equations
 import Itasca.Wasm2.Trace.Correspondence
 import Itasca.Profile.EntrySound
 import Itasca.Stream.Batch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.Wasm2
 
@@ -140,4 +140,4 @@ theorem typed_body_wasm2 {V : Type} (visitor : code.OpVisitor V)
       obtain ⟨rfl, ft, lookup⟩ := start
       exact typed_loop_wasm2 visitor data env ctx index _ before after
         (State.start data env .Wasm2 ctx.locals index ft lookup (by scalar_tac)) tail
-end Exec.Code
+end Itasca.Runtime.Code

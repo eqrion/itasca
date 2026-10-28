@@ -1,7 +1,7 @@
 import Exec.Abs.State
 import SpecExt.Builtins.Float.Decoding
 
-namespace Exec.Abs.Float
+namespace Itasca.Runtime.Abs.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Scalar float syntax, independent of compiler bytecode and native operations. -/
@@ -127,4 +127,4 @@ theorem Instruction.opcode_bound (op : Instruction) : op.opcode < 65536 := by
 
 
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

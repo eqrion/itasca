@@ -229,31 +229,22 @@ class AuditTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'distinct builtin symbols'):
                     audit.check_builtin_inventory(self.root)
 
-    def test_validator_mapping_only_in_external_adapters(self):
-        for name in ['Exec.Generated.FunsExternal', 'Exec.Generated.TypesExternal']:
-            audit.check_layer(name, 'Itasca.Generated.Types', 'Exec')
-        with self.assertRaises(ValueError):
-            audit.check_layer('Exec.Generated.Funs', 'Itasca.Generated.Funs', 'Exec')
-
-    def test_generated_reuse_boundary_applies_to_all_execution_layers(self):
-        for source in ['Exec.Representation.Store', 'Exec.Code.Local.Relations.A',
-                       'Exec.Interp.Relations.A', 'Exec.Store.Api.A', 'Exec.Theorems.A']:
+    def test_generated_functions_only_through_equations(self):
+        audit.check_layer('Exec.Generated.Equations', 'Itasca.Generated.Funs', 'Exec')
+        for source in ['Exec.Representation.Store', 'Exec.Interp.Relations.A', 'Exec.Store.Api.A']:
             with self.subTest(source=source):
-                with self.assertRaises(ValueError):
-                    audit.check_layer(source, 'Itasca.Generated.Types', 'Exec')
+                audit.check_layer(source, 'Itasca.Generated.Types', 'Exec')
+                with self.assertRaisesRegex(ValueError, 'import Exec.Generated.Equations'):
+                    audit.check_layer(source, 'Itasca.Generated.Funs', 'Exec')
+        with self.assertRaises(ValueError):
+            audit.check_layer('Exec.Abs.State', 'Itasca.Generated.Types', 'Exec')
 
     def test_public_import_cannot_bypass_generated_boundary(self):
-        for source, dependency in [
-            ('Exec.Generated.Funs', 'Itasca.Generated.Types'),
-            ('Exec.Generated.TypesExternal', 'Itasca.Wasm2.Soundness'),
-            ('Exec.Generated.FunsExternal', 'Itasca.Stream.Soundness'),
-        ]:
-            with self.subTest(source=source, dependency=dependency):
-                self.put(dependency, '')
-                self.put(source, f'module\npublic import {dependency}\n@[expose] public section\n')
-                with self.assertRaisesRegex(ValueError, 'outside the Exec.Generated layer'):
-                    self.check('Exec')
-                (self.root / Path(*source.split('.'))).with_suffix('.lean').unlink()
+        source, dependency = 'Exec.Generated.Equations', 'Itasca.Wasm2.Soundness'
+        self.put(dependency, '')
+        self.put(source, f'module\npublic import {dependency}\n@[expose] public section\n')
+        with self.assertRaisesRegex(ValueError, 'outside the Exec.Generated layer'):
+            self.check('Exec')
 
     def test_templates_are_excluded_but_cannot_be_imported(self):
         for name in ['FunsExternal_Template', 'TypesExternal_Template']:

@@ -3,7 +3,7 @@ import Exec.Store.Instantiation.PreparedGlobalTypes
 import Exec.Code.Module.SegmentPayloadBounds
 import Exec.Code.Module.CompileCache
 import Exec.Code.Module.CompileSemantic
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem PreparedRun.global_types {M P F A : Type}
@@ -34,4 +34,4 @@ theorem PreparedRun.global_types {M P F A : Type}
       (after := {trace.dataStore with instance_items := trace.charged}) rfl (by simp),
     by simpa only [trace.source, ElementTypeMap] using elements⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

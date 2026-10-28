@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Local.ReaderLocalSafety
 import Exec.Code.Body.Reader.Common.ReaderLiteralSafety
 import Exec.Code.Body.Reader.Common.ReaderReferenceSafety
 import Itasca.Wasm2.Scalar.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_scalar_total {A} (ops : runtime.platform.Alloc A)
@@ -73,4 +73,4 @@ theorem compiler_reader_scalar_total {A} (ops : runtime.platform.Alloc A)
     scalar_tac
   rw [code.step.reserved _ st data env ctx opcode compiler reserved]
   simp
-end Exec.Code
+end Itasca.Runtime.Code

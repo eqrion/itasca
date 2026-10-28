@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Integer.IntegerBinary
 import Exec.Interp.Numeric.Integer.IntCompareSigned
 import Exec.Abs.Numeric.Compare
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def compareOpcode (ty : Inn) (op : relop_Inn) : U16 :=
@@ -186,4 +186,4 @@ theorem scalar_compare_exact {F : Type} (floats : runtime.platform.FloatOps F)
   refine ⟨value, rfl, ?_⟩
   have same := Spec.integer_relop_deterministic relation (Abs.Numeric.compare_relation ty op (integerWord ty a) (integerWord ty b))
   simpa only [num_.mk_num__0.injEq, uN.mk_uN.injEq, true_and] using same
-end Exec.Interp
+end Itasca.Runtime.Interp

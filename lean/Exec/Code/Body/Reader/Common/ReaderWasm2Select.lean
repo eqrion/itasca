@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Local.ReaderWasm2Local
 import Exec.Code.Local.Relations.Common.KnownStackTransfer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_select_wasm2 {data env locals index st}
@@ -38,4 +38,4 @@ theorem reader_select_wasm2 {data env locals index st}
   · simpa [controls] using blocks
   · exact stack
   · exact encoded.declared _
-end Exec.Code
+end Itasca.Runtime.Code

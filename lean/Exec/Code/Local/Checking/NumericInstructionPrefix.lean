@@ -2,7 +2,7 @@ import Exec.Code.Local.Checking.OpenInstructionCompiler
 import Exec.Code.Local.Lowering.Common.NumericInstructionPublication
 import Exec.Code.Local.Lowering.Table.ScalarTablePreservation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Numeric
 
 /-- Observation preserves every instruction's operand check and pending branch
@@ -24,4 +24,4 @@ theorem compiler_observe_open_instructions {A : Type} (ops : runtime.platform.Al
   have frames : after.frames = before.frames := by rw [frame]
   simpa only [PendingInstructionSite,frames] using owned
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixLocal
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixDeadLocal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.local_get {jumpTables : List U32} {A : Type}
@@ -94,4 +94,4 @@ theorem StructuredReaderCompilerStateWasm2.local_tee {jumpTables : List U32} {A 
       state.compiled reach byte accepted
     exact ⟨localIndex, values, state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

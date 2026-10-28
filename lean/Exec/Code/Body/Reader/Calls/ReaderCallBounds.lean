@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderSafety
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
 import Itasca.Wasm2.Control.Total
 import Itasca.Wasm2.Scalar.ReadersTotal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 2000000
 attribute [local step] code.pop_with_type.total code.pop_types.total
@@ -22,4 +22,4 @@ theorem reader_call_indirect_info_bound (st : code.BodyState) (data : Slice U8) 
   unfold code.call_indirect_info
   step*
 
-end Exec.Code
+end Itasca.Runtime.Code

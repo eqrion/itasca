@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.Machines.Slice.SliceMeasure
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem StructuredMachine.Advance.widen {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation} {store : runtime.store.Store M} {exec : runtime.interp.Execution}
     {expected : List valtype} {small large pc : Nat} {pending : Bool} {before : Abs.AState}
     (advance : StructuredMachine.Advance view code store exec expected small pc pending before) (bound : small ≤ large) :
@@ -24,4 +24,4 @@ theorem SupportedStepOutcome.widen {M P A : Type} {allocator : runtime.platform.
     exact StructuredMachine.Advance.widen transition bound
   | Err error => simpa only [status] using transition
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

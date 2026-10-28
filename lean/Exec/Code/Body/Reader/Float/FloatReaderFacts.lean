@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Abs.Float
 
 /-- All base float instructions use the canonical scalar reader
@@ -33,4 +33,4 @@ theorem float_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
   | reinterpretFloat source => cases source <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
   | reinterpretInt source => cases source <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
   | promote | demote => skip <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-end Exec.Code
+end Itasca.Runtime.Code

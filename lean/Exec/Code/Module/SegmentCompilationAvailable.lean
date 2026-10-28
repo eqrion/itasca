@@ -1,6 +1,6 @@
 import Exec.Code.Module.SegmentCompilation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def segmentCompilationDemand (module : runtime.compiler.ExecutableModule) : Nat :=
@@ -96,4 +96,4 @@ theorem segment_compilation_available {A : Type} (ops : runtime.platform.Alloc A
     unfold segmentCompilationDemand
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

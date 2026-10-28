@@ -5,7 +5,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Abs.Numeric.Decode
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem linearEmission_not_select {locals before after emitted}
@@ -32,4 +32,4 @@ theorem scalarEmission_select_inv {C before after emitted}
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
 
-end Exec.Interp
+end Itasca.Runtime.Interp

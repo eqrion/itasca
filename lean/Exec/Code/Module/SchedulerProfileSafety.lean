@@ -1,7 +1,7 @@
 import Exec.Code.Module.SchedulerSubmissionSafety
 import Exec.Code.Module.Stream
 import Itasca.Stream.InvariantDriver
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -86,4 +86,4 @@ theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platfo
         exact (ModuleEnv.profile_accepted_entry_conditions bytes env next profile bounded accepted).2))
   intro out fresh accepted
   exact (fresh accepted).1
-end Exec.Code
+end Itasca.Runtime.Code

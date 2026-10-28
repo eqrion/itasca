@@ -2,7 +2,7 @@ import SpecExt.Builtins.Float.Promotion
 import Exec.Interp.Numeric.Float.FloatPromoteLoop
 import Exec.Interp.Numeric.Float.FloatCompareBits
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem promote_sound (bits : U32) : runtime.interp.float.promote bits ⦃ result =>
@@ -108,4 +108,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   step with promote_sound (UScalar.cast .U32 a) as ⟨value, chosen⟩
   exact ⟨value, rfl, chosen⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

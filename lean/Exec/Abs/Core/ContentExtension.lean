@@ -1,7 +1,7 @@
 import Exec.Abs.Core.Typing
 
-namespace Exec.Abs
-open Exec.Spec
+namespace Itasca.Runtime.Abs
+open Itasca.Runtime.Spec
 
 theorem globalinst_typed_extend {before after : store} (extension : Extend_store before after)
     {object ty} (typed : Globalinst_ok before object ty) : Globalinst_ok after object ty := by
@@ -56,4 +56,4 @@ theorem StoreContentsTyped.global_replacement {before after : store}
     have wf : wf_datainst entry := by cases typed; assumption
     exact datainst_ok_extend extension (extend_data_refl entry wf) typed
 
-end Exec.Abs
+end Itasca.Runtime.Abs

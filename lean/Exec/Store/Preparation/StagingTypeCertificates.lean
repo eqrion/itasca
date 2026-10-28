@@ -4,7 +4,7 @@ import Exec.Store.Initialization.ElementTypes
 import Exec.Store.Initialization.ElementContentEffect
 import Exec.Store.Initialization.DataContentLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem storeParts_inj {M P : Type} (a b : runtime.store.Store M) (p q : P)
@@ -19,4 +19,4 @@ theorem storeStateParts_inj {M : Type} (a b : runtime.store.Store M)
   cases a; cases b
   simp [storeStateParts]
 
-end Exec.Store
+end Itasca.Runtime.Store

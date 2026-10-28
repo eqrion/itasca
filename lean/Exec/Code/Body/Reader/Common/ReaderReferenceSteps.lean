@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_ref_func_wasm2 {data env locals index st}
@@ -86,4 +86,4 @@ theorem reader_ref_is_null_wasm2 {data env locals index st}
       p.current.ctrl.polymorphic_base values .instr_case_42 encoded newTyped newControls newBlocks newValues
       (fun h => nomatch h) (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices])
 
-end Exec.Code
+end Itasca.Runtime.Code

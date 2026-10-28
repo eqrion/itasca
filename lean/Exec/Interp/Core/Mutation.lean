@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Interp.State.GlobalMutation
 import Exec.Abs.Ownership.Core
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A live source value is already present in an operand or local region, or
@@ -26,4 +26,4 @@ inductive CoreStoreMutation {M : Type} (view : M → Slice U8) (source : Abs.ASt
   | global {after value} (live : CoreLiveValue source value) (wellFormed : wf_val value)
       (mutation : GlobalMutation before after value) : CoreStoreMutation view source before after
 
-end Exec.Interp
+end Itasca.Runtime.Interp

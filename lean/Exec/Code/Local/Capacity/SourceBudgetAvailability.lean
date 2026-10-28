@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.BudgetEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A source-byte allowance for every compiler counter, relative to the
@@ -47,4 +47,4 @@ theorem SourceCompilationBudget.room {A : Type}
   rw [frames]
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

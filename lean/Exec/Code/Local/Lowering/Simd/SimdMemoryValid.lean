@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
 import Itasca.Binary.Wasm2.SimdBitsMeaning
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd SpecExt
 
 theorem simd_memory_lane_valid (op : MemoryOperation) (C : context) (argument : memarg) (lane : laneidx)
@@ -15,4 +15,4 @@ theorem simd_memory_lane_valid (op : MemoryOperation) (C : context) (argument : 
   all_goals norm_num at *
   all_goals omega
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.MemoryAvailability
 import Exec.Code.Body.Reader.Memory.MemoryReaderFacts
 import Itasca.Visitor.EventDispatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -67,4 +67,4 @@ theorem compiler_reader_memory_store_available {A V : Type} (ops : runtime.platf
   rw [(memory_store_reader_facts ops compiler final op arg).2.2.2.2.1]
   exact compiler_memory_store_available ops bound available compiler final demand front op arg.offset arg.align layout
 
-end Exec.Code
+end Itasca.Runtime.Code

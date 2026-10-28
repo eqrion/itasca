@@ -1,5 +1,5 @@
 import Exec.Spec.Float
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins.Float
 
 theorem float_abs_wf (width : Nat) (a : fN) (ha : wf_fN width a) :
@@ -52,4 +52,4 @@ theorem float_f64_copysign_relation (a b : fN) (ha : wf_fN 64 a) :
   apply fun_binop_.fun_binop__case_37
   · exact float_copysign_wf 64 a b ha
   · exact float_results_wf .F64 _ (float_copysign_wf 64 a b ha)
-end Exec.Spec
+end Itasca.Runtime.Spec

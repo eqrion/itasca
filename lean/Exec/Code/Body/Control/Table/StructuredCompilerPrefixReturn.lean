@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerTerminalMetadata
 import Exec.Code.Local.Callbacks.Calls.CallbackSources
 import Exec.Code.Local.Callbacks.Calls.CallbackCursor
 import Exec.Code.Local.Lowering.Control.LoweringReturn
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.return_live {jumpTables : List Aeneas.Std.U32} {A : Type} (ops : runtime.platform.Alloc A)
@@ -66,4 +66,4 @@ theorem StructuredCompilerPrefix.return_dead {jumpTables : List Aeneas.Std.U32} 
   have deadAfter : after.reachable = false := by rw [frame]; exact dead
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip .RETURN dead deadAfter ordinary code sources consumed (by rw [cursor]), deadAfter⟩
-end Exec.Code
+end Itasca.Runtime.Code

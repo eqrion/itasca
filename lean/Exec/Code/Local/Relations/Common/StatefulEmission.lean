@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Common.StatefulOpcode
 import Exec.Code.Local.Relations.Common.ScalarEmission
 import Exec.Code.Local.Relations.Calls.IndirectCallEmissionTransport
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Reference and bulk instructions retain their exact function-local pair table.
@@ -20,4 +20,4 @@ inductive StatefulEmission (pairs : List (U32 × U32)) (C : context) :
       StatefulEmission pairs C (stack ++ input) op.source
         [statefulInstruction op first second a entry] (stack ++ output)
 
-end Exec.Code
+end Itasca.Runtime.Code

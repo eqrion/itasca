@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatCompareBits
 import SpecExt.Builtins.Float.RawCompare
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins.Float
 
 theorem compare_float_raw32 (op : U16) (a b : U64)
@@ -132,4 +132,4 @@ theorem compare_float_raw64 (op : U16) (a b : U64)
     by_cases hlt : rawLess 9223372036854775808 a.val b.val = true <;> simp [hlt, rawCompare, na, nb]
   · with_unfolding_all change (Result.ok (decide (¬ rawLess 9223372036854775808 a.val b.val = true))) ⦃ result => result = rawCompare 9223372036854775808 9218868437227405312 5 a.val b.val ⦄
     simp [rawCompare, na, nb]
-end Exec.Interp
+end Itasca.Runtime.Interp

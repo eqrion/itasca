@@ -3,7 +3,7 @@ import Exec.Code.Local.Lowering.Float.FloatEffects
 import Exec.Code.Body.Reader.Float.FloatReaderFacts
 import Exec.Code.Body.Source.TypedLowering
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_float_wasm2 {data env locals index st}
@@ -58,4 +58,4 @@ theorem reader_emit_float_wasm2 {data env locals index st}
   exact ScalarEmission.float front op left right
     (by simpa only [contextLocalsCode] using leftPosition) rightPosition
 
-end Exec.Code
+end Itasca.Runtime.Code

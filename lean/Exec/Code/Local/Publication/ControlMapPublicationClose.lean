@@ -1,6 +1,6 @@
 import Exec.Code.Local.Publication.ControlMapPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Popping the innermost owner and recording its bounded exit preserves all
@@ -96,4 +96,4 @@ theorem ControlMapPublication.close_last_publish {A : Type} {before after : runt
     have inactive : other ∉ activeControlMaps before := by simpa only [owners,List.mem_singleton] using Ne.symm same
     exact (held.closed other map lookup inactive).publish code start finish
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Api.TableFillLoop
 import Exec.Store.Initialization.BulkTable
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableFillEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
@@ -64,4 +64,4 @@ theorem bulk_table_fill {M : Type} (memory : runtime.platform.MemoryBuffer M)
     rw [rangeEffect]
     simp_all [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TableFillEffect]
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Source.SourceOpcodeDescriptors
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 8192
 
@@ -117,4 +117,4 @@ theorem ReservedSourceOpcode.rejects {V : Type} (source : code.OpVisitor V)
       code.step_numeric.unrecognized source st.core opcode before absent] at raw
     simp at raw
 
-end Exec.Code
+end Itasca.Runtime.Code

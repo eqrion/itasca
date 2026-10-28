@@ -1,7 +1,7 @@
 import Exec.Generated.Equations
 import Itasca.Support.Result
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 abbrev checkInstructionBody (f : runtime.bytecode.CompiledFunction)
@@ -197,5 +197,5 @@ theorem well_formed_fetched (f : runtime.bytecode.CompiledFunction)
   have same : actual = instruction := Option.some.inj (found.symm.trans fetched)
   exact same ▸ checked
 
-end Exec.Code
+end Itasca.Runtime.Code
 

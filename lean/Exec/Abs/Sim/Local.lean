@@ -2,8 +2,8 @@ import Exec.Abs.Sim.Basic
 import Exec.Abs.Typing
 import Exec.Spec.Counted
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The read uses the active frame's locals, then lifts through every surrounding
 label and caller. Bounds and syntax well-formedness remain explicit. -/
@@ -154,4 +154,4 @@ theorem local_tee_simulation (s : store) (ambient : frame) (f : AFrame)
     hs ha hf hl valuesWf hx hc hr heights' hi32
   exact .cons expanded (.cons write (.refl (stepH_wf write).2))
 
-end Exec.Abs
+end Itasca.Runtime.Abs

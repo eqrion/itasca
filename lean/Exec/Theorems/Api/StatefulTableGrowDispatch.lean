@@ -1,8 +1,8 @@
 import Exec.Theorems.Api.StatefulGrowthSlots
 import Exec.Interp.State.StatefulOperandValues
 import Exec.Interp.State.StatefulLookup
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp Exec.Interp.Stateful
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_table_grow_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -67,4 +67,4 @@ theorem stateful_table_grow_dispatch {M P F A : Type} (memory : runtime.platform
         (by rw [←referenceEq,deltaValue];exact values) slots position)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨success,rfl,trivial,metadata,result,written,⟨address.index,object,_,_,issued,growth,by rw [←referenceEq,values];simp⟩,represented,by simpa only [indexEq] using transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Fetch
 import Exec.Code.Local.Lowering.Simd.SimdConstructor
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -47,4 +47,4 @@ theorem step_simd_of_view {M P F A : Type}
     instruction op dst a entry view]
   obtain ⟨⟨result,execution,storeNext⟩,returned,property⟩ := WP.spec_imp_exists (handler next nextValue)
   simpa only [returned,bind_ok,uncurry_apply_pair,WP.spec_ok] using property
-end Exec.Interp
+end Itasca.Runtime.Interp

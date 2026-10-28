@@ -1,5 +1,5 @@
 import Exec.Spec.SimdFloatBinarySource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem float_binary_result_member (ty : Fnn) (op : vbinop_Fnn_N) (x y result : BitVec 128)
@@ -36,4 +36,4 @@ theorem float_binary_step (ty : Fnn) (op : vbinop_Fnn_N) (x y result : BitVec 12
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) (float_binary_source_wf ty op)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

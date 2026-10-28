@@ -3,7 +3,7 @@ import Exec.Code.Body.Relations.Common.BodyCheckedWasm2
 import Exec.Code.Module.PreparedPublicationStart
 import Exec.Code.Local.Checking.FunctionStartExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent validity and source-only allocation/resource room establish
@@ -72,4 +72,4 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     rw [code.validate_body_with.wasm1_of_body _ _ _ _ _ _ result limits room.size body run, WP.spec_ok]
     exact post
 
-end Exec.Code
+end Itasca.Runtime.Code

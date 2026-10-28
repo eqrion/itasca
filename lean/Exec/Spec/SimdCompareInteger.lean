@@ -1,5 +1,5 @@
 import Exec.Spec.IntegerSigned
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def integerLaneCompare {width : Nat} (op : vrelop_Jnn_N) (a b : BitVec width) : Bool :=
   match op with
@@ -51,4 +51,4 @@ theorem integer_lane_compare_relation {width : Nat} (op : vrelop_Jnn_N) (a b : B
     | U => exact .fun_ige__case_0 _ _ _ (boolean_u32_wf _)
     | S => exact .fun_ige__case_1 _ _ _ _ _ (bitvec_signed _ b) (bitvec_signed _ a) (boolean_u32_wf _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

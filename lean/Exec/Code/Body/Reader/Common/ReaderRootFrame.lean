@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
 import Exec.Code.Local.Callbacks.Control.ScopeFrameStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem paired_head_right {α β : Type} {R : α → β → Prop} {left right}
@@ -49,4 +49,4 @@ theorem reader_root_frame_wasm2 {data env sourceLocals index st}
   · simpa only [List.head?_eq_getElem?] using frameHead
   · rw [framed.results, matched.results, outputs]
 
-end Exec.Code
+end Itasca.Runtime.Code

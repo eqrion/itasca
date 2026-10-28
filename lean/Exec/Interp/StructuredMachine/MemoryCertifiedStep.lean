@@ -4,9 +4,9 @@ import Exec.Interp.StructuredMachine.MemoryPrepare
 import Exec.Interp.Memory.MemoryCoreStep
 import Exec.Interp.Memory.MemoryCoreResult
 import Exec.Interp.Memory.MemoryLoadStepFootprint
-namespace Exec.Interp.StructuredMachine.Memory
-open Exec.Interp.MemoryDescriptor
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
+open Itasca.Runtime.Interp.MemoryDescriptor
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem coreFramePoint_load_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -121,4 +121,4 @@ theorem coreFramePoint_store_step {M P F A : Type} (memory : runtime.platform.Me
       · exact corePoint_store_continue point extension front _ after values heights tail pc pcNext
     · exact Or.inr trapped
 
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

@@ -35,7 +35,7 @@ import Exec.Store.Invariant.InstantiationCode
 import Exec.Code.Module.CompileSlice
 import Exec.Store.Instantiation.PreparedSourceInstantiation
 import Exec.Store.Instantiation.InstantiateLinkedBounds
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The generated instantiation configuration at the actual publication
@@ -47,4 +47,4 @@ def sourceInstantiationConfiguration {M : Type} (view : M → Slice U8) (code : 
     ((Spec.Segment.dataPrograms (raw.data.map ModuleData.translate)).flatten.map admininstr_instr ++
       (raw.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList)⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

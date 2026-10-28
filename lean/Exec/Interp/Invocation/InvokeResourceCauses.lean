@@ -6,7 +6,7 @@ import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Relations.ExecutionLoop
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Exact source-signature causes introduced by public invocation setup and
@@ -23,4 +23,4 @@ def InvocationResourceCause {A M : Type} (allocator : runtime.platform.Alloc A)
         allocator.reserve results n = .ok (false, results))
   | _ => False
 
-end Exec.Interp
+end Itasca.Runtime.Interp

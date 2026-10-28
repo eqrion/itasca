@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredElseEvidence
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A callback may change relocation lists while preserving the resolved
@@ -25,4 +25,4 @@ theorem StructuredUniversalElse.resolved_append
   have prior := invariant label labels previous oldPlans oldShape parentShapes
   rw [codeEq]
   exact (prior.extend suffix).advance instruction
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderKnownFronts
 import Exec.Code.Body.Reader.Common.ReaderEnterStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderEnterPostWasm2.known_fronts {data env locals index st out form bt ins outs remaining base}
@@ -22,4 +22,4 @@ theorem ReaderEnterPostWasm2.known_fronts {data env locals index st out form bt 
   have transfer := post.popped
   rw [live entered] at transfer
   exact concreteStack_append.mpr ⟨knownParts.1, concrete_stack_transfer knownParts.2 transfer⟩
-end Exec.Code
+end Itasca.Runtime.Code

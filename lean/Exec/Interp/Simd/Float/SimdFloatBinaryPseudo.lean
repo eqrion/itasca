@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatBinaryWord
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd Platform
 
 theorem float_binary_pmin {F : Type} (floats : runtime.platform.FloatOps F)
     (ty : Fnn) (a b : U64)
@@ -56,4 +56,4 @@ theorem float_binary_word {F : Type} (floats : runtime.platform.FloatOps F)
     | exact float_binary_pmax floats ty a b aBound bBound
     | exact float_binary_native_word floats laws ty _ a b (by trivial) aBound bBound
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

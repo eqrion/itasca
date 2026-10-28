@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Integer.SimdWidenWord
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 theorem memory_extend_loop (op width i : U32) (x initial : U128)
     (positive : 0 < width.val) (widthBound : width.val ≤ 32)
@@ -52,4 +52,4 @@ theorem memory_extend_loop (op width i : U32) (x initial : U128)
     · have finished : index.val=64/width.val := by scalar_tac
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

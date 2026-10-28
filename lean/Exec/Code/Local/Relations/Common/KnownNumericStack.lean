@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.KnownPopStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 theorem pop_with_type_known (st after : code.OpIterState) (outer segment : List code.StackType)
@@ -19,4 +19,4 @@ theorem pop_with_type_known (st after : code.OpIterState) (outer segment : List 
   exact ⟨rest, controls, position, afterValues, length, afterValues'.symm ▸
     concreteStack_append.mpr ⟨(concreteStack_append.mp (values ▸ known)).1, restKnown⟩⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

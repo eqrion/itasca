@@ -1,7 +1,7 @@
 import Exec.Abs.Stateful.Signature
 import Exec.Abs.Safety
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 private theorem lookup_eq {α : Type} [Inhabited α] (values : List α) (index : Nat) (value : α)
     (bound : index < values.length) (read : values[index]! = value) : values[index]? = some value := by
@@ -16,4 +16,4 @@ theorem Signature.of_typed {C : context} {op : Instruction} {input output : List
     | assumption
     | (apply lookup_eq <;> assumption)
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

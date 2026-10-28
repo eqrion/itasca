@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Control.ScopeFrameSelect
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Control.ReaderBranchEffects
 import Exec.Code.Body.Callbacks.Common.CompilerPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_layout_wasm2 {data env locals index st}
@@ -27,4 +27,4 @@ theorem reader_br_layout_wasm2 {data env locals index st}
   refine ⟨scope, discarded, scopeAt, ?_⟩
   simpa only [values, wasm2_spine_values spine, List.flatMap_def] using whole
 
-end Exec.Code
+end Itasca.Runtime.Code

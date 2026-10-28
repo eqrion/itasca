@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.BranchTableBuild
 import Exec.Code.Local.Callbacks.Control.ScopeFrameElse
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem paired_set_right {α β : Type} {R : α → β → Prop} {left right}
@@ -54,4 +54,4 @@ theorem TableTargetsBuilt.frame_length {A : Type}
   induction built with
   | nil => rfl
   | cons _ _ _ _ _ _ effect rest ih => exact ih.trans effect.frame_length
-end Exec.Code
+end Itasca.Runtime.Code

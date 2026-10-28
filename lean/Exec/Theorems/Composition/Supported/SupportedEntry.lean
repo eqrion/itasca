@@ -6,7 +6,7 @@ import Exec.Interp.StructuredMachine.CallLookup
 
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Abs.Supported.Invoke
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- A real defined-function call establishes the complete mutable-machine entry
@@ -73,4 +73,4 @@ theorem call_defined_supported_entry {M P F A : Type}
   · exact ⟨rfl,⟨typed,Store.decodeStore_contents_typed view code store shaped sourceSyntax bounds⟩,covered,Abs.entry_result _ _ _ _ _ _ _ _,stack,cursor⟩
   · exact stateful_entry_owned shaped ambient address.index.val (Store.decodeInstance store inst)
       (signature.results.val.map Interp.sourceType) body args.val (declared.map local.LOCAL) defaults owned default
-end Exec.Theorems
+end Itasca.Runtime.Theorems

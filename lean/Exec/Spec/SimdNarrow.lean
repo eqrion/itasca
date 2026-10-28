@@ -1,5 +1,5 @@
 import Exec.Spec.SimdQ15
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem unsigned_saturate_bits (width : Nat) (x : Int) :
@@ -15,7 +15,7 @@ def narrowBits (width : Nat) (signed : Bool) {input : Nat} (a : BitVec input) : 
 theorem narrow_bits_source (width : Nat) (signed : Bool) {input : Nat} (a : BitVec input) :
     uN.mk_uN (narrowBits width signed a).toNat =
       narrow__ input width (if signed then .S else .U) (.mk_uN a.toNat) := by
-  simp only [narrow__,proj_uN_0,Exec.Spec.signedValue_bitvec,narrowBits]
+  simp only [narrow__,proj_uN_0,Itasca.Runtime.Spec.signedValue_bitvec,narrowBits]
   cases signed
   · exact unsigned_saturate_bits width a.toInt
   · exact signed_saturate_bits width a.toInt
@@ -48,4 +48,4 @@ def narrowResult (ty : NarrowWidth) (signed : Bool) (x y : BitVec 128) : uN :=
   inv_lanes_ (shapeOf (lanetype_Jnn ty.output))
     (Map (lane_.mk_lane__0 ty.output) (narrowWords ty signed x) ++ Map (lane_.mk_lane__0 ty.output) (narrowWords ty signed y))
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

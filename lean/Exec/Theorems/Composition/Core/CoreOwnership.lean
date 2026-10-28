@@ -1,7 +1,7 @@
 import Exec.Abs.Ownership.Core
 import Exec.Store.Invariant.ValueShape
 import Exec.Interp.Relations.ReferenceArguments
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The two reference namespaces are measured independently. -/
@@ -65,8 +65,8 @@ theorem owned_reference_bound {M : Type} (store : runtime.store.Store M) (value 
 theorem owned_result_fits {M : Type} (store : runtime.store.Store M) (value : val)
     (owned : Abs.Ownership.ValueOwned (ownershipBounds store) value) : Interp.ResultIndexFits value :=
   Interp.resultIndexFits_of_reference_bound value (owned_reference_bound store value owned)
-end Exec.Store
-namespace Exec.Theorems
+end Itasca.Runtime.Store
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Issued arguments, default locals, and actual stored globals establish the
@@ -86,4 +86,4 @@ theorem core_entry_owned {M : Type} {view : M → Slice U8} {code : Store.CodeIn
   subst frame
   exact ⟨Abs.Ownership.valuesOwned_append.mpr ⟨Store.source_values_owned store args owned,
     Abs.Ownership.defaultLocals_ownership created⟩,Abs.Ownership.valuesOwned_nil _⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_end_root_wasm2 {data env locals index st}
@@ -32,4 +32,4 @@ theorem step_end_root_wasm2 {data env locals index st}
   obtain ⟨pair,read,_⟩ := reader_body_success _ _ _ _ _ _ accepted
   exact reader_end_root_wasm2 p single read
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerEnterMetadata
 import Exec.Code.Local.Relations.Control.ControlCursor
 import Exec.Code.Local.Relations.Control.ControlSources
 import Exec.Code.Local.Relations.Control.ControlObservedLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A literal successful BLOCK callback lifts its exact emitted frame to the
@@ -65,4 +65,4 @@ theorem structured_callback_block_prefix {jumpTables : List U32} {emit : List va
     (by simpa [child, SourceScope.enterBlock, SourceScope.arguments, SourceScope.input] using oldTypes.symm)
     sources (by simp) consumed (by rw [cursor])
 
-end Exec.Code
+end Itasca.Runtime.Code

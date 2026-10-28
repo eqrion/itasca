@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.StructuredCall
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem FrameStackRel.source_base {M : Type}
@@ -18,4 +18,4 @@ theorem FrameStackRel.source_base {M : Type}
       simpa only [frames,List.getLast?_concat,Option.some.injEq] using top
     subst actual
     exact saved_source_base saved
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

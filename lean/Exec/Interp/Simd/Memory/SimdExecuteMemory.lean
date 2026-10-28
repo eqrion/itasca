@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdOperandsBounded
 import Exec.Interp.Simd.Common.SimdExecutePure
 import Exec.Platform.Memory
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -118,4 +118,4 @@ theorem execute_simd_pure_memory_bounded {M F : Type}
     · simp [memBack]
     simp [SlotsEffect,simdResultSlots,zeroNat,notTwo]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

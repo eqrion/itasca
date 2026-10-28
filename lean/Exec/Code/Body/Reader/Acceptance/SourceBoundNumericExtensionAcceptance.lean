@@ -4,7 +4,7 @@ import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Capacity.BodyReplay
 import Exec.Code.Local.Demand.RecordedDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent source sign validation and source-byte room construct
@@ -111,4 +111,4 @@ theorem IndexedTableReaderCompilerPointWasm2.saturating_available_from_source {A
     ⟨sourceLocals,ft.results⟩ op extension subopcode prefixEnd subopcodeEq decoded demand state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) byte canonical
 
-end Exec.Code
+end Itasca.Runtime.Code

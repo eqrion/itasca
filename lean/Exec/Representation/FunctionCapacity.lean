@@ -1,6 +1,6 @@
 import Exec.Representation.ValidatedStacks
 import Exec.Generated.Equations
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A source frame's word requirement: its parameter/local words plus the
@@ -25,4 +25,4 @@ def FunctionCapacity (profile : ValidationProfile) (env : module.Env)
     (typeIndex : U32) (source : funccode) (compiled : runtime.bytecode.CompiledFunction) : Prop :=
   ∃ words, SourceFrameCapacity profile env typeIndex source words ∧ compiled.slot_count.val ≤ words
 
-end Exec.Code
+end Itasca.Runtime.Code

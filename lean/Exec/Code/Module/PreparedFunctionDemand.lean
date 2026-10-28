@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.FunctionStartAvailability
 import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Relations.Common.FunctionEntry
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Conservative function demand measured solely in source body bytes,
@@ -78,4 +78,4 @@ theorem PreparedFunctionDemand.body {A : Type}
     have room := demand.slots
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

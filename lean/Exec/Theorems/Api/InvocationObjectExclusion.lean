@@ -1,7 +1,7 @@
 import Exec.Theorems.Api.InitialHostInvocationCauses
 import Exec.Theorems.Composition.Eventful.EventfulDispatchCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Invocation does not allocate store objects. Every initial host failure is
 setup/readback allocation, signature capacity, interrupt, or a host reply. -/
@@ -33,4 +33,4 @@ theorem EventfulDispatchCause.no_objects
     simp at impossible
   · obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := host
     simpa only [HostCallCauses,failed,HostPreparationCause] using refused
-end Exec.Theorems
+end Itasca.Runtime.Theorems

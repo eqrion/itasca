@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.BulkTableLoop
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Exact left-to-right table-fill writes. -/
@@ -70,4 +70,4 @@ theorem table_fill_loop (tables : alloc.vec.Vec runtime.store.TableInst)
   · refine ⟨Nat.le_refl _,ordered,table.elements,by simp [fillTableWords],?_⟩
     have same : {table with elements := table.elements} = table := by cases table; rfl
     rw [same,←tableRead,vec_set_current tables tableIndex tableBound]
-end Exec.Store
+end Itasca.Runtime.Store

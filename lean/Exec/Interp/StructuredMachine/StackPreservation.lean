@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Interp.Relations.StackPreservation
 import Exec.Interp.Relations.PrefixEffect
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- A checked ordinary mutation preserves the full caller chain through both
@@ -46,4 +46,4 @@ theorem FrameStackRel.single_base {M : Type} {store : runtime.store.Store M} {so
     subst actual
     exact saved.empty_inv.2
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

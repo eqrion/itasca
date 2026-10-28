@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
 import Exec.Code.Body.Reader.Common.ReaderValues
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Live Wasm 2 entry exposes the full physical prefix below its block parameters and condition. -/
@@ -34,4 +34,4 @@ theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins ou
     exact concreteStack_append.mpr ⟨concreteStack_append.mpr ⟨knownParts.1, remainingKnown⟩,
       (concreteStack_iff _).mpr ⟨ins, rfl⟩⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

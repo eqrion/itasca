@@ -1,5 +1,5 @@
 import Exec.Spec.References
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Source REF_FUNC resolves the function address in the current instance. -/
@@ -18,4 +18,4 @@ theorem ref_func_step (s : store) (f : frame) (index address : Nat)
     (by simpa [fun_funcaddr,proj_uN_0] using (List.getElem?_eq_some_iff.mp mapped).1) input
     (wf_admininstr.admininstr_case_68 _)
   simpa only [proj_uN_0,lookup] using step
-end Exec.Spec
+end Itasca.Runtime.Spec

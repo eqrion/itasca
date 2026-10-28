@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.TransferAvailability
 import Exec.Code.Local.Capacity.CallbackCapacity
 import Exec.Code.Local.Lowering.Common.LoweringConditionalTransfer
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -216,4 +216,4 @@ theorem branch_if_transfer_forward_available {A : Type} (ops : runtime.platform.
         rw [patchedEq]
         exact ((guardEffect.trans copyEffect).trans jumpEffect).weaken (by intro counter; cases counter <;> simp)
 
-end Exec.Code
+end Itasca.Runtime.Code

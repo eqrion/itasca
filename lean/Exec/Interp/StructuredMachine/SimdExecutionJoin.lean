@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Abs.Simd.Coverage
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- Actual SIMD frame effects preserve the complete stack of compiled callers.
@@ -42,4 +42,4 @@ theorem Execution.simd {M : Type}
     (step.next_extension machine.typed) raw index pc last lookup program (.ready point) slots metadata effect preserved
     (step.next_typed machine.typed) (step.next_supported machine.core)
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

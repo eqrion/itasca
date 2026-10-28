@@ -19,7 +19,7 @@ import Exec.Code.Local.Control.Common.CumulativeFunctionContext
 import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Initialization.SegmentInitializeMetadata
 import Exec.Store.Initialization.SegmentInitializeShape
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Segment writes and drops preserve the complete static cumulative
@@ -79,4 +79,4 @@ theorem initialize_segments_certified_supported {M P F A : Type}
   rw [run, WP.spec_ok] at shaped normal ⊢
   have retained := certified.segments metadata shaped.1
   exact ⟨retained.1, retained.2, metadata, normal.2⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

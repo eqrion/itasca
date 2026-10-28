@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Calls.ScopeCallbackEnter
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A successful live IF callback retains its actual condition slot and guard,
@@ -65,4 +65,4 @@ theorem callback_if_scope {A : Type} (ops : runtime.platform.Alloc A)
   · intro scope frame old
     exact old.extend [.JumpIfZero condition core.num.U32.MAX] codeEq (by simp [mapsEq])
 
-end Exec.Code
+end Itasca.Runtime.Code

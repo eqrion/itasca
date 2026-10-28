@@ -2,7 +2,7 @@ import Exec.Store.Invariant.Typing
 import Exec.Store.Initialization.Data
 import Exec.Store.Initialization.SegmentEffects
 import Exec.Store.Initialization.BulkPreservation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem SegmentBounds.same {M : Type} {before after : runtime.store.Store M}
@@ -39,4 +39,4 @@ theorem add_instance_data_bounds {M A : Type} (memory : runtime.platform.MemoryB
       · exact bounded.data data old
       · have source := sourceBound _ (List.getElem_mem bound)
         simpa only [alloc.vec.Vec.length, copied, instanceRead] using source
-end Exec.Store
+end Itasca.Runtime.Store

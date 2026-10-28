@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Theorems.Composition.StoreMutationFacts
 import Exec.Theorems.Composition.Stateful.StatefulDropStep
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem StatefulDropEffect.mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
     {before after : runtime.store.Store M} (effect : StatefulDropEffect before after)
     (shaped : Shape view before) (sourceSyntax : StoreSyntax code before) (bounds : SegmentBounds before) : CumulativeStoreMutation view code before after := by
@@ -49,4 +49,4 @@ theorem stateful_drop_execution_supported
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       (by rw [exactState]) (by rw [exactState]; exact .refl _ _) transition
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

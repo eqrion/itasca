@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Arguments
 import Exec.Interp.Control.StructuredPoint
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem sourceType_injective : Function.Injective sourceType := by
@@ -51,4 +51,4 @@ theorem typed_arguments_accepted {M : Type} (memory : runtime.platform.MemoryBuf
     simpa only [alloc.vec.Vec.deref, Slice.from_val] using typed_arguments_match typed owned
   have ok := accepted.mpr matched
   simpa only [ok] using checked
-end Exec.Interp
+end Itasca.Runtime.Interp

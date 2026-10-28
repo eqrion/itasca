@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.LocalAvailability
 import Exec.Code.Local.Relations.Local.LocalDeclarations
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual local declaration loop accepts independently bounded remaining
@@ -83,4 +83,4 @@ theorem compiler_locals_available {A : Type} (ops : runtime.platform.Alloc A)
         by simpa [last] using offsetCount,by simpa [last] using used,by simpa [last] using words⟩
   · exact ⟨.refl _,rfl,rfl,inside,rfl,rfl,rfl,by dsimp only; omega⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

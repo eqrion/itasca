@@ -4,7 +4,7 @@ import Exec.Representation.NameSource
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Store.Invariant.Typing
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem getD_member {α : Type} (values : List α) (index : Nat) (fallback : α)
@@ -72,4 +72,4 @@ theorem decodeStore_typed {M : Type} (view : M → Slice U8) (code : CodeInterpr
       Funcinst_ok.mk_Funcinst_ok _ _ _ (.FUNC index locals instructions)
         (Code.moduleSourceContext inst.module) signature environment body storeWf bindings.wf functionWf
 
-end Exec.Store
+end Itasca.Runtime.Store

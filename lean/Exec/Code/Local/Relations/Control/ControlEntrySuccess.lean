@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.ControlHeightSuccess
 import Exec.Code.Local.Callbacks.Control.EnterBlock
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Successful entry computes its exact slot and byte coordinates before any
@@ -45,4 +45,4 @@ theorem control_entry_coordinates {A : Type} (ops : runtime.platform.Alloc A)
   have sourceBound : source.val ≤ Usize.max := by scalar_tac
   exact ⟨by simpa [heightEq, alloc.vec.Vec.deref] using heightBound, by omega⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

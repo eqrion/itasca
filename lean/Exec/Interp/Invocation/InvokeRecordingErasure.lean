@@ -1,6 +1,6 @@
 import Exec.Interp.Invocation.InvokeRecording
 import Exec.Platform.RecordingBind
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 /-- Erasing the writer recovers the extracted invocation for arbitrary hooks
 and internal states, including failure and divergence. -/
@@ -24,4 +24,4 @@ theorem recordedInvokeWith_erase {M P F A : Type}
        funext answer)
     | (split <;> simp only [Std.bind_assoc,bind_ok,Std.uncurry])
 
-end Exec.Interp
+end Itasca.Runtime.Interp

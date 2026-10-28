@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Relations.Memory.MemoryOperands
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every scalar/packed load callback accepts from its typed address layout
@@ -49,4 +49,4 @@ theorem compiler_memory_store_available {A : Type} (ops : runtime.platform.Alloc
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

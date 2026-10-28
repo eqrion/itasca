@@ -77,7 +77,7 @@ import Exec.Code.Local.Relations.Common.Function
 import Exec.Code.Local.Relations.Common.LabelWiden
 import Exec.Code.Local.Source.TypedRunClosed
 import Exec.Code.Body.Reader.Common.ReaderStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderBoundaryWasm2.root_iff {data env locals index ft st parents current}
@@ -95,4 +95,4 @@ theorem ReaderBoundaryWasm2.root_iff {data env locals index ft st parents curren
     | root => rfl
     | push => simp at empty
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.BranchSuccessConditionalLoop
 import Exec.Code.Local.Relations.Common.ConditionalCertificates
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_branch_if_forward_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -154,4 +154,4 @@ theorem callback_branch_if_loop_success {A : Type} (ops : runtime.platform.Alloc
     obtain ⟨code, frames⟩ := effect
     exact ⟨by simpa [hcode] using code, by simpa [hframes] using frames⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

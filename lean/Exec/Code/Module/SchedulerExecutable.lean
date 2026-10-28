@@ -1,7 +1,7 @@
 import Exec.Code.Module.ExecutableSchedulerSubmission
 import Exec.Code.Module.SourceCompileExecutableEntry
 import Exec.Code.Local.Source.SourceSubmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Captured module tables and the exact source-indexed certificate ledger
@@ -98,4 +98,4 @@ theorem compiler_submit_source_executable_functions {A S : Type} (ops : runtime.
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_executable_functions ops current next worker ready.functions accepted
     exact ready.transport same functions
-end Exec.Code
+end Itasca.Runtime.Code

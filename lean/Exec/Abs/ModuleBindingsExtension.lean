@@ -1,6 +1,6 @@
 import Exec.Spec.ExtensionTyping
 import Exec.Abs.Typing
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Module bindings survive specification store extension, including growth,
 content writes, and dropping segments. -/
@@ -43,4 +43,4 @@ theorem FunctionsTyped.extend_same {s t : store} (functions : FunctionsTyped s)
     (extension : Extend_store s t) (same : t.FUNCS = s.FUNCS) : FunctionsTyped t := by
   intro fn member
   exact functions.extend_old extension fn (same ▸ member)
-end Exec.Abs
+end Itasca.Runtime.Abs

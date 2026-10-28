@@ -3,7 +3,7 @@ import Exec.Interp.Relations.Fetch
 
 /-! Public invocation rejection before execution begins. These conclusions
 preserve execution state, store, platform, and the caller's result vector. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem func_type_lookup {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -47,5 +47,5 @@ theorem invoke_wrong_store (foreign : func.store ≠ store.id) :
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

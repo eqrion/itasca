@@ -6,7 +6,7 @@ import Exec.Store.Preparation.StagingSegmentBounds
 import Exec.Store.Instantiation.PublishInstance
 import Exec.Store.Linking.LinkedOwners
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -90,4 +90,4 @@ theorem prepared_commit_segment_bounds {M P F A : Type}
     (by simpa only [preparedSource] using dataBounds)
     globalStore elementStore after globalRun elementRun dataRun
 
-end Exec.Store
+end Itasca.Runtime.Store

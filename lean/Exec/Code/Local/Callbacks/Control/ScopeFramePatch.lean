@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFrame
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Forward branch fixups cannot overwrite a LOOP hook or an open IF guard. -/
@@ -29,4 +29,4 @@ theorem FrameScope.patch_branches {A : Type} {locals} {before after : runtime.co
   apply shape.transport maps
   · simp [code, patchCode_length]
   · simpa only [code] using shape.entryCode.patch_branches branches target
-end Exec.Code
+end Itasca.Runtime.Code

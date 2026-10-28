@@ -1,6 +1,6 @@
 import Exec.Code.Local.Publication.ControlMapPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Appending a fresh map and its uniquely indexed owner preserves every
@@ -67,4 +67,4 @@ theorem ControlMapPublication.push {A : Type} {before after : runtime.compiler.F
       exact List.mem_append_left _ member
     exact (held.closed index map lookup oldInactive).grow code start finish
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 import Exec.Code.Body.Reader.Calls.ReaderIndirectCall
 import Exec.Code.Body.Reader.Common.ReaderTypedSelect
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_indirect_call_code_mono_wasm2 {data env locals index st}
@@ -44,4 +44,4 @@ theorem SimdReaderEvent.code_mono {A : Type} {ops : runtime.platform.Alloc A}
   exact compiler_lower_simd_code_mono ops law before after out event.opcode event.a event.b event.bits
     (by omega) (by omega) event.callback
 
-end Exec.Code
+end Itasca.Runtime.Code

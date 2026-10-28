@@ -20,7 +20,7 @@ independent source validity, the source-only `Code.CompileEligible` envelope, an
 
 open Aeneas Aeneas.Std
 
-namespace Exec
+namespace Itasca.Runtime
 
 open Itasca Theorems
 
@@ -88,4 +88,4 @@ theorem runtime.compiler.compile_with.profile_complete_spec {A : Type} (ops : ru
   rw [compiled,WP.spec_ok]
   exact ⟨executable,rfl,certificate⟩
 
-end Exec
+end Itasca.Runtime

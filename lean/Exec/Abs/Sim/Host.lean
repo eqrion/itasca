@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Call
 import Exec.Abs.Sim.Trap
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- A direct host call resolves its module index and then returns atomically.
 The host event and changed store survive all labels and suspended callers. -/
@@ -69,4 +69,4 @@ theorem host_trap_simulation (s s' : store) (ambient : frame) (f : AFrame)
   simp only [decode,decodeFrames,vals,List.map_nil,List.nil_append,List.map_cons,AFrame.toFrame,AFrame.arity]
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [decodeFrames,instrContext,vals,List.append_assoc,AFrame.arity,AFrame.toFrame,admininstr_instr,Nat.add_assoc] using both
-end Exec.Abs
+end Itasca.Runtime.Abs

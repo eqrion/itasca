@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Step
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_slice (s : _root_.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr)
@@ -42,5 +42,5 @@ theorem constant_progress (s : _root_.store) (ambient : frame) (f : AFrame) (res
   · exact decode_const s ambient f rest ty value after (by simpa only [FrameHeights] using frameTyped_heights frameTyped)
   · exact const_measure_decreases s ambient f rest ty value after
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core
 

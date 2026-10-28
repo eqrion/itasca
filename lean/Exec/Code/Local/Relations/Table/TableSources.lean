@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Calls.CallbackSources
 import Exec.Code.Local.Relations.Table.TableDepths
 import Exec.Code.Local.Source.SourceStartFrame
 import Exec.Code.Local.Source.SourceCursor
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 def snapshotStatus {A : Type} (output : CompilerSnapshot A) :
     core.result.Result Unit Itasca.error.VisitError :=
@@ -181,5 +181,5 @@ theorem compiler_br_table_sources {A : Type} (ops : runtime.platform.Alloc A)
         after state (.Ok ()) observed rfl
       exact ⟨labeledSources.trans finalSources, cursor⟩
 
-end Exec.Code
+end Itasca.Runtime.Code
 

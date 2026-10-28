@@ -2,7 +2,7 @@ import Exec.Store.Invariant.FunctionStaging
 import Exec.Store.Api.MemoryStaging
 import Exec.Store.Api.TableStaging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Allocated values and resource counters during instantiation. Function/module
@@ -101,4 +101,4 @@ theorem FunctionStageEffect.allocated {M : Type} {view : M → Slice U8} {store 
     · exact shape.tableAccounting
     · exact shape.tableLimit
 
-end Exec.Store
+end Itasca.Runtime.Store

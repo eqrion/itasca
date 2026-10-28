@@ -1,7 +1,7 @@
 import Exec.Interp.Control.BranchTransfer
 import Exec.Interp.Control.PendingJump
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem branch_no_transfer {locals front discarded results : List val} {dst src count : U32}
@@ -92,4 +92,4 @@ theorem step_branchNoCopy_refines {M P F A : Type}
   rw [exactState]
   simpa only [FrameSlots, List.append_assoc] using represented
 
-end Exec.Interp
+end Itasca.Runtime.Interp

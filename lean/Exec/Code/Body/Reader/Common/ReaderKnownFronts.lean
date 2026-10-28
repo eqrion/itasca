@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Local.Source.SourceStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Entered scopes retain concrete saved operands even when the current
@@ -59,4 +59,4 @@ theorem ReaderKnownFronts.pop {parents parent current values segment}
     (instruction : instr) : ReaderKnownFronts parents (parent.advance instruction) values := by
   obtain ⟨prior, known⟩ := fronts.prior.pop
   exact ⟨prior, known⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.FutureFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Source control information retained while callbacks are still reading the
@@ -75,4 +75,4 @@ inductive ParentPrefixes (types functions : List functype) (returns locals : Lis
       (saved : ParentPrefix types functions returns locals code (label :: labels) parent child) :
       ParentPrefixes types functions returns locals code (parents ++ [parent]) (label :: labels) child
 
-end Exec.Code
+end Itasca.Runtime.Code

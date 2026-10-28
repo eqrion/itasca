@@ -1,7 +1,7 @@
 import Exec.Store.Preparation.PreparationResults
 import Exec.Store.Invariant.FunctionPreparation
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -134,4 +134,4 @@ theorem preparation_certificates {M A : Type} (memory : runtime.platform.MemoryB
     simpa only [typeSource] using rebound
   · simpa only [typeSource] using stagedFinal
 
-end Exec.Store
+end Itasca.Runtime.Store

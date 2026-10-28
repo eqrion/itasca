@@ -1,5 +1,5 @@
 import Exec.Spec.MemoryCopyAlgebra
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def memoryCopy (s : store) (f : frame) (destination source count : Nat) : store :=
@@ -26,4 +26,4 @@ theorem memory_copy_steps (s : store) (f : frame) (destination source count : Na
       (CopySuffix.initial _ _ _ _) (by omega) (by omega) inside.1 inside.2
     rw [memoryCopyBackward_words _ _ _ _ _ address,snapshot] at run
     exact run
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

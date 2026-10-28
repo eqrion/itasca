@@ -10,7 +10,7 @@ import Exec.Store.Initialization.SegmentCompatible
 import Exec.Code.Local.Relations.Common.SegmentTranslation
 import Exec.Store.Initialization.SegmentStep
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 def segmentAfter (status : core.result.Result Unit runtime.ExecError) (after : List admininstr) : List admininstr :=
@@ -34,9 +34,9 @@ theorem segment_steps_suffix (first : config) (s : store) (f : frame)
         .step (.pure _ _ _ (.trap_vals [] after (Or.inr empty) (by simp [Forall]) afterWf .admininstr_case_73) input wf)
       exact Spec.stepsH_trans lifted (Spec.stepsH_single trap)
 
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem segment_global_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -63,9 +63,9 @@ theorem segment_global_source {M : Type} (view : M → Slice U8) (code : CodeInt
   have bits : (bulkWord value.lo).val = value.lo.val % 2^32 := by scalar_tac
   simpa only [fetched,decodeGlobal,typed,decodeWords,vals,List.map_cons,List.map_nil,segmentValue,admininstr_val,bits] using read
 
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 def segmentArity : runtime.bytecode.Instr → Nat
@@ -131,9 +131,9 @@ theorem segment_bulk_source {M : Type} (memory : runtime.platform.MemoryBuffer M
     rintro out ⟨success,step⟩
     simpa [segmentArity,segmentPending,vals,Code.segmentInstructionSource,success,segmentResult] using Spec.stepsH_single step
 
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 def segmentState {M : Type} (view : M → Slice U8) (source : CodeInterpretation)
@@ -155,9 +155,9 @@ theorem segmentPending_one_set (slots : List U64) (word : U64) (inside : 0 < slo
   | nil => simp at inside
   | cons a rest => rfl
 
-end Exec.Store
-namespace Exec.Store
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+end Itasca.Runtime.Store
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -251,10 +251,10 @@ theorem segment_step_bulk_source (laws : Platform.MemoryLaws memory view)
   simpa only [Spec.instrContext,segmentState,Code.segmentSource,List.flatMap_cons,vals,List.map_nil,List.nil_append,
     List.append_assoc,alloc.vec.Vec.deref,Slice.from_val] using lifted
 
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem segment_instruction_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -319,4 +319,4 @@ theorem segment_instruction_source {M P F A : Type}
       refine ⟨0,Or.inr next,?_⟩
       simpa only [segmentArity,segmentState,segmentPending_zero,vals,List.map_nil,List.nil_append] using steps
 
-end Exec.Store
+end Itasca.Runtime.Store

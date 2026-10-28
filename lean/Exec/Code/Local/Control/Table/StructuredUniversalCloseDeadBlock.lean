@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Table.StructuredUniversalCloseBlock
 import Exec.Code.Local.Control.Common.UniversalRoot
 import Exec.Code.Local.Relations.Common.PrefixZipper
 import Exec.Code.Local.Relations.Common.Prefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A block with neither a normal exit nor a recorded forward branch leaves
@@ -155,5 +155,5 @@ theorem StructuredUniversalTerminal.close_block_resume {jumpTables : List Aeneas
       exact outerSaved.advance_current (.BLOCK bt child.source)
     · simpa only [resolve, lengthEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Exec.Code
+end Itasca.Runtime.Code
 

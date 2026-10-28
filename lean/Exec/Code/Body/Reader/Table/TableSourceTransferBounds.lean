@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Exec.Code.Local.Source.TableTransferBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source typing of every table label supplies overlap-safe transfer bounds
@@ -40,4 +40,4 @@ theorem StructuredCompilerPrefix.table_transfer_geometry
   have entry := shape.entryBound
   cases form : scope.form <;> simp_all [ScopeForm.kind,SourceScope.frameStart]
 
-end Exec.Code
+end Itasca.Runtime.Code

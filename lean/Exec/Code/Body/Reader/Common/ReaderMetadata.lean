@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Itasca.Wasm2.References.Step
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Exact successful decoder and fixed-stack effect, with the original source zipper. -/
@@ -83,4 +83,4 @@ theorem reader_metadata_wasm2 {data env locals index st}
             p.current.ctrl.polymorphic_base values (wellFormed a) sourceEncoding finalTyped
             controlEq newBlocks afterValues (fun h => nomatch h) (declared a ⟨middle,read⟩)
 
-end Exec.Code
+end Itasca.Runtime.Code

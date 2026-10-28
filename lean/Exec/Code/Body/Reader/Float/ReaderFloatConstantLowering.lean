@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Common.Lowering
 import Exec.Code.Local.Lowering.Common.LiteralSources
 import Exec.Code.Local.Lowering.Common.LiteralCursor
 import Exec.Code.Local.Callbacks.Common.CompilerLiteralMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -66,4 +66,4 @@ theorem callback_float64_eq {A : Type} (ops : runtime.platform.Alloc A)
     (UScalar.cast .U128 value) layout reachable concrete
     codeFits sourceFits coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

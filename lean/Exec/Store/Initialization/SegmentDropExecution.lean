@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentDropSemantics
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem bulk_data_drop_refines {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -37,4 +37,4 @@ theorem bulk_element_drop_refines {M : Type} (memory : runtime.platform.MemoryBu
   exact ⟨rfl, element_drop_refines view code store inst ambient index address store.elems.val[address.val]
     shape sourceSyntax ambientWf moduleEq mapped (List.getElem?_eq_getElem issued)⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -4,11 +4,11 @@ import Exec.Store.Invariant.CheckedValues
 import Exec.Spec.HostCall
 import Exec.Interp.Host.HostResume
 import Exec.Store.Invariant.HostSignature
-import Exec.Generated.Types
+import Itasca.Generated.Types
 import Exec.Spec.Extend
 
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Observable behavior after an actual host callback. Preparation rejections
 are separated by the calling theorem because they perform no host event. -/
@@ -59,4 +59,4 @@ theorem HostCallCauses.of_preparation {A M P : Type} {allocator : runtime.platfo
   rename_i limit
   cases limit <;> simp_all [HostPreparationCause]
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

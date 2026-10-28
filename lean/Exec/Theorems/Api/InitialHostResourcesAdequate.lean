@@ -1,7 +1,7 @@
 import Exec.Theorems.Invocation.PublicEventfulSourceResources
 import Exec.Theorems.Api.InvocationResourcesAdequate
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InitialHostSourceResourceCause.excludes_boundary {M P A : Type}
     {hooks : runtime.platform.Platform P M} {allocator : runtime.platform.Alloc A}
@@ -24,4 +24,4 @@ theorem InitialHostSourceResourceCause.excludes_boundary {M P A : Type}
     · exact reserve_ne_refusal_of_universal_bound available arguments n refused
     · exact reserve_ne_refusal_of_universal_bound available results n refused
   · exact cause
-end Exec.Theorems
+end Itasca.Runtime.Theorems

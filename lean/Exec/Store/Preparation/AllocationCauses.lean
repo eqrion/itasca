@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.CopyTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The allocator's actual Boolean response is retained alongside the runtime
@@ -45,4 +45,4 @@ theorem copy_type_resource_causes {A : Type} (allocator : runtime.platform.Alloc
       step with copy_type_loop_results ty.results (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize
         (by scalar_tac) (by simp) as ⟨results,hr⟩
       simp [hp,hr]
-end Exec.Store
+end Itasca.Runtime.Store

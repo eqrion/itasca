@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ReachedPointAcceptance
 import Exec.Code.Body.Reader.Acceptance.ReachedReferenceDemand
 import Exec.Code.Local.Capacity.BodyReplay
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -170,4 +170,4 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available_from_source 
   exact point.memory_store_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op byte reference
 
-end Exec.Code
+end Itasca.Runtime.Code

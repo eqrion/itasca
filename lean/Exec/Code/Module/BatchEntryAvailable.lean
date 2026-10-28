@@ -1,7 +1,7 @@
 import Exec.Code.Module.EntryFinishAvailable
 import Itasca.Stream.BatchComplete
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A valid worker entry compiles and finishes successfully, with actual worker
@@ -48,6 +48,6 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
   obtain ⟨count,increment,countValue⟩ := WP.spec_imp_exists
     (UScalar.add_spec (x := batch.num_validated) (y := 1#usize) (by scalar_tac))
   refine ⟨count,after,by simpa using countValue,?_,finished,effect⟩
-  simp [Exec.stream.CodeBatch.validate_func,Itasca.stream.CodeBatch.validate_func,noError,core.option.Option.is_none,next,increment]
+  simp [Itasca.stream.CodeBatch.validate_func,noError,core.option.Option.is_none,next,increment]
 
-end Exec.Code
+end Itasca.Runtime.Code

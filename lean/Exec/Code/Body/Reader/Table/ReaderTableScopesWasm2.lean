@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.ReaderTableSuffix
 import Exec.Code.Local.Relations.Table.BranchTableOperands
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical target checks and the saved source zipper discharge every static
@@ -40,4 +40,4 @@ theorem reader_table_scopes_wasm2 {data env locals index st}
   refine ⟨scope,discarded,selected',chain.all_entered entered scope ?_,?_⟩
   · simpa only [List.mem_reverse] using List.mem_of_getElem? selected'
   · simpa only [values] using whole
-end Exec.Code
+end Itasca.Runtime.Code

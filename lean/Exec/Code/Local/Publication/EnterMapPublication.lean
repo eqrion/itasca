@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerEnterMetadata
 import Exec.Code.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Exec.Code.Local.Relations.Control.ControlCursor
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual BLOCK entry establishes the newly owned map bounds. -/
@@ -147,4 +147,4 @@ theorem compiler_enter_dead_map_publication {A : Type} (ops : runtime.platform.A
   rw [cursor]
   exact forward
 
-end Exec.Code
+end Itasca.Runtime.Code

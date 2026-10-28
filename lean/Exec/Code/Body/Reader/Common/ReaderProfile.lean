@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderBasic
 import Itasca.Wasm2.Step.Dispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
@@ -74,4 +74,4 @@ theorem profile_base_success_wasm2 {V : Type} (visitor : code.OpVisitor V)
     Wasm2.scalar_context _ _ _ _ ctx ctx' _ _ ordinary locals] at run
   exact ⟨capacity, run⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

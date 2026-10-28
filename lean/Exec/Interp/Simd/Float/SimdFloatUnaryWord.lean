@@ -2,8 +2,8 @@ import Exec.Interp.Simd.Float.SimdFloatUnaryLoop
 import Exec.Interp.Simd.Float.SimdCompareFloatWord
 import Exec.Spec.SimdFloatUnary
 import Exec.Interp.Numeric.Float.Float
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd Platform
 
 def floatUnaryIndex (op : vunop_Fnn_N) : U32 :=
   match op with
@@ -66,4 +66,4 @@ theorem float_unary_word {F : Type} (floats : runtime.platform.FloatOps F)
     intro result allowed
     exact allowed
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

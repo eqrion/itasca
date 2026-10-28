@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderReachability
 import Exec.Code.Body.Reader.Control.ReaderScopeInitial
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderReachabilityWasm2.advance {reachable parents current savedParents savedCurrent}
@@ -27,4 +27,4 @@ theorem ReaderReachabilityWasm2.close {reachable parents parent child savedParen
       (resumedSource savedParent savedCurrent instruction) :=
   invariant.pop nextReachable instruction _ rfl entered
 
-end Exec.Code
+end Itasca.Runtime.Code

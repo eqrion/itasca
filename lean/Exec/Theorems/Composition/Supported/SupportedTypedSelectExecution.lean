@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.TypedSelectExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem step_typed_select_supported_execution
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -29,4 +29,4 @@ theorem step_typed_select_supported_execution
   rintro out ⟨success,sameStore,samePlatform,pc,g,fresh,simulation,owned,bounded⟩
   exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore success
     (StructuredMachine.Advance.of_frame fresh simulation owned rfl bounded)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

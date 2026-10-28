@@ -1,6 +1,6 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldLoop
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- An actual divergent loop either calls a diverging callback from the current store, or retains
 its current interpretation and invariant through the next recorded dispatch, including a host
@@ -74,4 +74,4 @@ theorem world_loop_infinite {M P F A : Type}
     · exact ⟨events,⟨after,afterValid,afterDivergent,_,_,history_append history (.cons edge (.refl after))⟩,edge⟩
   · intro before events after edge
     exact edge.edge.simulation
-end Exec.Theorems
+end Itasca.Runtime.Theorems

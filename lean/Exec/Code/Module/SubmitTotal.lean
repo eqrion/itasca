@@ -1,7 +1,7 @@
 import Exec.Code.Module.CompileEntries
 import Exec.Code.Local.Relations.Common.LayoutProofs
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -23,8 +23,7 @@ theorem compiler_submit_loop_total_on {A : Type} (ops : runtime.platform.Alloc A
   apply loop.spec_decr_nat (fun st => Usize.max - st.2.2.1.val)
     (fun st => st.2.2.2 = .Ok () → safe st.1 st.2.1)
   · rintro ⟨scheduler,worker,index,status⟩ held
-    simp only [CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-      Exec.stream.CodeBatch.len,Itasca.stream.CodeBatch.len,bind_ok]
+    simp only [CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok]
     split
     · rename_i inbounds
       cases status with
@@ -73,4 +72,4 @@ theorem compiler_submit_total_on {A : Type} (ops : runtime.platform.Alloc A)
     cases result <;> simp [visitor_result,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Code
+end Itasca.Runtime.Code

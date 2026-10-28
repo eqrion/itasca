@@ -1,7 +1,7 @@
 import Exec.Code.Module.PreparedFunctionAvailable
 import Exec.Code.Module.PreparedBodyChecked
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual function-start and body compilation accept from independent source
@@ -70,4 +70,4 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
     cases counter <;> simp [ChargeCounter.used,localsUsed,controlsUsed]
   exact (startEffect.trans held.2.1).weaken (by intro counter; cases counter <;> simp [bodyResourceRate,preparedFunctionAllowance])
 
-end Exec.Code
+end Itasca.Runtime.Code

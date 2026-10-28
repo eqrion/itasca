@@ -10,7 +10,7 @@ import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Relations.ExecutionLoop
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 private theorem reserve_result {A T : Type} (allocator : runtime.platform.Alloc A)
@@ -252,4 +252,4 @@ theorem invoke_with_prefix_causes_composition_mode {M P F A : Type}
   rintro out ⟨kept,success,errors⟩
   exact ⟨kept,fun accepted => (success accepted).1,errors⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

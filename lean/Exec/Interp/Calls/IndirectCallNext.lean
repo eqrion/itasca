@@ -1,7 +1,7 @@
 import Exec.Interp.Calls.CallRefinement
 import Exec.Abs.Indirect.Definition
 import Exec.Interp.Relations.TypedOperands
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem indirect_call_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
@@ -25,4 +25,4 @@ theorem indirect_call_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
   have resolved' : Abs.Indirect.resolve s {f with vals:=(front++args)++[Abs.integerVal .I32 position]} table type position=some address := resolved
   simp only [Abs.Indirect.step,Abs.pop_append,decoded,resolved']
   simp [Abs.Indirect.invoke,lookup,length,types,default,callCallee]
-end Exec.Interp
+end Itasca.Runtime.Interp

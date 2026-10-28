@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.BudgetAvailability
 import Exec.Code.Local.Relations.Common.Signatures
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent source signature width excludes the actual accumulator error. -/
@@ -32,7 +32,7 @@ theorem capture_signature_available {A : Type} (ops : runtime.platform.Alloc A)
         SignatureMatches signature (type.params.val.map Itasca.Translate.valueType)
           (type.results.val.map Itasca.Translate.valueType) ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_signature
-  simp only [module.Env.types,Itasca.module.Env.impl.types,bind_ok]
+  simp only [Itasca.module.Env.impl.types,bind_ok]
   have inside := (List.getElem?_eq_some_iff.mp lookup).1
   step as ⟨actual,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
@@ -73,7 +73,7 @@ theorem capture_func_slots_available {A : Type} (ops : runtime.platform.Alloc A)
         slots.val = scheduler.func_param_slots.val ++ [amount] ∧
         amount.val = signatureSlots type.params.val ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_func_slots
-  simp only [module.Env.func_types,Itasca.module.Env.impl.func_types,bind_ok]
+  simp only [Itasca.module.Env.impl.func_types,bind_ok]
   have inside := (List.getElem?_eq_some_iff.mp lookup).1
   step as ⟨actual,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
@@ -89,4 +89,4 @@ theorem capture_func_slots_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [runtime.compiler.visitor_result,bind_ok,WP.spec_ok]
   exact ⟨trivial,slots,amount,by rw [sameBudget],appended,by simpa [alloc.vec.Vec.deref] using counted⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

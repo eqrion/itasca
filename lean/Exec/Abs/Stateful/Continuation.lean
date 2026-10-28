@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.Signature
 import Exec.Abs.Sim.Typed
 import Exec.Abs.Core.Typing
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 /-- A typed active instruction exposes its actual operands and the continuation
 for any result values of the instruction's generated output type. -/
@@ -35,4 +35,4 @@ theorem frame_operands {s : store} {f : AFrame} {op : instr} {code : List instr}
       · simpa only [ResultsTyped,resultTypes] using typedValues
       · simpa only [List.append_nil,resultTypes] using continuation
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.TableSourceTransferBounds
 import Exec.Code.Local.Checking.TableCallbackExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed labels and a source transfer intervals discharge the actual complete
@@ -40,4 +40,4 @@ theorem StructuredCompilerPrefix.br_table_scratch_exit_slots
     rw [appended] at member
     exact geometry depth member index frame found position
 
-end Exec.Code
+end Itasca.Runtime.Code

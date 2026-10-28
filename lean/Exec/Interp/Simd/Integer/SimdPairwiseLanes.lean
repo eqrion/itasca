@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdPairwiseWord
 import Exec.Interp.Simd.Integer.SimdWidenLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def pairwiseOpcode (ty : PairwiseWidth) (signed : Bool) : U32 :=
   match ty,signed with | .i8,true => 124#u32 | .i8,false => 125#u32 | .i16,true => 126#u32 | .i16,false => 127#u32
@@ -29,4 +29,4 @@ theorem pairwise_dispatch_eq (ty : PairwiseWidth) (signed : Bool) (x : U128) :
   apply WP.spec_mono loopLaw
   intro out lanes
   cases ty <;> with_unfolding_all exact lanes
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

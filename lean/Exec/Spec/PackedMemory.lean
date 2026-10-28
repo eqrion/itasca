@@ -2,7 +2,7 @@ import Exec.Spec.MemoryStore
 import Exec.Spec.MemoryLoad
 import Exec.Spec.IntegerExtend
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- The five legal scalar packed widths; signedness is a separate load choice. -/
@@ -163,4 +163,4 @@ theorem store_step (s : _root_.store) (f : frame) (op : PackedMemory) (argument 
     · exact wf_config_trap storeWf frameWf
     · exact Segment.index_wf 0 (by norm_num)
 end PackedMemory
-end Exec.Spec
+end Itasca.Runtime.Spec

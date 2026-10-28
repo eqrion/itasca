@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.FutureFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Forward label fixups never name an IF guard. The two branch constructors
@@ -98,4 +98,4 @@ theorem FrameSites.patch {code frame} (sitesOk : FrameSites code frame)
   · exact ⟨condition, target, by simp [found, retarget]⟩
   · exact ⟨condition, old, found⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

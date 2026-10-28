@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Control.LoweringForwardBranch
 import Exec.Code.Local.Lowering.Control.LoweringLoopBranch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_condition {A : Type} (ops : runtime.platform.Alloc A)
@@ -170,4 +170,4 @@ set_option maxRecDepth 4096 in
           have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
           simpa only [← kind, ← atIndex] using List.set_getElem_self inBounds
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Api.Define
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def LimitsFit (limits : Itasca.types.Limits) (maximum : U32) : Prop :=
@@ -82,4 +82,4 @@ theorem define_memory_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Store
+end Itasca.Runtime.Store

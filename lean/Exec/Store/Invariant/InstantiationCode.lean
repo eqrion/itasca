@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.FunctionSignatures
 import Exec.Code.Local.Relations.Common.Function
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -30,4 +30,4 @@ theorem InstantiationCode.function_table {M : Type} {before ready : runtime.stor
   obtain ⟨staged, count, rfl, _, _, table, _⟩ := code
   exact table
 
-end Exec.Store
+end Itasca.Runtime.Store

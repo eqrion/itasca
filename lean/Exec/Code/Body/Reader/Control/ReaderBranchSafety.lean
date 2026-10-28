@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderBodySafety
 import Exec.Code.Local.Relations.Calls.BranchCallbackSafety
 import Exec.Code.Body.Reader.Control.ReaderBranchInfo
 import Itasca.Wasm2.Visitor.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -39,4 +39,4 @@ theorem compiler_branch_reader_total {A} (ops : runtime.platform.Alloc A)
     | true =>
       exact compiler_br_if_callback_total ops law compiler out.core depth view depthFits fixups
         pcBound codeFits sourceFits coordinate
-end Exec.Code
+end Itasca.Runtime.Code

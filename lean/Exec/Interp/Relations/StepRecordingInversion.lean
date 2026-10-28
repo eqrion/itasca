@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.StepRecordingLookup
 import Exec.Code.Body.Relations.Common.RecordingEmission
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem hostInstructionAddress_callTag {M : Type} (exec : runtime.interp.Execution)
@@ -89,4 +89,4 @@ theorem hostStepAddress_instruction {M : Type} (exec : runtime.interp.Execution)
   cases found : compiled.code.val[raw.pc.val]? with
   | none => simp [found] at selected
   | some instruction => exact ⟨instruction,rfl,by simpa only [found,Option.bind] using selected⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

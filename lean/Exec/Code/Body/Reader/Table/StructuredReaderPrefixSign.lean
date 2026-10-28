@@ -9,7 +9,7 @@ import Exec.Code.Local.Relations.Common.KnownPopStack
 import Exec.Code.Local.Relations.Common.KnownNumericStack
 import Exec.Code.Body.Control.Table.StructuredLinearEmbedding
 import Exec.Code.Body.Reader.Table.StructuredReaderDead
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_sign_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -73,4 +73,4 @@ theorem structured_reader_prefix_dead_sign_wasm2 {jumpTables : List U32} {data e
     simpa [Control.base, controls] using base
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (integerOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

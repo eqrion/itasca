@@ -4,7 +4,7 @@ import Exec.Code.Module.SubmitAvailable
 import Exec.Code.Module.CompletedWorkerQueue
 import Exec.Code.Module.SchedulerSubmission
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -109,4 +109,4 @@ theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
     · exact ⟨ready.signatures,ready.functionSlots,ready.origin,ready.slots,ready.paid⟩
     · simpa only [after,completed,alloc.vec.Vec.from_val] using paired
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.LoweringConditionalTransfer
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -83,4 +83,4 @@ private theorem branch_if_underflow_total {A} (ops : runtime.platform.Alloc A)
           lookup position loop nonempty different sourcePosition conditionAt rfl fixupsFit codeFits sourceFits coordinateFits) (by simp)
     · exact branch_if_underflow_total ops compiler frame index depth lookup position (by cases kindEq : frame.kind <;> simp_all)
 
-end Exec.Code
+end Itasca.Runtime.Code

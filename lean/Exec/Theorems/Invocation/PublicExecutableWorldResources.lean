@@ -11,8 +11,8 @@ import Exec.Theorems.Invocation.ExecutableWorldSourceCause
 
 /-! Canonical public invocation construction: exact recording, full invariant,
 source correspondence and classified resource causes share all witnesses. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The construction for any invariant that refines `ExecutableInv`, survives store
 mutations and is preserved by callbacks. -/
@@ -144,4 +144,4 @@ theorem invoke_executable_world_source_resources {M P F A : Type}
     (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])
     (invoke_executable_world_recorded_resources memory hooks floats allocator view laws code
       callbacks exec store platform valid address args results issued argumentIssued initial invoked)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

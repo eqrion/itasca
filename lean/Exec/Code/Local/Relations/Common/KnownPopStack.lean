@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Control.KnownControlStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -31,4 +31,4 @@ theorem concrete_typed_pop_result {poly before expected result after}
   rintro ⟨result, after⟩ ⟨controls, position, rest, afterValues, effect⟩
   exact ⟨controls, position, rest, afterValues, concrete_typed_pop_result known effect⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

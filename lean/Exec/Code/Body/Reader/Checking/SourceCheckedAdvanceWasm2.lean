@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Publication.SourcePublicationAdvanceWasm2
 import Exec.Code.Body.Reader.Checking.ReaderCheckedPrefixWasm2
 import Exec.Code.Body.Reader.Control.ReaderClosedInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-paid executable and publication evidence, with all instruction checks retained. -/
@@ -74,4 +74,4 @@ theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A)
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,after),called,rfl,rfl,⟨held,checks.1,checks.2,finalInstructions⟩,forward⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

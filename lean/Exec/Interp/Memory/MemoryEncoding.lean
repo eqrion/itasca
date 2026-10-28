@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryScalar
 import SpecExt.Builtins.EncodingLemmas
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 private theorem power_byte (index : Nat) : 2^(index * 8) = 256^index := by
@@ -49,4 +49,4 @@ theorem scalarLoadBytes_source (bytes : List U8) (start count : Nat)
       SpecExt.Builtins.integerOfBytes (Store.decodeBytes ((bytes.drop start).take count)) := by
   simpa using scalarLoadBytes_value bytes start 0#u64 0 count (by simpa using small)
     (by simpa using inside) (by simp)
-end Exec.Interp
+end Itasca.Runtime.Interp

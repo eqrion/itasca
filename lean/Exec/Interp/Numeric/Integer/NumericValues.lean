@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Integer.NumericWords
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 def NumericValuesEffect (op : Instruction)
@@ -45,4 +45,4 @@ theorem integer_values {F : Type} (floats : runtime.platform.FloatOps F)
         List.singleton_append, List.append_nil] using values
     have second : right.val = (Code.encodeValues front).length + 1 := by simpa [two, position] using hr
     exact WP.spec_mono (integer_binary_words floats exec base op left right (Code.encodeValues front) a b words position second) post
-end Exec.Interp
+end Itasca.Runtime.Interp

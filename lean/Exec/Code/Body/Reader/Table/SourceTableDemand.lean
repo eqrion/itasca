@@ -1,7 +1,7 @@
 import Exec.Code.Local.Demand.RecordedDemand
 import Itasca.Wasm2.Trace.TableBytes
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem table_suffix_final_observation {data start remaining observations result state}
@@ -34,4 +34,4 @@ theorem source_table_loop_demand
   dsimp only [id] at recorded
   simp only [retained,recorded,events,List.append_assoc,List.singleton_append]
 
-end Exec.Code
+end Itasca.Runtime.Code

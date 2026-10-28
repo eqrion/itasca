@@ -1,7 +1,7 @@
 import Exec.Store.Instantiation.LinkedPreparedRun
 import Exec.Store.Linking.LinkExternalLoop
 import Exec.Store.Linking.LinkLoop
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem LinkedPreparedRun.external_maps {M P F A : Type}
@@ -35,4 +35,4 @@ theorem ExternalMaps.source (externals : List runtime.Extern) (inst : runtime.st
   rw [maps.funcs, maps.globals, maps.tables, maps.memories]
   exact ⟨external_functions externals, external_globals externals, external_tables externals,
     external_memories externals⟩
-end Exec.Store
+end Itasca.Runtime.Store

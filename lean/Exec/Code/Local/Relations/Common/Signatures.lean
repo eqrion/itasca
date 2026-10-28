@@ -4,7 +4,7 @@ import Itasca.Support.ControlTranslation
 import Exec.Representation.Values
 /-! Compiler signature capture: total exact word counting, retained source
 value/word arities, and source block-signature resolution. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def signatureSlots (types : List Itasca.types.ValueType) : Nat :=
@@ -70,7 +70,7 @@ The slot accumulator is total, and rejects only a width above the u32 bound. -/
         SignatureMatches signature (ty.params.val.map Itasca.Translate.valueType)
           (ty.results.val.map Itasca.Translate.valueType) ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_signature
-  simp only [module.Env.types, Itasca.module.Env.impl.types, bind_ok]
+  simp only [Itasca.module.Env.impl.types, bind_ok]
   have bound := (List.getElem?_eq_some_iff.mp lookup).1
   have inBounds : index.val < env.types.deref.length := by simpa [alloc.vec.Vec.deref] using bound
   step as ⟨actual, hactual⟩
@@ -102,4 +102,4 @@ The slot accumulator is total, and rejects only a width above the u32 bound. -/
         · simpa [signatureSlots, alloc.vec.Vec.deref] using hparams
         · simpa [signatureSlots, alloc.vec.Vec.deref] using hresults
       · simp [runtime.compiler.visitor_result]
-end Exec.Code
+end Itasca.Runtime.Code

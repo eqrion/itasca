@@ -1,7 +1,7 @@
 import Exec.Platform.Recording
 import Exec.Interp.Host.HostPreparationCauses
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- A known host call logs the actual scratch arguments and checked result.
@@ -15,4 +15,4 @@ def hostCallEvents {M P : Type} (address : runtime.FuncAddr)
       [.call address.index.val (out.2.1.host_args.val.map sourceValue) none]
   | _ => []
 
-end Exec.Interp
+end Itasca.Runtime.Interp

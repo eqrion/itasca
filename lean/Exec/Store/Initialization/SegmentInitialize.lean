@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.SegmentSynthetic
 import Exec.Code.Module.SegmentSource
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual instantiation segment entry point returns normally for the
@@ -50,4 +50,4 @@ theorem initialize_segments_program_total {M P F A : Type}
   initialize_segments_total memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound (segment_program_ready store inst code program pcBound shape imports bindings elementsValid dataValid)
 
-end Exec.Store
+end Itasca.Runtime.Store

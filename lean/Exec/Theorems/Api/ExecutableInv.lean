@@ -11,7 +11,7 @@ import Exec.Store.Initialization.SegmentAccounting
 import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Invariant.TypeStaging
 import Exec.Store.Initialization.SegmentCounts
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Public execution invariant with the two reachable-store ledgers retained
@@ -44,4 +44,4 @@ theorem update {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretati
     held.capacities.metadata mutation.metadata.functions mutation.metadata.instances mutation.metadata.types mutation.metadata.identity⟩
 
 end ExecutableInv
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,6 +1,6 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldStep
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def WorldLoopInvariant {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -150,4 +150,4 @@ theorem world_loop_results {M P F A : Type}
   apply WP.dspec_mono (world_loop_stops memory hooks floats allocator Inv steps initial valid)
   rintro result ⟨state,invariant,stopped,same⟩
   exact ⟨same ▸ world_loop_finished memory hooks floats allocator Inv initial state invariant stopped,state,invariant,stopped,same⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

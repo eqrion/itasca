@@ -1,7 +1,7 @@
 import Exec.Generated.Equations
 import Exec.Store.Initialization.SegmentInitializeShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Structural store validity provides the finite constant-read bindings needed
@@ -15,4 +15,4 @@ theorem Shape.initializer_bindings {M : Type} {view : M → Slice U8}
   intro address member
   exact (instanceShape.2.2.2.2.2.2.2.2.1 address member).2
 
-end Exec.Store
+end Itasca.Runtime.Store

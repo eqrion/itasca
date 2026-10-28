@@ -2,9 +2,9 @@ import Exec.Theorems.Host.HostIndirectSelected
 import Exec.Theorems.Host.HostCallRetainedWorld
 import Exec.Theorems.Composition.ExecutionCode
 import Exec.Theorems.Host.HostDispatchCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 
 theorem call_indirect_host_structured_world {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -99,7 +99,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     Inv (fun c s h => (certify c s h).shape)
     {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform valid
     address base f.toFrame frameWf function host signature functionAt hostCode signatureAt args argumentTypes'.symm
-    argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback retains)
+    argumentTyped (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback retains)
   intro out result
   obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
   have same := Store.decodeStore_code_agrees view agrees
@@ -140,7 +140,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     · have events := observed.1.indirect_frame_events view afterCode store ambient f rest after table type position address front args base _ out
         newMachine.typed.typed.store (Store.decodeStore_wf view afterCode _ fresh.shape fresh.storeSyntax)
         machine.typed.typed.ambient frameWf labels frontWf sourceTail callers sourceHeights (by simpa only [same] using target) tableBound typeBound positionBound
-        (Exec.Spec.resultsTyped_wf argumentTyped)
+        (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped)
       simpa only [←split,same] using events
     · intro success
       have tail' : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
@@ -149,4 +149,4 @@ theorem call_indirect_host_structured_world {M P F A : Type}
       obtain ⟨finalPC,resumed⟩ := host_structured_resume newMachine last hf binding slots program newPoint (by simpa only [List.append_assoc] using split)
         basePosition heights tail' newPending observed.1 success retained (frame_type_bounds_of_shape certified.shape) newExtension fresh (observed.2 success).1
       exact ⟨finalPC,resumed,(observed.2 success).2⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

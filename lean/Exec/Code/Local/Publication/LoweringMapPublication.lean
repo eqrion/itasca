@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneScalar
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneStateful
 import Exec.Code.Local.Relations.Common.StatefulEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual numeric lowering preserves all control-map bounds. -/
@@ -42,4 +42,4 @@ theorem compiler_core_map_publication {A : Type} (ops : runtime.platform.Alloc A
   rw [compiler_core_cursor ops law before after state op called]
   exact forward
 
-end Exec.Code
+end Itasca.Runtime.Code

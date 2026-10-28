@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.EnterIf
 import Exec.Code.Local.Relations.Common.SuspendedPrefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A new IF guard is its own pending group, separate from body branches. Its
@@ -21,4 +21,4 @@ theorem resolvedCode_open_guard (code : List Bytecode) (groups : List FixupTarge
     resolvedCode_new_branch code [] [] groups ⟨[], target⟩ (.zero condition) old site
       (by simpa using position) allInside
 
-end Exec.Code
+end Itasca.Runtime.Code

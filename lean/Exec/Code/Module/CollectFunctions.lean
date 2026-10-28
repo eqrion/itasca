@@ -1,7 +1,7 @@
 import Exec.Code.Local.Initializer.InitializerComplete
 import Exec.Code.Local.Relations.Common.Function
 import Itasca.Support.EnvTranslation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Moving a successful function into the dense executable vector preserves
@@ -121,4 +121,4 @@ vector is internal; callers receive the dense vector with every original slot. -
     cases acceptedUnit
     simp [core.result.Result.Insts.CoreOpsTry.branch, collected rfl]
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.World.WorldRecordedLoop
 import Exec.Theorems.Composition.Eventful.EventfulSourceResources
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A failed dispatch retains its actual reached world and source-sized
 resource request, even when earlier callbacks published new modules. -/
@@ -60,4 +60,4 @@ theorem world_recorded_loop_resource_results {M P F A : Type}
   intro error failed
   apply invariant.source_resources capacities
   simpa only [finishExecution] using failed
-end Exec.Theorems
+end Itasca.Runtime.Theorems

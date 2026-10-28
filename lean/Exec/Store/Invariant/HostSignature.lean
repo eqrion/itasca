@@ -2,7 +2,7 @@ import Exec.Store.Api.ApiMetadata
 import Exec.Store.Invariant.TypeEquality
 import Exec.Spec.ExtensionTyping
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- An issued raw host entry decodes to the host identity and its exact signature. -/
@@ -57,4 +57,4 @@ theorem host_signature_extension {M : Type} (view : M → Slice U8) (code : Code
       decodeFunction_type code after nextFunction sigBound,oldSigEqual,nextSigEqual] using equal
   have same := decodeFuncType_injective decoded
   exact ⟨nextFunction,nextFound,by rw [←same]; exact nextSig⟩
-end Exec.Store
+end Itasca.Runtime.Store

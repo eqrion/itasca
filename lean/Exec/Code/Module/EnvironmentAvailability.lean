@@ -1,6 +1,6 @@
 import Exec.Code.Module.SignatureAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 abbrev EnvironmentCapture (A : Type) :=
@@ -38,7 +38,7 @@ theorem environment_signatures_available {A : Type} (ops : runtime.platform.Allo
     dsimp only at same accepted position count
     subst status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [module.Env.types,Itasca.module.Env.impl.types,bind_ok]
+    simp only [Itasca.module.Env.impl.types,bind_ok]
     split
     · rename_i more
       have insideType : next.val < env.types.val.length := by
@@ -66,4 +66,4 @@ theorem environment_signatures_available {A : Type} (ops : runtime.platform.Allo
       exact WP.spec.ret ⟨current,rfl,same,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

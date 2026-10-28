@@ -1,6 +1,6 @@
 import Exec.Spec.FloatConvert
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem f32_reinterpret_i32_pure (bits : Nat) (bound : bits < 2 ^ 32) :
@@ -67,4 +67,4 @@ theorem i64_reinterpret_f64_pure (bits : Nat) (bound : bits < 2 ^ 64) :
   · exact .cvtop___case_2 _ _ _ _ _ (.cvtop__Fnn_1_Inn_2_case_2 _ _ (by decide)) rfl rfl
   · decide
 
-end Exec.Spec
+end Itasca.Runtime.Spec

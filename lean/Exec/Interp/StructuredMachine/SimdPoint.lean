@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Code.Local.Lowering.Simd.SimdEmission
 import Exec.Abs.Simd.Source
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 variable {jumpTables : List Aeneas.Std.U32}
@@ -49,4 +49,4 @@ theorem simd_point_head {emission : ContextEmission} {immediates constants C ret
     | pure signature => cases signature <;> simp at sourceEq
     | constant => simp at sourceEq
     | memory signature => cases signature <;> simp at sourceEq
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

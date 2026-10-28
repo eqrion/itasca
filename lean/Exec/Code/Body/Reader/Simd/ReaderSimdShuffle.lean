@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdConstant
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Shuffle validation retains its checked lane vector, exact source bytes,
@@ -56,4 +56,4 @@ theorem reader_simd_shuffle_wasm2 {data env locals index st}
   · exact p.append_result C outer spine header base {st with core := out.core} _
       p.current.ctrl.polymorphic_base values (Wasm2.Simd.shuffle_wf low high) encoded typed finalControls finalBlocks valuesEq
       (fun h => nomatch h) (Wasm2.Simd.shuffle_declared _ low high)
-end Exec.Code
+end Itasca.Runtime.Code

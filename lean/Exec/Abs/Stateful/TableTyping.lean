@@ -1,7 +1,7 @@
 import Exec.Abs.Stateful.Continuation
 import Exec.Abs.Core.MemoryTyping
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def tableElementType : tabletype → reftype
   | .mk_tabletype _ type => type
@@ -83,4 +83,4 @@ theorem memory_pages_bound {s : store} (contents : StoreContentsTyped s) {object
       norm_num at bound
       exact bound
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

@@ -2,7 +2,7 @@ import Exec.Store.Preparation.StagingTypeCertificates
 import Exec.Store.Api.GlobalTypeLoop
 import Exec.Store.Initialization.ElementGlobalTypes
 import Exec.Store.Initialization.DataGlobalTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Successful actual global, element, and data staging constructs the source/raw
@@ -84,4 +84,4 @@ theorem staging_global_types {M P F A : Type}
       ((elementMetadata.resolve elementFound).trans (finalMetadata.resolve nextFound))
   · simpa only [nextSource, elementSource, globalSource] using nextTypes
 
-end Exec.Store
+end Itasca.Runtime.Store

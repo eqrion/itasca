@@ -2,7 +2,7 @@ import Exec.Representation.Layout
 import Exec.Generated.Equations
 import Itasca.Support.TypeTranslation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def compilerStackWidth : Itasca.code.StackType → Nat
@@ -11,4 +11,4 @@ def compilerStackWidth : Itasca.code.StackType → Nat
 
 def stackWords (values : List Itasca.code.StackType) : Nat :=
   (values.map compilerStackWidth).sum
-end Exec.Code
+end Itasca.Runtime.Code

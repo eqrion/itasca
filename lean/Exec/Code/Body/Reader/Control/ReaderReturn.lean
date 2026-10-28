@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
 import Itasca.Wasm2.Control.Return
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_return_wasm2 {data env locals index st}
@@ -38,4 +38,4 @@ theorem reader_return_wasm2 {data env locals index st}
     · simpa using afterValues
     · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Exec.Code
+end Itasca.Runtime.Code

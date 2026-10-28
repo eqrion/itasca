@@ -3,7 +3,7 @@ import Exec.Code.Local.Lowering.Calls.LoweringCall
 import Exec.Code.Local.Relations.Calls.IndirectCallLowering
 
 /-! Call callback safety includes checked arithmetic and operand rejections. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -115,4 +115,4 @@ set_option maxRecDepth 4096
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ :=
   compiler_indirect_call_total ops law compiler state typeIndex tableIndex indexBound pairFits codeFits sourceFits coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

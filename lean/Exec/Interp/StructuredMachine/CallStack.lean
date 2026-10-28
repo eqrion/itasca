@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Interp.Calls.CallStack
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- The caller's post-fetch continuation and live prefix form the saved frame
@@ -43,4 +43,4 @@ theorem FrameStackRel.call_enter {M : Type} {store : runtime.store.Store M} {s :
   exact .active (by rw [effect.1, frames]) active
     (saved.call_preserved effect (Nat.le_refl _) params capacity)
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

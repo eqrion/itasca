@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryBytes
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def scalarLoadWidth (opcode : U16) : Usize :=
@@ -115,4 +115,4 @@ specified bounds trap; the extracted computation itself never fails. -/
   · simp only [MemoryAddressEffect, Slice.len_val, fits, if_false] at effect
     rw [effect]
     simp [ScalarStoreEffect,fits]
-end Exec.Interp
+end Itasca.Runtime.Interp

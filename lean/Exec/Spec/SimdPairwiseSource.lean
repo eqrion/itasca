@@ -1,5 +1,5 @@
 import Exec.Spec.SimdPairwise
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem pairwise_source_wf (ty : PairwiseWidth) (signed : Bool) : wf_admininstr (pairwiseSource ty signed) := by
@@ -70,4 +70,4 @@ theorem pairwise_step (ty : PairwiseWidth) (signed : Bool) (x result : BitVec 12
   · exact const_wf x
   · exact pairwise_source_wf ty signed
   · exact const_wf result
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

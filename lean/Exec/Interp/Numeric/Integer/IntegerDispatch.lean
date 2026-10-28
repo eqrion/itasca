@@ -5,7 +5,7 @@ import Exec.Interp.Relations.ScalarDispatch
 import Exec.Abs.Numeric.Instruction
 import Exec.Code.Local.Lowering.Common.NumericOpcode
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem integerOpcode_agrees (op : Instruction) : Code.integerOpcode op =
@@ -75,4 +75,4 @@ theorem execute_integer_effect {F : Type} (floats : runtime.platform.FloatOps F)
     (scalar_integer_exact floats op exec.slots.val[base.val + left.val]! exec.slots.val[base.val + right.val]!)
   apply WP.spec_mono (execute_scalar_effect floats exec base (Code.integerOpcode op) dst left right hl hr hd numeric equation)
   exact fun _ effect => ⟨numeric, exactResult, effect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

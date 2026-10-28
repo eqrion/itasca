@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.OwnershipPrimitives
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec Stateful
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec Stateful
 
 theorem ValuesOwned.popThree {bounds values front a b c} (owned : ValuesOwned bounds values)
     (popped : Stateful.popThree values = some (front,a,b,c)) :
@@ -135,4 +135,4 @@ theorem stateful_tableInit_owned {bounds s f rest next index sourceIndex after}
       · contradiction
     · contradiction
   · contradiction
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

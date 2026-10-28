@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.ElseSource
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Only source syntax is matched here; control locations and liveness remain compiler ghosts. -/
@@ -71,4 +71,4 @@ theorem SourceScopeMatchesWasm2.fresh (bt : signature.BlockType) (form : Wasm2.F
       (Wasm2.Frames.Saved.fresh base form bt ins outs) :=
   ⟨matched, rfl, rfl, rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

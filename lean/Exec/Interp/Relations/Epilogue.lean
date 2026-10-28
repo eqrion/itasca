@@ -2,7 +2,7 @@ import Exec.Interp.Calls.ReturnRefinement
 import Exec.Abs.Sim.Step
 import Exec.Abs.Sim.Compose
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 def resultLabel (types : List valtype) : Abs.Label := ⟨types, types, [], 0, []⟩
@@ -135,4 +135,4 @@ theorem step_epilogue_refines {M P F A : Type}
   intro out effect
   exact ⟨effect.1, effect.2.1.before_fetch last, effect.2.2⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

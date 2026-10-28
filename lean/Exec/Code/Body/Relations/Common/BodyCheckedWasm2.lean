@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Checking.SourceCheckedStepsWasm2
 import Exec.Code.Local.Capacity.IndependentBodyReplay
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent Wasm 2 body validity and source-only resource demand imply
@@ -51,4 +51,4 @@ theorem compiler_body_wasm2_checked_available {A} (ops : runtime.platform.Alloc 
       initialLocals initialCapacity
       (independentBodyLog data env ⟨sourceLocals,ft.results⟩ index) room extent
 
-end Exec.Code
+end Itasca.Runtime.Code

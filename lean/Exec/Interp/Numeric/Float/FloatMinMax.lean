@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Float.FloatCompare
 import SpecExt.Builtins.Float.MinMax
 
 set_option maxHeartbeats 1000000
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem binary32_min_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U32) :
@@ -203,4 +203,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
-end Exec.Interp
+end Itasca.Runtime.Interp

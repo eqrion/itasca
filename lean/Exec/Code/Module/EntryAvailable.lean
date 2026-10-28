@@ -2,7 +2,7 @@ import Exec.Code.Module.SourceEntryPrepared
 import Exec.Code.Module.PreparedEntryReplay
 import Exec.Code.Module.PreparedFunctionAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent numerical resource eligibility over decoded source entry
@@ -14,4 +14,4 @@ def EntryResourceDemand {A : Type} (budget : runtime.compiler.Budget A)
     PreparedFunctionDemand budget w.ctx w.body.length
       (independentBodyDemand w.body env w.ctx w.typeIdx).operands bound
 
-end Exec.Code
+end Itasca.Runtime.Code

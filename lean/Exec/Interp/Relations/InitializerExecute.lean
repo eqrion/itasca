@@ -4,7 +4,7 @@ import Exec.Interp.Relations.Copy
 /-! Exact effects of the read-only instruction handlers used by retained
 constant-initializer functions. Store lookups are explicit premises, independent
 of any execution-correctness certificate. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -138,4 +138,4 @@ theorem copyWords_self (words : List U64) (src n : Nat) (h : src + n ≤ words.l
     simpa [copyWords_self exec.slots.val 0 width.val (by simpa using hwidth)] using hslots
   exact ⟨hok, he, hframes, by simpa [he] using hrest⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

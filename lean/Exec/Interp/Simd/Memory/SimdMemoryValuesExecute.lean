@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemorySourceExecute
 import Exec.Interp.Simd.Common.SimdInputValues
 import Exec.Interp.Simd.Common.SimdNumericResultSlots
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 private theorem memory_inputs_numeric (op : MemoryOperation) (ty : valtype) (member : ty ∈ op.inputs) :
@@ -110,4 +110,4 @@ theorem execute_simd_memory_values {M F : Type}
     unfold Simd.memorySourceInput at source
     rw [inputs] at source
     exact source
-end Exec.Interp
+end Itasca.Runtime.Interp

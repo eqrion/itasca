@@ -3,7 +3,7 @@ import Exec.Spec.SegmentDrops
 import Exec.Store.Initialization.BulkPreservation
 import Exec.Store.Invariant.SourceSyntax
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem data_drop_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -17,7 +17,7 @@ theorem data_drop_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpr
   have read : ambient.MODULE.DATAS[index.val]! = address.val := by
     rw [moduleEq]
     simp only [decodeInstance, List.getElem!_eq_getElem?_getD, List.getElem?_map, mapped, Option.map_some, Option.getD_some]
-  have lists := Exec.Representation.map_set_modify decodeData (fun data => {data with BYTES := []}) store.datas.val address.val old
+  have lists := Itasca.Runtime.Representation.map_set_modify decodeData (fun data => {data with BYTES := []}) store.datas.val address.val old
     ⟨alloc.vec.Vec.new U8⟩ found rfl
   unfold Spec.droppedDataStore
   rw [read]
@@ -36,7 +36,7 @@ theorem element_drop_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
   have read : ambient.MODULE.ELEMS[index.val]! = address.val := by
     rw [moduleEq]
     simp only [decodeInstance, List.getElem!_eq_getElem?_getD, List.getElem?_map, mapped, Option.map_some, Option.getD_some]
-  have lists := Exec.Representation.map_set_modify decodeElement (fun element => {element with REFS := []}) store.elems.val address.val old
+  have lists := Itasca.Runtime.Representation.map_set_modify decodeElement (fun element => {element with REFS := []}) store.elems.val address.val old
     {old with refs := alloc.vec.Vec.new U64} found rfl
   unfold Spec.droppedElementStore
   rw [read]
@@ -76,4 +76,4 @@ theorem element_drop_refines {M : Type} (view : M → Slice U8) (code : CodeInte
   · rw [← element_drop_decodes view code store inst ambient index address old moduleEq mapped found]
     exact decodeStore_wf view code _ (shape.element_drop address old) (sourceSyntax.instances_eq rfl)
 
-end Exec.Store
+end Itasca.Runtime.Store

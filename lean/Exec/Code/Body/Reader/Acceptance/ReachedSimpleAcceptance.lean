@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ReaderSimpleAcceptance
 import Exec.Code.Body.Reader.Common.ReaderSelectTypes
 import Exec.Code.Body.Reader.Global.ReaderGlobalEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -75,4 +75,4 @@ theorem reached_reader_select_available {A V : Type}
   · exact compiler_reader_select_available ops bound available source before after compiler st out data env ctx
       demand [] .I32 (fun impossible => False.elim (live impossible)) reference
 
-end Exec.Code
+end Itasca.Runtime.Code

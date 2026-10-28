@@ -1,6 +1,6 @@
 import Exec.Abs.Indirect.Progress
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 theorem invoke_preservation (s : store) (ambient : frame) (originalCode : List instr) (f : AFrame) (rest : List AFrame)
     (address : Nat) (after : List instr) (fn : funcinst) (params results : List valtype) (front args : List val)
@@ -59,4 +59,4 @@ theorem preservation (s : store) (ambient : frame) (f : AFrame) (rest : List AFr
     have actualType : fn.TYPE=⟨.mk_list params,.mk_list results⟩ := signature.symm.trans (type_selected bindings typeSelected)
     apply invoke_preservation s ambient _ f rest address after fn params results front args typed lookup actualType arguments caller heights next
     simpa only [step,values,pop_append,decoded,resolved] using stepped
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

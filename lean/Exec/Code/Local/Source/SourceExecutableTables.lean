@@ -1,6 +1,6 @@
 import Exec.Abs.BinaryInstr
 import Itasca.Binary.Wasm2.Encoding
-namespace Exec.Code.SourceExecutable
+namespace Itasca.Runtime.Code.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
 theorem integer (op : Abs.Numeric.Instruction) : Abs.BinaryInstr op.source := .numeric op
@@ -189,4 +189,4 @@ theorem memory {opcode operation} (arg : code.MemArg)
   · exact .store (.packed .I64 .byte) _
   · exact .store (.packed .I64 .half) _
   · exact .store (.packed .I64 .word) _
-end Exec.Code.SourceExecutable
+end Itasca.Runtime.Code.SourceExecutable

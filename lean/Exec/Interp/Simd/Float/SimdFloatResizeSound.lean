@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatResizeLanes
 import Exec.Spec.SimdFloatResizeStep
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Platform
 
 @[step] theorem float_resize_lanes_sound {F : Type} (floats : runtime.platform.FloatOps F)
@@ -39,4 +39,4 @@ theorem float_resize_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   subst out
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

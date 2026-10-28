@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.PendingInstructionClose
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Patching the last frame and appending a checked epilogue discharges every
@@ -48,4 +48,4 @@ theorem compiler_instruction_root_publish {A : Type} {before after : runtime.com
       exact checked.publish growth strict
   · exact fresh instruction new
 
-end Exec.Code
+end Itasca.Runtime.Code

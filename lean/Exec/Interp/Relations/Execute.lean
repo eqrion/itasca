@@ -2,7 +2,7 @@ import Exec.Interp.Relations.ScalarDispatch
 
 /-! Exact state effects of the extracted copy, constant, and jump handlers.
 Bounds are slot/frame bounds, independent of compiler correctness. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -73,4 +73,4 @@ def JumpEffect (before after : runtime.interp.Execution) (index : Nat) (target :
   unfold runtime.interp.execute_jump_if_non_zero
   step* <;> simp_all [JumpEffect, _root_.getElem!_pos]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

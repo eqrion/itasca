@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixUnreachable
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixReturn
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.unreachable {jumpTables : List U32} {A : Type}
@@ -48,4 +48,4 @@ theorem StructuredReaderCompilerStateWasm2.return_ {jumpTables : List U32} {A : 
   exact state.advance next advance inbounds post
     (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])
 
-end Exec.Code
+end Itasca.Runtime.Code

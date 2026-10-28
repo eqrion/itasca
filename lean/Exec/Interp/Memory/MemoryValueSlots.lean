@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryDescriptorValues
 import Exec.Interp.Relations.Regions
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem scalar_load_bytes_bound (bytes : List U8) (start width : Nat)
@@ -73,4 +73,4 @@ theorem load_word_encode (op : Abs.Memory.Load) (bytes : List U8) (start : Nat)
     | full ty => cases ty <;> decide
     | packed ty width sign => cases width <;> simp [Abs.Memory.Load.bytes,Abs.Memory.PackedWidth.bits]
   · exact inside
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

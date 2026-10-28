@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatDispatch
 import Exec.Interp.Relations.Fetch
 import Exec.Code.Local.Lowering.Float.FloatOpcode
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -42,4 +42,4 @@ theorem dispatch_float_eq (exec : runtime.interp.Execution)
     Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex, Abs.Float.signIndex,
     runtime.interp.dispatch, runtime.interp.dispatch_scalar, runtime.interp.scalar_operands, bind_ok]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

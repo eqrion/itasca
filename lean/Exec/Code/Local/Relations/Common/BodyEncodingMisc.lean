@@ -10,7 +10,7 @@ theorem BodyEncoding.next_misc {data body tokens position}
     (next : Usize) (advance : next.val = position.val + 1)
     (byte : data.val[position.val]'remaining = 252#u8) :
     ∃ subopcode endPosition, Leb128.Decoded data next subopcode endPosition ∧
-      Exec.Code.CumulativeMiscOpcode subopcode := by
+      Itasca.Runtime.Code.CumulativeMiscOpcode subopcode := by
   obtain ⟨allTokens,finish,complete,endPosition,spelling⟩ := encoded
   obtain ⟨token,nextToken,suffix,split,atToken,rest⟩ := before.next_of_prefix complete (by omega)
   exact atToken.cumulative_misc next advance remaining byte

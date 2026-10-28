@@ -8,7 +8,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Interp.Relations.ControlPoint
 import Exec.Abs.Core.Typing
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- A retained forward jump is a source stutter with a strictly decreasing
@@ -47,4 +47,4 @@ theorem step_forward_jump_flat {M P F A : Type}
   refine ⟨success,sameStore,samePlatform,exactState,?_,point,typed,?_⟩
   · simpa only [exactState,FrameSlots] using slots
   · exact Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward point.code.current.entry_bound⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.DefinitionErrors
 import Exec.Store.Initialization.InitializerErrors
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -35,8 +35,7 @@ theorem add_global_errors {M P F A : Type}
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
   simp only [Code.initializer_vec_index store.instances instIndex inst hi,
-    runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.globals, Itasca.module.Env.impl.globals, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
     Code.initializer_vec_index inst.module.global_initializers index function hmapping,
@@ -54,4 +53,4 @@ theorem add_global_errors {M P F A : Type}
     rename' rest => run
     repeat' allocation_error_step run using allocator, law
 
-end Exec.Store
+end Itasca.Runtime.Store

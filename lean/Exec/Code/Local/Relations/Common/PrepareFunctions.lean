@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.SignatureTable
 /-! Allocation-aware preparation of the defined-function result vector. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem prepare_functions_loop {A : Type} (ops : runtime.platform.Alloc A)
@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
   · rintro ⟨functions, budget, i, result⟩ ⟨hi, filled⟩
     dsimp only at hi filled
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop2.body
-    simp only [module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, bind_ok]
+    simp only [Itasca.module.Env.impl.func_type_indices, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.func_type_indices.val.length := by
@@ -50,4 +50,4 @@ open Aeneas Aeneas.Std
       intro accepted
       simpa [same] using filled accepted
   · exact ⟨bound, initialized⟩
-end Exec.Code
+end Itasca.Runtime.Code

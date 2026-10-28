@@ -1,7 +1,7 @@
 import Exec.Code.Module.InitializerOffsetAvailable
 import Exec.Code.Local.Capacity.AuxiliaryAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Data-segment bytecode emission accepts from source offset typing and a
@@ -21,7 +21,7 @@ theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect = function.indirect ⦄ := by
   unfold runtime.compiler.initialize.emit_data
-  simp only [runtime.compiler.ExecutableModule.tail,Exec.module.Module.tail,Itasca.module.Module.impl.tail,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok]
   rw [initializer_vec_index _ _ segment lookup,bind_ok]
   cases mode : segment.mode with
   | Passive =>
@@ -83,4 +83,4 @@ theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc
     · exact congrArg (fun value => value.v128_pool) fields
     · exact congrArg (fun value => value.indirect) fields
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -6,8 +6,8 @@ import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
-namespace Exec.Interp.StructuredMachine.Memory
-open Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
+open Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem corePoint_load_continue {sourceStore raw f compiled C targets next output}
@@ -43,4 +43,4 @@ theorem corePoint_store_continue {before afterStore raw f compiled C targets nex
     rw [values] at labels
     simpa only [List.append_nil] using labels.replace_suffix (after := []) heights
   · simpa only [pcNext] using tail
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

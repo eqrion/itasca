@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Float.ReaderFloatConstantEmissions
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Local.Checking.LinearEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
@@ -101,4 +101,4 @@ theorem reader_float64_open_instructions_wasm2 {data env locals index st}
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
   exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localTypes emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

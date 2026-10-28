@@ -1,7 +1,7 @@
-import Exec.Generated.Types
+import Itasca.Generated.Types
 import Exec.Spec.Steps
 
-namespace Exec.Platform.Recording
+namespace Itasca.Runtime.Platform.Recording
 open Aeneas Aeneas.Std SpecExt
 
 /-- Proof-only instrumentation records events at an interpreter call site,
@@ -33,4 +33,4 @@ theorem returned {α : Type} (operation : Result α) (events : α → List HostE
   · rintro ⟨operationEq,rfl⟩
     simp only [run,operationEq,bind_ok]
 
-end Exec.Platform.Recording
+end Itasca.Runtime.Platform.Recording

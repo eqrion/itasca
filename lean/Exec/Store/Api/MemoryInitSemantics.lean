@@ -3,7 +3,7 @@ import Exec.Spec.MemoryInitAlgebra
 import Exec.Store.Initialization.SegmentCopySlice
 import Exec.Store.Api.TableInitSemantics
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem memory_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -35,7 +35,7 @@ theorem memory_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
     unfold decodeBytes
     rw [copied,←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ inside.1 inside.2]
     exact copyInto_map _ _ _ _ _ _ inside.1
-  have lists := Exec.Representation.map_set_modify (decodeMemory view)
+  have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view)
     (fun m => {m with BYTES := Spec.Segment.copyInto m.BYTES (decodeData segment).BYTES destination source count})
     store.memories.val memoryAddress.index.val memory {memory with buf := buffer} target
     (by simp only [decodeMemory,decodeData,lengthEq,bytesEq])
@@ -97,4 +97,4 @@ theorem MemoryInitializationEffect.refines {M : Type} (view : M → Slice U8) (c
     simp only [alloc.vec.Vec.length,Slice.length] at outside
     omega
 
-end Exec.Store
+end Itasca.Runtime.Store

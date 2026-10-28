@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.Float
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem float_sign_mask_32 (bits : U64) (bound : bits.val < 2 ^ 32) :
@@ -51,4 +51,4 @@ theorem less_float_bits_64 (a b : U64)
   by_cases sa : 9223372036854775808 ≤ a.val <;> by_cases sb : 9223372036854775808 ≤ b.val <;>
     simp [sa, sb, UScalar.lt_equiv]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

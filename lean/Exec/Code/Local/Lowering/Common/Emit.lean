@@ -5,7 +5,7 @@ import Exec.Code.Local.Relations.Common.CompileInv
 operand lookup, and exact emission. Emission records source coordinates and
 preserves all state except the budget and the two appended vectors. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_pc {A : Type} (ops : runtime.platform.Alloc A)
@@ -112,4 +112,4 @@ theorem Emitted.old_instruction {A : Type} {before after : runtime.compiler.Func
   simp only [hcode]
   exact List.getElem?_append_left (List.getElem?_eq_some_iff.mp previous).1 |>.trans previous
 
-end Exec.Code
+end Itasca.Runtime.Code

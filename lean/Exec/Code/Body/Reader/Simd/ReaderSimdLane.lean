@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdPure
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 set_option maxRecDepth 4096
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
@@ -72,4 +72,4 @@ theorem reader_simd_lane_wasm2 {data env locals index st}
       (fun C wf _ => by simpa only [Wasm2.Simd.LaneOperation.inputs_pop,Wasm2.Simd.LaneOperation.outputs_pop]
           using op.typed C (.mk_uN lane.val) wf laneWf bound) encoded fixed
 
-end Exec.Code
+end Itasca.Runtime.Code

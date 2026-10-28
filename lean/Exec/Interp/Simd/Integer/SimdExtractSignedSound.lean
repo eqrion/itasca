@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdExtractSignedRuntime
 import Exec.Spec.SimdExtractSigned
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -37,4 +37,4 @@ theorem extract_signed_dispatch_eq {F : Type} (floats : runtime.platform.FloatOp
   step with extract_signed_access_sound ty laneIndex a b valid as ⟨result, value, exactResult, source⟩
   exact ⟨value, by rw [exactResult], source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

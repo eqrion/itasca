@@ -3,7 +3,7 @@ import Exec.Code.Local.Checking.ConditionalLoopInstructionPrefix
 import Exec.Code.Local.Relations.Table.BranchTableSkip
 import Exec.Code.Local.Relations.Table.BranchTableArguments
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The source transfer interval pays for a recorded forward exit. This holds
@@ -76,4 +76,4 @@ theorem compiler_branch_if_exit_slots {A : Type} (ops : runtime.platform.Alloc A
     rw [width] at sourceFits
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

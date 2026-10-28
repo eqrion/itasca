@@ -1,8 +1,8 @@
-import Exec.Generated.Types
+import Itasca.Generated.Types
 
 /-! Partial correctness that names the cause of divergence. `step` accepts `DivSpec` goals and
 lifts total `spec` theorems into them. -/
-namespace Exec
+namespace Itasca.Runtime
 open Aeneas Aeneas.Std
 
 /-- `m` returns a value satisfying `post`, or diverges and `cause` holds. -/
@@ -76,21 +76,21 @@ theorem spec {α : Type} {m : Result α} {post : WP.Post α} (h : DivSpec False 
 end DivSpec
 
 #register_spec_info {
-    spec_name := ``Exec.DivSpec
+    spec_name := ``Itasca.Runtime.DivSpec
     arity := 4
     program_index := 2
     post_index := 3
-    mk_spec_mono := ``Exec.DivSpec.mono
+    mk_spec_mono := ``Itasca.Runtime.DivSpec.mono
     mk_spec_mono_skip_args := 3
-    mk_spec_bind := ``Exec.DivSpec.bind
+    mk_spec_bind := ``Itasca.Runtime.DivSpec.bind
     mk_spec_bind_skip_args := 5
     prepare_intro_outputs := ``Aeneas.Step.prepareIntroOutputs
     to_mvcgen := .none
     liftings := #[
       { from_statement := ``Aeneas.Std.WP.spec
-        conversion_thm := ``Exec.DivSpec.of_spec
+        conversion_thm := ``Itasca.Runtime.DivSpec.of_spec
         conversion_thm_inferred_args := 4 }
     ]
   }
 
-end Exec
+end Itasca.Runtime

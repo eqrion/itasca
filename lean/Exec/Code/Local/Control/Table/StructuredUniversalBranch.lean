@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
 import Exec.Code.Local.Callbacks.Common.FramePlanUpdate
 import Exec.Code.Local.Control.Table.StructuredResolvedBranchPrefix
 import Exec.Code.Local.Control.Control.UniversalBranch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredUniversalPrefix.branch_forward {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current stack}
@@ -58,4 +58,4 @@ theorem StructuredUniversalPrefix.branch_forward {jumpTables : List Aeneas.Std.U
     · by_cases elided : count = 0#u32 ∨ src = dst
       all_goals simpa [codeEq, SourceScope.advance, SourceScope.input, branchInstructions, elided] using terminal
 
-end Exec.Code
+end Itasca.Runtime.Code

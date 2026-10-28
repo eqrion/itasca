@@ -1,7 +1,7 @@
 import Exec.Code.Module.EntryDemand
 import Exec.Code.Module.FunctionDemandEnvelope
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independently prepared, encoded, and typed source entries in byte/index
@@ -21,4 +21,4 @@ inductive PreparedBatchSource (data : Slice U8) (env : module.Env) (profile : Va
       (rest : PreparedBatchSource data env profile bodyBytes localCount peak (index+1) next entries finish) :
       PreparedBatchSource data env profile bodyBytes localCount peak index start (entry::entries) finish
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionAppendPatch
 import Exec.Code.Local.Callbacks.Control.ElseTransition
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem pending_else {A : Type} {before after : runtime.compiler.FunctionCompiler A}
@@ -69,4 +69,4 @@ theorem ElseTransition.instruction_prefix {A : Type} {before after : runtime.com
           simp [transition.fixupsEq]
       | succ index => simp [fragment] at found
 
-end Exec.Code
+end Itasca.Runtime.Code

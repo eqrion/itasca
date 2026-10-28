@@ -3,8 +3,8 @@ import Exec.Theorems.Composition.Cumulative.CumulativeExecutionOutcome
 import Exec.Theorems.Composition.StoreMutationFacts
 import Exec.Interp.StructuredMachine.SupportedAdvance
 import Exec.Interp.StructuredMachine.UniformAdvance
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 /-- Concrete mutation evidence and the full source/machine outcome of one
 cumulative dispatch. Fresh certification follows from the mutation witness. -/
 def UniformSupportedStepOutcome {M P A : Type} (allocator : runtime.platform.Alloc A)
@@ -52,4 +52,4 @@ theorem UniformSupportedStepOutcome.forget
   cases status : out.1 with
   | Ok value => exact (by simpa only [status] using outcome : StructuredMachine.UniformAdvance view code out.2.2.1 out.2.1 expected codeLength pc pending source).forget
   | Err error => simpa only [status] using outcome
-end Exec.Theorems
+end Itasca.Runtime.Theorems

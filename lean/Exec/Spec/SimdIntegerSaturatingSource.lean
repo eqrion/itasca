@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerSaturatingLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def integerSaturatingResult (ty : Jnn) (kind : IntegerSaturating) (x y : BitVec 128) : uN :=
@@ -40,4 +40,4 @@ theorem integer_saturating_vector_relation (ty : Jnn) (kind : IntegerSaturating)
     | exact maskWf
     | exact relation
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

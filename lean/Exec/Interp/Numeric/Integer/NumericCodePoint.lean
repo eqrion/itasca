@@ -2,7 +2,7 @@ import Exec.Interp.Relations.Rel
 import Exec.Abs.Numeric.Decode
 import Exec.Abs.Numeric.OperandsCore
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std Abs.Numeric
 
 theorem linearEmission_numeric_inv {locals before after : List valtype} {emitted : List Code.Bytecode}
@@ -45,4 +45,4 @@ theorem numericOperand_types (op : Instruction)
   · simp [Instruction.operands, one, integerValue_type]
   · simp [Instruction.operands, two, integerValue_type]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

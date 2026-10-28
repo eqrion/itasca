@@ -4,7 +4,7 @@ import Itasca.Wasm2.Trace.TableBytes
 import Exec.Code.Body.Reader.Table.ReaderTableSuffix
 import Exec.Code.Local.Relations.Table.BranchTableOperands
 import Exec.Code.Body.Reader.Table.ReaderTableSource
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_capacity_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -16,4 +16,4 @@ theorem reader_table_capacity_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨count,first,selector,popped,depths,fallback,types,defaultStart,readState,budget,buffer,
     _,_,_,_,_,_,_,callback⟩ := compiler_read_br_table ops law before after st out data env _ accepted
   exact compiler_br_table_capacity ops law {before with budget,table_depths:=buffer} after out.core fallback types callback
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Checking.ElseExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source THEN geometry provides the owned guard needed by actual ELSE in
@@ -55,4 +55,4 @@ theorem StructuredCompilerPrefix.else_exit_slots {A : Type}
     norm_num [limits.MAX_MODULE_BYTES] at sourceBound
     scalar_tac
 
-end Exec.Code
+end Itasca.Runtime.Code

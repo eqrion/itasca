@@ -2,7 +2,7 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Measure
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Code sizes include nested bodies. Saved branch continuations are bounded
 as the exact sequence resumed by a branch. Values, locals, and call depth do
@@ -197,4 +197,4 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
         simp at hh ⊢
         omega
 
-end Exec.Abs
+end Itasca.Runtime.Abs

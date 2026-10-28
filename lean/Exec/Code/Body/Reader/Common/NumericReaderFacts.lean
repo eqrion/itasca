@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Abs.Numeric
 
 /-- All non-extension integer instructions use the canonical scalar reader
@@ -48,4 +48,4 @@ theorem integer_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     cases operator <;>
       refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩ <;>
       simp only [global_simps] <;> decide
-end Exec.Code
+end Itasca.Runtime.Code

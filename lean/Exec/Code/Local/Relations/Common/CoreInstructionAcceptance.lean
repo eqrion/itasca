@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SlotCheckAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -72,4 +72,4 @@ theorem CoreInstructionBounds.accepts {function : runtime.bytecode.CompiledFunct
   all_goals try simp_all only [Result.ok.injEq,decide_eq_true_eq,bind_ok]
   all_goals first | rfl | scalar_tac | (apply checked_difference_accepts; scalar_tac)
 
-end Exec.Code
+end Itasca.Runtime.Code

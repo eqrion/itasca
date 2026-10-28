@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileSubmit
 import Exec.Code.Module.CollectFunctions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Metadata captured before any function compilation is fixed across all
@@ -23,4 +23,4 @@ theorem CompileEntries.static {A : Type} {allocator : runtime.platform.Alloc A}
     obtain ⟨w⟩ := compile_entry_accepted _ _ _ _ _ entry
     exact ih.trans w.static
 
-end Exec.Code
+end Itasca.Runtime.Code

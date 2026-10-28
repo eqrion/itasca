@@ -1,6 +1,6 @@
 import Exec.Spec.SimdIntegerArithmetic
 import Exec.Spec.IntegerExtend
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def dotProduct (x y : BitVec 128) (j : Nat) : BitVec 32 :=
@@ -43,8 +43,8 @@ theorem dot_product_relation (x y : BitVec 128) :
   simp only [laneOfBits,proj_lane__0,Option.get!_some]
   have relation := integer_arithmetic_relation .mul
     ((laneWord .I16 x j).signExtend 32) ((laneWord .I16 y j).signExtend 32)
-  have ex := Exec.Spec.extend_signed_bitvec 16 32 (laneWord .I16 x j)
-  have ey := Exec.Spec.extend_signed_bitvec 16 32 (laneWord .I16 y j)
+  have ex := Itasca.Runtime.Spec.extend_signed_bitvec 16 32 (laneWord .I16 x j)
+  have ey := Itasca.Runtime.Spec.extend_signed_bitvec 16 32 (laneWord .I16 y j)
   exact (congrArg₂ (fun a b => fun_imul_ 32 a b (.mk_uN (dotProduct x y j).toNat)) ex ey).mpr relation
 
 theorem dot_sum_relation (x y : BitVec 128) :
@@ -65,4 +65,4 @@ theorem dot_words_wf (x y : BitVec 128) :
   obtain ⟨j,valid,rfl⟩ := List.mem_map.mp member
   exact .lane__case_0 _ _ _ (unsigned_wf_of_lt 32 _ (BitVec.isLt _)) rfl
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

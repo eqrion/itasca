@@ -1,7 +1,7 @@
 import Exec.Abs.Numeric.TransitionSimulation
 import Exec.Abs.Core.Pure
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
     (typed : ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
@@ -47,4 +47,4 @@ theorem core_step_positive (s : store) (ambient : frame) (f : AFrame)
   simp only [Core.step] at step
   rw [Core.instruction_slice s ambient {f with code := op.source::after} rest op.source after (.numeric op) hf] at step
   exact astep_positive s ambient f rest after op next typed step
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

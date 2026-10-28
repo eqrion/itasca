@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdSaturation
 import Exec.Spec.SimdQ15
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def q15Word (a b : I64) : Result U64 :=
   Aeneas.Std.bind (Aeneas.Std.bind (Aeneas.Std.bind (Aeneas.Std.bind (a * b)
@@ -24,4 +24,4 @@ def q15Word (a b : I64) : Result U64 :=
   simp only [Std.bind_assoc]
   step* <;> simp_all [Int.shiftRight_eq_div_pow] <;> first | (with_unfolding_all assumption) | scalar_tac
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

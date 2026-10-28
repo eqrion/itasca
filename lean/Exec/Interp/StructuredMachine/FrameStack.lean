@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.SuspendedPoint
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 structure SavedFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
@@ -159,4 +159,4 @@ theorem SavedFrame.resume {M : Type} {store : runtime.store.Store M} {sourceStor
   obtain ⟨compiled,C,targets,next,output,program,point⟩ := saved.continuation
   exact ⟨compiled,C,targets,next,output,program,point.resume results types heights⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

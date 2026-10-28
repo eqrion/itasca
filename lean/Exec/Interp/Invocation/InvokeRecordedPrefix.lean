@@ -11,7 +11,7 @@ import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Relations.ExecutionLoop
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 
@@ -209,4 +209,4 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
                 try simp only [DivSpec.ok_iff]
                 exact ⟨finalRetained, (fun _ => ⟨by simpa only [sameResults] using satisfied,resultOwners⟩), by intro error impossible; cases impossible⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

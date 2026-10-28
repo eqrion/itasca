@@ -6,7 +6,7 @@ import Exec.Code.Local.Source.SourceBudget
 import Exec.Code.Local.Source.SourceLengths
 import Exec.Code.Local.Demand.ObservationDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Multi-instruction callbacks use the same source footprint. Their larger
@@ -42,4 +42,4 @@ theorem scopeDemand_of_source {A : Type}
   refine ⟨demand.pc,demand.coordinate,maps,?_,frames,?_,room,demand.operands,demand.slots⟩ <;>
     simp only [alloc.vec.Vec.length] <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Spec.SegmentInitCases
 import Exec.Spec.Context
 import Mathlib.Tactic
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def tableWrite (s : store) (f : frame) (index position : Nat) (value : ref) : store :=
@@ -143,4 +143,4 @@ theorem table_init_steps (s : store) (f : frame) (destination source count table
     have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,tableInit,value,fresh] using combined
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

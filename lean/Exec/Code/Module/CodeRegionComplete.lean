@@ -1,7 +1,7 @@
 import Exec.Code.Module.CodeRegion
 import Itasca.Stream.SplitComplete
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca ModuleBinary
 set_option maxRecDepth 4096
 
@@ -197,4 +197,4 @@ theorem compiler_code_region_eq_stream {profile} (data : Slice U8) (raw : Module
   obtain ⟨decls,codeStart,codeEnd,layout⟩ := ModuleLayout.normalize data raw encoded
   rw [compiler_code_region_complete_layout layout,Itasca.stream.find_code_region.complete_layout layout]
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -4,7 +4,7 @@ import Exec.Code.Module.StreamingAvailable
 import Exec.Code.Module.CollectionAvailable
 import Exec.Code.Module.SourceCompilationDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -93,14 +93,13 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
   subst reply
   refine ⟨executable,?_⟩
   unfold runtime.compiler.compile_with
-  simp only [if_neg (module_fits bytes limits.max_module_bytes eligible.moduleBytes),regionCall,bind_ok,uncurry_apply_pair,
-    Exec.module.Env.new,initialized]
+  simp only [if_neg (module_fits bytes limits.max_module_bytes eligible.moduleBytes),regionCall,bind_ok,uncurry_apply_pair,initialized]
   simp only [initialScheduler] at streamCall
-  simp only [Exec.stream.validate_streaming,streamCall,bind_ok,uncurry_apply_pair,tailReady,core.option.Option.ok_or,
+  simp only [streamCall,bind_ok,uncurry_apply_pair,tailReady,core.option.Option.ok_or,
     core.result.Result.Insts.CoreOpsTry.branch,collected]
   simp only [uninitializedModule] at lowered
   rw [lowered]
   simp only [bind_ok]
   rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

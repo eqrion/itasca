@@ -4,8 +4,8 @@ import Exec.Abs.Numeric.Conversion
 import Exec.Abs.Numeric.UnaryOperators
 import Exec.Abs.Numeric.Typing
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
   cases op with
@@ -55,4 +55,4 @@ theorem Instruction.pure_success (op : Instruction)
     subst result
     exact conv.pure a
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

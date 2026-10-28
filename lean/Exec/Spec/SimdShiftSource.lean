@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShift
 import SpecExt.Builtins.LaneMap
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def vectorLane (ty : lanetype) (bits : BitVec 128) (j : Nat) : BitVec (lsize ty) :=
@@ -54,4 +54,4 @@ theorem shift_step (ty : Jnn) (kind : ShiftKind) (bits result : BitVec 128) (amo
   · exact shapeWf
   · exact integerShape
   · exact unsigned_wf_of_lt 32 _ amount.isLt
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

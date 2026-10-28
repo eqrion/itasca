@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.FrameSites
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- At a complete callback boundary, each retained fixup was paid for by an
@@ -61,4 +61,4 @@ theorem FixupBudget.lookup {frames codeLength} (budget : FixupBudget frames code
     frame.fixups.val.length < Usize.max :=
   (budget frame (List.mem_of_getElem? selected)).trans_lt capacity
 
-end Exec.Code
+end Itasca.Runtime.Code

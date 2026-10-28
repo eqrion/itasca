@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Arguments
 import Itasca.Support.Result
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem decode_value_owned_of_ok (ty : Itasca.types.ValueType) (lo hi : U64) (store : Usize)
@@ -29,4 +29,4 @@ theorem decode_slot_owned_of_ok (slots : Slice U64) (position : Usize)
   obtain ⟨lo,loEq,actual⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ actual
   exact decode_value_owned_of_ok ty lo hi store value actual
 
-end Exec.Interp
+end Itasca.Runtime.Interp

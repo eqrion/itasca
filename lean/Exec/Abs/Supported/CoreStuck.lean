@@ -3,7 +3,7 @@ import Exec.Abs.Core.Step
 import Exec.Abs.BinaryInstr
 import Exec.Abs.SupportedState
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- `Core.instruction` never executes the head; another transition relation handles it. -/
 def CoreStuck (op : instr) : Prop :=
@@ -57,4 +57,4 @@ theorem BinaryInstr.core_head {op} (allowed : BinaryInstr op) : CoreHead op ∨ 
   | call_indirect table type => exact .inr (indirect_core_stuck table type)
   | ret => exact .inl (.pure .ret)
 
-end Exec.Abs
+end Itasca.Runtime.Abs

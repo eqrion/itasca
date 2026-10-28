@@ -4,7 +4,7 @@ import Exec.Store.Invariant.FunctionStagingLoop
 import Exec.Store.Api.TableStagingLoop
 import Exec.Store.Api.MemoryStagingLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem typeParts_inj {M : Type} (a b : runtime.store.Store M)
@@ -28,4 +28,4 @@ theorem preparation_result {M R : Type}
   obtain ⟨rfl, rfl, rfl⟩ := injective _ _ _ _ _ _ eq
   exact property
 
-end Exec.Store
+end Itasca.Runtime.Store

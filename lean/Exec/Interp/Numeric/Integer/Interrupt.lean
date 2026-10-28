@@ -1,9 +1,9 @@
 import Exec.Generated.Equations
-import Exec.Generated.Types
+import Itasca.Generated.Types
 
 /-! Interrupt polling has no store access. A terminated execution at this
 boundary is exactly a terminating hook decision, not an internal escape hatch. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def interruptResult : runtime.platform.InterruptAction → core.result.Result Unit runtime.ExecError
@@ -18,4 +18,4 @@ theorem interrupt_eq {M P : Type} (memory : runtime.platform.MemoryBuffer M)
   simp only [runtime.interp.interrupt, h, bind_ok]
   cases decision <;> rfl
 
-end Exec.Interp
+end Itasca.Runtime.Interp

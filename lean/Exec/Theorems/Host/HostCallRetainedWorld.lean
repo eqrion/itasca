@@ -3,8 +3,8 @@ import Exec.Theorems.Host.HostCallSource
 import Exec.Theorems.Composition.ExecutionCode
 import Exec.Interp.Relations.FrameStorePrefix
 import Exec.Theorems.Host.HostResumeOwned
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem call_host_source_retained_world {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -128,4 +128,4 @@ theorem call_host_source_retained_world {M P F A : Type}
         · simp [trapped] at success
         · simp [exhausted] at success
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

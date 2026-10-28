@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.StatefulAuxiliaryGrowth
 import Exec.Code.Local.Capacity.SimdAuxiliaryGrowth
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Body.Reader.Common.ReaderExtendedCodeMonotone
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_stateful_base_auxiliary_growth_wasm2 {data env locals index st}
@@ -75,4 +75,4 @@ theorem reader_typed_select_auxiliary_growth_wasm2 {data env locals index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact .of_tables (compiler_core_tables ops law before after out.core (.select true) callback)
     (compiler_core_code_mono ops law before after out.core (.select true) callback)
-end Exec.Code
+end Itasca.Runtime.Code

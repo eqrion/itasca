@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.SimdReaderMeaning
 import Exec.Code.Local.Callbacks.Table.CompilerTables
 import Exec.Code.Body.Reader.Simd.ReaderSimdShuffle
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent source meaning of a SIMD callback, including the constant
@@ -40,4 +40,4 @@ theorem declared {C sub a bits input source output}
   | instruction h => exact h.declared references
   | constant => simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
 end SimdCallbackMeaning
-end Exec.Code
+end Itasca.Runtime.Code

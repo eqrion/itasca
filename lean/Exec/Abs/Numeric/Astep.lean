@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.Compatibility
 
-namespace Exec.Abs.Numeric
+namespace Itasca.Runtime.Abs.Numeric
 
 theorem pop_two (front : List val) (a b : val) :
     pop (front ++ [a,b]) = some (front ++ [a], b) := by
@@ -75,4 +75,4 @@ theorem astep_typed_eq (s : AState) (f : AFrame) (rest : List AFrame)
     cases f; simp_all
   rw [same, astep_operands, transition_operands_code]
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

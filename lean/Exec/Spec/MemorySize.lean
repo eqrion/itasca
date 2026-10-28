@@ -1,5 +1,5 @@
 import Exec.Spec.TableAccess
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Memory size returns the exact page count of the source memory. -/
@@ -20,4 +20,4 @@ theorem memory_size_step (s : store) (f : frame)
   · exact input
   · exact output
   · exact Segment.index_wf 0 (by decide)
-end Exec.Spec
+end Itasca.Runtime.Spec

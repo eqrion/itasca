@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerMinMaxShape
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def minmaxWords (ty : Jnn) (kind : IntegerMinMax) (x y : BitVec 128) : List uN :=
@@ -29,4 +29,4 @@ theorem minmax_words_wf (ty : Jnn) (kind : IntegerMinMax) (x y : BitVec 128) :
   cases ty <;> constructor
   all_goals first | rfl | exact unsigned_wf_of_lt _ _ (BitVec.isLt _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

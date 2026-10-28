@@ -3,7 +3,7 @@ import Itasca.Stream.SubmissionComplete
 
 open Aeneas Aeneas.Std Itasca
 
-namespace Exec.Code.StreamAvailability
+namespace Itasca.Runtime.Code.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -157,9 +157,9 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     · simpa using hrestcount.symm
   · simpa using hnextprogress
 
-end Exec.Code.StreamAvailability
+end Itasca.Runtime.Code.StreamAvailability
 
-namespace Exec.Code.StreamAvailability
+namespace Itasca.Runtime.Code.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -218,9 +218,9 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
     have cursor : func.val = env.func_type_indices.val.length := by simpa using hcount
     exact ⟨queue,by simpa only [cursor] using hv,hq,hp,hmax⟩
 
-end Exec.Code.StreamAvailability
+end Itasca.Runtime.Code.StreamAvailability
 
-namespace Exec.Code.StreamAvailability
+namespace Itasca.Runtime.Code.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -300,4 +300,4 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     obtain ⟨queue, hv', hvalid, hids, hmax⟩ := hp
     exact ⟨pending, v', queue, hr, hv', hvalid, hids, hmax⟩
 
-end Exec.Code.StreamAvailability
+end Itasca.Runtime.Code.StreamAvailability

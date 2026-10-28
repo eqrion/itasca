@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.DataResultEffect
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def sourceDataPayload (segment : Itasca.module.Data) : datainst :=
@@ -29,4 +29,4 @@ theorem add_instance_data_payload {M A : Type} (memory : runtime.platform.Memory
     · intro _
       simp only [List.map_append, List.map_cons, List.map_nil, appended, decodeData,
         copied, instanceRead, sourceDataPayload, decodeBytes]
-end Exec.Store
+end Itasca.Runtime.Store

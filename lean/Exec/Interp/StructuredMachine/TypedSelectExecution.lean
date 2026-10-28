@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.TypedSelectStep
 import Exec.Abs.TypedSelect.Step
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.TypedSelect
+namespace Itasca.Runtime.Interp.StructuredMachine.TypedSelect
 open Aeneas Aeneas.Std
 theorem step_execution {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -51,7 +51,7 @@ theorem step_execution {M P F A : Type}
     · exact (Abs.TypedSelect.Step.next step).next_supported machine.core
   refine ⟨success,sameStore,samePlatform,pc,g,
     Execution.ordinary view code ambient {f with code := .SELECT (some [declared])::after} g rest expected raw.pc.val false machine
-      (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
+      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,?_,?_⟩
   · intro bounds owned
     rcases transition with same | step
@@ -61,4 +61,4 @@ theorem step_execution {M P F A : Type}
     rcases transition with same | step
     · rw [←same]; exact bounded
     · exact (Abs.TypedSelect.Step.next step).next_bound bounded
-end Exec.Interp.StructuredMachine.TypedSelect
+end Itasca.Runtime.Interp.StructuredMachine.TypedSelect

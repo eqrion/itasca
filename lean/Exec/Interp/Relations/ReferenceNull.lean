@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.InitializerExecute
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The reference test compares the complete encoded word with the null
@@ -23,4 +23,4 @@ sentinel and writes exactly the canonical i32 Boolean. -/
   simp only [wordEq]
   split <;> step* <;> simp_all [SlotsEffect,_root_.getElem!_pos]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

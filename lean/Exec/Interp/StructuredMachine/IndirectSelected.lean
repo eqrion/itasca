@@ -5,7 +5,7 @@ import Exec.Interp.Calls.IndirectCallNext
 import Exec.Abs.Indirect.Results
 import Exec.Abs.Indirect.Correct
 import Exec.Abs.Indirect.Transport
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- A resolved defined indirect call reuses the actual call installer while
@@ -114,4 +114,4 @@ theorem call_indirect_selected
   obtain ⟨head,code,C,targets,next,output,found,program,point⟩ := ready
   have same : head.pc.val=0 := by rw [top] at found;cases found;rfl
   exact ⟨head,code,C,targets,next,output,found,same,program,.ready point⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

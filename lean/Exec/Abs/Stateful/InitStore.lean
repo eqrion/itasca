@@ -3,8 +3,8 @@ import Exec.Abs.Stateful.ObjectReplacement
 import Exec.Abs.Stateful.MemorySize
 import Exec.Spec.MemoryInitAlgebra
 import Exec.Spec.TableInitAlgebra
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem memory_byte_length_bound {s : store} (contents : StoreContentsTyped s) {object : meminst}
     (member : object ∈ s.MEMS) : object.BYTES.length ≤ 2^32 := by
@@ -75,4 +75,4 @@ theorem tableInit_preserves (s : store) (f : frame) (tableIndex elementIndex tab
   simp only [elementEq,List.getElem!_eq_getElem?_getD,mapped,Option.getD_some,List.modify_eq_set_getElem?,found,Option.map_some] at final
   rw [final]
   exact ⟨result.1,result.2,rfl⟩
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

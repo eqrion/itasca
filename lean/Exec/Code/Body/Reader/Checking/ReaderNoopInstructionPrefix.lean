@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Local.Checking.NoopInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual nop reading preserves instruction and recorded exit-slot checks. -/
@@ -41,4 +41,4 @@ theorem reader_drop_open_instructions_wasm2 {A : Type}
   obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
   exact compiler_nop_drop_open_instructions ops law before after out.core true held exits callback
 
-end Exec.Code
+end Itasca.Runtime.Code

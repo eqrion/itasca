@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableLayout
 import Exec.Code.Local.Relations.Common.Extension
 import Exec.Code.Local.Relations.Common.Concatenation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem BranchTableEntry.extend {locals labels stack code depth entry next}
@@ -61,4 +61,4 @@ theorem BranchTableLayout.append_tables {tables locals labels stack code depths 
   intro index depth found
   obtain ⟨entry,lookup,fragment⟩ := table.entries index depth found
   exact ⟨entry,by rw [List.getElem?_append_left (List.getElem?_eq_some_iff.mp lookup).1]; exact lookup,fragment⟩
-end Exec.Code
+end Itasca.Runtime.Code

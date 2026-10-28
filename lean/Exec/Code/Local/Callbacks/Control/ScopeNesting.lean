@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFrameElse
 import Exec.Code.Local.Callbacks.Control.ScopeFrameEnter
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Nested source scopes begin after their parent's body entry. The extra local
@@ -111,4 +111,4 @@ theorem ScopeNesting.enter_if {A : Type} {locals parents current frame}
     ScopeNesting (parents ++ [current])
       (SourceScope.enterIf bt condition front params results compiler.function.code.val.length entered) :=
   .push nested _ shape.bodyBound (by simp [SourceScope.enterIf])
-end Exec.Code
+end Itasca.Runtime.Code

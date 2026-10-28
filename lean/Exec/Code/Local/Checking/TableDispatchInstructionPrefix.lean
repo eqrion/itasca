@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.InstructionAppendEffect
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- An emitted dispatch word can be deferred at its exact new position while
@@ -50,4 +50,4 @@ theorem instruction_append_effect_jump_table {A : Type} (before : runtime.compil
   rw [appended,List.length_append,List.length_singleton]
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

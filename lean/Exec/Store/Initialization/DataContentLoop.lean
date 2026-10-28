@@ -3,7 +3,7 @@ import Exec.Store.Initialization.ElementTypes
 import Exec.Store.Initialization.DataStagingLoop
 import Exec.Store.Initialization.ElementContentEffect
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem DataStageEffect.contents {M : Type} {store after : runtime.store.Store M}
@@ -13,4 +13,4 @@ theorem DataStageEffect.contents {M : Type} {store after : runtime.store.Store M
   | unchanged => exact contents
   | appended datas addresses data stored mapped => simpa only [ElementContents, ReferenceShape] using contents
 
-end Exec.Store
+end Itasca.Runtime.Store

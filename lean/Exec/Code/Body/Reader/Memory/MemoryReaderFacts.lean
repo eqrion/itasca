@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Memory.MemoryOpcode
 import Exec.Code.Body.Reader.Memory.ReaderMemory
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 def memoryRawType : numtype → types.ValueType
@@ -57,4 +57,4 @@ def memoryStoreMeaning : Abs.Memory.Store → MemoryMeaning.Operation
   | full ty => cases ty <;> refine ⟨rfl,rfl,rfl,rfl,rfl,by decide,by decide,rfl,?_⟩ <;> simp only [global_simps] <;> decide
   | packed ty width => cases ty <;> cases width <;>
       refine ⟨rfl,rfl,rfl,rfl,rfl,by decide,by decide,rfl,?_⟩ <;> simp only [global_simps] <;> decide
-end Exec.Code
+end Itasca.Runtime.Code

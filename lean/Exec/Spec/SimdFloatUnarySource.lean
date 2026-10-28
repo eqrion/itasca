@@ -1,6 +1,6 @@
 import Exec.Spec.SimdFloatUnary
 import Exec.Spec.SimdChoices
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatUnaryLaneChoices (ty : Fnn) (op : vunop_Fnn_N) (lane : lane_) : List lane_ :=
@@ -60,4 +60,4 @@ theorem float_unary_relation (ty : Fnn) (op : vunop_Fnn_N) (bits : BitVec 128) :
   · apply fun_vunop_.fun_vunop__case_25
     all_goals first | rfl | exact shapeWf | exact lanesWf
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

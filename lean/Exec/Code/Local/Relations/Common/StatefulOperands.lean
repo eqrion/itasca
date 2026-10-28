@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.StatefulLowering
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem first_suffix_operand {A : Type} (ops : runtime.platform.Alloc A)
@@ -85,4 +85,4 @@ theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
       omega
     · intro _; omega
 
-end Exec.Code
+end Itasca.Runtime.Code

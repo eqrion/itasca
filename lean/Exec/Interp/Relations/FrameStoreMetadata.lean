@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.StackRelation
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Runtime content mutations preserve the metadata used by every active or
@@ -38,4 +38,4 @@ theorem FrameProgram.store_metadata {M : Type} {before after : runtime.store.Sto
   obtain ⟨inst,found,code,table⟩ := program.lookup
   exact ⟨inst,by simpa only [metadata.instances] using found,code,table.store_metadata metadata⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Store.Preparation.StagingAllocation
 import Exec.Store.Preparation.StagingInstanceShape
 import Exec.Store.Invariant.ShapeAssembly
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual initializer staging sequence establishes the full store invariant
@@ -78,4 +78,4 @@ theorem staging_commit_shape {M P F A : Type}
     (by simpa only [source] using counted)
     (by simpa only [retained.limits] using limited)
 
-end Exec.Store
+end Itasca.Runtime.Store

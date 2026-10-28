@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Table.ReaderTableLoop
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -45,4 +45,4 @@ theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
           (by scalar_tac) rest
       exact ⟨count,first,selector,popped,depths,default,types,defaultStart,readState,budget,buffer,
         readSpec,popCall,bufferEq,decoded,defaultDecoded,by simpa using countEq,marked,callback⟩
-end Exec.Code
+end Itasca.Runtime.Code

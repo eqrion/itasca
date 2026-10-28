@@ -10,7 +10,7 @@ import Exec.Interp.Relations.ControlPoint
 import Exec.Interp.Relations.LocalCodePoint
 import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.ValueLookup
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 theorem step_localGet_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -110,4 +110,4 @@ theorem step_localGet_owned_forward {M P F A : Type}
       exact simulation
     · exact FrameOwnershipClosure.local_get {f with code := .LOCAL_GET (.mk_uN localIndex.val) :: after} after localIndex.val value lookup
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -4,7 +4,7 @@ import Mathlib.Tactic
 /-! Store extension facts for the generated relation, including its explicit
 well-formedness premises. No generated well-formedness theorem is used. -/
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem extend_func_refl (x : funcinst) (h : wf_funcinst x) : Extend_funcinst x x := by
   cases x
@@ -182,4 +182,4 @@ theorem extend_store_trans {a b c : store}
         ad (range_bound_trans _ _ _ bd cd) (range_rel_trans (R := Extend_datainst) extend_data_trans _ _ _ bd rd rd')
         ae (range_bound_trans _ _ _ be ce) (range_rel_trans (R := Extend_eleminst) extend_elem_trans _ _ _ be re re') ha hc
 
-end Exec.Spec
+end Itasca.Runtime.Spec

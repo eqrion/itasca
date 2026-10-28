@@ -3,8 +3,8 @@ import Exec.Abs.Simd.Transition
 import Exec.Abs.Core.MemoryTyping
 import Exec.Abs.Core.MemoryMutation
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec
 
 theorem MemorySignature.memory_present {source inputs outputs C signature}
     (shape : MemorySignature source inputs outputs) (typed : Instr_ok C source signature) :
@@ -88,4 +88,4 @@ theorem MemoryChange.typed {before frame after} (change : MemoryChange before fr
       ⟨memoryPayloadWrite_extends before frame address start object payload storeWf contents mapped found valid,
        contents.memory_write storeWf frame address start object payload mapped found valid⟩
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

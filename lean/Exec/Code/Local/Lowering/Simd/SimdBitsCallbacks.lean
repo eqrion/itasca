@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Simd.SimdCallbacks
 import Exec.Code.Local.Initializer.Initializer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem compiler_simd_constant_callback {A : Type} (ops : runtime.platform.Alloc A)
@@ -22,4 +22,4 @@ theorem compiler_simd_shuffle_callback {A : Type} (ops : runtime.platform.Alloc 
   simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_shuffle,lift,bind_ok,shift]
   rfl
-end Exec.Code
+end Itasca.Runtime.Code

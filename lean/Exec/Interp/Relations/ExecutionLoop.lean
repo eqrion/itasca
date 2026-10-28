@@ -2,7 +2,7 @@ import Exec.Interp.Control.LoopBasis
 
 /-! Actual execution-loop trace and safety composition. The body contract is a
 local proof interface, to be discharged by the concrete instruction refinements. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 abbrev ExecutionState (M P : Type) :=
@@ -94,5 +94,5 @@ theorem execution_loop_stops
   rintro result ⟨count, trace, finalState⟩
   exact finalState
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

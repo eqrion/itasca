@@ -1,7 +1,7 @@
 import Exec.Interp.Calls.CallStack
 import Exec.Interp.Relations.StackPreservation
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Updating the fetched last frame preserves the exact concrete stack prefix. -/
@@ -15,4 +15,4 @@ theorem frames_set_last (exec : runtime.interp.Execution) (index : Usize)
   simp only [show exec.frames.val.length - 1 + 1 = exec.frames.val.length by omega,
     List.drop_length]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Api.DefineTable
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
@@ -57,4 +57,4 @@ theorem define_table_resource_causes {M A : Type} (memory : runtime.platform.Mem
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TableAllocationCause]
     omega
-end Exec.Store
+end Itasca.Runtime.Store

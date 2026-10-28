@@ -1,5 +1,5 @@
 import Exec.Interp.Memory.MemoryNumericInput
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
  theorem execute_store_slots {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -43,4 +43,4 @@ open Aeneas Aeneas.Std
   have effect := execute_store_value memory view laws code exec store instanceIndex base op address value offset inst memoryAddress object word valueWord
     found mapped issued input inputValue
   simpa only [castEq,decoded] using effect
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

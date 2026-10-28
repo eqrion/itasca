@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderSignEmissions
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Local.Checking.LinearEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed integer reader progress preserves all stored instruction checks. -/
@@ -55,4 +55,4 @@ theorem reader_sign_open_instructions_wasm2 {data env locals index st}
   rw [input] at layout
   exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

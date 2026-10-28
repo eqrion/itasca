@@ -5,7 +5,7 @@ import Exec.Code.Body.Reader.Control.ReaderReturnStack
 import Exec.Code.Body.Reader.Common.ReaderRootFrame
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -47,4 +47,4 @@ theorem reached_profile_return_available_wasm2 {jumpTables : List U32} {data env
     omega
   exact compiler_return_available ops bound available compiler out.core demand frame (fun _ => found) height
 
-end Exec.Code
+end Itasca.Runtime.Code

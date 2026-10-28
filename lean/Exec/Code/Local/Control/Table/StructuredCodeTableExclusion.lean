@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Common.Structured
 import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Code.Local.Control.Table.StructuredCodePoint
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 private theorem numeric_not_branchTable (op : Abs.Numeric.Instruction) (depths fallback) :
@@ -29,4 +29,4 @@ theorem ScalarEmission.not_branchTable {C before instruction emitted after}
   | store => simp [Abs.Memory.Store.source]
   | _ => simp
 
-end Exec.Code
+end Itasca.Runtime.Code

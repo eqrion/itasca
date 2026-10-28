@@ -1,7 +1,7 @@
 import Exec.Representation.TypeEntries
 import Exec.Store.Preparation.Staging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A successful type-map entry names the exact canonical type; rejection
@@ -23,8 +23,7 @@ theorem add_instance_type_effect {M A : Type} (memory : runtime.platform.MemoryB
     runtime.store.instantiate.Store.add_instance_type memory allocator store inst index
       ⦃ out => TypeStageEffect store inst inst.module.module.env.types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_type
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.types, Itasca.module.Env.impl.types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -119,4 +118,4 @@ theorem TypeStageEffect.entries {M : Type} {store : runtime.store.Store M}
     rw [mapped]
     exact List.rel_append (entries.extend interned.staged) (.cons interned.lookup .nil)
 
-end Exec.Store
+end Itasca.Runtime.Store

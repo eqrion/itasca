@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Table.ReaderTablePost
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_decoded_wasm2 {V : Type} (visitor : code.OpVisitor V)
@@ -21,4 +21,4 @@ theorem reader_table_decoded_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [erased,WP.spec_ok] at effect
   obtain ⟨depths,fallback,decoded,_⟩ := effect rfl
   exact ⟨depths,fallback,decoded⟩
-end Exec.Code
+end Itasca.Runtime.Code

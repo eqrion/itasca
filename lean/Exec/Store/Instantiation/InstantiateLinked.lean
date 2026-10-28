@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.InstantiateClassified
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -34,4 +34,4 @@ theorem instantiate_inner_linked_decomposition {M P F A : Type}
   · exact Or.inl ⟨error, staged, returned, retained⟩
   · exact Or.inr committed
 
-end Exec.Store
+end Itasca.Runtime.Store

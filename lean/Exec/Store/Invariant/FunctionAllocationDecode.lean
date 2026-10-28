@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.FunctionPayload
 import Exec.Spec.Allocation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem FunctionAllocatedAt.decode {M : Type}
@@ -22,4 +22,4 @@ theorem FunctionAllocatedAt.decode {M : Type}
     decodeInstance, sourceIndex, types, List.getElem!_eq_getElem?_getD,
     List.getElem?_map, signatureFound, Option.map_some, Option.getD_some]
 
-end Exec.Store
+end Itasca.Runtime.Store

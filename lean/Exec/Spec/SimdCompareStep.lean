@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareRelation
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem integer_comparison_step (ty : Jnn) (op : vrelop_Jnn_N) (x y result : BitVec 128)
     (supported : integerCompareSupported ty op)
@@ -17,4 +17,4 @@ theorem integer_comparison_step (ty : Jnn) (op : vrelop_Jnn_N) (x y result : Bit
   · exact .admininstr_case_28 _ _ (shapeOf_wf _) (integerCompareSource_wf ty op supported)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

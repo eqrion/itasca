@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerDataAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every remaining independently typed data offset is accepted by the actual
@@ -34,7 +34,7 @@ theorem initializer_data_offsets_available {A : Type} (ops : runtime.platform.Al
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop2.body
-    simp only [runtime.compiler.ExecutableModule.tail,Exec.module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail,bind_ok]
     split
     · rename_i more
@@ -64,4 +64,4 @@ theorem initializer_data_offsets_available {A : Type} (ops : runtime.platform.Al
       exact ⟨trivial,same,by simpa [last] using size,by simpa [last] using used,limits⟩
   · exact ⟨rfl,rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

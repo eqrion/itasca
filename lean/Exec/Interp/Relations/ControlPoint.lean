@@ -2,7 +2,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Control.PendingJump
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Simulation counts positive SpecTec reductions and explicitly measures all
@@ -31,4 +31,4 @@ theorem ConcreteSim.of_source {before after : Abs.AState}
   · exact Or.inl ⟨same, dispatchMeasure_source_any beforePending afterPending codeLength beforePC afterPC decrease⟩
   · exact Or.inr ⟨n, positive, steps⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

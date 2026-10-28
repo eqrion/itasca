@@ -2,7 +2,7 @@ import Exec.Abs.Memory.Descriptor
 import Exec.Abs.Typing
 import Exec.Spec.PackedMemory
 
-namespace Exec.Abs.Memory
+namespace Itasca.Runtime.Abs.Memory
 open SpecExt
 
 def PackedWidth.spec {ty : Inn} (width : PackedWidth ty) : Spec.PackedMemory :=
@@ -94,4 +94,4 @@ theorem Store.source_step (op : Store) (s : _root_.store) (f : frame) (argument 
       (by simpa only [PackedWidth.spec_type,Store.type] using valueWf) mapped
     cases ty <;> cases width <;> exact source
 
-end Exec.Abs.Memory
+end Itasca.Runtime.Abs.Memory

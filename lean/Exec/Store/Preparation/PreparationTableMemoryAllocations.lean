@@ -5,7 +5,7 @@ import Exec.Store.Api.MemoryBindingLoop
 import Exec.Store.Api.TableAllocationLoop
 import Exec.Store.Api.MemoryAllocationLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -229,4 +229,4 @@ theorem preparation_table_memory_allocations {M A : Type} (memory : runtime.plat
   obtain ⟨tables, memories, tableMap, memoryMap, tableCount, memoryCount, _⟩ :=
     preparation_table_memory_allocations_metadata memory allocator law view laws before seed shape maps cache instanceIndex typed functions tabled after typeInst funcInst tableInst inst typeRun functionRun tableRun memoryRun
   exact ⟨tables, memories, tableMap, memoryMap, tableCount, memoryCount⟩
-end Exec.Store
+end Itasca.Runtime.Store

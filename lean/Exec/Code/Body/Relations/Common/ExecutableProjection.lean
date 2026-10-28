@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.ExecutableEmission
 import Exec.Code.Body.Lowering.Simd.SimdEmissionExclusion
 import Exec.Abs.ExecutableExclusion
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem LinearEmission.executable_extension_tag {locals before source emitted after}
@@ -33,4 +33,4 @@ theorem ExecutableEmission.typed_select_inv {tables C before declared emitted af
   | typedSelect h => subst equal; exact h
   | branchTable => cases equal
 
-end Exec.Code
+end Itasca.Runtime.Code

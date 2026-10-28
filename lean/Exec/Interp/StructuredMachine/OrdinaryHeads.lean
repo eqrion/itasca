@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Heads
 import Exec.Interp.StructuredMachine.IndexedLinear
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 variable {emission : ContextEmission} [OrdinaryHeads emission]
 
 theorem emission_not_block {C before after emitted bt body}
@@ -37,4 +37,4 @@ theorem emission_not_return {C before after emitted}
     (head : emission C before .RETURN emitted after) : False := by
   have h := OrdinaryHeads.ordinary head
   cases h
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdQ15Packing
 import Exec.Spec.SimdQ15Source
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem q15_lanes_sound (x y : U128)
@@ -35,4 +35,4 @@ theorem q15_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with q15_lanes_sound x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

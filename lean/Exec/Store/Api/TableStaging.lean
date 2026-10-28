@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.Staging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
@@ -23,8 +23,7 @@ theorem add_instance_table_effect {M A : Type} (memory : runtime.platform.Memory
     runtime.store.instantiate.Store.add_instance_table memory allocator store inst index
       ⦃ out => TableStageEffect store inst inst.module.module.env.table_types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_table
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.table_types, Itasca.module.Env.impl.table_types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.table_types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -80,4 +79,4 @@ theorem TableStageEffect.count {M : Type} {store : runtime.store.Store M}
   · rw [output]
     simpa using congrArg List.length mapped
 
-end Exec.Store
+end Itasca.Runtime.Store

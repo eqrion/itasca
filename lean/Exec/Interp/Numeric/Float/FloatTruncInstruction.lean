@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatInstructionOutcome
 import Exec.Interp.Numeric.Float.FloatTruncSource
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem truncOutcome_value_bound (source : Fnn) (target : Inn) (sign : sx) (sat : Bool)
@@ -148,4 +148,4 @@ theorem scalar_i64_trunc_sat_f64_u_instruction {F : Type} (ops : runtime.platfor
   intro result effect
   exact trunc_instruction_result .F64 .I64 .U true a b result effect.1 effect.2
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.ReaderAcceptance
 import Exec.Code.Local.Capacity.LiteralBudgetAvailability
 import Itasca.Visitor.EventDispatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -146,4 +146,4 @@ theorem compiler_reader_f64_const_available {A V : Type} (ops : runtime.platform
   intro bits _ _
   exact compiler_on_f64_const_available_effect ops bound available compiler final demand bits
 
-end Exec.Code
+end Itasca.Runtime.Code

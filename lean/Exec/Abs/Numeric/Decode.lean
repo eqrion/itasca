@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.Semantics
 
-namespace Exec.Abs.Numeric
+namespace Itasca.Runtime.Abs.Numeric
 
 /-- Recognize exactly the integer instruction descriptors, including matching
 outer and inner source type tags. -/
@@ -35,4 +35,4 @@ def decodeInstruction : instr → Option Instruction
   | unary ty op => cases op <;> (try cases ty) <;> rfl
   | conversion op => cases op <;> rfl
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

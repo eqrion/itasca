@@ -2,9 +2,9 @@ import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.StructuredMachine.MemoryCertifiedStep
 import Exec.Interp.StructuredMachine.ForwardJump
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.Memory
-open Exec.Interp.MemoryDescriptor
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
+open Itasca.Runtime.Interp.MemoryDescriptor
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 theorem step_memory_load_core {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
@@ -118,4 +118,4 @@ theorem step_memory_store_core {M P F A : Type} (memory : runtime.platform.Memor
         exact extend_store_refl _ typed.typed.store
       exact ⟨samePlatform,mutation.frame_metadata,extension,Or.inr ⟨_,_,issued,mutation⟩,pc,exactState,Or.inr ⟨failed,unchanged,trace⟩⟩
 
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

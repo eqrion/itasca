@@ -1,6 +1,6 @@
 import Exec.Abs.Typing
 
-namespace Exec.Abs.Simd
+namespace Itasca.Runtime.Abs.Simd
 open SpecExt
 
 /-- Principal stack signatures of pure SIMD source instructions. This relation
@@ -56,4 +56,4 @@ theorem numeric_value_typed {s : store} {value : val} {output : valtype}
     · simp_all [valueType]
     · cases nt <;> simp_all [valueType,valtype_numtype]
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

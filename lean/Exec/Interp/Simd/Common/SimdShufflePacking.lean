@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdShuffleLoop
 import Exec.Spec.SimdByteSelect
 import SpecExt.Builtins.LaneMap
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem shuffle_byte_source (bits x y : U128) (j : Nat)
@@ -49,4 +49,4 @@ theorem shuffle_packed (bits x y result : U128)
   dsimp only [values]
   congr 1
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

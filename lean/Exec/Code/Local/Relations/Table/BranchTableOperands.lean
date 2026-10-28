@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableFrames
 import Exec.Code.Local.Callbacks.Control.ScopeFrameSelect
 import Exec.Code.Local.Control.Control.UniversalBranch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Static source operand suffixes for every independently decoded table arm.
@@ -59,4 +59,4 @@ theorem table_operand_layout {locals stack scope label frame discarded}
     rw [slots_append]
     omega
   · simpa only [typedLabel.branchTypes] using width
-end Exec.Code
+end Itasca.Runtime.Code

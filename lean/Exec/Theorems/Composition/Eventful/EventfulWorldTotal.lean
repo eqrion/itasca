@@ -1,11 +1,11 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldNonhost
 import Exec.Theorems.Host.HostSiteWorld
 import Exec.Theorems.Composition.ExecutionCode
-import Exec.Generated.Types
+import Itasca.Generated.Types
 import Exec.Spec.Extend
 import Exec.Contracts
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Full actual dispatch under a current-world callback contract. Each ordinary
 case reuses the fixed-world proof; actual host calls choose their post-world. -/
@@ -33,4 +33,4 @@ theorem world_step_outcomes
     · rw [actual]
       exact .div _ diverged
   · exact .of_spec _ _ _ _ ordinary
-end Exec.Theorems
+end Itasca.Runtime.Theorems

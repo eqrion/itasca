@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.PrecheckWitness
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -93,8 +93,8 @@ theorem element_precheck_loop_witness (law : Platform.AllocCorrect allocator) (v
     unfold runtime.store.instantiate.Store.prepare_instance_loop10.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.length := by
@@ -139,7 +139,7 @@ theorem data_precheck_loop_witness (law : Platform.AllocCorrect allocator)
     unfold runtime.store.instantiate.Store.prepare_instance_loop11.body
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
-    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok]
     split
     · rename_i more
@@ -161,4 +161,4 @@ theorem data_precheck_loop_witness (law : Platform.AllocCorrect allocator)
       exact ⟨_, rfl, hallowed⟩
   · exact ⟨rfl, rfl, hstart, allowed⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Store.Invariant.FunctionTypingExtension
 import Exec.Store.Invariant.CodeAgreement
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem core_function_typed_code_agrees {M : Type} {view : M → Slice U8}
@@ -85,4 +85,4 @@ theorem core_functions_typed_metadata {M : Type} {view : M → Slice U8}
     · rwa [instances]
     · simpa only [decodeInstance, types] using bindings.extend extension
     · rwa [fnEq]
-end Exec.Store
+end Itasca.Runtime.Store

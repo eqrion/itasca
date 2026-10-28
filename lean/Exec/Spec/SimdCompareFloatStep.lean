@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareFloatRelation
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem float_comparison_step (ty : Fnn) (op : vrelop_Fnn_N) (x y result : BitVec 128)
     (packed : uN.mk_uN result.toNat = floatComparisonResult ty op x y) :
@@ -16,4 +16,4 @@ theorem float_comparison_step (ty : Fnn) (op : vrelop_Fnn_N) (x y result : BitVe
   · exact .admininstr_case_28 _ _ (shapeOf_wf _) (floatCompareSource_wf ty op)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Common.EndSafety
 import Exec.Code.Local.Callbacks.Control.ElseSafety
 import Exec.Code.Local.Relations.Control.BranchSafety
 import Exec.Code.Local.Callbacks.Common.FixupBudget
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -53,4 +53,4 @@ theorem StructuredCompilerPrefix.end_total {jumpTables : List U32} {A}
   have room := invariant.codeBudget.callback_headroom bounded invariant.sources
   exact compiler_else_total ops law compiler state bt frame prior frames (invariant.mode.sites frame member)
     ((fixups frame member).trans_lt (by omega)) (by omega) (by omega) (by omega) coordinate
-end Exec.Code
+end Itasca.Runtime.Code

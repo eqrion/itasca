@@ -1,7 +1,7 @@
 import Exec.Spec.Wf
 import Mathlib.Tactic
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def i32 (bits : Nat) : admininstr := .CONST .I32 (.mk_num__0 .I32 (.mk_uN bits))
@@ -99,4 +99,4 @@ theorem memory_init_zero (s : store) (f : frame) (destination source dataIndex :
   · exact input
 
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

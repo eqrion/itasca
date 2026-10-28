@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableStagingLoop
 import Exec.Store.Api.NewTableCauses
 import Exec.Store.Preparation.PreparationCalls
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev tableStageCall {M A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -54,8 +54,7 @@ theorem table_staging_resource_loop {M A : Type} (memory : runtime.platform.Memo
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-      module.Env.table_types, Itasca.module.Env.impl.table_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.table_types.val.length := by
@@ -117,4 +116,4 @@ theorem table_staging_resource_loop {M A : Type} (memory : runtime.platform.Memo
       simpa only [atEnd] using counting success
   · exact ⟨changed, instChanged, retained, objectBound, issued, startBound, (fun _ => count), (fun _ => .refl _ _), by simp⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

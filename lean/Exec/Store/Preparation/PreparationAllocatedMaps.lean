@@ -5,7 +5,7 @@ import Exec.Store.Invariant.AllocatedTableLoop
 import Exec.Store.Invariant.AllocatedMemoryLoop
 import Exec.Store.Linking.LinkedOwners
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -150,4 +150,4 @@ theorem preparation_allocated_maps {M A : Type} (memory : runtime.platform.Memor
     exact ⟨finalMemoryOwners address member, memoryAddresses address member⟩
   · simpa only [memorySource] using memoryCount rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

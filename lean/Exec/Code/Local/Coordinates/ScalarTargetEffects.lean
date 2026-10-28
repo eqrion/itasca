@@ -2,7 +2,7 @@ import Exec.Code.Local.Coordinates.ScalarSourceCoordinates
 import Exec.Code.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -586,4 +586,4 @@ theorem compiler_scalar_target_effects {A : Type} (ops : runtime.platform.Alloc 
   · exact scalar_target_effects_272 ops law before after state a b bits called
   · exact scalar_target_effects_273 ops law before after state a b bits called
 
-end Exec.Code
+end Itasca.Runtime.Code

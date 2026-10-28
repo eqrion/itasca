@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Float.SimdCompareFloatWord
 import Exec.Interp.Simd.Common.SimdCompareLoop
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd
 
 def floatCompareOpcode (ty : Fnn) (op : vrelop_Fnn_N) : U32 :=
   match ty,op with
@@ -69,4 +69,4 @@ theorem float_compare_dispatch_eq (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

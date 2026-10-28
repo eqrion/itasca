@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdEmissions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_simd_constant_fixed_emission {data env locals index st values position}
@@ -38,4 +38,4 @@ theorem reader_simd_constant_fixed_emission {data env locals index st values pos
     (Sequence.stackTypes st.core.vals.val) a bits contextLocals layout concrete finalTypes
     codeFits sourceFits coordinateFits accepted
   exact ⟨ordinary,sources,cursor,simd,pool,emitted,⟨lowered,SourceStack.of_map types concrete finalTypes⟩,emission⟩
-end Exec.Code
+end Itasca.Runtime.Code

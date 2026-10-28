@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.TypeEquality
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def scanState {M : Type} (s : runtime.store.Store M) (i : Usize) :=
@@ -118,5 +118,5 @@ theorem intern_type_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, InternEffect]
       · simp [InternEffect]
 
-end Exec.Store
+end Itasca.Runtime.Store
 

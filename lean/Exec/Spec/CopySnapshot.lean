@@ -1,6 +1,6 @@
 import Exec.Spec.CopyInterval
 import Exec.Spec.MemoryInitSource
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 def copyForward {T : Type} [Inhabited T] (words : List T) (dst src : Nat) : Nat → List T
   | 0 => words
@@ -50,4 +50,4 @@ theorem copyBackward_snapshot {T : Type} [Inhabited T] (before current : List T)
     simp only [Nat.add_sub_cancel] at fresh
     rw [copyBackward]
     exact ih _ fresh (by omega)
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

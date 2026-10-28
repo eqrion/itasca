@@ -1,7 +1,7 @@
 import Exec.Abs.Step
 import Mathlib.Tactic
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Pending instructions in the active frame. Suspended callers do not affect
 the bound on consecutive administrative constant moves; real steps may reset it. -/
@@ -20,4 +20,4 @@ theorem const_measure_decreases (s : store) (ambient : frame) (f : AFrame)
       { f with code := .CONST ty value :: after } :: rest, []⟩ := by
   simp [administrativeMeasure]
 
-end Exec.Abs
+end Itasca.Runtime.Abs

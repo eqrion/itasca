@@ -1,7 +1,7 @@
 import Exec.Spec.SimdBitwise
 import Exec.Spec.Float
 import SpecExt.Builtins.Float.Decoding
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def shapeOf (ty : lanetype) : shape := .X ty (.mk_dim (128/lsize ty))
@@ -90,4 +90,4 @@ theorem splat_step (ty : lanetype) (bits : BitVec 64) (result : BitVec 128)
     (.admininstr_case_13 _ _ (scalarInput_wf ty bits))
     (.admininstr_case_33 _ (shapeOf_wf ty)) (const_wf result) (shapeOf_wf ty)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

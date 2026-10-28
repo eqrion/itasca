@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Control.StructuredScopeClosePublication
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual Wasm 2 END reader supplies progress and a bounded source
@@ -38,4 +38,4 @@ theorem reader_end_publication_wasm2 {jumpTables : List U32}
   exact structured_scope_close_publication ops law invariant sourceBound out.core p.current.ctrl.kind
     p.current.bt coordinates maps consumed endBound callback
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Interp.Numeric.Integer.IntCounts
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem countBits_zero (width : Nat) : Primitive.countBits width 0 = 0 := by
@@ -25,4 +25,4 @@ theorem countBits_width (width value : Nat) (bound : width ≤ 64) (fits : value
     Primitive.countBits 64 value = Primitive.countBits width value := by
   have eq := countBits_extend width (64-width) value fits
   simpa only [Nat.add_sub_of_le bound] using eq
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

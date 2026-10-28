@@ -1,8 +1,8 @@
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.Relations.ControlPoint
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem step_pending_execution {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -35,4 +35,4 @@ theorem step_pending_execution {M P F A : Type}
       (extend_store_refl _ machine.typed.typed.store) raw frameIndex target last frameFound program (.ready retained)
       (by rw [exactState]; exact slots) ⟨rfl,rfl,rfl,rfl⟩ (by rw [exactState])
       (by rw [exactState]; exact .refl _ _) machine.typed machine.core
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

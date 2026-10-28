@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.BranchTable
 import Exec.Interp.StructuredMachine.SupportedAdvance
 import Exec.Abs.BrTableTransition
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- The actual table jump consumes its selector, then reuses the checked branch
@@ -46,10 +46,10 @@ theorem step_brTable_execution
     ⟨Store.decodeStore view code store,ambient,{f with code:=.BR (Abs.BrTable.select depths fallback value)::after,vals:=front}::rest,[]⟩,?_,?_,?_,rfl,?_⟩
   · exact Execution.ordinary view code ambient {f with code:=.BR_TABLE depths fallback::after}
       {f with code:=.BR (Abs.BrTable.select depths fallback value)::after,vals:=front} rest expected raw.pc.val false machine
-      (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index target last hf program (.ready retained)
+      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index target last hf program (.ready retained)
       represented ⟨rfl,rfl,rfl,rfl⟩ (by rw [effect]) (by rw [effect]; exact .refl _ _) typed
       (transition.next_supported machine.core)
   · exact ConcreteSim.of_source _ _ _ _ _ (transition.correct machine.typed).2
   · exact fun _ owned => transition.next_owned owned
   · exact fun _ bounded => transition.next_bound bounded
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

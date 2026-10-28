@@ -6,7 +6,7 @@ import Exec.Interp.StructuredMachine.LinearContinuation
 import Exec.Interp.Numeric.Float.FloatFetch
 import Exec.Abs.Float.Transition
 import Exec.Interp.Relations.ControlPoint
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Float
 theorem step_float_structured {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -94,4 +94,4 @@ theorem step_float_structured {M P F A : Type}
     rcases effect with ⟨success,pc,g,unchanged,represented,nextPoint,nextTyped,metadata,simulation,prefixEffect,transition⟩ | trap
     · exact Or.inl ⟨success,pc,g,unchanged,represented,nextPoint,nextTyped,metadata,simulation,prefixEffect,Or.inr transition⟩
     · exact Or.inr trap
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

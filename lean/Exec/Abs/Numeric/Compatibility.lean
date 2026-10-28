@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.Transition
 
-namespace Exec.Abs.Numeric
+namespace Itasca.Runtime.Abs.Numeric
 
 theorem binary_add_nat (ty : Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
     (a + b).toNat = (a.toNat + b.toNat) % 2^integerWidth ty := by
@@ -52,4 +52,4 @@ theorem finish_ltU (s f rest after front) (ty : Inn)
   simp only [finish, Instruction.apply, Instruction.output, compare, BitVec.toNat_ofNat]
   split <;> simp_all
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

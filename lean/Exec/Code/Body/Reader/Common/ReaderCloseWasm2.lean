@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderEndInfo
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 private theorem no_parent_body {env root parents C outer form ins}
@@ -136,4 +136,4 @@ theorem reader_else_wasm2 {data env locals index st}
   have afterState := p.end_after true 0x05#u8 rfl byte
   rw [erased, WP.spec_ok] at afterState
   exact ⟨callback, read, form, encoded, results, opened, afterState rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

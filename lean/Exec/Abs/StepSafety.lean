@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.TransitionSafety
 import Exec.Abs.CallSafety
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem returnFrame_preservation {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {next : AState}
@@ -142,4 +142,4 @@ theorem instruction_preservation (s : store) (ambient : frame) (f : AFrame)
         apply active_frame_preservation typed (br_if_frame_preservation (f := f) ?_) rfl
         simpa only [hvals] using hf
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdPacking
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -75,4 +75,4 @@ def comparisonBits (width : Nat) (answer : Bool) : BitVec width :=
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix,zeroSuffix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

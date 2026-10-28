@@ -2,7 +2,7 @@ import Itasca.Binary.Wasm1.EncodingUnique
 import Itasca.Module.Code.ReachedEntry
 import Itasca.Module.Code.LocalsComplete
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Pure entry decoding determines all inputs to source body demand. Grouping
@@ -46,4 +46,4 @@ theorem prepared_entry_unique {data env index start profile}
     exact List.append_cancel_right (left.symm.trans second.body_bytes.suffix))
   exact ⟨typeEq,ctxEq,bodyEq,localsEq.2,finishEq⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

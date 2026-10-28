@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareMasks
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def integerComparisonResult (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128) : uN :=
@@ -58,4 +58,4 @@ theorem integer_comparison_relation (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec
     | exact maskWf
     | exact relation
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

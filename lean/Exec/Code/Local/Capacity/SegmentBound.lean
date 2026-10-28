@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.SegmentProgram
 import Itasca.Module.Limits
 
 /-! Source framing bounds the synthetic initialization program counter. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 private theorem leb_positive {bytes value} (h : Itasca.Leb128.Encoding bytes value) :
@@ -176,4 +176,4 @@ theorem SegmentProgram.pc_bound {module function raw bytes profile R}
   norm_num [U32.max_eq] at *
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

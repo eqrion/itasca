@@ -1,6 +1,6 @@
 import Exec.Spec.IntegerSigned
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem signed_deterministic {width bits : Nat} {left right : Int}
     (first : fun_signed_ width bits left) (second : fun_signed_ width bits right) : left = right := by
@@ -48,4 +48,4 @@ theorem integer_cvtop_deterministic {source target : Inn} {op : cvtop__Inn_1_Inn
     (first : fun_cvtop__ (numtype_Inn source) (numtype_Inn target) (.mk_cvtop___0 source target op) (.mk_num__0 source a) (some left))
     (second : fun_cvtop__ (numtype_Inn source) (numtype_Inn target) (.mk_cvtop___0 source target op) (.mk_num__0 source a) (some right)) : left = right := by
   cases source <;> cases target <;> cases first <;> cases second <;> rfl
-end Exec.Spec
+end Itasca.Runtime.Spec

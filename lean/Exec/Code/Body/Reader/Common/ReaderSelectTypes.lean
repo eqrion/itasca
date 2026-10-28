@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Local.Relations.Common.KnownStackTransfer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem select_full_stack_types {before after outer segment result : List code.StackType} {selected}
@@ -21,4 +21,4 @@ theorem select_full_stack_types {before after outer segment result : List code.S
       exact ⟨rest, rfl, by simpa [StackSemantics.selectedType, Translate.valueType] using transfer⟩
     obtain ⟨front, types, prior, concrete, output⟩ := numeric_full_stack_types known old new numeric
     exact ⟨ty, front, types, rfl, by simpa [Translate.valueType] using prior, concrete, output⟩
-end Exec.Code
+end Itasca.Runtime.Code

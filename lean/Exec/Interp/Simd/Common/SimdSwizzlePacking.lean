@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdShuffleLoop
 import Exec.Spec.SimdSwizzle
 import SpecExt.Builtins.LaneMap
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem swizzle_byte_source (bits x y : U128) (j : Nat) :
@@ -41,4 +41,4 @@ theorem swizzle_packed (bits x y result : U128)
   dsimp only [values]
   congr 1
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

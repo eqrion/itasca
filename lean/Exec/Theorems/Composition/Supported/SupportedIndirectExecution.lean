@@ -3,8 +3,8 @@ import Exec.Theorems.Composition.Cumulative.CumulativeIndirectExecution
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.IndirectOperands
 import Exec.Interp.StructuredMachine.IndirectSelected
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem step_indirect_supported_execution
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -122,4 +122,4 @@ theorem step_indirect_supported_execution
         exact Or.inr ⟨entry,selector,offset,table,type,pc,address,base,function,instanceIndex,functionIndex,calleeInst,callee,
           fetch,pair,functionAt,defined,calleeInstAt,calleeAt,baseOffset,pcEq,cause,
           f,rest,after,front,args,position,params,results,0,Spec.StepsHN.refl machine.typed.typed.decode_wf,values,bounded,resolved,sameType.trans signatureEq,argumentTypes,basePosition,machine.stack.source_base last hf⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

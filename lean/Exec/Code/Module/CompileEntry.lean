@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.EntryTypedSteps
 import Exec.Code.Local.Callbacks.Common.Finish
 import Exec.Code.Local.Relations.Common.FunctionEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -42,7 +42,7 @@ theorem compile_entry_accepted {A : Type} (allocator : runtime.platform.Alloc A)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at tail
   | Ok entry =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      runtime.compiler.Budget.copy_state, Exec.stream.CodeBatch.code_offset, Itasca.stream.CodeBatch.impl.code_offset, uncurry_apply_pair] at tail
+      runtime.compiler.Budget.copy_state, Itasca.stream.CodeBatch.impl.code_offset, uncurry_apply_pair] at tail
     obtain ⟨batchStart, coordinates, tail⟩ := bind_ok_inv _ _ _ tail
     obtain ⟨initial, created, tail⟩ := bind_ok_inv _ _ _ tail
     obtain ⟨⟨validationResult, checkedBatch, final⟩, validated, tail⟩ := bind_ok_inv _ _ _ tail
@@ -115,4 +115,4 @@ theorem CompileEntryWitness.typed {A : Type} {allocator : runtime.platform.Alloc
   obtain ⟨finish, index, entry, typed⟩ := batch_typed_steps _ w.dispatched finalBatch w.entry.index
     w.initial w.final (by simpa only [w.metadata.1] using bounds) w.validated
   exact ⟨finish, by simpa only [w.metadata.2.2.1, w.metadata.2.2.2.1] using index, entry, typed⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Abs.Stateful.Continuation
 import Exec.Abs.Stateful.SignatureTyping
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem operand_heights {s : store} {f : Abs.AFrame} {op : Abs.Stateful.Instruction} {after : List instr}
     (typed : Abs.FrameTyped s {f with code:=op.source::after} [])
@@ -17,4 +17,4 @@ theorem operand_heights {s : store} {f : Abs.AFrame} {op : Abs.Stateful.Instruct
   have height := heights label member
   omega
 
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

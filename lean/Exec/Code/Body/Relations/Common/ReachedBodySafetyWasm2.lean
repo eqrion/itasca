@@ -3,7 +3,7 @@ import Exec.Code.Body.Control.Common.IndexedAdvanceOrClosed
 import Itasca.Visitor.InvariantBodyLoop
 import Itasca.Visitor.ReaderAcceptedProgress
 import Itasca.Wasm2.Trace.Body
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A rejected body needs no retained suffix; an accepted open boundary retains
@@ -81,4 +81,4 @@ theorem compiler_body_wasm2_total {A} (ops : runtime.platform.Alloc A) (law : Pl
     subst result
     obtain ⟨rfl,_⟩ := held
     exact .inr ⟨point,ledger⟩
-end Exec.Code
+end Itasca.Runtime.Code

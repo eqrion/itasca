@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Checking.ReaderConstantInstructionPrefix
 import Exec.Code.Body.Reader.Checking.ReaderCoreInstructionPrefix
 import Exec.Code.Body.Reader.Control.ReaderTerminalInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Every scalar reader kind preserves both instruction and recorded exit-slot
@@ -75,4 +75,4 @@ theorem reader_scalar_checked_prefix_wasm2 {jumpTables : List U32} {data env sou
     exact reader_dead_scalar_checked_prefix ops law before after st.core out.core data env ctx kind
       (Bool.eq_false_iff.mpr live) codeFits sourceFits coordinateFits held exits raw
 
-end Exec.Code
+end Itasca.Runtime.Code

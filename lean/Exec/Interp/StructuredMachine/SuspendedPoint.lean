@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Interp.Relations.SuspendedPoint
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- A mutable caller retains its module context and its typed continuation
@@ -59,4 +59,4 @@ theorem ControlPoint.extend {before after : _root_.store} (extension : Extend_st
   cases point with
   | ready h => exact .ready (h.extend extension)
   | jump target fetched h => exact .jump target fetched (h.extend extension)
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

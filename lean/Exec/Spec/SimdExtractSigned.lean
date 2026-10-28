@@ -1,6 +1,6 @@
 import Exec.Spec.SimdExtract
 import Exec.Spec.IntegerExtend
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem signed_lane_num_wf (width bits : Nat) (bound : bits < 2^width) :
@@ -40,4 +40,4 @@ theorem extract_signed_step (ty : packtype) (index : Nat) (v : BitVec 128)
   · exact .admininstr_case_13 _ _ wf
   · exact shapeOf_wf _
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

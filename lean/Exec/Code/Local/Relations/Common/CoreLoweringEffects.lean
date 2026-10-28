@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
 import Exec.Code.Local.Source.SourceLengthsTactic
 import Exec.Code.Local.Source.SourceCursorTactic
 import Exec.Code.Local.Capacity.CapacityTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -117,4 +117,4 @@ theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_neg reach] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Simd.ReachedSimdScalarAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -81,4 +81,4 @@ theorem reached_profile_simd_shuffle_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Exec.Code
+end Itasca.Runtime.Code

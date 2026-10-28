@@ -6,7 +6,7 @@ import Exec.Code.Local.Relations.Table.BranchTableScopeFrames
 import Exec.Code.Local.Relations.Table.BranchTableMetadata
 import Exec.Code.Local.Capacity.BranchTableGrowth
 import Exec.Code.Local.Relations.Table.TableSources
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful live table callback advances the indexed compiler
@@ -84,4 +84,4 @@ theorem StructuredCompilerPrefix.br_table {A : Type}
   · exact invariant.codeBudget.table growth (by omega)
   · exact (invariant.controlBudget.transport (by rw [fixed.controls]) (Nat.le_of_eq framesLength)).advance (by omega)
   · rw [cursor]
-end Exec.Code
+end Itasca.Runtime.Code

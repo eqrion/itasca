@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Common.StructuredScalarEmbedding
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Checked syntactic inclusion of the scalar, stateful and indirect-call
@@ -14,4 +14,4 @@ class OrdinaryEmbedding (pairs : List (U32 × U32)) (C : context)
   indirect : ∀ {input instruction code output}, IndirectCallEmission pairs C input instruction code output →
     emit input instruction code output
 
-end Exec.Code
+end Itasca.Runtime.Code

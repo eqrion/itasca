@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.SelectSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -173,4 +173,4 @@ set_option maxRecDepth 4096
   rw [run]
   exact compiler_observe_stack ops law compiler state
 
-end Exec.Code
+end Itasca.Runtime.Code

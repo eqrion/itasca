@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.TypedStepsWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem TypedRunWasm2.closed {V : Type} {visitor : code.OpVisitor V}
@@ -13,4 +13,4 @@ theorem TypedRunWasm2.closed {V : Type} {visitor : code.OpVisitor V}
     simp only [code.BodyState.blocks] at closed blocks
     rw [closed] at blocks
     simp at blocks
-end Exec.Code
+end Itasca.Runtime.Code

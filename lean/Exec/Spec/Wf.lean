@@ -1,6 +1,6 @@
 import Exec.Spec.Steps
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 @[simp] theorem forall_nil {α : Type} (P : α → Prop) : Forall P [] := by
@@ -111,4 +111,4 @@ theorem wf_config_instrs {z : state} {body after : List admininstr} {vs : List v
   obtain ⟨hz, hb⟩ := wf_config_parts h
   exact .config_case_0 _ _ hz (forall_append (wf_vals hv) (forall_append hb ha))
 
-end Exec.Spec
+end Itasca.Runtime.Spec

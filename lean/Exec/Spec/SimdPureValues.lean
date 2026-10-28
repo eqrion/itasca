@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShape
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Source values represented by SIMD operand bits. SIMD uses only numerical
@@ -19,4 +19,4 @@ def valueOfBits (ty : valtype) (bits : BitVec 128) : val :=
 def operandValues (types : List valtype) (x y z : BitVec 128) : List val :=
   List.zipWith valueOfBits types [x,y,z]
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

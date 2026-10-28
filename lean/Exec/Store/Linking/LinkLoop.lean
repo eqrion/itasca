@@ -1,6 +1,6 @@
 import Exec.Store.Linking.LinkMaps
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -99,4 +99,4 @@ theorem linked_maps_empty {M : Type} (view : M → Slice U8) (store : runtime.st
     LinkedMaps view store inst.module [] inst := by
   constructor <;> simp [*, importedFuncs, importedTables, importedMems, importedGlobals]
 
-end Exec.Store
+end Itasca.Runtime.Store

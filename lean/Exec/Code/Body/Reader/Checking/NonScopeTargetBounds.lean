@@ -4,7 +4,7 @@ import Exec.Code.Local.Coordinates.TableCallbackTargetBounds
 import Exec.Code.Local.Callbacks.Table.CallbackTables
 import Exec.Code.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Every non-scope-boundary event retains valid jump-table targets. Tables
@@ -69,4 +69,4 @@ theorem compiler_non_scope_hook_target_bounds {A : Type} (ops : runtime.platform
       (congrArg CompilerTables.jumpTables (compiler_else_tables ops law before after state bt called))
       (compiler_else_code_mono ops law before after state bt called)
 
-end Exec.Code
+end Itasca.Runtime.Code

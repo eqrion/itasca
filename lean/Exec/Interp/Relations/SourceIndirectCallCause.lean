@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.SourceCallCause
 import Exec.Abs.Indirect.Definition
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A rejected indirect call retains both the actual selected callee and the
@@ -46,4 +46,4 @@ theorem SourceIndirectCallCause.prepend {A M P : Type} {allocator : runtime.plat
     f,rest,source,front,args,position,params,results,count+tailCount,?_,values,bounded,?_,signature,arguments,coordinates,sourceBase⟩
   · simpa only [sameStore,sameAmbient,List.nil_append] using steps.trans tail
   · simpa only [sameStore] using resolved
-end Exec.Interp
+end Itasca.Runtime.Interp

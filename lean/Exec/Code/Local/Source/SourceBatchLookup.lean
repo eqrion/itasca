@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceEntryLookup
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The reachable worker's validated prefix identifies its next exact entry
@@ -49,4 +49,4 @@ theorem sourceFunctions_lookup {raw : ModuleBinary.Module} {index : Nat} {typeIn
   simp only [sourceFunctions, List.getElem_zipWith]
   rw [(List.getElem?_eq_some_iff.mp typeFound).2, (List.getElem?_eq_some_iff.mp codeFound).2]
 
-end Exec.Code
+end Itasca.Runtime.Code

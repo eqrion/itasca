@@ -1,7 +1,7 @@
 import Exec.Spec.SimdWidenLists
 import Exec.Spec.SimdCompareFloatLists
 import Exec.Spec.SimdChoices
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def extendOperation (ty : WidenWidth) (high signed : Bool) : vcvtop__ :=
@@ -62,4 +62,4 @@ theorem extend_source_wf (ty : WidenWidth) (high signed : Bool) : wf_admininstr 
       cases ty <;> decide
     · rfl
     · cases ty <;> rfl
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

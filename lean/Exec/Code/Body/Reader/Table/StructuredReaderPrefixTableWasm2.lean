@@ -4,7 +4,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefixTable
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Body.Reader.Table.ReaderTablePost
 import Exec.Code.Body.Reader.Table.ReaderTableEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
@@ -64,4 +64,4 @@ theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
       rfl
     exact invariant.skip (BrTable.instruction depths fallback) beforeDead dead ordinary codeEq sources
       (by rw [endEq]; omega) (by rw [cursor])
-end Exec.Code
+end Itasca.Runtime.Code

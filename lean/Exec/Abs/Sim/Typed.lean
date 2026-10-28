@@ -3,8 +3,8 @@ import Exec.Abs.Sim.Call
 import Exec.Abs.Sim.Trap
 import Exec.Abs.Sim.Local
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- A successful abstract step either performs positive source work or is an
 exact decoding stutter that strictly decreases the administrative potential. -/
@@ -40,4 +40,4 @@ theorem frame_typed_operands_bounds {s : store} {f : AFrame} {op : instr} {code 
     rw [resultsTyped_length hfirst]
     exact heights label hm
 
-end Exec.Abs
+end Itasca.Runtime.Abs

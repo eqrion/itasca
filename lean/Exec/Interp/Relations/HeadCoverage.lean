@@ -6,7 +6,7 @@ import Exec.Abs.Simd.Source
 import Exec.Interp.Machines.Slice.SliceOpcode
 import Exec.Interp.Control.NormalizeClosure
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- Source forms remaining after zero-byte normalization. -/
@@ -37,4 +37,4 @@ inductive DispatchHead : instr → Prop where
   | typedSelect (ty : valtype) : DispatchHead (.SELECT (some [ty]))
   | branchTable (depths : List labelidx) (fallback : labelidx) : DispatchHead (.BR_TABLE depths fallback)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Interp.Relations.Rel
 import Exec.Abs.LabelHeights
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- Function identity and local layout survive ordinary instruction steps. -/
@@ -119,4 +119,4 @@ theorem LabelsMatch.branch {front discarded results : List val} {labels targets}
   have bound := heights label member
   simp only [List.append_assoc, List.take_append_of_le_length bound]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

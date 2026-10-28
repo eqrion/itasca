@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.Binary
 import Exec.Abs.Sim.Trap
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem binary_pure (ty : Inn) (op : binop_Inn)
     (a b result : BitVec (sizenn (numtype_Inn ty)))
@@ -78,4 +78,4 @@ theorem binary_trap_simulation (s : store) (ambient : frame) (f : AFrame)
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, AFrame.toFrame, AFrame.arity]
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [decodeFrames, operands, vals, instrContext, AFrame.toFrame, AFrame.arity, List.append_assoc] using all
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

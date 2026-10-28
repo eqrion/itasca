@@ -1,7 +1,7 @@
 import Exec.Abs.BrTableInvariants
 
-namespace Exec.Abs.BrTable
-open SpecExt Exec.Spec Ownership
+namespace Itasca.Runtime.Abs.BrTable
+open SpecExt Itasca.Runtime.Spec Ownership
 
 inductive Transition : AState → AState → Prop where
   | next {s : store} {ambient : frame} {f : AFrame} {rest : List AFrame}
@@ -39,5 +39,5 @@ theorem Transition.next_bound {bound before next} (transition : Transition befor
   cases transition with
   | next values bound => exact bounded (by simpa only [normalized values] using initial)
 
-end Exec.Abs.BrTable
+end Itasca.Runtime.Abs.BrTable
 

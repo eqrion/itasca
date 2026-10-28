@@ -1,6 +1,6 @@
 import Exec.Interp.State.GlobalMutationStep
 import Exec.Interp.StructuredMachine.GlobalCertifiedStepOwned
-namespace Exec.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -32,4 +32,4 @@ theorem coreFramePoint_globalSet_mutation (platform : P) (frameIndex : Usize)
     refine Or.inr ⟨front,value,values,valueWf,?_⟩
     exact step_global_set_mutation memory hooks floats allocator exec store raw src idx inst address object f front value
       platform frameIndex found mapped issued slots values position mutable valueType compiled last frameFound codeFound fetch pcBound
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

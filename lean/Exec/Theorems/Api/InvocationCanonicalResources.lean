@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.SignatureWords
 import Exec.Theorems.Api.InvocationBoundary
 import Exec.Interp.Relations.SourceIndirectResources
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Allocator refusal sizes for the public argument/result buffers. -/
 def SignatureAllocation {A : Type} (allocator : runtime.platform.Alloc A) (signature : functype) : Prop :=
@@ -29,4 +29,4 @@ def CanonicalInvocationResourceCause {A M P : Type} (allocator : runtime.platfor
     ∃ source, StepsH initial [] (Abs.decode source) ∧ SourceInvocationAllocation allocator source
   | .Exhausted .Objects => False
   | error => InvocationBoundaryCause hooks initial frameLimit error
-end Exec.Theorems
+end Itasca.Runtime.Theorems

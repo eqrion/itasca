@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Control.LoweringBranchIf
 import Exec.Code.Local.Callbacks.Control.CloseBlock
 /-! Exact conditional branches with nonempty slot transfers. The guard skips
 the copy and jump on false; the final patch fixes its exact resume address. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
@@ -256,4 +256,4 @@ set_option maxRecDepth 4096 in
               simp only [alloc.vec.Vec.set_val_eq]
               have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
               simpa only [← kindEq, ← atIndex] using List.set_getElem_self inBounds
-end Exec.Code
+end Itasca.Runtime.Code

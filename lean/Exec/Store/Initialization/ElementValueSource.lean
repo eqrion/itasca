@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.ElementValueEffect
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementSourceSegments (sourceStore : _root_.store) (sourceInstance : moduleinst)
@@ -41,4 +41,4 @@ theorem ElementValueEffect.source_values {M : Type} {store after : runtime.store
     refine ⟨produced ++ [{ty := original.elem, refs := values}], ?_, ?_⟩
     · simpa only [stored, List.append_assoc] using entries
     · exact List.rel_append previous (.cons ⟨rfl, evaluated⟩ .nil)
-end Exec.Store
+end Itasca.Runtime.Store

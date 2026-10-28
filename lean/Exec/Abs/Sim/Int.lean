@@ -2,8 +2,8 @@ import Exec.Abs.Sim.Basic
 import Exec.Abs.Typing
 import Exec.Spec.Integer
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem integer_add_relation (ty : Inn) (a b : Nat) :
     fun_binop_ (numtype_Inn ty) (.mk_binop__0 ty .ADD)
@@ -106,4 +106,4 @@ theorem integer_relop_pure (ty : Inn) (op : relop_Inn) (a b result : Nat)
   · exact wf_admininstr_instr (.instr_case_17 _ _ (.relop__case_0 _ _ _ rfl))
   · exact wf_admininstr_val (integer_val_wf .I32 result hr)
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.ReaderTableTargetsWasm2
 import Exec.Code.Body.Reader.Table.ReaderTableScopesWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -48,4 +48,4 @@ theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
   refine ⟨Sequence.stackTypes popped.vals.val,?_,scopes⟩
   simp only [values,segmentEq,poppedValues,Sequence.stackTypes,List.map_append,List.map_cons,List.map_nil,
     Translate.valueType,List.append_assoc]
-end Exec.Code
+end Itasca.Runtime.Code

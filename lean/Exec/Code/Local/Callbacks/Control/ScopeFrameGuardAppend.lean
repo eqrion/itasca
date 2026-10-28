@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFrameGuard
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 theorem ScopeFrameShape.guard_distinct {locals scope frame}
     (shape : ScopeFrameShape locals scope frame) (guard : Usize)
@@ -28,4 +28,4 @@ theorem FrameScope.set_guard_append {A : Type} {locals} {before after : runtime.
   · rw [code]
     exact (shape.entryCode.extend suffix).set_guard guard condition old target
       (fetch_extend found suffix) (shape.toScopeFrameShape.guard_distinct guard distinct)
-end Exec.Code
+end Itasca.Runtime.Code

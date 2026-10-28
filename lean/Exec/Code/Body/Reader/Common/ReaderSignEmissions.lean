@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Common.NumericOperands
 import Exec.Code.Local.Lowering.Common.NumericEffects
 import Exec.Code.Body.Reader.Common.ReaderSignExtension
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_sign_wasm2 {data env locals index st}
@@ -49,4 +49,4 @@ theorem reader_emit_sign_wasm2 {data env locals index st}
   exact LinearEmission.numeric front op left right
     leftPosition rightPosition
 
-end Exec.Code
+end Itasca.Runtime.Code

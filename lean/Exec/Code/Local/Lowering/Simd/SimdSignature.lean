@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Simd.SimdEmission
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std Itasca.Wasm2.Simd
 
 /-- The retained binary meaning has the same principal signature under every
@@ -16,4 +16,4 @@ theorem SimdImmediateMeaning.principal {C D opcode immediate input source output
     exact op.principal D argument _ ins outs typed
   | shuffle immediate low high bits => cases typed; exact ⟨rfl,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

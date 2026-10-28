@@ -1,6 +1,6 @@
 import Exec.Spec.IntegerDiv
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 @[simp] theorem truncz_neg (value : Rat) : truncz (-value) = -truncz value := by
   simp only [truncz, Rat.num_neg_eq_neg_num, Rat.den_neg_eq_den, Int.neg_tdiv]
@@ -270,4 +270,4 @@ theorem signed_rem_overflow64 :
   exact signed_rem_relation 64 (BitVec.ofNat 64 9223372036854775808)
     (BitVec.ofNat 64 18446744073709551615) (BitVec.ofNat 64 0) (by decide +kernel) (by decide +kernel)
 
-end Exec.Spec
+end Itasca.Runtime.Spec

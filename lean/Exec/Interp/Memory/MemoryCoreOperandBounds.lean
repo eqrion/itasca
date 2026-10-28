@@ -1,5 +1,5 @@
 import Exec.Interp.Memory.MemoryCoreOperands
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
  theorem load_typed_operands_full {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
@@ -40,4 +40,4 @@ open Aeneas Aeneas.Std SpecExt
       obtain ⟨bits,rfl,bitsBound⟩ := Abs.integer_val_inv (ty := .I32) addressTyped
       obtain ⟨number,rfl,numberWf⟩ := Abs.Core.numeric_value_inv valueTyped
       exact ⟨front,bits,number,address,object,split,bitsBound,numberWf,rawMapped,rawFound,frontWf,heights⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

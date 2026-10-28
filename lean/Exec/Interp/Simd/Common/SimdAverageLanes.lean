@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Common.SimdAverageWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
 import Exec.Spec.SimdAverage
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def averageOpcode (ty : Jnn) : U32 :=
   match ty with | .I8 => 123#u32 | .I16 => 155#u32 | .I32 => 187#u32 | .I64 => 219#u32
@@ -60,4 +60,4 @@ theorem average_dispatch_eq (ty : Jnn) (x y : U128) :
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

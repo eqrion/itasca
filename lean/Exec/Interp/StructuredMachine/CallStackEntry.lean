@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.CallCertificate
 import Exec.Interp.StructuredMachine.CallStack
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Actual defined-function entry preserves the complete prepared caller stack
@@ -70,4 +70,4 @@ theorem call_wasm_stack {M P F A : Type}
     [Code.functionRootLabel (signature.results.val.map sourceType) compiled epilogue], epilogue.val,
     signature.results.val.map sourceType, false, program, .ready point⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

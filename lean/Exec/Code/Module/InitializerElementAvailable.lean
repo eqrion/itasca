@@ -1,7 +1,7 @@
 import Exec.Code.Module.InitializerElementValuesAvailable
 import Exec.Code.Local.Initializer.InitializerElementAppend
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- One complete element mapping is accepted from source typing and independently
@@ -45,7 +45,7 @@ theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A
     as ⟨status,rowBudget,rows,accepted,sameBudget,appended⟩
   subst status rowBudget
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-    runtime.compiler.ExecutableModule.env,Exec.module.Module.env,Itasca.module.Module.impl.env]
+    runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env]
   rw [same,element_offset_found module.module.env index segment lookup,bind_ok]
   have rowSize : initializerSize {middle with module := module.module, element_initializers := rows} = initializerSize middle + 1 := by
     simp only [initializerSize,appended,List.length_append,List.length_singleton]
@@ -102,4 +102,4 @@ theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A
       simp only [initializerSize] at expressionSize size
       omega
 
-end Exec.Code
+end Itasca.Runtime.Code

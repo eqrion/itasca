@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Cumulative.CumulativeExecutionOutcome
 import Exec.Interp.Machines.Slice.SliceErrors
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Every Core integer, control, global, and memory trap has a positive checked source execution to
 `TRAP`; boundary and resource failures cannot masquerade as traps. -/
@@ -38,4 +38,4 @@ theorem CumulativeFailure.kind {M P A : Type} {allocator : runtime.platform.Allo
     · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
       exact Or.inr cause.kind
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

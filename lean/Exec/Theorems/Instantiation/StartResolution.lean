@@ -24,7 +24,7 @@ import Exec.Store.Invariant.Typing
 import Exec.Theorems.Instantiation.StartAmbient
 import Exec.Abs.Sim.Call
 
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- Module-start execution uses the newly installed module and no ambient locals. -/
@@ -54,4 +54,4 @@ theorem module_start_resolve {M : Type} (view : M → Slice U8) (code : Store.Co
   · simp only [moduleStartFrame, Store.decodeInstance, List.getElem?_map, mapped, Option.map_some]
   · scalar_tac
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -3,7 +3,7 @@ import Exec.Interp.StructuredMachine.TypedSelectPoint
 import Exec.Interp.Relations.SelectSlots
 import Exec.Interp.Relations.TypedSelectOperands
 import Exec.Interp.StructuredMachine.ForwardJump
-namespace Exec.Interp.StructuredMachine.TypedSelect
+namespace Itasca.Runtime.Interp.StructuredMachine.TypedSelect
 open Aeneas Aeneas.Std SpecExt
 
 theorem step_select {M P F A : Type}
@@ -83,5 +83,5 @@ theorem step_select {M P F A : Type}
     obtain ⟨success,sameStore,samePlatform,represented,fields,preserved⟩ := effect
     refine ⟨success,sameStore,samePlatform,pc,_,fields,?_,continuation,fresh,⟨rfl,rfl,rfl,rfl⟩,Or.inr actual,?_,preserved⟩
     · simpa only [FrameSlots,List.append_assoc] using represented
-    · exact Or.inr ⟨1,by omega,by simpa using Exec.Spec.StepsHN.cons source (Exec.Spec.StepsHN.refl (Exec.Spec.stepH_wf source).2)⟩
-end Exec.Interp.StructuredMachine.TypedSelect
+    · exact Or.inr ⟨1,by omega,by simpa using Itasca.Runtime.Spec.StepsHN.cons source (Itasca.Runtime.Spec.StepsHN.refl (Itasca.Runtime.Spec.stepH_wf source).2)⟩
+end Itasca.Runtime.Interp.StructuredMachine.TypedSelect

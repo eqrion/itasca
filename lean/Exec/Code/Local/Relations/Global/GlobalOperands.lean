@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Global.GlobalLowering
 import Exec.Code.Local.Lowering.Local.LoweringLocal
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_global_get_lowered {A : Type} (ops : runtime.platform.Alloc A)
@@ -59,4 +59,4 @@ open Aeneas Aeneas.Std
     (globalSetInstruction (decide (width ty = 2)) source index) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨source, position, by simpa only [typed] using lowered success⟩
-end Exec.Code
+end Itasca.Runtime.Code

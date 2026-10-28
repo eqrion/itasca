@@ -1,5 +1,5 @@
 import Exec.Spec.SimdByteView
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem byteLanes_integer (bits : BitVec 128) :
@@ -29,4 +29,4 @@ theorem byteWords_append_get (x y : BitVec 128) (index : Nat) (valid : index < 3
   · simp only [if_neg first]
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_append,byteWords,first,show index-16 < 16 by omega]
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

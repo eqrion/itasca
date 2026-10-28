@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Common.CompileInv
 /-! Exact allocation-aware local declaration accumulation and prefix offsets.
 The actual function-start loop terminates with an explicit compiler error or
 with every declared local represented at its source-order slot position. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 @[step] theorem charge_local {A : Type} (ops : runtime.platform.Alloc A)
     (budget : runtime.compiler.Budget A) :
@@ -170,4 +170,4 @@ def localLoopOutput {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
       intro accepted
       simpa [finalIndex] using invariant accepted
   · exact ⟨bound, fun _ => ⟨.refl compiler, layout, prefixTypes⟩⟩
-end Exec.Code
+end Itasca.Runtime.Code

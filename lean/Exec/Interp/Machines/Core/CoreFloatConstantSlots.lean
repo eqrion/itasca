@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Execute
 import Exec.Interp.Relations.Regions
 import Exec.Abs.Sim.Instruction
-namespace Exec.Interp.FloatConstant
+namespace Itasca.Runtime.Interp.FloatConstant
 open Aeneas Aeneas.Std SpecExt
 
 theorem encode_float32 (bits : U32) :
@@ -72,4 +72,4 @@ theorem dispatch_float64_slots {M P F A : Type}
   simpa only [Code.encodeValues_append,Code.encodeValues,List.flatMap_append,List.flatMap_cons,
     List.flatMap_nil,List.append_nil,List.append_assoc,encode_float64] using represented
 
-end Exec.Interp.FloatConstant
+end Itasca.Runtime.Interp.FloatConstant

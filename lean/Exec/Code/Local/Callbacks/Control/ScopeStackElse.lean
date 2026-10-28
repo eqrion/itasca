@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFrameStack
 import Exec.Code.Local.Callbacks.Control.ScopeFrameGuardAppend
 import Exec.Code.Local.Callbacks.Control.ElseTransition
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem ScopeFrameStack.parts {A : Type} {locals parents current}
@@ -49,4 +49,4 @@ theorem ScopeFrameStack.begin_else {A : Type} {locals parents current}
   have bounded := shape.entryBound
   rw [change.noPosition]
   omega
-end Exec.Code
+end Itasca.Runtime.Code

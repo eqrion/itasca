@@ -3,7 +3,7 @@ import Exec.Code.Local.Lowering.Float.FloatEncoding
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Float.StructuredReaderPrefixFloat
 import Exec.Code.Body.Reader.Float.StructuredReaderPrefixDeadFloat
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.float_base {jumpTables : List U32} {A : Type}
@@ -34,4 +34,4 @@ theorem StructuredReaderCompilerStateWasm2.float_base {jumpTables : List U32} {A
       state.compiled reach op baseOpcode byte accepted
     exact ⟨values, state.advance next advance inbounds post (float_source_declared op _) compiled (by simp [dead])⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

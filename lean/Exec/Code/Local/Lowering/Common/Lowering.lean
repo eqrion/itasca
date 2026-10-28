@@ -6,7 +6,7 @@ current slice proves both integer constants through the actual extracted
 callbacks, including bit-preserving casts, emission, source coordinates, and
 post-callback operand layout. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def Lowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)
@@ -151,4 +151,4 @@ set_option maxRecDepth 4096 in
     (UScalar.cast .U128 (IScalar.hcast .U64 value)) layout reachable concrete
     codeFits sourceFits coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

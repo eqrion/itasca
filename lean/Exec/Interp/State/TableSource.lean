@@ -1,7 +1,7 @@
 import Exec.Interp.State.TableAccess
 import Exec.Spec.TableAccess
-namespace Exec.Interp
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 /-- Exact source lookup for the runtime's resolved table address. -/
 theorem table_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -32,4 +32,4 @@ theorem table_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   intro function member
   rfl
 
-end Exec.Interp
+end Itasca.Runtime.Interp

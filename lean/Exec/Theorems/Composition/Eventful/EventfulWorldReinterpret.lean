@@ -1,6 +1,6 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorld
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Reusing a fixed-world successor after reinterpreting only unissued keys
 produces a genuine cross-world edge with the original source endpoint. -/
@@ -15,4 +15,4 @@ theorem EventfulTransition.world_reinterpret {M P F A : Type}
     EventfulWorldTransition memory hooks floats allocator ⟨oldCode,before⟩ events ⟨newCode,after⟩ := by
   refine ⟨edge.actual,edge.simulation,?_,edge.metadata,edge.ambient,agrees⟩
   simpa only [EventfulMachine.change_code,Store.decodeStore_code_agrees view agrees] using edge.extension
-end Exec.Theorems
+end Itasca.Runtime.Theorems

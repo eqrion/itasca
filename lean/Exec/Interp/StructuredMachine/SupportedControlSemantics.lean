@@ -7,7 +7,7 @@ import Exec.Abs.Supported.PureCoverage
 import Exec.Abs.Supported.CumulativeStep
 import Exec.Interp.Core.BoundClosure
 import Exec.Abs.SupportedState
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem StructuredMachine.SyntaxClosure.supported {before after}
     (closure : StructuredMachine.SyntaxClosure before after)
@@ -39,9 +39,9 @@ theorem ErasedStep.supported {before after : Abs.AFrame} (step : ErasedStep befo
     apply Abs.Supported.replace_frame covered
     exact ⟨(current.2 label (List.mem_cons_self ..)).2,fun outer member => current.2 outer (List.mem_cons_of_mem _ member)⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 
 /-- A non-erased core step of a typed supported state stays supported. -/
 theorem core_step_supported {before next} (typed : Abs.CoreTyped before) (covered : Abs.SupportedState before)
@@ -78,4 +78,4 @@ theorem bound_transition {initial next} (typed : Abs.CoreTyped initial) (covered
   rcases transition with same | step
   · exact fun _ h => same ▸ h
   · exact core_step_bound typed covered step
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Control.ReaderControlCheckedPrefixWasm2
 import Exec.Code.Body.Reader.Table.ReaderTableInstructionPrefixWasm2
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 
@@ -61,4 +61,4 @@ theorem IndexedTableReaderCompilerPointWasm2.checked_prefix {A : Type}
     exact state.control_checked_prefix ops law ctx rfl C matched contextLocals beforeMetadata beforeSignatures
       initialLayout initialLocals initialCapacity beforeExtent beforeBound maps fixups held exits next advance inbounds out kind byte accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

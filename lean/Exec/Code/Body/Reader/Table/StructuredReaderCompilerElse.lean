@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixElseDormantWasm2
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixElseEnteredWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.begin_else {jumpTables : List U32} {A : Type}
@@ -56,4 +56,4 @@ theorem StructuredReaderCompilerStateWasm2.else_ {jumpTables : List U32} {A : Ty
   obtain ⟨condition, noEntry, nextState⟩ := state.begin_else ops law initialLocals next advance inbounds out byte accepted
   exact nextState.point
 
-end Exec.Code
+end Itasca.Runtime.Code

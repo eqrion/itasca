@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 
 theorem linear_emission_not_indirect {locals before emitted after table type}
     (head : LinearEmission locals before (.CALL_INDIRECT table type) emitted after) : False := by
@@ -25,4 +25,4 @@ theorem stateful_emission_not_indirect {pairs C before emitted after table type}
   cases head with
   | instruction stack input output op signature first second a b entry firstSlot secondSlot arguments pair =>
     cases op <;> cases equal
-end Exec.Code
+end Itasca.Runtime.Code

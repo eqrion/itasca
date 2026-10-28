@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.StatefulReaderPost
 import Exec.Code.Body.Reader.Common.ReaderReferenceSteps
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 private theorem fixed_effect_concrete {before after inputs output}
@@ -68,4 +68,4 @@ theorem reader_ref_func_post_wasm2 {data env locals index st}
   · rw [values]
     exact concreteStack_append.mpr ⟨known,by simp [ConcreteStack]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

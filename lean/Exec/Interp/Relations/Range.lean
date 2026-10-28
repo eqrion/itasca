@@ -2,7 +2,7 @@ import Exec.Interp.Relations.DecodeValue
 
 /-! The extracted range guard checks subtraction before addition and casts only
 bounded endpoints. This holds at both supported machine-index widths. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem usize_to_u64_exact (value : Usize) :
@@ -42,4 +42,4 @@ def RangeEffect (start len : U64) (size : Usize) (trap : runtime.Trap)
       have endCast := cast_usize_exact last (by scalar_tac)
       simp [RangeEffect, fits, startCast, endCast, hlast]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

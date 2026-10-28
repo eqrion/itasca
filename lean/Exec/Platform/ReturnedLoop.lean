@@ -1,6 +1,6 @@
 import Exec.Platform.RecordingLoop
 
-namespace Exec.Platform
+namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std Lean.Order
 
 private theorem returned_bind {α β : Type} (read : Result α) (next : α → Result β)
@@ -42,4 +42,4 @@ theorem loop_returned_invariant {α β : Type} (body : α → Result (ControlFlo
     | cont state => exact ih state next answer tail
   exact held state initial answer returned
 
-end Exec.Platform
+end Itasca.Runtime.Platform

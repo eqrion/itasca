@@ -1,5 +1,5 @@
 import Exec.Interp.Numeric.Float.FloatInstructionOutcome
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 theorem scalar_f32_abs_instruction {F : Type} (ops : runtime.platform.FloatOps F)
@@ -463,4 +463,4 @@ theorem scalar_i64_reinterpret_f64_instruction {F : Type} (ops : runtime.platfor
   · try simp only [signed_roundtrip32, signed_roundtrip64] at source
     exact source
 
-end Exec.Interp
+end Itasca.Runtime.Interp

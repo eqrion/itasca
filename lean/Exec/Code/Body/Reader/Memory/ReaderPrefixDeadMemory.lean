@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -70,4 +70,4 @@ theorem reader_prefix_dead_memory_store_wasm2 {jumpTables : List U32} {data env 
   have cursor := compiler_core_cursor ops law before after out.core (.store op arg.offset arg.align) callback
   exact ⟨arg,values,post,post.structured_skip ops law invariant dead ordinary sources cursor
     (memoryStoreOpcode op) arg.offset arg.align 0#u128 callback⟩
-end Exec.Code
+end Itasca.Runtime.Code

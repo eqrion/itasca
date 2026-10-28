@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredCodeTableExclusion
 import Exec.Code.Body.Lowering.Simd.SimdEmissionExclusion
 import Exec.Code.Local.Relations.Common.StatefulEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StatefulEmission.not_branchTable {pairs C before instruction emitted after}
@@ -18,4 +18,4 @@ theorem SimdEmission.not_branchTable {immediates constants C before instruction 
   simp only [same,Abs.simdSourceTag] at tag
   contradiction
 
-end Exec.Code
+end Itasca.Runtime.Code

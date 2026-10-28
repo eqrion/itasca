@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Common.Lowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Aeneas.Std.Result
 set_option maxRecDepth 4096
@@ -77,4 +77,4 @@ theorem lower_select_eq {A : Type} (ops : runtime.platform.Alloc A)
   simp only [hleft, hright, hcondition, hdifference, bind_ok,
     core.result.Result.Insts.CoreOpsTry.branch, selectInstruction]
   split <;> simp_all
-end Exec.Code
+end Itasca.Runtime.Code

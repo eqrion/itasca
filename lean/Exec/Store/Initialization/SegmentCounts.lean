@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentAccounting
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Instruction execution may drop segment payloads while retaining the number
@@ -16,4 +16,4 @@ theorem SegmentCounts.accounting {M : Type} {before after : runtime.store.Store 
   · simpa only [counts.elements,instances] using accounted.elements
   · simpa only [counts.datas,instances] using accounted.datas
 
-end Exec.Store
+end Itasca.Runtime.Store

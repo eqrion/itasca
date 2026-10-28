@@ -7,7 +7,7 @@ import Exec.Code.Local.Callbacks.Table.CompilerPairTableAppend
 import Exec.Code.Local.Relations.Table.StatefulAuxiliaryTables
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-typed stateful metadata readers check every newly emitted word and
@@ -56,4 +56,4 @@ theorem StatefulReaderPost.instruction_prefix {jumpTables : List U32} {data env 
       (.stateful emission) emission.not_branchTable growth held ordinary.frames,
       exits.retained (congrArg alloc.vec.Vec.val ordinary.frames) ordinary.capacity⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

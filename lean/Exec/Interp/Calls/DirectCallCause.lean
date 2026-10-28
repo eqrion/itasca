@@ -1,6 +1,6 @@
 import Exec.Interp.Calls.CallCauses
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A rejected direct call records the fetched instruction, resolved callee,
@@ -24,4 +24,4 @@ def DirectCallCause {A M P : Type} (allocator : runtime.platform.Alloc A)
       { before with frames := before.frames.set frameIndex { raw with pc := pc } }
       store platform base compiled error
 
-end Exec.Interp
+end Itasca.Runtime.Interp

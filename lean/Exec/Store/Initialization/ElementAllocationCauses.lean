@@ -2,7 +2,7 @@ import Exec.Store.Initialization.ElementValueCauses
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Preparation.AllocationErrors
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 
@@ -31,8 +31,7 @@ theorem add_element_resource_cause {M P F A : Type}
     after = store ∧ host = platform ∧ ElementAllocationCause allocator store inst index segment error := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Code.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun,refusal⟩ := reserve_with_cause allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -70,8 +69,7 @@ theorem add_element_resource_cause {M P F A : Type}
         obtain ⟨rfl,rfl,rfl⟩ := run
         exact ⟨rfl,rfl,Or.inl ⟨rfl,Or.inr refused⟩⟩
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
-          runtime.compiler.ExecutableModule.env,module.Module.env,Itasca.module.Module.impl.env,
-          module.Env.elements,Itasca.module.Env.impl.elements] at run
+          runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements] at run
         obtain ⟨current,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨declared,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨elements,pushed,run⟩ := normal_bind_exists _ _ _ run
@@ -79,4 +77,4 @@ theorem add_element_resource_cause {M P F A : Type}
         simp only [uncurry_apply_pair] at run
         obtain ⟨addresses,mapped,run⟩ := normal_bind_exists _ _ _ run
         simp at run
-end Exec.Store
+end Itasca.Runtime.Store

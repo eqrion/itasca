@@ -6,7 +6,7 @@ import Exec.Abs.Ownership.Core
 import Exec.Interp.StructuredMachine.NumericFetch
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem step_numeric_execution_owned_uniform {M P F A : Type}
@@ -101,4 +101,4 @@ theorem step_numeric_execution_owned {M P F A : Type}
     exact ⟨same,platform,Or.inl ⟨success,pc,g,machine,simulation,ownership,bounded⟩⟩
   · exact ⟨same,platform,Or.inr trapped⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

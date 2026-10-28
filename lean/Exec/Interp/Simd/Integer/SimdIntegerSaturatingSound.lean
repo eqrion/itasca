@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdIntegerSaturatingPacking
 import Exec.Spec.SimdIntegerSaturatingStep
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem integer_saturating_lanes_sound (ty : Jnn) (op : Spec.Simd.IntegerSaturating) (x y : U128)
@@ -38,4 +38,4 @@ theorem integer_saturating_simd_eq {F : Type} (floats : runtime.platform.FloatOp
   step with integer_saturating_lanes_sound ty op x y supported as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

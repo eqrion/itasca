@@ -1,6 +1,6 @@
 import Exec.Interp.State.GlobalCoreWrite
 import Exec.Code.Local.Relations.Global.GlobalLowering
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -45,4 +45,4 @@ theorem dispatch_globalSet {Q : core.result.Result Unit runtime.ExecError × run
   simp only [bind_ok]
   with_unfolding_all apply WP.spec.ret
   exact ⟨property,rfl⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

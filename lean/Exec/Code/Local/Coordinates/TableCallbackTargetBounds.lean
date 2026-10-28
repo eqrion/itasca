@@ -1,6 +1,6 @@
 import Exec.Code.Local.Coordinates.TableTargetBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Streamed labels retain all jump-table targets and code. -/
@@ -48,4 +48,4 @@ theorem compiler_br_table_target_bounds {A : Type} (ops : runtime.platform.Alloc
       exact compiler_observe_jump_table_bounds ops law {labeled with table_depths := cleared} after state
         (by simpa only [JumpTableBounds] using coordinates) observed
 
-end Exec.Code
+end Itasca.Runtime.Code

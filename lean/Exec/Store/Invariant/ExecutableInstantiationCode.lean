@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.InstantiationCode
 import Exec.Store.Invariant.ExecutableCompiledDefinitions
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 /-- The compiler's syntactic module certificate supplies fresh function bodies;
 existing bodies keep their old certificate. Charging instance items changes no
@@ -20,4 +20,4 @@ theorem InstantiationCode.executable_compiled {M : Type} {view : M → Slice U8}
     found certificate dataCount cache entries table signatures
   exact compiled
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Interp.Calls.CallRecording
 import Exec.Interp.Invocation.InvokeLoopRecording
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 abbrev InvocationResult (M P : Type) := core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
@@ -90,7 +90,7 @@ def recordedInvokeWith {M P F A : Type}
                     let r8 ←
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                         Unit (core.convert.FromSame
-                        _root_.Exec.runtime.ExecError) residual
+                        _root_.Itasca.runtime.ExecError) residual
                     Result.ok ((r8,
                       {
                         store := i,
@@ -103,7 +103,7 @@ def recordedInvokeWith {M P F A : Type}
                   let r7 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                       Unit (core.convert.FromSame
-                      _root_.Exec.runtime.ExecError) residual
+                      _root_.Itasca.runtime.ExecError) residual
                   Result.ok ((r7,
                     {
                       store := i,
@@ -115,7 +115,7 @@ def recordedInvokeWith {M P F A : Type}
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let r6 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                    Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError)
                     residual
                 Result.ok ((r6,
                   {
@@ -128,35 +128,35 @@ def recordedInvokeWith {M P F A : Type}
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r6 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                  Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError)
                   residual
               Result.ok ((r6, exec2, store1, platform1, results),callTrace)
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r5 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Exec.runtime.ExecError)
+                Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError)
                 residual
             Result.ok ((r5, exec1, store, platform, results),prior)
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r4 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Exec.runtime.ExecError)
+              Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError)
               residual
           Result.ok ((r4, exec, store, platform, results),prior)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
+            Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError) residual
         Result.ok ((r3, exec, store, platform, results),prior)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
+          Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError) residual
       Result.ok ((r2, exec, store, platform, results),prior)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
+        Unit (core.convert.FromSame _root_.Itasca.runtime.ExecError) residual
     Result.ok ((r1, exec, store, platform, results),prior)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

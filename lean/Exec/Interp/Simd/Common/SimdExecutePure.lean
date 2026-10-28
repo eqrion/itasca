@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdOperandsBounded
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -82,4 +82,4 @@ theorem execute_simd_no_memory_bounded {M F : Type}
     have notTwo : wr ≠ 2#u32 := by scalar_tac
     simp [notTwo,SlotsEffect,simdResultSlots,zeroNat]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

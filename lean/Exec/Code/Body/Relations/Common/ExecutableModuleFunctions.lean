@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.Function
 import Itasca.Support.EnvTranslation
 import Exec.Code.Body.Relations.Common.ExecutableFunction
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 structure ExecutableModuleFunctions (module : runtime.compiler.ExecutableModule)
     (sources : List funccode) : Prop where
@@ -25,4 +25,4 @@ theorem ExecutableModuleFunctions.extend {before after : runtime.compiler.Execut
   have same := (List.getElem?_eq_some_iff.mp foundCode).2
   have retained := congrArg (fun list => list[index]?) preserved
   simpa [List.getElem?_take, bound, same] using retained
-end Exec.Code
+end Itasca.Runtime.Code

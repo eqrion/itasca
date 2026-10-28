@@ -1,7 +1,7 @@
 import Exec.Abs.Core.Step
 import Exec.Abs.Numeric.Effect
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Every legacy pure abstract transition retains its source store exactly,
 including control transfer, defined calls, and function returns. -/
@@ -16,4 +16,4 @@ theorem astep_store {s next : AState} (step : astep s = .next next) : next.store
       cases step
       rfl
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.ReaderTableSafetyWasm2
 import Itasca.Binary.Wasm1.EncodingUnique
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Independently decoded table labels remaining at a reader boundary. The
@@ -92,4 +92,4 @@ theorem TableDecodeRead.cursor {data all finish index state depths depth}
   subst tail
   exact (decoded.unique .nil rfl).2.symm
 
-end Exec.Code
+end Itasca.Runtime.Code

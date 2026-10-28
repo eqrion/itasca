@@ -1,5 +1,5 @@
 import Exec.Interp.Core.Linear
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalarEmission_localGet_pure {C before after emitted} (index : Nat)
@@ -19,4 +19,4 @@ theorem scalarEmission_localWrite_pure {C before after emitted} (index : Nat) (k
   | linear head => simpa only [equality] using head
   | float stack other => cases keep <;> cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => cases keep <;> simp_all [Abs.Memory.Load.source,Abs.Memory.Store.source]
-end Exec.Interp
+end Itasca.Runtime.Interp

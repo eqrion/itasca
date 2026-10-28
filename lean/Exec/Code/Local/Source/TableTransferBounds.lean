@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableFrames
 import Exec.Code.Local.Relations.Table.BranchTableArguments
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source-selected table arms have a complete transfer region below the
@@ -49,4 +49,4 @@ theorem TableTransferBounds.advance {A : Type} {before after : runtime.compiler.
     · rw [frames,List.getElem?_set_ne same] at lookup
       exact retain (held depth member index frame lookup position)
 
-end Exec.Code
+end Itasca.Runtime.Code

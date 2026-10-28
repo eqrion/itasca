@@ -4,8 +4,8 @@ import Exec.Interp.State.StatefulLookup
 import Exec.Store.Initialization.SegmentStep
 import Exec.Interp.State.StatefulSegmentLookup
 import Exec.Store.Invariant.Typing
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp Exec.Interp.Stateful
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_memory_init_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -54,4 +54,4 @@ theorem stateful_memory_init_dispatch {M P F A : Type} (memory : runtime.platfor
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,trivial,⟨address,object,segment,_,_,_,issued,effect⟩,metadata,
       by rw [same];exact frame_consume after slots values,by simpa only [indexEq] using transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

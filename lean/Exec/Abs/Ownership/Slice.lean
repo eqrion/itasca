@@ -1,7 +1,7 @@
 import Exec.Abs.Ownership.Numeric
 import Exec.Abs.Preservation
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_ownership (bound : Bounds) (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState) (results : List val)
@@ -64,4 +64,4 @@ theorem instruction_ownership (bound : Bounds) (s : store) (ambient : frame) (f 
               | apply localsBound; apply List.mem_of_getElem?; assumption
             · exact valuesOwned_nil _
 
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

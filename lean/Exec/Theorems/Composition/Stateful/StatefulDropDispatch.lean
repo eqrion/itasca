@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.Stateful.StatefulDrops
 import Exec.Store.Initialization.SegmentStep
 import Exec.Interp.State.StatefulSegmentLookup
 import Exec.Interp.State.StatefulOperandSlots
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 def statefulIsDrop : Abs.Stateful.Instruction → Bool
   | .dataDrop _ | .elemDrop _ => true
@@ -69,4 +69,4 @@ theorem stateful_drop_dispatch {M P F A : Type} (memory : runtime.platform.Memor
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨status,same,rfl,trivial,values.symm,by rw [changed];exact .data address issued,metadata,
       by rw [same];exact slots,by simpa only [indexEq] using transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

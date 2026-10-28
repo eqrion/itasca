@@ -1,6 +1,6 @@
 import SpecExt.Host
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Endpoint well-formedness follows directly from generated constructors.
@@ -31,4 +31,4 @@ theorem stepsH_trans {c c' c'' : config} {es rest : List HostEvent}
   | refl _ => simpa using h'
   | cons h _ ih => simpa [List.append_assoc] using StepsH.cons h (ih h')
 
-end Exec.Spec
+end Itasca.Runtime.Spec

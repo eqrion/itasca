@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.FunctionStaging
 import Exec.Store.Initialization.ElementEffects
 import Exec.Store.Initialization.DataEffects
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Addresses issued by append-only preparation, in their actual source order. -/
@@ -86,4 +86,4 @@ theorem DataStageEffect.address_order {M : Type} {store after : runtime.store.St
     subst next
     simpa [stored, mapped] using ordered.append
 
-end Exec.Store
+end Itasca.Runtime.Store

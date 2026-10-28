@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Store.Api.MemoryFillEffect
-namespace Exec.Store
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem MemoryFillEffect.mutation {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
     (address : runtime.MemoryAddr) (memory : runtime.store.MemInst M) (destination count : U64) (value : U8)
@@ -17,4 +17,4 @@ theorem MemoryFillEffect.mutation {M : Type} (view : M → Slice U8) (store : ru
     simpa only [Slice.length,List.length_setSlice!] using congrArg List.length filled
   · rw [effect]
     exact ⟨⟨rfl,rfl,rfl,rfl⟩,Or.inr ⟨rfl,rfl⟩⟩
-end Exec.Store
+end Itasca.Runtime.Store

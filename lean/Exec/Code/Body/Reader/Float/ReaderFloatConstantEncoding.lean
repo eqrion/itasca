@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.ScalarEmission
 import Itasca.Spec.ScalarConst
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem scalar_float_value_32 (bits : U32) :
     SpecExt.Builtins.floatOfBits 32 bits.val = ScalarConst.floatValue 23 8 bits.val := by
@@ -19,4 +19,4 @@ theorem scalar_float_value_64 (bits : U64) :
     SpecExt.Builtins.floatBias, sign]
 
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Common.OrdinaryEmbedding
 import Exec.Code.Local.Control.Simd.StructuredSimdEmbedding
 import Exec.Code.Local.Callbacks.Table.CompilerTables
 import Exec.Code.Local.Source.TypedSelectEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Every emitted ordinary instruction, with the function-local index-pair, SIMD
@@ -31,4 +31,4 @@ instance (tables C) : OrdinaryEmbedding tables.indirect C (ExecutableEmission ta
 instance (tables C) : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C) :=
   ⟨.simd⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

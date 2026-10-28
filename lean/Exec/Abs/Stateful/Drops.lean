@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.DropStore
 import Exec.Abs.Stateful.Continuation
 import Exec.Abs.Core.Simulation
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def elementDrop (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (after : List instr) : AResult :=
   match f.module.ELEMS[index]? with
@@ -90,4 +90,4 @@ theorem dataDrop_progress (s : store) (ambient : frame) (f : AFrame) (rest : Lis
       typed.typed.ambient labelsWf valuesWf tailWf restWf height (by simpa [vals,admininstr_instr] using source)
     simpa only [List.append_nil] using full
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

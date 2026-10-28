@@ -1,6 +1,6 @@
 import Exec.Abs.ControlSafety
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Generated source typing exposes the nesting bound below every active
 label. This ensures downward branch transfers preserve saved outer prefixes. -/
@@ -29,4 +29,4 @@ theorem FrameTyped.outer_heights {s : store} {frame : AFrame} {incoming : List v
   | mk C bindings localTypes locals values returns code wf =>
     exact codeStack_outer_heights code depth target lookup
 
-end Exec.Abs
+end Itasca.Runtime.Abs

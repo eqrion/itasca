@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixEndEnteredWasm2
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixEndDormantWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A non-root END closes the exact retained source scope and restores its
@@ -50,4 +50,4 @@ theorem StructuredReaderCompilerStateWasm2.end_nested {jumpTables : List U32} {A
         (show ReaderKnownFronts parents current (p.parents.map Wasm2.Frames.Saved.vals) from state.knownFronts)
     exact ⟨outer, parent.advance instruction, savedOuter, resumedSource savedParent p.current instruction,
       compiled, boundary, same, reach, fronts, savedKnown.pop instruction⟩
-end Exec.Code
+end Itasca.Runtime.Code

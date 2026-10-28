@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.PairSuccess
 import Exec.Code.Local.Relations.Common.StatefulSuccess
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -55,7 +55,7 @@ noncomputable def simdLowering {A : Type} (ops : runtime.platform.Alloc A)
           let (r4, b, v) ←
             runtime.compiler.Budget.push ops before.budget
               before.function.simd ({ offset := a, lane, bits } :
-              _root_.Exec.runtime.bytecode.SimdImmediate)
+              _root_.Itasca.runtime.bytecode.SimdImmediate)
           let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
           match cf4 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -149,8 +149,8 @@ theorem compiler_simd_nonconstant_eq {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_pos lo,if_pos hi]
     rfl
 
-end Exec.Code
-namespace Exec.Code
+end Itasca.Runtime.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 
 def simdStores (sub : U32) : Bool :=
@@ -174,4 +174,4 @@ theorem simd_outputs_eq (sub : U32) :
     (if simdStores sub then Result.ok 0#usize else Result.ok 1#usize) =
       Result.ok (if simdStores sub then 0#usize else 1#usize) := by split <;> rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

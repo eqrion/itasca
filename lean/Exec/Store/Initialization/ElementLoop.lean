@@ -4,7 +4,7 @@ import Exec.Store.Initialization.Initializer
 /-! Finite preparation of element initializer values. Each input certificate
 connects an actual source expression and retained synthetic function; no
 execution premise is accepted. The loop leaves the store and platform intact. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementInitializers {M : Type} (store : runtime.store.Store M)
@@ -78,9 +78,9 @@ theorem element_initializers_loop {M P F A : Type}
         subst found
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
-        simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-          Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
-        step with Exec.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+        simp only [runtime.compiler.ExecutableModule.env,
+          Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+        step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
         rw [elem_value_type_eq, bind_ok]
@@ -110,4 +110,4 @@ theorem element_initializers_loop {M P F A : Type}
       omega
   · exact ⟨rfl, rfl, hvalues, hj⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

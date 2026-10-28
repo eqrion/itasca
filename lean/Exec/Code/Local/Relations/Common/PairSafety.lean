@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.NumericSafety
 import Exec.Code.Local.Initializer.InitializerProofs
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_pair_total {A} (ops : runtime.platform.Alloc A)
@@ -22,4 +22,4 @@ open Aeneas Aeneas.Std
     cases answer <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, WP.spec_ok]
 
-end Exec.Code
+end Itasca.Runtime.Code

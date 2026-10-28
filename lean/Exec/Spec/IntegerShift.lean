@@ -1,6 +1,6 @@
 import Exec.Spec.IntegerSigned
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 /-- The builtin's signed value is bitvector two's-complement interpretation. -/
 theorem signedValue_bitvec (width : Nat) (bits : BitVec width) :
@@ -43,4 +43,4 @@ theorem integer_shrs_relation (ty : Inn) (bits : BitVec (sizenn (numtype_Inn ty)
   · rw [← same] at wf ⊢
     exact .fun_binop__case_19 .S _ _ wf
 
-end Exec.Spec
+end Itasca.Runtime.Spec

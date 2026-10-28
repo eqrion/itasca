@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Acceptance.SourceStepAcceptanceWasm2
 import Exec.Code.Body.Reader.Checking.SourceCheckedAdvanceWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Complete-profile Wasm 2 body steps retain executable, resource,
@@ -33,4 +33,4 @@ theorem source_checked_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (la
     point ledger budget layout localsMatch metadata matched contextLocals signatures room.coordinate nonempty next advance inbounds
     (fun counter => bodyResourceRate counter*(out.core.pos.val-st.core.pos.val)) (by intro counter; rfl) acceptance coordinates maps targets initialLocals initialCapacity instructions exits extent
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -3,14 +3,14 @@ import Exec.Store.Linking.LinkMaps
 import Exec.Store.Invariant.Extension
 import Exec.Interp.Relations.CompiledFunctions
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
 theorem StagedPrefix.type_lookup {M : Type} {before after : runtime.store.Store M}
     (retained : StagedPrefix before after) {index : Nat} {ty : Itasca.types.FuncType}
     (found : before.types.val[index]? = some ty) : after.types.val[index]? = some ty :=
-  Exec.Representation.lookup_prefix _ _ retained.types found
+  Itasca.Runtime.Representation.lookup_prefix _ _ retained.types found
 
 /-- Updating unrelated instance maps does not change its function signatures. -/
 theorem function_table_instance {M : Type} {store : runtime.store.Store M}
@@ -27,7 +27,7 @@ theorem function_table_prefix {M : Type} {before after : runtime.store.Store M}
   intro address ty matching
   obtain ⟨owner, function, signature, found, signatureFound, decoded⟩ := matching
   exact ⟨owner.trans retained.identity.symm, function, signature,
-    Exec.Representation.lookup_prefix _ _ retained.funcs found, Exec.Representation.lookup_prefix _ _ retained.types signatureFound, decoded⟩
+    Itasca.Runtime.Representation.lookup_prefix _ _ retained.funcs found, Itasca.Runtime.Representation.lookup_prefix _ _ retained.types signatureFound, decoded⟩
 
 /-- Every address in a concrete signature table denotes an existing function. -/
 theorem function_table_issued {M : Type} {store : runtime.store.Store M}
@@ -112,4 +112,4 @@ theorem installCode_lookup (before : CodeInterpretation) (fresh : Nat)
     installCode before fresh source fresh module index = function := by
   simp only [installCode, ↓reduceIte, List.getD_eq_getElem?_getD, found, Option.getD_some]
 
-end Exec.Store
+end Itasca.Runtime.Store

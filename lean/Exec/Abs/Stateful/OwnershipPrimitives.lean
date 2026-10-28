@@ -1,7 +1,7 @@
 import Exec.Abs.Stateful.OwnershipStore
 import Exec.Abs.Stateful.Transition
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec Stateful
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec Stateful
 
 theorem stateful_owned_advance {bounds s f rest next}
     (heap : StatefulHeapOwned bounds s.store) (results : ValuesOwned bounds s.results)
@@ -133,4 +133,4 @@ theorem stateful_dataDrop_owned {bounds s f rest next index after}
     · exact results
     · exact frame
     · exact frames
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

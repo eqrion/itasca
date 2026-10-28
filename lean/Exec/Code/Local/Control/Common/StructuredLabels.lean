@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Common.StructuredComposition
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem ExitAligned.cons (label : LabelTarget) (labels : List LabelTarget) :
@@ -9,4 +9,4 @@ theorem ExitAligned.cons (label : LabelTarget) (labels : List LabelTarget) :
   subst found
   rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

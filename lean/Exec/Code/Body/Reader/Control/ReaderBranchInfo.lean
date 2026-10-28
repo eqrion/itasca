@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxHeartbeats 2000000
 
@@ -54,4 +54,4 @@ theorem reader_branch_info_selected (st : code.BodyState) (data : Slice U8)
   obtain ⟨rfl, _⟩ := Leb128.Decoded.deterministic data st.core.pos depth selected middle.core.pos middle.core.pos
     (bytes.2.2 depth view rfl) decoded
   exact label
-end Exec.Code
+end Itasca.Runtime.Code

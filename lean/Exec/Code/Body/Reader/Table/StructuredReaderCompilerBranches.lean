@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixBr
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixBrIf
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.br {jumpTables : List U32} {A : Type}
@@ -45,4 +45,4 @@ theorem StructuredReaderCompilerStateWasm2.br_if {jumpTables : List U32} {A : Ty
     (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled
     (fun live => state.reach.current (reach.symm.trans live))⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

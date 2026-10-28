@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdSwizzlePacking
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem swizzle_lanes_sound (bits x y : U128) :
@@ -28,4 +28,4 @@ theorem swizzle_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with swizzle_lanes_sound as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

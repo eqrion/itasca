@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.TableTyping
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 theorem operands {s : store} {f : AFrame} {table type : Nat} {after : List instr}
     (typed : FrameTyped s {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} []) :
@@ -43,4 +43,4 @@ theorem operands {s : store} {f : AFrame} {table type : Nat} {after : List instr
           simpa only [frontTypes] using continuation
         · cases instructionWf;rename_i ht hy;cases ht;norm_num at *;omega
         · cases instructionWf;rename_i ht hy;cases hy;norm_num at *;omega
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

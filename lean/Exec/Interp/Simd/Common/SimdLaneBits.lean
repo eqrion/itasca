@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdLanes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def laneBits (width index : Nat) (v : BitVec 128) : BitVec width :=
@@ -79,4 +79,4 @@ theorem laneBits_write_other (width index other : Nat) (v : BitVec 128) (x : Bit
     exact (congrArg (laneBits width.val other) bits).trans
       (laneBits_write_other _ _ _ _ _ bound different)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

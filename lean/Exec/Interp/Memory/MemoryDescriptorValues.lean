@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Abs.Memory.Semantics
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
  theorem load_word_value (op : Abs.Memory.Load) (bytes : List U8) (start : Nat)
@@ -78,4 +78,4 @@ open Aeneas Aeneas.Std SpecExt
     refine ⟨status,?_⟩
     rw [after]
     exact memory_unchanged_decodes view code store memoryAddress object buffer issued unchanged
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

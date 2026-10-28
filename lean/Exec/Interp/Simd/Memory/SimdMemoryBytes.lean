@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryAddress
 
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def vectorStoreByte (value : U128) (index : Nat) : U8 :=
@@ -100,4 +100,4 @@ bytes, preserving their little-endian order. -/
     · have finished : position.val = width.val := by scalar_tac
       simpa [finished, vectorLoadBytes] using effect
   · exact ⟨initial, rfl⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

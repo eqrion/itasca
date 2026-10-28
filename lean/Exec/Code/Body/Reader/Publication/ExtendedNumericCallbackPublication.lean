@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Source.SourceOpcodeDescriptors
 import Exec.Code.Local.Coordinates.NumericSourceCoordinates
 import Exec.Code.Local.Publication.LoweringMapPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Sign-extension and saturating numeric events select exact descriptors. -/
@@ -48,4 +48,4 @@ theorem compiler_extended_numeric_hook_publication {A : Type} (ops : runtime.pla
     exact ⟨compiler_float_dispatch_source_coordinates ops law before after state op coordinates inside forward called,
       compiler_float_map_publication ops law before after state op called maps forward⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

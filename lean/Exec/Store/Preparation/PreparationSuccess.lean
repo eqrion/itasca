@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.PreparationResults
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -211,4 +211,4 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
   · simp only [memoryMap_elements, tableMap_elements, functionMap_elements, typeMap_elements]
   · simp only [memoryMap_data, tableMap_data, functionMap_data, typeMap_data]
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Abs.Core.Select
 import Exec.Abs.Core.Step
 import Exec.Interp.Machines.Core.CoreSelectPoint
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem select_typed_operands {s : _root_.store} {f : Abs.AFrame} {after : List instr}
@@ -39,4 +39,4 @@ theorem select_source_next {s : _root_.store} {ambient : frame} {f : Abs.AFrame}
   have types : Abs.valueType left = Abs.valueType right := by simpa only [valueType_eq_abs] using matching
   simp only [Abs.Core.step,Abs.Core.instruction,Abs.Core.select,shape,Abs.pop_append,decoded,types,
     ite_true,Abs.advance]
-end Exec.Interp
+end Itasca.Runtime.Interp

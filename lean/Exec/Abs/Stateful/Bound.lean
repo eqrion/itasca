@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.Metadata
 import Exec.Abs.Bound
-namespace Exec.Abs.Stateful
+namespace Itasca.Runtime.Abs.Stateful
 
 theorem transition_bound (bound : Nat) (op : Instruction) (s : store) (ambient : frame)
     (f : AFrame) (rest : List AFrame) (after : List instr) (next : AState)
@@ -21,4 +21,4 @@ theorem transition_bound (bound : Nat) (op : Instruction) (s : store) (ambient :
       omega
     · exact bounded.frames frame (List.mem_cons_of_mem _ member)
   · simpa only [functions] using bounded.functions
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

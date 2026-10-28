@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdLowered
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A checked SIMD subopcode has an exact, nonwrapping compiler opcode. -/
@@ -48,4 +48,4 @@ theorem compiler_simd_memory_lane_callback (arg : Itasca.code.MemArg) (lane : U8
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory_lane,lift,bind_ok,
     simd_opcode_add sub opcode bound number]
 
-end Exec.Code
+end Itasca.Runtime.Code

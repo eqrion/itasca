@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredPrefixZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 
 /-- Closing the current source scope exposes exactly its suspended parent and
 the unchanged remainder of the source zipper. -/
@@ -20,5 +20,5 @@ theorem StructuredParentPrefixes.pop {jumpTables : List Aeneas.Std.U32} {emit ty
     subst earlier previous
     exact ⟨prior, shape, bound, held⟩
 
-end Exec.Code
+end Itasca.Runtime.Code
 

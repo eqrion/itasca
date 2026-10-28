@@ -13,7 +13,7 @@ import Exec.Store.Instantiation.PrecommitSource
 
 /-! Public instantiation links, allocates and initializes a module and returns its start
 function without running it. The construction is total and uses no host callback. -/
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca Store SpecExt
 
 /-- The returned start function is the one the module declares, resolved through the new
@@ -182,8 +182,8 @@ theorem commit_instance_source {M P F A : Type}
       have run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (.Ok ⟨identity,none⟩,initialized,platform,true) := by
         simp [runtime.store.instantiate.Store.commit_instance,initRun,core.result.Result.Insts.CoreOpsTry.branch,
-          alloc.vec.Vec.index_slice_index,read,runtime.compiler.ExecutableModule.env,Exec.module.Module.env,
-          Itasca.module.Module.impl.env,Exec.module.Env.start,Itasca.module.Env.impl.start,start]
+          alloc.vec.Vec.index_slice_index,read,runtime.compiler.ExecutableModule.env,
+          Itasca.module.Module.impl.env,Itasca.module.Env.impl.start,start]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩
       · intro instantiated same
@@ -201,8 +201,7 @@ theorem commit_instance_source {M P F A : Type}
       have run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (.Ok ⟨identity,some address⟩,initialized,platform,true) := by
         simp only [runtime.store.instantiate.Store.commit_instance,initRun,lift,bind_ok,uncurry_apply_pair,
-          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env,
-          Exec.module.Module.env,Itasca.module.Module.impl.env,Exec.module.Env.start,Itasca.module.Env.impl.start,
+          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.start,
           alloc.vec.Vec.index_slice_index,read,start,addressRun]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩
@@ -326,4 +325,4 @@ theorem instantiate_compiled_source {M P F A : Type}
         · rcases trap with impossible | impossible <;> cases impossible
         · exact Or.inr ⟨ready,inst,found,source,allocated,continued,unchanged,setup⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

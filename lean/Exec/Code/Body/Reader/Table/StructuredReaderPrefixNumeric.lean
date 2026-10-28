@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Reader.Common.ReaderNumericEmissions
 import Exec.Code.Body.Reader.Common.ReaderSpan
 import Exec.Code.Body.Control.Table.StructuredLinearEmbedding
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_numeric_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -39,4 +39,4 @@ theorem structured_reader_prefix_numeric_wasm2 {jumpTables : List U32} {data env
   · simpa only [retained.localsEq, inputTypes] using emission
   · rw [cursor]
 
-end Exec.Code
+end Itasca.Runtime.Code

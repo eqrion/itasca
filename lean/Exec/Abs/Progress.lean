@@ -2,8 +2,8 @@ import Exec.Abs.Numeric.Astep
 import Exec.Abs.Safety
 import Exec.Abs.PureHead
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem const_progress (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (code : List instr) (ty : Inn) (number : iN)
@@ -94,4 +94,4 @@ theorem function_defaults {s : store} {fn : funcinst} {index : idx}
   | mk_Func_ok _ types _ _ _ _ _ nonbot _ _ _ _ =>
     exact defaultLocals_exists types nonbot
 
-end Exec.Abs
+end Itasca.Runtime.Abs

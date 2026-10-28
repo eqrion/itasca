@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem typed_label_end_simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (label : Label) (labels : List Label) (next : AState)
@@ -25,4 +25,4 @@ theorem typed_label_end_simulation (s : store) (ambient : frame) (f : AFrame)
       exact .single result
     · contradiction
 
-end Exec.Abs
+end Itasca.Runtime.Abs

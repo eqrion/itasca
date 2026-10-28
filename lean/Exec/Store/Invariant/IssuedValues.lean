@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.ForeignValues
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A public value is either owned by this store or carries a foreign store
@@ -28,4 +28,4 @@ theorem issued_value_owned_or_foreign {M : Type} (s : runtime.store.Store M)
       · rcases Usize.bounds_eq with h | h <;> scalar_tac
     · exact Or.inr same
 
-end Exec.Store
+end Itasca.Runtime.Store

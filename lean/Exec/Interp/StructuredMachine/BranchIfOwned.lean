@@ -16,7 +16,7 @@ import Exec.Interp.Control.BranchNoCopy
 import Exec.Interp.Control.BranchConditionStep
 import Exec.Interp.Relations.TypedOperands
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_branchIf_owned_uniform {M P F A : Type}
@@ -216,4 +216,4 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
         · simpa only [if_pos zero] using FrameBoundClosure.tail f (.BR_IF (.mk_uN depth)) after f.locals values
         · simpa only [if_neg zero] using FrameBoundClosure.replace f (.BR_IF (.mk_uN depth)) (.BR (.mk_uN depth)) after f.locals values (by simp)
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

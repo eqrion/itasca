@@ -3,7 +3,7 @@ import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Control.Table.StructuredUniversalCloseLoop
 import Exec.Code.Local.Control.Table.StructuredElseFrames
 import Exec.Code.Local.Callbacks.Control.ScopeStackClose
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing an entered LOOP preserves its normal reachability; backward
@@ -84,4 +84,4 @@ theorem StructuredCompilerPrefix.close_loop {jumpTables : List Aeneas.Std.U32} {
   | dormant dead retained =>
     have impossible := retained.unentered
     simp [entered] at impossible
-end Exec.Code
+end Itasca.Runtime.Code

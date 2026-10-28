@@ -1,6 +1,6 @@
 import Exec.Abs.Ownership.Core
 import Exec.Interp.Calls.ReturnRefinement
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Abs.Ownership
 
 /-- Returning retains only the existing result suffix and the saved callers;
@@ -22,4 +22,4 @@ theorem returnedState_owned {s : store} {ambient : frame} {f : Abs.AFrame} {rest
     rcases List.mem_cons.mp member with rfl | member
     · exact ⟨saved.1,valuesOwned_append.mpr ⟨saved.2,values⟩⟩
     · exact owned.values.2 item (by simp [member])
-end Exec.Interp
+end Itasca.Runtime.Interp

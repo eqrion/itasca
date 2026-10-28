@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableAllocationCauses
 import Exec.Store.Invariant.NormalResult
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual table staging helper propagates the exact declared table's
@@ -15,8 +15,7 @@ theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryB
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok (.Err (.Exhausted limit),after,next)) :
     after = store ∧ next = inst ∧ TableAllocationCause allocator store ty limit := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
-  simp only [runtime.compiler.ExecutableModule.env,module.Module.env,Itasca.module.Module.impl.env,
-    module.Env.table_types,Itasca.module.Env.impl.table_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.table_types,bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.table_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found),bind_ok] at run
   obtain ⟨⟨status,staged⟩,defined,run⟩ := normal_bind_exists _ _ _ run
@@ -33,4 +32,4 @@ theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryB
     obtain ⟨rfl,rfl,rfl⟩ := run
     obtain ⟨same,cause⟩ := effect limit rfl
     exact ⟨same,rfl,cause⟩
-end Exec.Store
+end Itasca.Runtime.Store

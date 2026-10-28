@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SegmentData
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
@@ -20,8 +20,8 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
       (instructions.length ≤ 1 ∧ after.slot_count = before.slot_count ∨
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_element at success
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at success
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   cases mode : segment.mode with
   | Passive =>
@@ -145,4 +145,4 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
                         simp [indirectValues, same]
                       · exact .inr ⟨rfl, by rw [firstFields]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

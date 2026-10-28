@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdEventPrefix
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem SimdReaderEvent.tables {jumpTables : List U32} {A : Type} {ops : runtime.platform.Alloc A}
@@ -35,4 +35,4 @@ theorem SimdReaderEvent.tables {jumpTables : List U32} {A : Type} {ops : runtime
         event.meaning event.post event.effect event.read (invariant.known reachable) (monomorphic reachable) event.capacity
         (contextLocals.trans retained.localsEq.symm) retained.layout reachable codeFits sourceFits coordinateFits event.callback
     exact ⟨extra,tables⟩
-end Exec.Code
+end Itasca.Runtime.Code

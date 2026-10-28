@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdNarrowLoop
 import Exec.Spec.SimdNarrowSource
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def narrowWidth : NarrowWidth → U32 | .i8 => 8#u32 | .i16 => 16#u32
 
@@ -29,4 +29,4 @@ theorem narrow_dispatch_eq (ty : NarrowWidth) (signed : Bool) (x y : U128) :
   intro result lanes
   cases ty <;> with_unfolding_all exact lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

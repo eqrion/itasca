@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.Typing
 import Exec.Spec.Mutation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Replacing memory contents while retaining its maximum and not shrinking
@@ -30,4 +30,4 @@ theorem decodeTable_extends (before after : runtime.store.TableInst)
   simp only [decodeLimits_option] at old fresh ⊢
   exact .mk_Extend_tableinst _ _ _ _ _ _ length
     (by simpa only [List.length_map] using length) old fresh
-end Exec.Store
+end Itasca.Runtime.Store

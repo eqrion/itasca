@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredPrefixControl
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- An implicit empty ELSE joins directly at the normal exit. Its input and
@@ -16,5 +16,5 @@ theorem StructuredPrefix.ifEnd {jumpTables : List Aeneas.Std.U32} {emit types fu
   exact StructuredPrefix.ifElse (noNormal := true) (noBranch := false) signature condition guard yesCode (.direct rfl rfl)
     (.nil _ _ _ yesCode.next_le_length (NormalLive.cons rfl))
 
-end Exec.Code
+end Itasca.Runtime.Code
 

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.CopyBudgetAvailability
 import Exec.Code.Local.Relations.Control.BranchSuccessEmit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Available nonelided transfer retains the exact existing transfer
@@ -23,4 +23,4 @@ theorem compiler_transfer_available {A : Type} (ops : runtime.platform.Alloc A)
   have shape := compiler_copy_success ops law compiler after dst src count nonempty different actual
   exact WP.exists_imp_spec ⟨(.Ok (),after),actual,rfl,shape,effect⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

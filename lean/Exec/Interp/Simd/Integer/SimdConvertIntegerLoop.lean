@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdConvertIntegerWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def convertIntegerOpcode (ty : Fnn) (signed : Bool) : U32 :=
   match ty,signed with
@@ -67,4 +67,4 @@ theorem convert_integer_loop {F : Type} (floats : runtime.platform.FloatOps F)
       exact ⟨current,rfl,by simpa [finished] using initialized⟩
   · exact ⟨position,initializedPrefix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

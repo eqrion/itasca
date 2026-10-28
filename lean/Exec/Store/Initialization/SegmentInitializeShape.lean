@@ -2,7 +2,7 @@ import Exec.Store.Initialization.SegmentSyntheticShape
 import Exec.Store.Initialization.SegmentCompatibility
 import Exec.Store.Initialization.SegmentAccepted
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem initialize_segments_shape {M P F A : Type}
@@ -54,4 +54,4 @@ theorem initialize_segments_compiled_shape {M P F A : Type}
   exact initialize_segments_shape memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound ready shape compatible
 
-end Exec.Store
+end Itasca.Runtime.Store

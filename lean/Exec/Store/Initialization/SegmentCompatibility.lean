@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.SegmentCompatible
 import Exec.Store.Initialization.SegmentCertificate
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem constant_compatible {M : Type} {store : runtime.store.Store M} {inst code dst expr ty instruction}
@@ -94,4 +94,4 @@ theorem segment_program_compatible {M : Type} (store : runtime.store.Store M)
     exact data_compatible store inst code index segment block emitted instruction inBlock
   · trivial
 
-end Exec.Store
+end Itasca.Runtime.Store

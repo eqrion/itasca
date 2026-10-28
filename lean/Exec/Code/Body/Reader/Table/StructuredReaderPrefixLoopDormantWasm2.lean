@@ -5,7 +5,7 @@ import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
 import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Body.Reader.Common.ReaderReachability
 import Exec.Code.Body.Reader.Common.ReaderFrontTransitions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_loop_dead_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env localTypes index st}
@@ -64,4 +64,4 @@ theorem structured_reader_prefix_loop_dead_wasm2 {jumpTables : List U32} {emit :
     rfl
   · exact post.scope_fronts_dormant (.inr (.inl rfl)) fronts _ rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

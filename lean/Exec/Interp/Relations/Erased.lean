@@ -5,7 +5,7 @@ import Exec.Abs.Sim.Instruction
 /-! Source reductions whose compiler emission is empty. They advance the
 abstract continuation while retaining the actual bytecode position and slot
 storage; dead dropped words remain outside the live value relation. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem linearEmission_nop_inv {locals before after : List valtype} {emitted : List Code.Bytecode}
@@ -32,4 +32,4 @@ theorem linearEmission_drop_inv {locals before after : List valtype} {emitted : 
     simp [Abs.Numeric.decodeInstruction_source, Abs.Numeric.decodeInstruction] at decoded
   | _ => simp_all
 
-end Exec.Interp
+end Itasca.Runtime.Interp

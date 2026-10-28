@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.EmissionFrameAvailability
 import Exec.Code.Local.Capacity.CallbackAvailability
 import Exec.Code.Local.Lowering.Local.LoweringLocal
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -82,4 +82,4 @@ theorem compiler_enter_if_available {A : Type} (ops : runtime.platform.Alloc A)
   intro out post
   exact ⟨post.1,(firstEffect.trans post.2).weaken (by intro counter; cases counter <;> simp)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Control.StructuredElseInstructionPrefix
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
@@ -35,4 +35,4 @@ theorem reader_else_open_instructions_wasm2 {jumpTables : List U32} {data env so
     omega
   exact invariant.else_open_instructions ops law out.core _ condition form p.current.bt sourceBound held callback
 
-end Exec.Code
+end Itasca.Runtime.Code

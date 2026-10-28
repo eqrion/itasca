@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderDead
 import Exec.Code.Body.Reader.Float.ReaderFloatConstant
 import Exec.Code.Body.Reader.Float.ReaderFloatConstantLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -57,4 +57,4 @@ theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourc
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const ops before out.core value = _ at callback
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const, lift, bind_ok] using callback
 
-end Exec.Code
+end Itasca.Runtime.Code

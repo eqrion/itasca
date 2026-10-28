@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Simd.SimdSourceShape
 import Exec.Code.Local.Relations.Common.SimdInstructionAcceptance
 import Exec.Code.Local.Relations.Common.CoreInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem source_width_some (ty : valtype) :
@@ -71,4 +71,4 @@ theorem SimdEmission.instructions_accept {immediates constants C before source e
     simp only [slots_append,slots,width] at outputs
     exact (CoreInstructionBounds.constV128 (by omega) row).accepts
 
-end Exec.Code
+end Itasca.Runtime.Code

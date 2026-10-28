@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareLists
 import Exec.Spec.IntegerExtend
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def comparisonMasks (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128) : List uN :=
@@ -25,4 +25,4 @@ theorem comparison_masks_wf (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128) :
   cases ty <;> constructor
   all_goals first | rfl | exact unsigned_wf_of_lt _ _ (BitVec.isLt _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,7 +1,7 @@
 import Exec.Store.Api.MemoryCopyEffect
 import Exec.Spec.MemoryCopySnapshot
 import Exec.Store.Api.MemoryInitSemantics
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -34,4 +34,4 @@ theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   simp only [decodeMemory,lengthEq,bytesEq,Spec.Segment.withBytes]
   rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

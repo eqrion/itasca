@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.Point
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 
 theorem structuredCode_empty_inv {emit types functions returns locals code jumpTables labels stack pc next output}
     (relation : Code.StructuredCode emit types functions returns locals code jumpTables labels stack [] pc next output) :
@@ -9,4 +9,4 @@ theorem structuredCode_empty_inv {emit types functions returns locals code jumpT
   cases relation with
   | nil _ _ _ _ live => exact Or.inr ⟨rfl,rfl,live⟩
   | skip forward instruction rest => exact Or.inl ⟨_,forward,instruction,rest⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

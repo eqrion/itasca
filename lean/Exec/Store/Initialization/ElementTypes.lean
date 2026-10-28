@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.ElementTypedEffect
 import Exec.Store.Initialization.DataEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementTypeMap {M : Type} (store : runtime.store.Store M)
@@ -73,4 +73,4 @@ theorem DataStageEffect.element_types {M : Type} {store after : runtime.store.St
     subst next
     exact matching
 
-end Exec.Store
+end Itasca.Runtime.Store

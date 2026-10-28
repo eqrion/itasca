@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdEventPrefix
 import Exec.Code.Body.Reader.Simd.ReaderSimdEventDispatch
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual SIMD dispatch extends the same canonical source zipper and the
@@ -28,4 +28,4 @@ theorem StructuredReaderCompilerStateWasm2.simd {jumpTables : List U32} {A : Typ
   obtain ⟨extra,tables,compiled,mono⟩ := event.prefix law contextLocals state.compiled
     state.reach.current sourceBound bodyBound
   exact ⟨extra,tables,(state.advance next advance inbounds event.post (event.meaning.declared _) compiled mono).point⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.EntryCompilerInitial
 import Itasca.Module.Code.ReachedEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Entry framing and captured signature lookup justify every unchecked
@@ -31,4 +31,4 @@ theorem prepared_compiler_start_total {A : Type} (ops : runtime.platform.Alloc A
   intros
   trivial
 
-end Exec.Code
+end Itasca.Runtime.Code

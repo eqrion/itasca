@@ -5,7 +5,7 @@ under allocator laws and representable vector lengths. Successful calls append
 exactly the certified scalar/reference/vector instruction, with vector constants
 embedded in the actual pool. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem initializer_emit {A : Type} (ops : runtime.platform.Alloc A)
@@ -128,4 +128,4 @@ def ConstantLowered (before after : runtime.bytecode.CompiledFunction)
         simp [hv, poolIndex, alloc.vec.Vec.len, packed]
       · subst result values
         simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-end Exec.Code
+end Itasca.Runtime.Code

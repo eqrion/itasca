@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.ControlPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- A dispatch either consumes administrative potential without emitting an
 observable event, or performs positive source reductions with its exact events. -/
@@ -31,4 +31,4 @@ theorem EventfulConcreteSim.source {codeLength beforePC afterPC beforePending af
   rcases simulation with ⟨same,rfl,decrease⟩ | ⟨n,positive,steps⟩
   · exact ⟨0,same ▸ Spec.StepsHN.refl wellFormed⟩
   · exact ⟨n,steps⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

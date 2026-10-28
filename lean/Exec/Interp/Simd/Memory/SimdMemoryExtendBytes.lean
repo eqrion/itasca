@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLaneBytes
 import Exec.Spec.SimdMemoryChunks
 import Exec.Spec.SimdWidenLists
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt SpecExt.Builtins Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt SpecExt.Builtins Itasca.Runtime.Spec.Simd
 
 theorem vector_extend_load_bytes (ty : WidenWidth) (bytes : List U8) (start j : Nat)
     (inside : start+8 ≤ bytes.length) (lane : j < ty.count) :
@@ -30,4 +30,4 @@ theorem vector_extend_load_bytes (ty : WidenWidth) (bytes : List U8) (start j : 
   rw [laneBits_toNat,UScalar.bv_toNat]
   rw [←chunk,List.drop_take,List.take_take,List.drop_drop]
   rw [Nat.min_eq_left (by omega)]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

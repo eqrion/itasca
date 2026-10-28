@@ -1,5 +1,5 @@
 import Exec.Store.Instantiation.InstantiateTailCommit
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Tuple-form consequence of the canonical committed-tail theorem. -/
@@ -13,4 +13,4 @@ theorem instantiate_tail_committed_result {M P F A : Type}
   exact instantiate_tail_committed memory hooks floats allocator identity store platform
     out.1 out.2.1 out.2.2.1 out.2.2.2 run
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -12,7 +12,7 @@ import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
 import Exec.Code.Body.Reader.Common.ReaderValues
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful constant reader and compiler callback extends the
@@ -113,4 +113,4 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
   apply LinearEmission.const64
   exact layout.height
 
-end Exec.Code
+end Itasca.Runtime.Code

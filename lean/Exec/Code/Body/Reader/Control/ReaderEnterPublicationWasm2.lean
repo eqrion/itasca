@@ -3,7 +3,7 @@ import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
 import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Body.Reader.Common.ReaderReachability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual Wasm 2 BLOCK, LOOP and IF readers preserve both publication
@@ -63,4 +63,4 @@ theorem reader_enter_publication_wasm2 {jumpTables : List U32}
   · rcases initialForm with rfl | rfl | rfl <;> simp [Wasm2.Frames.Form.kind]
   · exact le_trans invariant.cursor (Nat.le_of_lt consumed)
 
-end Exec.Code
+end Itasca.Runtime.Code

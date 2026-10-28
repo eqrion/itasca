@@ -2,7 +2,7 @@ import Exec.Code.Body.Capacity.FunctionCapacity
 import Exec.Representation.Collection
 import Exec.Store.Invariant.InstantiationCode
 import Exec.Representation.StoreCapacity
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem FunctionCapacity.staged {M : Type} {before after : runtime.store.Store M}
@@ -11,7 +11,7 @@ theorem FunctionCapacity.staged {M : Type} {before after : runtime.store.Store M
     (capacity : FunctionCapacity oldCode before function) : FunctionCapacity newCode after function := by
   intro instanceIndex functionIndex defined
   obtain ⟨inst, compiled, typeIndex, found, functionFound, bound, entries, table, signature, typeFound, signatureFound⟩ := capacity instanceIndex functionIndex defined
-  refine ⟨inst, compiled, typeIndex, Exec.Representation.lookup_prefix _ _ retained.instances found, functionFound, ?_,
+  refine ⟨inst, compiled, typeIndex, Itasca.Runtime.Representation.lookup_prefix _ _ retained.instances found, functionFound, ?_,
     entries.extend retained, function_table_prefix retained table, signature, typeFound,
     retained.type_lookup signatureFound⟩
   rw [agrees instanceIndex.val inst found functionIndex.val]
@@ -91,4 +91,4 @@ theorem FunctionCapacities.code_agrees {M : Type} {store : runtime.store.Store M
   refine ⟨inst, compiled, typeIndex, found, functionFound, ?_, entries, table, signature, typeFound, signatureFound⟩
   rw [agrees instanceIndex.val inst found functionIndex.val]
   exact bound
-end Exec.Store
+end Itasca.Runtime.Store

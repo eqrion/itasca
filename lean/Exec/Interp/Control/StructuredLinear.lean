@@ -2,7 +2,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Relations.Rel
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 def linearSource : instr → Bool
   | .NOP | .DROP | .CONST .. | .BINOP .. | .TESTOP .. | .RELOP ..
@@ -36,4 +36,4 @@ theorem frame_linear_heights {s : store} {f : Abs.AFrame} {op : instr} {code : L
     omega
   simpa only [firstLength] using heights
 
-end Exec.Interp
+end Itasca.Runtime.Interp

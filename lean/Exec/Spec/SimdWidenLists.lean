@@ -1,6 +1,6 @@
 import Exec.Spec.SimdWiden
 import Exec.Spec.SimdIntegerArithmetic
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def widenInputs (ty : WidenWidth) (high : Bool) (x : BitVec 128) : List lane_ :=
@@ -56,4 +56,4 @@ theorem widen_multiply_relation (ty : WidenWidth) (high signed : Bool) (x y : Bi
       (laneWord (lanetype_Jnn ty.input) x (j+if high then ty.count else 0))
       (laneWord (lanetype_Jnn ty.input) y (j+if high then ty.count else 0))).toNat)) ex ey).mp relation
   cases ty <;> exact relation'
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Memory.SimdMemoryBytes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 /-- SIMD accesses use the scalar effective-address check against the whole memory. -/
@@ -8,4 +8,4 @@ open Aeneas Aeneas.Std
     runtime.interp.memory.address address offset size (Slice.len memory)
       ⦃ result => MemoryAddressEffect address offset size (Slice.len memory) result ⦄ :=
   memory_address_effect address offset size (Slice.len memory)
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

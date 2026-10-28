@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Calls.ScopeCallbackEnter
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Dormant BLOCK entry pushes its exact physical frame and source
@@ -164,4 +164,4 @@ theorem callback_if_dead_scope {A : Type} (ops : runtime.platform.Alloc A)
   · intro scope frame old
     exact old.extend [] (by simp only [codeEq, List.append_nil]) (by simp [mapsEq])
 
-end Exec.Code
+end Itasca.Runtime.Code

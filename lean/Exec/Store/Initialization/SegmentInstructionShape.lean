@@ -1,9 +1,9 @@
 import Exec.Store.Initialization.SegmentShape
 import Exec.Store.Initialization.SegmentInstruction
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- Both checked postconditions concern the same normally returned extracted
 result. This combines refinements without assuming a second execution. -/
@@ -55,4 +55,4 @@ theorem segment_instruction_shape {M P F A : Type}
     rintro out ⟨success, slots, empty, rfl, rfl⟩
     exact ⟨shape, .refl _⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

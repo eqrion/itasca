@@ -1,5 +1,5 @@
 import Exec.Spec.SimdBitwise
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem any_true_relation (a : BitVec 128) :
     fun_ine_ 128 (.mk_uN a.toNat) (.mk_uN 0)
@@ -22,4 +22,4 @@ theorem any_true_step (a : BitVec 128) :
     (.admininstr_case_13 _ _ (predicate_i32_wf _))
     (unsigned_wf_of_lt 128 0 (by decide))
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Common.UniversalTerminal
 import Exec.Code.Local.Callbacks.Common.FramePlanUpdate
 import Exec.Code.Local.Relations.Control.ResolvedBranchPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem scopeLabels_lookup {scopes labels} (shapes : List.Forall₂ ScopeLabel scopes labels)
@@ -32,4 +32,4 @@ theorem FrameSites.add_branch {code frame} (valid : FrameSites code frame)
     · simp [branchInstructions, elided, position]
     · simp [branchInstructions, elided, position, List.getElem?_append]
 
-end Exec.Code
+end Itasca.Runtime.Code

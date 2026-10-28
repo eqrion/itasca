@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdShiftLoop
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def shiftOpcode (ty : Jnn) (kind : ShiftKind) : U32 :=
   match ty,kind with
@@ -42,4 +42,4 @@ theorem shiftWidth_val (ty : Jnn) : (shiftWidth ty).val=lsize (lanetype_Jnn ty) 
   intro result lanes
   rw [amountEq] at lanes
   cases ty <;> with_unfolding_all exact lanes
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

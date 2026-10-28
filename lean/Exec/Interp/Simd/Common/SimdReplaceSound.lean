@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdReplaceRuntime
 import Exec.Interp.Simd.Common.SimdReplacePacking
 import Exec.Spec.SimdReplace
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -43,4 +43,4 @@ theorem replace_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with replace_access_sound ty laneIndex a b valid as ⟨result, value, exactResult, source⟩
   exact ⟨value, by rw [exactResult], source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

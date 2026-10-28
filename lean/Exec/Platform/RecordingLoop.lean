@@ -1,5 +1,5 @@
 import Exec.Platform.Recording
-namespace Exec.Platform.Recording
+namespace Itasca.Runtime.Platform.Recording
 open Aeneas Aeneas.Std SpecExt Lean.Order Aeneas.Data.Coinductive
 unseal Result
 
@@ -110,4 +110,4 @@ theorem loop_erase {α β : Type} (body : α → Result (ControlFlow α β))
     | done result => simp only [bind_ok]; exact PartialOrder.rel_refl
     | cont next => simpa only [bind_ok,loop] using ih next (prior++events state (.cont next))
 
-end Exec.Platform.Recording
+end Itasca.Runtime.Platform.Recording

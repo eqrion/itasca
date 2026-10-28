@@ -6,7 +6,7 @@ import Itasca.Support.TypeTranslation
 import Exec.Code.Local.Relations.Common.Function
 import Exec.Code.Local.Relations.Common.ScalarEmission
 import Itasca.Support.EnvTranslation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- The source function context is fixed by the independently decoded module
@@ -27,4 +27,4 @@ theorem sourceFunctionContext_reader (env : Itasca.module.Env) (ctx : Itasca.cod
     sourceFunctionContext env (ctx.locals.val.map Itasca.Translate.valueType)
       (ctx.results.val.map Itasca.Translate.valueType) = Itasca.EnvTranslation.context env ctx := rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

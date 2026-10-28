@@ -1,14 +1,14 @@
 import Exec.Store.Initialization.Initializer
 import Exec.Store.Invariant.Syntax
 import Itasca.Module.Const.Syntax
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 private theorem eval_literal (s : _root_.store) (f : frame) (instruction : instr) (value : val)
     (storeWf : wf_store s) (frameWf : wf_frame f)
     (valueWf : wf_val value) (same : admininstr_instr instruction = admininstr_val value) :
     Eval_expr ⟨s, f⟩ [instruction] ⟨s, f⟩ [value] := by
-  have wf := Exec.Spec.wf_config_vals (vs := [value]) storeWf frameWf (by simpa [Forall] using valueWf)
+  have wf := Itasca.Runtime.Spec.wf_config_vals (vs := [value]) storeWf frameWf (by simpa [Forall] using valueWf)
   simp only [SpecExt.vals, List.map_cons, List.map_nil] at wf
   apply Eval_expr.mk_Eval_expr
   · simpa only [Map, List.map_cons, List.map_nil, same] using Steps.refl _ _ wf
@@ -20,12 +20,12 @@ private theorem eval_read (s : _root_.store) (f : frame) (instruction : instr) (
     (instructionWf : wf_instr instruction) (valueWf : wf_val value)
     (read : Step_read ⟨⟨s, f⟩, [admininstr_instr instruction]⟩ [admininstr_val value]) :
     Eval_expr ⟨s, f⟩ [instruction] ⟨s, f⟩ [value] := by
-  have before := Exec.Spec.wf_config_make storeWf frameWf
+  have before := Itasca.Runtime.Spec.wf_config_make storeWf frameWf
     (show Forall wf_admininstr [admininstr_instr instruction] by
-      simpa [Forall] using Exec.Spec.wf_admininstr_instr instructionWf)
-  have after := Exec.Spec.wf_config_make storeWf frameWf
+      simpa [Forall] using Itasca.Runtime.Spec.wf_admininstr_instr instructionWf)
+  have after := Itasca.Runtime.Spec.wf_config_make storeWf frameWf
     (show Forall wf_admininstr [admininstr_val value] by
-      simpa [Forall] using Exec.Spec.wf_admininstr_val valueWf)
+      simpa [Forall] using Itasca.Runtime.Spec.wf_admininstr_val valueWf)
   exact .mk_Eval_expr _ _ _ _
     (.trans _ _ _ _ _ _ (.read _ _ _ read before after) (.refl _ _ after) before after after) before after
 
@@ -111,8 +111,8 @@ theorem initializer_resolution_source_in_state {M : Type}
     simpa only [ModuleConstants.instruction, admininstr_instr, admininstr_val, proj_uN_0, fetched] using
       (Step_read.ref_func ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (.mk_uN index.val)
         (by simpa [fun_funcaddr, functions, proj_uN_0] using bound)
-        (Exec.Spec.wf_config_make storeWf frameWf (by
-          simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Exec.Spec.wf_admininstr_instr inputWf))
+        (Itasca.Runtime.Spec.wf_config_make storeWf frameWf (by
+          simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Itasca.Runtime.Spec.wf_admininstr_instr inputWf))
         (by simp only [proj_uN_0, fetched]; constructor))
   | global ty index address global lookup found typed scalar =>
     have value : decodeWords ty global.lo 0#u64 = (decodeGlobal global).VALUE := by
@@ -125,7 +125,7 @@ theorem initializer_resolution_source_in_state {M : Type}
       exact globals index address global rfl lookup found
     simpa only [ModuleConstants.instruction, admininstr_instr, fetched] using
       (Step_read.global_get ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (.mk_uN index.val)
-        (Exec.Spec.wf_config_make storeWf frameWf (by simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Exec.Spec.wf_admininstr_instr inputWf)))
+        (Itasca.Runtime.Spec.wf_config_make storeWf frameWf (by simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Itasca.Runtime.Spec.wf_admininstr_instr inputWf)))
   | global2 index address global lookup found typed =>
     have value : decodeWords .V128 global.lo global.hi = (decodeGlobal global).VALUE := by
       simp [decodeGlobal, typed]
@@ -136,7 +136,7 @@ theorem initializer_resolution_source_in_state {M : Type}
       exact globals index address global rfl lookup found
     simpa only [ModuleConstants.instruction, admininstr_instr, fetched] using
       (Step_read.global_get ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (.mk_uN index.val)
-        (Exec.Spec.wf_config_make storeWf frameWf (by simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Exec.Spec.wf_admininstr_instr inputWf)))
+        (Itasca.Runtime.Spec.wf_config_make storeWf frameWf (by simpa [Forall, ModuleConstants.instruction, admininstr_instr] using Itasca.Runtime.Spec.wf_admininstr_instr inputWf)))
 
 /-- The ordinary runtime state is a direct instance of the source-state bridge. -/
 theorem initializer_resolution_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -154,4 +154,4 @@ theorem initializer_resolution_source {M : Type} (view : M → Slice U8) (code :
   intro index address global _ lookup found
   simp [fun_global, proj_uN_0, decodeStore, decodeInstance, List.getElem!_eq_getElem?_getD,
     List.getElem?_map, lookup, found]
-end Exec.Store
+end Itasca.Runtime.Store

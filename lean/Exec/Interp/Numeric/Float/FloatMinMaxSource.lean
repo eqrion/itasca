@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatMinMax
 import Exec.Spec.FloatMinMax
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Actual f32.min dispatch takes a permitted generated numeric step. -/
@@ -80,4 +80,4 @@ theorem scalar_f64_max_source {F : Type} (ops : runtime.platform.FloatOps F)
   · exact floatOfBits_wf 64 (by omega) _
   · exact floatOfBits_wf 64 (by omega) _
 
-end Exec.Interp
+end Itasca.Runtime.Interp

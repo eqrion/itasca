@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFramePatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def SourceScope.enterBlock (bt : blocktype) (front params results : List valtype)
@@ -74,4 +74,4 @@ theorem FrameScope.enter_if {A : Type} (compiler : runtime.compiler.FunctionComp
   · change entry.val + (if entered then 1 else 0) ≤ compiler.function.code.val.length
     omega
   · exact guard
-end Exec.Code
+end Itasca.Runtime.Code

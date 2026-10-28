@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderBoundary
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
 import Exec.Code.Body.Reader.Common.ReaderKnownFronts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 structure StructuredReaderCompilerStateWasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
@@ -37,4 +37,4 @@ theorem StructuredReaderCompilerStateWasm2.advance {jumpTables : List U32} {A : 
   ⟨compiled, post.boundary declared, state.sources.advance _ _ _ _, state.reach.advance _ _ _ _ _ mono,
     state.fronts.advance instruction, state.knownFronts.advance instruction⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

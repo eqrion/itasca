@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Float.ReaderFloatInstructionPrefix
 import Exec.Code.Body.Reader.Checking.ReaderCoreInstructionPrefix
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
@@ -195,4 +195,4 @@ theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env
       codeFits sourceFits coordinateFits held exits byte accepted
   · exact reader_dead_saturating_checked_prefix_wasm2 p ops law before after out ctx contextSource (Bool.eq_false_iff.mpr live) op extension subopcode next subopcodeEq decoded held exits byte accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

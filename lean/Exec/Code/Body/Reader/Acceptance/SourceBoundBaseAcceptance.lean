@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ReachedReferenceDemand
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 import Exec.Code.Local.Capacity.BodyReplay
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Common source-demand adapter for ordinary base instructions. Independent
@@ -55,4 +55,4 @@ theorem source_bound_base_available_wasm2 {A R : Type}
     (fun after => CompilationBudgetEffect compiler.budget after.budget allowance) capacity ordinary plain sign misc rfl
     (readerAccepts capacity raw demand)
 
-end Exec.Code
+end Itasca.Runtime.Code

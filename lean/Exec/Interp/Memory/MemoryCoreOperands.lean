@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryCoreStore
 import Exec.Abs.Core.MemoryLoad
 import Exec.Abs.Core.MemoryStore
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
  theorem memory_lookup_back {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -19,4 +19,4 @@ open Aeneas Aeneas.Std SpecExt
   obtain ⟨object,rawIssued,objectEq⟩ := Option.map_eq_some_iff.mp issued
   exact ⟨address,object,rawMapped,by simpa only [addressEq] using rawIssued⟩
 
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

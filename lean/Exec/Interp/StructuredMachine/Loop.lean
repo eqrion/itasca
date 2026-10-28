@@ -7,7 +7,7 @@ import Exec.Interp.Relations.ControlEntry
 import Exec.Interp.Relations.ControlPoint
 import Exec.Interp.Control.LoopHead
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_loop {M P F A : Type}
@@ -89,4 +89,4 @@ theorem step_loop {M P F A : Type}
       · apply ConcreteSim.of_source
         exact simulation
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

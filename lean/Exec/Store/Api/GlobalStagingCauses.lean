@@ -1,7 +1,7 @@
 import Exec.Store.Api.GlobalErrorLoop
 import Exec.Store.Api.GlobalInitializerCauses
 import Exec.Store.Preparation.PreparationCalls
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev globalStageCall {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -69,8 +69,8 @@ theorem global_staging_resource_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.globals, Itasca.module.Env.impl.globals, bind_ok, hsource]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -134,4 +134,4 @@ theorem global_staging_resource_loop {M P F A : Type}
         currentInst, hfound, hsource, hbindings, himports, hsegments, helements, hdatas, hmapElements, hmapData⟩
   · exact ⟨rfl, (fun _ => .refl _ _), (by simp), True.intro, staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, rfl, rfl, rfl, rfl⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Spec.SimdBitmaskBits
 import Exec.Spec.SimdShiftSource
 import Exec.Spec.IntegerSigned
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def bitmaskSource (ty : Jnn) : admininstr :=
@@ -76,4 +76,4 @@ theorem bitmask_step (ty : Jnn) (bits : BitVec 128) (result : BitVec 32)
   · exact shapeOf_wf _
   · exact outputWf
   · constructor; simp
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -4,7 +4,7 @@ import Exec.Representation.StoreInvariant
 below are supplied by compilation: export-name syntax and source function syntax.
 They contain no execution-correctness premise. `wf_store` is SpecTec syntax;
 it is deliberately distinct from the semantic typing judgment `Store_ok`. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Source syntax attached to one compiled instance and its ghost source bodies. -/
@@ -135,4 +135,4 @@ theorem decodeStore_wf {M : Type} (view : M → Slice U8) (code : CodeInterpreta
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hdata
     exact .datainst_case_ _ (decodeBytes_wf _)
 
-end Exec.Store
+end Itasca.Runtime.Store

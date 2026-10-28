@@ -5,7 +5,7 @@ import Exec.Store.Api.GlobalResultEffect
 
 /-! The actual staged global loop preserves pre-existing store objects and the
 linked initializer context through all allocation/refusal branches. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem global_owned_staging_loop {M P F A : Type}
@@ -55,8 +55,8 @@ theorem global_owned_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.globals, Itasca.module.Env.impl.globals, bind_ok, hsource]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -113,4 +113,4 @@ theorem global_owned_staging_loop {M P F A : Type}
         currentInst, hfound, hsource, hissued, hbindings, himports, hsegments, helements, hdatas, hmapElements, hmapData, fun success => by have counted := hcount success; omega⟩
   · exact ⟨rfl, staged, objectBound, contents, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, issued, bindings, imports, segments, mapCapacity, rfl, rfl, rfl, rfl, fun _ => by simp⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

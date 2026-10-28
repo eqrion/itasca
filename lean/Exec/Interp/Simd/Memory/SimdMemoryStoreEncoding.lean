@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemoryEncoding
 import Exec.Spec.SegmentCopySlice
 
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def vectorStorePayload (value : U128) (width : Nat) : List U8 :=
@@ -68,4 +68,4 @@ theorem vectorStoreBytes_source (bytes : List U8) (start : Nat) (value : U128) (
   rw [List.map_setSlice!]
   rw [show (vectorStorePayload value width).map (fun b => byte.mk_byte b.val) =
     SpecExt.Builtins.integerBytes width value.val from vectorStorePayload_source value width]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

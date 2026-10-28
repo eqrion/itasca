@@ -5,7 +5,7 @@ import Exec.Spec.FloatPromote
 import Exec.Spec.FloatComparison
 import SpecExt.Builtins.Float.Canonical
 
-namespace Exec.Abs.Float
+namespace Itasca.Runtime.Abs.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem numberOfBits_float (ty : Fnn) (bits : Nat) :
@@ -22,4 +22,4 @@ theorem float_encoding (ty : Fnn) (value : fN) (valid : wf_fN (sizenn (numtype_F
   · exact ⟨floatBits 32 value, floatBits_lt_32 value valid, float_roundtrip_32 value valid⟩
   · exact ⟨floatBits 64 value, floatBits_lt_64 value valid, float_roundtrip_64 value valid⟩
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

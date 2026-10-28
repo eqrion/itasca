@@ -4,7 +4,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefixFinish
 import Exec.Code.Body.Reader.Control.ReaderControlBoundary
 import Exec.Code.Local.Source.TypedRunClosed
 import Exec.Code.Body.Reader.Common.ReaderStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.finish_root {jumpTables : List U32} {A : Type}
@@ -85,4 +85,4 @@ theorem StructuredReaderCompilerStateWasm2.root_scopes {jumpTables : List U32} {
   rw [saved] at paired
   cases paired
   exact ⟨rfl, saved⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Synthetic
 import Exec.Interp.Relations.ScalarDispatch
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Two little-endian slot words, including the interpreter's zero padding. -/
@@ -21,4 +21,4 @@ def vectorBits (words : List U64) (position : Nat) : BitVec 128 :=
   simp only [vectorBits, hlo, hhi, hnext]
   rfl
 
-end Exec.Interp
+end Itasca.Runtime.Interp

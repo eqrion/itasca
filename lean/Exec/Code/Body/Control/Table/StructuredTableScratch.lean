@@ -1,5 +1,5 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Collecting table labels changes only private scratch and allocation
@@ -26,4 +26,4 @@ theorem StructuredCompilerPrefix.table_scratch {A : Type}
       exact .terminal reachable entered ⟨retained.localsEq,retained.sites,retained.prefixes⟩
     | dormant reachable retained =>
       exact .dormant reachable ⟨retained.unentered,retained.localsEq,retained.sites,retained.prefixes⟩
-end Exec.Code
+end Itasca.Runtime.Code

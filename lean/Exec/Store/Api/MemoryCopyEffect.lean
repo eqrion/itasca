@@ -1,6 +1,6 @@
 import Exec.Store.Api.MemoryCopyLoops
 import Exec.Spec.SplitCopy
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryCopyEffect {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
@@ -155,4 +155,4 @@ theorem bulk_memory_copy {M : Type} (ops : runtime.platform.MemoryBuffer M)
     rw [rangeEffect]
     simp_all [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,MemoryCopyEffect]
-end Exec.Store
+end Itasca.Runtime.Store

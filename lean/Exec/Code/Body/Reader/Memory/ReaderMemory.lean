@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderWasm2
 import Exec.Code.Body.Reader.Memory.ReaderMemoryStacks
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual memory reader selected by the independently defined binary row. -/
@@ -60,4 +60,4 @@ theorem reader_memory_wasm2 {data env locals index st}
   · exact p.append_result C outer spine header base {st with core := out} (operation.op arg)
       p.current.ctrl.polymorphic_base rest wf (.plain encoded1) finalTyped controlEq newBlocks stack (fun h => nomatch h) (encoded1.declared _)
 
-end Exec.Code
+end Itasca.Runtime.Code

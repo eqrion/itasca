@@ -1,8 +1,8 @@
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Memory.MemoryCoreOperandBounds
 import Exec.Interp.StructuredMachine.MemoryContinue
-namespace Exec.Interp.StructuredMachine.Memory
-open Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
+open Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
 theorem coreFramePoint_load_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -66,4 +66,4 @@ theorem coreFramePoint_store_prepare {M : Type} (view : M → Slice U8) (code : 
     · simpa only [← point.locals,typesEq] using position
     · simp only [offsetEq,proj_uN_0]
     · simpa only [typesEq] using tail
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

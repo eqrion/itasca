@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.UniversalPrefix
 import Exec.Code.Local.Relations.Common.Extension
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- An ELSE scope retains its completed then arm, resolved guard, and literal
@@ -41,4 +41,4 @@ def UniversalElse {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     ElseFrames types functions returns locals (resolvedCode compiler.function.code.val groups)
       (current :: parents.reverse) (label :: labels)
 
-end Exec.Code
+end Itasca.Runtime.Code

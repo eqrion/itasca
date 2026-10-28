@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Acceptance.BodyReaderAcceptance
 import Itasca.Wasm2.Trace.ControlRecords
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Checked metadata-producing profile readers, excluding the streamed table
@@ -124,4 +124,4 @@ theorem records {data env locals index st} (kind : ControlReaderKind)
   · exact Wasm2.CallbackTrace.step_call_indirect pending visitor observe recorded ctx byte
 
 end ControlReaderKind
-end Exec.Code
+end Itasca.Runtime.Code

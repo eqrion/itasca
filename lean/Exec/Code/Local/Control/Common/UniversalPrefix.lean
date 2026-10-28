@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.PrefixZipper
 import Exec.Code.Local.Callbacks.Common.FrameSites
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Append one source instruction to the current open scope. Its saved entry,
@@ -27,4 +27,4 @@ structure UniversalPrefix {A : Type} (compiler : runtime.compiler.FunctionCompil
     CodePrefix types functions returns locals (resolvedCode compiler.function.code.val groups)
       (label :: labels) current.input current.source current.bodyPc compiler.function.code.val.length stack
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.InstructionPrefixRetained
 import Exec.Code.Local.Checking.TableLowerInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Collecting a table label preserves instruction checks and pending owners. -/
@@ -54,4 +54,4 @@ theorem compiler_br_table_callback_open_instructions {A : Type} (ops : runtime.p
       exact compiler_observe_open_instructions ops law {labeled with table_depths := cleared}
         after state (checked.retained rfl rfl) observed
 
-end Exec.Code
+end Itasca.Runtime.Code

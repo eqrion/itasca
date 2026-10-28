@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdTruncSatWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def truncSatOpcode (ty : Fnn) (signed : Bool) : U32 :=
   match ty,signed with
@@ -85,4 +85,4 @@ theorem trunc_sat_loop {F : Type} (floats : runtime.platform.FloatOps F)
       exact ⟨current,rfl,by simpa [finished] using initialized,zeroed⟩
   · exact ⟨position,initializedPrefix,initializedSuffix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

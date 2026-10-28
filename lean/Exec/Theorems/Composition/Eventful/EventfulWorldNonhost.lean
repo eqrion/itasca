@@ -4,8 +4,8 @@ import Exec.Theorems.Composition.Supported.SupportedHostDispatch
 import Exec.Theorems.Composition.Eventful.EventfulErrors
 import Exec.Interp.Relations.StepRecording
 import Exec.Theorems.Host.HostRecordingBoundary
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem world_step_or_host
  {M P F A : Type}
@@ -55,4 +55,4 @@ theorem world_step_or_host
         simp only [stepHostEvents,selected]
         rw [decoded]
         exact cause.eventful_error machine.invariant.typed.typed
-end Exec.Theorems
+end Itasca.Runtime.Theorems

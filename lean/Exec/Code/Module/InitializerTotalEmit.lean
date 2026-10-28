@@ -1,5 +1,5 @@
 import Exec.Code.Module.InitializerTotalBasic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -59,8 +59,8 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.v128_pool.val.length ≤ function.v128_pool.val.length + 1 ∧
       out.2.2.indirect.val.length ≤ function.indirect.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.emit_element
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
   step
   · simpa [alloc.vec.Vec.deref] using bound
   repeat' first
@@ -88,7 +88,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.v128_pool.val.length ≤ function.v128_pool.val.length + 1 ∧
       out.2.2.indirect = function.indirect ⦄ := by
   unfold runtime.compiler.initialize.emit_data
-  simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok]
   step
   repeat' first
@@ -103,4 +103,4 @@ and one table-index pair. The bounds include rejected partial emissions. -/
     | assumption
     | rfl
     | scalar_tac
-end Exec.Code
+end Itasca.Runtime.Code

@@ -4,7 +4,7 @@ import Exec.Store.Invariant.CodeAgreement
 import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Code.Local.Source.SourceBatchLookup
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca Itasca.ModuleEnv
 
 /-- New defined functions get their source typing from the independently
@@ -73,4 +73,4 @@ theorem core_source_functions_publish_wf {M : Type} (view : M → Slice U8)
       simpa only [decodeFunction, encoded, found, List.getD_eq_getElem?_getD, List.getElem?_map, signature,
         Option.map_some, Option.getD_some, ← alloc.vec.Vec.len_val, Code.sourceFunctionCode, CodeEntry.function, defined] using sourceTyped
 
-end Exec.Store
+end Itasca.Runtime.Store

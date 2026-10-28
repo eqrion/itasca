@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdNarrowLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem narrow_packed (ty : NarrowWidth) (signed : Bool) (x y result : U128)
     (lanes : ∀ j, j < 128/ty.width → laneBits ty.width j result.bv = narrowLane ty.width signed x.bv y.bv j) :
@@ -24,4 +24,4 @@ theorem narrow_packed (ty : NarrowWidth) (signed : Bool) (x y result : U128)
   unfold narrowResult
   with_unfolding_all exact congrArg uN.mk_uN packed.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

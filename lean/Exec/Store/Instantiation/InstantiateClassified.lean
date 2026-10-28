@@ -1,5 +1,5 @@
 import Exec.Store.Instantiation.PrepareInstanceClassified
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 /-- Every actual instantiation computation either returns an ordinary precommit
@@ -39,4 +39,4 @@ theorem instantiate_inner_classified_decomposition {M P F A : Type}
     rw [prepared] at run
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair, charge] at run
     exact Or.inr ⟨_, inst, shaped, found, source, imported, types, accounting, code, linked, run⟩
-end Exec.Store
+end Itasca.Runtime.Store

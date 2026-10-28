@@ -1,8 +1,8 @@
 import Exec.Store.Initialization.SegmentReady
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- Syntactic and issued-address requirements of one initializer instruction.
 There are no interpreter executions or semantic postconditions in this record. -/
@@ -95,4 +95,4 @@ theorem segment_instruction_total (view : M → Slice U8) (laws : Platform.Memor
     rintro out ⟨success, slots, empty, rfl, rfl⟩
     exact ⟨Or.inl success, by rw [slots], .refl _, rfl, by simpa [segmentReturns] using empty⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

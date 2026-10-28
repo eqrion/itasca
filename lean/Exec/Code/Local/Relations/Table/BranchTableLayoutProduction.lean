@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Table.BranchTableResolved
 import Exec.Code.Local.Capacity.BranchTableBounds
 import Exec.Code.Local.Relations.Table.BranchTableProduction
 import Exec.Code.Local.Lowering.Local.LoweringLocal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -85,4 +85,4 @@ theorem compiler_lower_table_layout_prefix {A : Type} (ops : runtime.platform.Al
       rw [tables,startEq]
       rw [List.getElem?_append_right (by omega)]
       simpa only [Nat.add_sub_cancel_left] using entryAt
-end Exec.Code
+end Itasca.Runtime.Code

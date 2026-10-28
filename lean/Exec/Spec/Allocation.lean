@@ -1,7 +1,7 @@
 import Exec.Spec.Context
 import Mathlib.Data.List.Forall2
 import Mathlib.Tactic
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def allocationFunctionIndex : func → Nat
@@ -148,4 +148,4 @@ theorem allocate_datas (s : store) (values : List datainst)
       List.length_singleton, List.length_nil, Nat.zero_add, List.append_assoc, List.singleton_append] using
       fun_allocdatas.fun_allocdatas_case_1 s value.BYTES (values.map datainst.BYTES) _ _ _ _ _ _ rest one rfl rfl
 
-end Exec.Spec
+end Itasca.Runtime.Spec

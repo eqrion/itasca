@@ -1,5 +1,5 @@
 import Exec.Spec.Float
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- A concrete member of a permitted float result list takes one generated step. -/
@@ -44,4 +44,4 @@ theorem float_binary_pure (ty : Fnn) (op : binop_Fnn) (a b result : fN)
   · exact wf_admininstr_val (.val_case_0 _ _ (float_num_wf ty b secondWf))
   · exact wf_admininstr_instr (.instr_case_15 _ _ (.binop__case_1 _ _ _ rfl))
   · exact wf_admininstr_val (.val_case_0 _ _ (float_num_wf ty result resultWf))
-end Exec.Spec
+end Itasca.Runtime.Spec

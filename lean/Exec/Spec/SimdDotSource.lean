@@ -1,6 +1,6 @@
 import Exec.Spec.SimdDot
 import Exec.Spec.SimdCompareFloatLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem dot_source_wf : wf_admininstr dotSource := by
@@ -53,4 +53,4 @@ theorem dot_step (x y result : BitVec 128) (packed : uN.mk_uN result.toNat = dot
   · exact dot_source_wf
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

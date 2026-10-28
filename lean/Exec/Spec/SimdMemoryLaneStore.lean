@@ -1,6 +1,6 @@
 import Exec.Spec.SimdMemoryLane
 import Exec.Spec.MemoryStore
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 theorem lane_store_step (ty : Jnn) (s : store) (f : frame) (argument : memarg) (address index : Nat)
@@ -63,4 +63,4 @@ theorem lane_store_step (ty : Jnn) (s : store) (f : frame) (argument : memarg) (
     · exact input
     · exact wf_config_trap storeWf frameWf
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

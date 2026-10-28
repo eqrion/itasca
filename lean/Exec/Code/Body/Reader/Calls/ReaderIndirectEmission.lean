@@ -2,7 +2,7 @@ import Exec.Code.Body.Relations.Calls.IndirectCallEffects
 import Exec.Code.Body.Relations.Calls.IndirectCallLowered
 import Exec.Code.Local.Relations.Calls.IndirectCallMetadata
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- The canonical reader and actual compiler callback jointly establish the
@@ -53,4 +53,4 @@ theorem reader_emit_indirect_call_wasm2 {data env locals typeIndex st}
     compiler_indirect_call_cursor ops law before after out.core index table callback,
     index,table,values,emitted,_,pairs,post,?_,beforeTypes ▸ emission⟩
   exact ⟨lowered,SourceStack.of_map (front ++ ft.results.val) concrete (by simp)⟩
-end Exec.Code
+end Itasca.Runtime.Code

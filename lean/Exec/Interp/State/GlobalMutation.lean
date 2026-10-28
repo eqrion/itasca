@@ -1,5 +1,5 @@
 import Exec.Interp.State.GlobalCoreWrite
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- An instruction writes the represented source value into one existing global;
@@ -76,4 +76,4 @@ theorem global_set2_mutation
   subst out
   refine ⟨address.index,object,_,_,issued,mutable,typed,?_,fun h => False.elim (h vector),rfl⟩
   simpa only [pairWords,vector,sourceType,ite_true] using represented
-end Exec.Interp
+end Itasca.Runtime.Interp

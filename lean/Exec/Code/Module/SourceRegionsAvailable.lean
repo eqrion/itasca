@@ -1,7 +1,7 @@
 import Exec.Code.Module.Stream
 import Itasca.Stream.DriverComplete
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem slice_value (data region : Slice U8) (first last : Usize)
@@ -38,4 +38,4 @@ theorem compiler_source_regions_available (data : Slice U8) (regions : Itasca.st
     ⟨ordered,bounded⟩
   simpa only [sourceEnvironment,sourceCode,sourceTail,←envEq,←codeValue,←tailEq] using available
 
-end Exec.Code
+end Itasca.Runtime.Code

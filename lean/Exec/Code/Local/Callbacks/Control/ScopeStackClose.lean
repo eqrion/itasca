@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ScopeStackElse
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Ordinary END resolves forward branches and removes the inner physical
@@ -65,4 +65,4 @@ theorem ScopeFrameStack.begin_else_dormant {A : Type} {locals parents current}
   change current.entry ≤ noEntry.val
   rw [position]
   exact shape.entryBound
-end Exec.Code
+end Itasca.Runtime.Code

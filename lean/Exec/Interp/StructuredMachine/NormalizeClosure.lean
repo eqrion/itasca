@@ -4,7 +4,7 @@ import Exec.Interp.Core.Erased
 import Exec.Interp.Relations.SourceClosure
 import Exec.Interp.Control.NormalizeClosure
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 
 theorem normalization_choice (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
@@ -74,4 +74,4 @@ theorem normalize (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     · exact ⟨0, f, targets, next, output, .nil f, by omega, slots, point, typed,
         ⟨rfl, rfl, rfl, rfl⟩, Or.inr ready⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

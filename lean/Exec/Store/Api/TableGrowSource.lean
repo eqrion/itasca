@@ -3,7 +3,7 @@ import Exec.Store.Api.Grow
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Interp.State.TableSource
 import Exec.Spec.TableGrowth
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- The exact runtime append is the generated table-growth operation. -/
@@ -52,4 +52,4 @@ theorem decode_table_growth (old : runtime.store.TableInst) (elements : alloc.ve
   · rw [← exactTable]
     exact freshWf
 
-end Exec.Store
+end Itasca.Runtime.Store

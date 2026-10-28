@@ -1,6 +1,6 @@
 import Exec.Representation.Encoding
 import Exec.Abs.Float.Descriptor
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem encode_float_number (ty : numtype) (bits : Nat) (bound : bits < 2^sizenn ty) :
@@ -20,4 +20,4 @@ theorem encode_float_operands (op : Abs.Float.Instruction) (a b : Nat)
   split
   all_goals simp only [encodeValues, List.flatMap_cons, List.flatMap_nil,
     encode_float_number _ _ first, encode_float_number _ _ second, List.append_nil, List.singleton_append]
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Memory.SimdMemoryExtend
 import Exec.Interp.Simd.Memory.SimdMemoryExtendBytes
 import Exec.Spec.SimdMemoryExtend
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec.Simd
 
 theorem extend_load_source (ty : WidenWidth) (signed : Bool) (address value : U128) (offset index : U32) (bytes : Slice U8)
     (s : store) (f : frame) (argument : memarg)
@@ -39,4 +39,4 @@ theorem extend_load_source (ty : WidenWidth) (signed : Bool) (address value : U1
     apply Spec.Simd.extend_load_trap ty signed s f argument (UScalar.cast .U32 address).val
       storeWf frameWf (by scalar_tac) operationWf
     simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map] using Nat.lt_of_not_ge fits
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

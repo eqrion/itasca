@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Source.SourceOpcodeDescriptors
 import Exec.Code.Local.Coordinates.NumericSourceCoordinates
 import Exec.Code.Local.Publication.LoweringMapPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Every memory visitor event preserves source-coordinate and control-map
@@ -31,4 +31,4 @@ theorem compiler_memory_hook_publication {A : Type} (ops : runtime.platform.Allo
       coordinates inside forward visited,
       compiler_core_map_publication ops law before after state (.store op arg.offset arg.align) visited maps forward⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.StackPreservation
 import Exec.Interp.Calls.ReturnRefinement
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Returning to a suspended caller restores the active certificate and
@@ -77,4 +77,4 @@ theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M}
     exact relation.return_to_caller_ready raw top effect results represented types width bounds
       (heights caller (by simp))
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

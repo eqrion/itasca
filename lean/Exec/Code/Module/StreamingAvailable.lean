@@ -1,6 +1,6 @@
 import Exec.Code.Module.RemainingAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete streaming compiler phase accepts independently certified
@@ -55,4 +55,4 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
     ⟨regions.env,Slice.len regions.env,before,before,environmentCall,environmentBound,rfl,decodeCall,remaining⟩
   exact ⟨after,run,run.run storage,tailEq,delivered,retained⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

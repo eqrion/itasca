@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Rel
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The module bound to the active source frame is the decoded instance found
@@ -42,4 +42,4 @@ theorem defined_function_lookup {M : Type} (view : M → Slice U8)
       some ⟨Store.decodeFuncType signature, Store.decodeInstance store inst, sourceCode⟩ := by
   simp [Store.decodeStore, Store.decodeFunction, List.getD_eq_getElem?_getD, hf, hs, hw, hi, hc]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

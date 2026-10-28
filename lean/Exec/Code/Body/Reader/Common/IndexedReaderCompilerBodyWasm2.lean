@@ -15,7 +15,7 @@ import Exec.Code.Local.Relations.Common.BodyEncodingMisc
 import Exec.Code.Body.Reader.Common.ReaderCompilerOrdinary
 import Exec.Code.Body.Reader.Control.ReaderCompilerScopes
 import Exec.Code.Body.Reader.Common.ReaderCompilerBounds
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 /-- Actual accepted complete-profile body execution produces indexed code
 evidence against all four final function-local tables. -/
@@ -84,4 +84,4 @@ theorem TypedRunWasm2.compile_executable {A : Type}
     exact .inr (point.simd ops law C contextLocals matched.mems (fun tables => (inferInstance : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C))) next advance inbounds out sourceBound bodyBound simd accepted)
   · rw [typedSelect] at accepted
     exact .inr (point.typed_select ops law C (by intro tables input instruction code output h; exact .typedSelect h) contextLocals next advance inbounds out sourceBound bodyBound typedSelect accepted)
-end Exec.Code
+end Itasca.Runtime.Code

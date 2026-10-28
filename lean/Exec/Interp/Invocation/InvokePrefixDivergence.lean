@@ -1,5 +1,5 @@
 import Exec.Interp.Invocation.InvokePrefixCauses
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 private theorem total_of_nondivergent {α : Type} {run : Result α} {post : α → Prop}
@@ -69,4 +69,4 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
       exact ⟨values,tags,wf,fits,represented,trivial⟩
   rw [diverges] at total
   exact WP.spec_div.mp total
-end Exec.Interp
+end Itasca.Runtime.Interp

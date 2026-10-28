@@ -2,8 +2,8 @@ import Exec.Abs.Stateful.TableMutation
 import Exec.Abs.Core.MemoryMutation
 import Exec.Spec.TableFillSource
 import Exec.Spec.MemoryFillSource
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem tableFill_preserves (s : store) (f : frame) (index address destination : Nat)
     (object : tableinst) (value : ref) (count : Nat) (wf : wf_store s) (contents : StoreContentsTyped s)
@@ -52,4 +52,4 @@ theorem memoryFill_preserves (s : store) (f : frame) (address destination value 
       (Segment.next32 destination) {object with BYTES := object.BYTES.set destination (Segment.fillByte value)}
       (extend_store_wf extension).2 fresh lookup
     exact ⟨extend_store_trans extension later,typed,functions⟩
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

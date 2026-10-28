@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceExecutableBody
 import Exec.Code.Local.Source.SourceSlice
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Coverage of every independently decoded function body by the complete
@@ -80,4 +80,4 @@ theorem functions {profile raw bytes}
   exact all raw.functions raw.codes (module encoded)
 
 end SourceExecutable
-end Exec.Code
+end Itasca.Runtime.Code

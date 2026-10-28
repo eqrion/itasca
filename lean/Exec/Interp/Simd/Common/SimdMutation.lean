@@ -1,5 +1,5 @@
 import Exec.Interp.Memory.MemoryMutation
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- SIMD retains the store or replaces the opaque buffer of one issued memory
@@ -9,4 +9,4 @@ def SimdStoreMutation {M : Type} (view : M → Slice U8)
   after = before ∨ ∃ address object, before.memories.val[address.index.val]? = some object ∧
     MemoryMutation view before after address object
 
-end Exec.Interp
+end Itasca.Runtime.Interp

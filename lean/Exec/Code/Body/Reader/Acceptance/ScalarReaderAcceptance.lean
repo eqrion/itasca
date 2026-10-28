@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ReaderLiteralAcceptance
 import Exec.Code.Body.Reader.Acceptance.ReachedSimpleAcceptance
 import Exec.Code.Body.Reader.Local.ReaderLocalAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- The ordinary scalar readers whose source parsing and callback acceptance
@@ -180,4 +180,4 @@ theorem available {A V : Type} (kind : ScalarReaderKind)
         demand reference
 
 end ScalarReaderKind
-end Exec.Code
+end Itasca.Runtime.Code

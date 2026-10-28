@@ -3,7 +3,7 @@ import Exec.Code.Body.Relations.Common.ExecutableInstructionPrefix
 import Exec.Code.Local.Checking.FrameExitSlotBounds
 import Exec.Code.Local.Callbacks.Table.CompilerPairTableAppend
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual indirect-call reading checks the captured table row and source operand region. -/
@@ -37,4 +37,4 @@ theorem reader_indirect_call_open_instructions_wasm2 {data env locals typeIndex 
     (.indirect emission) (by intro depths fallback same; cases same) growth held stable.frames,
     exits.retained (congrArg alloc.vec.Vec.val stable.frames) stable.capacity⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

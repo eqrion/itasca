@@ -4,7 +4,7 @@ import Exec.Interp.Simd.Integer.SimdIntegerSaturatingSound
 import Exec.Interp.Simd.Integer.SimdIntegerMinMaxSound
 import Exec.Interp.Simd.Common.SimdAverageSound
 import Exec.Interp.Simd.Integer.SimdQ15Sound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem pure_entry_110 {F : Type} (floats : runtime.platform.FloatOps F) :
@@ -245,4 +245,4 @@ theorem pure_entry_213 {F : Type} (floats : runtime.platform.FloatOps F) :
   cases meaning
   with_unfolding_all exact integer_arithmetic_simd_sound floats .I64 .mul offset laneIndex bits x y z memory (by trivial)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

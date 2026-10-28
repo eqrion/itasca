@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.CallStack
 import Exec.Interp.Control.SkipStack
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Fetch advances the caller PC and removes argument values from its saved
@@ -48,4 +48,4 @@ theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s
         · intro position bits represented _
           exact represented
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

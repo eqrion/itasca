@@ -2,7 +2,7 @@ import Exec.Representation.Encoding
 
 /-! Local value boundaries in the mathematical word encoding. These lemmas
 apply uniformly to one-word scalar/reference values and two-word vectors. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 
 theorem encodeValues_drop (values : List val) (count : Nat) :
     (encodeValues values).drop (offset (values.map valueType) count) =
@@ -48,4 +48,4 @@ theorem valueTypes_set {values : List val} {index : Nat} {old replacement : val}
   rw [← hv]
   exact List.set_getElem_self hb
 
-end Exec.Code
+end Itasca.Runtime.Code

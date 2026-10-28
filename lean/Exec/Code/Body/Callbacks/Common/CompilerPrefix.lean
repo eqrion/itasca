@@ -9,7 +9,7 @@ import Exec.Code.Local.Control.Common.UniversalDormant
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
 import Exec.Code.Local.Control.Common.UniversalPrefix
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Reachability selects a retained executable prefix, a terminal prefix, or
@@ -44,4 +44,4 @@ structure CompilerPrefix {A : Type} (initial compiler : runtime.compiler.Functio
   controlBudget : SourceControlBudget compiler position
   cursor : compiler.next_source.val ≤ position
 
-end Exec.Code
+end Itasca.Runtime.Code

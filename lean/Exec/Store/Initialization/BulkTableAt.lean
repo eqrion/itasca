@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.BulkTable
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 theorem bulk_table_init_at {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
@@ -87,4 +87,4 @@ theorem bulk_table_init_at {M : Type} (memory : runtime.platform.MemoryBuffer M)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       TableInitializationEffect]
 
-end Exec.Store
+end Itasca.Runtime.Store

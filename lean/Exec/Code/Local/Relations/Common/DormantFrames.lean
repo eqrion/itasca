@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceEntryChain
 import Exec.Code.Local.Callbacks.Control.CloseScope
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Unentered frames cannot acquire live exits or forward-branch fixups. -/
@@ -54,4 +54,4 @@ theorem ScopeFrameStack.dormant_initial {A : Type} {locals current}
     (live : current.entered = true) : DormantFrames compiler.frames.val := by
   intro frame member
   exact DormantFrame.entered (stack.frame_entered (.root current live) live frame member)
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Api.GlobalValueEffect
 import Exec.Store.Initialization.InitializerSourceContext
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Every appended runtime global has its declared type and its source
@@ -49,4 +49,4 @@ theorem GlobalValueEffect.source_values {M : Type} {store after : runtime.store.
     · simpa only [stored, List.append_assoc] using entries
     · apply List.rel_append previous
       exact .cons ⟨rfl, by simpa only [decodeGlobal, decoded] using evaluated⟩ .nil
-end Exec.Store
+end Itasca.Runtime.Store

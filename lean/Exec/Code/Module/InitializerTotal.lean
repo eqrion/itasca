@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerTotalMappings
 import Exec.Code.Module.InitializerTotalSegments
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 set_option maxRecDepth 4096
@@ -122,4 +122,4 @@ theorem initializer_lower_fresh_total {A : Type} (ops : runtime.platform.Alloc A
   apply WP.spec_mono (initializer_lower_total ops law m budget headroom segmentSpace)
   intros; trivial
 
-end Exec.Code
+end Itasca.Runtime.Code

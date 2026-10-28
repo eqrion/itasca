@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCloseBlock
 import Exec.Code.Local.Control.Table.StructuredUniversalCloseIf
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A live-entered IF without ELSE restores the identity arm at END, so the
@@ -56,4 +56,4 @@ theorem StructuredCompilerPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A 
     (invariant.controlBudget.transport maps (by simp [framesEq])).advance (Nat.le_of_lt consumed), cursor⟩
   refine StructuredPrefixMode.live live (by exact parentEntered) ?_
   simpa only [sourceTypes.decoded] using next
-end Exec.Code
+end Itasca.Runtime.Code

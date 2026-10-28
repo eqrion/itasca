@@ -5,7 +5,7 @@ import Exec.Code.Local.Relations.Global.GlobalSafety
 import Exec.Code.Local.Relations.Common.TerminalSafety
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Visitor.EventDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_i32_const_total {A} (ops : runtime.platform.Alloc A)
@@ -149,4 +149,4 @@ theorem compiler_reader_nop_total {A} (ops : runtime.platform.Alloc A)
   · exact by simp
   · intro state value read
     exact compiler_on_nop_total ops law compiler state
-end Exec.Code
+end Itasca.Runtime.Code

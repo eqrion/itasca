@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Integer.SimdSigned
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem compare_int_lts (a b : U64) (width : U32)
@@ -66,4 +66,4 @@ open Aeneas Aeneas.Std
   rw [shifted_signed a.bv width.val positive bound,shifted_signed b.bv width.val positive bound,
     BitVec.toInt_signExtend_of_le bound,BitVec.toInt_signExtend_of_le bound]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

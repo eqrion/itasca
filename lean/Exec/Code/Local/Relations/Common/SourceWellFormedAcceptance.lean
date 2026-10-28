@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.WellFormedAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 abbrev checkSourceCoordinate (function : runtime.bytecode.CompiledFunction) (index : Usize) : Result Bool := do
@@ -80,4 +80,4 @@ theorem check_source_instructions_accepts (function : runtime.bytecode.CompiledF
     · simp
   · exact ⟨rfl,inside⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

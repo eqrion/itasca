@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.InitializerResourceCauses
 import Exec.Store.Invariant.PrecommitError
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -26,4 +26,4 @@ theorem eval_const_owned_resource_causes (law : Platform.AllocCorrect allocator)
   rw [called] at errors
   simp only [WP.spec_ok] at errors
   exact WP.exists_imp_spec ⟨out,called,sameStore,sameHost,values,errors.2.2.2⟩
-end Exec.Store
+end Itasca.Runtime.Store

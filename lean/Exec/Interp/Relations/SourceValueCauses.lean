@@ -2,7 +2,7 @@ import Exec.Representation.StoreCapacity
 import Exec.Interp.Relations.SourceCallCause
 import Exec.Abs.DecodeDepth
 import Exec.Interp.Machines.Slice.SliceErrors
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The type and function tables used by the integer/control trace match the
@@ -15,4 +15,4 @@ structure SourceCapacityEnvironment (store : _root_.store) (function : funcinst)
   signature : ∃ signature, env.types.val[typeIndex.val]? = some signature ∧
     function.TYPE = Store.decodeFuncType signature
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.InstanceItems
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Exact checked-sum outcome. An error witnesses that the complete mathematical
@@ -69,8 +69,8 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
   · rintro ⟨current,status,index⟩ ⟨bound,invariant⟩
     dsimp only at bound invariant ⊢
     unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,
-      Itasca.module.Module.impl.env,Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have hmore : index.val < module.module.env.elements.val.length := by simpa [alloc.vec.Vec.deref] using more
@@ -105,4 +105,4 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
       | Ok unit => simpa [ItemSumOutcome,equal,total] using invariant
   · exact ⟨startBound,rfl⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

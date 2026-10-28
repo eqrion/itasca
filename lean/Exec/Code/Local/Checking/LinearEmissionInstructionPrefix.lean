@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.CoreEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Literal, local, and integer lowering derives its instruction check from
@@ -19,4 +19,4 @@ theorem Lowered.linearInstructionPrefix {A : Type}
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Exec.Code
+end Itasca.Runtime.Code

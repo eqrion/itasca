@@ -1,5 +1,5 @@
 import Exec.Spec.Mutation
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem extend_store_wf {s t : store} (h : Extend_store s t) : wf_store s ∧ wf_store t := by
   cases h; exact ⟨by assumption, by assumption⟩
@@ -112,8 +112,8 @@ theorem datainst_ok_extend {s t : store} (extension : Extend_store s t)
       rcases contents with rfl | rfl
       · exact .mk_Datainst_ok t bytes bound (extend_store_wf extension).2 fresh
       · exact .mk_Datainst_ok t [] (by norm_num) (extend_store_wf extension).2 fresh
-end Exec.Spec
-namespace Exec.Spec
+end Itasca.Runtime.Spec
+namespace Itasca.Runtime.Spec
 
 theorem function_lookup_extend {s t : store} (extension : Extend_store s t)
     {index : Nat} {fn : funcinst} (found : s.FUNCS[index]? = some fn) :
@@ -148,4 +148,4 @@ theorem data_lookup_extend {s t : store} (extension : Extend_store s t)
   rw [getElem!_pos s.DATAS index bound, equal] at retained
   refine ⟨t.DATAS[index]!, ?_, datainst_ok_extend extension retained typed⟩
   simp [getElem!_pos t.DATAS index room]
-end Exec.Spec
+end Itasca.Runtime.Spec

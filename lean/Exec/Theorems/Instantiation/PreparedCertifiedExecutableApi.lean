@@ -8,7 +8,7 @@ import Exec.Store.Instantiation.PreparedRunBounds
 import Exec.Theorems.Composition.Executable.ExecutableInstantiationSource
 import Exec.Store.Invariant.ExecutableInstantiationCode
 import Exec.Code.Module.CompileDataCount
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The actual preparation trace constructs source typing and retained compiler
@@ -45,4 +45,4 @@ theorem prepared_certified_executable_api {M P F A : Type}
       cache valid initializers raw elaborated typed matched encoded functions dataCount bounds
   exact ⟨inst,found,source,⟨certified,trace.export_bounds laws law old.shape accounted cache valid initializers old.exportBounds⟩,
     counted,bindings⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

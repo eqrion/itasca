@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 import Exec.Code.Local.Relations.Common.ScalarEmissionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source layouts at the two ends of actual lowering bound both operand
@@ -30,4 +30,4 @@ theorem Lowered.floatCoreInstructionPrefix {A : Type}
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Exec.Code
+end Itasca.Runtime.Code

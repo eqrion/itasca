@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 
@@ -80,4 +80,4 @@ theorem SimdImmediateMeaning.output_count {C opcode immediate input source outpu
     rw [store_of_memory opcode op meaning]
     cases op <;> rfl
   | shuffle => rfl
-end Exec.Code
+end Itasca.Runtime.Code

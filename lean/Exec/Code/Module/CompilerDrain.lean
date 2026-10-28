@@ -1,5 +1,5 @@
 import Exec.Code.Module.CompilerProvenance
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -45,4 +45,4 @@ theorem compiler_drain_frame {A : Type} (allocator : runtime.platform.Alloc A)
         have afterEq := ih rest.val.length smaller middle rest tail' rfl
         have middleEq := (compiler_poll_accepted allocator before middle batch polled).2
         rw [afterEq, middleEq]
-end Exec.Code
+end Itasca.Runtime.Code

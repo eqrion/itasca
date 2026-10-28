@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Control.KnownControlStack
 import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Control.ReaderControlBoundary
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_else_dormant_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
@@ -57,4 +57,4 @@ theorem structured_reader_prefix_else_dormant_wasm2 {jumpTables : List U32} {emi
     reach.begin_else after.reachable _ condition noEntry.val noEntry false,
     fronts.begin_else _ condition noEntry.val noEntry false,
     reader_else_boundary_wasm2 p sourceForm encoded opened afterState, afterState⟩
-end Exec.Code
+end Itasca.Runtime.Code

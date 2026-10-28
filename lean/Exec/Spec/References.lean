@@ -1,5 +1,5 @@
 import Exec.Spec.TableInitSource
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def referenceIsNull : ref → Nat
@@ -37,4 +37,4 @@ theorem ref_is_null_step (s : store) (f : frame) (value : ref)
   · apply wf_config_make hs hf
     have bound : referenceIsNull value < 2^32 := by cases value <;> simp [referenceIsNull]
     simpa [Forall] using Segment.i32_wf _ bound
-end Exec.Spec
+end Itasca.Runtime.Spec

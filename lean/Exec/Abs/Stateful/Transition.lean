@@ -12,8 +12,8 @@ import Exec.Abs.Stateful.TableInit
 import Exec.Abs.Stateful.MemoryGrow
 import Exec.Abs.Stateful.TableGrow
 import Exec.Abs.Stateful.Descriptor
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 /-- The only nondeterministic choices are successful growth or permitted refusal. -/
 structure Selection where
@@ -253,4 +253,4 @@ theorem transition_trap (op : Instruction) (s : store) (ambient : frame)
       ⟨⟨s,ambient⟩,[.TRAP]⟩ :=
   transition_safe op s ambient f rest after .trap typed step
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

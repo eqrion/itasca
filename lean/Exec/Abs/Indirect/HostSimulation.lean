@@ -1,8 +1,8 @@
 import Exec.Abs.Sim.Call
 import Exec.Spec.IndirectCallSource
 import Exec.Abs.Sim.Trap
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 /-- An indirect host call resolves its checked table target and then returns atomically.
 The host event and changed store survive all labels and suspended callers. -/
@@ -74,4 +74,4 @@ theorem host_trap_simulation (s s' : store) (ambient : frame) (f : AFrame)
   rw [List.append_assoc]
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [decodeFrames,instrContext,vals,List.append_assoc,AFrame.arity,AFrame.toFrame,admininstr_instr,Nat.add_assoc,integerVal,Segment.i32,numtype_Inn,admininstr_val] using both
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

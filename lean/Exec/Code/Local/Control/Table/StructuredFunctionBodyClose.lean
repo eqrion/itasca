@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Common.CloseFunction
 import Exec.Code.Local.Relations.Common.Function
 import Exec.Code.Local.Control.Table.StructuredLabelWiden
 import Exec.Code.Local.Control.Table.StructuredCodeAlgebra
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Appending the literal epilogue reconciles the root's separate normal and
@@ -72,4 +72,4 @@ the completed root prefix, after resolving every root branch. -/
     (by simpa only [patchCode_length] using position) out.2.function frame.height frame.results width code'
   exact ⟨popped, body', ⟨_, return'⟩, end'⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

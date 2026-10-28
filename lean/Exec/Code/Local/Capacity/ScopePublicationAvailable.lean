@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.ScopeDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -32,7 +32,7 @@ noncomputable def scopePublication {A : Type} (ops : runtime.platform.Alloc A)
            stack_height := valueHeight,
            parameters := signature.params,
            results := signature.results
-         } : _root_.Exec.runtime.compiler.ControlMap)
+         } : _root_.Itasca.runtime.compiler.ControlMap)
     let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
     match cf5 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -50,7 +50,7 @@ noncomputable def scopePublication {A : Type} (ops : runtime.platform.Alloc A)
              entry_reachable := compiler.reachable,
              end_reachable := false,
              fixups := (alloc.vec.Vec.new Std.Usize)
-           } : _root_.Exec.runtime.compiler.Frame)
+           } : _root_.Itasca.runtime.compiler.Frame)
       let cf6 ←
         core.result.Result.Insts.CoreOpsTry.branch r6
       match cf6 with
@@ -139,4 +139,4 @@ theorem scope_publication_available {A : Type} (ops : runtime.platform.Alloc A)
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

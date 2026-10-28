@@ -4,7 +4,7 @@ import Exec.Interp.Simd.Memory.SimdMemoryTransition
 import Exec.Interp.Simd.Memory.SimdExecuteMemoryEffect
 import Exec.Interp.Simd.Memory.SimdExecuteMemoryError
 import Exec.Interp.Memory.MemoryMutation
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 /-- Execute any decoded vector memory instruction, retaining its exact source
@@ -90,4 +90,4 @@ theorem execute_simd_memory_source {M F : Type}
     refine ⟨errorEq,execEq,?_,source⟩
     rw [changed]
     exact memory_unchanged_decodes view interpretation store ma object buffer issued bytesEq
-end Exec.Interp
+end Itasca.Runtime.Interp

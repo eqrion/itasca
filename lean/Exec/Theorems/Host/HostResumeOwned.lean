@@ -3,8 +3,8 @@ import Exec.Spec.HostCall
 import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Interp.Host.HostResume
 
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Successful host checks produce exactly the encoded results; rejected
 results and explicit host errors retain the callback's store in an atomic host
@@ -79,4 +79,4 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
         as ⟨words,length,represented,preserved⟩
       exact Or.inl ⟨Spec.host_return_step host arguments extension sourceTyped typed wfAmbient,
         typed,Store.source_values_owned after results.val owned,represented,length,by simpa only [widths] using preserved⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

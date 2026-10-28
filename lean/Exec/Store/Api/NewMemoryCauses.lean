@@ -1,7 +1,7 @@
 import Exec.Store.Api.MemoryAllocationCauses
 import Exec.Store.Invariant.NormalResult
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def NewMemoryResourceCause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -31,8 +31,7 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
     scalar_tac
   obtain ⟨size,sizeRun,sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
-  simp only [runtime.compiler.ExecutableModule.env,module.Module.env,Itasca.module.Module.impl.env,
-    module.Env.mem_types,Itasca.module.Env.impl.mem_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.mem_types,bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.mem_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,lift,sizeRun] at run
@@ -85,4 +84,4 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
       have failed : ¬store.memory_bytes.val+(UScalar.cast .Usize size).val≤store.limits.max_memory_bytes.val := by
         simpa [fitsEq] using ‹¬fits=true›
       scalar_tac
-end Exec.Store
+end Itasca.Runtime.Store

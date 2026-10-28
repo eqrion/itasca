@@ -2,7 +2,7 @@ import Exec.Code.Body.Lowering.Simd.SimdCallbackMeaning
 import Exec.Code.Body.Reader.Simd.ReaderSimdTypes
 import Exec.Code.Local.Capacity.SimdOpAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -55,4 +55,4 @@ theorem reader_simd_nonconstant_available {data env locals index st source value
     exact ⟨held.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
 
-end Exec.Code
+end Itasca.Runtime.Code

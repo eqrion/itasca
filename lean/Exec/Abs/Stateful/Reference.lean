@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.Continuation
 import Exec.Abs.Core.Simulation
 import Exec.Spec.ReferenceFunction
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def asReference : val → Option ref
   | .REF_NULL ty => some (.REF_NULL ty)
@@ -128,4 +128,4 @@ theorem refIsNull_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
         [val_ref reference] [integerVal .I32 (Spec.referenceIsNull reference)]
         typed.typed.ambient labelsWf frontWf tailWf restWf heights source'
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

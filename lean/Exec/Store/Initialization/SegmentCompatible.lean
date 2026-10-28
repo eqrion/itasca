@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentTypes
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- For an emitted table initialization, source-segment words and destination
@@ -56,4 +56,4 @@ theorem segment_table_compatible {M : Type} (store : runtime.store.Store M)
   rw [bindings.elements element.val segment address values source mapped valuesFound,
     bindings.tables tableId.val tableType tableAddress table target tableMapped tableFound, same]
 
-end Exec.Store
+end Itasca.Runtime.Store

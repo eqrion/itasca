@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.SignatureTable
 /-! Exact scheduler capture of argument word counts across the full source function index space. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem capture_function_slots {A : Type} (ops : runtime.platform.Alloc A)
@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
         out.2.func_param_slots.val = scheduler.func_param_slots.val ++ [word] ∧
         word.val = signatureSlots ty.params.val ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_func_slots
-  simp only [module.Env.func_types, Itasca.module.Env.impl.func_types, bind_ok]
+  simp only [Itasca.module.Env.impl.func_types, bind_ok]
   have bound := (List.getElem?_eq_some_iff.mp lookup).1
   have inBounds : index.val < env.func_types.deref.length := by simpa [alloc.vec.Vec.deref] using bound
   step as ⟨actual, hactual⟩
@@ -60,7 +60,7 @@ which includes imports, and preserve every previously captured type signature. -
   · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
     dsimp only at hi certified
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body
-    simp only [module.Env.func_types, Itasca.module.Env.impl.func_types, bind_ok]
+    simp only [Itasca.module.Env.impl.func_types, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.func_types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac
@@ -94,4 +94,4 @@ which includes imports, and preserve every previously captured type signature. -
       intro accepted
       simpa [same] using certified accepted
   · exact ⟨bound, fun accepted => ⟨rfl, prefixMatches accepted, rfl⟩⟩
-end Exec.Code
+end Itasca.Runtime.Code

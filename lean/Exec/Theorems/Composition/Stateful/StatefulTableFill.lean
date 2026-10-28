@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Stateful.StatefulBulk
 import Exec.Store.Api.TableFillSemantics
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_table_fill_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
@@ -49,4 +49,4 @@ theorem stateful_table_fill_effect {M : Type} (memory : runtime.platform.MemoryB
     simp [bulkWord,Slice.length,alloc.vec.Vec.length] at outside
     simp [
       decodeTable,bulk_integer_decoded,Abs.Stateful.asReference_value,outside,alloc.vec.Vec.length]
-end Exec.Theorems
+end Itasca.Runtime.Theorems

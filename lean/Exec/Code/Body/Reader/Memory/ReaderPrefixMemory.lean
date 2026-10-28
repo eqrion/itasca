@@ -3,7 +3,7 @@ import Exec.Code.Body.Control.Common.StructuredScalarEmbedding
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Reader.Memory.ReaderMemoryEmissions
 import Exec.Code.Body.Reader.Common.ReaderSpan
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -76,4 +76,4 @@ theorem reader_prefix_memory_store_wasm2 {jumpTables : List U32} {data env sourc
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
-end Exec.Code
+end Itasca.Runtime.Code

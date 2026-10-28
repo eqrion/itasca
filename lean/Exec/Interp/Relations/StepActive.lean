@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.ExecutionLoop
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem step_returned_active {M P F A : Type}
@@ -32,4 +32,4 @@ theorem executionBody_stopped {M P F A : Type}
     | Ok value => cases value;exact (stopped ⟨positive,rfl⟩).elim
     | Err error => simp [core.result.Result.is_ok,finishExecution]
   · rfl
-end Exec.Interp
+end Itasca.Runtime.Interp

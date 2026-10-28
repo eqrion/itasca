@@ -1,6 +1,6 @@
 import Exec.Store.Api.TableFillLoop
 import Exec.Spec.CopyInterval
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem table_copy_forward_same (tables : alloc.vec.Vec runtime.store.TableInst)
@@ -128,4 +128,4 @@ theorem table_copy_backward_same (tables : alloc.vec.Vec runtime.store.TableInst
     · simpa using Spec.Segment.CopySuffix.initial table.elements.val destination.val source.val count.val
     · have same : {table with elements := table.elements} = table := by cases table; rfl
       rw [same,←tableRead,vec_set_current tables tableIndex tableBound]
-end Exec.Store
+end Itasca.Runtime.Store

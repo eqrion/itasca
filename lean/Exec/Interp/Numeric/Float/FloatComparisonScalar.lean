@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatCompare
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem scalar_f32_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -237,4 +237,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   simp [fge_, fgt_, fge_, fle_, flt_, feq_, fne_, Bool.toNat, proj_uN_0]
   all_goals split <;> simp_all
 
-end Exec.Interp
+end Itasca.Runtime.Interp

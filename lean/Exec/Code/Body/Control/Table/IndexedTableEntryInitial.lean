@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Common.IndexedEntryCompilerInitial
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Local.Callbacks.Table.CompilerTableScratchEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem witness_compiler_table_boundary {A : Type} (ops : runtime.platform.Alloc A)
@@ -44,4 +44,4 @@ theorem indexed_table_witness_compiler_initial_wasm2
     ops law w signatureTable functionTable endFits created
   exact ⟨(all .empty).1,⟨witness_compiler_table_boundary ops law w created,fun more => (all more).2.1⟩,(all .empty).2.2⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

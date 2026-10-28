@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdPacking
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def selectedByte (shuffle : Bool) (x y : BitVec 128) (n : Nat) : BitVec 8 :=
@@ -46,4 +46,4 @@ def selectedByte (shuffle : Bool) (x y : BitVec 128) (n : Nat) : BitVec 8 :=
     · rename_i swizzle
       simp [selectedByte,large,swizzle]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

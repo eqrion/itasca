@@ -2,7 +2,7 @@ import Exec.Representation.Store
 import Itasca.Binary.Unicode
 
 /-! Store names use the same independent Unicode decoding as the source grammar. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem decodeNameChars_source (bytes : List U8) :
@@ -18,4 +18,4 @@ theorem decodeName_source (bytes : List U8) :
     decodeName bytes = ModuleBinary.nameOfBytes bytes := by
   simp only [decodeName, ModuleBinary.nameOfBytes, decodeNameChars_source]
 
-end Exec.Store
+end Itasca.Runtime.Store

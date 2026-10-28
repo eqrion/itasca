@@ -26,7 +26,7 @@ import Exec.Code.Local.Lowering.Common.LoweringArithmetic
 import Exec.Code.Body.Reader.Common.ReaderSaturating
 import Exec.Code.Local.Checking.DeadInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual unreachable numeric reading preserves both maintained checks. -/
@@ -159,4 +159,4 @@ theorem reader_dead_sign_checked_prefix_wasm2 {data env sourceLocals index st}
   obtain ⟨operation,instruction,inputs,output,callback,_⟩ := reader_integer_sign_wasm2 p ops before after out ctx op extension byte accepted
   exact compiler_dead_op_checked_prefix ops law before after out.core (integerOpcode op) 0#u32 0#u32 0#u128 dead held exits callback
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem matched_at {α β : Type} {R : α → β → Prop} {left right}
@@ -96,4 +96,4 @@ theorem ReaderScopeZipperWasm2.label {parents current savedParents savedCurrent 
     simp only [resolved, Option.map_some, Option.some.injEq, list.mk_list.injEq] at label
     exact ⟨scope, types, scopeFound, rfl, matchScope.branchTypes.trans label.symm⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

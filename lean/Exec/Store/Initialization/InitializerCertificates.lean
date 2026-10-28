@@ -6,7 +6,7 @@ import Itasca.Module.Elab.SegmentSyntax
 
 /-! Compiler map certificates and canonical validator constant typing discharge
 the structural initializer premises of the actual staged store operations. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem related_lookup {T U : Type} {relation : T → U → Prop}
@@ -128,4 +128,4 @@ theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
       refine ⟨function, code, words, addr, memory, mapped, codeFound, codeCert, resolved, addrFound, ?_⟩
       exact List.getElem?_eq_getElem issued
 
-end Exec.Store
+end Itasca.Runtime.Store

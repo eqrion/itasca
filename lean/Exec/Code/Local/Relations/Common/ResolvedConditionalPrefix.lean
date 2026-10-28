@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Control.ResolvedBranchPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem resolvedCode_new_br_if (code : List Bytecode) (before after : List FixupTarget)
@@ -16,4 +16,4 @@ theorem resolvedCode_new_br_if (code : List Bytecode) (before after : List Fixup
       resolvedCode_new_branch code [.JumpIfZero condition resume, transferInstruction dst src count]
         before after group .jump old site (by simpa [elided] using position) inside
 
-end Exec.Code
+end Itasca.Runtime.Code

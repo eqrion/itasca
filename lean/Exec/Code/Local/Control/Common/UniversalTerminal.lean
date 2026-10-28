@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Common.UniversalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Terminal source instructions whose bytecode has no pending label fixup. -/
@@ -25,4 +25,4 @@ structure UniversalTerminal {A : Type} (compiler : runtime.compiler.FunctionComp
     DeadCodePrefix types functions returns locals (resolvedCode compiler.function.code.val groups)
       (label :: labels) current.input current.source current.bodyPc compiler.function.code.val.length
 
-end Exec.Code
+end Itasca.Runtime.Code

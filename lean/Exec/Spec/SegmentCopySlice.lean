@@ -1,6 +1,6 @@
 import Exec.Spec.SegmentCopy
 import Aeneas.Data.List.List
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 /-- The sequential source writes copy the selected interval and preserve every
 position outside it. The source list is independent of the destination. -/
@@ -50,4 +50,4 @@ theorem copyInto_eq_setSlice {T : Type} [Inhabited T] (before source : List T) (
         List.getElem?_slice _ _ _ _ (by omega)]
       have equal : dst + (index-dst) = index := by omega
       simpa only [equal] using copied (index-dst) (by omega)
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

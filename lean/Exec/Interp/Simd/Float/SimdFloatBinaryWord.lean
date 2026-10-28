@@ -2,8 +2,8 @@ import Exec.Interp.Simd.Float.SimdFloatBinaryLoop
 import Exec.Spec.SimdFloatBinary
 import Exec.Interp.Simd.Float.SimdCompareFloatWord
 import Exec.Interp.Numeric.Float.FloatMinMax
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd Platform
 
 def floatBinaryIndex (op : vbinop_Fnn_N) : U32 :=
   match op with
@@ -75,4 +75,4 @@ theorem float_binary_native_word {F : Type} (floats : runtime.platform.FloatOps 
     intro result allowed
     exact allowed
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

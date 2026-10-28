@@ -1,5 +1,5 @@
 import Exec.Interp.State.StatefulSlots
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std
 
 theorem frame_consume {exec : runtime.interp.Execution} {raw : runtime.interp.Frame}
@@ -27,4 +27,4 @@ theorem frame_read_suffix_word {exec : runtime.interp.Execution} {raw : runtime.
     raw.base.val+src.val+index<exec.slots.length ∧
     exec.slots.val[raw.base.val+src.val+index]!.val=bits[index]! :=
   frame_read_suffix slots values position encoded index bound
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

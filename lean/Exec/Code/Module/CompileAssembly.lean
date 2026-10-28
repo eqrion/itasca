@@ -1,7 +1,7 @@
 import Exec.Code.Module.CompileEntry
 import Exec.Code.Local.Initializer.InitializerComplete
 import Exec.Code.Module.CollectFunctions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -101,4 +101,4 @@ theorem CompileWitness.initializers {A : Type} {allocator : runtime.platform.All
   exact initializer_lower allocator law (uninitializedModule w.env w.tail profile w.functions) executable
     w.collectedBudget w.finalBudget (by rfl) (by rfl) (by rfl) (by rfl) w.lowered
 
-end Exec.Code
+end Itasca.Runtime.Code

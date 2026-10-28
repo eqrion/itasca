@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- All constant-expression forms lower successfully with one remaining
@@ -89,4 +89,4 @@ theorem initializer_constant_available {A : Type} (ops : runtime.platform.Alloc 
       scalar_tac
     simp [appended,poolValue,packed]
 
-end Exec.Code
+end Itasca.Runtime.Code

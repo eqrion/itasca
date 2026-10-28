@@ -1,6 +1,6 @@
 import Exec.Platform.RecordingLoop
 import Exec.Interp.Relations.StepRecording
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 abbrev InvokeLoopState (M P : Type) := runtime.interp.Execution × runtime.store.Store M × P × core.result.Result Unit runtime.ExecError
@@ -33,4 +33,4 @@ theorem recordedInvokeLoop_erase {M P F A : Type}
     (do let (out,_) ← recordedInvokeLoop memory hooks floats allocator exec store platform status prior; Result.ok out) =
       runtime.interp.invoke_with_loop1 memory hooks floats allocator exec store platform status := by
   exact Platform.Recording.loop_erase _ _ _ _
-end Exec.Interp
+end Itasca.Runtime.Interp

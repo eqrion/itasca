@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatInstruction
 import Exec.Interp.Relations.ScalarDispatch
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 
 theorem scalar_float_dispatch {F : Type} (ops : runtime.platform.FloatOps F)
@@ -34,4 +34,4 @@ theorem execute_float_effect {F : Type} (floats : runtime.platform.FloatOps F)
   rw [← scalar_float_dispatch] at equation
   apply WP.spec_mono (execute_scalar_effect floats exec base (floatOpcode op) dst left right hl hr hd numeric equation)
   exact fun _ effect => ⟨numeric, exactResult, effect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

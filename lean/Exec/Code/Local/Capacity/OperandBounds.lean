@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.WellFormed
 import Itasca.Support.Result
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 @[step] theorem slots_fit_spec (f : runtime.bytecode.CompiledFunction) (start count : U32) :
@@ -95,4 +95,4 @@ theorem jumpIfNonZero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond
   have targetBound := Result.ok_injective targetRun
   scalar_tac
 
-end Exec.Code
+end Itasca.Runtime.Code

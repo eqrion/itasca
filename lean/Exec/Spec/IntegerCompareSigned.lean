@@ -1,6 +1,6 @@
 import Exec.Spec.IntegerSigned
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem integer_lts_relation (ty : Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
     fun_relop_ (numtype_Inn ty) (.mk_relop__0 ty (.LT .S))
@@ -62,4 +62,4 @@ theorem integer_ges_relation (ty : Inn) (a b : BitVec (sizenn (numtype_Inn ty)))
   · exact .fun_relop__case_10 .S _ _ _ relation wf
   · exact .fun_relop__case_11 .S _ _ _ relation wf
 
-end Exec.Spec
+end Itasca.Runtime.Spec

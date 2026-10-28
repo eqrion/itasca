@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Source.SourceCursor
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The real dead-opcode path observes the validator without emitting code.
@@ -26,4 +26,4 @@ theorem StructuredCompilerPrefix.dead_op {jumpTables : List Aeneas.Std.U32} {A :
   have deadAfter : after.reachable = false := by rw [frame]; exact dead
   exact invariant.skip instruction dead deadAfter ordinary unchanged sources consumed (by rw [cursor])
 
-end Exec.Code
+end Itasca.Runtime.Code

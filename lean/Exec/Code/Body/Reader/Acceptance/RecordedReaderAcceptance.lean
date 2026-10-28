@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.ReaderAcceptance
 import Itasca.Visitor.Recording
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Equal successful recorder transitions name the same source event. This
@@ -34,4 +34,4 @@ theorem recorded_reader_available {R W : Type}
   rw [same]
   exact acceptance
 
-end Exec.Code
+end Itasca.Runtime.Code

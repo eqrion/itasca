@@ -5,7 +5,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Abs.Numeric.Decode
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
 theorem load_source_injective (left right : Abs.Memory.Load) (a b : memarg)
@@ -89,4 +89,4 @@ theorem scalarEmission_store_inv {C before after emitted} (op : Abs.Memory.Store
     exact ⟨_,address,value,offset,rfl,rfl,rfl,sourceOffset,addressPosition,valuePosition⟩
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderBranchLayout
 import Itasca.Wasm2.Control.BrTableSound
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem concrete_fits_prefix (actual expected : List types.ValueType)
@@ -34,4 +34,4 @@ theorem table_suffix_concrete (st : code.OpIterState) (outer segment : List code
     simpa only [List.reverse_reverse,List.reverse_append] using reversed
   refine ⟨rest.reverse.map Translate.valueType,?_⟩
   simp only [Sequence.stackTypes,List.map_map,Function.comp_def,actualEq,List.map_append]
-end Exec.Code
+end Itasca.Runtime.Code

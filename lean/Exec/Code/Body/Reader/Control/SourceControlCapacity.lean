@@ -4,7 +4,7 @@ import Exec.Code.Local.Demand.RecordedDemand
 import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Capacity.BodyReplay
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent control-reader success and its retained source suffix supply
@@ -52,4 +52,4 @@ theorem IndexedTableReaderCompilerPointWasm2.control_capacity_from_source {A : T
   have coordinate := room.coordinate
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.SelectOperands
 import Exec.Code.Local.Relations.Global.GlobalOperands
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_select_emission {A : Type} (ops : runtime.platform.Alloc A)
@@ -73,4 +73,4 @@ open Aeneas Aeneas.Std
   intro out result success
   obtain ⟨source, position, lowered⟩ := result success
   exact ⟨_, lowered, .globalSet front ty index source globalType (by simpa only [locals] using position)⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdCompareLanes
 import Exec.Spec.SimdCompareMasks
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem comparisonBits_signExtend (width : Nat) (bound : width ≤ 64) (answer : Bool) :
@@ -15,4 +15,4 @@ theorem comparisonBits_signExtend (width : Nat) (bound : width ≤ 64) (answer :
     have small : i < 64 := by omega
     simp [valid,small,BitVec.getLsbD_signExtend]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

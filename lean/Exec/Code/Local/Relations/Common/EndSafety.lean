@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Control.CloseGuardedScope
 import Exec.Code.Local.Callbacks.Common.FrameSites
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
 import Exec.Code.Local.Relations.Control.ControlObservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- END safety needs only retained fixup/map addresses and vector headroom,
@@ -52,4 +52,4 @@ not a source body typing or final compilation-success hypothesis. -/
   rw [observed, WP.spec_ok] at result
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

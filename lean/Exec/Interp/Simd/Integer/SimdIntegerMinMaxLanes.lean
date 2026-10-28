@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerMinMaxWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def integerMinMaxOpcode (ty : Jnn) (kind : IntegerMinMax) : U32 :=
   match ty,kind with
@@ -61,4 +61,4 @@ theorem integer_minmax_dispatch_eq (ty : Jnn) (kind : IntegerMinMax) (x y : U128
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Store.Api.Define
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[simp] theorem vec_set_current {T : Type} (values : alloc.vec.Vec T) (index : Usize)
@@ -8,4 +8,4 @@ open Aeneas Aeneas.Std
   apply alloc.vec.Vec.ext
   simp [alloc.vec.Vec.set_val_eq, List.set_getElem_self]
 
-end Exec.Store
+end Itasca.Runtime.Store

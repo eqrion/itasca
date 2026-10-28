@@ -5,7 +5,7 @@ import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Local.Callbacks.Table.CompilerPairTableAppend
 import Exec.Code.Body.Control.Common.OrdinaryEmbedding
 import Exec.Code.Body.Reader.Table.ReaderIndirectPairPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.indirect_call {A : Type}
@@ -53,4 +53,4 @@ theorem IndexedTableReaderCompilerPointWasm2.indirect_call {A : Type}
       (fun _ _ _ _ head => (embedding ((CompilerTables.ofFunction after.function).append future)).indirect (head)) state.compiled state.reach.current matched contextLocals signaturesBefore sourceBound bodyBound byte accepted
   exact (state.advance next advance inbounds reader (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]) compiled
     (fun live => state.reach.current (reachable ▸ live))).point
-end Exec.Code
+end Itasca.Runtime.Code

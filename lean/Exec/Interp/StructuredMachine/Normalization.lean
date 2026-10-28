@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.ControlInversion
 import Exec.Interp.StructuredMachine.LabelCompletion
 import Exec.Interp.Relations.ValueLookup
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- A retained forward administrative instruction must execute before the
@@ -109,4 +109,4 @@ theorem structured_label_normalizes (exec : runtime.interp.Execution) (raw : run
       label_completion_point exec raw compiled C targets next output s ambient f rest label labels typed slots point empty.1 empty.2.2
     exact Or.inr ⟨_, _, next', output', .label f label labels, represented, continuation⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

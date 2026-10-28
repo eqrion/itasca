@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.State.GlobalCoreEmission
 
-namespace Exec.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [FloatHeads family]
 open Aeneas Aeneas.Std
@@ -66,4 +66,4 @@ theorem corePoint_globalSet_head {C returns code labels stack pc next output}
     subst_vars
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => cases sourceEq
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

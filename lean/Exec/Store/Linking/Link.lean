@@ -3,7 +3,7 @@ import Exec.Platform.Memory
 import Exec.Representation.StoreInvariant
 import Exec.Store.Api.Write
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def LimitsMatch (size : Nat) (maximum : Option U32) (required : Itasca.types.Limits) : Prop :=
@@ -50,8 +50,8 @@ theorem link_function {M : Type} (ops : runtime.platform.MemoryBuffer M)
        s.types.val[(s.funcs.val[address.index.val]).signature.val]'((hs.functions _ (by simp)).1) =
          inst.module.module.env.types.val[typeIndex.val]) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Func typeIndex := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -60,7 +60,7 @@ theorem link_function {M : Type} (ops : runtime.platform.MemoryBuffer M)
   step as ⟨function, hfunction⟩
   have hsignature := (hs.functions function (by simp [hfunction])).1
   step as ⟨actual, hactual⟩
-  simp only [module.Env.types, Itasca.module.Env.impl.types, bind_ok]
+  simp only [Itasca.module.Env.impl.types, bind_ok]
   step as ⟨index, hcast⟩
   have hind : index.val < inst.module.module.env.types.deref.length := by
     simp [alloc.vec.Vec.deref]
@@ -95,8 +95,8 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
        LimitsMatch ((view (s.memories.val[address.index.val]).buf).length / 65536)
          (s.memories.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Memory required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -127,8 +127,7 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
     core.cmp.PartialEq.ne.trait_default types.Mut.Insts.CoreCmpPartialEqMut a b
       ⦃ different => different = true ↔ a ≠ b ⦄ := by
   cases a <;> cases b <;>
-    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-      types.Mut.Insts.CoreCmpPartialEqMut.eq, Itasca.types.Mut.Insts.CoreCmpPartialEqMut.eq]
+    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, Itasca.types.Mut.Insts.CoreCmpPartialEqMut.eq]
 
 theorem elementValueType_injective : Function.Injective elementValueType := by
   intro a b h
@@ -153,8 +152,8 @@ theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
        LimitsMatch (s.tables.val[address.index.val]).elements.length
          (s.tables.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Table required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -197,8 +196,8 @@ theorem link_global {M : Type} (ops : runtime.platform.MemoryBuffer M)
        result.types = inst.types ∧ result.elems = inst.elems ∧ result.datas = inst.datas ∧
        (s.globals.val[address.index.val]).ty = required) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Global required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -235,8 +234,8 @@ theorem link_wrong_kind {M : Type} (ops : runtime.platform.MemoryBuffer M)
     runtime.store.instantiate.Store.link_import ops s inst i external ⦃ answer after result =>
       answer = .Err (.Link .IncompatibleImportType) ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hk : ¬ ImportKindMatches entry.desc external := by simpa [hentry, alloc.vec.Vec.deref] using hkind
@@ -257,12 +256,12 @@ theorem link_foreign {M : Type} (ops : runtime.platform.MemoryBuffer M)
     runtime.store.instantiate.Store.link_import ops s inst i external ⦃ answer after result =>
       ∃ error, answer = .Err error ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.imports, Itasca.module.Env.impl.imports, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   cases entry.desc <;> cases external <;>
     simp_all [ForeignExtern, runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Store
+end Itasca.Runtime.Store

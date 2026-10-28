@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Interp.Machines.Slice.SliceExecution
 import Exec.Abs.Core.Typing
 import Exec.Abs.SupportedState
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 def ControlTop {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
@@ -77,4 +77,4 @@ theorem ReadyState.cursor {M : Type} {store : runtime.store.Store M}
     simp only [ReadyState,frames] at ready
     obtain ⟨pc,cursor⟩ := ready.cursor
     exact ⟨pc,by simpa only [ExecutionCursor,frames] using cursor⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

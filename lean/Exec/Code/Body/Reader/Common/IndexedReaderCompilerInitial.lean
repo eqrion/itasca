@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Common.ReaderBoundaryInitial
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixStart
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.initial {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -19,4 +19,4 @@ theorem StructuredReaderCompilerStateWasm2.initial {jumpTables : List U32} {emit
     .initial (.TypeIndex index) 0#usize ft.params.val ft.results.val, ?_, .initial _, .initial _⟩
   exact ReaderReachability.initial _ _ _ _ rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

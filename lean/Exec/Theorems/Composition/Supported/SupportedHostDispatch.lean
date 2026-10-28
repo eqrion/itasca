@@ -25,8 +25,8 @@ import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Code.Local.Control.Table.StructuredCodePoint
 import Exec.Interp.StructuredMachine.SupportedControlSemantics
 import Exec.Interp.StructuredMachine.SupportedBoundarySemantics
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem step_head_supported_host_site
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -397,4 +397,4 @@ theorem step_supported_host_site
       simpa only [position] using outcome.widen program.fetchBound
 
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

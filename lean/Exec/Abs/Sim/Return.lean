@@ -1,8 +1,8 @@
 import Exec.Abs.Sim.Branch
 import Exec.Abs.Preservation
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Appending a callee's results to its suspended caller agrees with inserting
 those values into the decoded frame context. Saved prefixes already exist. -/
@@ -193,4 +193,4 @@ theorem typed_frame_end_simulation (s : store) (ambient : frame) (f : AFrame)
         simpa only [AFrame.arity, ← count, Nat.sub_self, List.drop_zero] using result
     · contradiction
 
-end Exec.Abs
+end Itasca.Runtime.Abs

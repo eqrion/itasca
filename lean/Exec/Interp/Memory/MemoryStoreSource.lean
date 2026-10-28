@@ -2,7 +2,7 @@ import Exec.Interp.Memory.MemoryStoreEncoding
 import Exec.Interp.Memory.MemoryLoadSource
 import Exec.Spec.MemoryStore
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 def numericStoreOpcode : numtype → U16
@@ -34,4 +34,4 @@ theorem numericStoreValue_bytes (ty : numtype) (word : U64) :
   · have bits := Builtins.Float.float_bits_roundtrip_64 word.val (by scalar_tac)
     simp [nbytes_,numericStoreValue,fbytes_,bits,Spec.scalarNumBytes]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

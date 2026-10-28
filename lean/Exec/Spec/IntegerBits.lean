@@ -1,7 +1,7 @@
 import Exec.Spec.IntegerDiv
 import SpecExt.Builtins.Bitwise
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt.Builtins
 
 theorem integer_and_relation (ty : Inn) (a b : Nat) :
@@ -59,4 +59,4 @@ theorem integer_shru_relation (ty : Inn) (a b : Nat) (ha : a < 2 ^ sizenn (numty
   · apply fun_binop_.fun_binop__case_19
     exact unsigned_num_wf .I64 _ hb
 
-end Exec.Spec
+end Itasca.Runtime.Spec

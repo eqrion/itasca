@@ -1,6 +1,6 @@
 import Exec.Store.Linking.ExternalMaps
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -98,4 +98,4 @@ theorem link_external_maps_loop {M : Type} (memory : runtime.platform.MemoryBuff
   · exact ⟨rfl, maps.source, startBound, fun _ => ⟨maps, externals⟩⟩
 
 
-end Exec.Store
+end Itasca.Runtime.Store

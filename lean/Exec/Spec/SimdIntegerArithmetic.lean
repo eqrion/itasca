@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 inductive IntegerArithmetic where | add | sub | mul
 
@@ -36,4 +36,4 @@ theorem integer_arithmetic_relation (kind : IntegerArithmetic) {width : Nat} (a 
       (by simpa only [integerArithmeticBits,formula,proj_uN_0] using wf)
     simpa only [IntegerArithmeticRel,integerArithmeticBits,formula,proj_uN_0] using relation
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

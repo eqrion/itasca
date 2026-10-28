@@ -10,7 +10,7 @@ import Exec.Interp.Numeric.Integer.NumericFetch
 import Exec.Interp.Numeric.Integer.NumericCodePoint
 import Exec.Abs.Numeric.TransitionSimulation
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem step_numeric_no_trap {M P F A : Type}
@@ -69,4 +69,4 @@ theorem step_numeric_no_trap {M P F A : Type}
     | some value =>
       simp only [NumericValuesEffect,operation] at effect
       exact effect.1
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

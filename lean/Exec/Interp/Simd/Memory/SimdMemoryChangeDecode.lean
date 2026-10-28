@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryRelation
 import Exec.Interp.Memory.MemoryDecode
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 
 /-- The structured byte effect decodes an actual opaque buffer replacement exactly. -/
@@ -18,4 +18,4 @@ theorem MemoryBufferChange.decoded {M : Type} (view : M → Slice U8) (code : St
   | write start payload after inside payloadWf written =>
     exact memory_write_decodes view code store inst ambient address object buffer start payload
       moduleEq mapped found inside (by rw [bytesEq]; exact written)
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

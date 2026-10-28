@@ -2,7 +2,7 @@ import Exec.Representation.StoreInvariant
 import Exec.Store.Api.Grow
 import Exec.Store.Api.Write
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def objectCount {M : Type} (s : runtime.store.Store M) : Nat :=
@@ -132,4 +132,4 @@ theorem define_global_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Store
+end Itasca.Runtime.Store

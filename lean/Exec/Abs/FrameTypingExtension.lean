@@ -1,7 +1,7 @@
 import Exec.Abs.ModuleBindingsExtension
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Store extension preserves the type of every existing operand/reference. -/
 theorem val_typed_extend {before after : store} (extension : Extend_store before after)
@@ -36,4 +36,4 @@ theorem ATyped.extend_same {state : AState} {after : _root_.store}
     (functions : after.FUNCS = state.store.FUNCS) : ATyped {state with store := after} :=
   ⟨(extend_store_wf extension).2, typed.functions.extend_same extension functions,
     typed.ambient, typed.frames.extend extension, typed.results, typed.activeResults, typed.heights⟩
-end Exec.Abs
+end Itasca.Runtime.Abs

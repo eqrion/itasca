@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Table.StructuredUniversalPrefix
 import Exec.Code.Local.Control.Table.StructuredParentPrefixChange
 import Exec.Code.Local.Control.Common.UniversalPrefix
 import Exec.Code.Local.Callbacks.Common.FramePlanPop
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Opening BLOCK or LOOP suspends the current source prefix and starts an
@@ -134,5 +134,5 @@ theorem StructuredUniversalPrefix.open_if {jumpTables : List Aeneas.Std.U32} {A 
             (resolvedCode after.function.code.val (⟨[site], target⟩ :: ⟨[], label.target⟩ :: pending))
             (label :: parentLabel :: outerLabels) stack after.function.code.val.length
 
-end Exec.Code
+end Itasca.Runtime.Code
 

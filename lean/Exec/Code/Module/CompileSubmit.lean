@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileEntries
 import Exec.Code.Local.Initializer.InitializerExpression
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -68,4 +68,4 @@ theorem compiler_poll_accepted {A : Type} (allocator : runtime.platform.Alloc A)
     constructor
     · simpa using (List.dropLast_append_getLast? value empty).symm
     · rfl
-end Exec.Code
+end Itasca.Runtime.Code

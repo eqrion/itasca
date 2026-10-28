@@ -1,7 +1,7 @@
 import Exec.Abs.Float.Operands
 import Exec.Abs.Preservation
-namespace Exec.Abs.Float
-open SpecExt Exec.Spec SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.Runtime.Abs.Float
+open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem Instruction.source_signature_inv (op : Instruction) {C : context} {signature : functype}
     (typed : Instr_ok C op.source signature) : signature = op.signature := by
@@ -34,4 +34,4 @@ theorem Instruction.frame_preservation (op : Instruction) {s : store} {f : AFram
         List.rel_append frontTyped (List.Forall₂.cons resultTyped List.Forall₂.nil)
     · simpa only [List.map_append, List.map_cons, List.map_nil, List.append_nil, valueType, stack] using continuation
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

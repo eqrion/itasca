@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Simd.SimdMeaningCounts
 import Exec.Code.Local.Lowering.Simd.SimdFinishTables
 import Exec.Code.Local.Lowering.Simd.SimdOpcodeReduction
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -102,4 +102,4 @@ theorem compiler_simd_const_emission {A : Type} (ops : runtime.platform.Alloc A)
   · apply SimdEmission.constant front bits before.height entry _ (by simpa only [locals] using layout.height)
     rw [afterTable,indexVal]
     simp
-end Exec.Code
+end Itasca.Runtime.Code

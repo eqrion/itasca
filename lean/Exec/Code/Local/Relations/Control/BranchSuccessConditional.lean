@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.BranchSuccessForward
 import Exec.Code.Local.Lowering.Common.LoweringConditionalTransfer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
@@ -95,4 +95,4 @@ theorem branch_if_elided_forward_success {A : Type} (ops : runtime.platform.Allo
         · simp [alloc.vec.Vec.len]
         · simp [exactState, hback, kindEq]
 
-end Exec.Code
+end Itasca.Runtime.Code

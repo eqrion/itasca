@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SelectSafety
 import Itasca.Visitor.Basic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -61,4 +61,4 @@ theorem compiler_select_raw_total {A} (ops : runtime.platform.Alloc A)
     · unfold runtime.compiler.lower.FunctionCompiler.op
       rw [if_neg live]
       exact compiler_observe_stack ops law compiler state
-end Exec.Code
+end Itasca.Runtime.Code

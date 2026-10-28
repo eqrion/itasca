@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
 import Exec.Code.Local.Relations.Common.PrefixZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- The source cursor at ELSE remembers the completed then arm and resumes an
@@ -20,4 +20,4 @@ theorem ScopeLabel.before_else {scope bt condition yesExit noEntry normal label}
   refine ⟨shape.front, ?_, shape.results⟩
   simpa [SourceScope.begin_else, SourceScope.branchTypes, form] using shape.branchTypes
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -6,7 +6,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Interp.Control.StructuredLinear
 import Exec.Interp.Numeric.Integer.NumericCodePoint
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalarEmission_numeric_pure {C before after emitted} (op : Abs.Numeric.Instruction)
@@ -23,4 +23,4 @@ theorem scalarEmission_numeric_pure {C before after emitted} (op : Abs.Numeric.I
     have decoded := congrArg Abs.Numeric.decodeInstruction equality
     rw [Abs.Numeric.decodeInstruction_source] at decoded
     simp [Abs.Numeric.decodeInstruction,Abs.Memory.Load.source,Abs.Memory.Store.source] at decoded
-end Exec.Interp
+end Itasca.Runtime.Interp

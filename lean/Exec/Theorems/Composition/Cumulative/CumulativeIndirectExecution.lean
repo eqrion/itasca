@@ -27,8 +27,8 @@ import Exec.Interp.Calls.IndirectCallSlots
 import Exec.Interp.Relations.SourceIndirectCallCause
 import Exec.Interp.Calls.IndirectResolve
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def SourceIndirectHostBoundary {M : Type} (store : runtime.store.Store M) (source : Abs.AState) : Prop :=
   ∃ (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr) (front : List val)
@@ -41,4 +41,4 @@ def SourceIndirectHostBoundary {M : Type} (store : runtime.store.Store M) (sourc
 def IndirectTrap (trap : runtime.Trap) : Prop :=
   trap=.TableOutOfBounds ∨ trap=.UninitializedElement ∨ trap=.IndirectCallTypeMismatch
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

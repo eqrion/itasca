@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.SourceValueCauses
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Actual allocator refusals at entry retain source-bounded request sizes. -/
@@ -15,4 +15,4 @@ theorem CallCause.source_allocation {A M P : Type} {allocator : runtime.platform
   · exact Or.inl ⟨n, by omega, refused⟩
   · exact Or.inr refused
 
-end Exec.Interp
+end Itasca.Runtime.Interp

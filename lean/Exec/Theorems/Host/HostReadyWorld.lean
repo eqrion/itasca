@@ -2,8 +2,8 @@ import Exec.Theorems.Host.HostFrameSiteExecution
 import Exec.Theorems.Host.HostDirectWorld
 import Exec.Theorems.Composition.World.WorldSourceStep
 import Exec.Theorems.Host.HostIndirectWorld
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A ready host boundary retains enough static and source evidence to execute
 the actual direct or indirect call and construct its eventful successor. The
@@ -68,4 +68,4 @@ theorem host_ready_world_outcomes {M P F A : Type}
       (fun p=>callback p host) (retains host))
     intro out result
     exact result.unbundle
-end Exec.Theorems
+end Itasca.Runtime.Theorems

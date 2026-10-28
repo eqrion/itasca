@@ -1,8 +1,8 @@
 import Exec.Abs.Ownership.Slice
 import Exec.Abs.Core.Pure
 import Exec.Abs.Core.PureMetadata
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec
 
 def GlobalsOwned (bounds : Bounds) (s : _root_.store) : Prop :=
   ∀ object ∈ s.GLOBALS, ValueOwned bounds object.VALUE
@@ -128,4 +128,4 @@ theorem instruction_owned (bounds : Bounds) (s : _root_.store) (ambient : frame)
     rw [Core.instruction_store] at step
     exact store_owned globals (valuesOwned_nil _) frame frames step
 
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

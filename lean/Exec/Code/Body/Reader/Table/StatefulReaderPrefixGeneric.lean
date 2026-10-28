@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Table.StatefulReaderPrefix
 import Exec.Code.Body.Control.Common.OrdinaryEmbedding
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 /-- A fixed future metadata table can be used on both sides of one actual
 stateful callback. Its current entries are retained by list append. -/
@@ -52,4 +52,4 @@ theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data e
       (statefulOpcode op) a b 0#u128 callback
     exact ⟨values,reader,compiled,deadAfter.trans dead.symm⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

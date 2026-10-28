@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.AuxiliaryAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -22,4 +22,4 @@ def ScalarLiteralKind.lowering {A : Type} (kind : ScalarLiteralKind) (ops : runt
     let word ← lift (UScalar.cast .U64 bits)
     runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Const64 compiler.height word)
 
-end Exec.Code
+end Itasca.Runtime.Code

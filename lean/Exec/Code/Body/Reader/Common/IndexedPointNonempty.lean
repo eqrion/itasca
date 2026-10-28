@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete-profile reached reader likewise has an active source control frame. -/
@@ -13,4 +13,4 @@ theorem IndexedTableReaderCompilerPointWasm2.ctrls_nonempty {A : Type}
   rw [controls]
   simp
 
-end Exec.Code
+end Itasca.Runtime.Code

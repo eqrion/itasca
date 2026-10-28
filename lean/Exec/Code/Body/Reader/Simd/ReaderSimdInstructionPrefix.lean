@@ -3,7 +3,7 @@ import Exec.Code.Body.Relations.Common.ExecutableInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The exhaustive actual SIMD event classifier supplies source widths and
@@ -50,4 +50,4 @@ theorem SimdReaderEvent.instruction_prefix {jumpTables : List U32} {A : Type} {o
       (.simd emission) emission.not_branchTable growth held ordinary.frames,
       exits.retained (congrArg alloc.vec.Vec.val ordinary.frames) ordinary.capacity⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

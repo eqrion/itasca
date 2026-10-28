@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableTrace
 import Exec.Code.Local.Relations.Table.BranchTableSuccess
 import Exec.Code.Local.Initializer.InitializerProofs
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -61,4 +61,4 @@ theorem compiler_lower_table_success {A : Type} (ops : runtime.platform.Alloc A)
           rw [compilerEq] at trace
           exact ⟨start,len,selector,emitted,startEq,lenEq,operandCalled,
             compiler_emit_success ops law before emitted _ emitCalled,trace⟩
-end Exec.Code
+end Itasca.Runtime.Code

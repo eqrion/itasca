@@ -27,8 +27,8 @@ import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Store.Initialization.SegmentExtension
 import Exec.Store.Invariant.SourceSyntax
 import Exec.Store.Initialization.SegmentInitializeMetadata
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}
     {code : CodeInterpretation} {store : runtime.store.Store M}
     (shaped : Shape view store) (sourceSyntaxBefore : StoreSyntax code store) (bounds : SegmentBounds store) :
@@ -252,4 +252,4 @@ theorem core_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
   | unchanged => exact .refl_of_shape shaped sourceSyntaxBefore bounds
   | memory issued mutation => exact memory_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ _ issued mutation
   | global live wellFormed mutation => exact global_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ mutation wellFormed (live.owned owned)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

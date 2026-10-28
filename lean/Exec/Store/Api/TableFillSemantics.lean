@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableFillEffect
 import Exec.Store.Api.TableFillLists
 import Exec.Store.Api.TableInitSemantics
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 private theorem fill_map_set_modify {T U : Type} (decode : T → U) (change : U → U)
@@ -46,4 +46,4 @@ theorem table_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

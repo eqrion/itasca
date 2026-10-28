@@ -1,6 +1,6 @@
 import Exec.Store.Api.DefineMemory
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem define_table_loop (count : U32) (before : alloc.vec.Vec U64) (position : U32)
@@ -93,4 +93,4 @@ theorem define_table_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Store
+end Itasca.Runtime.Store

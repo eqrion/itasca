@@ -1,5 +1,5 @@
 import Exec.Store.Instantiation.PreparedCommitShape
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The concrete preparation and staging calls that produced a committed store.
@@ -48,4 +48,4 @@ structure PreparedRun {M P F A : Type}
   counted : charged.val = before.instance_items.val + moduleItems seed.module
   limited : charged.val ≤ before.limits.max_instance_items.val
   committed : ready = {dataStore with instance_items := charged}
-end Exec.Store
+end Itasca.Runtime.Store

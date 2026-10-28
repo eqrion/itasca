@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Control.ReaderBranchLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_if_layout_wasm2 {data env locals index st}
@@ -29,4 +29,4 @@ theorem reader_br_if_layout_wasm2 {data env locals index st}
   · rw [output]
     exact concreteStack_append.mpr ⟨both.1, (concreteStack_append.mp (input ▸ both.2)).1⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

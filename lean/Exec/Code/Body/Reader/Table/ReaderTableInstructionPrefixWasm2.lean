@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Table.SourceTableScratchInstructionPrefix
 import Exec.Code.Body.Reader.Table.SourceTableScratchExitSlots
 import Exec.Code.Body.Reader.Table.ReaderTableInputsWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -65,4 +65,4 @@ theorem reader_table_open_instructions_wasm2 {jumpTables : List U32} {data env s
       fixups room boundary.targets coordinate labels held callback,
     invariant.br_table_scratch_exit_slots ops law budget buffer final.core fallback view labels exits callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -6,9 +6,9 @@ import Exec.Theorems.Host.HostIndirectContext
 import Exec.Theorems.Composition.FrameStorePrefixStaged
 import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Abs.Indirect.HostTyping
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 
 theorem structured_indirect_host_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (table type position address identity : Nat)
@@ -28,4 +28,4 @@ theorem structured_indirect_host_next (s : _root_.store) (ambient : frame) (f : 
   simp only [Abs.Indirect.step,Abs.pop_append,decoded,resolved']
   simp [Abs.Indirect.invoke,lookup,length,types]
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

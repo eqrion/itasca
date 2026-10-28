@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEnterBlock
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEnterLoop
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEnterIf
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerBranches
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem StructuredReaderCompilerPointWasm2.scope_step {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -47,4 +47,4 @@ theorem StructuredReaderCompilerPointWasm2.scope_step {jumpTables : List U32} {A
     obtain ⟨x0, x1, post⟩ := state.br_if ops law next advance inbounds out sourceBound
       (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact post.point
-end Exec.Code
+end Itasca.Runtime.Code

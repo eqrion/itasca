@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderCompilerBounds
 import Exec.Code.Body.Reader.Control.ReaderRootInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing the actual reader control stack publishes checks for every stored instruction. -/
@@ -36,4 +36,4 @@ theorem StructuredReaderCompilerStateWasm2.closed_checked_instructions
   exact (state.root_checked_instructions (ctx := ctx) ops law root next advance inbounds out state.boundary.source_bound
     bodyExtent initialLayout initialLocals initialCapacity maps held exits byte accepted).1
 
-end Exec.Code
+end Itasca.Runtime.Code

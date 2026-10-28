@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredPrefixControl
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StructuredDeadPrefix.ifElse_skip {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels front params results yes no bt pc yesExit noEntry exit cond}
@@ -30,5 +30,5 @@ theorem StructuredDeadPrefix.ifElse_skip {jumpTables : List Aeneas.Std.U32} {emi
   · apply noCode.relabel
     exact .cons ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ (LabelsShape.refl _)
 
-end Exec.Code
+end Itasca.Runtime.Code
 

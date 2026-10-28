@@ -1,7 +1,7 @@
 import Exec.Interp.Control.NormalizeClosure
 import Exec.Interp.Relations.ControlPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem ConcreteSim.trans {codeLength firstPC middlePC lastPC firstPending middlePending lastPending before middle after}
     (first : ConcreteSim codeLength firstPC middlePC firstPending middlePending before middle)
@@ -28,4 +28,4 @@ theorem ConcreteSim.prepend_normalization {count before middle} (chain : ErasedS
   · simpa only [same] using simulation
   · exact (ConcreteSim.of_source codeLength pc pc false false prefixSimulation).trans simulation
 
-end Exec.Interp
+end Itasca.Runtime.Interp

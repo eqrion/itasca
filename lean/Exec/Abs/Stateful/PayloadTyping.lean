@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.TableTyping
 import Exec.Abs.Core.MemoryMutation
 import Exec.Spec.SegmentCopy
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem copyInto_forall {T : Type} [Inhabited T] (property : T → Prop)
     (before source : List T) (destination offset count : Nat)
@@ -38,4 +38,4 @@ theorem memory_payload_typed {s : store} {object : meminst} (typed : Meminst_ok 
     refine ⟨.mk_Meminst_ok _ _ _ _ typeOk ?_ storeWf (.meminst_case_ _ _ typeWf values) typeWf,?_⟩
     · exact length.trans oldLength
     · exact extend_mem_contents count count maximum old bytes (by rfl) (by simpa only using length.ge) objectWf (.meminst_case_ _ _ typeWf values)
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

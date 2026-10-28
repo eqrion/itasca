@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Readback
 import Exec.Interp.Relations.DecodeOwnership
 import Itasca.Support.Result
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem read_results_loop_owned {M : Type} (words : alloc.vec.Vec U64)
@@ -105,4 +105,4 @@ results and leaves the store unchanged. -/
   · simp [empty]
   · simp [empty]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

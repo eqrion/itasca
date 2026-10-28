@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.LocalVariableAvailability
 import Exec.Code.Local.Capacity.DeadOpAvailability
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -132,4 +132,4 @@ theorem compiler_reader_local_tee_available {A V : Type}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) read callback
 
-end Exec.Code
+end Itasca.Runtime.Code

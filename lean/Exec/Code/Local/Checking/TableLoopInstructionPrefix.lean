@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.TableBranchInstructionEffect
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The finite table builder preserves all stored checks except the dispatch
@@ -28,4 +28,4 @@ theorem TableBranchRun.instruction_prefix_except {A : Type} {ops : runtime.platf
       exact heightFits.trans capacity
     · exact effect.apply_except omitted held
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import SpecExt.Builtins.Rotations
 import Exec.Spec.IntegerDiv
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem integer_rotleft_relation (ty : Inn) (bits : BitVec (sizenn (numtype_Inn ty))) (shift : Nat) :
     fun_binop_ (numtype_Inn ty) (.mk_binop__0 ty .ROTL)
@@ -27,4 +27,4 @@ theorem integer_rotright_relation (ty : Inn) (bits : BitVec (sizenn (numtype_Inn
   · rw [← same] at wf ⊢
     exact .fun_binop__case_23 _ _ wf
 
-end Exec.Spec
+end Itasca.Runtime.Spec

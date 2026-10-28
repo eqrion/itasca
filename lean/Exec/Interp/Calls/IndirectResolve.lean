@@ -1,7 +1,7 @@
 import Exec.Abs.Indirect.Definition
 import Exec.Representation.Store
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- An actual table range failure is an unresolved source indirect call. -/
@@ -40,4 +40,4 @@ theorem indirect_resolve_reference {M : Type} (view : M → Slice U8) (code : St
   rw [tableEq]
   simp [Store.decodeTable,selected,Store.decodeRef,funcref,word,Store.decodeStore,found]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

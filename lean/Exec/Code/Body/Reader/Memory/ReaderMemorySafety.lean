@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Memory.MemorySafety
 import Exec.Code.Body.Reader.Memory.MemoryReaderFacts
 import Itasca.Wasm2.Scalar.ReadersTotal
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_memory_load_total {A} (ops : runtime.platform.Alloc A)
@@ -45,4 +45,4 @@ theorem compiler_reader_memory_store_total {A} (ops : runtime.platform.Alloc A)
     exact compiler_memory_store_total ops law compiler state op arg.offset arg.align
       ready.codeFits ready.sourceFits ready.coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

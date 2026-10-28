@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Abs.Ownership.Core
 import Exec.Abs.Stateful.OwnershipStore
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- A returned mutable-machine step retains the complete current state,
@@ -27,4 +27,4 @@ def Advance
     (bounded : ∀ bound, Abs.CodeBound bound before → Abs.CodeBound bound after) :
     Advance view code store exec expected codeLength pc pending before :=
   ⟨nextPC.val,nextPending,after,machine,simulation,ownership,ambient,bounded⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,5 +1,5 @@
 import Exec.Spec.MemoryCopySource
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem memory_bytes_wf (s : store) (f : frame) (wellFormed : wf_store s)
@@ -90,4 +90,4 @@ theorem memory_copy_backward_steps (s : store) (f : frame) (destination source c
       (Or.inl order)
     have combined := stepsH_trans (stepsH_single first) (stepsH_trans second rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,memoryCopyBackward,value,fresh] using combined
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

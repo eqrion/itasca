@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.Concatenation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Increasing a label's permitted exits preserves literal code evidence.
@@ -40,4 +40,4 @@ theorem LabelsWiden.normal {left right} (shape : LabelsWiden left right)
     subst label
     exact head.normalLive (live a rfl)
 
-end Exec.Code
+end Itasca.Runtime.Code

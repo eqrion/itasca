@@ -1,5 +1,5 @@
 import Exec.Spec.SimdFloatResizeSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem float_resize_vector_relation (kind : FloatResize) (x result : BitVec 128)
@@ -25,7 +25,7 @@ theorem float_resize_vector_relation (kind : FloatResize) (x result : BitVec 128
     · apply fun_zero.fun_zero_case_2
       · decide
       · exact .fun_fzero_case_0 _ (floatOfBits_wf 32 (by decide) 0)
-      · exact Exec.Spec.float_num_wf .F32 _ (floatOfBits_wf 32 (by decide) _)
+      · exact Itasca.Runtime.Spec.float_num_wf .F32 _ (floatOfBits_wf 32 (by decide) _)
     · constructor; exact .lane__case_1 _ _ _ (floatOfBits_wf 32 (by decide) _) rfl
     · exact lengths
     · exact float_resize_lists_relation .demote x
@@ -79,4 +79,4 @@ theorem float_resize_step (kind : FloatResize) (x result : BitVec 128)
     · exact float_resize_source_wf kind
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

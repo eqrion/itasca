@@ -4,8 +4,8 @@ import Exec.Abs.Core.Step
 import Exec.Abs.Supported.CoreStuck
 import Exec.Abs.Core.Pure
 import Exec.Abs.Supported.PureCoverage
-namespace Exec.Abs.Supported
-open Exec.Abs.Core
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Core
 
 /-- Successful instructions retain the supported source grammar, including
 unchanged defined function bodies after mutable object-content writes. -/
@@ -84,4 +84,4 @@ theorem step_covered (s next : AState) (typed : ATyped s) (covered : SupportedSt
             exact ⟨(body.2 label (by simp)).2,fun outer member => body.2 outer (by simp [member])⟩
           · contradiction
 
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

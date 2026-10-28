@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdPureRelation
 import Exec.Interp.Simd.Float.SimdFloatUnarySound
 import Exec.Interp.Simd.Float.SimdFloatBinarySound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem pure_entry_103 {F : Type} (floats : runtime.platform.FloatOps F) (laws : Platform.FloatOpsCorrect floats) :
@@ -214,4 +214,4 @@ theorem pure_entry_247 {F : Type} (floats : runtime.platform.FloatOps F) (laws :
   cases meaning
   with_unfolding_all exact float_binary_simd_sound floats laws .F64 .PMAX offset laneIndex bits x y z memory
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

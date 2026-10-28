@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.PrecommitOrigins
 import Exec.Store.Initialization.PrecheckSource
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- The ghost item charge affects neither source objects nor source instance
@@ -47,4 +47,4 @@ theorem PrecommitOrigins.source_bounds {M : Type} {memory : runtime.platform.Mem
   have failure := cause.source view _ staged inst trap storeWf frameWf
   obtain ⟨elements, datas⟩ := source_segments_raw inst raw instMatched
   exact ⟨inst, found, source, by simpa only [elements, datas] using failure⟩
-end Exec.Store
+end Itasca.Runtime.Store

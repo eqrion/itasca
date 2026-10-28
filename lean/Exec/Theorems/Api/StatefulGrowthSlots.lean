@@ -1,8 +1,8 @@
 import Exec.Theorems.Api.StatefulMemoryGrow
 import Exec.Theorems.Api.StatefulTableGrow
 import Exec.Interp.State.StatefulOperandSlots
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem stateful_memory_grow_slots {M : Type}
     (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
@@ -63,4 +63,4 @@ theorem stateful_table_grow_slots {M A : Type}
     Stateful.frame_write_result frameSlots values position (List.getElem?_eq_some_iff.mp referenceSlot).1 written ?_,transition⟩
   simp [Code.encodeValue,Abs.integerVal,numtype_Inn,U32.cast_U64_val_eq]
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

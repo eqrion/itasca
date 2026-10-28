@@ -6,7 +6,7 @@ import Exec.Store.Instantiation.PreparedRunBounds
 import Exec.Theorems.Composition.Executable.ExecutableInstantiationSource
 import Exec.Store.Invariant.ExecutableInstantiationCode
 import Exec.Code.Module.CompileDataCount
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The actual preparation trace constructs source typing and retained compiler
@@ -76,4 +76,4 @@ theorem prepared_certified_executable {M P F A : Type}
     · exact code.executable_compiled oldCode old.shape old.compiled readyFound (Code.sourceFunctions raw)
         (by simpa only [source] using functions) (by simpa only [source] using dataCount) (by simpa only [source] using cache)
   · exact counted.preserve (by simp only [trace.committed]) (by simp only [trace.committed]) (by simp only [trace.committed])
-end Exec.Theorems
+end Itasca.Runtime.Theorems

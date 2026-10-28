@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.InitializerSource
 import Exec.Store.Initialization.InitializerResolve
 import Exec.Store.Invariant.ValueDecode
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- The source initial frame reads the same imported globals and function
@@ -74,4 +74,4 @@ theorem InitializerSourceContext.of_maps {M : Type} (view : M → Slice U8)
   rw [globals] at found
   simp [fun_global, decodeStore, addresses, proj_uN_0,
     List.getElem!_eq_getElem?_getD, List.getElem?_map, mapped, found]
-end Exec.Store
+end Itasca.Runtime.Store

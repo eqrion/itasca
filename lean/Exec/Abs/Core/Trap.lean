@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Simulation
 import Exec.Abs.Sim.Trap
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- An instruction-local bounds or arithmetic trap unwinds all labels and
 callers after consuming exactly the typed redex operands. -/
@@ -33,4 +33,4 @@ theorem operand_trap_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [decodeFrames,frameContext,instrContext,vals,List.append_assoc,AFrame.toFrame,AFrame.arity] using combined
 
-end Exec.Abs
+end Itasca.Runtime.Abs

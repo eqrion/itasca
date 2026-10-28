@@ -1,10 +1,10 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Memory.MemoryCoreEmission
-namespace Exec.Interp.StructuredMachine.Memory
+namespace Itasca.Runtime.Interp.StructuredMachine.Memory
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [FloatHeads family]
-open Exec.Interp.MemoryDescriptor
+open Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
  theorem corePoint_load_head {C returns code labels stack pc next output}
@@ -64,4 +64,4 @@ open Aeneas Aeneas.Std
     subst_vars
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => simp [Abs.Memory.Store.source] at sourceEq
-end Exec.Interp.StructuredMachine.Memory
+end Itasca.Runtime.Interp.StructuredMachine.Memory

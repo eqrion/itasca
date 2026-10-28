@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdFixed
 import Exec.Code.Body.Reader.Common.ReaderProfile
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Accepted SIMD prefix decoding retains the exact unsigned LEB and the
@@ -64,4 +64,4 @@ theorem reader_simd_pure_wasm2 {data env locals index st}
     (fun C wf _ => by simpa only [Wasm2.Simd.Signature.inputs_pop,Wasm2.Simd.Signature.outputs_pop]
         using op.typed C wf) encoded read
 
-end Exec.Code
+end Itasca.Runtime.Code

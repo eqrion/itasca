@@ -2,7 +2,7 @@ import Exec.Representation.Values
 
 /-! Signature slot counting terminates on arbitrary type sequences. Overflow is the
 sole error, with an exact mathematical size witness. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def typeSlots (types : List Itasca.types.ValueType) : Nat :=
@@ -17,4 +17,4 @@ def typeSlots (types : List Itasca.types.ValueType) : Nat :=
   step with value_type_slots types as ⟨slots, hs⟩
   cases slots <;> simpa [typeSlots, valueTypeSlots, core.option.Option.ok_or] using hs
 
-end Exec.Interp
+end Itasca.Runtime.Interp

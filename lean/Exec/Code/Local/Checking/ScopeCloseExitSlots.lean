@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.ScopeCloseInstructionPrefix
 import Exec.Code.Local.Checking.FrameExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual nested END removes its frame while retaining slot bounds of every
@@ -35,4 +35,4 @@ theorem compiler_scope_close_exit_slots {A : Type} (ops : runtime.platform.Alloc
     obtain ⟨frames,code,_⟩ := effect rfl
     exact held.pop geometry.frame (by rw [frames]; exact geometry.frames) capacity
 
-end Exec.Code
+end Itasca.Runtime.Code

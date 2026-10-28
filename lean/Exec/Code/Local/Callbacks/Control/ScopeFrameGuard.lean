@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ScopeFramePatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Resolving another frame's IF guard preserves this scope's entry instruction. -/
@@ -26,4 +26,4 @@ theorem ScopeEntryCode.set_guard {code scope} (entry : ScopeEntryCode code scope
     rw [List.getElem?_set_ne away]
     exact entry live
 
-end Exec.Code
+end Itasca.Runtime.Code

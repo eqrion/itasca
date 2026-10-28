@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatWords
 import Exec.Code.Local.Lowering.Float.FloatValueEncoding
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 
 def FloatValuesEffect (op : Abs.Float.Instruction) (a b : Nat)
@@ -46,4 +46,4 @@ theorem float_values {F : Type} (floats : runtime.platform.FloatOps F) (correct 
         two, Nat.reduceEqDiff, if_false] using values
     have secondPosition : right.val = (Code.encodeValues front).length + 1 := by simpa [two, position] using hr
     exact WP.spec_mono (float_binary_words floats correct exec base op left right (Code.encodeValues front) a b first second words position secondPosition) post
-end Exec.Interp
+end Itasca.Runtime.Interp

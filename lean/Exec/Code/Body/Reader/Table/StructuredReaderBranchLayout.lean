@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Control.ReaderBranchEffects
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Reader.Control.ReaderBranchLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact live branch slot coordinates follow from source scope selection and
@@ -31,4 +31,4 @@ theorem StructuredCompilerPrefix.branch_layout {jumpTables : List Aeneas.Std.U32
     (input ▸ retained.layout) retained.localsEq
   exact ⟨index, frame, source, found, position, shape, height, sourcePosition, sourceWidth⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLane
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def LaneLoadEffect (ty : Jnn) (offset index : U32) (address value : U128) (bytes : Slice U8)
@@ -63,4 +63,4 @@ def LaneStoreEffect (ty : Jnn) (offset index : U32) (address value : U128) (byte
     exact ⟨word,bits,True.intro,by simpa only [startEq,Nat.sub_zero] using updatedEq⟩
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_false] at effect
     simp only [effect,WP.spec_ok,LaneStoreEffect,if_neg fits]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

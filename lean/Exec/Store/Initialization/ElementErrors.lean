@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.ElementValueErrors
 import Exec.Store.Preparation.AllocationErrors
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 
@@ -20,8 +20,7 @@ theorem add_element_errors {M P F A : Type}
     ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Code.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -39,4 +38,4 @@ theorem add_element_errors {M P F A : Type}
     rw [loopRun] at run
     repeat' allocation_error_step run using allocator, law
 
-end Exec.Store
+end Itasca.Runtime.Store

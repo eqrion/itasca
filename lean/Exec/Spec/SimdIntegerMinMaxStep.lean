@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerMinMaxSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem integer_minmax_step (ty : Jnn) (kind : IntegerMinMax) (x y result : BitVec 128)
     (supported : integerMinMaxSupported ty kind)
@@ -19,4 +19,4 @@ theorem integer_minmax_step (ty : Jnn) (kind : IntegerMinMax) (x y result : BitV
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_minmax_source_wf ty kind supported)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

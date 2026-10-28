@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.Conditional
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The extracted jump table performs exactly one unsigned selection and
@@ -120,4 +120,4 @@ theorem step_jumpTable_exact {M P F A : Type}
   simp only [frames] at exactState
   exact ⟨success, exactState, sameStore, samePlatform⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

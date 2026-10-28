@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdLanes
 import Exec.Spec.SimdBitwise
 set_option maxRecDepth 4096
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def binaryOpcode (op : vvbinop) : U32 :=
@@ -72,4 +72,4 @@ theorem binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step as ⟨value, valueEq⟩
   exact ⟨_, rfl, valueEq⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

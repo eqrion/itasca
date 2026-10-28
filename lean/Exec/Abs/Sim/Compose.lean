@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Abs
-open Exec.Spec
+namespace Itasca.Runtime.Abs
+open Itasca.Runtime.Spec
 
 /-- Fusing source administrative instructions preserves counted simulation.
 Positive reductions compose; a decoding stutter contributes no source steps. -/
@@ -15,4 +15,4 @@ theorem NextSim.trans {first middle last : AState}
     · exact Or.inr ⟨n, positive, by simpa only [same'] using steps⟩
     · exact Or.inr ⟨n + m, by omega, by simpa only [List.nil_append] using steps.trans steps'⟩
 
-end Exec.Abs
+end Itasca.Runtime.Abs

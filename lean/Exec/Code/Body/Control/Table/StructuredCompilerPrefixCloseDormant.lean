@@ -1,5 +1,5 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCloseBlock
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- END of an unentered child emits no code and restores its parent's
@@ -64,4 +64,4 @@ theorem StructuredCompilerPrefix.close_dormant {jumpTables : List Aeneas.Std.U32
     | true =>
       exact StructuredPrefixMode.terminal (current := parent.advance instruction) dead (by exact parentEntered)
         (retained.close_terminal frame label 0#u32 framesEq future labelShape resolved sites localsEq parentEntered instruction)
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Theorems.Host.HostReadyWorld
 import Exec.Interp.Relations.EventfulNormalize
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- All normalized direct and indirect host sites return normally. Successful
 results retain the exact eventful advance, including source-only prefixes. The
@@ -37,4 +37,4 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
     apply DivSpec.mono (ih (chain.sound s ambient rest typed).1)
     intro out result
     exact result.prepend_normalization chain typed
-end Exec.Theorems
+end Itasca.Runtime.Theorems

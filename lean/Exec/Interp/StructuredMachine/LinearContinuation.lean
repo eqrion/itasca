@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.Point
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 theorem linear_continuation {sourceStore raw f compiled C targets next output}
     (point : FramePoint sourceStore raw f compiled C targets next output)
@@ -16,4 +16,4 @@ theorem linear_continuation {sourceStore raw f compiled C targets next output}
       compiled.code.val compiled.jump_tables.val targets middle source pc.val next output from
       ⟨rest,point.code.targets,point.code.normal,point.code.exit,point.code.root⟩)
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

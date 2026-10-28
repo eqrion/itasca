@@ -4,7 +4,7 @@ import Exec.Code.Local.Lowering.Simd.SimdDispatch
 import Mathlib.Tactic.IntervalCases
 /-! SIMD lowering returns normally from raw compiler stacks, including rejected
 operand and allocation outcomes. Successful lowering records the validator stack. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -119,4 +119,4 @@ Successful callbacks retain the raw polymorphic stack observation. -/
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Exec.Code
+end Itasca.Runtime.Code

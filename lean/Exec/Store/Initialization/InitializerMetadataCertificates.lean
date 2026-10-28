@@ -2,7 +2,7 @@ import Exec.Store.Initialization.InitializerMetadata
 import Exec.Store.Invariant.FunctionSignatures
 import Exec.Code.Local.Relations.Common.Function
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -28,4 +28,4 @@ theorem InitializerFunctionMetadata.staged_functions {M : Type}
     StagedFunctionSignatures before after index types := by
   simpa only [StagedFunctionSignatures, metadata.functions, metadata.signatures] using staged
 
-end Exec.Store
+end Itasca.Runtime.Store

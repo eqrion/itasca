@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Local.ReaderLocalBounds
 import Exec.Code.Body.Relations.Calls.OrdinaryCallbackReady
 import Exec.Code.Local.Relations.Local.LocalSafety
 import Itasca.Wasm2.Scalar.ReadersTotal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual local.get dispatch returns normally on parsing rejection as well as
@@ -65,4 +65,4 @@ theorem compiler_reader_local_tee_total {A} (ops : runtime.platform.Alloc A)
       (by simpa [ready.namespaces.offsets] using bound)
       (by simpa [ready.namespaces.locals] using bound)
       ready.codeFits ready.sourceFits ready.coordinateFits
-end Exec.Code
+end Itasca.Runtime.Code

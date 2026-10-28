@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerBinaryLoop
 import Exec.Spec.SimdSaturation
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 theorem hcast_lane (x : I128) (width : Nat) (bound : width ≤ 64) :
     (IScalar.hcast .U64 x).bv.setWidth width = BitVec.ofInt width x.val := by
@@ -30,4 +30,4 @@ theorem hcast_lane (x : I128) (width : Nat) (bound : width ≤ 64) :
   all_goals try omega
   all_goals split_ifs <;> (try simp_all) <;> omega
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

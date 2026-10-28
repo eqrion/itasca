@@ -1,5 +1,5 @@
 import Exec.Interp.State.GlobalCoreDispatch
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -87,4 +87,4 @@ theorem dispatch_global_set_core (view : M → Slice U8) (code : Store.CodeInter
   intro out effect
   exact ⟨effect.2,effect.1⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

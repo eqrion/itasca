@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderNumericSafety
 import Exec.Code.Body.Reader.Memory.ReaderMemorySafety
 import Exec.Code.Local.Lowering.Common.NumericEncoding
 import Exec.Code.Local.Relations.Common.ReaderOpcode
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
@@ -89,4 +89,4 @@ theorem compiler_reader_memory_dispatch_total {A} (ops : runtime.platform.Alloc 
   rcases memory_byte_partition opcode lower upper with ⟨op,rfl⟩ | ⟨op,rfl⟩
   · exact compiler_reader_memory_load_total ops law compiler st data env ctx ready shape capacity op
   · exact compiler_reader_memory_store_total ops law compiler st data env ctx ready shape capacity op
-end Exec.Code
+end Itasca.Runtime.Code

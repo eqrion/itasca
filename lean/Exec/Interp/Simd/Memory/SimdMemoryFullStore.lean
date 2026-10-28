@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Memory.SimdMemoryRange
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem full_store_unfold (offset lane : U32) (address value : U128) (memory : Slice U8) :
@@ -40,4 +40,4 @@ def FullStoreEffect (offset : U32) (address value : U128) (memory : Slice U8)
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_false] at effect
     have outside : ¬ (UScalar.cast .U32 address).val + offset.val + 16 ≤ memory.length := by simpa using fits
     simp only [effect,WP.spec_ok,FullStoreEffect,if_neg outside]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

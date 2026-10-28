@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.TransferAvailability
 import Exec.Code.Local.Capacity.CallbackCapacity
 import Exec.Code.Local.Lowering.Control.LoweringForwardBranch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -174,4 +174,4 @@ theorem compiler_branch_forward_available {A : Type} (ops : runtime.platform.All
       lookup position forward (by intro empty; exact elided (Or.inl empty))
       (by intro same; exact elided (Or.inr same)) sourcePosition fixupsCapacity fixupsReserve
 
-end Exec.Code
+end Itasca.Runtime.Code

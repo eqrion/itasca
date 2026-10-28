@@ -2,7 +2,7 @@ import Exec.Spec.Wf
 
 /-! The per-export source judgment scopes address membership under export
 iteration. In particular it has no global nonempty-namespace requirement. -/
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 /-- The source repair expresses exactly well-formed export membership. -/
 theorem exportinst_in_iff (addresses : List externaddr) (entry : exportinst) :
@@ -21,4 +21,4 @@ theorem empty_exports_in (addresses : List externaddr) :
     Forall (Exportinst_in addresses) [] := by
   simp [Forall]
 
-end Exec.Spec
+end Itasca.Runtime.Spec

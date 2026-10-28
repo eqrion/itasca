@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -14,4 +14,4 @@ theorem compiler_simd_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
 
 
 
-end Exec.Code
+end Itasca.Runtime.Code

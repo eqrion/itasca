@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.EmissionGrowth
 import Exec.Code.Local.Callbacks.Common.PatchGrowth
 import Exec.Code.Local.Source.SourceLengthsTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_emit_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -141,4 +141,4 @@ theorem compiler_fixups_after_if_code_mono {A : Type} (ops : runtime.platform.Al
     before.function.code.val.length ≤ (snapshotCompiler output).function.code.val.length := by
   rw [compiler_fixups_after_if_code_length ops before sites target index status output accepted]
 
-end Exec.Code
+end Itasca.Runtime.Code

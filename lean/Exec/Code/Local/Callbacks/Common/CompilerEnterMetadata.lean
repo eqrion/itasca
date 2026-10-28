@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
 import Exec.Code.Local.Callbacks.Common.CompilerPatchMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -14,4 +14,4 @@ theorem compiler_enter_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     CompilerStable before after := by
   unfold runtime.compiler.control.FunctionCompiler.enter at accepted
   repeat' metadata_step accepted using ops, law
-end Exec.Code
+end Itasca.Runtime.Code

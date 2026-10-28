@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderProfile
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Lift available Wasm 2 scalar dispatch through its actual profile capacity
@@ -57,4 +57,4 @@ theorem profile_base_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [called]
   simpa [core.result.Result.Insts.CoreOpsTry.branch] using held
 
-end Exec.Code
+end Itasca.Runtime.Code

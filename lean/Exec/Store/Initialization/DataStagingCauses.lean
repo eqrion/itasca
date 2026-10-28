@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.DataStagingLoop
 import Exec.Store.Initialization.DataStagingCause
 import Exec.Store.Preparation.PreparationCalls
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev dataStageCall {M A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -56,7 +56,7 @@ theorem data_staging_resource_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -109,4 +109,4 @@ theorem data_staging_resource_loop {M A : Type}
         currentInst, hfound, hsource, hbindings, himports, hsegments⟩
   · exact ⟨(fun _ => .refl _ _), (by simp), staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, storeCapacity⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

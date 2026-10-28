@@ -2,8 +2,8 @@ import Exec.Abs.Simd.Transition
 import Exec.Abs.Stateful.OwnershipStore
 import Exec.Abs.Bound
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec Ownership
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec Ownership
 
 theorem numeric_value_owned {value : val} {output : valtype}
     (numeric : output = .V128 ∨ ∃ ty : numtype, output = valtype_numtype ty)
@@ -64,4 +64,4 @@ theorem transition_bound {s : store} {ambient : frame} {f : AFrame}
     have size : sizeOf after < sizeOf (source :: after) := by simp
     exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

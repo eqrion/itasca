@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableResolution
 import Exec.Code.Local.Relations.Table.BranchTableOperands
 import Exec.Code.Local.Relations.Table.BranchTableLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -74,4 +74,4 @@ theorem TableTargetsBuilt.resolved {A : Type}
     | succ selected =>
       simp only [List.getElem?_cons_succ] at lookup ⊢
       exact tailEntries selected depth lookup
-end Exec.Code
+end Itasca.Runtime.Code

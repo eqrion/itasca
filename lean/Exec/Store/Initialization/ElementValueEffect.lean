@@ -1,7 +1,7 @@
 import Exec.Representation.Collection
 import Exec.Store.Initialization.ElementSourceLoop
 import Exec.Store.Initialization.ElementContentEffect
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 inductive ElementValueEffect {M : Type} (sourceStore : _root_.store) (sourceInstance : moduleinst)
@@ -47,9 +47,9 @@ theorem add_instance_element_value_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
-  step with Exec.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+  step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
   obtain ⟨reserved, hreserve⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -83,7 +83,7 @@ theorem add_instance_element_value_effect {M P F A : Type}
         simp only [↓reduceIte, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
         step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
         subst found
-        step with Exec.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+        step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
         step as ⟨elements, helements⟩
@@ -104,4 +104,4 @@ theorem add_instance_element_value_effect {M P F A : Type}
         simpa [hback, instanceRead] using And.intro effect (rfl : platform = platform)
 
 
-end Exec.Store
+end Itasca.Runtime.Store

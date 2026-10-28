@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdExecutePure
 import Exec.Interp.Relations.WordEncoding
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem vectorBits_toNat (words : List U64) (position : Nat) :
@@ -74,4 +74,4 @@ theorem ValuesAt.simd_scalar_result {words : List U64} {base : Nat} {front : Lis
       (front ++ [Store.decodeWords ty (UScalar.cast .U64 value) 0#u64]) := by
   have written := represented.append_scalar ty (UScalar.cast .U64 value) 0#u64 scalar small capacity
   simpa only [simdResultSlots,show (1#u32).val > 0 from by decide,show (1#u32) ≠ 2#u32 from by decide,↓reduceIte] using written
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.OwnershipPrimitives
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec Stateful
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec Stateful
 
 theorem stateful_memoryGrow_owned {bounds choice s f rest next after}
     (heap : StatefulHeapOwned bounds s.store) (results : ValuesOwned bounds s.results)
@@ -56,4 +56,4 @@ theorem stateful_tableGrow_owned {bounds choice s f rest next index after}
       · exact results
       · exact ⟨frame.1,valuesOwned_append.mpr ⟨input.1,by simp [ValuesOwned,ValueOwned,integerVal]⟩⟩
       · exact frames
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

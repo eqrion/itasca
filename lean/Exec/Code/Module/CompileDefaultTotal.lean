@@ -1,5 +1,5 @@
 import Exec.Code.Module.CompileTotalDriver
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -9,4 +9,4 @@ open runtime.compiler
   step
   step
 
-end Exec.Code
+end Itasca.Runtime.Code

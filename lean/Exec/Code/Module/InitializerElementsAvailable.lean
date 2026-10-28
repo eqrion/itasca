@@ -1,7 +1,7 @@
 import Exec.Code.Module.InitializerElementAvailable
 import Exec.Code.Module.InitializerTotalMappings
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The complete element-mapping loop accepts from source typing and a demand
@@ -37,8 +37,7 @@ theorem initializer_elements_available {A : Type} (ops : runtime.platform.Alloc 
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,Itasca.module.Module.impl.env,
-      Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.env.elements.val.length := by
@@ -78,4 +77,4 @@ theorem initializer_elements_available {A : Type} (ops : runtime.platform.Alloc 
         by simpa [last,initializerElementCost] using used⟩
   · exact ⟨rfl,rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

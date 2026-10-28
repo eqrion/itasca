@@ -1,7 +1,7 @@
 import Exec.Store.Instantiation.PreparedAllocationContent
 import Exec.Store.Instantiation.PreparedExternalMaps
 import Exec.Store.Invariant.SourceExports
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- The source initializer frame contains imported globals and the complete
@@ -144,4 +144,4 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
   case functionBounds =>
     rw [typeMap]
     simpa only [List.length_map] using function_bounds raw.functions raw.codes raw.types.length elaborated.functions
-end Exec.Store
+end Itasca.Runtime.Store

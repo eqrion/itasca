@@ -6,7 +6,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Code.Local.Relations.Common.LayoutProofs
 import Itasca.Support.TypeTranslation
 import Exec.Code.Local.Relations.Common.Function
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 /-- Complete retained syntax/layout evidence for one defined function. The
 well-formedness field is the actual bytecode check, not execution correctness. -/
@@ -52,4 +52,4 @@ theorem StructuredFunctionCode.entry {emit typeTable functions params declared r
     · intro _ label lookup; simp at lookup
     · exact root
 
-end Exec.Code
+end Itasca.Runtime.Code

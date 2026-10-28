@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Table.BranchTableProduction
 import Exec.Code.Local.Relations.Table.BranchTableDead
 import Exec.Code.Local.Callbacks.Common.FixupPreservation
 import Exec.Code.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem TableTargetsBuilt.fixup_budget {A}
@@ -44,4 +44,4 @@ theorem compiler_br_table_fixup_budget {A} (ops : runtime.platform.Alloc A)
   · have dead : before.reachable = false := by simpa using live
     obtain ⟨_,code,_,frames,_⟩ := compiler_br_table_dead_effect ops law before after state fallback types dead accepted
     simpa [code,frames] using budget
-end Exec.Code
+end Itasca.Runtime.Code

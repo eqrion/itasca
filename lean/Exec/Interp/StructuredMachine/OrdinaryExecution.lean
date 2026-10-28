@@ -3,7 +3,7 @@ import Exec.Abs.Core.Step
 import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Core.Pure
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Checked local effects assemble into the mutable whole-machine invariant.
@@ -42,4 +42,4 @@ theorem Execution.ordinary {M : Type} (view : M → Slice U8) (code : Store.Code
   · exact machine.stack.ordinary stores extension raw index pc last lookup binding program point slots metadata effect preserved
   · exact ControlTop.updated topAfter (program.store_metadata stores) metadata ⟨targets,next,output,point⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

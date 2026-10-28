@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdInputValues
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem ValuesAt.simd_numeric_result {words : List U64} {base : Nat} {front : List val}
@@ -43,4 +43,4 @@ theorem ValuesAt.simd_numeric_result {words : List U64} {base : Nat} {front : Li
       (by intro h;rcases h with h|h <;>cases h) (by change base + Code.slots _ + 1 ≤ words.length at capacity;omega)
     simpa only [Code.simdSourceWidth,Store.decodeWords,Spec.Simd.valueOfBits,UScalar.cast_val_eq,UScalarTy.numBits,
       BitVec.toNat_setWidth,UScalar.bv_toNat] using result
-end Exec.Interp
+end Itasca.Runtime.Interp

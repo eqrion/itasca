@@ -1,5 +1,5 @@
 import Exec.Store.Api.GlobalTypedEffect
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Source global types agree exactly with the issued instance addresses. -/
@@ -40,4 +40,4 @@ theorem GlobalTypedEffect.type_map {M : Type} {store after : runtime.store.Store
     apply List.rel_append old
     exact .cons ⟨rfl, {ty := ty, lo := lo, hi := hi}, by simp [stored], rfl⟩ .nil
 
-end Exec.Store
+end Itasca.Runtime.Store

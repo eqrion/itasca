@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdWhole
 import Exec.Spec.SimdAnyTrue
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem any_true_dispatch {F : Type} (floats : runtime.platform.FloatOps F)
@@ -81,4 +81,4 @@ theorem any_true_dispatch_sound {F : Type} (floats : runtime.platform.FloatOps F
   rw [exactValue]
   exact Spec.Simd.any_true_step a.bv
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

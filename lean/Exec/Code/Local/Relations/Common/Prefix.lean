@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.Concatenation
 import Exec.Code.Local.Relations.Common.Extension
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A builder invariant for a still-open source prefix. Its hole is another
@@ -26,4 +26,4 @@ def DeadCodePrefix (types functions : List functype) (returns locals : List valt
   ∀ suffix tail next final, cursor ≤ next → next ≤ (code ++ suffix).length →
     CodeRel types functions returns locals (code ++ suffix) labels before (source ++ tail) pc next final
 
-end Exec.Code
+end Itasca.Runtime.Code

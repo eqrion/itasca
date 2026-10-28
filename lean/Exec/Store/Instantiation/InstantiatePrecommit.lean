@@ -1,7 +1,7 @@
 import Exec.Store.Instantiation.InstantiateClassified
 import Exec.Store.Instantiation.TailCommit
 import Exec.Store.Instantiation.PreparedRunBounds
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A normally returning precommit rejection of an actually compiled module
@@ -41,4 +41,4 @@ theorem instantiate_compiled_precommit_origins {M P F A : Type}
       ready platform _ tail
     contradiction
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.Point
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 /-- Target lookup exposes the retained source continuation, with concrete
 label fields obtained from the dynamic/static label correspondence. -/
@@ -80,4 +80,4 @@ theorem branch_target_point {s : _root_.store} {raw : runtime.interp.Frame}
   refine ⟨target, targetNext, targetOutput, found, matching, ⟨bindings,locals,labels, ?_⟩⟩
   simpa only [List.map_append, resultTypes, frontTypes] using continuation
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Callbacks.Control.CloseBlock
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -73,4 +73,4 @@ theorem compiler_close_body_available {A : Type} (ops : runtime.platform.Alloc A
     | exact finish_op_available_effect ops bound available (closed false) state (closedDemand false)
         (.Return frame.height 0#u32)
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Capacity.ExecutableFunctionCapacity
 import Exec.Code.Module.CompileEntryBounds
 import Exec.Code.Local.Source.SourceBatchLookup
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler's actual entry construction, issued batch validation, and
@@ -91,4 +91,4 @@ theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops :
   refine ⟨entry.typeIdx, sourceFunctionCode entry.typeIdx rawEntry, typeFound,
     sourceFunctions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
   simpa only [sourceFunctionCode, ModuleBinary.Code.declared, ModuleLocals.declared, groups, List.map_map, Function.comp_def] using certificate
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.InvalidWrite
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A reference value whose private handle belongs to another store. Numeric
@@ -10,4 +10,4 @@ def ForeignValue {M : Type} (s : runtime.store.Store M) : runtime.Value → Prop
   | .ExternRef (some a) => a.store ≠ s.id
   | _ => False
 
-end Exec.Store
+end Itasca.Runtime.Store

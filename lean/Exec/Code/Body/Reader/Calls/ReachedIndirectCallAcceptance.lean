@@ -5,7 +5,7 @@ import Exec.Code.Local.Capacity.DeadOpAvailability
 import Exec.Code.Body.Relations.Calls.IndirectCallEffects
 import Exec.Code.Body.Relations.Common.EntrySignatures
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -69,4 +69,4 @@ theorem reached_profile_indirect_call_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) read callback
 
-end Exec.Code
+end Itasca.Runtime.Code

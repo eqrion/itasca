@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Common.Observe
 /-! Actual forward BR emission for every non-loop label kind and arbitrary
 label depth. Covers all transfer widths and both copy-elision cases, retaining
 typed branch holes and exact fixup-list extensions for the closing callback. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
@@ -232,4 +232,4 @@ set_option maxRecDepth 4096 in
     · simpa [branchInstructions, elided] using code
     · exact ⟨site, by simpa [elided] using position, appended⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

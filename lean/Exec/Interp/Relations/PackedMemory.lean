@@ -2,7 +2,7 @@ import Exec.Interp.Memory.MemoryDispatch
 import Exec.Interp.Memory.MemoryDecode
 import Exec.Spec.PackedMemory
 
-namespace Exec.Interp.PackedMemory
+namespace Itasca.Runtime.Interp.PackedMemory
 open Aeneas Aeneas.Std SpecExt
 
 def loadOpcode (op : Spec.PackedMemory) (sign : sx) : U16 :=
@@ -81,4 +81,4 @@ theorem load_word_value (op : Spec.PackedMemory) (sign : sx) (word : U64)
         IScalarTy.numBits,UScalarTy.numBits,BitVec.signExtend_eq]
     all_goals congr 3
     all_goals exact Nat.mod_eq_of_lt (BitVec.isLt _)
-end Exec.Interp.PackedMemory
+end Itasca.Runtime.Interp.PackedMemory

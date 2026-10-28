@@ -2,7 +2,7 @@ import Exec.Code.Local.Coordinates.ScalarSourceCoordinates
 import Exec.Code.Local.Publication.OrdinaryMapPublication
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -817,4 +817,4 @@ theorem compiler_scalar_op_map_publication {A : Type} (ops : runtime.platform.Al
   · exact scalar_maps_272 ops law before after state a b bits held forward called
   · exact scalar_maps_273 ops law before after state a b bits held forward called
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Interp.Relations.DecodeValue
 import Exec.Interp.Relations.Regions
 
 /-! Recover specification values from represented live result slots. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def readPair (words : List U64) (position : Nat) (ty : Itasca.types.ValueType) : U64 × U64 :=
@@ -20,9 +20,9 @@ theorem WordsAt.readPair {words : List U64} {position : Nat} {bits : List Nat}
       have hm : i = 0 ∨ i = 1 := by omega
       rcases hm with rfl | rfl
       · have h := (represented 0 hb).2
-        simpa [pairWords, Exec.Interp.readPair, hv, _root_.getElem!_pos bits 0 hb] using h
+        simpa [pairWords, Itasca.Runtime.Interp.readPair, hv, _root_.getElem!_pos bits 0 hb] using h
       · have h := (represented 1 hb).2
-        simpa [pairWords, Exec.Interp.readPair, hv, _root_.getElem!_pos bits 1 hb] using h
+        simpa [pairWords, Itasca.Runtime.Interp.readPair, hv, _root_.getElem!_pos bits 1 hb] using h
   · have hw : Code.width (sourceType ty) = 1 := by cases ty <;> simp_all [sourceType, Code.width]
     have hl : bits.length = 1 := length.trans hw
     apply List.ext_getElem
@@ -31,7 +31,7 @@ theorem WordsAt.readPair {words : List U64} {position : Nat} {bits : List Nat}
       have hz : i = 0 := by omega
       subst i
       have h := (represented 0 hb).2
-      simpa [pairWords, Exec.Interp.readPair, hv, _root_.getElem!_pos bits 0 hb] using h
+      simpa [pairWords, Itasca.Runtime.Interp.readPair, hv, _root_.getElem!_pos bits 0 hb] using h
 
 theorem encodeValue_f32_low (value : val) (wellFormed : wf_val value)
     (typed : Code.valueType value = .F32) : (Code.encodeValue value)[0]! < 2^32 := by
@@ -82,7 +82,7 @@ theorem encodeValue_reference_low (value : val) (fits : ResultIndexFits value)
     represented.readPair ty (by rw [Code.encodeValue_length, ← typed])
   obtain ⟨result, hd, hty, hv⟩ := WP.spec_imp_exists
     (decode_value_represents ty pair.1 pair.2 store value wellFormed typed hp floatBound referenceBound)
-  step with decode_slot_spec slots position ty store pair.1 pair.2 result bound rfl (by simp only [pair, Exec.Interp.readPair]; split <;> simp_all) hd
+  step with decode_slot_spec slots position ty store pair.1 pair.2 result bound rfl (by simp only [pair, Itasca.Runtime.Interp.readPair]; split <;> simp_all) hd
     as ⟨actual, ha⟩
   simpa [ha] using And.intro hty hv
 
@@ -116,5 +116,5 @@ only the independent issued-address bound remains explicit. -/
     · exact Or.inl typed.symm
     · exact Or.inr typed.symm
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

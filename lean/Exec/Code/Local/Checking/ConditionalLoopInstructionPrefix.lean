@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.ConditionalForwardInstructionPrefix
 import Exec.Code.Local.Relations.Control.BranchSuccessConditionalLoop
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual conditional loop branching checks its selector and transfer, retains
@@ -47,4 +47,4 @@ theorem compiler_branch_if_loop_open_instructions {A : Type} (ops : runtime.plat
       omega
     · exact .inl (target.trans growth.code)
 
-end Exec.Code
+end Itasca.Runtime.Code

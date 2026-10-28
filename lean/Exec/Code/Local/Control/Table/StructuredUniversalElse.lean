@@ -6,7 +6,7 @@ import Exec.Code.Local.Callbacks.Control.ElseSource
 import Exec.Code.Local.Callbacks.Control.ElseTransition
 import Exec.Code.Local.Callbacks.Common.FramePlanPop
 import Exec.Code.Local.Relations.Common.ResolvedGuards
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- ELSE freezes the completed arm under every future outer plan and starts
@@ -128,5 +128,5 @@ theorem StructuredCompletedPrefix.begin_else {jumpTables : List Aeneas.Std.U32} 
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Exec.Code
+end Itasca.Runtime.Code
 

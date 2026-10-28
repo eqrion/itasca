@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.NumericOpcode
 import Itasca.Spec.DeclaredReferences
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- All scalar integer numeric opcode bytes. -/
@@ -87,4 +87,4 @@ theorem integer_source_declared (op : Abs.Numeric.Instruction) (refs : List func
   | eqz ty => cases ty <;> simp [Abs.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
   | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Exec.Code
+end Itasca.Runtime.Code

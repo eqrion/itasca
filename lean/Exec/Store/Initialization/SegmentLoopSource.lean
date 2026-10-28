@@ -1,8 +1,8 @@
 import Exec.Store.Initialization.SegmentLoopMetadata
 import Exec.Store.Initialization.SegmentExtension
 import Exec.Store.Initialization.SegmentStepSource
-namespace Exec.Store
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 private theorem flow_return {pending : Nat} {instruction : runtime.bytecode.Instr} {rest : List runtime.bytecode.Instr}
     (flow : Code.SegmentFlow pending (instruction :: rest)) (returns : segmentReturns instruction = true) :
@@ -130,4 +130,4 @@ theorem segment_loop_source {M P F A : Type}
   · refine ⟨shape,.refl _,.refl _ _,rfl,rfl,Or.inl rfl,Or.inr ⟨position,pending,frames,positionBound,flow,?_⟩⟩
     exact StepsH.refl (segmentState_wf view sourceCode store ambient code exec.slots.val pending _ shape sourceSyntax ambientWf)
 
-end Exec.Store
+end Itasca.Runtime.Store

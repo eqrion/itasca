@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 import Exec.Code.Body.Reader.Common.ReaderSaturating
 import Exec.Code.Local.Capacity.ReaderAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -105,4 +105,4 @@ theorem reached_profile_saturating_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) converted callback
 
-end Exec.Code
+end Itasca.Runtime.Code

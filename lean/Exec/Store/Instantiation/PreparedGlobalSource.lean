@@ -4,7 +4,7 @@ import Exec.Store.Instantiation.PublishInstance
 import Exec.Store.Linking.LinkedOwners
 import Exec.Store.Api.GlobalSourceLoop
 import Exec.Store.Api.GlobalOrderLoop
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 /-- The exact successful preparation trace computes all global values required
@@ -122,4 +122,4 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     simpa only [sameCount] using mapped
   · exact ⟨produced, stored, by simpa only [source] using evaluated⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -3,7 +3,7 @@ import Exec.Interp.Relations.SuspendedPoint
 import Exec.Interp.Calls.ReturnRegions
 import Exec.Interp.Calls.CallFrames
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Code safety and exact retained store lookups for a concrete frame. -/
@@ -19,4 +19,4 @@ structure FrameProgram {M : Type} (store : runtime.store.Store M)
   epilogue : ∃ pc count : U32, compiled.code.val.length = pc.val + 1 ∧
     compiled.code.val[pc.val]? = some (.Return compiled.local_slots count)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

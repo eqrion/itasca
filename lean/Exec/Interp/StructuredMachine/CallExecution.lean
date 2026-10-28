@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.StructuredCall
 import Exec.Interp.StructuredMachine.Execution
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_call_execution {M P F A : Type}
@@ -64,4 +64,4 @@ theorem step_call_execution {M P F A : Type}
         exact Option.some.inj eq
     subst current
     exact ⟨pc.val,_,⟨rfl,⟨typed,machine.typed.contents⟩,covered,result expected machine.result,stack,cursor⟩,simulation,ownedHere,rfl,bounded⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

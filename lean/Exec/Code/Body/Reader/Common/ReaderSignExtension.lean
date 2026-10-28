@@ -5,7 +5,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Itasca.Wasm2.NumericExt.Sound
 import Itasca.Visitor.EventTables
 set_option maxHeartbeats 1000000
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Exact sign-extension reading advances the supplied source zipper and
@@ -130,4 +130,4 @@ theorem reader_integer_sign_wasm2 {data env locals index st}
   exact ⟨operation, instruction, inputs, output, callback, read, converted, controls, position,
     values, numeric, instruction ▸ post⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

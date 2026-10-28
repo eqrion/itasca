@@ -1,7 +1,7 @@
 import Exec.Code.Local.Initializer.InitializerMappings
 import Exec.Code.Module.WellFormedTotal
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1500000
 
@@ -72,8 +72,8 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     runtime.compiler.initialize.lower_global ops m budget index ⦃ out =>
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.globals, Itasca.module.Env.impl.globals, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
   step as ⟨g, found⟩
   · simpa [alloc.vec.Vec.deref] using bound
   step with initializer_expression_total ops law m budget g.init g.gtype.valtype (by omega)
@@ -98,7 +98,7 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     runtime.compiler.initialize.lower_data_offset ops m budget index ⦃ out =>
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
-  simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok]
   step as ⟨segment, found⟩
   cases mode : segment.mode with
@@ -126,4 +126,4 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     unfold initializerSize at *
     dsimp at *
     omega
-end Exec.Code
+end Itasca.Runtime.Code

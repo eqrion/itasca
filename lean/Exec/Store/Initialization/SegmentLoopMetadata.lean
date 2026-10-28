@@ -2,9 +2,9 @@ import Exec.Store.Initialization.SegmentLoop
 import Exec.Store.Initialization.SegmentInstructionMetadata
 import Exec.Store.Initialization.SegmentInstructionShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- The actual retained initialization loop terminates normally after finitely
 many straight-line instructions. It can report only the segment range traps;
@@ -79,4 +79,4 @@ theorem segment_loop_object_metadata {M P F A : Type}
           all_goals omega
   · exact ⟨.refl _ _, .refl store, rfl, rfl, Or.inl rfl, Or.inr ⟨position, frames, positionBound⟩⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

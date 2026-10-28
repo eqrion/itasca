@@ -1,10 +1,10 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Machines.Core.CoreIntegerConstantPoint
-namespace Exec.Interp.StructuredMachine.IntegerConstant
+namespace Itasca.Runtime.Interp.StructuredMachine.IntegerConstant
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [FloatHeads family]
-open Aeneas Aeneas.Std SpecExt Exec.Interp.IntegerConstant
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp.IntegerConstant
 theorem corePoint_integer32_head {C returns code labels stack pc next output}
     (value : U32) (after : List instr)
     (point : Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
@@ -63,4 +63,4 @@ theorem corePoint_integer64_head {C returns code labels stack pc next output}
   | _ => cases sourceEq
 
 
-end Exec.Interp.StructuredMachine.IntegerConstant
+end Itasca.Runtime.Interp.StructuredMachine.IntegerConstant

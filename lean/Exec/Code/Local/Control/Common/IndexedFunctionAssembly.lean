@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
 import Exec.Code.Local.Control.Table.StructuredFunctionBodyClose
 import Exec.Code.Local.Control.Table.StructuredFunction
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Finishing the actual compiler assembles the retained function certificate.
@@ -38,4 +38,4 @@ theorem indexed_compiler_finish_certificate {A : Type} (ops : runtime.platform.A
   · rw [slotsEq]
     exact capacity.trans stable.capacity
   · simpa only [slotsEq] using returnCode
-end Exec.Code
+end Itasca.Runtime.Code

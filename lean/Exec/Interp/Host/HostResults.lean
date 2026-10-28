@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.Marshal
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 @[step] theorem host_results_encode_loop (words : alloc.vec.Vec U64)
     (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
@@ -82,4 +82,4 @@ open Aeneas Aeneas.Std
   · simp [argumentWords, Code.encodeValues]
   · intro j impossible
     simp [argumentWords, Code.encodeValues] at impossible
-end Exec.Interp
+end Itasca.Runtime.Interp

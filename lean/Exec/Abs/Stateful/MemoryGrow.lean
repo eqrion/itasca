@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.GrowthTyping
 import Exec.Abs.Stateful.ObjectReplacement
 import Exec.Abs.Stateful.MemorySize
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 /-- Refusal is permitted independently of the pure successful-growth rule. -/
 inductive MemoryGrowthChoice (before : meminst) (delta : Nat) : Option meminst → Prop
@@ -79,4 +79,4 @@ theorem memoryGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Li
           [integerVal .I32 delta] [integerVal .I32 (object.BYTES.length/65536)] typed.typed.ambient labelsWf frontWf tailWf restWf heights
           (by simpa [AFrame.toFrame,vals,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
         simpa only [split] using full
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

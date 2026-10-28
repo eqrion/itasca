@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Memory.MemoryLowering
 import Exec.Code.Local.Lowering.Local.LoweringLocal
 import Exec.Code.Local.Relations.Common.ScalarEmission
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A load consumes the final scalar address slot and overwrites that slot. -/
@@ -73,4 +73,4 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
   step with finish_op ops law compiler state types (memoryStoreInstruction op address value offset) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out,lowered,success⟩
   exact ⟨address,value,addressPosition,valuePosition,by simpa only [typed] using lowered success⟩
-end Exec.Code
+end Itasca.Runtime.Code

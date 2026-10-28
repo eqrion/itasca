@@ -1,7 +1,7 @@
 import Exec.Abs.Core
 import Exec.Abs.FrameTypingExtension
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Semantic typing of store payloads used by mutable instructions. Function
 bodies remain in `ATyped.functions`; no unproved generated `Store_ok` is used. -/
@@ -58,4 +58,4 @@ theorem StoreContentsTyped.global_value {s : store} (contents : StoreContentsTyp
     cases type
     exact valueTyped
 
-end Exec.Abs
+end Itasca.Runtime.Abs

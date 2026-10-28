@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulOperandSlots
 import Exec.Interp.State.StatefulReferenceValue
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 theorem two_operand_values {operands : List val} {left right : valtype}
     (types : operands.map Code.valueType=[left,right]) :
@@ -52,4 +52,4 @@ theorem frame_read_scalar {exec : runtime.interp.Execution} {raw : runtime.inter
   have equal : exec.slots.val[raw.base.val+src.val+index]! = word := by scalar_tac
   rw [List.getElem?_eq_getElem fits]
   rw [←_root_.getElem!_pos exec.slots.val (raw.base.val+src.val+index) fits,equal]
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

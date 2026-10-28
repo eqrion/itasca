@@ -2,7 +2,7 @@ import Exec.Code.Local.Checking.PendingInstructionClose
 import Exec.Code.Local.Publication.ScopeClosePublication
 import Exec.Code.Local.Relations.Table.ControlTablePreservation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual nested END patches all sites of its closing frame, removes that
@@ -52,4 +52,4 @@ theorem compiler_scope_close_open_instructions {A : Type} (ops : runtime.platfor
     rw [patchCode_append_sites,patched]
     exact code
 
-end Exec.Code
+end Itasca.Runtime.Code

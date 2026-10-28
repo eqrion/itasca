@@ -4,7 +4,7 @@ import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
 import Exec.Code.Local.Capacity.ScopeAvailability
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -68,4 +68,4 @@ theorem reached_profile_enter_available_wasm2 {jumpTables : List U32} {data env 
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0)) read actual
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.TableTyping
 import Exec.Abs.Core.Trap
 import Exec.Spec.TableAccess
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def tableGet (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (after : List instr) : AResult :=
   match pop f.vals, f.module.TABLES[index]? with
@@ -114,4 +114,4 @@ theorem tableSize_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
       (by simpa [vals,admininstr_val,integerVal,Segment.i32,numtype_Inn,admininstr_instr] using source)
     simpa only [List.append_nil] using full
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

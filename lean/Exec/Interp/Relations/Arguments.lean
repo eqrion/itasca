@@ -2,7 +2,7 @@ import Exec.Representation.Values
 
 /-! Argument checking tests scalar tags and the owning-store identity of
 references. Address validity is a separate store/issued-handle invariant. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 noncomputable section
@@ -86,7 +86,6 @@ theorem value_type_ne_eq (left right : Itasca.types.ValueType) :
   classical
   cases left <;> cases right <;>
     simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType,
-      types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
       Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 def checkSequence (first rest : core.result.Result Unit runtime.ExecError) :
@@ -195,4 +194,4 @@ theorem check_values_accepts_iff {M : Type}
       exact False.elim (hn h.length_eq)
 
 end
-end Exec.Interp
+end Itasca.Runtime.Interp

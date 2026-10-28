@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Relations.Common.SelectOperands
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Both forms of select accept scalar, reference, or vector layouts, with
@@ -42,4 +42,4 @@ theorem compiler_nop_drop_available {A : Type} (ops : runtime.platform.Alloc A)
   rw [dispatch]
   exact compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_span_wasm2 {data env locals index st token next}
@@ -14,4 +14,4 @@ theorem ReaderPostWasm2.span {data env locals index st out instruction poly valu
     (post : ReaderPostWasm2 p out instruction poly values) :
     st.core.pos.val ≤ out.pos.val ∧ out.pos.val ≤ data.length := reader_span_wasm2 p post.encoded
 
-end Exec.Code
+end Itasca.Runtime.Code

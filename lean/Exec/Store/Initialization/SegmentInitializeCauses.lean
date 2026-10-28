@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentInitializeSource
 import Exec.Store.Initialization.SegmentSyntheticCauses
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- Exact setup cause for the actual compiled segment initializer. The function
@@ -128,4 +128,4 @@ theorem initialize_segments_raw_source_causes {M P F A : Type}
     simpa only [Spec.instrContext,vals,List.map_nil,List.nil_append,
       segmentModuleSource_raw inst.module raw matched] using contextual
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,8 +1,8 @@
 import Exec.Abs.Sim.Context
 import Exec.Abs.Measure
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Constants are already values in SpecTec's administrative instruction syntax.
 Moving one into the flat stack is therefore an exact decoding equality. -/
@@ -133,4 +133,4 @@ theorem pure_code_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [decodeLabels_move_values _ _ _ _ heights, decodeLabels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame] using h₃
 
-end Exec.Abs
+end Itasca.Runtime.Abs

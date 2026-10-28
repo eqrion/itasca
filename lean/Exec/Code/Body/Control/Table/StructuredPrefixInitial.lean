@@ -1,6 +1,6 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Callbacks.Common.CompilerPrefixInitial
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 theorem StructuredUniversalPrefix.initial {jumpTables : List Aeneas.Std.U32} {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -32,9 +32,9 @@ theorem StructuredUniversalElse.initial {jumpTables : List Aeneas.Std.U32} {A : 
   cases parentShapes
   exact .cons _ label (by simp [StructuredElseEvidence, SourceScope.initial]) .nil
 
-end Exec.Code
+end Itasca.Runtime.Code
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 theorem StructuredCompilerPrefix.initial {jumpTables : List Aeneas.Std.U32} {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -50,4 +50,4 @@ theorem StructuredCompilerPrefix.initial {jumpTables : List Aeneas.Std.U32} {A :
   · simp [ConcreteStack]
   · omega
 
-end Exec.Code
+end Itasca.Runtime.Code

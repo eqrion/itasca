@@ -3,7 +3,7 @@ import Exec.Code.Local.Coordinates.SourceCoordinateCallbacks
 import Exec.Code.Local.Publication.StartMapPublication
 import Exec.Code.Local.Source.StartJumpTableBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual fresh entry setup establishes all initial publication invariants
@@ -42,4 +42,4 @@ theorem prepared_start_publication {A : Type} (ops : runtime.platform.Alloc A)
   change w.finish.val = w.bodyStart.val+w.body.length at length
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdExtractRuntime
 import Exec.Spec.SimdExtract
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -12,4 +12,4 @@ theorem extract_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
         (fun result => Result.ok (result, memory)) := by
   cases ty <;> unfold runtime.interp.simd.simd extractOpcode <;> with_unfolding_all rfl
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryAddress
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def scalarStoreByte (value : U64) (index : Nat) : U8 :=
@@ -106,4 +106,4 @@ bytes, preserving their little-endian order. -/
     · have finished : position.val = width.val := by scalar_tac
       simpa [finished, scalarLoadBytes] using effect
   · exact ⟨initial, rfl⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

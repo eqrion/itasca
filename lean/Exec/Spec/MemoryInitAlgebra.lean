@@ -1,7 +1,7 @@
 import Exec.Spec.MemoryInitSource
 import Exec.Spec.SegmentCopy
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem memoryInit_eq (s : store) (f : frame) (dataIndex destination source count : Nat)
@@ -34,4 +34,4 @@ theorem memoryInit_eq (s : store) (f : frame) (dataIndex destination source coun
         (by rw [lengthEq]; change source+1+count ≤ (fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES.length ∧ _; omega)]
       simp only [memoryWrite,fun_data,proj_uN_0,List.modify_modify_eq,Function.comp_def,copyInto]
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

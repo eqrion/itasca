@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.BranchForwardAvailability
 import Exec.Code.Local.Capacity.ObserveBudgetAvailability
 import Exec.Code.Local.Callbacks.Control.CompilerBranchMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Raw unconditional branching accepts for every label kind and depth. The
@@ -72,4 +72,4 @@ theorem compiler_on_br_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

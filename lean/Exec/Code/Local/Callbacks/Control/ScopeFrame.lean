@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.UniversalInitial
 import Exec.Code.Local.Callbacks.Control.ElseSource
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The IF frame starts after its guard. Other fresh frames start at entry. -/
@@ -106,4 +106,4 @@ theorem FrameScope.initial {A : Type} (locals returns : List valtype)
   · simp [SourceScope.initial]
   · simp [SourceScope.initial]
   · trivial
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SegmentPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual successful segment-emission loop establishes a complete syntactic
@@ -36,8 +36,8 @@ theorem element_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨b, i, status, function⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop3.body at body
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at body
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
@@ -122,7 +122,7 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨b, i, status, function⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop4.body at body
-    simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>
@@ -175,4 +175,4 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     (by exact fun _ => ⟨bound, programs, prefixInv⟩) (budgetAfter, .Ok (), after) success
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

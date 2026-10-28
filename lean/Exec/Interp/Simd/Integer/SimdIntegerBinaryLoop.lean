@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdSplat
 import Exec.Interp.Simd.Common.SimdPacking
 import Exec.Interp.Simd.Integer.SimdSigned
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def integerBinaryWord (op width : U32) (a b : U64) (sa sb : I64) : Result U64 :=
@@ -104,4 +104,4 @@ theorem integer_binary_loop
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

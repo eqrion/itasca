@@ -1,6 +1,6 @@
 import Exec.Store.Linking.LinkMaps
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem LinkedMaps.tables_owned {M : Type} {view : M → Slice U8}
@@ -43,4 +43,4 @@ theorem LinkedMaps.globals_owned {M : Type} {view : M → Slice U8}
   obtain ⟨owner, global, found, typed⟩ := related
   exact ⟨owner, (List.getElem?_eq_some_iff.mp found).1⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

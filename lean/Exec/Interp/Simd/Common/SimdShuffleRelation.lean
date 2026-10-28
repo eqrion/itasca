@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdPureRelation
 import Exec.Interp.Simd.Common.SimdShuffleSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 theorem shuffle_byteWords (bits : BitVec 128) (low high : U64)
@@ -17,8 +17,8 @@ theorem shuffle_byteWords (bits : BitVec 128) (low high : U64)
   · have left : (Spec.Simd.byteWords bits).length = 16 := Spec.Simd.byteWords_length _
     have right : (shuffleIndices low high).length = 16 := by simp [shuffleIndices,unpackBytes_length]
     rw [List.getElem?_eq_none (by omega),List.getElem?_eq_none (by omega)]
-end Exec.Interp.Simd
-namespace Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 def ShuffleSourceEffect (low high : U64) (x y z value : BitVec 128) : Prop :=
@@ -47,4 +47,4 @@ theorem shuffle_entry_sound {F : Type} (floats : runtime.platform.FloatOps F) : 
   refine ⟨value,returned,?_⟩
   rw [indices] at source
   with_unfolding_all exact source
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

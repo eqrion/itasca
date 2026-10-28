@@ -113,7 +113,7 @@ import Exec.Theorems.Composition.GlobalMutationShape
 import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Store.Invariant.InstantiationCode
 import Exec.Store.Initialization.SegmentObjectMetadata
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca Store
 
 /-- Actual accepted compilation and instantiation either retain a rollback
@@ -205,4 +205,4 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
         (by simpa only [source] using capacities) (by simpa only [source] using matched.2)
     · rw [trace.toPreparedRun.committed]
       exact ⟨retained.identity,retained.funcs,retained.types,retained.instances⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

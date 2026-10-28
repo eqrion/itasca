@@ -137,8 +137,8 @@ import Exec.Theorems.Composition.Supported.SupportedNormalizeOutcome
 import Exec.Interp.StructuredMachine.NormalizeExecution
 import Exec.Interp.StructuredMachine.PendingExecution
 import Exec.Theorems.Composition.Supported.SupportedMeasure
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- The fetched direct call is tied to its source opcode, not only to an
 unindexed raw store boundary. -/
@@ -194,4 +194,4 @@ inductive StructuredHostSite {M : Type}
       (chain : ErasedSteps count before after)
       (site : StructuredHostSite view code exec store expected pc false ⟨s,ambient,after::rest,[]⟩) :
       StructuredHostSite view code exec store expected pc false ⟨s,ambient,before::rest,[]⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

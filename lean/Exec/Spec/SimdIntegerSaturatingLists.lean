@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerSaturatingShape
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def saturatingWords (ty : Jnn) (kind : IntegerSaturating) (x y : BitVec 128) : List uN :=
@@ -29,4 +29,4 @@ theorem saturating_words_wf (ty : Jnn) (kind : IntegerSaturating) (x y : BitVec 
   cases ty <;> constructor
   all_goals first | rfl | exact unsigned_wf_of_lt _ _ (BitVec.isLt _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

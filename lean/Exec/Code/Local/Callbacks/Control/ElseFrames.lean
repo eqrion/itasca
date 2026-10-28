@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.ElseSource
 import Exec.Code.Local.Callbacks.Common.FramePlanPop
 import Exec.Code.Local.Relations.Common.ResolvedGuards
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 def ScopeForm.isElse : ScopeForm → Bool
@@ -16,4 +16,4 @@ theorem ElseEvidence.fresh {types functions returns locals code labels child lab
   · cases form : child.form <;> simp_all [ScopeForm.isElse]
   · trivial
 
-end Exec.Code
+end Itasca.Runtime.Code

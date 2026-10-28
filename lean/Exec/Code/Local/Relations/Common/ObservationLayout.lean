@@ -1,7 +1,7 @@
 import Exec.Code.Local.Source.SourceStacks
 import Exec.Code.Local.Relations.Local.LocalDeclarations
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful final observation establishes operand layout from
@@ -33,4 +33,4 @@ theorem CompilerStable.local_layout {A : Type} {before after : runtime.compiler.
   constructor
   · simpa [compilerLocals, types, slotsEq] using locals.slots
   · simpa [compilerLocals, types, offsets] using locals.offsets
-end Exec.Code
+end Itasca.Runtime.Code

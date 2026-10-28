@@ -1,7 +1,7 @@
 import Exec.Abs.CallSafety
 import Exec.Abs.FrameTypingExtension
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- A host callback suspends a nonempty source stack with its pending result
 signature. The store is the pre-call store until the atomic callback completes. -/
@@ -112,4 +112,4 @@ theorem host_call_preparation (s : store) (ambient : frame) (f : AFrame)
         | FUNC fi fl body =>
           cases defaults : defaultLocals fl <;>
             simp [astep,call,hresolve,hfn,htype',hbound,hheight,hargtypes,hcode,defaults] at step
-end Exec.Abs
+end Itasca.Runtime.Abs

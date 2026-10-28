@@ -1,7 +1,7 @@
-import Exec.Generated.Funs
+import Itasca.Generated.Funs
 
 /-! Shared equation lemmas for the generated runtime. Import this module instead
-of `Exec.Generated.Funs`.
+of `Itasca.Generated.Funs`.
 
 The functions below match on every `runtime.bytecode.Instr` constructor and share
 one 432-alternative matcher. Lean generates the matcher's equation lemmas on
@@ -13,12 +13,12 @@ the matcher equations. -/
 open Lean Meta in
 set_option maxHeartbeats 0 in
 run_meta do
-  let functions := [``Exec.runtime.interp.dispatch, ``Exec.runtime.interp.scalar_operands,
-    ``Exec.runtime.interp.load_operands, ``Exec.runtime.interp.store_operands,
-    ``Exec.runtime.interp.simd_operands, ``Exec.runtime.interp.bulk.execute,
-    ``Exec.runtime.bytecode.Instr.scalar, ``Exec.runtime.bytecode.Instr.load,
-    ``Exec.runtime.bytecode.Instr.store, ``Exec.runtime.bytecode.Instr.simd,
-    ``Exec.runtime.bytecode.Instr.retarget, ``Exec.runtime.bytecode.is_return,
-    ``Exec.runtime.bytecode.CompiledFunction.other_valid]
+  let functions := [``Itasca.runtime.interp.dispatch, ``Itasca.runtime.interp.scalar_operands,
+    ``Itasca.runtime.interp.load_operands, ``Itasca.runtime.interp.store_operands,
+    ``Itasca.runtime.interp.simd_operands, ``Itasca.runtime.interp.bulk.execute,
+    ``Itasca.runtime.bytecode.Instr.scalar, ``Itasca.runtime.bytecode.Instr.load,
+    ``Itasca.runtime.bytecode.Instr.store, ``Itasca.runtime.bytecode.Instr.simd,
+    ``Itasca.runtime.bytecode.Instr.retarget, ``Itasca.runtime.bytecode.is_return,
+    ``Itasca.runtime.bytecode.CompiledFunction.other_valid]
   for function in functions do
     discard <| getEqnsFor? function

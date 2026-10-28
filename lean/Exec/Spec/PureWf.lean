@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShape
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
 
@@ -30,4 +30,4 @@ theorem pure_i32_bound {before : List admininstr} {n : Nat}
   cases_type wf_uN
   norm_num [size,valtype_Inn] at *
   omega
-end Exec.Spec
+end Itasca.Runtime.Spec

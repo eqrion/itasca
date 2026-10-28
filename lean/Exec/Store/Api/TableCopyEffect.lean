@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.BulkTableAt
 import Exec.Store.Api.TableCopyDistinct
 import Exec.Store.Api.TableInitLists
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 def TableCopyEffect {M : Type} (store : runtime.store.Store M) (address : Usize)
     (table sourceTable : runtime.store.TableInst) (destination source count : U64)
@@ -131,4 +131,4 @@ theorem bulk_table_copy {M : Type} (memory : runtime.platform.MemoryBuffer M)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       TableCopyEffect]
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.NumericValues
 import Exec.Interp.Numeric.Integer.NumericDispatch
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem step_integer_values {M P F A : Type}
@@ -38,4 +38,4 @@ theorem step_integer_values {M P F A : Type}
   simp only [bind_ok]
   with_unfolding_all apply WP.spec.ret
   exact ⟨rfl, rfl, pc, position, effect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

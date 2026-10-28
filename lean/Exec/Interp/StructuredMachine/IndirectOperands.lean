@@ -4,8 +4,8 @@ import Exec.Interp.StructuredMachine.Execution
 import Exec.Abs.Cumulative.Step
 import Exec.Code.Local.Relations.Common.StatefulEmission
 import Exec.Abs.Indirect.Operands
-namespace Exec.Interp.StructuredMachine
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem indirect_values_head {s : _root_.store} {raw : runtime.interp.Frame} {f : Abs.AFrame} {compiled : runtime.bytecode.CompiledFunction} {C targets next output}
     [IndirectProjection (emission compiled) compiled.indirect.val]
@@ -49,4 +49,4 @@ theorem indirect_values_head {s : _root_.store} {raw : runtime.interp.Frame} {f 
       values,bounded,arguments,argumentTypes,heights,caller,signature,tableType,pair,?_,indexPosition,fetch,?_⟩
     · simpa only [List.map_append,Code.slots_append,frontTypes,point.locals] using basePosition
     · simpa only [frontTypes] using tail
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

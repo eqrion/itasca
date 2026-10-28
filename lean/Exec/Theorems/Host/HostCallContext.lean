@@ -1,7 +1,7 @@
 import Exec.Theorems.Host.HostCallRecording
 import Exec.Abs.Sim.Host
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Source endpoint after a host call in an active Wasm frame. Traps unwind
 all callers; successful calls resume the source continuation with actual results. -/
@@ -49,4 +49,4 @@ theorem HostCallSourceOutcome.frame_events {M P : Type}
     rcases failure with trapped | exhausted
     · simpa only [hostCallEvents,hostCallFrameResult,trapped,arguments] using trace
     · simpa only [hostCallEvents,hostCallFrameResult,exhausted,arguments] using trace
-end Exec.Theorems
+end Itasca.Runtime.Theorems

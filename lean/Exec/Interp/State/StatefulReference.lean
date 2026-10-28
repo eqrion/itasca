@@ -2,8 +2,8 @@ import Exec.Interp.Relations.InitializerExecute
 import Exec.Interp.Relations.ReferenceSource
 import Exec.Spec.ReferenceFunction
 import Exec.Abs.Stateful.Transition
-namespace Exec.Interp
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -62,4 +62,4 @@ theorem stateful_ref_is_null_effect (exec : runtime.interp.Execution) (base : Us
     split <;> rfl
   refine ⟨effect.1,word,wordEq,effect.2,{},trivial,?_⟩
   simp only [Abs.Stateful.evaluate,Abs.Stateful.refIsNull,values,Abs.pop_append,Abs.Stateful.asReference_value,wordEq]
-end Exec.Interp
+end Itasca.Runtime.Interp

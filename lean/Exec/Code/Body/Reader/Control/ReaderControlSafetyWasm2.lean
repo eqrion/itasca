@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderEnterSafety
 import Exec.Code.Body.Reader.Common.ReaderCloseSafety
 import Exec.Code.Body.Reader.Control.ReaderBranchSafety
 import Exec.Code.Body.Reader.Control.ReaderReturnSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 2000000
 
@@ -74,4 +74,4 @@ theorem StructuredReaderCompilerStateWasm2.control_total {A}
     rw [Wasm2.CallbackTrace.dispatch_return]
     exact compiler_return_reader_wasm2_total ops law compiler _ env index pending.opened.shape.core
       (fun _ => ready.nonempty) (by have := ready.code; omega) (by have := ready.sources; omega) ready.emittedCoordinate
-end Exec.Code
+end Itasca.Runtime.Code

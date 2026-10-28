@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.ForwardBranchInstructionPrefix
 import Exec.Code.Local.Relations.Control.BranchSkipLoopSafety
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual loop branching checks its overlap-safe transfer and retained backward
@@ -64,4 +64,4 @@ theorem compiler_branch_loop_open_instructions {A : Type} (ops : runtime.platfor
     CompilerInstructionPrefix after :=
   (compiler_branch_loop_instruction_effect ops law before after frame index depth source skip lookup position loop sourcePosition order sourceFits target codeFits offsetsFit coordinateFits called).apply held
 
-end Exec.Code
+end Itasca.Runtime.Code

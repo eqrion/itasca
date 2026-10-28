@@ -1,7 +1,7 @@
 import Exec.Code.Module.EntryCheckedAvailable
 import Exec.Code.Module.EntryHeaderPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent complete-profile source validity and numerical demand construct
@@ -50,4 +50,4 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
   rw [called,WP.spec_ok]
   exact ⟨rfl,ranges,header,closed,codeBound,compiler_finish_publication ops after closed header ranges instructions.indexed,effect⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

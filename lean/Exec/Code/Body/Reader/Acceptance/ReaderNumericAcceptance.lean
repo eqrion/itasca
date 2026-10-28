@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.NumericReaderFacts
 import Exec.Code.Body.Reader.Float.FloatReaderFacts
 import Itasca.Visitor.EventDispatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -74,4 +74,4 @@ theorem compiler_reader_float_available {A V : Type} (ops : runtime.platform.All
   rw [callback]
   exact compiler_float_available_effect ops bound available compiler final demand front op layout
 
-end Exec.Code
+end Itasca.Runtime.Code

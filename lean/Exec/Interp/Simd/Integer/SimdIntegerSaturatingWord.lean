@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdSaturation
 import Exec.Spec.SimdIntegerSaturating
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def integerSaturatingIndex (kind : IntegerSaturating) : U32 :=
   match kind with | .addS => 15#u32 | .addU => 16#u32 | .subS => 18#u32 | .subU => 19#u32
@@ -24,4 +24,4 @@ theorem integer_saturating_word (kind : IntegerSaturating) (width : U32)
   all_goals with_unfolding_all change (Aeneas.Std.bind _ _) ⦃ _ ⦄
   all_goals step* <;> simp_all [integerSaturatingBits,aCast,bCast,I128.min,I128.max] <;> scalar_tac
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

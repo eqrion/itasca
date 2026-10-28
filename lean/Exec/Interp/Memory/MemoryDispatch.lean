@@ -2,7 +2,7 @@ import Exec.Interp.Memory.MemoryScalar
 import Exec.Interp.Relations.Fetch
 import Exec.Platform.Memory
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Loads trap before modifying execution slots, and successful loads write only
@@ -105,4 +105,4 @@ theorem execute_store_effect {M : Type} (memory : runtime.platform.MemoryBuffer 
   refine ⟨writeBack written,?_,?_⟩
   · simp [backEq]
   · simpa only [restored] using effect
-end Exec.Interp
+end Itasca.Runtime.Interp

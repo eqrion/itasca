@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerElementLoop
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def sourceDataOffset (segment : Itasca.module.Data) : Option Itasca.types.ConstExpr :=
@@ -110,7 +110,7 @@ theorem initializer_data_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop2.body at body
-    simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>
@@ -165,4 +165,4 @@ theorem initializer_data_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

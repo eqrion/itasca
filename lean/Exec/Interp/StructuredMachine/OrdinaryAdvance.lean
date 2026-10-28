@@ -6,7 +6,7 @@ import Exec.Interp.StructuredMachine.ControlExecution
 import Exec.Interp.StructuredMachine.IntegerConstantExecutionOwned
 import Exec.Interp.StructuredMachine.Advance
 import Exec.Interp.Machines.Slice.SliceOpcode
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
 theorem step_numeric_total_advance_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -155,4 +155,4 @@ theorem step_ordinary_advance {M P F A : Type}
   rintro out ⟨success,same,platform,advance⟩
   exact ⟨success,same,platform,advance.forget⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

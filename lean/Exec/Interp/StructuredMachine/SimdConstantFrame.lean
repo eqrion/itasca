@@ -4,7 +4,7 @@ import Exec.Interp.Simd.Common.SimdMutation
 import Exec.Interp.StructuredMachine.SimdExecutionJoin
 import Exec.Interp.StructuredMachine.SimdContinue
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 private theorem constant_bounds (compiled : runtime.bytecode.CompiledFunction) (dst entry : U32)
@@ -79,4 +79,4 @@ theorem step_constant_frame {M P F A : Type}
       exact labels.replace_suffix (show ∀ label ∈ f.labels, label.height ≤ f.vals.length from Abs.frameTyped_heights (f := {f with code:=.VCONST .V128 (.mk_uN bits.val)::after}) frameTyped)
     · simpa only [List.map_append,List.map_cons,List.map_nil,Code.valueType,pcNext] using tail
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

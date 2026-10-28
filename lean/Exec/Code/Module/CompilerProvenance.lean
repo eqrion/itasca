@@ -1,5 +1,5 @@
 import Exec.Code.Module.EnvironmentFrame
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -84,4 +84,4 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked.queue rfl
-end Exec.Code
+end Itasca.Runtime.Code

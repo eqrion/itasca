@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdUnary
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem unary_sign_lane (width : Nat) (bits : BitVec width) (positive : 0 < width) (bound : width ≤ 64) :
@@ -31,4 +31,4 @@ theorem unary_signs_get (width : Nat) (x : BitVec 128) (count : Nat)
       · have after : ¬ (i < count+1) := by omega
         have difference : i-count≠0 := by omega
         simp [before,after,difference]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

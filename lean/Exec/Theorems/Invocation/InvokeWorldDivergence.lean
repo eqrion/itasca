@@ -3,8 +3,8 @@ import Exec.Theorems.Progress.EventfulWorldInfinite
 import Exec.Theorems.Composition.Supported.SupportedEntry
 import Exec.Interp.Invocation.InvokeDivergence
 import Exec.Interp.Invocation.InvokePrefixDivergence
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A source run from `initial` reaches a configuration whose store decodes a runtime store on
 which some callback diverges. -/
@@ -86,4 +86,4 @@ theorem invoke_defined_world_infinite_source
       Abs.decodeFrames reached.machine.source.frames (vals reached.machine.source.results),?_,diverged⟩
     have trace := Spec.stepsH_trans first reductions.erase
     simpa only [List.nil_append,Abs.decode,reached.machine.invariant.storeEq] using trace
-end Exec.Theorems
+end Itasca.Runtime.Theorems

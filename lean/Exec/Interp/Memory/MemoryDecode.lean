@@ -1,9 +1,9 @@
 import Exec.Representation.Collection
 import Exec.Interp.Memory.MemoryStoreSource
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
-open Exec.Store
+open Itasca.Runtime.Store
 
 theorem memory_lookup_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
@@ -25,7 +25,7 @@ theorem memory_unchanged_decodes {M : Type} (view : M → Slice U8) (code : Code
   rw [decodeStore_memory_update]
   have same : decodeMemory view {object with buf := buffer} = decodeMemory view object := by
     simp only [decodeMemory,unchanged]
-  have lists := Exec.Representation.map_set_modify (decodeMemory view) id store.memories.val address.index.val
+  have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view) id store.memories.val address.index.val
     object {object with buf := buffer} found same
   simp only [alloc.vec.Vec.set_val_eq,lists,List.modify_id]
   rfl
@@ -47,7 +47,7 @@ theorem memory_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
     simp [moduleEq,decodeInstance,List.getElem!_eq_getElem?_getD,mapped]
   have lengthEq : (view buffer).length = (view object.buf).length := by
     simpa only [decodeBytes,List.length_map,List.length_setSlice!,Slice.length] using congrArg List.length written
-  have lists := Exec.Representation.map_set_modify (decodeMemory view)
+  have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view)
     (fun m => {m with BYTES := splice m.BYTES payload start})
     store.memories.val address.index.val object {object with buf := buffer} found
     (by simp only [decodeMemory,lengthEq,Spec.splice_setSlice (decodeBytes (view object.buf).val) payload start (by simpa [decodeBytes] using inside),written])
@@ -55,4 +55,4 @@ theorem memory_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
   rw [memoryRead,decodeStore_memory_update]
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl
-end Exec.Interp
+end Itasca.Runtime.Interp

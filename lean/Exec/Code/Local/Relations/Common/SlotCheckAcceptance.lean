@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.WellFormed
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Exact arithmetic acceptance of the concrete slot-range check. The upper
@@ -18,4 +18,4 @@ theorem slots_fit_accepts (function : runtime.bytecode.CompiledFunction) (start 
   obtain ⟨result,called,rfl⟩ := WP.spec_imp_exists accepted
   exact called
 
-end Exec.Code
+end Itasca.Runtime.Code

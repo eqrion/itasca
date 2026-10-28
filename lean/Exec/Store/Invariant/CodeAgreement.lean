@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.FunctionTables
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Assigning source code at fresh instance keys leaves every existing
@@ -27,4 +27,4 @@ theorem decodeStore_code_agrees {M : Type} (view : M → Slice U8)
   unfold decodeStore
   rw [functions]
 
-end Exec.Store
+end Itasca.Runtime.Store

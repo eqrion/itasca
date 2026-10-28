@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.BranchSkipSafety
 import Exec.Code.Local.Relations.Table.BranchTableCallback
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -63,4 +63,4 @@ private theorem charge_branch_total {A} (ops : runtime.platform.Alloc A)
   | Ok unit =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
     step with budget_push ops law budget compiler.table_depths depth fits
-end Exec.Code
+end Itasca.Runtime.Code

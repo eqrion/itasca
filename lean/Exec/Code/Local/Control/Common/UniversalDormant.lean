@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Common.UniversalTerminal
 import Exec.Code.Local.Callbacks.Common.FramePlanPop
 import Exec.Code.Local.Relations.Common.PrefixZipper
 import Exec.Code.Local.Relations.Common.ResolvedGuards
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- An unentered source subtree emits no executable body. Its enclosing
@@ -19,4 +19,4 @@ structure UniversalDormant {A : Type} (compiler : runtime.compiler.FunctionCompi
     ParentPrefixes types functions returns locals (resolvedCode compiler.function.code.val groups)
       parents labels current
 
-end Exec.Code
+end Itasca.Runtime.Code

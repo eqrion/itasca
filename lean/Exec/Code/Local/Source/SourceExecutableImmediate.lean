@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceExecutableTables
 import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
-namespace Exec.Code.SourceExecutable
+namespace Itasca.Runtime.Code.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
 def TokenWasm2 : Wasm2.Token → Prop
@@ -84,4 +84,4 @@ theorem immediate_wasm2 {opcode token bytes} (encoded : Wasm2.Immediate opcode t
   | bulk _ _ encoded => exact bulk encoded
   | simd _ _ encoded => exact simd encoded
   | block | loop | if_ | else_ | end_ => trivial
-end Exec.Code.SourceExecutable
+end Itasca.Runtime.Code.SourceExecutable

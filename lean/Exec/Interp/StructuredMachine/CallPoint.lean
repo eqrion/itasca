@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Interp.StructuredMachine.SuspendedPoint
 import Exec.Abs.Numeric.Decode
 import Exec.Interp.Control.StructuredPoint
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 variable {jumpTables : List Aeneas.Std.U32}
 variable {emission : ContextEmission} [OrdinaryHeads emission]
@@ -50,4 +50,4 @@ theorem codeRel_call_values {C returns code labels pc next output after}
     · simpa only [List.map_append, Code.slots_append, frontTypesEq] using arguments
     · simpa only [frontTypesEq] using rest
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

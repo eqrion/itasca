@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.ReturnPoint
 import Exec.Interp.Calls.ReturnRefinement
 import Exec.Interp.Relations.ControlPoint
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Complete RETURN execution from a structured certificate. The certificate
@@ -80,4 +80,4 @@ theorem step_return_structured {M P F A : Type}
       split, types, source, width, original, bounds, returned, represented, nextTyped, ?_⟩⟩
     simpa only [← split] using simulation
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

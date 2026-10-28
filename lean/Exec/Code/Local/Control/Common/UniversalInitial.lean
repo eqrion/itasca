@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.ElseFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- The root source cursor before the first body instruction. -/
@@ -36,4 +36,4 @@ theorem UniversalElse.initial {A : Type} (compiler : runtime.compiler.FunctionCo
   cases parentShapes
   exact .cons _ label (ElseEvidence.fresh rfl) .nil
 
-end Exec.Code
+end Itasca.Runtime.Code

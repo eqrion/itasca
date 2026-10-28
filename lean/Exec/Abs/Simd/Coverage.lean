@@ -1,7 +1,7 @@
 import Exec.Abs.Simd.Step
 import Exec.Abs.SupportedState
 
-namespace Exec.Abs.Simd
+namespace Itasca.Runtime.Abs.Simd
 
 /-- SIMD consumes its source head without changing any remaining source syntax.
 The argument is independent of the eventual cumulative instruction family. -/
@@ -18,4 +18,4 @@ theorem Step.next_supported {before next}
     | next front operands results store values types resultTypes change effect =>
       exact covered.tail change.functions _
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

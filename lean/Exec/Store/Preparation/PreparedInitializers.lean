@@ -3,7 +3,7 @@ import Exec.Store.Initialization.InitializerCertificates
 import Exec.Store.Api.Define
 import Exec.Store.Preparation.Staging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -93,4 +93,4 @@ theorem prepared_initializer_bindings {M : Type} (view : M → Slice U8)
   · simp only [source, tableCount, le_refl]
   · simp only [source, memoryCount, le_refl]
 
-end Exec.Store
+end Itasca.Runtime.Store

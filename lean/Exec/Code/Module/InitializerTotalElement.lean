@@ -1,5 +1,5 @@
 import Exec.Code.Module.InitializerTotalBasic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 
@@ -14,8 +14,8 @@ set_option maxHeartbeats 1800000
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 1 ∧
       out.2.2.2.val.length ≤ indices.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.lower_element_value
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok]
   step as ⟨expr, read⟩
   try simp only [bind_ok]
@@ -53,8 +53,8 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, ix, position, result⟩ ⟨same, size, ixBound, positionBound⟩
     unfold runtime.compiler.initialize.lower_element_loop.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
     split
     · rename_i more
@@ -100,9 +100,8 @@ set_option maxHeartbeats 1800000
       exact ⟨same, by unfold initializerSize at *; dsimp at *; omega⟩
     | Ok value =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-        Itasca.module.Module.impl.env, runtime.compiler.initialize.element_offset,
-        Exec.module.Env.elements, Itasca.module.Env.impl.elements]
+        runtime.compiler.ExecutableModule.env,
+        Itasca.module.Module.impl.env, runtime.compiler.initialize.element_offset, Itasca.module.Env.impl.elements]
       try simp only [bind_ok]
       rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
       have room : initializerSize { middle with element_initializers := rows } + 2 ≤ Usize.max := by
@@ -130,4 +129,4 @@ set_option maxHeartbeats 1800000
         step with initializer_push_total ops law b2 middle.element_offsets none
           (by unfold initializerSize at room; dsimp at room; omega) as ⟨status, b3, offsets, offsetsBound⟩
         exact ⟨same, by unfold initializerSize at *; dsimp at *; omega⟩
-end Exec.Code
+end Itasca.Runtime.Code

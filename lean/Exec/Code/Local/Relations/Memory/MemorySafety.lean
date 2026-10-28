@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.NumericSafety
 import Exec.Code.Local.Relations.Memory.MemoryLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_total {A} (ops : runtime.platform.Alloc A)
@@ -56,4 +56,4 @@ open Aeneas Aeneas.Std
   · unfold runtime.compiler.lower.FunctionCompiler.op
     rw [if_neg live]
     exact compiler_observe_stack ops law compiler state
-end Exec.Code
+end Itasca.Runtime.Code

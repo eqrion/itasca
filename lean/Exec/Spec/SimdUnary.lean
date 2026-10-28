@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShape
 import Exec.Spec.IntegerSigned
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem negate_lane_relation (width : Nat) (bits : BitVec width) :
@@ -27,4 +27,4 @@ theorem absolute_lane_relation (width : Nat) (bits : BitVec width) (positive : 0
     simpa [show ¬bits.toInt ≥ 0 by omega] using relation
   · rename_i nonnegative
     simpa [show bits.toInt ≥ 0 by omega] using relation
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

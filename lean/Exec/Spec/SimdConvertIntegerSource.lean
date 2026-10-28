@@ -1,5 +1,5 @@
 import Exec.Spec.SimdConvertInteger
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def convertIntegerInputs (ty : Fnn) (x : BitVec 128) : List lane_ :=
@@ -80,4 +80,4 @@ theorem convert_integer_vector_relation (ty : Fnn) (sign : sx) (x result : BitVe
     · exact shapeOf_wf _
     · exact shapeOf_wf _
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

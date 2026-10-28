@@ -1,7 +1,7 @@
 import Exec.Abs.Invoke
 import Exec.Abs.SupportedState
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- A real defined function address and typed arguments construct the initial
 abstract state and its generated specification call reduction. -/
@@ -40,4 +40,4 @@ theorem defined_supported_invocation (s : store) (ambient : frame) (address : fu
       hs ha lookup nonbot hdefaults (resultsTyped_wf arguments) (resultsTyped_length arguments)
     simpa [entryState, decode, decodeFrames, decodeLabels, vals, AFrame.arity, AFrame.toFrame, Label.arity] using result
 
-end Exec.Abs
+end Itasca.Runtime.Abs

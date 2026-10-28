@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Body.Reader.Common.ReaderCompilerBounds
 import Exec.Code.Body.Reader.Calls.ReaderCallLowering
 import Exec.Code.Local.Relations.Table.SignatureTable
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 structure OrdinaryNamespaces {A} (compiler : runtime.compiler.FunctionCompiler A)
@@ -78,4 +78,4 @@ theorem IndexedTableReaderCompilerPointWasm2.ordinary_ready {A} {initial compile
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   exact ordinary_callback_ready_of_prefix state.compiled data.length namespaces observed
     state.boundary.source_bound state.boundary.bounds.pos bodyBound pairs simd pool
-end Exec.Code
+end Itasca.Runtime.Code

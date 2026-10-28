@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.IntRotate
 import SpecExt.Builtins.Counts
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 open SpecExt.Builtins
 
@@ -240,4 +240,4 @@ theorem scalar_i64_popcnt_sound {F : Type} (ops : runtime.platform.FloatOps F) (
   rw [← same] at wf ⊢
   exact .fun_unop__case_5 _ wf
 
-end Exec.Interp
+end Itasca.Runtime.Interp

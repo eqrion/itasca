@@ -1,5 +1,5 @@
 import Exec.Code.Module.CompileEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -43,8 +43,7 @@ theorem submit_loop_accepted {A : Type} (allocator : runtime.platform.Alloc A)
   | h n ih =>
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-      Exec.stream.CodeBatch.len, Itasca.stream.CodeBatch.len, bind_ok] at accepted
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body, Itasca.stream.CodeBatch.len, bind_ok] at accepted
     split at accepted
     · cases result with
       | Err error => simp [core.result.Result.is_ok, submitPack] at accepted
@@ -63,8 +62,7 @@ theorem submit_loop_accepted {A : Type} (allocator : runtime.platform.Alloc A)
             allocator middle nextBatch nextIndex nextResult = .ok (submitPack after finalBatch (.Ok ())) := by
           simpa only [uncurry_apply_pair, bind_ok,
             runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-            Exec.stream.CodeBatch.len, Itasca.stream.CodeBatch.len, core.result.Result.is_ok] using tail
+            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body, Itasca.stream.CodeBatch.len, core.result.Result.is_ok] using tail
         obtain ⟨success, rest⟩ := ih _ smaller middle nextBatch nextIndex nextResult tail' rfl
         subst nextResult
         exact ⟨rfl, .next entry rest⟩
@@ -108,4 +106,4 @@ theorem CompileEntries.fold {A : Type} {allocator : runtime.platform.Alloc A}
   | next entry rest ih =>
     obtain ⟨w⟩ := compile_entry_accepted _ _ _ _ _ entry
     exact ih (preserved _ _ _ _ initial w)
-end Exec.Code
+end Itasca.Runtime.Code

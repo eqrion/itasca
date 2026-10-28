@@ -1,7 +1,7 @@
 import Exec.Abs.Core.MemoryStep
 import Exec.Abs.Memory.Decode
 
-namespace Exec.Abs.Core
+namespace Itasca.Runtime.Abs.Core
 
 /-- Execute a scalar Core instruction. Pure integer/control instructions reuse
 the established transition; mutable instructions resolve their own store maps. -/
@@ -45,4 +45,4 @@ theorem instruction_store (s : _root_.store) (ambient : frame) (f : AFrame) (res
       store ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after op argument := by
   simp only [instruction,Memory.Store.source,Memory.decodeStore_descriptor]
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

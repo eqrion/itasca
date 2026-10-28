@@ -7,7 +7,7 @@ import Exec.Code.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
 import Exec.Code.Local.Relations.Table.ControlTablePreservation
 import Exec.Code.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual numeric lowering retains every existing jump-table target bound. -/
@@ -83,4 +83,4 @@ theorem compiler_end_target_bounds {A : Type} (ops : runtime.platform.Alloc A)
     (congrArg CompilerTables.jumpTables (compiler_end_tables ops law before after state kind bt called))
     (compiler_end_code_mono ops law before after state kind bt called)
 
-end Exec.Code
+end Itasca.Runtime.Code

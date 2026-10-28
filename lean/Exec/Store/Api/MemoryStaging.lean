@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.Staging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryStageEffect {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
@@ -24,8 +24,7 @@ theorem add_instance_memory_effect {M A : Type} (memory : runtime.platform.Memor
     runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index
       ⦃ out => MemoryStageEffect view store inst inst.module.module.env.mem_types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_memory
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.mem_types, Itasca.module.Env.impl.mem_types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.mem_types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -105,4 +104,4 @@ theorem MemoryStageEffect.count {M : Type} {view : M → Slice U8} {store : runt
   · rw [output]
     simpa using congrArg List.length mapped
 
-end Exec.Store
+end Itasca.Runtime.Store

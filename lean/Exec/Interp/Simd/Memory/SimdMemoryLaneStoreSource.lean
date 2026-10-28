@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLaneBytes
 import Exec.Interp.Simd.Memory.SimdMemoryStoreEncoding
 import Exec.Spec.SimdMemoryLaneStore
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins
 
 theorem memory_lane_selected (ty : Jnn) (index : Nat) (before : BitVec 128)
@@ -54,4 +54,4 @@ theorem lane_store_source (ty : Jnn) (address value : U128) (offset index : U32)
     simp only [U64.cast_U128_val_eq,wordVal]
   · rw [if_neg fits] at source effect ⊢
     exact ⟨effect,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

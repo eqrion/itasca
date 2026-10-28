@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryEncoding
 import Exec.Spec.MemoryLoad
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 def numericLoadOpcode : numtype → U16
@@ -39,4 +39,4 @@ theorem numeric_load_word_decodes (ty : numtype) (bytes : List U8) (start : Nat)
   · rw [Nat.mod_eq_of_lt (by simpa [Spec.scalarNumBytes] using bounded)]
   · rw [Nat.mod_eq_of_lt (by simpa [Spec.scalarNumBytes] using bounded)]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

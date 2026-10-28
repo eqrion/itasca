@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatBinaryLanes
 import Exec.Spec.SimdFloatBinaryChoices
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Platform
 
 @[step] theorem float_binary_lanes_sound {F : Type} (floats : runtime.platform.FloatOps F)
@@ -35,4 +35,4 @@ theorem float_binary_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with float_binary_lanes_sound floats laws ty op x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

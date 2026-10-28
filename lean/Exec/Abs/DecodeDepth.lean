@@ -1,7 +1,7 @@
 import Exec.Abs.Decode
 import Exec.Spec.Depth
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 @[simp] theorem instrDepth_value (value : val) : Spec.instrDepth (admininstr_val value) = 0 := by
   cases value <;> rfl
@@ -40,4 +40,4 @@ namespace Exec.Abs
     Spec.frameDepth (decode source) = source.frames.length := by
   simp [decode, Spec.frameDepth]
 
-end Exec.Abs
+end Itasca.Runtime.Abs

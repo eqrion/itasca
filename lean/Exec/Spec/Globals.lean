@@ -1,6 +1,6 @@
 import Exec.Spec.TableInitSource
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Source global writes change a single value, retaining its declared type. -/
@@ -56,4 +56,4 @@ theorem global_set_step (s : store) (f : frame) (index : Nat) (value : val)
     · exact wf_admininstr_val hv
     · exact .admininstr_case_47 _ (Segment.index_wf index hx)
   · exact wf_config_make outputWf hf (forall_nil _)
-end Exec.Spec
+end Itasca.Runtime.Spec

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Checking.ScopeCloseExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source scope metadata and retained branch sites preserve instruction
@@ -59,4 +59,4 @@ theorem structured_scope_close_exit_slots {jumpTables : List U32}
       cases guardPosition
     exact .guarded guard condition old nonBody hasIf guardCode
 
-end Exec.Code
+end Itasca.Runtime.Code

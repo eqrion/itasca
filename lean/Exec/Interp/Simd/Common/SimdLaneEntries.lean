@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdLaneRelation
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 theorem lane_entry_21 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 21#u32 := by
@@ -212,4 +212,4 @@ theorem lane_entry_sound {F : Type} (floats : runtime.platform.FloatOps F) (opco
   · have eq : opcode = 34#u32 := by scalar_tac
     subst opcode
     exact lane_entry_34 floats op meaning offset laneIndex bits x y z memory valid
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

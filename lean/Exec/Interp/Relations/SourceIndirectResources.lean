@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.SourceCanonicalCapacity
 import Exec.Interp.Relations.SourceIndirectSite
 import Exec.Interp.Relations.SourceAllocationCauses
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A selected call may be direct or table-resolved; either witness is purely
@@ -92,4 +92,4 @@ theorem SourceDirectCallCause.source_allocation_canonical {A M P : Type} {alloca
   · exact Or.inl ⟨exec.slots, n, by omega, refused⟩
   · exact Or.inr ⟨exec.frames.set index {raw with pc := pc}, refused⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

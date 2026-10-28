@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerBinaryLoop
 import Exec.Spec.SimdAverage
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 theorem average_word (width : U32) (a b : U64) (sa sb : I64)
     (widthBound : width.val ≤ 32)
@@ -24,4 +24,4 @@ theorem average_word (width : U32) (a b : U64) (sa sb : I64)
   rw [resultEq,roundedEq,sumEq]
   exact Nat.mod_eq_of_lt (by omega)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

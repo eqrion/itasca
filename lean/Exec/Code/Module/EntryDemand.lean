@@ -1,7 +1,7 @@
 import Exec.Code.Module.EntryAvailable
 import Exec.Code.Module.PreparedEntryUnique
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- One independently prepared source entry suffices to establish all entry
@@ -17,4 +17,4 @@ theorem EntryResourceDemand.of_prepared {A : Type} {budget : runtime.compiler.Bu
   obtain ⟨typeEq,ctxEq,bodyEq,_,_⟩ := prepared_entry_unique prepared other
   simpa only [← typeEq,← ctxEq,← bodyEq] using demand
 
-end Exec.Code
+end Itasca.Runtime.Code

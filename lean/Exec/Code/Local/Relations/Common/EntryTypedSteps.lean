@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.TypedStepsWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -44,4 +44,4 @@ theorem batch_typed_steps {V : Type} (visitor : code.OpVisitor V)
   · obtain ⟨_, position, entry⟩ := stream.CodeBatch.validate_next.accepted visitor batch index finish before after next
     exact ⟨finish, position, entry_typed_steps visitor batch.code batch.validated_end batch.env index finish
       before after bounds batch.profile entry⟩
-end Exec.Code
+end Itasca.Runtime.Code

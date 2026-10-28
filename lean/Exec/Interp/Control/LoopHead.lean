@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.Interrupt
 import Exec.Interp.Relations.Fetch
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem dispatch_loopHead_eq {M P F A : Type}
@@ -33,4 +33,4 @@ theorem dispatch_loopHead_effect {M P F A : Type}
   rw [dispatch_loopHead_eq memory hooks floats allocator exec store platform after index raw decision hook]
   exact ⟨rfl, rfl, decision, hook, rfl⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

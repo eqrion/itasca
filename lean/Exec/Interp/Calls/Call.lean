@@ -6,7 +6,7 @@ import Exec.Interp.Numeric.Integer.Interrupt
 /-! Defined-function entry checks resources, initializes local words, and pushes
 a frame. These operations return normally under the explicit allocation and
 interrupt laws, and cannot mutate the store. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Exact successful entry state; all invocation scratch fields are preserved. -/
@@ -116,4 +116,4 @@ theorem call_wasm_effect {M P F A : Type}
               have h := congrArg (fun e : runtime.interp.Execution => { e with frames := exec.frames }) he
               exact h
 
-end Exec.Interp
+end Itasca.Runtime.Interp

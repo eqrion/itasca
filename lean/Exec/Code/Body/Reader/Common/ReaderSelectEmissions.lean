@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Common.CoreBasicEmissions
 import Exec.Code.Local.Relations.Common.CoreLoweringEffects
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_select_wasm2 {data env locals typeIndex st}
@@ -50,4 +50,4 @@ theorem reader_emit_select_wasm2 {data env locals typeIndex st}
   obtain ⟨emitted, lower, emission⟩ := lowered rfl
   exact ⟨ordinary, sources, cursor, ty, front, values, beforeTypes, post, emitted,
     ⟨lower, SourceStack.of_map types concrete output⟩, emission⟩
-end Exec.Code
+end Itasca.Runtime.Code

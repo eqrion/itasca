@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The exact concrete source types of the validator's complete operand stack. -/
@@ -24,4 +24,4 @@ def TypedLoweredEmpty {A : Type} (before after : runtime.compiler.FunctionCompil
     (raw : List code.StackType) (stack : List valtype) : Prop :=
   LoweredEmpty before after stack ∧ SourceStack raw stack
 
-end Exec.Code
+end Itasca.Runtime.Code

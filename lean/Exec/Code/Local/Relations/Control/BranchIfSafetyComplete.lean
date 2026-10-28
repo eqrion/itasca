@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Control.BranchIfSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -61,4 +61,4 @@ private theorem branch_if_empty_total {A} (ops : runtime.platform.Alloc A)
       simp [condition,show compiler.before.val.length-1 < compiler.before.val.length by omega]
     exact compiler_branch_if_total ops law compiler frame index depth condition lookup position conditionAt
       fixupsFit pcBound codeFits sourceFits coordinateFits
-end Exec.Code
+end Itasca.Runtime.Code

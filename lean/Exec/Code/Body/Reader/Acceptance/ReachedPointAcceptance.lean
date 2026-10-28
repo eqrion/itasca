@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.ReachedNumericAcceptance
 import Exec.Code.Body.Reader.Memory.ReachedMemoryAcceptance
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -110,4 +110,4 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available {A V : Type}
     contextLocals demand op state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) byte reference
 
-end Exec.Code
+end Itasca.Runtime.Code

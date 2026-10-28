@@ -1,6 +1,6 @@
 import Exec.Spec.SimdUnary
 import Exec.Spec.SimdShiftSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 inductive SignedUnaryKind where | absolute | negate
@@ -88,4 +88,4 @@ theorem signed_unary_step (ty : Jnn) (kind : SignedUnaryKind) (bits result : Bit
     apply wf_vunop_.vunop__case_0 _ _ _ _ _ rfl
     cases kind <;> constructor
   · exact const_wf result
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Publication.FinalControlMapBounds
 import Exec.Code.Local.Relations.Common.SourcedWellFormedAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source-coordinate and control-target obligations of the actual final
@@ -33,4 +33,4 @@ theorem FunctionPublicationRanges.well_formed {function : runtime.bytecode.Compi
   well_formed_sourced_accepts function nonsynthetic nonempty held.sourceLength locals params returnStart returnCount
     last instructions held.sources held.targets held.controls
 
-end Exec.Code
+end Itasca.Runtime.Code

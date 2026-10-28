@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.LocalLoopAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent resource demand of function-start setup, including expanded
@@ -89,4 +89,4 @@ theorem compiler_function_start_available {A : Type} (ops : runtime.platform.All
   · simpa [initial] using used
   · simpa [retainedControls] using chargedEq
 
-end Exec.Code
+end Itasca.Runtime.Code

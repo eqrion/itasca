@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Local.Callbacks.Common.CompilerEnterMetadata
 import Exec.Code.Local.Relations.Control.ControlCursor
 import Exec.Code.Local.Relations.Control.ControlSources
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_if_dead_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -45,4 +45,4 @@ theorem structured_callback_if_dead_prefix {jumpTables : List U32} {emit : List 
   exact invariant.open_dormant dead deadAfter child frame stable aligned codeEq framesEq
     (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl  rfl rfl sources consumed (by rw [cursor])
 
-end Exec.Code
+end Itasca.Runtime.Code

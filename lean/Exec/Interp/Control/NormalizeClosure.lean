@@ -5,7 +5,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Relations.ValueLookup
 import Exec.Interp.Relations.SourceClosure
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- A source position that requires bytecode execution or function return. -/
 def ReadySource (f : Abs.AFrame) : Prop :=
@@ -34,4 +34,4 @@ theorem ErasedSteps.closure {count before after} (steps : ErasedSteps count befo
   | nil => exact .refl _
   | cons step tail ih => exact step.closure.trans ih
 
-end Exec.Interp
+end Itasca.Runtime.Interp

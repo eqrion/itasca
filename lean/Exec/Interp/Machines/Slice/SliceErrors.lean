@@ -1,6 +1,6 @@
 import Exec.Interp.Machines.Slice.SliceHistory
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A defined call can reject only for interruption or one of its three
@@ -28,4 +28,4 @@ theorem DirectCallCause.kind {A M P : Type} {allocator : runtime.platform.Alloc 
     callee, code, fetch, resolved, lookup, wasm, instanceLookup, codeLookup, baseEq, pcEq, rejection⟩ := cause
   exact rejection.kind
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Spec.SimdFloatBinary
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatBinaryLaneChoices (ty : Fnn) (op : vbinop_Fnn_N) (a b : lane_) : List lane_ :=
@@ -70,4 +70,4 @@ theorem float_binary_relation (ty : Fnn) (op : vbinop_Fnn_N) (x y : BitVec 128) 
   · apply fun_vbinop_.fun_vbinop__case_51
     all_goals first | rfl | exact shapeWf | exact lanesWf | exact lengths
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.EnterElse
 import Exec.Code.Local.Callbacks.Common.OpenPrefix
 import Exec.Code.Local.Relations.Common.Prefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem resolvedCode_guard_set (code : List Bytecode) (groups : List FixupTarget)
@@ -31,4 +31,4 @@ theorem resolvedCode_else_live (code : List Bytecode) (groups : List FixupTarget
   simpa only [List.append_nil, List.nil_append, BranchKind.instruction,
     resolvedCode_guard_set code (⟨fixups, exit⟩ :: groups) guard condition old noEntry found] using eq
 
-end Exec.Code
+end Itasca.Runtime.Code

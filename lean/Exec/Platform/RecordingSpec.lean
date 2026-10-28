@@ -1,5 +1,5 @@
 import Exec.Platform.Recording
-namespace Exec.Platform.Recording
+namespace Itasca.Runtime.Platform.Recording
 open Aeneas Aeneas.Std SpecExt
 /-- A returning trace witness lifts partial correctness through exact erasure.
 The divergence branch follows from erasure and adds no termination premise. -/
@@ -37,4 +37,4 @@ theorem erase_dspec {α : Type} (recorded : Result (α × List HostEvent)) (orig
   | div =>
     rw [←erase,actual,bind_div]
     exact WP.dspec.div _
-end Exec.Platform.Recording
+end Itasca.Runtime.Platform.Recording

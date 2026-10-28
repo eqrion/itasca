@@ -2,7 +2,7 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Core.Step
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
+namespace Itasca.Runtime.Abs.Supported
 
 theorem replace_frame {s : store} {ambient : frame} {f f' : AFrame}
     {rest : List AFrame} (h : SupportedState ⟨s, ambient, f :: rest, []⟩)
@@ -199,4 +199,4 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
           · exact ha op hm
 
 
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Simd.SimdSourceShape
 import Exec.Abs.Simd.Signature
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -26,4 +26,4 @@ theorem pure_source_signature {opcode : U32} {op : Operation}
   unfold PureSignatureCorrect at table
   simpa only [meaning] using table
 
-end Exec.Code
+end Itasca.Runtime.Code

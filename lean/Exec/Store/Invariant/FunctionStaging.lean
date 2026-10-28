@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.TypeStaging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The exact defined-function append, including its future instance identity
@@ -37,8 +37,8 @@ theorem add_instance_function_effect {M A : Type} (memory : runtime.platform.Mem
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, FunctionStageEffect]
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
-        runtime.compiler.ExecutableModule.env, module.Module.env,
-        Itasca.module.Module.impl.env, module.Env.func_type_indices,
+        runtime.compiler.ExecutableModule.env,
+        Itasca.module.Module.impl.env,
         Itasca.module.Env.impl.func_type_indices]
       have sourceBound : index.val < inst.module.module.env.func_type_indices.deref.length := by
         simpa [alloc.vec.Vec.deref] using bound
@@ -102,4 +102,4 @@ theorem FunctionStageEffect.count {M : Type} {store : runtime.store.Store M}
   · rw [output]
     simpa using congrArg List.length mapped
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.StructuredHostSite
 import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
 import Exec.Interp.Relations.StepRecordingInversion
 import Exec.Interp.StructuredMachine.RecordingHeads
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem HostFrameSite.indirect_recording_boundary {M : Type}
 
@@ -92,4 +92,4 @@ theorem HostFrameSite.recording_ready {M : Type}
     exact .ready site (Or.inl (site.direct_recording_instruction index after address selected))
   · obtain ⟨table,type,rfl⟩ := indirect
     exact .ready site (Or.inr ⟨table,type,rfl,site.indirect_recording_boundary table type after shaped address selected⟩)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

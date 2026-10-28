@@ -10,8 +10,8 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Interp.StructuredMachine.ForwardJump
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.Global
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -179,4 +179,4 @@ theorem step_globalSet_core_execution_owned (platform : P) (frameIndex : Usize)
   rintro out ⟨success,platform,metadata,extension,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,platform,metadata,extension,pc,g,machine,simulation,ownership,bounded⟩
 
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

@@ -4,7 +4,7 @@ import Exec.Interp.Relations.Range
 
 /-! Wasm1 active-segment prechecks evaluate certified constant offsets and check
 bounds without modifying a retained object. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -21,9 +21,9 @@ theorem element_bounds_inactive (store : runtime.store.Store M) (platform : P)
   unfold runtime.store.instantiate.Store.check_element_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
-  step with Exec.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+  step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
   rcases inactive with inactive | inactive <;> simp [inactive]
@@ -38,10 +38,10 @@ theorem data_bounds_inactive (store : runtime.store.Store M) (platform : P)
   unfold runtime.store.instantiate.Store.check_data_bounds
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok]
   step with Interp.vec_index_given inst.module.module.tail.data index segment hdata as ⟨found, hfound⟩
   subst found
   simp [inactive]
 
-end Exec.Store
+end Itasca.Runtime.Store

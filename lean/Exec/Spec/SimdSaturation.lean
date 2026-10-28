@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareLists
 import Exec.Spec.IntegerSigned
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def clampLane (width : Nat) (signed : Bool) (x : Int) : Int :=
   let lo := if signed then -(2^(width-1):Int) else 0
@@ -30,4 +30,4 @@ theorem clamp_unsigned_toNat (width : Nat) (x : Int) :
     · rw [BitVec.toNat_ofInt,Int.emod_eq_of_lt] <;> (try simp only [Nat.cast_pow,Nat.cast_ofNat]) <;> omega
     · rw [BitVec.toNat_ofInt,Int.emod_eq_of_lt] <;> (try simp only [Nat.cast_pow,Nat.cast_ofNat]) <;> omega
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

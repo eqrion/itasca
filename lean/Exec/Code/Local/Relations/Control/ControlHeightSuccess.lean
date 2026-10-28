@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.ControlLayout
 import Exec.Code.Local.Initializer.InitializerMappingLoops
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A normally returning addition determines its mathematical sum, without
@@ -70,4 +70,4 @@ theorem control_stack_height_success (values : Slice Itasca.code.StackType)
       have h := body state hi flow call
       cases flow <;> exact h) (initial, 0#usize) (by simp [inv, stackWords]) out success
 
-end Exec.Code
+end Itasca.Runtime.Code

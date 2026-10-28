@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Marshal
 import Exec.Representation.Collection
 import Exec.Interp.Relations.Readback
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def zeroValue : Itasca.types.ValueType → runtime.Value
@@ -54,4 +54,4 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
     (types : alloc.vec.Vec Itasca.types.ValueType) (empty : values.val = []) :
     runtime.interp.call_loop1 values types 0#usize ⦃ after => after.val = types.val.map zeroValue ⦄ := by
   exact host_results_defaults_loop values types 0#usize (by simp) (by simpa using empty)
-end Exec.Interp
+end Itasca.Runtime.Interp

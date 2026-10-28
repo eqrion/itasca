@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdSaturation
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def narrowLane (width : Nat) (signed : Bool) (x y : BitVec 128) (j : Nat) : BitVec width :=
   BitVec.ofInt width (clampLane width signed
@@ -65,4 +65,4 @@ theorem narrow_loop (x y initial : U128) (width i : U32) (signedFlag : Bool)
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

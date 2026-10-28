@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShuffle
 import Exec.Spec.SimdByteSelect
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 set_option maxRecDepth 4096
 
@@ -63,9 +63,9 @@ theorem swizzle_step (x y result : BitVec 128)
     rw [_root_.getElem!_pos (swizzleWords x) (byteAt y k) valid]
     exact List.getElem_mem _
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd
 
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem swizzleWords_get (bits : BitVec 128) (index : Nat) (valid : index < 256) :
     (swizzleWords bits)[index]! = if index < 16 then .mk_uN (byteAt bits index) else .mk_uN 0 := by
@@ -74,4 +74,4 @@ theorem swizzleWords_get (bits : BitVec 128) (index : Nat) (valid : index < 256)
   · simpa only [if_pos first,List.getElem!_eq_getElem?_getD] using byteWords_get bits index first
   · simp only [if_neg first,List.getElem?_replicate,if_pos (show index-16 < 240 by omega),Option.getD_some]
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

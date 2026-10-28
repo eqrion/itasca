@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Common.ObserveFrame
 import Exec.Code.Local.Callbacks.Common.ObserveMeasures
 import Exec.Code.Local.Callbacks.Common.Finish
 import Exec.Code.Local.Callbacks.Common.Fixups
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca.ResultFacts
 
@@ -57,4 +57,4 @@ theorem compiler_observe_stable {A : Type} (ops : runtime.platform.Alloc A)
     · exact Nat.le_max_left _ _
     · exact Nat.le_refl _
 
-end Exec.Code
+end Itasca.Runtime.Code

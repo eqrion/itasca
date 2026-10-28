@@ -4,8 +4,8 @@ import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.IntegerConstantBounded
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.IntegerConstant
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.IntegerConstant
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 theorem step_integer32_execution_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -150,4 +150,4 @@ theorem step_integer64_execution_owned_forward {M P F A : Type}
       (.refl store) (extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,ownership,bounded⟩
 
-end Exec.Interp.StructuredMachine.IntegerConstant
+end Itasca.Runtime.Interp.StructuredMachine.IntegerConstant

@@ -1,6 +1,6 @@
 import Exec.Spec.FloatTrunc
 import Exec.Interp.Numeric.Float.FloatTruncScalar
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 def TruncSourceOutcome (source : Fnn) (target : Inn) (sign : sx) (saturating : Bool)
@@ -171,4 +171,4 @@ theorem scalar_i64_trunc_sat_f64_u_source {F : Type} (ops : runtime.platform.Flo
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual unreachable callback accepts on live and dead input paths.
@@ -39,4 +39,4 @@ theorem compiler_on_unreachable_available {A : Type} (ops : runtime.platform.All
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

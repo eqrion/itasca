@@ -1,8 +1,8 @@
 import Exec.Interp.Invocation.ReadbackOwnership
 import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Store.Invariant.CheckedValues
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem owned_source_value_in_store {M : Type} (store : runtime.store.Store M) (value : runtime.Value)
     (owner : OwnedBy store.id value)
@@ -16,4 +16,4 @@ theorem owned_source_value_in_store {M : Type} (store : runtime.store.Store M) (
     | some reference => exact fun _ => sourceOwned
   exact issued.in_store owner
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -2,7 +2,7 @@ import Exec.Spec.SimdMemoryChunks
 import Exec.Spec.SimdMemoryLane
 import Exec.Spec.SimdWidenLists
 import Exec.Spec.SimdCompareFloatLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 def memoryExtendSource (ty : WidenWidth) (signed : Bool) (argument : memarg) : admininstr :=
@@ -81,8 +81,8 @@ theorem extend_load_value (ty : WidenWidth) (signed : Bool) (s : store) (f : fra
       rw [←ex];exact bounded
     cases ty <;> exact .lane__case_0 _ _ _ wf rfl
   · simp
-end Exec.Spec.Simd
-namespace Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 theorem extend_load_trap (ty : WidenWidth) (signed : Bool) (s : store) (f : frame) (argument : memarg)
@@ -104,4 +104,4 @@ theorem extend_load_trap (ty : WidenWidth) (signed : Bool) (s : store) (f : fram
   · exact input
   · exact .admininstr_case_73
   · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

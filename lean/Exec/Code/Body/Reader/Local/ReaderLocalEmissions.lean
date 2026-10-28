@@ -11,7 +11,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Local.LoweringLocal
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_local_get_wasm2 {data env locals typeIndex st}
@@ -179,4 +179,4 @@ theorem reader_emit_local_tee_wasm2 {data env locals typeIndex st}
   · exact localPosition
   · exact operandPosition
 
-end Exec.Code
+end Itasca.Runtime.Code

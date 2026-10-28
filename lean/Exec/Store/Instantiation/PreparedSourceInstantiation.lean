@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.PreparedAllocation
 import Exec.Code.Module.SourceInstantiation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual preparation cutpoint is the generated source instantiation
@@ -48,4 +48,4 @@ theorem LinkedPreparedRun.source_instantiation {M P F A : Type}
       Nat.min_self, List.range'_eq_map_range]
   · simpa only [rawGlobals] using globalValues.raw_evaluations
   · simpa only [rawElements] using elementValues.raw_evaluations
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,5 +1,5 @@
 import Exec.Interp.Numeric.Float.Float
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 @[step] theorem scalar_f32_abs {F : Type} (ops : runtime.platform.FloatOps F)
@@ -88,4 +88,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
-end Exec.Interp
+end Itasca.Runtime.Interp

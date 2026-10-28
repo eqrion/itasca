@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.ReaderTableSource
 import Itasca.Wasm2.Control.BrTableSound
 import Itasca.Visitor.Accepts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -50,4 +50,4 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
       obtain ⟨all,arity,length,decoded,targets,_,_,_,_⟩ := checked rfl
       exact ⟨count,first,selector,popped,all,arity,readSpec,popCall,popSpec.2.1,popSpec.2.2.1,
         length,by simpa only [popSpec.2.2.1] using decoded,targets⟩
-end Exec.Code
+end Itasca.Runtime.Code

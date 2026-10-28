@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.Execution
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 theorem Execution.finished {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution} {source : Abs.AState}
@@ -20,4 +20,4 @@ theorem Execution.finished {M : Type} {view : M → Slice U8} {code : Store.Code
   · have cursor := invariant.cursor
     simp only [StructuredMachine.ExecutionCursor,sourceEmpty] at cursor
     exact cursor.2.2
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

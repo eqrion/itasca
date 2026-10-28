@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShape
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem index_wf (ty : lanetype) (index : Nat) (valid : index < 128/lsize ty) :
@@ -26,4 +26,4 @@ theorem replace_step (ty : lanetype) (index : Nat) (before result : BitVec 128) 
   · exact const_wf result
   · exact shapeOf_wf ty
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

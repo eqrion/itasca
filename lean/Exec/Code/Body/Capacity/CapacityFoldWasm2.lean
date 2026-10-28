@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Control.ReaderControlEffects
 import Exec.Representation.ValidatedStacks
 import Exec.Code.Local.Relations.Common.EntryTypedSteps
 import Exec.Code.Local.Relations.Control.ControlLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ValidatedStacksWasm2.head_width {data env ctx index st samples}
@@ -12,4 +12,4 @@ theorem ValidatedStacksWasm2.head_width {data env ctx index st samples}
   | done => simp [maximumStackWords]
   | step => exact Nat.le_max_left _ _
 
-end Exec.Code
+end Itasca.Runtime.Code

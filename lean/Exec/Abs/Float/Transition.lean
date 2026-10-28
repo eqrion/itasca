@@ -1,7 +1,7 @@
 import Exec.Abs.Float.Simulation
 import Exec.Abs.Float.Progress
-namespace Exec.Abs.Float
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Float
+open SpecExt Itasca.Runtime.Spec
 
 /-- Relational scalar float transition: every permitted NaN result remains available. -/
 inductive Transition (s : AState) (f : AFrame) (rest : List AFrame)
@@ -92,4 +92,4 @@ theorem transition_trap_simulation (s : store) (ambient : frame) (f : AFrame)
     simpa only [values] using op.trap_simulation s ambient f rest after front a b first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

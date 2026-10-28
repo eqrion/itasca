@@ -16,7 +16,7 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Results
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem saved_source_base {M : Type} {store : runtime.store.Store M} {s : _root_.store}
@@ -97,7 +97,7 @@ theorem step_call_structured {M P F A : Type}
     · rw [exactState, frames_set_last exec frameIndex _ last]
       simp
     · rw [exactState]
-      exact FrameStackRel.ordinary relation (.refl store) (Exec.Spec.extend_store_refl _ typed.store)
+      exact FrameStackRel.ordinary relation (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ typed.store)
         raw frameIndex target last hf binding program (.ready targetPoint) slots ⟨rfl,rfl,rfl,rfl⟩ rfl (.refl _ _)
     · exact Or.inl ⟨rfl, dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩
     · refine ⟨{ raw with pc := target }, compiled, C, targets, next, output, ?_,
@@ -204,4 +204,4 @@ theorem step_call_structured {M P F A : Type}
         · simpa only [← split] using (Spec.StepsHN.refl typed.decode_wf)
         · simpa only [suspendedSourceWords, Nat.add_comm] using saved_source_base saved
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

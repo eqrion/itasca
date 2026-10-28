@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareMasks
 import SpecExt.Builtins.Float.RawCompare
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatComparisonBool (width : Nat) (op : vrelop_Fnn_N) (a b : fN) : Bool :=
@@ -41,4 +41,4 @@ theorem floatCompareSource_wf (ty : Fnn) (op : vrelop_Fnn_N) :
   cases ty <;> cases op <;> constructor <;> constructor <;>
     simp_all [lsizenn,lsize,size,psize,lanetype_Fnn,valtype_numtype]
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

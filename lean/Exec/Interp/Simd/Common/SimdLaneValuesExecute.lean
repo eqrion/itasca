@@ -2,7 +2,7 @@ import Exec.Interp.Simd.Common.SimdInputValues
 import Exec.Interp.Simd.Common.SimdNumericResultSlots
 import Exec.Interp.Simd.Common.SimdLaneEntries
 import Exec.Interp.Simd.Common.SimdExecuteSource
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 private theorem lane_inputs_numeric (op : LaneOperation) (ty : valtype) (member : ty ∈ op.inputs) :
@@ -91,4 +91,4 @@ theorem execute_simd_lane_values {M F : Type}
     unfold Simd.LaneSourceEffect at source
     rw [inputs] at source
     exact source
-end Exec.Interp
+end Itasca.Runtime.Interp

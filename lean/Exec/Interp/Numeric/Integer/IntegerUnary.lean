@@ -3,7 +3,7 @@ import Exec.Interp.Numeric.Integer.IntCounts
 import Exec.Interp.Numeric.Integer.IntExtend
 import Exec.Abs.Numeric.UnaryOperators
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 def unaryOpcode {ty : Inn} (op : UnaryOperator ty) : U16 :=
@@ -107,4 +107,4 @@ theorem scalar_unary_exact {F : Type} (floats : runtime.platform.FloatOps F)
   refine ⟨value, rfl, ?_⟩
   have same := Spec.integer_unop_deterministic relation (unary_relation ty op.operation (integerWord ty a))
   simpa only [List.singleton_inj, num_.mk_num__0.injEq, uN.mk_uN.injEq, true_and] using same
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,8 +2,8 @@ import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
 import Exec.Interp.Host.HostPreparationCauses
 import Exec.Spec.Counted
 import Exec.Theorems.Host.HostCallContext
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Source outcomes for errors after checked invocation entry. Resource and
 interrupt cases retain the exact reached store, including callback effects;
@@ -83,4 +83,4 @@ theorem host_frame_eventful_error {M P : Type} {view : M → Slice U8} {code : S
     refine ⟨[.TRAP],?_⟩
     simpa only [hostCallFrameResult,failed] using steps
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

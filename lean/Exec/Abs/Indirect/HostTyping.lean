@@ -1,7 +1,7 @@
 import Exec.Abs.HostTyping
 import Exec.Abs.Indirect.Progress
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 /-- A typed indirect host call retains the selected address, concrete argument
 suffix, and typed continuation produced by the actual abstract transition. -/
@@ -62,4 +62,4 @@ theorem host_preparation (s : store) (ambient : frame) (f : AFrame) (rest : List
     | FUNC index locals source =>
       cases defaults : defaultLocals locals <;>
         simp [step,values,←List.append_assoc,pop_append,decoded,resolved,invoke,lookup,actualType,←argLength,argTypes,body,defaults] at stepped
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

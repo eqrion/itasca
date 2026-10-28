@@ -1,8 +1,8 @@
 import Exec.Theorems.Host.HostCallSource
 import Exec.Interp.Host.HostReturnFrames
 
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Successful actual host calls supply the concrete slot/frame transport used
 when resuming a caller; no callback behavior is hidden in that transport. -/
@@ -20,4 +20,4 @@ theorem HostCallSourceOutcome.return_effect {M P : Type}
     exact ⟨identity,frames,capacity,values,fun j bound below => preserved j bound (Or.inl below)⟩
   · rcases failed.1 with status | status <;> rw [success] at status <;> cases status
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

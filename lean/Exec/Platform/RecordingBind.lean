@@ -1,5 +1,5 @@
 import Exec.Platform.Recording
-namespace Exec.Platform.Recording
+namespace Itasca.Runtime.Platform.Recording
 open Aeneas Aeneas.Std SpecExt
 
 theorem bind_erase_cont {α β : Type}
@@ -14,4 +14,4 @@ theorem bind_erase_cont {α β : Type}
   funext pair
   rcases pair with ⟨answer,trace⟩
   simpa only [Std.uncurry,bind_ok] using continued answer trace
-end Exec.Platform.Recording
+end Itasca.Runtime.Platform.Recording

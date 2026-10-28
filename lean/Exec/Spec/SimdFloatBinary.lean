@@ -1,6 +1,6 @@
 import Exec.Spec.SimdFloatUnaryChoices
 import Exec.Spec.FloatMinMax
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatBinaryChoices (width : Nat) (op : vbinop_Fnn_N) (a b : fN) : List fN :=
@@ -42,4 +42,4 @@ theorem float_binary_choices_wf (width : Nat) (supported : width = 32 ∨ width 
     subst result
     split <;> assumption
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

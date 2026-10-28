@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Typing
 import Exec.Abs.Preservation
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The canonical global typing rule and actual module binding identify a
 concrete, correctly typed global value and its continuation. -/
@@ -70,4 +70,4 @@ theorem global_set_frame_continuation {s : store} {f : AFrame} {code : List inst
         bindings localTypes locals prefixTyped returns ?_ hw
       simpa only [List.append_nil,baseEq] using hafter
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.NumericInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- NOP and DROP perform only the final operand observation on both live and
@@ -20,4 +20,4 @@ theorem compiler_nop_drop_open_instructions {A : Type} (ops : runtime.platform.A
   exact ⟨compiler_observe_open_instructions ops law before after state held called,
     compiler_observe_exit_slots ops law before after state exits called⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

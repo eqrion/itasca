@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
 import Exec.Code.Local.Control.Table.StructuredPrefixClose
 import Exec.Code.Local.Control.Common.UniversalRoot
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredUniversalPrefix.root_finish {jumpTables : List Aeneas.Std.U32} {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals current}
@@ -43,5 +43,5 @@ theorem StructuredUniversalTerminal.root_finish {jumpTables : List Aeneas.Std.U3
   have finished := code.finish target.val returns (by omega) (by simp [resolvedCode_length, position])
   simpa [resolvedCode, SourceScope.input, front, params, start, position] using finished
 
-end Exec.Code
+end Itasca.Runtime.Code
 

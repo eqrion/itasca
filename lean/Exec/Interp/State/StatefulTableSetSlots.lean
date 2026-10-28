@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulTableSet
 import Exec.Interp.State.StatefulOperandSlots
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 theorem table_set_slots {M : Type}
     (memory : runtime.platform.MemoryBuffer M)
@@ -48,4 +48,4 @@ theorem table_set_slots {M : Type}
   · rename_i outside
     rw [if_neg outside]
     exact effect
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

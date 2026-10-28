@@ -1,5 +1,5 @@
 import Itasca.Wasm2.EmptyVisitorLoop
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Oversized function bodies reject before initialization or visitor calls. -/
@@ -10,4 +10,4 @@ theorem reader_body_too_large {V} (visitor : code.OpVisitor V) (profile : Valida
       .ok (.Err .BodyTooLarge,value) := by
   have guard : Slice.len data > limits.MAX_FUNCTION_BYTES := by simpa using large
   simp only [code.validate_body_with,guard,↓reduceIte]
-end Exec.Code
+end Itasca.Runtime.Code

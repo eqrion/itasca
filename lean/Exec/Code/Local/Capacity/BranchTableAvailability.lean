@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.TableLowerAvailability
 import Exec.Code.Local.Capacity.BranchLabelAvailability
 import Exec.Code.Local.Relations.Table.BranchTableMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -88,4 +88,4 @@ theorem compiler_on_br_table_available {A : Type} (ops : runtime.platform.Alloc 
     rw [post.2]
     exact ⟨post.1,labelEffect.weaken (by intro counter; cases counter <;> simp)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

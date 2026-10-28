@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Acceptance.SourceStepAcceptanceWasm2
 import Exec.Code.Body.Reader.Source.SourceBudgetAdvance
 import Exec.Code.Module.PreparedFunctionDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Source-derived conservative total charges for one prepared function. -/
@@ -14,4 +14,4 @@ abbrev preparedFunctionAllowance (ctx : code.Context) (length : Nat) : ChargeCou
   | .controls => 1+length
   | .locals => ctx.locals.val.length
 
-end Exec.Code
+end Itasca.Runtime.Code

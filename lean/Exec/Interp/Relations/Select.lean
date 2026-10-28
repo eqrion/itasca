@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.CopyRel
 import Exec.Interp.Relations.PrefixEffect
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -30,4 +30,4 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   unfold runtime.interp.execute_select2
   simp only [lift,bind_ok,alloc.vec.Vec.deref_mut]
   step* <;> simp_all [SlotsEffect,_root_.getElem!_pos] <;> first | assumption | omega
-end Exec.Interp
+end Itasca.Runtime.Interp

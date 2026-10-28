@@ -1,7 +1,7 @@
 import Exec.Abs.Ownership.Core
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
-open Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Ownership
 
 theorem step_owned {bounds : Bounds} {s next : AState}
     (typed : CoreTyped s) (covered : SupportedState s) (owned : CoreOwned bounds s)
@@ -33,4 +33,4 @@ theorem step_owned {bounds : Bounds} {s next : AState}
         rcases BinaryInstr.core_head (supported op (by simp)) with head | stuck
         · exact Ownership.instruction_owned bounds store ambient ⟨address,types,locals,module,labels,[],values⟩ rest op after next head frameTyped owned.globals first remaining step
         · exact nomatch (stuck _ _ _ _ _).symm.trans step
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

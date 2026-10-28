@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Checking.NonScopeTargetBounds
 import Exec.Code.Body.Reader.Replay.SingleCallbackProfileWasm2
 import Itasca.Wasm2.Trace.TableBytes
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 
 /-- Every accepted complete-profile Wasm 2 reader step retains bounded jump
@@ -45,4 +45,4 @@ theorem reader_jump_targets_wasm2 {data env localTypes index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index opcode before after blocked accepted
   exact compiler_non_scope_hook_target_bounds ops law before after out.core (.of_range action range ordinary) held callback
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderSignExtension
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixNumeric
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixDeadNumeric
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.numeric {jumpTables : List U32} {A : Type}
@@ -43,4 +43,4 @@ theorem StructuredReaderCompilerStateWasm2.numeric {jumpTables : List U32} {A : 
         state.compiled reach op (by omega) byte accepted
       exact ⟨values, state.advance next advance inbounds post (integer_source_declared op _) compiled (by simp [dead])⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

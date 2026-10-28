@@ -1,7 +1,7 @@
 import Exec.Abs.Indirect.Definition
 import Exec.Abs.Ownership.Bounds
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
 
 theorem invoke_owned {bound s f rest next address after}
     (frame : FrameOwned bound f) (frames : ∀item∈rest,FrameOwned bound item)
@@ -30,4 +30,4 @@ theorem step_owned {bound s f rest next table type after}
       · cases stepped
       · apply invoke_owned (f:={f with vals:=front}) ⟨frame.1,?_⟩ frames results stepped
         exact (frame.2.pop popped).1
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

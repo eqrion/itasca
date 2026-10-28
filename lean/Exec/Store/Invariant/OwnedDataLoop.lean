@@ -8,7 +8,7 @@ import Exec.Store.Initialization.DataResultEffect
 
 import Exec.Store.Initialization.SegmentGlobalMetadata
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem data_owned_staging_loop {M A : Type}
@@ -56,7 +56,7 @@ theorem data_owned_staging_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -103,4 +103,4 @@ theorem data_owned_staging_loop {M A : Type}
         currentInst, hfound, hsource, hissued, hglobalMap, hbindings, himports, hsegments, htyped, fun success => by have counted := hcount success; omega⟩
   · exact ⟨staged, objectBound, contents, rfl, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, issued, rfl, bindings, imports, segments, mapCapacity, storeCapacity, matching, fun _ => by simp⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

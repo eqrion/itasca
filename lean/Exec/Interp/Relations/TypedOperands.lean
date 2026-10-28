@@ -1,6 +1,6 @@
 import Exec.Interp.Control.StructuredPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- Static integer operand types and generated source value typing determine
 actual integer tags, bit bounds, and the untouched prefix. -/
@@ -26,4 +26,4 @@ theorem frame_integer_suffix {s : store} {frame : Abs.AFrame} {incoming : List v
       refine ⟨front, bits, split, ?_, bound⟩
       simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs] using Abs.results_type_of_typed frontTyped
 
-end Exec.Interp
+end Itasca.Runtime.Interp

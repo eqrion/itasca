@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.DefinitionErrors
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -14,8 +14,7 @@ theorem add_table_errors_metadata {M A : Type} (memory : runtime.platform.Memory
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok out) :
     ErrorAllowed ResourceError out.1 ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.table_types, Itasca.module.Env.impl.table_types, bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.table_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok] at run
   obtain ⟨⟨status, after⟩, defined, rest⟩ := normal_bind_exists _ _ _ run
@@ -40,8 +39,7 @@ theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.Memor
     scalar_tac
   obtain ⟨size, sizeRun, sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.mem_types, Itasca.module.Env.impl.mem_types, bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.mem_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,
     lift, sizeRun] at run
@@ -71,4 +69,4 @@ theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.Memor
         repeat' allocation_error_step run using allocator, law
       · repeat' allocation_error_step run using allocator, law
 
-end Exec.Store
+end Itasca.Runtime.Store

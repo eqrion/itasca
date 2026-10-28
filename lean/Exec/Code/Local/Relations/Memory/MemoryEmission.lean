@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Memory.MemoryOperands
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_emission {A : Type} (ops : runtime.platform.Alloc A)
@@ -49,4 +49,4 @@ open Aeneas Aeneas.Std
   obtain ⟨address,value,addressPosition,valuePosition,lowered⟩ := success accepted
   exact ⟨_,lowered,.store front op argument address value offset memory available sourceOffset
     (by simpa only [locals] using addressPosition) valuePosition⟩
-end Exec.Code
+end Itasca.Runtime.Code

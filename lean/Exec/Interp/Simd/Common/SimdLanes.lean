@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Integer.Int
 import SpecExt.Builtins.Lanes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem mask (width : U32) (bound : width.val < 128) :
@@ -55,4 +55,4 @@ open Aeneas Aeneas.Std
   simp only [WP.spec_ok,UScalar.bv_or,UScalar.bv_and,UScalar.bv_not,
     shiftedMaskBits,shiftedValueBits,maskBits,positionEq]
   rfl
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

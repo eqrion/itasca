@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefixUnreachable
 import Exec.Code.Body.Reader.Common.ReaderUnreachable
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Body.Reader.Common.ReaderSpan
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -28,4 +28,4 @@ theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data
   have consumed : p.start.val < out.core.pos.val := by have position := p.pos; have span := post.span; omega
   exact ⟨post, invariant.unreachable ops law out.core consumed callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

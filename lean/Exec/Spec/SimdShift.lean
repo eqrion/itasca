@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShape
 import Exec.Spec.IntegerShift
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 inductive ShiftKind where
@@ -67,4 +67,4 @@ theorem shift_lane_relation (ty : Jnn) (kind : ShiftKind)
     · exact .fun_vshiftop__case_5 _ _ _ _ _ wf rfl
     · exact .fun_vshiftop__case_6 _ _ _ _ _ wf rfl
     · exact .fun_vshiftop__case_7 _ _ _ _ _ wf rfl
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

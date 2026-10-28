@@ -1,8 +1,8 @@
 import Exec.Abs.Preservation
 import Exec.Abs.Numeric.Unary
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem unary_frame_preservation {s : store} {f : AFrame} {code : List instr}
     {baseValues : List val} {ty : Inn} {op : unop_Inn} {bits result : Nat}
@@ -53,4 +53,4 @@ theorem conversion_frame_preservation {s : store} {f : AFrame} {code : List inst
         integerVal, valueType, numtype_Inn, valtype_numtype, hstack] using hafter
 
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

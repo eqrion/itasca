@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.FunctionSourceAllocation
 import Exec.Store.Invariant.FunctionTables
 import Exec.Code.Local.Source.SourceSlice
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent source declaration order agrees with the actual raw type-index
@@ -48,4 +48,4 @@ theorem canonical_function_payload_decode {M : Type} {before after : runtime.sto
   · rw [indices]
     exact source_function_type_indices raw.functions raw.codes lengths
   · exact installed_source_function code instanceIndex.val inst.module raw
-end Exec.Store
+end Itasca.Runtime.Store

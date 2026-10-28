@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.IntegerConstantPoint
 import Exec.Interp.Relations.Capacity
-namespace Exec.Interp.StructuredMachine.IntegerConstant
+namespace Itasca.Runtime.Interp.StructuredMachine.IntegerConstant
 variable {family : ContextEmission} [FloatHeads family]
 open Aeneas Aeneas.Std
 
@@ -38,4 +38,4 @@ theorem integer64_point_capacity (compiled : runtime.bytecode.CompiledFunction)
     · have bound := Code.const64_valid_bounds compiled dst bits (Code.well_formed_fetched compiled checked pc _ fetch)
       simpa only [position] using bound
 
-end Exec.Interp.StructuredMachine.IntegerConstant
+end Itasca.Runtime.Interp.StructuredMachine.IntegerConstant

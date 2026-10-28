@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceStacks
 import Itasca.Visitor.EventDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful dispatch exposes the actual successful reader and hook, without
@@ -33,4 +33,4 @@ theorem reader_run_success {A V : Type}
       obtain ⟨rfl, rfl⟩ := tail
       exact ⟨value, readEq, callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

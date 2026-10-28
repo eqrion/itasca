@@ -3,7 +3,7 @@ import Exec.Store.Initialization.InitializerMetadata
 import Exec.Store.Initialization.ElementEffects
 
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem element_order_loop {M P F A : Type}
@@ -53,8 +53,8 @@ theorem element_order_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.elements, Itasca.module.Env.impl.elements, bind_ok, hsource]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.val.length := by
@@ -102,4 +102,4 @@ theorem element_order_loop {M P F A : Type}
         currentInst, hfound, hsource, horder, hbindings, himports, hsegments, hdatas, hmapData⟩
   · exact ⟨rfl, staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, ordered, bindings, imports, segments, mapCapacity, storeCapacity, rfl, rfl⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

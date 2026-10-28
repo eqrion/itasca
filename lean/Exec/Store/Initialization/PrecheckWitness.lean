@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.PrecheckErrors
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- An actual active element offset resolves beyond its actual target table.
@@ -51,4 +51,4 @@ def PrecommitBoundsEvidence {M : Type} (view : M → Slice U8) (store : runtime.
     store.instances.val[index.val]? = some inst ∧ inst.module = module ∧
     PrecheckCause view store inst error
 
-end Exec.Store
+end Itasca.Runtime.Store

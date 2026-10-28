@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.CopyRel
 import Exec.Code.Local.Relations.Common.ValueRegions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem WordsAt.take {words : List U64} {base : Nat} {bits : List Nat}
@@ -85,4 +85,4 @@ theorem WordsAt.copy_replace {words : List U64} {base src : Nat}
       (by intro j hj; exact Or.inr (by omega))
     simpa only [List.length_append, Nat.add_assoc, width] using preserved
 
-end Exec.Interp
+end Itasca.Runtime.Interp

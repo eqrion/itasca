@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryCopyRun
 import Exec.Spec.CopySnapshot
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def withBytes (memory : meminst) (bytes : List byte) : meminst := {memory with BYTES := bytes}
@@ -38,4 +38,4 @@ theorem memoryCopyBackward_words (s : store) (f : frame) (destination source cou
     simp only [memoryWrite,fun_mem,proj_uN_0,List.modify_eq_set,copyBackward,withBytes]
     generalize same : f.MODULE.MEMS[0]! = a at address ⊢
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,List.set_set,address]
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

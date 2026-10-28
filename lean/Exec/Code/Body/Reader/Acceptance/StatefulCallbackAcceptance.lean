@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Acceptance.StatefulReaderAcceptance
 import Exec.Code.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Visitor.Events
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Named source event for each actual stateful visitor hook. -/
@@ -52,4 +52,4 @@ theorem StatefulReaderPost.callback_available {data env locals index st} {p : Wa
   rw [stateful_callback_lower ops compiler out op a b arguments]
   exact post.available ops bound allocation compiler demand C matched known monomorphic wholeLayout pairs a b
 
-end Exec.Code
+end Itasca.Runtime.Code

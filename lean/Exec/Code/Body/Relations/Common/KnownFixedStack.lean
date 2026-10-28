@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.KnownNumericStack
 import Exec.Code.Body.Reader.Common.ReaderStacks
 import Itasca.Wasm2.FixedOperands
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 /-- Fixed signatures preserve concrete operands even when the control frame is
@@ -50,4 +50,4 @@ theorem fixed_effect_types {before after : List code.StackType} {inputs output}
   obtain ⟨front,afterTypes,realized⟩ := effect _ (Sequence.realizes_default false after)
   exact ⟨front,(realized_concrete_types known realized).symm,afterTypes⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

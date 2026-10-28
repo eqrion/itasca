@@ -8,7 +8,7 @@ import Exec.Interp.Relations.ControlEntry
 import Exec.Interp.Control.BranchConditionStep
 import Exec.Interp.Relations.TypedOperands
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_if {M P F A : Type}
@@ -135,4 +135,4 @@ theorem step_if {M P F A : Type}
         simpa only [numtype_Inn] using Abs.integer_accepts .I32 bits bitsBound
       simp only [Abs.Core.step,Abs.Core.instruction,Abs.astep,valueSplit,Abs.pop_append,accepts,Abs.advance]
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

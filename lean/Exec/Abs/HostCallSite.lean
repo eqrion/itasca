@@ -2,8 +2,8 @@ import Exec.Abs.HostTyping
 import Exec.Abs.Sim.Call
 import Exec.Abs.Sim.Host
 import Exec.Spec.HostCall
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The source context around an abstract host boundary is recovered from
 instruction typing and actual address/argument extraction. -/
@@ -87,5 +87,5 @@ theorem HostPending.finish_typed {state : AState} {types : List valtype}
   obtain ⟨f,rest,frames,valid⟩ := pending.resume extension functions typed
   simpa only [finishHost,frames,pending.values] using valid
 
-end Exec.Abs
+end Itasca.Runtime.Abs
 

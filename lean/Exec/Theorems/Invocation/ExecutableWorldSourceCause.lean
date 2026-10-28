@@ -3,8 +3,8 @@ import Exec.Theorems.Invocation.InvokeHostWorldResources
 
 /-! Source resource causes at the public invocation boundary. Construction is
 separate so clients can use the vocabulary without importing the public proof. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Resource and boundary errors retain the original public selection or the
 actual reached code world, including functions published by earlier callbacks. -/
@@ -22,4 +22,4 @@ def ExecutableWorldInvocationSourceCause {M P F A : Type}
         memory hooks floats allocator view code Inv store Spec.invocationFrame address signature args after error) ∨
      ∃ identity,function.code=.Host identity ∧ InitialHostSourceResourceCause hooks allocator store after identity signature error)
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.DecodeValue
 import Exec.Interp.Relations.Regions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- Canonical raw global words re-encode exactly, including reference zero and
@@ -62,4 +62,4 @@ theorem ValuesAt.append_vector {words : List U64} {base : Nat} {front : List val
   simpa only [Code.encodeValues_length,List.length_append,List.length_cons,List.length_nil,
     List.append_assoc,List.cons_append,List.nil_append,Nat.add_assoc,Nat.zero_add] using second
 
-end Exec.Interp
+end Itasca.Runtime.Interp

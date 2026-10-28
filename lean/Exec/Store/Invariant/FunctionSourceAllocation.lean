@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.FunctionAllocationDecode
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Exact source-ordinal allocation and the installed body interpretation give
@@ -38,4 +38,4 @@ theorem FunctionPayload.source_list {M : Type} {before after : runtime.store.Sto
     exact allocated.decode code store inst found types sources[index]
       seed.module.module.env.func_type_indices.val[index] (List.getElem?_eq_getElem rawBound)
       sourceIndex (sourceCode index sources[index] (List.getElem?_eq_getElem sourceBound))
-end Exec.Store
+end Itasca.Runtime.Store

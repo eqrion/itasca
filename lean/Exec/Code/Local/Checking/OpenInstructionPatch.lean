@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 import Exec.Code.Local.Callbacks.Common.FixupAlgebra
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -33,7 +33,7 @@ theorem OpenInstructionCheck.retarget_accepts {before after : runtime.bytecode.C
     (held : OpenInstructionCheck before pending index instruction)
     (growth : InstructionCheckExtends before after) (target : U32)
     (inside : target.val < after.code.length) :
-    runtime.bytecode.CompiledFunction.instruction_valid after (Exec.Code.retarget instruction target) = .ok true := by
+    runtime.bytecode.CompiledFunction.instruction_valid after (Itasca.Runtime.Code.retarget instruction target) = .ok true := by
   cases held with
   | checked accepted =>
     by_cases jump : ∃ old, instruction = .Jump old
@@ -47,8 +47,8 @@ theorem OpenInstructionCheck.retarget_accepts {before after : runtime.bytecode.C
     · obtain ⟨condition,old,rfl⟩ := nonzero
       have bound := jumpIfNonZero_valid_bounds before condition old accepted
       exact (CoreInstructionBounds.jumpIfNonZero (by have capacity := growth.slots; omega) inside).accepts
-    have same : Exec.Code.retarget instruction target = instruction := by
-      cases instruction <;> simp_all [Exec.Code.retarget]
+    have same : Itasca.Runtime.Code.retarget instruction target = instruction := by
+      cases instruction <;> simp_all [Itasca.Runtime.Code.retarget]
     rw [same]
     exact instruction_valid_monotone before after instruction growth accepted
   | jump _ => exact (CoreInstructionBounds.jump inside).accepts
@@ -77,4 +77,4 @@ theorem OpenInstructionPrefix.patch {before after : runtime.bytecode.CompiledFun
   · rename_i unchanged
     exact (held index instruction found).grow growth (owners index (by simpa using unchanged))
 
-end Exec.Code
+end Itasca.Runtime.Code

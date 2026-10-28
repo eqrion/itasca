@@ -1,5 +1,5 @@
 import Exec.Spec.TableAccess
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- The generated indirect-call rule resolves exactly a function reference
@@ -51,4 +51,4 @@ theorem call_indirect_trap (s : store) (f : frame) (table type position : Nat)
     refine ⟨address,List.getElem?_eq_some_iff.mpr ⟨inside',?_⟩,s.FUNCS[address],List.getElem?_eq_getElem issued',?_⟩
     · simpa only [proj_num__0,proj_uN_0,Option.get!,getElem!_pos (fun_table ⟨s,f⟩ (.mk_uN table)).REFS position inside'] using reference
     · simpa only [fun_funcinst,getElem!_pos s.FUNCS address issued'] using signature
-end Exec.Spec
+end Itasca.Runtime.Spec

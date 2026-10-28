@@ -8,7 +8,7 @@ import Exec.Interp.Simd.Memory.SimdMemoryExtendSource
 import Exec.Interp.Simd.Memory.SimdMemoryDispatch
 import Exec.Spec.SimdPureValues
 import Exec.Code.Local.Lowering.Simd.SimdSourceShape
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 /-- Exact buffer changes permitted by a vector memory instruction. The write constructor retains
@@ -53,4 +53,4 @@ def MemoryOperationSound (opcode : U32) : Prop :=
     runtime.interp.simd.memory_op opcode offset laneIndex x y bytes
       ⦃ result => MemorySourceEffect op argument laneIndex.val x.bv y.bv z.bv s f bytes result.1 result.2 ⦄
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

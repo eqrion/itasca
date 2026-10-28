@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Memory.ReaderMemoryStacks
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem memory_load_stack_types {old next outer segment rest : List code.StackType} {ty : types.ValueType}
@@ -34,4 +34,4 @@ theorem memory_reader_available (env : module.Env) (arg : code.MemArg) (natural 
   rw [accepted,WP.spec_ok] at effect
   have bound : 0 < C.MEMS.length := by simpa [memories] using effect.1
   exact ⟨C.MEMS[0],List.getElem?_eq_getElem bound⟩
-end Exec.Code
+end Itasca.Runtime.Code

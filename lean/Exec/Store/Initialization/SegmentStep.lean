@@ -3,9 +3,9 @@ import Exec.Interp.Relations.Initializer
 
 /-! Straight-line initialization steps reuse the actual interpreter fetch and
 dispatch path, with exact program-counter and metadata effects. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -151,4 +151,4 @@ theorem segment_step_const32 (exec : runtime.interp.Execution)
   simp only [Nat.zero_add] at slots
   simpa only [success, true_and, and_true, initializerFrame] using (show ∃ next : U32, next.val = position.val + 1 ∧ SlotsEffect {exec with frames := exec.frames.set 0#usize (initializerFrame instIndex function next)} after (exec.slots.val.set dst.val (UScalar.cast .U64 bits)) from ⟨next, hnext, slots⟩)
 
-end Exec.Store
+end Itasca.Runtime.Store

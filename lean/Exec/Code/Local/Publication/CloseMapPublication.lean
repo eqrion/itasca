@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Control.ControlCursor
 import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 import Exec.Code.Local.Publication.ControlMapCloseEffect
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- An actual unguarded END retains control-map publication bounds. -/
@@ -68,4 +68,4 @@ theorem compiler_guarded_map_publication {A : Type} (ops : runtime.platform.Allo
   rw [cursor]
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

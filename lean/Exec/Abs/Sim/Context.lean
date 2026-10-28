@@ -1,8 +1,8 @@
 import Exec.Abs.Step
 import Exec.Spec.Context
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Syntactic well-formedness of the suspended continuations. -/
 def LabelsWf (labels : List Label) : Prop :=
@@ -101,4 +101,4 @@ theorem stepH_active {s s' : store} (ambient : frame) (rest : List AFrame)
   exact stepH_decodeFrames ambient rest
     (stepH_frame h arity (activeFrame ambient rest) (activeFrame_wf ha hr)) ha hr
 
-end Exec.Abs
+end Itasca.Runtime.Abs

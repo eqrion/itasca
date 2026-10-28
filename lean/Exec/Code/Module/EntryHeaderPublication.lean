@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.EntryBodyExecutable
 import Exec.Code.Local.Publication.FunctionPublicationHeader
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Complete-profile source encoding and the actual unfinished body establish
@@ -54,4 +54,4 @@ theorem witness_header_publication {A : Type} (ops : runtime.platform.Alloc A)
   · refine ⟨returnStart,returnCount,?_⟩
     simpa only [show final.function.code.length-1 = target.val by change final.function.code.val.length-1 = target.val; omega] using last
 
-end Exec.Code
+end Itasca.Runtime.Code

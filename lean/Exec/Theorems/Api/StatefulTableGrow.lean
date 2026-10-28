@@ -2,8 +2,8 @@ import Exec.Theorems.Api.StatefulGrowthChoice
 import Exec.Interp.State.TableGrow
 import Exec.Store.Api.TableGrowSource
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_table_growth {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (table : U32) (address : runtime.TableAddr)
@@ -82,4 +82,4 @@ theorem stateful_table_grow_effect {M A : Type}
   obtain ⟨metadata,transition⟩ := stateful_table_growth view code store inst table address object (UScalar.cast .U32 amount) reference
     (result,out.2.2) state f rest after front mapped issued sourceStore moduleEq values growth
   exact ⟨success,metadata,result,slots,growth,transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

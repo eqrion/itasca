@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Relations.Control.ControlEntrySuccess
 import Exec.Code.Local.Publication.ScopeEntryPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A reached structured prefix supplies entry PC and reserve bounds. Actual
@@ -47,4 +47,4 @@ theorem structured_scope_entry_publication {jumpTables : List U32}
     exact compiler_scope_entry_publication ops law before after state kind bt (makeGeometry pc)
       (.dead kind dead rfl) coordinates maps inside forward called
 
-end Exec.Code
+end Itasca.Runtime.Code

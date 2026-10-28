@@ -2,8 +2,8 @@ import Exec.Abs.Sim.Control
 import Exec.Abs.Sim.Typing
 import Exec.Spec.Counted
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Branching to the innermost label discards its intermediate operands and
 resumes the declared continuation with exactly the branch results. -/
@@ -207,4 +207,4 @@ theorem typed_branch_simulation (s : store) (ambient : frame) (f : AFrame)
           exact step ▸ result
         · contradiction
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryFillSource
 import Exec.Spec.FillSlice
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem memoryFill_eq (s : store) (f : frame) (destination value count : Nat)
@@ -26,4 +26,4 @@ theorem memoryFill_eq (s : store) (f : frame) (destination value count : Nat)
         (by simpa [memoryWrite] using address)
         (by simpa only [lengthEq] using memoryBound) (by rw [lengthEq]; omega)]
       simp only [memoryWrite,List.modify_modify_eq,Function.comp_def,fillInto]
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

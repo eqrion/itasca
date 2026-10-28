@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShiftSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def extendBits (signed : Bool) {width : Nat} (output : Nat) (bits : BitVec width) : BitVec output :=
@@ -19,7 +19,7 @@ theorem extend_bits_source {width : Nat} (output : Nat) (signed : Bool) (bits : 
   cases signed
   · simp only [extendBits,Bool.false_eq_true,↓reduceIte,extend__]
     rw [BitVec.toNat_setWidth_of_le le]
-  · simp only [extendBits,Bool.true_eq,↓reduceIte,extend__,proj_uN_0,Exec.Spec.signedValue_bitvec]
+  · simp only [extendBits,Bool.true_eq,↓reduceIte,extend__,proj_uN_0,Itasca.Runtime.Spec.signedValue_bitvec]
     rfl
 
 inductive WidenWidth where | i8 | i16 | i32
@@ -53,4 +53,4 @@ def pairwiseSource (ty : PairwiseWidth) (signed : Bool) : admininstr :=
   .VEXTUNOP (.mk_ishape (shapeOf (lanetype_Jnn ty.widen.output)))
     (.mk_ishape (shapeOf (lanetype_Jnn ty.widen.input)))
     (.mk_vextunop___0 ty.widen.input (128/ty.widen.width) ty.widen.output ty.widen.count (.EXTADD_PAIRWISE (widenSign signed)))
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Local.Relations.Control.KnownControlStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_unreachable_wasm2 {data env locals index st}
@@ -28,4 +28,4 @@ theorem reader_unreachable_wasm2 {data env locals index st}
   · simpa using markedVals
   · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Exec.Code
+end Itasca.Runtime.Code

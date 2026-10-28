@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Memory.ReaderMemoryEmissions
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Local.Checking.LinearEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed local get reading preserves every stored instruction check. -/
@@ -211,4 +211,4 @@ theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
   rw [input] at layout
   exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.CoreFunction
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Emission depends exactly on the local/global/memory namespaces used by
@@ -36,4 +36,4 @@ def moduleFunctionContext (module : runtime.compiler.ExecutableModule)
   {sourceFunctionContext module.module.env locals results with
     DATAS := List.replicate module.module.tail.data.length datatype.OK}
 
-end Exec.Code
+end Itasca.Runtime.Code

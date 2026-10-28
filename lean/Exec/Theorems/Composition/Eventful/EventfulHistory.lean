@@ -114,8 +114,8 @@ import Exec.Interp.Relations.EventfulControl
 import Exec.Interp.Relations.FrameStorePrefix
 import Exec.Spec.EventfulInfinite
 
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- An execution state with a current certificate and reference ownership.
 Host callbacks may extend the store, so neither host-freedom nor a fixed bound
@@ -152,4 +152,4 @@ def EventfulMachine.potential {M P view code expected}
     (machine : EventfulMachine M P view code expected) : Nat :=
   dispatchMeasure machine.pending U32.max machine.pc machine.source
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

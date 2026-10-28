@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderBranchInfo
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Checked branch arguments form the exact source suffix of a live concrete stack. -/
@@ -97,4 +97,4 @@ theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env 
         subst out
         refine ⟨remaining, segmentEq, ?_, Sequence.stackTypes rest, interpreted.symm⟩
         simpa [argumentValues, remainingShape, List.append_assoc] using finalValues
-end Exec.Code
+end Itasca.Runtime.Code

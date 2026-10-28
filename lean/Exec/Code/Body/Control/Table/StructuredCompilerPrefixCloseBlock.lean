@@ -3,7 +3,7 @@ import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Control.Table.StructuredUniversalCloseDeadBlock
 import Exec.Code.Local.Control.Table.StructuredElseFrames
 import Exec.Code.Local.Callbacks.Control.ScopeStackClose
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing an entered BLOCK restores either its live parent prefix or its
@@ -83,4 +83,4 @@ theorem StructuredCompilerPrefix.close_block {jumpTables : List Aeneas.Std.U32} 
   | dormant dead retained =>
     have impossible := retained.unentered
     simp [entered] at impossible
-end Exec.Code
+end Itasca.Runtime.Code

@@ -3,7 +3,7 @@ import Exec.Code.Module.InitializerEmitDatasAvailable
 import Exec.Code.Local.Relations.Common.SegmentAcceptance
 import Exec.Code.Local.Relations.Common.SegmentFinish
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The exact extracted suffix after read-only initializer mappings. This is a
@@ -15,7 +15,7 @@ def segmentCompilation {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.Budget A) := do
   let function ←
     runtime.bytecode.CompiledFunction.synthetic (alloc.vec.Vec.new
-      _root_.Exec.runtime.bytecode.Instr) 0#u32
+      _root_.Itasca.runtime.bytecode.Instr) 0#u32
   let (budget4, result3, function1) ←
     runtime.compiler.initialize.lower_loop3 ops module
       budget 0#usize (core.result.Result.Ok ()) function
@@ -67,4 +67,4 @@ def segmentCompilation {A : Type} (ops : runtime.platform.Alloc A)
         residual
     .ok (r, module, budget4)
 
-end Exec.Code
+end Itasca.Runtime.Code

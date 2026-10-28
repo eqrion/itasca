@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.StackRelation
 import Exec.Abs.Results
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem FrameProgram.reposition {M : Type} {store : runtime.store.Store M}
@@ -14,4 +14,4 @@ theorem FrameProgram.reposition {M : Type} {store : runtime.store.Store M}
     program.localSlots.trans (congrArg Code.slots metadata.locals).symm,
     by simpa only [metadata.results] using program.epilogue⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

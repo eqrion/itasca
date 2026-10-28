@@ -3,7 +3,7 @@ import Exec.Interp.StructuredMachine.Execution
 import Exec.Interp.Control.SkipStack
 import Exec.Interp.Relations.PrefixDispatch
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Ordinary bytecode changes only the active source's live values and code.
@@ -57,4 +57,4 @@ theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store
       program.localSlots.trans (congrArg Code.slots metadata.locals).symm,
       by simpa only [metadata.results] using program.epilogue⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

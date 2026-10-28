@@ -6,7 +6,7 @@ import Exec.Interp.StructuredMachine.SimdExecutionJoin
 import Exec.Code.Local.Lowering.Simd.SimdPureSignature
 import Exec.Code.Local.Capacity.SimdMeaningBound
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1200000
@@ -94,4 +94,4 @@ theorem step_pure_frame {M P F A : Type}
       cases op.signature <;> rfl
     simpa only [List.map_cons,List.map_nil,outputEq,frontEq] using tail
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

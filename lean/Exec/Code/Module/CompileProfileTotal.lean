@@ -4,7 +4,7 @@ import Exec.Code.Module.CompileTotalDriver
 import Exec.Code.Module.SchedulerProfileSafety
 import Itasca.Stream.ReachedBatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -56,7 +56,6 @@ theorem compiler_profile_entries_total_of_prepared_bodies {A : Type} (ops : runt
     omega
   have range : dispatched.first_func.val + dispatched.num_funcs.val ≤ dispatched.env.func_type_indices.val.length := by
     simpa only [workerFirst,workerCount,workerEnv] using bounded.2.1
-  simp only [Exec.stream.CodeBatch.validate_func]
   apply Itasca.stream.CodeBatch.validate_func.prepared_total _ dispatched entry.index initial
     (by simpa only [envEq] using envBounds) range
   · intro prepared
@@ -100,4 +99,4 @@ theorem compile_with_total_of_profile_prepared_bodies {A : Type} (ops : runtime.
     runtime.compiler.compile_with ops bytes profile limits ⦃ _ => True ⦄ :=
   compile_with_total_of_profile_entries ops law bytes profile limits
     (compiler_profile_entries_total_of_prepared_bodies ops law profile bodies)
-end Exec.Code
+end Itasca.Runtime.Code

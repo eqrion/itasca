@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
 import Itasca.Wasm2.Trace.ControlRecords
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- Accepted indirect calls retain both canonical source indices and advance
@@ -48,4 +48,4 @@ theorem reader_indirect_call_wasm2 {data env locals index st}
   · simpa [sameBlocks] using blocks
   · exact stack
   · simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
-end Exec.Code
+end Itasca.Runtime.Code

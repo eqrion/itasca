@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatTruncTail
 import Exec.Interp.Numeric.Float.FloatCompareBits
 import SpecExt.Builtins.Float.TruncBounds
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem float_sign_mask32_unbounded (bits : U64) :
@@ -139,4 +139,4 @@ theorem float_sign_mask32_unbounded (bits : U64) :
           simp only [checkedTruncMagnitude, lift, bind_ok] at effect
           rw [magnitudeValue] at effect
           exact effect
-end Exec.Interp
+end Itasca.Runtime.Interp

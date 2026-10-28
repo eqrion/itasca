@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatBinaryPseudo
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd Platform
 
 def floatBinaryOpcode (ty : Fnn) (op : vbinop_Fnn_N) : U32 :=
   match ty,op with
@@ -71,4 +71,4 @@ theorem float_binary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps 
   intro result allowed
   simpa using allowed
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

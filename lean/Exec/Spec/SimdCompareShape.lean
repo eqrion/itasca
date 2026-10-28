@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShape
 import Exec.Spec.SimdCompareInteger
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def integerCompareSupported (ty : Jnn) (op : vrelop_Jnn_N) : Prop :=
   match ty,op with
@@ -21,4 +21,4 @@ theorem integerCompareSource_wf (ty : Jnn) (op : vrelop_Jnn_N)
     constructor
     cases ty <;> cases sign <;> simp_all [integerCompareSupported,lsizenn,lsize,size,psize,lanetype_Jnn,isize,valtype_numtype]
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

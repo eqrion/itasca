@@ -5,7 +5,7 @@ import Exec.Interp.Relations.Execute
 relation supplies address and program-counter bounds; the selected handler
 supplies its own postcondition. This bridge checks all intervening indexing and
 the exact program-counter update. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem vec_index_given {T : Type} (values : alloc.vec.Vec T)
@@ -93,4 +93,4 @@ theorem step_fetch {M P F A : Type}
   (step_fetch_div memory hooks floats allocator exec store platform index frame inst code instruction
     last hf hi hc hop pcBound False post fun next hnext => .of_spec _ _ _ _ (handler next hnext)).spec
 
-end Exec.Interp
+end Itasca.Runtime.Interp

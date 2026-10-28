@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.StructuredMachine.JumpExecution
 import Exec.Interp.Relations.Capacity
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem step_function_end_execution {M P F A : Type}
@@ -64,4 +64,4 @@ theorem step_function_end_execution {M P F A : Type}
       compiled.local_slots.val count.val returned f.vals original codeTypes actualWidth bounds nextTyped result
     exact ⟨success,sameStore,samePlatform,pc,_,fresh,ConcreteSim.of_source _ _ _ _ _ simulation,
       StructuredMachine.return_owned f.vals (fun _ member => member),by cases rest <;> rfl,(fun _ bounded => returnedState_codeBound bounded f.vals)⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

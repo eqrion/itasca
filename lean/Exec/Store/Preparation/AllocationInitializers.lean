@@ -2,7 +2,7 @@ import Exec.Store.Preparation.AllocationShape
 import Exec.Store.Initialization.ElementContentEffect
 import Exec.Store.Initialization.DataEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem GlobalStageEffect.allocated {M : Type} {view : M → Slice U8} {store after : runtime.store.Store M}
@@ -67,4 +67,4 @@ theorem DataStageEffect.allocated {M : Type} {view : M → Slice U8} {store afte
     cases shape
     constructor <;> assumption
 
-end Exec.Store
+end Itasca.Runtime.Store

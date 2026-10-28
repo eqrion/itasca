@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Interp.Relations.ControlPoint
-namespace Exec.Interp.StructuredMachine
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem step_forward_jump
     {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -42,4 +42,4 @@ theorem step_forward_jump
     · exact machine.typed
     · exact machine.core
   · exact Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward point.code.current.entry_bound⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

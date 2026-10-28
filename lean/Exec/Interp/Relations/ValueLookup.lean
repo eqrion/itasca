@@ -1,6 +1,6 @@
 import Exec.Interp.Control.StructuredLinear
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem values_type_lookup (values : List val) (index : Nat) (ty : valtype)
     (lookup : (values.map Code.valueType)[index]? = some ty) :
@@ -18,4 +18,4 @@ theorem values_type_suffix (values : List val) (before : List valtype) (ty : val
   obtain ⟨value, rfl⟩ := List.length_eq_one_iff.mp size
   exact ⟨front, value, split, frontTypes, by simpa using operandTypes⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

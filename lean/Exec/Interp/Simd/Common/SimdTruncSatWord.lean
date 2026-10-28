@@ -2,8 +2,8 @@ import Exec.Spec.SimdTruncSat
 import Exec.Interp.Numeric.Float.FloatTrunc32
 import Exec.Interp.Numeric.Float.FloatTrunc64
 import Exec.Interp.Simd.Float.SimdCompareFloatLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem trunc_outcome_some (word : uN) (result : core.result.Result U64 runtime.ExecError)
     (effect : TruncOutcome (some word) result) :
@@ -38,4 +38,4 @@ theorem trunc_outcome_some (word : uN) (result : core.result.Result U64 runtime.
   rw [←word] at bound
   exact bound
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

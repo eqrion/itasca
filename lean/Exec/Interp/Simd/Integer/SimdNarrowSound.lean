@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdNarrowPacking
 import Exec.Spec.SimdNarrowSource
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem narrow_lanes_sound (ty : Spec.Simd.NarrowWidth) (signed : Bool) (x y : U128)
@@ -36,4 +36,4 @@ theorem narrow_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with narrow_lanes_sound ty signed x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

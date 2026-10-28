@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Control.ReaderBranchIfLayout
 import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
 import Exec.Code.Local.Relations.Common.KnownPopStack
 import Exec.Code.Body.Reader.Common.ReaderSpan
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -34,4 +34,4 @@ theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env s
       ((Nat.le_of_lt p.inbounds).trans sourceBound) callback
   · exact invariant.br_if_dead ops law out.core consumed (Bool.eq_false_iff.mpr reachable) depth view callback
 
-end Exec.Code
+end Itasca.Runtime.Code

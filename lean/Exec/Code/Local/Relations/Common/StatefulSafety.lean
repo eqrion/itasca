@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.PairSafety
 import Exec.Code.Local.Relations.Common.StatefulLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_stateful_plain_total {A} (ops : runtime.platform.Alloc A)
@@ -73,4 +73,4 @@ open Aeneas Aeneas.Std
       rw [if_neg live]
       exact compiler_observe_stack ops law compiler state
 
-end Exec.Code
+end Itasca.Runtime.Code

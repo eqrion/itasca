@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderCompilerRoot
 import Exec.Code.Body.Reader.Control.StructuredRootInstructionPrefix
 import Exec.Code.Local.Checking.FrameExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual root END checks every stored instruction from its typed preceding stack and retained exits. -/
@@ -62,4 +62,4 @@ theorem StructuredReaderCompilerStateWasm2.root_checked_instructions {jumpTables
     initialLayout initialLocals initialCapacity ((Nat.le_of_lt inbounds).trans sourceBound)
     out.core savedCurrent.ctrl.kind savedCurrent.bt stack exits maps held consumed endBound callback
 
-end Exec.Code
+end Itasca.Runtime.Code

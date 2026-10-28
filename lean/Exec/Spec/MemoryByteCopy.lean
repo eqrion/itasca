@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryFillSource
 import Exec.Spec.PackedMemory
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def loadByte : admininstr := PackedMemory.load .i32x8 .U zeroMemarg
@@ -44,4 +44,4 @@ theorem memory_copy_byte_steps (s : store) (f : frame) (destination source : Nat
     (by simpa [Forall] using storeByte_wf)
   have stored := memory_write_step s f destination _ hs hf hd byteWf mapped destinationInside
   exact stepsH_trans (stepsH_single (by simpa [instrContext,vals,admininstr_val,i32] using loaded)) (stepsH_single stored)
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

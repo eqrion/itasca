@@ -3,9 +3,9 @@ import Exec.Theorems.Host.HostEventfulReturn
 import Exec.Theorems.Composition.Eventful.EventfulWorldStep
 import Exec.Theorems.Composition.Eventful.EventfulWorldReinterpret
 import Exec.Interp.Relations.StepRecordingLookup
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 theorem step_host_call_world_outcomes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -108,4 +108,4 @@ theorem step_host_call_world_outcomes {M P F A : Type}
         have sourceError := host_frame_eventful_error kind trace.erase rfl
         simpa only [labels] using sourceError
     · exact ⟨rfl,frameIndex,raw,pc,address,signature,base,host,hf,pcNext,site,callActual,causes⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.CopyRel
 import Itasca.Support.Result
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 structure SlotPrefix (base : Nat) (before after : List U64) : Prop where
@@ -230,4 +230,4 @@ theorem execute_copy_n_prefix (exec : runtime.interp.Execution) (base : Usize)
   have sum := add_observed base (UScalar.cast .Usize dst) pd hpd
   omega
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.KnownStackTransfer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A live concrete stack has exactly one declarative interpretation. -/
@@ -32,4 +32,4 @@ theorem numeric_effect_types {before after : List code.StackType} {inputs output
   have beforeTypes := realized_concrete_types known (transfer _ (Sequence.realizes_default false rest))
   exact ⟨Sequence.stackTypes rest, beforeTypes.symm, by simp [Sequence.stackTypes], afterKnown⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

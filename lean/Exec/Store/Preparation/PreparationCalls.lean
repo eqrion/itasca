@@ -1,5 +1,5 @@
 import Exec.Store.Invariant.NormalResult
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A finite prefix of actual successful preparation calls. This records the
@@ -15,4 +15,4 @@ inductive PreparationCalls {S : Type}
       (advanced : nextIndex.val = index.val + 1) :
       PreparationCalls call initial start after nextIndex
 
-end Exec.Store
+end Itasca.Runtime.Store

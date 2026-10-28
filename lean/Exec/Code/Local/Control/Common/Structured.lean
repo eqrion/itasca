@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.Rel
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Concrete copy specialization shared by compiler and execution certificates. -/
@@ -169,4 +169,4 @@ inductive CodeRel (types functions : List functype) (returns locals : List valty
       (remaining : pc + 1 ≤ next) (scope : next ≤ code.length) :
       CodeRel types functions returns locals code labels (front ++ returns) (.RETURN :: after) pc next final
 
-end Exec.Code
+end Itasca.Runtime.Code

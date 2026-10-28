@@ -1,5 +1,5 @@
 import Exec.Spec.SimdExtendLanes
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem extend_vector (ty : WidenWidth) (high signed : Bool) (x result : BitVec 128)
@@ -40,4 +40,4 @@ theorem extend_step (ty : WidenWidth) (high signed : Bool) (x result : BitVec 12
   · exact const_wf x
   · exact extend_source_wf ty high signed
   · exact const_wf result
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

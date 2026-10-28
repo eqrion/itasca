@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationTableMemory
 import Exec.Store.Invariant.AddressOrder
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem TableStageEffect.address_order {M : Type} {store : runtime.store.Store M}
@@ -20,4 +20,4 @@ theorem MemoryStageEffect.address_order {M : Type} {view : M → Slice U8} {stor
   rcases effect with ⟨error, rfl⟩ | ⟨memories, buffer, addresses, count, zeros, stored, mapped, limits, capacity, counter, budget, rfl⟩
   · exact ordered
   · simpa [stored, mapped] using ordered.append
-end Exec.Store
+end Itasca.Runtime.Store

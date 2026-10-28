@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.Transition
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem evaluate_frame (choice : Selection) (op : Instruction) (s : AState) (f : AFrame)
     (rest : List AFrame) (after : List instr) (next : AState)
@@ -54,4 +54,4 @@ theorem transition_functions (s : AState) (f : AFrame) (rest : List AFrame) (aft
     next.store.FUNCS = s.store.FUNCS := by
   obtain ⟨choice,_,result⟩ := step
   exact evaluate_functions choice op s f rest after next result
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

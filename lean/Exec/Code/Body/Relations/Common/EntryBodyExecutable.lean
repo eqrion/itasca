@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.EntryCompilerExecutable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem witness_body_executable {A : Type} (ops : runtime.platform.Alloc A)
@@ -32,4 +32,4 @@ theorem witness_body_executable {A : Type} (ops : runtime.platform.Alloc A)
     facts.functionSlots matched rfl facts.signatures facts.bodyBound
   exact ⟨facts,body⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.EnterLoopAvailability
 import Exec.Code.Local.Capacity.EnterIfAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every raw observed stack entry occupies at most two compiler words. -/
@@ -60,4 +60,4 @@ theorem compiler_enter_available {A : Type} (ops : runtime.platform.Alloc A)
       intro out post
       exact ⟨post.1,post.2.weaken (by intro counter; cases counter <;> simp)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

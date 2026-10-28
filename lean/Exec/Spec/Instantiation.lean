@@ -1,7 +1,7 @@
 import Exec.Spec.Context
 import Mathlib.Data.List.Forall2
 import Mathlib.Tactic
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 private theorem concat_flatten {A : Type} (programs : List (List A)) : concat_ A programs = programs.flatten := by
@@ -144,4 +144,4 @@ theorem instantiate_source
     have bound := (List.mem_range.mp member).trans_le dataBound
     norm_num at *
     omega
-end Exec.Spec
+end Itasca.Runtime.Spec

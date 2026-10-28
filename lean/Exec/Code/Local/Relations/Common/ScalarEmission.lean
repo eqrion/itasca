@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Global.GlobalLowering
 import Exec.Code.Local.Relations.Common.SelectLowering
 import Exec.Code.Local.Relations.Memory.MemoryOpcode
 import Exec.Code.Local.Lowering.Float.FloatOpcode
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Scalar instructions, including those resolved against the module's globals and
@@ -57,4 +57,4 @@ inductive ScalarEmission (C : context) :
       ScalarEmission C (stack ++ List.replicate op.arity (valtype_numtype op.input))
         op.source [floatInstruction op left left right] (stack ++ [valtype_numtype op.output])
 
-end Exec.Code
+end Itasca.Runtime.Code

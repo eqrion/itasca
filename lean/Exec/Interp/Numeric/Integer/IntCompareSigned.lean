@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Integer.IntExtend
 import Exec.Spec.IntegerCompareSigned
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem shifted_signed32 (bits : BitVec 64) :
@@ -323,4 +323,4 @@ theorem scalar_i64_ges_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b
   rw [exactValue]
   exact Spec.integer_ges_relation .I64 a.bv b.bv
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -4,7 +4,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Body.Reader.Float.ReaderFloatConstantEmissions
 import Exec.Code.Body.Reader.Common.ReaderSpan
 import Exec.Code.Body.Control.Table.StructuredLinearEmbedding
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -79,4 +79,4 @@ theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLoca
   · simpa only [decoded] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
-end Exec.Code
+end Itasca.Runtime.Code

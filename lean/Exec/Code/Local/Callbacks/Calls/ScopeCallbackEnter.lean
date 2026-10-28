@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Control.EnterIf
 import Exec.Code.Local.Callbacks.Common.EnterDead
 import Exec.Code.Local.Callbacks.Control.ScopeNesting
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A successful actual BLOCK callback creates its source-aligned frame
@@ -123,4 +123,4 @@ theorem callback_loop_scope {A : Type} (ops : runtime.platform.Alloc A)
   · intro scope frame old
     exact old.extend [.LoopHead] (codeEq) (by simp [mapsEq])
 
-end Exec.Code
+end Itasca.Runtime.Code

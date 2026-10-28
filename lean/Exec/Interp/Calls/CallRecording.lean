@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.StepRecording
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- Initial-call recording selects a host site from the actual pre-call store.
@@ -43,4 +43,4 @@ theorem callHostEvents_wasm {M P : Type} {store : runtime.store.Store M} {addres
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P) :
     callHostEvents store address out = [] := by
   simp only [callHostEvents,found,defined]
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
 import Exec.Code.Body.Reader.Common.ReaderTypedSelectEmission
 import Exec.Code.Body.Reader.Table.ReaderStructuredDead
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.typed_select {jumpTables : List U32} {A : Type}
@@ -46,4 +46,4 @@ theorem StructuredReaderCompilerStateWasm2.typed_select {jumpTables : List U32} 
       (compiler_core_cursor ops law before after out.core (.select true) callback)
       28#u16 0#u32 0#u32 0#u128 callback
     exact (state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationErrors
 import Exec.Store.Api.DefineTable
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -53,4 +53,4 @@ theorem define_memory_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
     laws.read buffer, bind_ok, sameSize, bne_self_eq_false, Bool.false_eq_true, ↓reduceIte] at run
   repeat' allocation_error_step run using allocator, law
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.Float
 import SpecExt.Builtins.Float.TruncRange
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins.Float
 
 @[step] theorem overflow_effect (negative : Bool) (width : U32) (signed saturating : Bool)
@@ -14,4 +14,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins.Float
   all_goals repeat first | step | scalar_tac | simp_all
   all_goals norm_num [U32.rMax, U64.rMax, Nat.shiftRight_eq_div_pow]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.InitializerResolution
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -113,4 +113,4 @@ theorem synthetic_resolved_initializer_resource_causes (law : Platform.AllocCorr
     (by rw [compiled.capacity]; exact resolved.width)
   simpa [compiled.capacity] using hcode
 
-end Exec.Interp
+end Itasca.Runtime.Interp

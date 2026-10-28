@@ -5,7 +5,7 @@ import SpecExt.Builtins.Float.Decoding
 Slot words are naturals here; the concrete relation separately bounds them by
 2^64. Reference addresses are store indices, with zero reserved for null. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open SpecExt.Builtins
 
 def valueType : val → valtype
@@ -141,4 +141,4 @@ theorem encodeValues_take (values : List val) (count : Nat) :
     simp only [offset, List.map_take]
   rw [hl, List.take_left]
 
-end Exec.Code
+end Itasca.Runtime.Code

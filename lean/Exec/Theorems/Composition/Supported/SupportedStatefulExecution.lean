@@ -5,8 +5,8 @@ import Exec.Theorems.Composition.Supported.SupportedDropExecution
 import Exec.Theorems.Composition.Supported.SupportedTableSetExecution
 import Exec.Theorems.Api.SupportedMemoryGrowExecution
 import Exec.Theorems.Api.SupportedTableGrowExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem stateful_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -67,4 +67,4 @@ theorem stateful_execution_supported
   | dataDrop data =>
     exact stateful_drop_execution_supported memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.dataDrop data) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

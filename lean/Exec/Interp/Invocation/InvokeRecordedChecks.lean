@@ -1,6 +1,6 @@
 import Exec.Interp.Invocation.InvokeChecks
 import Exec.Interp.Invocation.InvokeRecording
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- Lift an accepted-argument contract through the actual public checker.
@@ -55,4 +55,4 @@ theorem recorded_invoke_wrong_store {M P F A : Type}
   simp [recordedInvokeWith,runtime.store.Store.func_type,runtime.store.Store.check,foreign,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-end Exec.Interp
+end Itasca.Runtime.Interp

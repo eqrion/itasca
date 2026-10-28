@@ -1,7 +1,7 @@
 import Exec.Abs.Stateful.OwnershipBulk
 import Exec.Abs.Stateful.OwnershipGrowth
-namespace Exec.Abs.Ownership
-open SpecExt Exec.Spec Stateful
+namespace Itasca.Runtime.Abs.Ownership
+open SpecExt Itasca.Runtime.Spec Stateful
 
 theorem StatefulHeapOwned.frame_function {bounds s} {f : AFrame} {instruction : instr} {after : List instr}
     (heap : StatefulHeapOwned bounds s) (typed : FrameTyped s {f with code := instruction::after} [])
@@ -74,4 +74,4 @@ theorem stateful_transition_owned (bounds : Bounds) (op : Instruction)
     StatefulOwned bounds next := by
   obtain ⟨choice,allowed,evaluated⟩ := step
   exact evaluate_owned bounds choice op s ambient f rest after next typed owned allowed evaluated
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

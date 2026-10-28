@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
 import Exec.Code.Local.Control.Table.StructuredParentPrefixPop
 import Exec.Code.Local.Control.Common.UniversalDormant
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- An unentered source subtree emits no executable body. Its enclosing
@@ -189,5 +189,5 @@ theorem StructuredUniversalDormant.close_dormant {jumpTables : List Aeneas.Std.U
   rw [codeEq, ← resolvedCode_append_groups]
   exact outerSaved.advance_current instruction
 
-end Exec.Code
+end Itasca.Runtime.Code
 

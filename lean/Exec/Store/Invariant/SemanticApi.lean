@@ -1,7 +1,7 @@
 import Exec.Store.Api.Write
 import Exec.Store.Invariant.ValueDecode
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem decodeStore_global_update {M : Type} (view : M → Slice U8)
@@ -16,4 +16,4 @@ theorem decodeStore_table_update {M : Type} (view : M → Slice U8)
     decodeStore view code {s with tables} =
       {decodeStore view code s with TABLES := tables.val.map decodeTable} := by rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

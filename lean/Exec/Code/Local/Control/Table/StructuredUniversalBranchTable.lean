@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Ordered target fragments close one source BR_TABLE. The retained plans and
@@ -42,4 +42,4 @@ theorem StructuredUniversalPrefix.branch_table
       exact retained.extend suffix
     have terminal := StructuredDeadPrefix.branchTable (types := types) (functions := functions) (returns := returns) (gate selector start len) table header
     simpa only [SourceScope.advance, SourceScope.input] using prior.terminal terminal
-end Exec.Code
+end Itasca.Runtime.Code

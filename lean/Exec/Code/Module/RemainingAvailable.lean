@@ -3,7 +3,7 @@ import Exec.Code.Module.SourceSubmissionAvailable
 import Exec.Code.Module.CompileDriverFrame
 import Itasca.Stream.DriverComplete
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -85,4 +85,4 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
     by decide,by decide,submitCall,rfl,tailCall,moduleBound,rfl,decodedCall,rfl,drainCall⟩,rfl,?_,afterQueued⟩
   rw [finalFrame]
 
-end Exec.Code
+end Itasca.Runtime.Code

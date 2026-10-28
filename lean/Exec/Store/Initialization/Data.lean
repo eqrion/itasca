@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.Staging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem copy_bytes_loop (source : Slice U8) (bytes : alloc.vec.Vec U8)
@@ -64,7 +64,7 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
         result = (.Ok (), {s with datas := datas, instances := s.instances.set instanceIndex {(s.instances.val[instanceIndex.val]) with datas := addresses}}) ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_data
   step as ⟨inst, hinst⟩
-  simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok]
   have hd : i.val < inst.module.module.tail.data.length := by simpa [hinst] using hi
   step as ⟨data, hdata⟩
@@ -90,4 +90,4 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
       · simpa [hinst'] using haddresses
       · simp [hback, hinst']
 
-end Exec.Store
+end Itasca.Runtime.Store

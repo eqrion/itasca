@@ -1,6 +1,6 @@
 import Exec.Spec.Wf
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 /-- Successive writes from an independent source segment. -/
 def copyInto {T : Type} [Inhabited T] (before source : List T) (dst src : Nat) : Nat → List T
@@ -13,4 +13,4 @@ theorem copyInto_length {T : Type} [Inhabited T] (before source : List T) (dst s
   | zero => rfl
   | succ count ih => simp only [copyInto,ih,List.length_set]
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

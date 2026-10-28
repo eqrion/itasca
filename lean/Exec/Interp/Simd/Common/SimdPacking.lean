@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdSplat
 import SpecExt.Builtins.LaneView
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem laneBits_toNat (width index : Nat) (v : BitVec 128) :
@@ -33,4 +33,4 @@ theorem splat_packed (ty : lanetype) (x : U64) (width : U32)
   have eq := packLanes_of_laneBits ty result.bv x.bv lanes
   exact congrArg uN.mk_uN eq.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

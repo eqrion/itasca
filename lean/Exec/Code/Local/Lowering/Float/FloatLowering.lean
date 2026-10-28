@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Float.FloatOpcode
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Float
 
 /-- The shared scalar lowering path, before resolving its source operands. -/
@@ -90,4 +90,4 @@ theorem lower_float_eq {A : Type} (ops : runtime.platform.Alloc A)
     simp only [binary, decide_false, Bool.false_eq_true, ↓reduceIte, bind_ok,
       hleft, core.result.Result.Insts.CoreOpsTry.branch, floatInstruction_make,
       core.option.Option.ok_or]
-end Exec.Code
+end Itasca.Runtime.Code

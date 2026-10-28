@@ -2,8 +2,8 @@ import Exec.Interp.Simd.Common.SimdUnary
 import Exec.Interp.Simd.Common.SimdUnaryBits
 import Exec.Spec.SimdUnarySource
 import SpecExt.Builtins.LaneMap
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 def signedUnaryAction : SignedUnaryKind → UnaryAction
   | .absolute => .absolute | .negate => .negate
@@ -63,4 +63,4 @@ theorem signed_unary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps 
   rw [signed_unary_dispatch_eq]
   step with signed_unary_lanes_sound ty kind x as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

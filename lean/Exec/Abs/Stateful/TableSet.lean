@@ -2,8 +2,8 @@ import Exec.Abs.Stateful.TableMutation
 import Exec.Abs.Stateful.ReferenceOperands
 import Exec.Abs.Core.Trap
 import Exec.Spec.TableWriteBounds
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 def tableSet (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (after : List instr) : AResult :=
   match pop f.vals, f.module.TABLES[index]? with
@@ -76,4 +76,4 @@ theorem tableSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Lis
             [integerVal .I32 position,val_ref reference] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
             (by simpa [vals,reference_admin_value,admininstr_instr,show admininstr_val (integerVal .I32 position) = Segment.i32 position from rfl] using source)
           simpa only [split] using full
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

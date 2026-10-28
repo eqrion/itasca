@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_br_wasm2 {data env locals index st}
@@ -77,4 +77,4 @@ theorem reader_br_if_wasm2 {data env locals index st}
   · simpa [signatures] using blocks
   · exact stack
   · exact encoded.declared _
-end Exec.Code
+end Itasca.Runtime.Code

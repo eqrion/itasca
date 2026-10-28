@@ -1,7 +1,7 @@
 import Exec.Interp.Calls.DirectCallCause
 import Exec.Interp.Relations.StackRelation
 import Exec.Spec.Counted
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Storage retained by suspended source callers. Arguments passed to the
@@ -82,4 +82,4 @@ theorem SourceDirectCallCause.prepend {A M P : Type} {allocator : runtime.platfo
     inst, code, fetch, resolved, lookup, wasm, instanceLookup, codeLookup, baseEq, pcEq, rejection, site⟩ := cause
   exact ⟨target, offset, pc, address, base, function, instanceIndex, functionIndex,
     inst, code, fetch, resolved, lookup, wasm, instanceLookup, codeLookup, baseEq, pcEq, rejection, site.prepend steps sameStore sameAmbient⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

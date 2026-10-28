@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Memory.SimdMemoryRelation
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 theorem memory_entry_11 : MemoryOperationSound 11#u32 := by
@@ -111,4 +111,4 @@ theorem memory_entry_91 : MemoryOperationSound 91#u32 := by
     refine ⟨rfl,rfl,?_⟩
     with_unfolding_all exact source
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

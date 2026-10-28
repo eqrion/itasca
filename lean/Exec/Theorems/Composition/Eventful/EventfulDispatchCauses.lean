@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Eventful.EventfulCausalLoop
 import Exec.Theorems.Host.HostDispatchCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Actual ordinary failures retain their decoded store; actual host failures
 retain the selected call and its concrete allocation/interrupt/callback cause. -/
@@ -14,4 +14,4 @@ def EventfulDispatchCause {M P F A : Type}
   (CumulativeFailure allocator hooks machine.exec machine.store machine.platform machine.source error ∧
     Store.decodeStore view code out.2.2.1=machine.source.store) ∨
   HostDispatchCause memory hooks floats allocator machine.exec machine.store machine.platform machine.source out error
-end Exec.Theorems
+end Itasca.Runtime.Theorems

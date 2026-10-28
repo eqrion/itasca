@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.NumericOpcode
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Numeric
 
 /-- The shared scalar lowering path, before resolving its source operands. -/
@@ -95,4 +95,4 @@ theorem lower_numeric_eq {A : Type} (ops : runtime.platform.Alloc A)
     simp only [binary, decide_false, Bool.false_eq_true, ↓reduceIte, bind_ok,
       hleft, core.result.Result.Insts.CoreOpsTry.branch, integerInstruction_make,
       core.option.Option.ok_or]
-end Exec.Code
+end Itasca.Runtime.Code

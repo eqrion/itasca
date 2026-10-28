@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareFloatLists
 set_option maxHeartbeats 800000
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def averageBits {width : Nat} (a b : BitVec width) : BitVec width :=
@@ -90,4 +90,4 @@ theorem average_step (ty : Jnn) (x y result : BitVec 128)
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) (average_source_wf ty supported)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

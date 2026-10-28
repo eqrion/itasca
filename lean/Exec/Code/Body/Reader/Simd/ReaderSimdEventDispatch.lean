@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvents
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Every accepted SIMD-prefixed reader is one of the independently classified
@@ -33,4 +33,4 @@ theorem reader_simd_event_wasm2 {data env locals index st}
         · exact simd_reader_event_constant p ops before after out ctx C 12#u32 next decoded byte accepted rfl
         · exact simd_reader_event_shuffle p ops before after out ctx C 13#u32 next decoded byte accepted rfl
         · simp at called
-end Exec.Code
+end Itasca.Runtime.Code

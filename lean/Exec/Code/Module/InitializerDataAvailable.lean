@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerGlobalsAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Active offsets compile from independent constant-expression typing;
@@ -20,7 +20,7 @@ theorem initializer_data_offset_available {A : Type} (ops : runtime.platform.All
       out.2.2.limits = budget.limits ∧ out.2.1.module = module.module ∧
       initializerSize out.2.1 ≤ initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
-  simp only [runtime.compiler.ExecutableModule.tail,Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail,bind_ok]
   step as ⟨segment,found⟩
   have member : segment ∈ module.module.tail.data.val := by rw [found]; exact List.getElem_mem inside
@@ -62,4 +62,4 @@ theorem initializer_data_offset_available {A : Type} (ops : runtime.platform.All
     · simp only [initializerSize,mapped,List.length_append,List.length_singleton]
       omega
 
-end Exec.Code
+end Itasca.Runtime.Code

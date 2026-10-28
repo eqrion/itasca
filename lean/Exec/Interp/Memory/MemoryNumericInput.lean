@@ -1,6 +1,6 @@
 import Exec.Interp.Memory.MemoryValueSlots
 import Exec.Interp.Relations.Readback
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std
 
 theorem numeric_input_word (words : List U64) (position : Nat) (ty : numtype) (value : num_)
@@ -32,4 +32,4 @@ theorem numeric_input_word (words : List U64) (position : Nat) (ty : numtype) (v
   have decoded := congrArg Prod.fst (Option.some.inj roundtrip)
   rw [numericStoreValue_decodes] at decoded
   exact ⟨word,List.getElem?_eq_getElem bound,(val.CONST.inj decoded).2⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

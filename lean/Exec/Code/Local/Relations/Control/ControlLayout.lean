@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Common.Observe
 /-! Exact word heights for validator control-stack prefixes, including bottom
 stack entries, using the extracted integer-width and accumulation loops. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 
@@ -60,4 +60,4 @@ theorem stackWords_take_succ (values : List Itasca.code.StackType) (i : Nat) (bo
       have same : i.val = count.val := by scalar_tac
       simpa [WP.spec_ok, same] using hheight
   · simp [stackWords]
-end Exec.Code
+end Itasca.Runtime.Code

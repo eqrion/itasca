@@ -20,7 +20,7 @@ of its instruction family: `OrdinaryHeads`, `ErasedHeads`, `FloatHeads`, `Statef
 function's retained metadata tables.
 -/
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 def ordinarySource : instr → Bool
@@ -96,9 +96,9 @@ theorem scalar_not_indirect {table type} (covered : Abs.ScalarHead (.CALL_INDIRE
     | _ => cases equal
   | float op => cases op <;> cases equal
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine
 
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 
 theorem linear_decode_none {locals before instruction emitted after}
     (head : Code.LinearEmission locals before instruction emitted after) :
@@ -116,9 +116,9 @@ theorem scalar_decode_none {C before instruction emitted after}
   | float stack op a b left right => cases op <;> rfl
   | _ => rfl
 
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 
 instance : OrdinaryHeads Code.ScalarEmission where
   ordinary := by
@@ -278,4 +278,4 @@ instance executable_simd_projection (compiled : runtime.bytecode.CompiledFunctio
     (Code.CompilerTables.ofFunction compiled).simd (Code.CompilerTables.ofFunction compiled).constants
   infer_instance
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

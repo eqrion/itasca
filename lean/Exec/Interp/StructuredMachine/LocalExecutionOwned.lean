@@ -11,8 +11,8 @@ import Exec.Abs.Core.Step
 import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -106,4 +106,4 @@ theorem step_localWrite_execution_owned_uniform (platform : P) (frameIndex : Usi
     (extend_store_refl _ machine.typed.typed.store) raw frameIndex pc last frameFound program retained
     represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ unchanged preserved typed covered
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

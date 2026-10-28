@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderSafety
 import Exec.Code.Body.Relations.Calls.OrdinaryCallbackReady
 import Exec.Code.Local.Relations.Common.StatefulSafety
 import Itasca.Wasm2.Bulk.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_typed_select_total {A} (ops : runtime.platform.Alloc A)
@@ -133,4 +133,4 @@ theorem compiler_reader_memory_grow_total {A} (ops : runtime.platform.Alloc A)
   · intro state value read
     exact compiler_stateful_total ops law compiler state .memoryGrow 0#u32 0#u32
       ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
-end Exec.Code
+end Itasca.Runtime.Code

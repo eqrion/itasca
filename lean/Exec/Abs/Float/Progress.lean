@@ -1,6 +1,6 @@
 import Exec.Abs.Float.Results
 import Exec.Spec.FloatReinterpret
-namespace Exec.Abs.Float
+namespace Itasca.Runtime.Abs.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem integer_number_bound (target : Inn) (bits : Nat)
@@ -12,4 +12,4 @@ theorem integer_number_bound (target : Inn) (bits : Nat)
     | uN_case_0 _ limit =>
       cases target <;> norm_num [sizenn, numtype_Inn, valtype_numtype, valtype_Inn, size] at limit ⊢ <;> omega
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

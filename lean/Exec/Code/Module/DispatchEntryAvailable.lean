@@ -1,7 +1,7 @@
 import Itasca.Stream.EntryFrame
 import Exec.Code.Module.CompileEntry
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 private theorem count_room (count limit : Usize) (less : count.val < limit.val) :
@@ -40,7 +40,7 @@ theorem compiler_next_entry_available (batch : stream.CodeBatch) (content finish
     (Usize.add_spec (x := batch.num_dispatched) (y := 1#usize) (by simpa using count_room _ _ remaining))
   refine ⟨index,count,frame,indexValue,by simpa using countValue,same,?_⟩
   have more : ¬ batch.num_dispatched ≥ batch.num_funcs := count_not_ge _ _ remaining
-  simp [Exec.stream.CodeBatch.next_entry,Itasca.stream.CodeBatch.next_entry,more,added,framed,
+  simp [Itasca.stream.CodeBatch.next_entry,more,added,framed,
     core.result.Result.Insts.CoreOpsTry.branch,subtracted,increment]
 
-end Exec.Code
+end Itasca.Runtime.Code

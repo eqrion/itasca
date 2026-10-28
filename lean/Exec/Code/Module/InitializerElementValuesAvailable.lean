@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerElementValueAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The complete remaining element-value loop accepts from independent source
@@ -41,8 +41,7 @@ theorem initializer_element_values_available {A : Type} (ops : runtime.platform.
     have currentLookup : current.module.env.elements.val[index.val]? = some segment := by simpa [same] using lookup
     have segmentBound := (List.getElem?_eq_some_iff.mp currentLookup).1
     unfold runtime.compiler.initialize.lower_element_loop.body
-    simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,Itasca.module.Module.impl.env,
-      Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
     step as ⟨selected,found⟩
     · simpa [alloc.vec.Vec.deref] using segmentBound
     have sameSegment : selected = segment := by
@@ -72,4 +71,4 @@ theorem initializer_element_values_available {A : Type} (ops : runtime.platform.
         by simpa [last] using scratchSize,by simpa [last] using used⟩
   · exact ⟨rfl,rfl,rfl,inside,rfl,rfl,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

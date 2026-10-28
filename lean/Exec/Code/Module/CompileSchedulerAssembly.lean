@@ -2,7 +2,7 @@ import Exec.Code.Module.CompileSourceCertificate
 import Exec.Code.Module.CompileDriverFrame
 import Exec.Code.Module.CompileSubmit
 import Exec.Code.Module.CollectFunctions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem sourceFunctions_length {raw : ModuleBinary.Module}
@@ -10,4 +10,4 @@ theorem sourceFunctions_length {raw : ModuleBinary.Module}
     (sourceFunctions raw).length = raw.functions.length := by
   simp [sourceFunctions, List.length_zipWith, count]
 
-end Exec.Code
+end Itasca.Runtime.Code

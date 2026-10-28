@@ -3,7 +3,7 @@ import Exec.Code.Body.Capacity.FunctionCapacity
 import Exec.Code.Module.CompileEntryBounds
 import Exec.Code.Local.Source.SourceBatchLookup
 import Exec.Code.Local.Source.SourceSubmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Captured module tables and the exact source-indexed certificate ledger
@@ -28,4 +28,4 @@ theorem SchedulerCapacity.transport {A : Type} {profile env sources}
     by simpa only [fields.2.1] using initial.functionSlots,
     by simpa only [fields.2.2] using initial.origin, functions⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

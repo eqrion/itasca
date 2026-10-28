@@ -1,8 +1,8 @@
 import Exec.Abs.Sim.Basic
 import Exec.Spec.Globals
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Lift a store-changing redex through the active operand stack, labels and
 suspended callers. The same frame syntax is interpreted in the new store. -/
@@ -59,4 +59,4 @@ theorem global_set_simulation (s : store) (ambient : frame) (f : AFrame)
     (Spec.globalWrite s f.toFrame index value) ambient f rest
     (.GLOBAL_SET (.mk_uN index)) after front [value] [] ha hl hv hc hr heights step
 
-end Exec.Abs
+end Itasca.Runtime.Abs

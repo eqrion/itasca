@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredPrefix
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StructuredPrefix.emit {jumpTables : List U32} {emission types functions returns locals code labels initial source start stack instruction emitted output}
@@ -48,5 +48,5 @@ theorem Lowered.structured_resolved_advance {jumpTables : List U32} {A : Type} {
     have advanced := sourceCode.emit head ordinary
     simpa only [lowered.1, resolved, List.length_append, resolvedCode_length] using advanced
 
-end Exec.Code
+end Itasca.Runtime.Code
 

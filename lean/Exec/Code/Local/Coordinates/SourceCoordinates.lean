@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.Emit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Retained source coordinates lie in the declared body interval, are ordered,
@@ -93,4 +93,4 @@ theorem SourceCoordinates.checker {A : Type} {compiler : runtime.compiler.Functi
     simpa only [List.length_map] using bounded
   simpa only [List.getElem_map] using order (index-1) index previousBound currentBound (by omega)
 
-end Exec.Code
+end Itasca.Runtime.Code

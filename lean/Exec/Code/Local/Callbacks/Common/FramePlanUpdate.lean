@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.FutureFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A future plan after recording a forward branch yields the corresponding
@@ -66,4 +66,4 @@ theorem FramePlans.before_mark {length locals updated labels groups}
         · simpa only [List.append_assoc] using FramePlans.push previous last label guardTarget future
         · simp only [grouped, List.append_assoc]
 
-end Exec.Code
+end Itasca.Runtime.Code

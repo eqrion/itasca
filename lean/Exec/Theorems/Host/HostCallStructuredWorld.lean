@@ -8,9 +8,9 @@ import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Interp.StructuredMachine.StructuredCall
 import Exec.Theorems.Host.HostCallRetainedWorld
 import Exec.Theorems.Host.HostDispatchCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 
 theorem step_host_call_structured_world_provenance {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -138,7 +138,7 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
       Inv (fun c s h => (certify c s h).shape)
       {exec with frames := exec.frames.set frameIndex {raw with pc := pc}} store platform valid
       address base f.toFrame frameWf function host signature functionAt hostCode signatureAtStore args argumentTypes'.symm
-      argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback
+      argumentTyped (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback
       retains).imp_exists with ⟨out,callActual,result⟩ | ⟨callActual,diverged⟩
     swap
     · rw [callActual]
@@ -185,11 +185,11 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
       · have events := observed.1.frame_events view afterCode store ambient f rest after index.val address front args base _ out
           newMachine.typed.typed.store (Store.decodeStore_wf view afterCode _ fresh.shape fresh.storeSyntax)
           machine.typed.typed.ambient frameWf labels frontWf tail callers heights resolve indexBound
-          (Exec.Spec.resultsTyped_wf argumentTyped)
+          (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped)
         simpa only [← split,same] using events
       · intro success
         obtain ⟨finalPC,resumed⟩ := host_structured_resume newMachine last hf binding slots program newPoint split
           (by rw [baseOffset,argumentOffset]) heights tailCode newPending observed.1 success retained
           (frame_type_bounds_of_shape certified.shape) newExtension fresh (observed.2 success).1
         exact ⟨finalPC,resumed,(observed.2 success).2⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

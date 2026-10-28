@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Checking.ReaderTypedSelectInstructionPrefix
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Checking.DeadInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed select preserves both invariants for either source reachability bit;
@@ -40,4 +40,4 @@ theorem reader_typed_select_checked_prefix_wasm2 {jumpTables : List U32} {data e
     exact compiler_dead_op_checked_prefix ops law before after out.core 28#u16 0#u32 0#u32 0#u128
       (Bool.eq_false_iff.mpr live) held exits callback
 
-end Exec.Code
+end Itasca.Runtime.Code

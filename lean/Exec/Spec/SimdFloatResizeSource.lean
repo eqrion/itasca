@@ -1,5 +1,5 @@
 import Exec.Spec.SimdFloatResize
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def floatResizeLaneChoices (kind : FloatResize) (a : fN) : List lane_ :=
@@ -26,8 +26,8 @@ theorem float_resize_lane_relation (kind : FloatResize) (value : fN) :
   have wf : Forall (fun result => wf_lane_ (lanetype_Fnn kind.output) (.mk_lane__1 kind.output result)) (floatResizeChoices kind value) := by
     intro result member
     cases kind
-    · exact .lane__case_1 _ _ _ (Exec.Spec.float_demote_wf 64 32 (by decide) value result member) rfl
-    · exact .lane__case_1 _ _ _ (Exec.Spec.float_demote_wf 32 64 (by decide) value result member) rfl
+    · exact .lane__case_1 _ _ _ (Itasca.Runtime.Spec.float_demote_wf 64 32 (by decide) value result member) rfl
+    · exact .lane__case_1 _ _ _ (Itasca.Runtime.Spec.float_demote_wf 32 64 (by decide) value result member) rfl
   cases kind
   · exact .fun_lcvtop___case_29 _ _ _ _ _ _ rfl wf rfl rfl
   · exact .fun_lcvtop___case_34 _ _ _ _ _ _ rfl wf rfl rfl
@@ -68,4 +68,4 @@ theorem float_resize_product_member (kind : FloatResize) (x result : BitVec 128)
     intro j member
     exact List.mem_map.mpr ⟨_,allowed j (List.mem_range.mp member),rfl⟩
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

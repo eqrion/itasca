@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryEntries
 import Exec.Interp.Simd.Memory.SimdMemoryWriteEntries
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 theorem memory_operation_range {opcode : U32} {op : MemoryOperation}
@@ -100,4 +100,4 @@ theorem memory_entry_sound {F : Type} (floats : runtime.platform.FloatOps F) (op
   step with memory_operation_sound opcode op meaning offset laneIndex x y z bytes s f argument
     storeWf frameWf operationWf offsetEq memoryEq mapped valid as ⟨result,effect⟩
   exact ⟨result.2,rfl,effect⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

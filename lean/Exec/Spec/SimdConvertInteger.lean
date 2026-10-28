@@ -1,7 +1,7 @@
 import Exec.Spec.SimdCompareFloatLists
 import Exec.Spec.FloatConvert
 import Exec.Spec.SimdChoices
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def convertIntegerCount (ty : Fnn) : Nat := 128/lsize (lanetype_Fnn ty)
@@ -53,4 +53,4 @@ theorem convert_integer_zero (ty : Fnn) (sign : sx) :
   · exact .fun_zeroop_case_16 _ _ _ _ _ _ rfl rfl
   · exact .fun_zeroop_case_20 _ _ _ _ _ _ rfl rfl
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Abs.SupportedState
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 /-- A step keeps the frame's code and labels within the binary instruction grammar. -/
 def SyntaxClosure (before after : Abs.AFrame) : Prop :=
   Abs.FrameSupported before → Abs.FrameSupported after
@@ -36,4 +36,4 @@ theorem SyntaxClosure.branch (f : Abs.AFrame) (depth : Nat) (label : Abs.Label)
   · intro next member
     exact labels next (List.mem_of_mem_drop member)
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

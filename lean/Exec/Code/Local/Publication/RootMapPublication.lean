@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Control.CloseMapEffect
 import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 import Exec.Code.Local.Publication.ControlMapPublicationClose
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual final END callback establishes every control-map range checked
@@ -45,4 +45,4 @@ theorem compiler_root_map_publication {A : Type} (ops : runtime.platform.Alloc A
   exact held.close_last_publish (compiler_end_stable_result ops law before after state .Block .Empty (.Ok ()) called)
     frame.map.val entry closed found controls owners bounded growth
 
-end Exec.Code
+end Itasca.Runtime.Code

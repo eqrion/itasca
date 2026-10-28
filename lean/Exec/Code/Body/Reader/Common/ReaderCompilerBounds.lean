@@ -2,7 +2,7 @@ import Exec.Code.Body.Callbacks.Common.CompilerPrefix
 import Exec.Code.Body.Reader.Common.ReaderBoundary
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderBoundaryWasm2.source_bound {data env locals index ft st parents current}
@@ -22,4 +22,4 @@ theorem CompilerStable.body_bound {A : Type}
     current.function.body_start.val + length ≤ Usize.max := by
   rw [stable.fields.2.2.2.2.2.2.2.1]
   exact bound
-end Exec.Code
+end Itasca.Runtime.Code

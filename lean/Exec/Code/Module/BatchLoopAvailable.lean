@@ -4,7 +4,7 @@ import Exec.Code.Module.CompileEntryAvailable
 import Exec.Code.Module.FunctionSlotPrefix
 import Exec.Code.Module.CompileEntries
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -53,8 +53,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     subst loopIndex
     refine ⟨before,batch,?_,ended,rfl,noError,rfl,?_,?_⟩
     · rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,loop]
-      simp [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-        Exec.stream.CodeBatch.len,Itasca.stream.CodeBatch.len,ended,submitPack]
+      simp [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,ended,submitPack]
     · simpa only [ended] using slots
     · simpa only [ended] using paid
   | cons entry entries ih =>
@@ -121,12 +120,10 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
       have incrementEq : incremented = validatedCount := UScalar.eq_of_val_eq (by simpa only [show (1#usize).val = 1 from rfl] using incrementValue.trans validatedValue.symm)
       subst incremented
       rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,loop]
-      simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-        Exec.stream.CodeBatch.len,Itasca.stream.CodeBatch.len,bind_ok]
+      simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok]
       have live : batch.num_validated < batch.num_funcs := by simpa only [UScalar.lt_equiv] using more
       simp only [live,↓reduceIte,core.result.Result.is_ok,bind_ok,compiled,uncurry_apply_pair,increment]
       simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,
-        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
-        Exec.stream.CodeBatch.len,Itasca.stream.CodeBatch.len,bind_ok,core.result.Result.is_ok] using continued
+        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok,core.result.Result.is_ok] using continued
 
-end Exec.Code
+end Itasca.Runtime.Code

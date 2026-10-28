@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Local.ReaderWasm2Local
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 theorem reader_global_get_wasm2 {data env locals index st}
     (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
@@ -48,4 +48,4 @@ theorem reader_global_set_wasm2 {data env locals index st}
     (fun idx _ encoded => .globalSet idx encoded) out idx post
   exact ⟨idx, values, callback, read, source⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

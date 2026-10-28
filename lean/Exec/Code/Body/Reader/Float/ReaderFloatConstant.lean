@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 open Itasca.Wasm1 in
 open Itasca.Wasm2 in
@@ -62,4 +62,4 @@ theorem reader_f64_const_wasm2 {data env locals index st}
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
 
-end Exec.Code
+end Itasca.Runtime.Code

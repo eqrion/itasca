@@ -7,7 +7,7 @@ lemmas count specification steps, not interpreter dispatches. The generic
 simulation theorem below still requires a per-dispatch proof and a bounded
 administrative measure; it makes no claim about the Rust interpreter by itself. -/
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 inductive StepsHN : Nat → config → List HostEvent → config → Prop where
@@ -58,4 +58,4 @@ inductive Iterations {S : Type} (next : S → List HostEvent → S → Prop) :
       next s events s' → Iterations next n s' rest s'' →
       Iterations next (n + 1) s (events ++ rest) s''
 
-end Exec.Spec
+end Itasca.Runtime.Spec

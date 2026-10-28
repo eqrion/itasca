@@ -2,8 +2,8 @@ import Exec.Theorems.Invocation.PublicExecutableWorldDivergence
 
 /-! The behavior of a public invocation: every returned result is a recorded source outcome with
 classified resource causes, and divergence is an infinite source run or a diverging callback. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A returned result carries the exact event log of `recordedInvokeWith`, the source outcome for
 that log and a resource cause for every error. Divergence is an infinite source run, or the source
@@ -66,4 +66,4 @@ theorem InvocationBehaves.returns {M P F A : Type}
   | ret post => exact .ret post
   | div => exact ((diverged rfl).elim finite callbacksReturn).elim
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -12,7 +12,7 @@ The caller invokes the start function with `runtime.interp.invoke_with`.
 
 open Aeneas Aeneas.Std SpecExt
 
-namespace Exec
+namespace Itasca.Runtime
 
 open Itasca Theorems Store
 
@@ -48,4 +48,4 @@ theorem runtime.store.instantiate.Store.instantiate_with.spec {M P F A : Type}
   instantiate_compiled_source memory hooks floats allocator view laws law before module imports platform
     oldCode old handles bytes profile limits accepted raw encoded
 
-end Exec
+end Itasca.Runtime

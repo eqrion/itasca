@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Common.SimdShiftBits
 import Exec.Spec.SimdShift
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
-open Exec.Spec.Simd
+open Itasca.Runtime.Spec.Simd
 
 def shiftCode (kind : ShiftKind) : Nat :=
   match kind with | .left => 11 | .signedRight => 12 | .unsignedRight => 13
@@ -46,4 +46,4 @@ theorem shift_word (kind : ShiftKind) (op width amount : U32) (value : U64)
     step as ⟨result,valueEq,bitsEq⟩
     simp only [shiftBits]
     rw [bitsEq,input,shiftRight_widen _ _ _ widthBound]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

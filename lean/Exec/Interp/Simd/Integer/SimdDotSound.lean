@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdDotPacking
 import Exec.Spec.SimdDotSource
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem dot_lanes_sound (x y : U128)
@@ -35,4 +35,4 @@ theorem dot_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with dot_lanes_sound x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

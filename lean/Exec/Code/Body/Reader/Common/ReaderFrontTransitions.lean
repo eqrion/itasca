@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Relations.Common.EntryLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete post-reader stack recovers a live Wasm 2 child front by
@@ -39,4 +39,4 @@ theorem ReaderEnterPostWasm2.scope_fronts_dormant {data env locals index st out 
     simpa only [List.flatMap_def] using same.trans (congrArg Sequence.stackTypes values)
   simpa only [List.map_append, List.map_cons, List.map_nil] using fronts.push child remaining front
 
-end Exec.Code
+end Itasca.Runtime.Code

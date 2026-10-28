@@ -2,8 +2,8 @@ import Exec.Abs.Ownership.Extension
 import Exec.Theorems.Composition.Stateful.StatefulOwnership
 import Exec.Interp.Relations.FrameStorePrefix
 
-namespace Exec.Interp
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- The raw function prefix retains function addresses. External-reference
 issuance is a separate namespace absent from the decoded specification store,
@@ -20,9 +20,9 @@ theorem FrameStorePrefix.ownership_extension {M : Type} {before after : runtime.
   simp only [List.length_take]
   exact Nat.min_le_right _ _
 
-end Exec.Interp
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+end Itasca.Runtime.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Checked returned values and fresh store shape restore all ownership facts
 needed by the next interpreter iteration. The old caller's retained values
@@ -40,4 +40,4 @@ theorem host_return_stateful_owned {M : Type} {view : M → Slice U8} {code : St
     Abs.Ownership.StatefulOwned (Store.ownershipBounds after)
       ⟨Store.decodeStore view code after,ambient,{caller with code:=continuation,vals:=front++returned}::rest,[]⟩ :=
   ⟨owned.host_return (retained.ownership_extension externs) split results,shape.stateful_heap_owned code⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

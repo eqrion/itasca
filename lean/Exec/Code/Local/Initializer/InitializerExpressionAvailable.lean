@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source-shaped constant initializers compile and publish successfully with
@@ -60,4 +60,4 @@ theorem initializer_expression_available {A : Type} (ops : runtime.platform.Allo
   exact ⟨trivial,by rw [sameBudget]; omega,by rw [sameBudget,limitsAgain,limits],
     _,shape,appended,trivial⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

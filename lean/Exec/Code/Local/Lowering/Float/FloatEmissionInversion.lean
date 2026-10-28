@@ -1,6 +1,6 @@
 import Exec.Abs.Float.Decode
 import Exec.Code.Local.Relations.Common.ScalarEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem LinearEmission.float_decode_none {locals before instruction emitted after}
@@ -40,4 +40,4 @@ theorem ScalarEmission.float_inv {C before emitted after}
     have decoded := congrArg Abs.Float.decodeInstruction sourceEq
     rw [Abs.Float.decodeInstruction_source] at decoded
     simp [Abs.Float.decodeInstruction,Abs.Memory.Load.source,Abs.Memory.Store.source] at decoded
-end Exec.Code
+end Itasca.Runtime.Code

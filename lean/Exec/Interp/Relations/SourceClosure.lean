@@ -2,7 +2,7 @@ import Exec.Abs.Bound
 import Exec.Abs.ReferenceBounds
 import Exec.Interp.Control.StructuredPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- Every ordinary source rearrangement preserves an arbitrary pre-existing finite bound on source continuations. -/
 structure SourceClosure (before after : Abs.AFrame) : Prop where
@@ -82,4 +82,4 @@ theorem SourceClosure.codeBound {before after} (closure : SourceClosure before a
     Abs.CodeBound bound ⟨s, ambient, after :: rest, []⟩ :=
   Abs.bound_replace_frame bounded (closure.bounded bound (bounded.frames before (List.mem_cons_self ..)))
 
-end Exec.Interp
+end Itasca.Runtime.Interp

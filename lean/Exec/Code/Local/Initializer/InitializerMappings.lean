@@ -2,7 +2,7 @@ import Exec.Code.Local.Initializer.InitializerExpression
 import Itasca.Module.Const.Syntax
 
 /-! Exact retained initializer indices from the actual compiler helpers. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Invert an ordinary result of an extracted monadic bind. -/
@@ -42,8 +42,8 @@ theorem initializer_lower_global {A : Type} (ops : runtime.platform.Alloc A)
       after.functions.val = module.functions.val ++ [function] ∧
       after.global_initializers.val = module.global_initializers.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_global at success
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.globals, Itasca.module.Env.impl.globals, bind_ok] at success
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at success
   rw [initializer_slice_index _ _ global (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
   cases result with
@@ -104,8 +104,8 @@ theorem initializer_lower_element_value {A : Type} (ops : runtime.platform.Alloc
       after.functions.val = module.functions.val ++ [function] ∧
       outIndices.val = indices.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_element_value at success
-  simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-    Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at success
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok,
     initializer_vec_index _ _ expr valueFound, bind_ok] at success
   simp only [bind_ok] at success
@@ -150,7 +150,7 @@ theorem initializer_lower_data_active {A : Type} (ops : runtime.platform.Alloc A
       after.functions.val = module.functions.val ++ [function] ∧
       after.data_offsets.val = module.data_offsets.val ++ [some fnIndex] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
-  simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, active] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
@@ -189,7 +189,7 @@ theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc 
     after = { module with data_offsets := after.data_offsets } ∧
       after.data_offsets.val = module.data_offsets.val ++ [none] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
-  simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+  simp only [runtime.compiler.ExecutableModule.tail,
     Itasca.module.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, passive] at success
   obtain ⟨⟨result, b1, indices⟩, pushed, rest⟩ := initializer_bind_success success
@@ -203,4 +203,4 @@ theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc 
   obtain ⟨_, pushedValues⟩ := budget_push_success ops law budget b1 module.data_offsets indices none pushed
   exact ⟨rfl, pushedValues⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

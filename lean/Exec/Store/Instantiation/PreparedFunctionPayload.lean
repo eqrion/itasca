@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.PreparedRun
 import Exec.Store.Preparation.PreparationFunctionPayload
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem PreparedRun.function_payload {M P F A : Type}
@@ -21,4 +21,4 @@ theorem PreparedRun.function_payload {M P F A : Type}
     (by simpa only [trace.source] using cache) before.instances.len trace.typed trace.functions trace.typeInst trace.funcInst
     trace.typeRun trace.functionRun
   simpa only [trace.source] using result
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredElseEvidence
 import Exec.Code.Local.Control.Table.StructuredParentPrefixChange
 import Exec.Code.Local.Callbacks.Control.ElseSource
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredElseFrames.outer {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code scopes labels scope label}
     (frames : StructuredElseFrames (jumpTables := jumpTables) emit types functions returns locals code (scope :: scopes) (label :: labels)) :
@@ -23,5 +23,5 @@ theorem StructuredElseEvidence.begin_else {jumpTables : List Aeneas.Std.U32} {em
   simp only [StructuredElseEvidence, SourceScope.begin_else, entered, ite_true]
   exact ⟨conditionSlot, guard, body, skip, trivial⟩
 
-end Exec.Code
+end Itasca.Runtime.Code
 

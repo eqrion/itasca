@@ -2,7 +2,7 @@ import Exec.Code.Local.Initializer.InitializerExpressionAvailable
 import Exec.Code.Module.InitializerTotalBasic
 import Itasca.Module.Const.Syntax
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent constant-expression typing supplies the vector-width condition
@@ -45,8 +45,8 @@ theorem initializer_global_available {A : Type} (ops : runtime.platform.Alloc A)
       out.2.2.limits = budget.limits ∧ out.2.1.module = module.module ∧
       initializerSize out.2.1 = initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
-  simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,
-    Itasca.module.Module.impl.env,Exec.module.Env.globals,Itasca.module.Env.impl.globals,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env,Itasca.module.Env.impl.globals,bind_ok]
   step as ⟨global,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
   have valid := typed global (by rw [found]; simpa [alloc.vec.Vec.deref] using List.getElem_mem inside)
@@ -72,4 +72,4 @@ theorem initializer_global_available {A : Type} (ops : runtime.platform.Alloc A)
     simp only [List.length_append,List.length_singleton]
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

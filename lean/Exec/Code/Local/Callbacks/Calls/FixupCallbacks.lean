@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.FixupElsePreservation
 import Exec.Code.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 4000000
 set_option maxRecDepth 4096
@@ -54,4 +54,4 @@ theorem compiler_br_if_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
       exact observe_budget ops law middle after state kept rest
   · exact observe_budget ops law before after state budget accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

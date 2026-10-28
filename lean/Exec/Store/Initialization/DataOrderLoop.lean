@@ -5,7 +5,7 @@ import Exec.Store.Initialization.DataEffects
 import Exec.Store.Api.GlobalLoop
 
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem data_order_loop {M A : Type}
@@ -47,7 +47,7 @@ theorem data_order_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail, module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -84,4 +84,4 @@ theorem data_order_loop {M A : Type}
         currentInst, hfound, hsource, horder, hbindings, himports, hsegments⟩
   · exact ⟨staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, ordered, bindings, imports, segments, mapCapacity, storeCapacity⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

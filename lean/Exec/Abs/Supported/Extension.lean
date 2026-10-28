@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Extension
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
-open Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- The mutable machine preserves issued source objects by the generated store
 extension relation at every successful transition. -/
@@ -30,4 +30,4 @@ theorem step_extends (s next : AState) (typed : CoreTyped s) (covered : Supporte
         rw [same]
         exact extend_store_refl _ typed.typed.store
 
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

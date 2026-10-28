@@ -5,8 +5,8 @@ import Exec.Theorems.Composition.Stateful.StatefulTableFillStep
 import Exec.Theorems.Composition.Stateful.StatefulTableCopyStep
 import Exec.Theorems.Composition.Stateful.StatefulTableInitStep
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem stateful_table_fill_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -141,4 +141,4 @@ theorem stateful_table_init_execution_supported
 
 
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

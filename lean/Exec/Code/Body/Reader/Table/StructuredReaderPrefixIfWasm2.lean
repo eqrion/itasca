@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderPrefixIf
 import Exec.Code.Body.Callbacks.Calls.ScopeCallbackInputs
 import Exec.Code.Body.Reader.Common.ReaderReachability
 import Exec.Code.Body.Reader.Common.ReaderFrontTransitions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- An accepted canonical IF reader constructs the complete live child
@@ -63,4 +63,4 @@ theorem structured_reader_prefix_if_wasm2 {jumpTables : List U32} {emit : List v
     rfl
   · exact post.scope_fronts (.inr (.inr rfl)) fronts _ (by simpa [SourceScope.enterIf] using newTypes)
 
-end Exec.Code
+end Itasca.Runtime.Code

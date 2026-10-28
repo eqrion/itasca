@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Cumulative.CumulativeExecutionOutcome
 import Exec.Theorems.Composition.StoreMutationFacts
 import Exec.Interp.StructuredMachine.SupportedAdvance
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 /-- Concrete mutation evidence and the full source/machine outcome of one
 cumulative dispatch. Fresh certification follows from the mutation witness. -/
 def SupportedStepOutcome {M P A : Type} (allocator : runtime.platform.Alloc A)
@@ -42,4 +42,4 @@ theorem SupportedStepOutcome.failure (mutation : CumulativeStoreMutation view co
     SupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out :=
   ⟨mutation,by simpa only [status] using And.intro cause decoded⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

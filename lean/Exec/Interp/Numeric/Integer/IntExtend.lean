@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.IntCounts
 import Exec.Spec.IntegerExtend
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalar_i32_extend8_eq {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -187,4 +187,4 @@ theorem scalar_extends_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b
   rw [value]
   exact Spec.integer_extends_relation (UScalar.cast .U32 a).bv
 
-end Exec.Interp
+end Itasca.Runtime.Interp

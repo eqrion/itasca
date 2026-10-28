@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.BranchAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- One actual branch-table stub publishes a dispatch target and accepts its
@@ -44,4 +44,4 @@ theorem compiler_table_branch_available {A : Type} (ops : runtime.platform.Alloc
   exact compiler_unconditional_branch_available ops law bound available staged state stagedCapacity frame frameIndex depth 1#u32
     frameAt position widthFits fixupsCapacity fixupsReserve
 
-end Exec.Code
+end Itasca.Runtime.Code

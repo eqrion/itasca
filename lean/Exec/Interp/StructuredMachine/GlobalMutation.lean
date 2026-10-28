@@ -1,7 +1,7 @@
 import Exec.Interp.Core.Mutation
 import Exec.Interp.StructuredMachine.GlobalMutationStep
 import Exec.Interp.Control.PendingJump
-namespace Exec.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -35,4 +35,4 @@ theorem coreFramePoint_globalSet_store_mutation (platform : P) (frameIndex : Usi
     intro out effect
     apply CoreStoreMutation.global ?_ wellFormed effect
     exact Or.inr ⟨{f with code := .GLOBAL_SET (.mk_uN index) :: after},by simp,Or.inr (by simpa only [values] using List.mem_append_right front (List.mem_singleton_self value))⟩
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

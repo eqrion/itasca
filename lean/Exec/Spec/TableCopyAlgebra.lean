@@ -1,6 +1,6 @@
 import Exec.Spec.TableCopyRun
 import Exec.Spec.CopyPlain
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def withRefs (table : tableinst) (refs : List ref) : tableinst := {table with REFS := refs}
@@ -85,4 +85,4 @@ theorem tableCopyBackward_distinct_words (s : store) (f : frame) (targetTable so
     generalize sourceEq : f.MODULE.TABLES[sourceTable]! = b at sourceAddress aliasEq ⊢
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,List.getElem?_eq_getElem sourceAddress,List.set_set,address,aliasEq]
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

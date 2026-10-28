@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderSafety
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- Body-state readers invoke the compiler only after their actual successful
@@ -24,4 +24,4 @@ theorem reader_body_run_reached {T V : Type}
     | Ok unitValue =>
       cases unitValue
       simpa [CallbackTrace.bodyRun,readEq,called,hookResult,WP.spec_ok] using ready rfl
-end Exec.Code
+end Itasca.Runtime.Code

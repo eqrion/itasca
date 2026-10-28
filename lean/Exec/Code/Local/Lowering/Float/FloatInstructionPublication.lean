@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Float.FloatOperands
 import Exec.Code.Local.Relations.Common.InstructionCheckAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Float
 
 theorem floatInstruction_scalar (op : Instruction) (dst a b : U32) :
@@ -39,4 +39,4 @@ theorem float_instruction_accepts (function : runtime.bytecode.CompiledFunction)
   apply scalar_instruction_accepts function _ (floatOpcode op) left left right (floatInstruction_scalar op left left right)
   all_goals omega
 
-end Exec.Code
+end Itasca.Runtime.Code

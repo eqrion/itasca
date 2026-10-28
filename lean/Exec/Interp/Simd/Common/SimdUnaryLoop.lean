@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdUnaryWord
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -75,4 +75,4 @@ set_option maxRecDepth 4096
     · have finished : index.val=128/width.val := by scalar_tac
       simpa [finished] using And.intro initialized (And.intro allEq signEq)
   · exact ⟨position,initializedPrefix,allPrefix,signPrefix⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

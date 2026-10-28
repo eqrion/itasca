@@ -3,7 +3,7 @@ import Exec.Store.Api.GlobalContentLoop
 import Exec.Store.Initialization.ElementBoundsLoop
 import Exec.Store.Initialization.DataBoundsLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Successful actual global, element, and data staging constructs the source/raw
@@ -79,4 +79,4 @@ theorem staging_segment_bounds {M P F A : Type}
   obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp result
   exact finalBounds
 
-end Exec.Store
+end Itasca.Runtime.Store

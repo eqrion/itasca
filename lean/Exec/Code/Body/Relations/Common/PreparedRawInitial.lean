@@ -2,7 +2,7 @@ import Exec.Code.Body.Relations.Common.PreparedCompilerStart
 import Exec.Code.Local.Relations.Common.FunctionStartRaw
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
 import Exec.Code.Local.Callbacks.Common.FixupBudget
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Fresh entry establishes the raw operand and auxiliary-buffer ledger before
@@ -50,4 +50,4 @@ theorem prepared_compiler_raw_initial {A : Type} (ops : runtime.platform.Alloc A
       using layout.operandOffsets
   · simpa [layout.localSlots,stackWords,Code.slots] using layout.height
   · simp [FixupBudget,framesEq,frames,alloc.vec.Vec.new]
-end Exec.Code
+end Itasca.Runtime.Code

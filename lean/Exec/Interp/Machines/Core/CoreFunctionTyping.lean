@@ -1,12 +1,12 @@
 import Exec.Interp.Relations.CompiledFunctions
 import Exec.Code.Local.Relations.Common.CoreFunctionContext
 import Exec.Abs.Typing
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 /-- The completed module context has no ambient function-local declarations. -/
 def moduleSourceContext (module : runtime.compiler.ExecutableModule) : context :=
   {moduleFunctionContext module [] [] with RETURN := none}
-end Exec.Code
-namespace Exec.Interp
+end Itasca.Runtime.Code
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Source typing uses the exact canonical context retained by the compiler,
@@ -42,4 +42,4 @@ theorem CoreFunctionsTyped.functions_typed {M : Type} {view : M → Slice U8}
     obtain ⟨inst, index, locals, instructions, found, source, bindings, body⟩ := body
     simp only [Store.decodeFunction, kind, found, source] at body ⊢
     exact ⟨Code.moduleSourceContext inst.module, bindings, rfl, rfl, rfl, body⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

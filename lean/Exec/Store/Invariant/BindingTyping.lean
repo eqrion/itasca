@@ -2,7 +2,7 @@ import Exec.Store.Api.GlobalTypeMap
 import Exec.Store.Api.TableMemoryBindings
 import Exec.Store.Invariant.Typing
 import Exec.Store.Invariant.FunctionTables
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem decodeGlobal_type_source (global : runtime.store.GlobalInst) :
@@ -118,4 +118,4 @@ theorem imported_memory_typed {M : Type} (view : M → Slice U8) (code : CodeInt
   · exact .externtype_case_3 _ actualWf
   · exact .externtype_case_3 _ sourceWf
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,5 +1,5 @@
 import Exec.Abs.Safety
-namespace Exec.Abs.Stateful
+namespace Itasca.Runtime.Abs.Stateful
 
 def popThree (values : List val) : Option (List val × val × val × val) :=
   match pop values with
@@ -14,4 +14,4 @@ def popThree (values : List val) : Option (List val × val × val × val) :=
     popThree (front ++ [a,b,c]) = some (front,a,b,c) := by
   have split : front ++ [a,b,c] = ((front ++ [a]) ++ [b]) ++ [c] := by simp [List.append_assoc]
   simp only [popThree,split,pop_append]
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

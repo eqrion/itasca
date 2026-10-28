@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -66,4 +66,4 @@ theorem concrete_numeric_effect {before after : List code.StackType} {inputs out
   obtain ⟨rest, rfl, transfer⟩ := effect
   exact concreteStack_append.mpr ⟨concrete_stack_transfer known transfer, by simp [ConcreteStack]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

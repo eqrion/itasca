@@ -12,7 +12,7 @@ import Exec.Interp.StructuredMachine.SuspendedPoint
 import Exec.Abs.Core.Typing
 import Exec.Interp.Control.BranchNoCopy
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- A complete BR iteration, including compiler-elided copies and forward
@@ -148,4 +148,4 @@ theorem step_branch_owned_uniform {M P F A : Type}
       apply ConcreteSim.of_source
       simpa only [← split] using simulation
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

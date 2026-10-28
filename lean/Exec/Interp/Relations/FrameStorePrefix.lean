@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Existing frame metadata survives object creation when old entries retain
@@ -98,4 +98,4 @@ theorem FrameProgram.store_prefix {M : Type} {before after : runtime.store.Store
   obtain ⟨inst,found,code,table⟩ := program.lookup
   exact ⟨inst,retained.instance_lookup found,code,table.store_prefix retained⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileSubmit
 import Itasca.Stream.Scheduler
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -68,8 +68,7 @@ theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A
   | h n ih =>
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0 at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body,
-      Exec.module.Env.types, Itasca.module.Env.impl.types, bind_ok] at accepted
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.module.Env.impl.types, bind_ok] at accepted
     split at accepted
     · cases result with
       | Err error =>
@@ -91,8 +90,7 @@ theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A
             allocator middle env nextIndex nextResult = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
             runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body,
-            Exec.module.Env.types, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
+            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
         exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
           (capture_signature_frame allocator before middle env index nextResult entry)
     · simp only [bind_ok, Result.ok.injEq] at accepted
@@ -110,8 +108,7 @@ theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A
   | h n ih =>
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1 at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body,
-      Exec.module.Env.func_types, Itasca.module.Env.impl.func_types, bind_ok] at accepted
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.module.Env.impl.func_types, bind_ok] at accepted
     split at accepted
     · cases result with
       | Err error =>
@@ -133,8 +130,7 @@ theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A
             allocator middle env nextIndex nextResult = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
             runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body,
-            Exec.module.Env.func_types, Itasca.module.Env.impl.func_types, core.result.Result.is_ok] using tail
+            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.module.Env.impl.func_types, core.result.Result.is_ok] using tail
         exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
           (capture_func_slots_frame allocator before middle env index nextResult entry)
     · simp only [bind_ok, Result.ok.injEq] at accepted
@@ -148,10 +144,10 @@ theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Allo
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
       allocator before env = .ok (.Ok config, after)) : schedulerFrame after = schedulerFrame before := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready at accepted
-  simp only [Exec.module.Env.func_type_indices, Itasca.module.Env.impl.func_type_indices, bind_ok] at accepted
+  simp only [Itasca.module.Env.impl.func_type_indices, bind_ok] at accepted
   split at accepted
   · simp [runtime.compiler.Budget.reject] at accepted
-  · simp only [Exec.module.Env.types, Itasca.module.Env.impl.types, bind_ok] at accepted
+  · simp only [Itasca.module.Env.impl.types, bind_ok] at accepted
     split at accepted
     · simp [runtime.compiler.Budget.reject] at accepted
     · obtain ⟨⟨signatures, slots, completed, functions, tail, start, budget, status⟩, loop0, rest⟩ :=
@@ -184,4 +180,4 @@ theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Allo
             obtain ⟨_, output⟩ := rest
             subst after
             exact frame1.trans frame0
-end Exec.Code
+end Itasca.Runtime.Code

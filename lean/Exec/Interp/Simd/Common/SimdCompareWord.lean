@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdCompareSigned
 import Exec.Spec.SimdCompareInteger
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def integerCompareIndex (op : vrelop_Jnn_N) : U16 :=
@@ -22,24 +22,24 @@ def integerCompareIndex (op : vrelop_Jnn_N) : U16 :=
     rw [BitVec.toNat_setWidth]; exact Nat.mod_eq_of_lt bBound
   cases op with
   | EQ => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-      Exec.Interp.compare_int_eq a b width positive widthBound
+      Itasca.Runtime.Interp.compare_int_eq a b width positive widthBound
   | NE => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-      Exec.Interp.compare_int_ne a b width positive widthBound
+      Itasca.Runtime.Interp.compare_int_ne a b width positive widthBound
   | LT sign => cases sign with
     | S => exact compare_int_lts a b width positive widthBound
     | U => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-        Exec.Interp.compare_int_ltu a b width positive widthBound
+        Itasca.Runtime.Interp.compare_int_ltu a b width positive widthBound
   | GT sign => cases sign with
     | S => exact compare_int_gts a b width positive widthBound
     | U => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-        Exec.Interp.compare_int_gtu a b width positive widthBound
+        Itasca.Runtime.Interp.compare_int_gtu a b width positive widthBound
   | LE sign => cases sign with
     | S => exact compare_int_les a b width positive widthBound
     | U => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-        Exec.Interp.compare_int_leu a b width positive widthBound
+        Itasca.Runtime.Interp.compare_int_leu a b width positive widthBound
   | GE sign => cases sign with
     | S => exact compare_int_ges a b width positive widthBound
     | U => simpa only [integerCompareIndex,Spec.Simd.integerLaneCompare,aValue,bValue] using
-        Exec.Interp.compare_int_geu a b width positive widthBound
+        Itasca.Runtime.Interp.compare_int_geu a b width positive widthBound
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

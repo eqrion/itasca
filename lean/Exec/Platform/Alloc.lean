@@ -1,6 +1,6 @@
-import Exec.Generated.Types
+import Itasca.Generated.Types
 
-namespace Exec.Platform
+namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 
 /-- Allocation may report either answer but must return normally and preserve
@@ -25,4 +25,4 @@ def AllocationAvailable {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat
     values.val.length + additional.val ≤ bound →
     ops.reserve values additional = .ok (true, values)
 
-end Exec.Platform
+end Itasca.Runtime.Platform

@@ -5,7 +5,7 @@ import Exec.Code.Body.Reader.Table.ReaderTableSuffix
 import Exec.Code.Local.Relations.Table.BranchTableOperands
 import Exec.Code.Body.Reader.Table.ReaderTableSource
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual Wasm 2 table decoding, selector handling and label collection retain
@@ -26,4 +26,4 @@ theorem reader_table_publication_wasm2 {A : Type} (ops : runtime.platform.Alloc 
     compiler_br_table_map_publication ops law {before with budget,table_depths := buffer} after final.core fallback
       types (maps.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) forward callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

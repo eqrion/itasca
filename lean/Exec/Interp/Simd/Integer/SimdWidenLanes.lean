@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdWidenWord
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def widenWidth (ty : WidenWidth) : U32 := match ty with
   | .i8 => 8#u32 | .i16 => 16#u32 | .i32 => 32#u32
@@ -39,4 +39,4 @@ theorem widen_dispatch_eq (ty : WidenWidth) (multiply high signed : Bool) (x y :
   rw [widthEq] at lanes
   have result := lanes j valid
   cases multiply <;> simpa only [Bool.false_eq_true,Bool.true_eq,↓reduceIte,widenBits,WidenWidth.count] using result
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.ChargeAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- One local declaration accepts from independently bounded reserves, word
@@ -49,4 +49,4 @@ theorem compiler_add_local_available {A : Type} (ops : runtime.platform.Alloc A)
     simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
     exact ⟨trivial,locals,offsets,localSlots,used,rfl,appendedLocals,appendedOffsets,by scalar_tac,usedEq⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

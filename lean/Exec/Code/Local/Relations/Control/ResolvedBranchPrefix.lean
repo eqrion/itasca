@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Retargeting a newly emitted BR in its selected open group preserves the
@@ -19,4 +19,4 @@ theorem resolvedCode_new_br (code : List Bytecode) (before after : List FixupTar
       resolvedCode_new_branch code [transferInstruction dst src count] before after group .jump old site
         (by simpa [elided] using position) inside
 
-end Exec.Code
+end Itasca.Runtime.Code

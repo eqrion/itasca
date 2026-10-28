@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Body.Reader.Local.ReaderWasm2Local
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful local reads return the declared local type and append exactly
@@ -118,4 +118,4 @@ theorem reader_local_tee_effect (st out : code.OpIterState) (data : Slice U8) (c
       · simp [values, segmentShape, List.append_assoc]
       · simp [finalValues, nextValues, values, segmentShape, List.append_assoc]
 
-end Exec.Code
+end Itasca.Runtime.Code

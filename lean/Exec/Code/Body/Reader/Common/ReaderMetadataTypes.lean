@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderMetadata
 import Exec.Code.Body.Relations.Common.KnownFixedStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Live metadata readers retain the precise full operand suffix used by the
@@ -44,4 +44,4 @@ theorem MetadataReaderPost.types {data env locals index st}
     rw [afterTypes,List.append_assoc]
     rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

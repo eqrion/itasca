@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Integer.IntegerDispatch
 import Exec.Interp.Relations.Rel
 import Exec.Abs.Numeric.Transition
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem integerWord_of_val (ty : Inn) (raw : U64)
@@ -97,4 +97,4 @@ theorem integer_unary_words {F : Type} (floats : runtime.platform.FloatOps F)
     rw [va, op.apply_unary a b one] at operation
     simp only [NumericWordsEffect, operation]
     exact ⟨trap, allowed, effect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Common.CumulativeMiscSupport
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Itasca.Wasm2.Bulk.Dispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual bulk dispatcher accepts only its ten source subopcodes. -/
@@ -44,4 +44,4 @@ theorem reader_misc_accepted {V} (visitor : code.OpVisitor V)
     · exact ⟨sub,next,decoded,cumulative_misc_small sub (by scalar_tac)⟩
     · simp only [if_neg small] at run
       exact ⟨sub,next,decoded,.inr (reader_bulk_accepted_subopcode visitor _ _ data env sub before after run)⟩
-end Exec.Code
+end Itasca.Runtime.Code

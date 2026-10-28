@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdConvertIntegerLoop
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 def convertIntegerCountU32 : Fnn → U32 | .F32 => 4#u32 | .F64 => 2#u32
 
@@ -39,4 +39,4 @@ theorem convert_integer_dispatch_eq {F : Type} (floats : runtime.platform.FloatO
     (by simp) (by simp)
   cases ty <;> with_unfolding_all exact spec
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

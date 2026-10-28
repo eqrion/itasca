@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalConditional
 import Exec.Code.Local.Control.Common.UniversalConditional
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A loop branch has a known literal target and adds no forward fixup. The
@@ -113,4 +113,4 @@ theorem StructuredUniversalPrefix.branch_if_loop {jumpTables : List Aeneas.Std.U
         (StructuredPrefix.branchIf labelAt (future.loopLive isLoop) layout conditionSlot fragment)
       simpa only [codeEq, resolved, resumePosition, SourceScope.advance, SourceScope.input] using advanced
 
-end Exec.Code
+end Itasca.Runtime.Code

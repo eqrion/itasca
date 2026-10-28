@@ -1,8 +1,8 @@
 import Exec.Abs.Core.ContentExtension
 import Exec.Abs.Memory.Semantics
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem memoryPayloadWrite_as_set (s : store) (f : frame) (address start : Nat)
     (object : meminst) (payload : List byte) (mapped : f.MODULE.MEMS[0]? = some address)
@@ -93,4 +93,4 @@ theorem StoreContentsTyped.memory_write {s : store} (contents : StoreContentsTyp
     (congrArg store.MEMS (memoryPayloadWrite_as_set s f address start object payload mapped found))
     rfl rfl rfl rfl objectFresh
 
-end Exec.Abs
+end Itasca.Runtime.Abs

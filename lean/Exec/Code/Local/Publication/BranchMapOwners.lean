@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Control.BranchSuccessControls
 import Exec.Code.Local.Publication.ControlMapPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -70,4 +70,4 @@ theorem compiler_branch_map_owners {A : Type} (ops : runtime.platform.Alloc A)
     simp only [runtime.compiler.control.FunctionCompiler.branch,Bool.false_eq_true,ite_false,ite_true] at accepted <;>
     repeat' owners_step accepted using ops, law
 
-end Exec.Code
+end Itasca.Runtime.Code

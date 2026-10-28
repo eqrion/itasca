@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.StatefulOpcode
 import Exec.Generated.Equations
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 def statefulCallback {V : Type} (visitor : code.OpVisitor V) (before : V)
@@ -43,4 +43,4 @@ theorem stateful_callback_lower {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,Bool.false_eq_true,↓reduceIte]
   all_goals rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

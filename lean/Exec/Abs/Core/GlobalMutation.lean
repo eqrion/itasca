@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Typing
 import Exec.Spec.Globals
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem globalWrite_as_set (s : store) (f : frame) (index address : Nat)
     (object : globalinst) (value : val) (mapped : f.MODULE.GLOBALS[index]? = some address)
@@ -41,4 +41,4 @@ theorem globalWrite_extends (s : store) (f : frame) (index address : Nat)
     cases mutable
     exact Spec.extend_global_mutable ty old value oldWf (.globalinst_case_ _ _ valueWf)
 
-end Exec.Abs
+end Itasca.Runtime.Abs

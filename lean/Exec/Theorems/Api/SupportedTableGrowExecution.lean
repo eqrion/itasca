@@ -3,8 +3,8 @@ import Exec.Theorems.Composition.StoreMutationFacts
 import Exec.Theorems.Composition.Stateful.StatefulReferenceShape
 import Exec.Theorems.Api.StatefulTableGrowStep
 import Exec.Interp.StructuredMachine.JumpExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem stateful_table_grow_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -49,4 +49,4 @@ theorem stateful_table_grow_execution_supported
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       written.2 (by rw [written.1]; exact SlotPrefix.set _ _ _ _ above) transition
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

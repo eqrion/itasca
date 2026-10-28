@@ -5,8 +5,8 @@ import Exec.Theorems.Composition.Supported.SupportedEntryOutcomes
 import Exec.Interp.Invocation.InvokeRecordedPrefix
 import Exec.Theorems.Api.ReadbackIssued
 import Exec.Spec.HostCall
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A public failure is explained at its original signature/entry boundary or
 at an actual source-reachable dispatch in the then-current code world. -/
@@ -174,4 +174,4 @@ theorem invoke_defined_world_recorded_resources
         have equal : error=reported := by simpa only [status,core.result.Result.Err.injEq] using failed
         subst reported
         exact reductions
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemoryRange
 import Exec.Interp.Simd.Common.SimdShift
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 
@@ -53,4 +53,4 @@ theorem memory_lane_unfold (ty : Jnn) (store : Bool) (offset index : U32) (addre
       core.convert.FromSame,core.convert.FromSame.from,lift,bind_ok]
   all_goals try (solve | congr 1; scalar_tac)
   all_goals with_unfolding_all rfl
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

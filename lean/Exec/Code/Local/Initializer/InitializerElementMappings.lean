@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerMappingLoops
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def ElementMappingPrefix (before current : runtime.compiler.ExecutableModule)
@@ -81,8 +81,8 @@ theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, values, k, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_element_loop.body at body
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok] at body
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       obtain ⟨actualSegment, indexed, rest⟩ := initializer_bind_success body
@@ -136,4 +136,4 @@ theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, outIndices, .Ok ()) success
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

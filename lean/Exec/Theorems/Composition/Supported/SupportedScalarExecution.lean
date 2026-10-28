@@ -4,8 +4,8 @@ import Exec.Theorems.Composition.Uniform.UniformSupportedOutcome
 import Exec.Interp.StructuredMachine.IndexedLinear
 import Exec.Interp.StructuredMachine.FloatStructuredOwned
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Abs.Float Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Abs.Float Itasca.Runtime.Interp
 
 /-- All seventy scalar float operators preserve the mutable float machine or
 return the exact generated arithmetic trap; allowed NaN choices remain relational. -/
@@ -78,7 +78,7 @@ theorem step_scalar_supported_execution_uniform
           fun _ invariant => step.next_owned_supported machine.typed machine.core invariant,
           fun _ invariant => step.next_bound_supported machine.typed machine.core invariant⟩
     have fresh := StructuredMachine.Execution.ordinary view code ambient {f with code := op.source::after} g rest expected raw.pc.val false machine
-      (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
+      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields prefixEffect facts.1 facts.2.1
     exact UniformSupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore success
       ⟨pc.val,false,_,fresh,simulation,uniform,facts.2.2.1,rfl,facts.2.2.2⟩
@@ -116,4 +116,4 @@ theorem step_scalar_supported_execution
   rintro out ⟨same,platform,outcome⟩
   exact ⟨same,platform,outcome.forget⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

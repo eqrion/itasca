@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.EventfulControl
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- A concrete-only rank for silent dispatches. It is independent of source
@@ -40,5 +40,5 @@ theorem UniformConcreteSim.of_steps {beforePC afterPC beforePending afterPending
     UniformConcreteSim beforePC afterPC beforePending afterPending before after events :=
   Or.inr ⟨n,positive,steps⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

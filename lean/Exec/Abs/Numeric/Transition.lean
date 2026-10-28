@@ -1,6 +1,6 @@
 import Exec.Abs.Numeric.OperandsCore
 
-namespace Exec.Abs.Numeric
+namespace Itasca.Runtime.Abs.Numeric
 
  theorem Instruction.apply_unary (op : Instruction)
     (a b : BitVec (sizenn (numtype_Inn op.input))) (one : op.arity = 1) :
@@ -24,4 +24,4 @@ namespace Exec.Abs.Numeric
     simp only [hb, BitVec.ofNat_toNat, pop_append, ha]
     simp [finish]
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

@@ -1,6 +1,6 @@
 import Exec.Spec.MemoryLoad
 import Exec.Spec.SimdBitwise
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 def fullLoadResult (bytes : List byte) (start : Nat) : List admininstr :=
@@ -72,4 +72,4 @@ theorem full_load_step (s : store) (f : frame) (argument : memarg) (address : Na
     · exact input
     · exact .admininstr_case_73
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

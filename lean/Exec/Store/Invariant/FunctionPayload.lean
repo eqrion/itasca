@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.FunctionStaging
 import Mathlib.Data.List.Forall2
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Exact source ordinal and interned type index stored in a freshly allocated
@@ -41,4 +41,4 @@ theorem FunctionStageEffect.payload {M : Type} {before store : runtime.store.Sto
       refine .cons ⟨index, rfl, rfl, inst.module.module.env.func_type_indices.val[index.val], ?_, ?_⟩ .nil
       · simpa only [source] using List.getElem?_eq_getElem bound
       · simpa only [types, signatureEq] using List.getElem?_eq_getElem typeBound
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdValueSlots
 import Exec.Spec.SimdPureValues
 import Exec.Code.Local.Lowering.Simd.SimdSourceShape
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem WordsAt.simd_value {words : List U64} {position : Nat} {value : val}
@@ -93,4 +93,4 @@ theorem ValuesAt.simd_operands {words : List U64} {base : Nat} {values : List va
         rw [first,simdSourceWidth_value,second,simdSourceWidth_value]
         rw [←Nat.add_assoc] at third
         rw [third]
-end Exec.Interp
+end Itasca.Runtime.Interp

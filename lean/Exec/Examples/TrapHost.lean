@@ -9,7 +9,7 @@ every request. Together they discharge every host, interrupt and allocator premi
 memory and the source program remain parameters.
 -/
 
-namespace Exec.Examples
+namespace Itasca.Runtime.Examples
 open Aeneas Aeneas.Std SpecExt Theorems
 
 /-- Every callback traps and returns the store unchanged. -/
@@ -82,4 +82,4 @@ theorem trapHost_no_spurious_errors {M F : Type}
     (grantAll_available _) (fun _ _ refused => by simp [trapHost] at refused)
     (fun _ _ _ _ _ _ _ _ _ _ refused => by have same := trapHost_answer refused; simp at same)
 
-end Exec.Examples
+end Itasca.Runtime.Examples

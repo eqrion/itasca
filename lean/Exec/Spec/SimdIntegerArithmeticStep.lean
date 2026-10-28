@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerArithmeticSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem integer_arithmetic_step (ty : Jnn) (kind : IntegerArithmetic) (x y result : BitVec 128)
     (supported : integerArithmeticSupported ty kind)
@@ -19,4 +19,4 @@ theorem integer_arithmetic_step (ty : Jnn) (kind : IntegerArithmetic) (x y resul
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_arithmetic_source_wf ty kind supported)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

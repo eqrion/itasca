@@ -1,5 +1,5 @@
 import Exec.Code.Module.CompileEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The driver's issued byte cap and the scanned code origin bound all
@@ -37,4 +37,4 @@ theorem CompileEntryWitness.end_fits {A : Type} {ops : runtime.platform.Alloc A}
   have bound := w.coordinate_bound reachable bounded origin
   have span := entry.body_bytes.bound
   omega
-end Exec.Code
+end Itasca.Runtime.Code

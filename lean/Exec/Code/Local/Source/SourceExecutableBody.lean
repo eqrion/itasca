@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceExecutableImmediate
-namespace Exec.Code.SourceExecutable
+namespace Itasca.Runtime.Code.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
 theorem token_wasm1 {token bytes} (encoded : Wasm1.TokenEncoding token bytes) : TokenWasm2 token := by
@@ -54,4 +54,4 @@ theorem body_wasm2 {data source} (encoded : Wasm2.BodyEncoding data source) :
   obtain ⟨tokens, next, consumed, _, inner, rfl, emitted⟩ := encoded
   have known := consumed_wasm2 consumed
   exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
-end Exec.Code.SourceExecutable
+end Itasca.Runtime.Code.SourceExecutable

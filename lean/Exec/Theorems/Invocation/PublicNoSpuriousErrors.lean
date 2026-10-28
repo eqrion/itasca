@@ -5,8 +5,8 @@ import Exec.Interp.Relations.TypedArguments
 /-! Public invocation reports only traps when every source run fits the store limits, the
 allocator grants every request, interrupts continue and callbacks report no stack
 overflow. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 private theorem decoded_function {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {address : runtime.FuncAddr} {function : runtime.store.FuncInst}
@@ -127,4 +127,4 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
       | Objects => exact (excluded (Or.inr (Or.inr (Or.inr (Or.inr rfl))))).elim
     | _ => exact executed.elim
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

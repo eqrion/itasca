@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.ReaderAcceptance
 import Itasca.Wasm2.Trace.ControlRefinement
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Visitor
 set_option maxRecDepth 4096
 
@@ -240,4 +240,4 @@ theorem table_loop_reader_accepted_replay {V W : Type}
           index'' progress.2 arity'' first'' next' before' compiler' retained tail rfl
         exact ⟨targetAfter,by simpa only [bind_ok,code.branch_table_with_loop] using targetTail,retained'⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

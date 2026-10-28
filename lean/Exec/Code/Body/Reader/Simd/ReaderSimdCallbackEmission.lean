@@ -1,7 +1,7 @@
 import Exec.Code.Body.Lowering.Simd.SimdCallbackMeaning
 import Exec.Code.Body.Reader.Simd.ReaderSimdConstantFixed
 import Exec.Code.Local.Lowering.Simd.SimdStaticTables
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Every independently classified SIMD callback yields typed emitted code
@@ -51,4 +51,4 @@ theorem reader_simd_callback_emission {data env locals index st source values po
     · simp only [CompilerTables.ofFunction,CompilerTables.append,indirect,jumps,simd,pool,List.append_nil]
     · simp [Wasm2.Simd.inputTypes]
     · simpa [Wasm2.Simd.inputTypes,Wasm2.Simd.outputTypes,Translate.valueType] using emission
-end Exec.Code
+end Itasca.Runtime.Code

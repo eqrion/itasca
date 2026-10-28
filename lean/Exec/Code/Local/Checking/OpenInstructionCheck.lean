@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.CheckedInstructionPrefix
 import Exec.Code.Local.Relations.Common.CoreInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Earlier bytecode may contain forward branches whose owner has not closed.
@@ -53,4 +53,4 @@ retain their own check. Semantic reachability alone does not imply this fact. -/
 def OpenInstructionPrefix (function : runtime.bytecode.CompiledFunction) (pending : Nat → Prop) : Prop :=
   ∀ index instruction, function.code.val[index]? = some instruction → OpenInstructionCheck function pending index instruction
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Store.Initialization.SegmentAccounting
 import Exec.Store.Initialization.ElementEffects
 import Exec.Store.Initialization.DataEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem GlobalStageEffect.segment_accounting {M : Type} {store after : runtime.store.Store M}
@@ -43,4 +43,4 @@ theorem DataStageEffect.segment_accounting {M : Type} {store after : runtime.sto
     · simp
     · simpa using congrArg List.length addressValues
 
-end Exec.Store
+end Itasca.Runtime.Store

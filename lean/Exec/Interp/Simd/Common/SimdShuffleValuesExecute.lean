@@ -2,7 +2,7 @@ import Exec.Interp.Simd.Common.SimdInputValues
 import Exec.Interp.Simd.Common.SimdNumericResultSlots
 import Exec.Interp.Simd.Common.SimdShuffleRelation
 import Exec.Interp.Simd.Common.SimdExecuteSource
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 theorem execute_simd_shuffle_values {M F : Type}
@@ -68,4 +68,4 @@ theorem execute_simd_shuffle_values {M F : Type}
     unfold Simd.ShuffleSourceEffect at source
     rw [inputs] at source
     exact source
-end Exec.Interp
+end Itasca.Runtime.Interp

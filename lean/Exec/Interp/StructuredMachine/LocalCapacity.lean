@@ -3,9 +3,9 @@ import Exec.Interp.StructuredMachine.LocalInversion
 import Exec.Interp.Relations.LocalCapacity
 import Exec.Interp.Relations.Capacity
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
-open Exec.Interp.StructuredMachine
+open Itasca.Runtime.Interp.StructuredMachine
 /-- Even behind forward skips, a local read's destination lies within the
 allocation checked for the complete function bytecode. -/
 theorem structured_local_get_capacity
@@ -38,11 +38,11 @@ theorem structured_local_get_capacity
       have bound := (move_valid_bounds compiled ty dst src valid).1
       simpa only [position] using bound
 
-end Exec.Code
+end Itasca.Runtime.Code
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
-open Exec.Interp.StructuredMachine
+open Itasca.Runtime.Interp.StructuredMachine
 /-- LOCAL_GET needs no independent spare-capacity premise: retained code and
 frame certificates establish it for the actual represented local value. -/
 theorem structured_local_get_storage_capacity {M : Type}
@@ -70,4 +70,4 @@ theorem structured_local_get_storage_capacity {M : Type}
   simp only [List.map_append, Code.slots_append]
   omega
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -4,7 +4,7 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Interp.Control.StructuredPoint
 import Exec.Interp.Control.NormalizeClosure
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- Code-size preservation is separate from value provenance and allowed syntax. -/
 def FrameBoundClosure (before after : Abs.AFrame) : Prop :=
@@ -43,4 +43,4 @@ theorem FrameBoundClosure.state {before after} (closure : FrameBoundClosure befo
 theorem ErasedSteps.codeBound {count before after} (steps : ErasedSteps count before after)
     {bound s ambient rest} (bounded : Abs.CodeBound bound ⟨s,ambient,before::rest,[]⟩) :
     Abs.CodeBound bound ⟨s,ambient,after::rest,[]⟩ := steps.closure.codeBound bounded
-end Exec.Interp
+end Itasca.Runtime.Interp

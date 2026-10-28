@@ -5,7 +5,7 @@ import Exec.Code.Local.Lowering.Float.FloatSafety
 import Exec.Code.Body.Reader.Common.NumericReaderFacts
 import Exec.Code.Body.Reader.Float.FloatReaderFacts
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Every base integer numeric reader and its concrete compiler callback return
@@ -52,4 +52,4 @@ theorem compiler_reader_float_total {A} (ops : runtime.platform.Alloc A)
     rw [callback]
     exact compiler_float_total ops law compiler state op ready.codeFits ready.sourceFits ready.coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

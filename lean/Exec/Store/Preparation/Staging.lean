@@ -2,7 +2,7 @@ import Exec.Store.Invariant.Rollback
 import Exec.Store.Api.DefineTable
 import Exec.Store.Invariant.InternTypes
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem StagedPrefix.refl {M : Type} (s : runtime.store.Store M) : StagedPrefix s s := by
@@ -32,4 +32,4 @@ theorem StagedPrefix.trans {M : Type} {a b c : runtime.store.Store M}
   externs := hbc.externs.trans hab.externs
   instanceItems := hbc.instanceItems.trans hab.instanceItems
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,8 +1,8 @@
 import Exec.Interp.Host.HostRecording
 import Exec.Theorems.Host.HostCallSource
 
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The observable source endpoint for an isolated host call. A preparation
 rejection has not consumed the call redex. -/
@@ -30,4 +30,4 @@ theorem HostCallSourceOutcome.events {M P : Type} (view : M → Slice U8)
     · simpa only [hostCallEvents,hostCallResultConfig,trap,arguments] using Spec.stepsH_single source
     · simpa only [hostCallEvents,hostCallResultConfig,exhausted,arguments] using Spec.stepsH_single source
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

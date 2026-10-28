@@ -1,6 +1,6 @@
 import Exec.Spec.FloatPure
 import Exec.Spec.IntegerDiv
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- A checked floating comparison reduces to its exact i32 Boolean result. -/
@@ -23,4 +23,4 @@ theorem float_comparison_pure (ty : Fnn) (op : relop_Fnn) (a b : fN) (value : Na
   · exact wf_admininstr_instr (.instr_case_17 _ _ (.relop__case_1 _ _ _ rfl))
   · exact wf_admininstr_val (.val_case_0 _ _ wf)
 
-end Exec.Spec
+end Itasca.Runtime.Spec

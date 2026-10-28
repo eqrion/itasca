@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.IntegerConstantStep
 import Exec.Interp.StructuredMachine.IntegerConstantCapacity
-namespace Exec.Interp.StructuredMachine.IntegerConstant
+namespace Itasca.Runtime.Interp.StructuredMachine.IntegerConstant
 open Aeneas Aeneas.Std SpecExt
 theorem step_integer32_core_bounded_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -94,4 +94,4 @@ theorem step_integer64_core_bounded_forward {M P F A : Type}
   exact step_integer64_core_forward memory hooks floats allocator exec store platform index raw inst compiled C targets next output
     sourceStore ambient f rest value after last frameFound instanceFound codeFound pcBound slots capacity point typed
 
-end Exec.Interp.StructuredMachine.IntegerConstant
+end Itasca.Runtime.Interp.StructuredMachine.IntegerConstant

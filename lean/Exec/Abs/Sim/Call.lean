@@ -1,8 +1,8 @@
 import Exec.Abs.CallSafety
 import Exec.Abs.Sim.Return
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem defaultValue_relation (ty : valtype) (h : ty ≠ .BOT) :
     fun_default_ ty (defaultValue ty) := by
@@ -245,4 +245,4 @@ theorem typed_call_simulation (s : store) (ambient : frame) (f : AFrame)
           rw [hnext]
           simpa only [List.take_append_drop] using result
 
-end Exec.Abs
+end Itasca.Runtime.Abs

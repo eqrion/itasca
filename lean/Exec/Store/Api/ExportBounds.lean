@@ -2,7 +2,7 @@ import Exec.Representation.StoreInvariant
 import Exec.Store.Preparation.Staging
 import Itasca.Module.Env.Basic
 import Itasca.Module.Elab.Metadata
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Static export descriptors address the validated namespace and retain
@@ -70,4 +70,4 @@ theorem ExportBounds.staged {M : Type} {before after : runtime.store.Store M}
     subst index
     exact fresh inst found
 
-end Exec.Store
+end Itasca.Runtime.Store

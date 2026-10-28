@@ -4,7 +4,7 @@ import Exec.Store.Invariant.CodeAgreement
 import Exec.Store.Invariant.FunctionSignatures
 import Exec.Store.Initialization.SegmentCodeMetadata
 import Exec.Store.Invariant.InstantiationCode
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem InstantiationCode.core_typed {M : Type} {view : M → Slice U8}
@@ -26,4 +26,4 @@ theorem InstantiationCode.core_typed {M : Type} {view : M → Slice U8}
   exact core_source_functions_publish_wf view before staged oldCode raw shape oldSyntax freshWf retained
     oldTyped inst found elaborated typed matched bindings signatures
 
-end Exec.Store
+end Itasca.Runtime.Store

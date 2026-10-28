@@ -4,7 +4,7 @@ import Exec.Interp.Host.HostArguments
 import Exec.Interp.Host.HostBuffers
 import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Calls.CallRegions
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Preparation can stop only for allocation, value capacity, or an interrupt.
@@ -249,4 +249,4 @@ theorem call_host_composition_causes {M P F A : Type}
                   apply congrArg (fun continuation => Std.bind (runtime.interp.check_failed checked) continuation)
                   funext failed
                   cases failed <;> simp [bind_ok,Std.bind_assoc]
-end Exec.Interp
+end Itasca.Runtime.Interp

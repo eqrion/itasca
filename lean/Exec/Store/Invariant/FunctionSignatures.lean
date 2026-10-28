@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.FunctionTables
 import Exec.Store.Invariant.FunctionStaging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -104,4 +104,4 @@ theorem type_entries_decoded {M : Type} {store : runtime.store.Store M}
     rw [ih]
     simp only [List.getD_eq_getElem?_getD, List.getElem?_map, found, Option.map_some, Option.getD_some]
 
-end Exec.Store
+end Itasca.Runtime.Store

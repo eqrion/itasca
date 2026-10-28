@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceLengthsTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -31,7 +31,7 @@ elab "start_frame_effect " h:ident " using " ops:term ", " law:term : tactic => 
   let ty ← inferType hyp
   let some (_, lhs, _) := ty.eq? | throwError "not an equation"
   if lhs.getAppFn.constName? = some ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start_loop then
-    let theoremName := mkIdent `Exec.Code.compiler_locals_source_frame
+    let theoremName := mkIdent `Itasca.Runtime.Code.compiler_locals_source_frame
     evalTactic (← `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ $h))
   else
     throwError "not local declaration loop"
@@ -128,4 +128,4 @@ theorem compiler_function_start_source_frame {A : Type} (ops : runtime.platform.
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start at accepted
   repeat' start_frame_step accepted using ops, law
 
-end Exec.Code
+end Itasca.Runtime.Code

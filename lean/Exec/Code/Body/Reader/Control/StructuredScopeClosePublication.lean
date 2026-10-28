@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Publication.ScopeClosePublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A reached prefix supplies the physical closing frame and all branch and
@@ -53,4 +53,4 @@ theorem structured_scope_close_publication {jumpTables : List U32}
       cases guardPosition
     exact .guarded guard condition old nonBody hasIf guardCode
 
-end Exec.Code
+end Itasca.Runtime.Code

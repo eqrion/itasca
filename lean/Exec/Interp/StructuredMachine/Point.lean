@@ -2,19 +2,19 @@ import Exec.Code.Local.Control.Table.StructuredCodeLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Code.Body.Relations.Common.ExecutableEmission
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 abbrev ContextEmission := context → List valtype → instr → List Code.Bytecode → List valtype → Prop
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 /-- The emission relation of a compiled function: the complete compiler relation over the
 function's retained indirect, SIMD, constant and jump-table metadata. -/
 abbrev emission (compiled : runtime.bytecode.CompiledFunction) : StructuredMachine.ContextEmission :=
   Code.ExecutableEmission (Code.CompilerTables.ofFunction compiled)
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 structure FramePoint (sourceStore : _root_.store) (raw : runtime.interp.Frame)
@@ -34,4 +34,4 @@ theorem FramePoint.extend {before after : _root_.store} (extension : Extend_stor
     FramePoint after raw frame compiled C targets next output :=
   ⟨point.bindings.extend extension,point.locals,point.labels,point.code⟩
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

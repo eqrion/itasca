@@ -7,7 +7,7 @@ import Exec.Code.Local.Relations.Table.ControlTablePreservation
 import Exec.Code.Local.Callbacks.Control.CompilerBranchMetadata
 import Exec.Code.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual forward branching preserves every old instruction check, validates
@@ -81,4 +81,4 @@ theorem compiler_branch_forward_open_instructions {A : Type} (ops : runtime.plat
     CompilerInstructionPrefix after :=
   (compiler_branch_forward_instruction_effect ops law before after frame index depth source skip lookup position forward sourcePosition order sourceFits fixupsFit codeFits offsetsFit coordinateFits called).apply held
 
-end Exec.Code
+end Itasca.Runtime.Code

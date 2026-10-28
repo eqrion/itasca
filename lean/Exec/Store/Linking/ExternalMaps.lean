@@ -1,5 +1,5 @@
 import Exec.Store.Linking.LinkMaps
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def decodeExternal : runtime.Extern → externaddr
@@ -83,4 +83,4 @@ theorem external_memories (externals : List runtime.Extern) :
     all_goals first
       | exact .fun_mems_case_1 _ _ _ ih
       | exact .fun_mems_case_2 _ _ _ ih
-end Exec.Store
+end Itasca.Runtime.Store

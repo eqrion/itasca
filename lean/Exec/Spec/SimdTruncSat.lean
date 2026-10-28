@@ -1,6 +1,6 @@
 import Exec.Spec.FloatTrunc
 import Exec.Spec.SimdCompareFloatLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def truncSatWord (source : Nat) (sign : sx) (value : fN) : uN :=
@@ -13,7 +13,7 @@ theorem trunc_sat_word_some (source : Nat) (sign : sx) (value : fN) :
 
 theorem trunc_sat_word_wf (source : Nat) (sign : sx) (value : fN) :
     wf_uN 32 (truncSatWord source sign value) := by
-  have wf := Exec.Spec.float_trunc_sat_results_wf source .I32 sign value
+  have wf := Itasca.Runtime.Spec.float_trunc_sat_results_wf source .I32 sign value
   change Forall (fun result => wf_num_ .I32 (.mk_num__0 .I32 result)) (trunc_sat__ source 32 sign value).toList at wf
   rw [trunc_sat_word_some] at wf
   have numeric := wf (truncSatWord source sign value) (by simp)
@@ -26,8 +26,8 @@ theorem trunc_sat_word_bound (source : Nat) (sign : sx) (value : fN) :
     | uN_case_0 n bound => norm_num [proj_uN_0] at bound ⊢; omega
   exact all _ (trunc_sat_word_wf source sign value)
 
-end Exec.Spec.Simd
-namespace Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def truncSatCount (ty : Fnn) : Nat := 128/lsize (lanetype_Fnn ty)
@@ -80,4 +80,4 @@ theorem trunc_sat_zero (ty : Fnn) (sign : sx) :
   · exact .fun_zeroop_case_24 _ _ _ _ _ _ rfl rfl
   · exact .fun_zeroop_case_25 _ _ _ _ _ _ rfl rfl
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

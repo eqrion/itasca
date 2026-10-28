@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.OperandBounds
 import Exec.Code.Local.Relations.Global.GlobalLowering
 set_option maxHeartbeats 1200000
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem global_get_valid_bounds (compiled : runtime.bytecode.CompiledFunction)
@@ -22,4 +22,4 @@ theorem global_get_valid_bounds (compiled : runtime.bytecode.CompiledFunction)
     rw [widthEq]
     scalar_tac
 
-end Exec.Code
+end Itasca.Runtime.Code

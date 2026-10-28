@@ -1,8 +1,8 @@
 import Exec.Abs.Core.ContentExtension
 import Exec.Spec.SegmentDrops
 import Exec.Spec.TableInitSource
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem droppedElementStore_wf (s : store) (f : frame) (index : Nat)
     (wf : wf_store s) : wf_store (droppedElementStore s f index) := by
@@ -95,4 +95,4 @@ theorem droppedDataStore_contents (s : store) (f : frame) (index : Nat)
       exact datainst_ok_extend extension (extend_data_refl object wf) typed
     · intro object typed
       exact .mk_Datainst_ok _ [] (by norm_num) (extend_store_wf extension).2 (.datainst_case_ _ (by simp [Forall]))
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

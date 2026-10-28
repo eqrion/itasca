@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.StepRecording
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem hostStepAddress_at {M : Type} (exec : runtime.interp.Execution)
@@ -45,4 +45,4 @@ theorem hostInstructionAddress_indirect {M : Type} (exec : runtime.interp.Execut
     apply UScalar.eq_of_val_eq
     simpa only [UScalar.ofNatCore_val_eq] using sub
   simp only [equal,functionAt,Bind.bind,Option.bind,signatureAt,same,ite_true,hostCode]
-end Exec.Interp
+end Itasca.Runtime.Interp

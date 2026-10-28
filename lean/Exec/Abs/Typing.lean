@@ -6,8 +6,8 @@ import Itasca.Spec.TypingInversion
 generated value/instruction predicates; whole-state preservation and progress
 require the label/caller typing invariant and are not asserted here. -/
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 def integerWidth : Inn → Nat
   | .I32 => 32
@@ -223,4 +223,4 @@ theorem integer_val_inv {s : store} {ty : Inn} {value : val}
   | val_case_3 address => cases ty <;> simp_all [valueType, valtype_numtype, numtype_Inn]
   | val_case_4 address => cases ty <;> simp_all [valueType, valtype_numtype, numtype_Inn]
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderSaturatingEmissions
 import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Local.Checking.CoreEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed floating-point reader progress preserves all stored instruction checks. -/
@@ -60,4 +60,4 @@ theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
   rw [input] at layout
   exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceSlice
 import Itasca.Stream.Batch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Prefix-unique encodings identify an entry by the number of preceding
@@ -56,4 +56,4 @@ theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
   exact ⟨⟨w.groups, source⟩, encoded_entry_lookup (Profile.code_prefix_unique profile)
     whole prefixEncoding lastEncoding joined bound, rfl, body⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

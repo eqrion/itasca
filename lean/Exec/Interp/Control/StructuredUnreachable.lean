@@ -2,7 +2,7 @@ import Exec.Abs.Numeric.Decode
 import Exec.Interp.Relations.Unreachable
 import Exec.Interp.Relations.ControlPoint
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem linearEmission_not_unreachable {locals before after emitted}
@@ -16,4 +16,4 @@ theorem linearEmission_not_unreachable {locals before after emitted}
     simp [Abs.Numeric.decodeInstruction_source, Abs.Numeric.decodeInstruction] at decoded
   | _ => simp_all
 
-end Exec.Interp
+end Itasca.Runtime.Interp

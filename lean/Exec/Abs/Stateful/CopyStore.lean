@@ -3,8 +3,8 @@ import Exec.Abs.Stateful.ObjectReplacement
 import Exec.Abs.Stateful.MemorySize
 import Exec.Spec.MemoryCopySnapshot
 import Exec.Spec.TableCopySnapshot
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem memoryCopy_preserves (s : store) (f : frame) (address destination source count : Nat)
     (object : meminst) (wf : wf_store s) (contents : StoreContentsTyped s)
@@ -43,4 +43,4 @@ theorem tableCopy_preserves (s : store) (f : frame) (targetTable sourceTable tar
   have result := table_replacement_preserves s targetAddress targetObject _ wf contents targetFound objectExtension newTyped
   simpa only [Segment.tableCopy,Segment.withRefs,List.getElem!_eq_getElem?_getD,targetMapped,sourceMapped,
     targetFound,sourceFound,Option.getD_some] using result
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

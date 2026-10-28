@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Api.Define
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def GlobalAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
@@ -41,4 +41,4 @@ theorem define_global_resource_causes {M A : Type} (memory : runtime.platform.Me
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,GlobalAllocationCause]
     omega
-end Exec.Store
+end Itasca.Runtime.Store

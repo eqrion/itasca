@@ -2,8 +2,8 @@ import Exec.Interp.State.StatefulReadStep
 import Exec.Interp.StructuredMachine.SupportedControlSemantics
 import Exec.Interp.StructuredMachine.JumpExecution
 import Exec.Interp.Relations.Capacity
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem read_execution_supported_forward
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -103,4 +103,4 @@ theorem read_execution_supported
     exact ⟨sameStore,samePlatform,Or.inl ⟨ok,pc,g,fresh⟩⟩
   · exact ⟨sameStore,samePlatform,Or.inr failed⟩
 
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

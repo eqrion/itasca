@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.BulkTableLoop
 import Exec.Code.Local.Initializer.InitializerMappings
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem bulk_zero_add (value : Usize) : (0#usize + value : Result Usize) = .ok value := by
@@ -100,4 +100,4 @@ theorem bulk_table_init {M : Type} (memory : runtime.platform.MemoryBuffer M)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       TableInitializationEffect]
 
-end Exec.Store
+end Itasca.Runtime.Store

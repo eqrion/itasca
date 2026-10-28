@@ -3,8 +3,8 @@ import Exec.Interp.StructuredMachine.SimdContinue
 import Exec.Code.Local.Lowering.Simd.SimdSignature
 import Exec.Abs.Simd.Transition
 
-namespace Exec.Interp.StructuredMachine.Simd
-open Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
+open Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem instruction_operands {s : store} {f : Abs.AFrame} {after : List instr}
     {C opcode immediate input source output frontTypes}
@@ -52,4 +52,4 @@ theorem framePoint_head
     exact Or.inl ⟨target,forward,fetch,⟨point.bindings,point.locals,point.labels,tail⟩⟩
   · exact Or.inr head
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

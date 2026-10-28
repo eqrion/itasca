@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.Observe
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Observation changes only compiler work state and allocation high-water marks. -/
@@ -14,4 +14,4 @@ def ObserveFrame {A : Type} (before after : runtime.compiler.FunctionCompiler A)
   split <;> step*
   all_goals cases r <;> simp_all [ObserveFrame, core.cmp.impls.OrdU32.max, alloc.vec.Vec.deref]
   all_goals try exact fun e => ⟨e⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Memory.SimdMemoryExtendLoop
 import Exec.Interp.Simd.Integer.SimdWidenSound
 import Exec.Interp.Simd.Memory.SimdMemoryRange
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 set_option maxHeartbeats 200000
 
 def memoryExtendOpcode (ty : WidenWidth) (signed : Bool) : U32 :=
@@ -55,9 +55,9 @@ theorem memoryExtendLoop_eq (ty : WidenWidth) (signed : Bool) (value : U128) :
       runtime.interp.simd.memory_op_loop0 (memoryExtendOpcode ty signed) value (widenWidth ty) 0#u128 0#u32 := by
   cases ty <;> cases signed <;> with_unfolding_all rfl
 
-end Exec.Interp.Simd
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+end Itasca.Runtime.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 @[step] theorem memory_extend_lanes (ty : WidenWidth) (signed : Bool) (value : U128) :
     runtime.interp.simd.memory_op_loop0 (memoryExtendOpcode ty signed) value (widenWidth ty) 0#u128 0#u32
@@ -102,4 +102,4 @@ open Aeneas Aeneas.Std Exec.Spec.Simd
     simpa only [wordEq,startEq,show (8#usize).val=8 by simp,show (0#usize).val=0 by simp,Nat.sub_zero] using packed
   · simp only [MemoryAddressEffect,Slice.len_val,show (8#usize).val=8 by simp,fits,if_false] at effect
     simp only [effect,WP.spec_ok,if_neg fits]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

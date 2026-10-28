@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Calls.IndirectCallOperands
 import Exec.Code.Local.Relations.Calls.IndirectCallEmission
 import Exec.Code.Body.Relations.Calls.IndirectCallSignature
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Successful indirect-call lowering appends the exact table/type pair and
@@ -80,4 +80,4 @@ theorem compiler_indirect_call_emission_captured {A : Type} (ops : runtime.platf
   exact compiler_indirect_call_emission ops law before after state types C front params results typeIndex tableIndex bounds
     signature signatureFound tableFound read matched.paramWords locals layout reachable concrete typed
     codeFits sourceFits coordinateFits accepted
-end Exec.Code
+end Itasca.Runtime.Code

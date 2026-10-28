@@ -2,8 +2,8 @@ import Exec.Theorems.Host.HostCallSource
 import Exec.Interp.Relations.SourceIndirectResources
 import Exec.Interp.StructuredMachine.SourceBase
 import Exec.Theorems.Composition.SignatureWords
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A selected source host call fixes both its source signature and its shared
 argument base, including suspended source callers. -/
@@ -114,4 +114,4 @@ theorem HostDispatchCause.host_overflow {M P F A : Type}
       hooks.call_host p store identity args defaults=.ok (.Err .StackOverflow,out.2.2.2,out.2.2.1,returned) := by
   obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := cause
   exact ⟨identity,by simpa only [HostCallCauses,failed] using refused⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

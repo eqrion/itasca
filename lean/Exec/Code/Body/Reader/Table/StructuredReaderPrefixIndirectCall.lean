@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Calls.ReaderIndirectEmission
 import Exec.Code.Body.Reader.Table.ReaderStructuredDead
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A fixed future pair table suffices for both sides of indirect-call lowering.
@@ -62,4 +62,4 @@ theorem structured_reader_prefix_indirect_call_wasm2 {jumpTables : List U32} {da
       (compiler_indirect_call_cursor ops law before after out.core index table callback)
       17#u16 index table 0#u128 callback
     exact ⟨index,table,values,[],pairs,reader,compiled,deadAfter.trans dead.symm⟩
-end Exec.Code
+end Itasca.Runtime.Code

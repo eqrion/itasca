@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdUnaryAll
 import Exec.Spec.SimdAllTrue
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 @[step] theorem all_true_lanes_sound (ty : Jnn) (x : U128) :
     runtime.interp.simd.integer_unary_lanes (unaryOpcode ty .allTrue) x
       ⦃ result => Step_pure [.VCONST .V128 (.mk_uN x.val),allTrueSource ty]
@@ -25,4 +25,4 @@ theorem all_true_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
       Aeneas.Std.bind (runtime.interp.simd.integer_unary_lanes (unaryOpcode ty .allTrue) x)
         (fun result => Result.ok (core.result.Result.Ok result,memory)) := by
   cases ty <;> unfold runtime.interp.simd.simd unaryOpcode <;> with_unfolding_all rfl
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

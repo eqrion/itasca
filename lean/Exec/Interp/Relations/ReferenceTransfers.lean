@@ -1,6 +1,6 @@
 import Exec.Abs.ReferenceBounds
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem integer_reference_bound (bound : Nat) (ty : Inn) (bits : Nat) :
     Abs.ReferenceBound bound (Abs.integerVal ty bits) := by
@@ -37,4 +37,4 @@ theorem values_references_prefix (f : Abs.AFrame) (front suffix : List val)
   rw [shape] at bounded
   exact (Abs.valuesBound_append.mp bounded).1
 
-end Exec.Interp
+end Itasca.Runtime.Interp

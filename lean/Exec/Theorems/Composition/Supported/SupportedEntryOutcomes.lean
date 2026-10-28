@@ -1,6 +1,6 @@
 import Exec.Theorems.Composition.Supported.SupportedEntry
 import Exec.Interp.Calls.CallCauses
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 /-- Entry rejections retain the exact allocator, frame limit, value limit, or interrupt witness. -/
@@ -52,4 +52,4 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
   rw [returned] at causes ⊢
   simp only [WP.spec_ok] at causes ⊢
   exact ⟨unchanged,entered,fun error rejected => ⟨inst,compiled,hi,hc,causes error rejected⟩⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

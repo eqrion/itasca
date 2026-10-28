@@ -3,7 +3,7 @@ import Exec.Store.Instantiation.PreparedSegmentBounds
 import Exec.Code.Module.SegmentPayloadBounds
 import Exec.Code.Module.CompileCache
 import Exec.Code.Module.CompileSemantic
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem PreparedRun.segment_bounds {M P F A : Type}
@@ -51,4 +51,4 @@ theorem PreparedRun.compiled_segment_bounds {M P F A : Type}
     exact valid
   obtain ⟨elementBounds, dataBounds⟩ := Code.compile_segment_payload_bounds allocator law bytes profile limits module accepted
   exact trace.segment_bounds laws law shape accounted bounded cache actualValid certificates.2.2.2 elementBounds dataBounds
-end Exec.Store
+end Itasca.Runtime.Store

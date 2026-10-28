@@ -1,6 +1,6 @@
 import Exec.Code.Module.EnvironmentAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual function-parameter capture loop accepts independently bounded source parameter
@@ -28,7 +28,7 @@ theorem environment_function_slots_available {A : Type} (ops : runtime.platform.
     dsimp only at same accepted position count
     subst status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body
-    simp only [module.Env.func_types,Itasca.module.Env.impl.func_types,bind_ok]
+    simp only [Itasca.module.Env.impl.func_types,bind_ok]
     split
     · rename_i more
       have insideType : next.val < env.func_types.val.length := by
@@ -56,4 +56,4 @@ theorem environment_function_slots_available {A : Type} (ops : runtime.platform.
       exact WP.spec.ret ⟨current,rfl,same,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

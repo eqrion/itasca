@@ -3,7 +3,7 @@ import Exec.Code.Local.Initializer.InitializerMappings
 /-! Syntactic programs emitted for active and declarative segments. The
 certificate records source segment indices and actual embedded descriptor
 lookups; runtime bounds and source typing remain separate obligations. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 inductive ElementProgram (function : runtime.bytecode.CompiledFunction)
@@ -56,4 +56,4 @@ structure SegmentProgramBody (module : runtime.compiler.ExecutableModule)
 def SegmentProgram (module : runtime.compiler.ExecutableModule) (function : runtime.bytecode.CompiledFunction) : Prop :=
   ∃ elements datas, SegmentProgramBody module function elements datas
 
-end Exec.Code
+end Itasca.Runtime.Code

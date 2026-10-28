@@ -1,7 +1,7 @@
 import Exec.Store.Api.ExportBounds
 import Exec.Store.Instantiation.PreparedRunShape
 import Exec.Store.Instantiation.PreparedRunGlobalTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual publication and initializer staging calls preserve old export
@@ -28,4 +28,4 @@ theorem PreparedRun.export_bounds {M P F A : Type}
       rw [source]
       exact module_export_bounds valid
   exact bounded.instances_eq (by simp only [trace.committed])
-end Exec.Store
+end Itasca.Runtime.Store

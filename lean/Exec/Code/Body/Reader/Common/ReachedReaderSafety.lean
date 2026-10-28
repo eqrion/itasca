@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Control.ReaderControlSafetyWasm2
 import Exec.Code.Body.Reader.Common.ReaderProfileOrdinarySafety
 import Exec.Code.Body.Reader.Table.ReaderTableSafetyWasm2
 import Itasca.Visitor.ReachedTableLabels
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.reader_total {A} (ops : runtime.platform.Alloc A)
@@ -42,4 +42,4 @@ theorem IndexedTableReaderCompilerPointWasm2.reader_total {A} (ops : runtime.pla
     have tableNe : opcode.val ≠ 14 := fun h => table (UScalar.eq_of_val_eq h)
     tauto
 
-end Exec.Code
+end Itasca.Runtime.Code

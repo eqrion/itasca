@@ -4,7 +4,7 @@ import SpecExt.Builtins.Float.Decoding
 import SpecExt.Builtins.Float.Storage
 import Mathlib.Tactic
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt.Builtins
 
 private theorem byte_value_bound (value : byte) (hw : wf_byte value) : proj_byte_0 value < 256 := by
@@ -81,4 +81,4 @@ theorem numericBytes_wf (ty : numtype) (bytes : List byte)
     apply Float.floatOfBits_wf_64
     rw [sized] at bounded
     simpa using bounded
-end Exec.Spec
+end Itasca.Runtime.Spec

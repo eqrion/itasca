@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
 import Exec.Code.Body.Reader.Table.ReaderTableTargetsWasm2
 import Exec.Code.Body.Reader.Table.ReaderTableSuffix
 import Exec.Code.Local.Relations.Table.BranchTableOperands
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -34,4 +34,4 @@ theorem reader_table_post_wasm2 {V : Type} (visitor : code.OpVisitor V)
   · simpa only [finalBlocks] using blocks
   · simpa only [List.append_nil] using finalValues
   · exact sourceAt.declared _
-end Exec.Code
+end Itasca.Runtime.Code

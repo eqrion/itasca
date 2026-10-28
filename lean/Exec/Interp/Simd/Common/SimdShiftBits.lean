@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdSigned
 import Exec.Interp.Simd.Common.SimdPacking
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem shiftRight_widen (width : Nat) (bits : BitVec width) (shift : Nat) (bound : width ≤ 64) :
@@ -52,4 +52,4 @@ theorem shiftRight_signed_widen (width : Nat) (bits : BitVec width) (shift : Nat
   apply BitVec.eq_of_toInt_eq
   rw [BitVec.toInt_signExtend_of_le widthBound]
   exact value
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

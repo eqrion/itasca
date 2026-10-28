@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.SignatureTable
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std Itasca
 
 /-- Concrete block selection agrees with the canonical resolved parameter and
@@ -53,4 +53,4 @@ theorem SignatureSequence.select {signatures : Slice runtime.compiler.Signature}
   obtain ⟨signature, selected⟩ := selected
   exact ⟨signature, selected, selected.resolved sequence.table inputs outputs⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
 import Exec.Code.Body.Reader.Common.ReaderValues
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call metadata lookup and parameter/result stack transfer. -/
@@ -65,4 +65,4 @@ theorem call_full_stack_types {before after outer segment rest : List code.Stack
       Function.comp_def, List.append_assoc] using whole
   · simp [new, outerConcrete, restConcrete, List.append_assoc]
 
-end Exec.Code
+end Itasca.Runtime.Code

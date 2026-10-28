@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Acceptance.RecordedReaderAcceptance
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 import Exec.Code.Local.Capacity.SelectAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Explicit-select source typing supplies the full live operand layout.
@@ -50,4 +50,4 @@ theorem reached_profile_typed_select_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Exec.Code
+end Itasca.Runtime.Code

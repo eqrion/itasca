@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatSigns
 import Exec.Interp.Numeric.Float.FloatMinMax
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 @[step] theorem scalar_f32_convert_i32_s_bounded {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -280,4 +280,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
   · scalar_tac
   · simpa only [U32.cast_U64_val_eq] using hvalue
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Step
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Scalar integer traps arise from an explicit unreachable instruction or a numeric operation. -/
 theorem instruction_trap_eq (s : store) (ambient : frame) (f : AFrame)
@@ -15,4 +15,4 @@ theorem instruction_trap_eq (s : store) (ambient : frame) (f : AFrame)
     simp only [astep, advance, integerBinary, branch, enterLabel, call, returnFrame] at step
     repeat' first | contradiction | split at step
 
-end Exec.Abs
+end Itasca.Runtime.Abs

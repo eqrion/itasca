@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Common.RecordingEmission
 import Exec.Interp.StructuredMachine.SupportedHeadCoverage
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 class RecordingHeads (emission : ContextEmission) : Prop where
@@ -62,4 +62,4 @@ theorem code_recording_source {emission : ContextEmission} [RecordingHeads emiss
   | unreachable head remaining scope => rw [head] at fetched; cases fetched; exact (calls rfl).elim
   | return_ source size head remaining scope => rw [head] at fetched; cases fetched; exact (calls rfl).elim
   | branchTable gate table bounds => rw [table.instruction] at fetched; cases fetched; exact (calls rfl).elim
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

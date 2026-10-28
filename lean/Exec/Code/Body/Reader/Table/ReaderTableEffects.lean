@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Table.BranchTableEffects
 import Exec.Code.Body.Reader.Table.ReaderTableSource
 import Exec.Code.Body.Reader.Table.ReaderTableSuffix
 import Exec.Code.Local.Relations.Table.BranchTableOperands
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Complete instruction effects at reader boundaries, after the private label
@@ -30,4 +30,4 @@ theorem compiler_reader_table_effect_wasm2 {A : Type} (ops : runtime.platform.Al
     source,cursor,afterBoundary,dead,?_⟩
   simpa only [bufferEq,boundary.depths,List.nil_append] using growth
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -3,7 +3,7 @@ import Exec.Interp.Control.LabelCompletion
 import Exec.Interp.Relations.Erased
 import Exec.Abs.Sim.Compose
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 /-- The saved normal continuations are counted once, alongside the active
 source code. Entering nested blocks and completing labels both decrease this
@@ -95,4 +95,4 @@ theorem ErasedSteps.sound {count before after} (steps : ErasedSteps count before
       exact ⟨afterTyped, Or.inr first⟩
     · exact ⟨afterTyped, Or.inr (first.trans remaining)⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

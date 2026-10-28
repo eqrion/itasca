@@ -1,6 +1,6 @@
 import Exec.Code.Local.Capacity.SimdMeaningBound
 import Mathlib.Tactic.IntervalCases
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -62,4 +62,4 @@ theorem SimdImmediateMeaning.shape {C opcode immediate input source output}
     unfold MemoryShapeCorrect at correct
     simpa only [meaning] using correct
   | shuffle => with_unfolding_all rfl
-end Exec.Code
+end Itasca.Runtime.Code

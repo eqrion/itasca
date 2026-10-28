@@ -29,8 +29,8 @@ import Exec.Store.Invariant.CheckedValues
 import Exec.Theorems.Composition.Entry
 import Exec.Theorems.Composition.Eventful.EventfulSourceResources
 import Exec.Theorems.Api.InvocationEntryResources
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def InitialHostSourceResourceCause {M P A : Type}
     (hooks : runtime.platform.Platform P M) (allocator : runtime.platform.Alloc A)
@@ -43,4 +43,4 @@ def InitialHostSourceResourceCause {M P A : Type}
   | .Exhausted .Objects => False
   | _ => True
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

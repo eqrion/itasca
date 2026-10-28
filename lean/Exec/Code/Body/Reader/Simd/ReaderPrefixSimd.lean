@@ -3,7 +3,7 @@ import Exec.Code.Local.Control.Simd.StructuredSimdEmbedding
 import Exec.Code.Body.Reader.Simd.ReaderSimdEmissions
 import Exec.Code.Body.Reader.Table.ReaderStructuredDead
 import Exec.Code.Local.Callbacks.Table.CompilerTablePreservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.simd_dead_prefix {jumpTables : List U32} {data env sourceLocals index st}
@@ -24,4 +24,4 @@ theorem ReaderPostWasm2.simd_dead_prefix {jumpTables : List U32} {data env sourc
   unfold runtime.compiler.lower.FunctionCompiler.op at accepted
   rw [if_neg (by simp [dead])] at accepted
   exact ⟨prefixProof,deadAfter,compiler_observe_tables ops law before after out (.Ok ()) accepted⟩
-end Exec.Code
+end Itasca.Runtime.Code

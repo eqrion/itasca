@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.SimdExecutionJoin
 import Exec.Interp.Simd.Common.SimdMutation
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas.Std
 
 def FrameOutcome {M P : Type} (view : M → Slice U8)
@@ -24,4 +24,4 @@ def FrameOutcome {M P : Type} (view : M → Slice U8)
     Store.decodeStore view interpretation out.2.2.1=Store.decodeStore view interpretation store ∧
     Abs.Simd.Step ⟨Store.decodeStore view interpretation store,ambient,source::rest,[]⟩ .trap))
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

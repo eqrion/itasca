@@ -1,7 +1,7 @@
 import Exec.Code.Body.Callbacks.Common.CompilerPrefix
 import Exec.Code.Local.Callbacks.Control.ScopeFrameStart
 import Exec.Code.Local.Source.SourceEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The root scope starts with an empty concrete operand stack and a live
@@ -19,4 +19,4 @@ theorem CompilerPrefix.initial {A : Type} (compiler : runtime.compiler.FunctionC
   · simp [ConcreteStack]
   · omega
 
-end Exec.Code
+end Itasca.Runtime.Code

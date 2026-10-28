@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
@@ -231,4 +231,4 @@ theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env 
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.State.TableMutation
 import Exec.Store.Api.TableFillEffect
-namespace Exec.Store
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem fillTableWords_member (before : List U64) (start count : Nat) (value word : U64)
     (member : word ∈ fillTableWords before start value count) : word ∈ before ∨ word = value := by
@@ -30,4 +30,4 @@ theorem TableFillEffect.mutation {M : Type} (store : runtime.store.Store M)
       exact fillTableWords_member _ _ _ _ _ member
   · rw [effect]
     exact ⟨⟨rfl,rfl,rfl,rfl⟩,Or.inr ⟨rfl,rfl⟩⟩
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.StructuredComposition
 import Exec.Code.Local.Callbacks.Common.Fixups
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def BranchHole (code : List Bytecode) (sites : List Usize)
@@ -11,4 +11,4 @@ def BranchHole (code : List Bytecode) (sites : List Usize)
     code[pc]? = some (transferInstruction dst src count) ∧
     ∃ site, site ∈ sites ∧ site.val = pc + 1 ∧ code[pc + 1]? = some (.Jump 4294967295#u32)
 
-end Exec.Code
+end Itasca.Runtime.Code

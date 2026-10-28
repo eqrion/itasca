@@ -1,7 +1,7 @@
 import Exec.Code.Module.PreparedBatchSource
 import Exec.Code.Module.SourceEntryPrepared
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private def sourceOrdinal (env : module.Env) (index : Nat)
@@ -44,4 +44,4 @@ theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : module.Env) (pro
       exact .cons ordinal value (by simpa only [value] using indexBound) (by simpa only [value] using fullTyped)
         entryBytes w ending bytes locals operands (ih (index+1) next rest remaining)
 
-end Exec.Code
+end Itasca.Runtime.Code

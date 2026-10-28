@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.FrameDepth
 import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Both direct and selected indirect calls explain exhaustion by decoded
 source FRAME_ nesting at the actual failure site. -/
@@ -43,4 +43,4 @@ theorem CumulativeFailure.interrupted {M P A : Type} {allocator : runtime.platfo
     · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,
         fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
       exact cause
-end Exec.Theorems
+end Itasca.Runtime.Theorems

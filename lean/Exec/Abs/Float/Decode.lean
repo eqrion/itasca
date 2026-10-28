@@ -1,5 +1,5 @@
 import Exec.Abs.Float.Descriptor
-namespace Exec.Abs.Float
+namespace Itasca.Runtime.Abs.Float
 
 def decodeInstruction : instr → Option Instruction
   | .UNOP .F32 (.mk_unop__1 .F32 op) => some (.unary .F32 op)
@@ -44,4 +44,4 @@ theorem Instruction.source_injective : Function.Injective Instruction.source := 
   have := congrArg decodeInstruction same
   simpa only [decodeInstruction_source,Option.some.injEq] using this
 
-end Exec.Abs.Float
+end Itasca.Runtime.Abs.Float

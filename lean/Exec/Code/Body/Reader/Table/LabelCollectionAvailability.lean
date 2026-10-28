@@ -3,7 +3,7 @@ import Itasca.Visitor.ReachedTableLabels
 import Exec.Code.Local.Capacity.BranchLabelAvailability
 import Exec.Code.Local.Relations.Table.BranchTableCallback
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -64,4 +64,4 @@ theorem LabelCollectionPrefix.collect_available {A : Type}
   refine ⟨(.Ok (),after),called,rfl,nextBudget,nextDepths,?_,counts,nextEffect⟩
   rw [nextFrame,frame]
 
-end Exec.Code
+end Itasca.Runtime.Code

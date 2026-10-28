@@ -2,7 +2,7 @@ import Exec.Store.Initialization.SegmentSyntheticSource
 import Exec.Store.Initialization.SegmentInitializeShape
 import Exec.Code.Local.Relations.Common.SegmentFlowSource
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- Ordered source instructions for the retained element and data initialization programs. -/
@@ -26,4 +26,4 @@ theorem segmentModuleSource_raw (module : runtime.compiler.ExecutableModule)
   simp only [segmentRawSource, elements, datas, Itasca.ModuleElaboration.fromEnv,
     List.map_map, Function.comp_def,segmentModuleSource]
 
-end Exec.Store
+end Itasca.Runtime.Store

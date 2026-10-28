@@ -2,7 +2,7 @@ import Exec.Interp.Control.PendingJump
 import Exec.Interp.Relations.Regions
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem JumpEffect.exact {before after : runtime.interp.Execution} {index : Usize}
@@ -126,4 +126,4 @@ theorem dispatch_jumpIfNonZero_exact {M P F A : Type}
   exact ⟨success, exactState, rfl, rfl⟩
 
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Store.Linking.LinkEffects
 import Exec.Store.Initialization.InitializerResolve
 import Itasca.Module.Env.Basic
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -159,4 +159,4 @@ theorem LinkedMaps.global_resolution {M : Type} {view : M → Slice U8} {store :
     Option.some.inj ((List.getElem?_eq_getElem sourceBound).symm.trans prefixFound)
   exact ⟨_, global, List.getElem?_eq_getElem addressBound, issued, same.trans tyEq⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

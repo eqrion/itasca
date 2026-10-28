@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SelectOperands
 import Exec.Code.Local.Source.TypedSelectEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 @[step] theorem compiler_typed_select_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -60,4 +60,4 @@ open Aeneas Aeneas.Std
   exact ⟨_, lowered, .select front ty left right condition (by simpa only [locals] using lp) rp cp⟩
 
 
-end Exec.Code
+end Itasca.Runtime.Code

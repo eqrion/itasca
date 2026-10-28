@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
 import Exec.Code.Local.Callbacks.Control.ScopeFrame
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
@@ -13,4 +13,4 @@ theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
   · rfl
   · rfl
   · rfl
-end Exec.Code
+end Itasca.Runtime.Code

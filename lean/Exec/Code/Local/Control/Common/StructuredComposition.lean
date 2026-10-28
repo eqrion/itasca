@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.Structured
 import Exec.Code.Local.Lowering.Common.Lowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem Segment.split {code pc emitted next} (segment : Segment code pc emitted next)
@@ -35,4 +35,4 @@ theorem Segment.pc_le_next {code pc emitted next} (segment : Segment code pc emi
   obtain ⟨_, _, _, _, rfl⟩ := segment
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

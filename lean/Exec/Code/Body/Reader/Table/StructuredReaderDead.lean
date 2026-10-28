@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Common.DeadCode
 import Exec.Code.Body.Reader.Common.ReaderSpan
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Relations.Common.KnownPopStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.structured_dead_op {jumpTables : List U32} {data env sourceLocals index st}
@@ -23,4 +23,4 @@ theorem ReaderPostWasm2.structured_dead_op {jumpTables : List U32} {data env sou
   rw [accepted, WP.spec_ok] at observed
   exact observed.reachable.trans dead
 
-end Exec.Code
+end Itasca.Runtime.Code

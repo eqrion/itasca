@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.SourceIndirectCallCause
 import Exec.Interp.Relations.SourceValueCauses
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- An indirect source call retains the selected callee and the shared
@@ -52,4 +52,4 @@ theorem SourceIndirectCallCause.source_site {A M P : Type} {allocator : runtime.
   · simp only [decoded,Store.decodeStore,List.getElem?_map,functionAt,Option.map_some]
   · simpa only [Store.decodeFunction,defined,instanceAt] using signature
   · omega
-end Exec.Interp
+end Itasca.Runtime.Interp

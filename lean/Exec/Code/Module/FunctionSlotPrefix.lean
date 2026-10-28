@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileEntry
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Published source slots form a dense prefix; all later slots remain vacant. -/
@@ -27,4 +27,4 @@ theorem FunctionSlotPrefix.publish {count cursor functions}
     rw [List.getElem?_set_ne (by omega)]
     exact held.vacant index (by omega) upper
 
-end Exec.Code
+end Itasca.Runtime.Code

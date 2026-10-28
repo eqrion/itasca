@@ -1,6 +1,6 @@
 import Exec.Abs.State
 
-namespace Exec.Abs.Stateful
+namespace Itasca.Runtime.Abs.Stateful
 
 /-- Source-indexed reference, table and bulk-memory instructions. -/
 inductive Instruction where
@@ -79,4 +79,4 @@ def Instruction.arity : Instruction → Nat
 theorem Instruction.arity_le_three (op : Instruction) : op.arity ≤ 3 := by
   cases op <;> simp [Instruction.arity]
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

@@ -3,7 +3,7 @@ import Exec.Interp.Simd.Common.SimdShuffleRelation
 import Exec.Interp.Simd.Memory.SimdMemoryTransition
 import Exec.Abs.Simd.Transition
 import Exec.Interp.Control.StructuredPoint
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt Itasca.Wasm2.Simd
 
 theorem memory_values_transition (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -28,4 +28,4 @@ theorem memory_values_trap (state : Abs.AState) (f : Abs.AFrame) (rest : List Ab
       ⟨⟨state.store,f.toFrame⟩,[.TRAP]⟩) :
     Abs.Simd.MemoryTransition state f rest after (op.instruction argument (.mk_uN laneIndex)) op.inputs op.outputs .trap := by
   exact .trap front values split (by simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs] using types) effect
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

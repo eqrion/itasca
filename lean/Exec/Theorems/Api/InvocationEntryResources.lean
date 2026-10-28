@@ -2,8 +2,8 @@ import Exec.Theorems.Api.InvocationCanonicalResources
 import Exec.Interp.Relations.SourceCanonicalCapacity
 import Exec.Interp.Relations.SourceAllocationCauses
 import Exec.Interp.Invocation.InvokeMutableCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InvocationResourceCause.canonical {M P A : Type}
     {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
@@ -59,4 +59,4 @@ theorem CallCause.invocation_canonical {M P A : Type}
       · exact Or.inr ⟨prepared.frames,refused⟩
     | Objects => exact cause
   | _ => trivial
-end Exec.Theorems
+end Itasca.Runtime.Theorems

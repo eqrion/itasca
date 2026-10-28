@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- An ELSE scope retains its completed then arm, resolved guard, and literal
@@ -93,5 +93,5 @@ theorem StructuredUniversalElse.append {jumpTables : List Aeneas.Std.U32} {A : T
   rw [codeEq, resolvedCode_append_code _ _ _ (oldPlans.inside sites)]
   exact (prior.extend emitted).advance instruction
 
-end Exec.Code
+end Itasca.Runtime.Code
 

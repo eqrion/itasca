@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.CompiledFunctions
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Abs.CallSafety
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
@@ -34,4 +34,4 @@ theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
   have contextBindings := bindings.scope (signature.params.val.map sourceType++declared) [] (some (.mk_list (signature.results.val.map sourceType)))
   exact ⟨inst,compiled,signature,declared,body,epilogue,hi,hc,hs,table,certificate,contextBindings,
     defined_function_lookup view code store address function signature instanceIndex functionIndex inst _ lookup hs defined hi source⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

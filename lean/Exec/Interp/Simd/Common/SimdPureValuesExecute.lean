@@ -2,7 +2,7 @@ import Exec.Interp.Simd.Common.SimdInputValues
 import Exec.Interp.Simd.Common.SimdPureResultSlots
 import Exec.Interp.Simd.Common.SimdPureSound
 import Exec.Interp.Simd.Common.SimdExecuteSource
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 private theorem signature_inputs_numeric (signature : Signature) (ty : valtype)
@@ -79,4 +79,4 @@ theorem execute_simd_pure_values_mutation_bounded {M F : Type}
     rw [inputs] at source
     exact source
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Common.Lowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- NOP and DROP update the validator-derived stack layout without emitting code. -/
@@ -32,4 +32,4 @@ theorem lower_empty_eq {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
   cases drop <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> split <;> rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

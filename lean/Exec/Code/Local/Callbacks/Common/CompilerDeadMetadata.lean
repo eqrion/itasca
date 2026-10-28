@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerOrdinaryResults
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Ordinary opcodes in an unreachable suffix only observe the validator.
@@ -25,4 +25,4 @@ theorem compiler_dead_op_fields {A : Type} (ops : runtime.platform.Alloc A)
   intro out frame
   rw [frame]
   exact ⟨rfl, rfl, rfl, dead⟩
-end Exec.Code
+end Itasca.Runtime.Code

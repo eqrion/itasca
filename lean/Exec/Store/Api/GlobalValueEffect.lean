@@ -2,7 +2,7 @@ import Exec.Representation.Collection
 import Exec.Store.Api.GlobalEffects
 import Exec.Store.Linking.LinkMaps
 import Exec.Store.Invariant.ValueDecode
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The appended global retains its validated type and exact decoded initializer value. -/
@@ -57,9 +57,9 @@ theorem add_instance_global_value_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_global
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-    Itasca.module.Module.impl.env, module.Env.globals, Itasca.module.Env.impl.globals, bind_ok]
-  step with Exec.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+  step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
     as ⟨found, hfound⟩
@@ -106,4 +106,4 @@ theorem add_instance_global_value_effect {M P F A : Type}
       simpa [hback, instanceRead, decodedValue] using And.intro effect (rfl : platform = platform)
 
 
-end Exec.Store
+end Itasca.Runtime.Store

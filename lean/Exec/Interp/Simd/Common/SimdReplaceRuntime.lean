@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdSplatSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -34,4 +34,4 @@ def replaceOpcode (ty : lanetype) : U32 :=
     | exact ⟨value, rfl, bits⟩
     | (simp only [bind_ok, WP.spec_ok]; exact ⟨value, rfl, bits⟩)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentCompatible
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem segment_bulk_shape {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -53,4 +53,4 @@ theorem segment_bulk_shape {M : Type} (memory : runtime.platform.MemoryBuffer M)
     exact ⟨shape.element_drop address _, .element_drop store address _ (List.getElem?_eq_getElem issued)⟩
 
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableFrames
 import Exec.Code.Local.Relations.Table.BranchTableArguments
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent branch widths for the retained table labels. Only labels
@@ -48,4 +48,4 @@ theorem TableWidthsFit.advance {A : Type} {before after : runtime.compiler.Funct
   rw [height,widths]
   exact fits depth memberBefore index old oldLookup beforePosition
 
-end Exec.Code
+end Itasca.Runtime.Code

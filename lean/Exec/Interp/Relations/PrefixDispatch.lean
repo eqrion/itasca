@@ -3,7 +3,7 @@ import Exec.Interp.Numeric.Integer.NumericDispatch
 import Exec.Interp.Relations.Fetch
 import Exec.Code.Local.Relations.Common.Rel
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -199,4 +199,4 @@ theorem step_prefix (exec : runtime.interp.Execution) (store : runtime.store.Sto
     exact dispatch_prefix memory hooks floats allocator { exec with frames := write.2 { write.1 with pc := next } }
       store platform index raw.instance raw.function raw.base instruction allowed out returned
 
-end Exec.Interp
+end Itasca.Runtime.Interp

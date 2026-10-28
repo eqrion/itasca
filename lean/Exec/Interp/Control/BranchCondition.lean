@@ -2,7 +2,7 @@ import Exec.Interp.Relations.Conditional
 import Exec.Interp.Control.BranchNoCopy
 import Exec.Abs.Sim.Compose
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem branchIf_source_step (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
@@ -93,4 +93,4 @@ theorem dispatch_branchIfNoCopy_refines {M P F A : Type}
   · simp only [branchIfFrame, if_neg zero, FrameSlots]
     simpa only [List.append_assoc] using reduced
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Spec.SimdExtract
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def byteAt (bits : BitVec 128) (index : Nat) : Nat := bits.toNat/2^(8*index)%2^8
@@ -33,4 +33,4 @@ theorem byteWords_wf (bits : BitVec 128) :
   obtain ⟨index,_,rfl⟩ := List.mem_map.mp member
   exact .lane__case_0 _ _ _ (unsigned_wf_of_lt 8 _ (byteAt_bound bits index)) rfl
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

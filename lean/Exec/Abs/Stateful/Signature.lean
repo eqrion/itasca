@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.Descriptor
 
-namespace Exec.Abs.Stateful
+namespace Itasca.Runtime.Abs.Stateful
 
 /-- Canonical source index spaces determine the operand/result types. -/
 inductive Signature (C : context) : Instruction → List valtype → List valtype → Prop where
@@ -53,4 +53,4 @@ theorem Signature.inputs_scalar {C op input output} (signature : Signature C op 
     ∀ type ∈ input, type ≠ valtype.V128 := by
   cases signature <;> simp_all [reference_scalar]
 
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

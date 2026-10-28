@@ -3,7 +3,7 @@ import Exec.Interp.State.GlobalCoreStep
 import Exec.Interp.State.GlobalCoreOperands
 import Exec.Interp.Relations.Capacity
 import Exec.Code.Local.Capacity.GlobalCapacity
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -67,4 +67,4 @@ theorem step_global_set_mutation
     {exec with frames := exec.frames.set frameIndex {raw with pc := pc}} store raw src index inst address object f front value
     platform frameIndex found mapped issued slots values position mutable typed
 
-end Exec.Interp
+end Itasca.Runtime.Interp

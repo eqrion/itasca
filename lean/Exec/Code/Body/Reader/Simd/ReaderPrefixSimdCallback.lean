@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Simd.ReaderPrefixSimd
 import Exec.Code.Body.Reader.Simd.ReaderSimdCallbackEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete SIMD prefix step handles live emission and polymorphic dead
@@ -52,4 +52,4 @@ theorem ReaderPostWasm2.simd_callback_prefix {jumpTables : List U32} {data env s
     refine ⟨extra,tables,?_,fun _ => monomorphic reachable⟩
     apply invariant.ordinary reachable ordinary lowered _ sources consumed (by rw [cursor]) emission.not_branchTable
     simpa only [oldTypes] using (SimdEmbedding.lift (emit := emit) emission)
-end Exec.Code
+end Itasca.Runtime.Code

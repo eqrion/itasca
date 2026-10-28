@@ -2,7 +2,7 @@ import Exec.Code.Local.Coordinates.SourceCoordinateCallbacks
 import Exec.Code.Local.Source.SourceCursorTactic
 import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -83,4 +83,4 @@ macro "coordinates_step " h:ident " using " ops:term ", " law:term : tactic => `
      try simp only [uncurry_apply_pair] at $h:ident)
   | sources_split $h)
 
-end Exec.Code
+end Itasca.Runtime.Code

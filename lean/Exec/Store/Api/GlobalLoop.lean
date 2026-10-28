@@ -3,7 +3,7 @@ import Exec.Store.Api.GlobalEffects
 
 /-! The actual staged global loop preserves pre-existing store objects and the
 linked initializer context through all allocation/refusal branches. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def InitializerContext {M : Type} (store : runtime.store.Store M) (index : Usize)
@@ -11,4 +11,4 @@ def InitializerContext {M : Type} (store : runtime.store.Store M) (index : Usize
   ∃ inst, store.instances.val[index.val]? = some inst ∧ inst.module = module ∧
     InitializerBindings store inst ∧ InitializerImports store inst ∧ InitializerSegmentBindings store inst
 
-end Exec.Store
+end Itasca.Runtime.Store

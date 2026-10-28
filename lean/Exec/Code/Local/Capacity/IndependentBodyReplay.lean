@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.BodyReplay
 import Exec.Code.Local.Demand.IndependentBodyDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent body validity constructs its reference run internally, then
@@ -25,4 +25,4 @@ theorem independent_body_accepted_replay {W : Type} (target : code.OpVisitor W)
     related (independentBodyLog data env ctx index)
     steps [] before initial reference
 
-end Exec.Code
+end Itasca.Runtime.Code

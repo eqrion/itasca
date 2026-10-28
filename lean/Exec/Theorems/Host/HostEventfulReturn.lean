@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Eventful.EventfulHistory
 import Exec.Theorems.Host.HostOwnership
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A checked host result closes an actual eventful machine edge. The source
 trace, runtime result check, fresh certificate and raw namespace preservation
@@ -44,4 +44,4 @@ theorem eventful_host_return {M P F A : Type}
   refine ⟨after,rfl,rfl,rfl,rfl,actual,EventfulConcreteSim.of_steps positive trace,extension,retained,?_⟩
   change ambient=before.source.ambient
   rw [source]
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -2,7 +2,7 @@ import Exec.Interp.Simd.Common.SimdValueSlots
 import Exec.Interp.Simd.Common.SimdPureRelation
 import Exec.Spec.PureWf
 import Exec.Code.Local.Lowering.Simd.SimdSourceShape
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 theorem ValuesAt.simd_pure_result {words : List U64} {base : Nat} {front : List val}
@@ -29,4 +29,4 @@ theorem ValuesAt.simd_pure_result {words : List U64} {base : Nat} {front : List 
     rfl
   rw [decoded] at result
   exact result
-end Exec.Interp
+end Itasca.Runtime.Interp

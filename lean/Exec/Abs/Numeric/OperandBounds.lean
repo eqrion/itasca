@@ -1,7 +1,7 @@
 import Exec.Abs.Numeric.Operands
 import Exec.Abs.Sim.Typed
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
  theorem Instruction.typed_operands_bounds (op : Instruction) {s : store} {f : AFrame}
     {after : List instr} (typed : FrameTyped s { f with code := op.source :: after } []) :
     ∃ front a b, f.vals = front ++ op.operands a b ∧ Forall wf_val front ∧
@@ -27,4 +27,4 @@ open SpecExt Exec.Spec
         obtain ⟨wa, hwa⟩ := word_exists _ a ha
         exact ⟨first, wa, wa, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa] using hsplit, hfirst, heights⟩
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

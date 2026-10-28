@@ -2,7 +2,7 @@ import Exec.Store.Api.GlobalAllocationCauses
 import Exec.Store.Api.GlobalErrors
 import Exec.Store.Initialization.InitializerResourceCauses
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -38,8 +38,7 @@ theorem add_global_resource_cause {M P F A : Type}
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
   simp only [Code.initializer_vec_index store.instances instIndex inst hi,
-    runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-    module.Env.globals, Itasca.module.Env.impl.globals, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
   rw [Code.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
     Code.initializer_vec_index inst.module.global_initializers index function hmapping,
@@ -70,4 +69,4 @@ theorem add_global_resource_cause {M P F A : Type}
       simp only [uncurry_apply_pair] at run
       obtain ⟨addresses,pushed,run⟩ := normal_bind_exists _ _ _ run
       simp at run
-end Exec.Store
+end Itasca.Runtime.Store

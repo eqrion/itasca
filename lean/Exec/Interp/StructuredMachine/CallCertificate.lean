@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.FunctionCode
 import Exec.Interp.Calls.CallRefinement
 import Exec.Interp.StructuredMachine.Point
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- The compiler's complete function certificate supplies the initial callee
@@ -95,4 +95,4 @@ theorem call_wasm_certified {M P F A : Type}
   · exact function_callee_point s (Store.decodeInstance store inst) C bindings _ declared _ body compiled epilogue
       certificate address.index.val instanceIndex functionIndex base args defaults argumentTypes default
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderScalarDispatchSafety
 import Exec.Code.Body.Reader.Common.ReaderExtendedNumericSafety
 import Exec.Code.Body.Reader.Common.ReaderSaturatingSafety
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 8192
 set_option maxHeartbeats 8000000
@@ -70,4 +70,4 @@ theorem source_saturating_descriptor (opcode : U32) (small : opcode.val < 8) :
   · exact ⟨.truncate .F64 .I64 .S true,by decide,rfl⟩
   · exact ⟨.truncate .F64 .I64 .U true,by decide,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

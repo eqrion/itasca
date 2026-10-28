@@ -13,7 +13,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderCompilerScopes
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerElse
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEndWasm2
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerRoot
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.scope_step {A : Type}
@@ -90,4 +90,4 @@ theorem IndexedTableReaderCompilerPointWasm2.end_nested {A : Type}
   have form : savedCurrent.form ≠ .body := fun h => nonRoot (state.boundary.root_iff.mp h)
   exact state.end_nested ops law initialLocals typesEq next advance inbounds out form bodyBound
     (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
-end Exec.Code
+end Itasca.Runtime.Code

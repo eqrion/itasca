@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticWord
 import Exec.Interp.Simd.Common.SimdCompareDispatch
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def integerArithmeticOpcode (ty : Jnn) (kind : IntegerArithmetic) : U32 :=
   match ty,kind with
@@ -67,4 +67,4 @@ theorem integer_arithmetic_dispatch_eq (ty : Jnn) (kind : IntegerArithmetic) (x 
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

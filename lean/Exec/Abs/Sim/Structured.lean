@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem blockType_spec (s : store) (f : AFrame) (bt : blocktype) (ft : functype)
     (h : blockType f.module bt = some ft) : fun_blocktype ⟨s, f.toFrame⟩ bt = ft := by
@@ -78,4 +78,4 @@ theorem typed_loop_simulation (s : store) (ambient : frame) (f : AFrame)
       apply NextSim.single
       simpa only [← hsplit] using result
 
-end Exec.Abs
+end Itasca.Runtime.Abs

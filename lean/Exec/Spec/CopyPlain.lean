@@ -1,6 +1,6 @@
 import Exec.Spec.CopySnapshot
 import Exec.Spec.SegmentCopySlice
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 def copyForwardPlain {T : Type} [Inhabited T] (words : List T) (dst src : Nat) : Nat → List T
   | 0 => words
@@ -66,4 +66,4 @@ theorem copyBackwardFrom_snapshot {T : Type} [Inhabited T] (before source : List
     · rw [List.setSlice!_getElem?_middle _ _ _ _ (by omega),List.getElem?_slice _ _ _ _ (by omega)]
       have equal : dst+(index-dst)=index := by omega
       simpa only [equal] using copied (index-dst) (by omega)
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

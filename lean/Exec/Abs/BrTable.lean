@@ -1,8 +1,8 @@
 import Exec.Abs.Sim.Compose
 import Exec.Abs.ControlSafety
 
-namespace Exec.Abs.BrTable
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.BrTable
+open SpecExt Itasca.Runtime.Spec
 
 /-- The final label is used whenever the unsigned selector is out of range. -/
 def select (labels : List labelidx) (fallback : labelidx) (index : Nat) : labelidx :=
@@ -162,4 +162,4 @@ theorem operands {s : store} {f : AFrame} {after : List instr}
       refine ⟨first ++ discarded ++ arguments,bits,?_,bound⟩
       simpa only [List.append_assoc] using split
 
-end Exec.Abs.BrTable
+end Itasca.Runtime.Abs.BrTable

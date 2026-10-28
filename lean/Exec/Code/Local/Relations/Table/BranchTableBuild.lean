@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableTarget
 import Exec.Code.Local.Relations.Table.BranchTableTrace
 import Exec.Code.Local.Relations.Table.TableDepths
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Syntax-only production certificate for the ordered branch fragments. Each
@@ -83,4 +83,4 @@ theorem TableTargetsBuilt.code_prefix {A : Type} {before after : runtime.compile
     obtain ⟨first,firstCode,firstLength⟩ := effect.code_prefix
     obtain ⟨remaining,restCode,restLength⟩ := ih
     exact ⟨first++remaining,by rw [restCode,firstCode,List.append_assoc],by simp only [List.length_append,List.length_cons]; omega⟩
-end Exec.Code
+end Itasca.Runtime.Code

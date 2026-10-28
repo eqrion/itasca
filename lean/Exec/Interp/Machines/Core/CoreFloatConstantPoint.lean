@@ -5,7 +5,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Abs.Numeric.Decode
-namespace Exec.Interp.FloatConstant
+namespace Itasca.Runtime.Interp.FloatConstant
 open Aeneas Aeneas.Std SpecExt
 
 theorem linearEmission_not_float {locals before after emitted} (ty : Fnn) (value : fN)
@@ -53,4 +53,4 @@ theorem scalarEmission_float64_inv {C before after emitted} (value : fN)
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => cases equality
 
-end Exec.Interp.FloatConstant
+end Itasca.Runtime.Interp.FloatConstant

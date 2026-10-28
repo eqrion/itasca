@@ -10,7 +10,7 @@ import Exec.Code.Body.Reader.Simd.ReaderSimdConstant
 import Exec.Code.Local.Lowering.Simd.SimdBitsCallbacks
 import Exec.Code.Local.Lowering.Simd.SimdBits
 import Exec.Code.Body.Reader.Simd.ReaderSimdShuffleFixed
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 def simdCompilerOpcode (sub : U32) : U16 := ⟨BitVec.ofNat 16 (512 + sub.val)⟩
@@ -155,4 +155,4 @@ theorem simd_reader_event_shuffle (shuffle : sub = 13#u32) :
     bits:=initializerBits low high,opcode:=525#u16,number:=rfl,meaning:=.instruction retained,
     values:=values,position:=out.core.pos,post:=post,effect:=effect,read:=fixed,callback:=callback,capacity:=capacity}⟩
 end
-end Exec.Code
+end Itasca.Runtime.Code

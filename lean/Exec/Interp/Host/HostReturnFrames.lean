@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.FrameStorePrefix
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A checked host return keeps the caller frame vector and writes its results
@@ -42,4 +42,4 @@ theorem HostReturnEffect.resume {before after : runtime.interp.Execution}
   have combined := WordsAt.append kept (by simpa only [ValuesAt,Code.encodeValues_length,←destination] using effect.results)
   simpa only [FrameSlots,ValuesAt,Code.encodeValues_append,List.append_assoc] using combined
 
-end Exec.Interp
+end Itasca.Runtime.Interp

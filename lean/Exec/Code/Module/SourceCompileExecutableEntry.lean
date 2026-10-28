@@ -1,7 +1,7 @@
 import Exec.Code.Local.Source.SourceBatchLookup
 import Exec.Code.Module.CompileEntryExecutable
 import Exec.Code.Local.Source.SourceExecutable
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful scheduler entry is paired with the original module's exact
@@ -62,4 +62,4 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
   refine ⟨entry.typeIdx, sourceFunctionCode entry.typeIdx rawEntry, typeFound,
     sourceFunctions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
   simpa only [sourceFunctionCode, ModuleBinary.Code.declared, ModuleLocals.declared, groups, List.map_map, Function.comp_def] using certificate
-end Exec.Code
+end Itasca.Runtime.Code

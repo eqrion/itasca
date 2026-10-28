@@ -6,7 +6,7 @@ import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Capacity.BodyReplay
 import Exec.Code.Local.Demand.RecordedDemand
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Source typing, source byte room, and the independent final reference
@@ -50,4 +50,4 @@ theorem IndexedTableReaderCompilerPointWasm2.simd_available_from_source {A : Typ
     ⟨sourceLocals,ft.results⟩ C matched.mems demand state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) ledger.simd ledger.constants byte canonical
 
-end Exec.Code
+end Itasca.Runtime.Code

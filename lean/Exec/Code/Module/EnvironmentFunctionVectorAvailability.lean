@@ -1,6 +1,6 @@
 import Exec.Code.Module.EnvironmentFunctionSlotsAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Allocating the defined-function slots accepts under a reserve bound computed
@@ -26,7 +26,7 @@ theorem environment_function_vector_available {A : Type} (ops : runtime.platform
     dsimp only at same accepted position count
     subst charged status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop2.body
-    simp only [module.Env.func_type_indices,Itasca.module.Env.impl.func_type_indices,bind_ok]
+    simp only [Itasca.module.Env.impl.func_type_indices,bind_ok]
     split
     · rename_i more
       have inbounds : next.val < env.func_type_indices.val.length := by
@@ -52,4 +52,4 @@ theorem environment_function_vector_available {A : Type} (ops : runtime.platform
       exact WP.spec.ret ⟨rfl,rfl,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

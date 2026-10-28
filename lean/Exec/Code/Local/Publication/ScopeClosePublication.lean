@@ -1,7 +1,7 @@
 import Exec.Code.Local.Publication.CloseMapPublication
 import Exec.Code.Local.Coordinates.ControlSourceCoordinates
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Closing geometry comes from the current physical scope and its branch
@@ -59,4 +59,4 @@ theorem compiler_scope_close_publication {A : Type} (ops : runtime.platform.Allo
       maps geometry.frames guard condition old nonBody hasIf guardCode geometry.position geometry.branches mapFits coordinateFits
       progress endBound canonical
 
-end Exec.Code
+end Itasca.Runtime.Code

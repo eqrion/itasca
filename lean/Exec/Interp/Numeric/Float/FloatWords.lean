@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.FloatDispatch
 import Exec.Interp.Numeric.Integer.NumericWords
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 
 theorem floatInput_of_val (ty : numtype) (raw : U64) (bits : Nat)
@@ -88,4 +88,4 @@ theorem float_unary_words {F : Type} (floats : runtime.platform.FloatOps F)
     case Trap trap =>
       rw [va, floatResult_unary op a b _ one] at exactResult
       exact Or.inr ⟨exactResult.1, trap, exactResult.2, effect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

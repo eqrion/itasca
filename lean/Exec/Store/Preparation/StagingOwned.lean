@@ -3,7 +3,7 @@ import Exec.Store.Invariant.OwnedGlobalLoop
 import Exec.Store.Initialization.ElementCompleteLoop
 import Exec.Store.Invariant.OwnedDataLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Successful actual global, element, and data staging constructs the source/raw
@@ -108,4 +108,4 @@ theorem staging_owned_certificates {M P F A : Type}
   · exact (globalMetadata.resolve globalFound).trans ((elementMetadata.resolve elementFound).trans (finalMetadata.resolve nextFound))
   · simpa only [nextSource] using nextTypes
 
-end Exec.Store
+end Itasca.Runtime.Store

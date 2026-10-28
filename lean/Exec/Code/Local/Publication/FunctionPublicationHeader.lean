@@ -1,7 +1,7 @@
 import Exec.Code.Local.Publication.FunctionPublicationRanges
 import Exec.Code.Local.Callbacks.Common.Finish
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Non-instruction header checks required for publishing a sourced function.
@@ -37,4 +37,4 @@ theorem compiler_finish_publication {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.FunctionCompiler.finish ops compiler (.Ok ()) = .ok (.Ok compiler.function,compiler.budget) := by
   simp [runtime.compiler.FunctionCompiler.finish,alloc.vec.Vec.is_empty,closed,header.well_formed ranges instructions]
 
-end Exec.Code
+end Itasca.Runtime.Code

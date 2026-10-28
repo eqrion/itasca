@@ -5,7 +5,7 @@ import Exec.Interp.Simd.Common.SimdShiftSound
 import Exec.Interp.Simd.Common.SimdSplatSound
 import Exec.Interp.Simd.Common.SimdAllTrueSound
 import Exec.Interp.Simd.Common.SimdBitmaskSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem pure_entry_15 {F : Type} (floats : runtime.platform.FloatOps F) :
@@ -289,4 +289,4 @@ theorem pure_entry_205 {F : Type} (floats : runtime.platform.FloatOps F) :
   cases meaning
   with_unfolding_all exact shift_dispatch_sound floats .I64 .unsignedRight offset laneIndex bits x y z memory
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

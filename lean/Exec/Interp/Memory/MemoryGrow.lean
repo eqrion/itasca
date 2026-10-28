@@ -1,5 +1,5 @@
 import Exec.Interp.State.TableAccess
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Exact memory-grow operand marshalling and result-slot update. -/
@@ -31,4 +31,4 @@ theorem memory_grow_handler {M : Type}
   step with grown as ⟨result,nextStore,growth⟩
   step* <;> simp_all [SlotsEffect]
   exact ⟨result,growth,rfl⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

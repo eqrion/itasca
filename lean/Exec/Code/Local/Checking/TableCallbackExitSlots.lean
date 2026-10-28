@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.BranchCallbackExitSlots
 import Exec.Code.Local.Checking.TableExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Collecting a table label preserves instruction checks and pending owners. -/
@@ -54,4 +54,4 @@ theorem compiler_br_table_callback_exit_slots {A : Type} (ops : runtime.platform
       exact compiler_observe_exit_slots ops law {labeled with table_depths := cleared}
         after state (checked.retained rfl le_rfl) observed
 
-end Exec.Code
+end Itasca.Runtime.Code

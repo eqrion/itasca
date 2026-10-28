@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Common.IndexedAdvanceOrClosedWasm2
 import Exec.Code.Body.Reader.Common.ReaderOpcodeClassification
 import Exec.Code.Body.Control.Common.IndexedEndOrClosed
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.advance_or_closed {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -28,4 +28,4 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closed {A : Type}
   apply point.advance_or_closed_of_opcode ops law C initialLocals localsMatch metadata matched contextLocals
     signatures bodyBound next advance inbounds out _ accepted
   exact reader_accepted_opcode_wasm2 _ _ out data env ctx index _ before middle accepted
-end Exec.Code
+end Itasca.Runtime.Code

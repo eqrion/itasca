@@ -5,7 +5,7 @@ import Exec.Interp.Relations.Readback
 import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Relations.ExecutionLoop
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Argument checking returns normally, so a divergent public invocation
@@ -32,4 +32,4 @@ theorem invoke_divergent_arguments {M P F A : Type}
     subst found
     simp [runtime.interp.invoke_with, lookup, checked, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at divergent
-end Exec.Interp
+end Itasca.Runtime.Interp

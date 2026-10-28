@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalPrefix
 import Exec.Code.Local.Lowering.Common.LoweringEmpty
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Instructions with no emitted bytecode advance every possible structured
@@ -28,5 +28,5 @@ theorem LoweredEmpty.structured_universal_advance {jumpTables : List Aeneas.Std.
     exact ⟨by simpa only [codeEq] using saved.advance_current instruction,
       by simpa only [codeEq, SourceScope.advance, SourceScope.input] using advanced⟩
 
-end Exec.Code
+end Itasca.Runtime.Code
 

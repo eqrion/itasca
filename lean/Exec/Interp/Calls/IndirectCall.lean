@@ -2,7 +2,7 @@ import Exec.Platform.DivSpec
 import Exec.Interp.Calls.DirectCall
 set_option maxRecDepth 4096
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Actual indirect resolution checks the table position, null reference, and
@@ -111,4 +111,4 @@ theorem execute_call_indirect_effect {M P F A : Type}
         subst actualBase
         exact called reference address function selected nonzero addressEq targetFound eq
 
-end Exec.Interp
+end Itasca.Runtime.Interp

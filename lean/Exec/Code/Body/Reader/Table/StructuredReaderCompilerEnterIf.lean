@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Control.ReaderControlBoundary
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixIfWasm2
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixIfDormantWasm2
 import Exec.Code.Body.Reader.Common.ReaderKnownFrontEntry
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.enter_if {jumpTables : List U32} {A : Type}
@@ -54,4 +54,4 @@ theorem StructuredReaderCompilerStateWasm2.enter_if {jumpTables : List U32} {A :
         apply state.compiled.known
         simpa only [SourceScope.enterIf, reach] using entered
 
-end Exec.Code
+end Itasca.Runtime.Code

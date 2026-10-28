@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.TransitionSimulation
 import Exec.Abs.Sim.Structured
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- Every successful instruction in the checked integer slice has a counted
 source simulation; only moving a constant is an administrative stutter. -/
@@ -169,4 +169,4 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
           (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi32
         simpa only [← hvals] using result
 
-end Exec.Abs
+end Itasca.Runtime.Abs

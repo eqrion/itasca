@@ -11,8 +11,8 @@ import Exec.Interp.State.GlobalCoreStep
 import Exec.Interp.StructuredMachine.GlobalContinue
 import Exec.Interp.Relations.Capacity
 import Exec.Code.Local.Capacity.GlobalCapacity
-namespace Exec.Interp.StructuredMachine.Global
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -125,4 +125,4 @@ theorem coreFramePoint_globalSet_step_owned (platform : P) (frameIndex : Usize)
       exact corePoint_globalSet_continue point extension front value after values heights tail pc pcNext
     · exact ⟨_,frameEq.symm⟩
 
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

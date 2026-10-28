@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareFloatLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def floatComparisonResult (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 128) : uN :=
@@ -45,4 +45,4 @@ theorem float_comparison_relation (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 1
   · apply fun_vrelop_.fun_vrelop__case_35 (v_Inn := .I64) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat)) (lane_3_lst := floatComparisonMasks .F64 .GE x y)
     all_goals first | rfl | exact nonX | exact nonY | exact maskWf | exact answerWf | exact shapeWf | exact resultShapeWf | exact lenXY | decide
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

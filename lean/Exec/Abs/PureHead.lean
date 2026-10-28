@@ -1,6 +1,6 @@
 import Exec.Abs.Typing
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Source heads executed by `astep`, which never changes the store. -/
 inductive PureHead : instr → Prop where
@@ -21,4 +21,4 @@ inductive PureHead : instr → Prop where
   | call (index : funcidx) : PureHead (.CALL index)
   | ret : PureHead .RETURN
 
-end Exec.Abs
+end Itasca.Runtime.Abs

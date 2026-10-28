@@ -1,5 +1,5 @@
 import Exec.Spec.SimdMemoryLane
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 theorem splat_load_value (ty : Jnn) (s : store) (f : frame) (argument : memarg) (address : Nat)
     (result : BitVec 128) (word : BitVec (lsize (lanetype_Jnn ty)))
@@ -58,4 +58,4 @@ theorem splat_load_trap (ty : Jnn) (s : store) (f : frame) (argument : memarg) (
   · exact input
   · exact .admininstr_case_73
   · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

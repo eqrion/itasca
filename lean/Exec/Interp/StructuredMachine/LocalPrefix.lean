@@ -4,7 +4,7 @@ import Exec.Interp.StructuredMachine.LocalInversion
 import Exec.Interp.StructuredMachine.LinearContinuation
 import Exec.Interp.Relations.PrefixDispatch
 import Exec.Interp.Relations.LocalCodePoint
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 theorem localGet_fetch {s raw compiled C targets next output} {f : Abs.AFrame}
     (index : Nat) (after : List instr)
@@ -26,4 +26,4 @@ theorem localWrite_fetch {s raw compiled C targets next output} {f : Abs.AFrame}
   · obtain ⟨stack,ty,dst,src,shape,localType,emittedEq,middleEq,destination,source⟩ := linearEmission_localWrite_inv index keep (emission_localWrite_pure index keep head)
     refine ⟨Code.move ty dst src,?_,move_prefix ty dst src⟩
     simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq,List.getElem?_cons_zero])
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

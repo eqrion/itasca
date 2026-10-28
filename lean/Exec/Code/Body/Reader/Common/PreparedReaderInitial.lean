@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.PreparedCompilerStart
 import Exec.Code.Body.Reader.Common.IndexedReaderCompilerInitial
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerPoint
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem indexed_prepared_compiler_start (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -64,4 +64,4 @@ theorem indexed_prepared_compiler_initial_wasm2 (jumpTables : List U32) (emit : 
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
   exact ⟨facts, (StructuredReaderCompilerStateWasm2.initial _ _ _ _ _ _ _ _ _ lookup bodyBound compiled).point⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Module.BatchLoopAvailable
 import Exec.Code.Module.CompileSubmit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Eager submission compiles every independently prepared source entry,
@@ -62,4 +62,4 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
   refine ⟨True.intro,published,charged,worker,?_,finished⟩
   rw [appended,queue]
 
-end Exec.Code
+end Itasca.Runtime.Code

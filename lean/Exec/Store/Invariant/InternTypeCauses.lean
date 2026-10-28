@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Invariant.InternTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Concrete thresholds and reached allocator requests for creating one new
@@ -73,4 +73,4 @@ theorem intern_type_resource_causes {M A : Type} (memory : runtime.platform.Memo
           exact Or.inr (Or.inr (by omega))
       · simp [TypeInternResourceCause,absent]
         exact Or.inr (Or.inl (by scalar_tac))
-end Exec.Store
+end Itasca.Runtime.Store

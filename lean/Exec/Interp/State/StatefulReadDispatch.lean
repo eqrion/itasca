@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulLookup
 import Exec.Interp.State.StatefulReferenceValue
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 def ReadResult (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (state : Abs.AState)
     (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
@@ -128,4 +128,4 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
       (memory_size_slots memory view laws code exec store raw first inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
     simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,Or.inl ⟨[Abs.integerVal .I32 pages.val],_,success,rfl,written,represented,transition⟩⟩
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

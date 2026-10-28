@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionCheck
 import Exec.Code.Local.Lowering.Common.Lowering
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- New ordinary emissions preserve every stored instruction check, including
@@ -73,4 +73,4 @@ theorem Lowered.openInstructionPrefix {A : Type}
     OpenInstructionPrefix after.function next :=
   held.append (lowered.instructionCheckExtends tables) owners [instruction] lowered.1 (by simpa using valid)
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,9 +1,9 @@
 import Exec.Store.Initialization.SegmentSyntheticSource
 import Exec.Interp.Relations.SyntheticInitializerCauses
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- The actual synthetic segment entry point either refuses setup allocation
 without changing the store, or follows the generated source reductions through
@@ -108,4 +108,4 @@ theorem segment_synthetic_source_causes {M P F A : Type}
         step with get_effect finalSlots.deref 1#usize
         exact Or.inr ⟨trivial, by simpa [segmentState,segmentPending,vals,segmentResult] using objects⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

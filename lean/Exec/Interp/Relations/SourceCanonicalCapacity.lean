@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.SourceValueCauses
 import Exec.Interp.Machines.Core.CoreFunctionTyping
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The complete source module namespace. The data namespace is completed
@@ -65,4 +65,4 @@ theorem function_canonical_capacity_decoded {M : Type} (view : M → Slice U8)
     · simpa only [Store.decodeFunction,defined,instanceFound] using sourceEq
     · simpa only [contextEq] using sourceTyped
   · simpa only [Store.decodeFunction,defined,instanceFound] using sourceCapacity
-end Exec.Interp
+end Itasca.Runtime.Interp

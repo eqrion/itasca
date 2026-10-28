@@ -3,7 +3,7 @@ import Exec.Store.Api.GlobalValueSource
 import Exec.Store.Initialization.DataPayload
 import Exec.Store.Invariant.BindingTyping
 import Exec.Code.Local.Source.SourceSlice
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 private theorem maps_two {α β γ δ : Type} (values : List α) (f : α → β) (g : α → γ) (pair : β → γ → δ) :
@@ -90,9 +90,9 @@ theorem source_data_payload_syntax (sources : List Itasca.module.Data) :
   simp only [List.map_map, Function.comp_def, sourceDataPayload]
   rw [maps_two]
   rfl
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem GlobalSourceValues.raw_evaluations {s inst sources values}
@@ -111,4 +111,4 @@ theorem ElementSourceSegments.raw_evaluations {s inst sources values}
   apply List.forall₂_map_left_iff.mpr
   exact (List.forall₂_map_left_iff.mp related.evaluations).imp
     (fun _ _ current => List.forall₂_map_left_iff.mp current)
-end Exec.Store
+end Itasca.Runtime.Store

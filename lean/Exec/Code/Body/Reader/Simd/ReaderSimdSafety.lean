@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderSafety
 import Exec.Code.Body.Relations.Calls.OrdinaryCallbackReady
 import Exec.Code.Local.Lowering.Simd.SimdSafetyCallbacks
 import Itasca.Wasm2.Simd.DispatchTotal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Simd
 
 theorem compiler_reader_simd_sub_total {A} (ops : runtime.platform.Alloc A)
@@ -103,4 +103,4 @@ theorem compiler_reader_simd_total {A} (ops : runtime.platform.Alloc A)
     obtain ⟨sub,next⟩ := pair
     exact compiler_reader_simd_sub_total ops law compiler {st with pos := next} data env ctx sub
       ready ⟨shape.ordered,shape.bounded⟩ capacity
-end Exec.Code
+end Itasca.Runtime.Code

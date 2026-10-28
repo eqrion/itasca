@@ -1,8 +1,8 @@
 import Exec.Abs.Stateful.TableTyping
 import Exec.Abs.Core.ContentExtension
 import Exec.Spec.TableInitSource
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem tableWrite_as_set (s : store) (f : frame) (index address position : Nat)
     (object : tableinst) (value : ref) (mapped : f.MODULE.TABLES[index]? = some address)
@@ -60,4 +60,4 @@ theorem tableWrite_contents (s : store) (f : frame) (index address position : Na
     have typed := contents.data item member
     have itemWf : wf_datainst item := by cases typed; assumption
     exact datainst_ok_extend extension (extend_data_refl item itemWf) typed
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceCursorTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -48,4 +48,4 @@ theorem compiler_else_cursor {A : Type} (ops : runtime.platform.Alloc A)
   all_goals repeat' cursor_step accepted using ops, law
 
 
-end Exec.Code
+end Itasca.Runtime.Code

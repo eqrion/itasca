@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.ControlPoint
 import Exec.Abs.Sim.Step
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Generated empty-code typing gives both the precise result suffix and the
@@ -24,4 +24,4 @@ theorem typed_label_completion (s : store) (ambient : frame) (f : Abs.AFrame)
       rw [List.map_drop, heq, ← height, List.drop_left]
     exact ⟨hstack, htail, by simp [Abs.astep, hstack, htail, Abs.advance]⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

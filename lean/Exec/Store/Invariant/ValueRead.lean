@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.ValueDecode
 import Exec.Store.Api.Grow
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Raw reference words fit the machine index type because they refer to a
@@ -49,4 +49,4 @@ theorem decode_global_owned {M : Type} (s : runtime.store.Store M)
       step as ⟨index, hindexValue⟩
       scalar_tac
 
-end Exec.Store
+end Itasca.Runtime.Store

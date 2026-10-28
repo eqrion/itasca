@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalPrefix
 import Exec.Code.Local.Control.Common.UniversalTerminal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem TerminalEmission.structured_prefix {jumpTables : List Aeneas.Std.U32} {locals returns stack instruction emitted}
     (emission : TerminalEmission locals returns stack instruction emitted)
@@ -75,5 +75,5 @@ theorem StructuredUniversalTerminal.skip {jumpTables : List Aeneas.Std.U32} {A :
     exact ⟨by simpa only [codeEq] using saved.advance_current instruction,
       by simpa only [codeEq, SourceScope.advance, SourceScope.input] using terminal.skip_source [instruction]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code
 

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixTableWasm2
 import Itasca.Wasm2.Trace.TableBytes
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.br_table {A : Type}
@@ -31,4 +31,4 @@ theorem StructuredReaderCompilerStateWasm2.br_table {A : Type}
     futureTables tableEq gate byte accepted
   refine ⟨state.advance next advance inbounds post ?_ compiled (by simp [dead]),afterBoundary⟩
   simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices,BrTable.instruction]
-end Exec.Code
+end Itasca.Runtime.Code

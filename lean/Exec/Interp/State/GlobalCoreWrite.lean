@@ -2,7 +2,7 @@ import Exec.Interp.State.GlobalCoreRead
 import Exec.Interp.Relations.WordDecoding
 import Exec.Interp.Relations.FrameStoreMetadata
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem core_global_set_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -134,4 +134,4 @@ theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretatio
   change Abs.Core.globalSet s f rest index.val after = _
   simpa only [storeEq,source] using abstract
 
-end Exec.Interp
+end Itasca.Runtime.Interp

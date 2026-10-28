@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.BranchTableSkipForward
 import Exec.Code.Local.Relations.Table.BranchTableSkipLoop
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_branch_forward_skip_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -60,4 +60,4 @@ theorem compiler_branch_loop_skip_success {A : Type} (ops : runtime.platform.All
     have effect := branch_transfer_loop_skip_success ops law compiler frame index depth source skip lookup
       position kind nonempty different sourcePosition after accepted
     simpa [branchInstructions, elided] using effect
-end Exec.Code
+end Itasca.Runtime.Code

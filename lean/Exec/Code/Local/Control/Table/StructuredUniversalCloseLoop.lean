@@ -3,7 +3,7 @@ import Exec.Code.Local.Control.Common.UniversalRoot
 import Exec.Code.Local.Relations.Common.PrefixZipper
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedLiteral
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- LOOP END resumes its parent only from the normal body continuation. Loop
@@ -150,5 +150,5 @@ theorem StructuredUniversalTerminal.close_loop {jumpTables : List Aeneas.Std.U32
       exact outerSaved.advance_current (.LOOP bt child.source)
     · simpa only [codeEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Exec.Code
+end Itasca.Runtime.Code
 

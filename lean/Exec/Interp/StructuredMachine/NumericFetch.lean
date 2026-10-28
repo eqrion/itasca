@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.IndexedLinear
 import Exec.Interp.StructuredMachine.Numeric
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std Abs.Numeric
 theorem numeric_fetched {raw compiled C targets next output s} {f : Abs.AFrame}
     (op : Instruction) (after : List instr)
@@ -15,4 +15,4 @@ theorem numeric_fetched {raw compiled C targets next output s} {f : Abs.AFrame}
     refine ⟨Code.integerInstruction op left left right,?_⟩
     simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq,List.getElem?_cons_zero])
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

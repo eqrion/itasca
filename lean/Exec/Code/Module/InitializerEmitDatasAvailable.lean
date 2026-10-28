@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerEmitDataAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The full source-ordered data bytecode loop accepts with five emitted
@@ -39,7 +39,7 @@ theorem initializer_emit_datas_available {A : Type} (ops : runtime.platform.Allo
     dsimp only at limits accepted position used code pairs pool
     subst status
     unfold runtime.compiler.initialize.lower_loop4.body
-    simp only [runtime.compiler.ExecutableModule.tail,Exec.module.Module.tail,Itasca.module.Module.impl.tail,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok]
     split
     · rename_i more
       have sourceBound : next.val < module.module.tail.data.val.length := by
@@ -71,4 +71,4 @@ theorem initializer_emit_datas_available {A : Type} (ops : runtime.platform.Allo
         pairs,pool⟩
   · exact ⟨rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _,rfl,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

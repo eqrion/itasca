@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.SegmentInitialize
 import Exec.Code.Module.CompileSemantic
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A successfully compiled module supplies both the retained program and all
@@ -28,4 +28,4 @@ theorem initialize_segments_compiled {M P F A : Type}
   exact initialize_segments_program_total memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound program pcBound shape imports bindings valid.elements dataValid
 
-end Exec.Store
+end Itasca.Runtime.Store

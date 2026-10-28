@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatInstructionBasic
 import Exec.Interp.Numeric.Float.FloatInstructionComparison
 import Exec.Interp.Numeric.Float.FloatTruncInstruction
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 
 /-- Every scalar float opcode returns a bounded permitted source result or its exact numeric trap. -/
@@ -102,4 +102,4 @@ theorem scalar_float_instruction {F : Type} (ops : runtime.platform.FloatOps F)
   | promote => exact scalar_f64_promote_f32_instruction ops a b
   | demote => exact scalar_f32_demote_f64_instruction ops correct a b
 
-end Exec.Interp
+end Itasca.Runtime.Interp

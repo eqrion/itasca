@@ -1,6 +1,6 @@
 import Exec.Spec.TableGrowth
 import Exec.Spec.IntegerDiv
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 theorem memory_grow_fail_step (s : store) (f : frame) (delta : Nat)
@@ -46,4 +46,4 @@ theorem memory_grow_success_step (s : store) (f : frame) (delta : Nat) (next : m
     simpa only [Forall,List.mem_cons,List.not_mem_nil,false_implies,forall_const,and_true,forall_eq_or_imp,pages,Segment.i32]
       using Segment.i32_wf _ bounded
   · exact Segment.index_wf 0 (by decide)
-end Exec.Spec
+end Itasca.Runtime.Spec

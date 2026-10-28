@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Integer.SimdIntegerBinaryLoop
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def pairwiseWord (width : U32) (signed : Bool) (a b : U64) : Result U64 := do
@@ -63,4 +63,4 @@ theorem pairwise_loop (width i : U32) (signed : Bool) (x initial : U128)
     · have finished : index.val=64/width.val := by scalar_tac
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatCompare
 import Exec.Spec.SimdCompareFloat
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Itasca.Runtime.Spec.Simd
 
 def floatCompareWidth (ty : Fnn) : U32 := match ty with | .F32 => 32#u32 | .F64 => 64#u32
 
@@ -55,4 +55,4 @@ theorem float_compare_word (ty : Fnn) (op : vrelop_Fnn_N) (a b : U64)
     intro answer effect
     exact effect.trans (rawCompare_ge64 a.val b.val aBound bBound)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

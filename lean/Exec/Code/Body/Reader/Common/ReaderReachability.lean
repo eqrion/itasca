@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Control.ReaderScopeZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Every entered child was opened from a monomorphic suspended source parent.
@@ -86,4 +86,4 @@ theorem ReaderReachability.pop {Saved : Type} {poly : Saved → Bool}
   exact parentMono (entered live)
 
 abbrev ReaderReachabilityWasm2 := ReaderReachability (fun saved : Wasm2.Frames.Saved => saved.ctrl.polymorphic_base)
-end Exec.Code
+end Itasca.Runtime.Code

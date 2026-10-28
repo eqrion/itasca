@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.SegmentTranslation
 import Exec.Spec.SegmentPrograms
 import Itasca.Module.Elab.SegmentSyntax
 import Exec.Code.Local.Source.SourceFunctionTyping
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem constant_i32_flow {function expr instruction env valueType}
@@ -338,4 +338,4 @@ theorem SegmentProgram.global_types {module function} (program : SegmentProgram 
   · exact dataTypes slot index member
   · cases impossible
 
-end Exec.Code
+end Itasca.Runtime.Code

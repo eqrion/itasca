@@ -3,7 +3,7 @@ import Exec.Store.Api.MemoryStaging
 import Exec.Store.Api.GlobalResultEffect
 import Exec.Store.Initialization.DataResultEffect
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem TableStageEffect.owners {M : Type} {store : runtime.store.Store M}
@@ -77,4 +77,4 @@ theorem DataStageEffect.addresses {M : Type} {store after : runtime.store.Store 
       omega
     · simp [size]
 
-end Exec.Store
+end Itasca.Runtime.Store

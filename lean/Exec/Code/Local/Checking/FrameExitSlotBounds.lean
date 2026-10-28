@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A recorded forward exit retains enough slots for its result transfer even
@@ -54,4 +54,4 @@ theorem FrameExitSlotBounds.record {A : Type} {before after : runtime.compiler.F
   · subst selected
     exact region
 
-end Exec.Code
+end Itasca.Runtime.Code

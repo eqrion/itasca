@@ -2,7 +2,7 @@ import Exec.Code.Local.Callbacks.Table.CompilerTableTactic
 import Exec.Code.Local.Lowering.Common.NumericEffects
 import Exec.Code.Local.Lowering.Float.FloatEffects
 import Exec.Code.Local.Relations.Common.CoreLoweringEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -47,4 +47,4 @@ theorem compiler_core_tables {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_neg reach] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

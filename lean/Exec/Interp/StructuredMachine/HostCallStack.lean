@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.PrepareCallStack
 import Exec.Interp.StructuredMachine.HostSavedFramesResume
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Actual caller PC advancement and checked host result writes compose into
@@ -35,4 +35,4 @@ theorem FrameStackRel.host_call_return {M : Type} {store : runtime.store.Store M
     front args after returns base split destination heights continuation
   exact saved.resume_host_extended retained bounds extension frames effect typed heights
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdShufflePacking
 import Exec.Spec.SimdShuffle
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem shuffle_lanes_sound (bits x y : U128)
@@ -35,4 +35,4 @@ theorem shuffle_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with shuffle_lanes_sound as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.ExecutableEmission
 import Exec.Code.Local.Lowering.Simd.SimdConstructor
 import Exec.Code.Local.Capacity.SimdMeaningBound
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def callTag : Bytecode → Nat
@@ -132,4 +132,4 @@ theorem ExecutableEmission.recording_shape {tables C before source emitted after
   cases head with
   | scalar h | stateful h | indirect h | simd h | typedSelect h => exact h.recording_shape
   | branchTable => exact .singleton _ _ rfl
-end Exec.Code
+end Itasca.Runtime.Code

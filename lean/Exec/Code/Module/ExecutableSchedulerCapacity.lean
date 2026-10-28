@@ -1,6 +1,6 @@
 import Exec.Code.Module.SchedulerCapacity
 import Exec.Code.Module.ExecutableCompileEntryCapacity
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A submitted batch's real entry calls are certified against exactly its
@@ -75,4 +75,4 @@ theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_capacities ops current next worker ready.functions accepted
     exact ready.transport same functions
-end Exec.Code
+end Itasca.Runtime.Code

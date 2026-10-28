@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Table.BranchTableCallback
 import Itasca.Wasm2.Visitor.BrTable
 import Itasca.Binary.Leb128
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 
  theorem table_rest_cont {V : Type} (visitor : code.OpVisitor V)
@@ -63,4 +63,4 @@ theorem table_rest_done {V : Type} (visitor : code.OpVisitor V)
     · simp only [isLast,ite_false] at rest
       obtain ⟨_,_,rest⟩ := bind_ok_inv _ _ _ rest
       simp at rest
-end Exec.Code
+end Itasca.Runtime.Code

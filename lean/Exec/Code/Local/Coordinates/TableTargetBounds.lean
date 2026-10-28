@@ -2,7 +2,7 @@ import Exec.Code.Local.Source.JumpTableBounds
 import Exec.Code.Local.Source.BranchCodeStrict
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A table stub records its PC before lowering its branch. Actual branch code
@@ -48,4 +48,4 @@ theorem compiler_lower_table_target_bounds {A : Type} (ops : runtime.platform.Al
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
   exact run.jumpTableBounds law (emission.jumpTableBounds held)
 
-end Exec.Code
+end Itasca.Runtime.Code

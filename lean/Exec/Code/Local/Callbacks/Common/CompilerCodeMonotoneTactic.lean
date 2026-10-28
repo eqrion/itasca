@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotone
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -13,7 +13,7 @@ elab "code_mono_effect " h:ident " using " ops:term ", " law:term : tactic => wi
     | ``runtime.compiler.FunctionCompiler.pair =>
       `(tactic| have effect := compiler_pair_code_mono $ops _ _ _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.branch => do
-      let theoremName := mkIdent `Exec.Code.compiler_branch_code_mono
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_branch_code_mono
       `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.observe =>
       `(tactic| have effect := compiler_observe_code_mono $ops $law _ _ _ _ $h)
@@ -24,16 +24,16 @@ elab "code_mono_effect " h:ident " using " ops:term ", " law:term : tactic => wi
     | ``runtime.compiler.lower.FunctionCompiler.finish_op =>
       `(tactic| have effect := compiler_finish_op_code_mono $ops $law _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Exec.Code.compiler_pc_code_mono
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_code_mono
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Exec.Code.compiler_patch_code_mono
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_code_mono
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 => do
-      let theoremName := mkIdent `Exec.Code.compiler_fixups_code_mono
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_code_mono
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1 => do
-      let theoremName := mkIdent `Exec.Code.compiler_fixups_after_if_code_mono
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_after_if_code_mono
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -70,4 +70,4 @@ macro "code_mono_step " h:ident " using " ops:term ", " law:term : tactic => `(t
 
 
 
-end Exec.Code
+end Itasca.Runtime.Code

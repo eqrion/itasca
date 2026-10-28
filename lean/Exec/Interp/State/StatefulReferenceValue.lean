@@ -1,5 +1,5 @@
 import Exec.Interp.State.StatefulSlots
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std
 
 theorem reference_word_value (value : val) (type : Itasca.types.ElemType) (word : U64)
@@ -43,4 +43,4 @@ theorem ref_is_null_value_slots
   apply WP.spec_mono (ref_is_null_slots exec raw dst type state f rest after front slots decodedValues position)
   intro out effect
   simpa only [←referenceEq] using effect
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Common.CloseFunction
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Only the root frame emits an epilogue when its map is closed. -/
@@ -123,4 +123,4 @@ theorem close_unguarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
     · rw [hcontrols]
       exact mapEffect
 
-end Exec.Code
+end Itasca.Runtime.Code

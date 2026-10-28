@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Control.UniversalBranch
 import Exec.Code.Local.Relations.Common.ResolvedConditionalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem FrameSites.add_conditional {code frame} (valid : FrameSites code frame)
@@ -19,4 +19,4 @@ theorem FrameSites.add_conditional {code frame} (valid : FrameSites code frame)
     · exact Or.inr ⟨condition, old, by simp [branchIfInstructions, elided, position]⟩
     · exact Or.inl ⟨old, by simp [branchIfInstructions, elided, position]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

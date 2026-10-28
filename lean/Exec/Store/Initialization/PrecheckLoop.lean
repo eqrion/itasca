@@ -2,7 +2,7 @@ import Exec.Store.Initialization.Precheck
 
 /-! Structural readiness and finite execution of the Wasm1 precommit bounds
 passes. Certificates describe source modes, offset code, and issued addresses. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementPrecheckReady {M : Type} (store : runtime.store.Store M)
@@ -38,4 +38,4 @@ def storeParts {M P : Type} (store : runtime.store.Store M) (platform : P)
     store.instance_items, store.signature_values, store.memory_bytes, store.table_elements,
     platform, status)
 
-end Exec.Store
+end Itasca.Runtime.Store

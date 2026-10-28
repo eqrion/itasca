@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdUnaryLoop
 import Exec.Interp.Simd.Common.SimdShift
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 inductive UnaryAction where | absolute | negate | population | allTrue | bitmask
@@ -85,4 +85,4 @@ def UnaryOutcome (ty : Jnn) (action : UnaryAction) (x result : U128) : Prop :=
     apply congrArg (UScalar.cast .U128)
     apply (UScalar.eq_equiv_bv_eq _ _).mpr
     cases ty <;> with_unfolding_all exact signEq
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

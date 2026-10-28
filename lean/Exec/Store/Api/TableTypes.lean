@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableStagingLoop
 import Exec.Store.Initialization.SegmentTypes
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableTypeMap {M : Type} (store : runtime.store.Store M)
@@ -55,4 +55,4 @@ theorem TableTypeMap.bindings {M : Type} {store : runtime.store.Store M} {inst :
   have same : actual = table := Option.some.inj (actualFound.symm.trans found)
   simpa only [same] using typed
 
-end Exec.Store
+end Itasca.Runtime.Store

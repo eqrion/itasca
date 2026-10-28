@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.Typing
 import Exec.Abs.Core.Typing
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Actual owned store shape supplies every non-function source payload typing
@@ -13,4 +13,4 @@ theorem decodeStore_contents_typed {M : Type} (view : M → Slice U8)
   obtain ⟨globals,tables,memories,elements,data⟩ := decoded_components_typed view code store shape sourceSyntax segments
   exact ⟨globals,tables,memories,elements,data⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

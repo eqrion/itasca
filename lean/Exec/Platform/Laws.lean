@@ -2,7 +2,7 @@ import Exec.Platform.Alloc
 import Exec.Platform.Float
 import Exec.Platform.Memory
 
-namespace Exec.Platform
+namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 
 /-- The laws of the platform operations used by execution. -/
@@ -14,4 +14,4 @@ structure Laws {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   interruptsReturn : ∀ p, hooks.interrupt p ⦃ _ => True ⦄
   memoryLaws : MemoryLaws memory view
 
-end Exec.Platform
+end Itasca.Runtime.Platform

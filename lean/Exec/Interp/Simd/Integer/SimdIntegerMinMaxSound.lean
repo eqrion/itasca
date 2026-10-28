@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdIntegerMinMaxPacking
 import Exec.Spec.SimdIntegerMinMaxStep
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem integer_minmax_lanes_sound (ty : Jnn) (op : Spec.Simd.IntegerMinMax) (x y : U128)
@@ -38,4 +38,4 @@ theorem integer_minmax_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with integer_minmax_lanes_sound ty op x y supported as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

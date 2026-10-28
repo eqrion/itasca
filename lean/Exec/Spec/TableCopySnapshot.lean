@@ -1,5 +1,5 @@
 import Exec.Spec.TableCopyAlgebra
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def tableCopy (s : store) (f : frame) (targetTable sourceTable destination source count : Nat) : store :=
@@ -43,4 +43,4 @@ theorem table_copy_steps (s : store) (f : frame) (destination source count targe
       rw [tableCopyBackward_distinct_words _ _ _ _ _ _ _ address sourceAddress same,
         copyBackwardFrom_snapshot _ _ _ _ _ inside.1 inside.2] at run
       exact run
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

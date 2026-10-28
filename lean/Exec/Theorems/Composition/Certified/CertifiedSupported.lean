@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Cumulative.CumulativeMutationCertified
 import Exec.Interp.StructuredMachine.CompiledFunctions
 import Exec.Abs.SupportedState
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Common static store certificate indexed by source syntax and concrete
@@ -46,4 +46,4 @@ theorem CertifiedSupportedStore.update {M view code before after}
     Store.decodeInstance,mutation.metadata.identity,mutation.metadata.functions,mutation.metadata.types,
     mutation.metadata.instances] using certified.compiled
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

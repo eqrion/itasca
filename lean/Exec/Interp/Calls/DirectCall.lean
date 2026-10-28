@@ -1,6 +1,6 @@
 import Exec.Interp.Calls.Call
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Resolving a direct call uses the caller's instance map and the emitted
@@ -62,4 +62,4 @@ theorem step_direct_call {M P F A : Type}
   exact execute_call_effect memory hooks floats allocator _ store platform
     frame.instance frame.base func callee caller address calleeBase hi ha hb cause post (called next hnext)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

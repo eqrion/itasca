@@ -1,8 +1,8 @@
 import Exec.Abs.Simd.MemoryTransition
 import Exec.Abs.Simd.Invariants
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec Ownership
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec Ownership
 
 theorem MemorySignature.results_owned {source inputs outputs}
     (signature : MemorySignature source inputs outputs) {values : List val}
@@ -68,4 +68,4 @@ theorem memory_transition_bound {s : _root_.store} {ambient : frame} {f : AFrame
       rw [change.functions]
       exact bounded.functions
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

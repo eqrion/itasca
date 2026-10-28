@@ -6,7 +6,7 @@ import Exec.Interp.Control.LoopBasis
 /-! Read-only synthetic initializer execution. `InitialRead` records only the
 instruction shape, literal bits, and resolved store addresses. It contains no
 interpreter execution premise. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 inductive InitialRead {M : Type} (store : runtime.store.Store M)
@@ -168,4 +168,4 @@ theorem synthetic_body_done (exec : runtime.interp.Execution)
       .ok (.done (store, platform, exec.slots, .Ok ())) := by
   simp [runtime.interp.run_synthetic_loop.body, alloc.vec.Vec.len, empty]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

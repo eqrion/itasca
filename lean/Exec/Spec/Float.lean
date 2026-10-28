@@ -3,7 +3,7 @@ import SpecExt.Builtins.Float.Wf
 
 /-! The concrete arithmetic result lists satisfy the generated numeric rules.
 Membership in these lists is the nondeterministic choice consumed by Step. -/
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins.Float
 
 theorem float_num_wf (ty : Fnn) (value : fN)
@@ -141,4 +141,4 @@ theorem float_f64_nearest_relation (a : fN) (ha : wf_fN 64 a) :
   apply fun_unop_.fun_unop__case_21
   exact float_results_wf .F64 _ (integral_wf 64 (by omega) _ a ha)
 
-end Exec.Spec
+end Itasca.Runtime.Spec

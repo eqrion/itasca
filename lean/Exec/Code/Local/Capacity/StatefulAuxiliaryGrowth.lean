@@ -1,5 +1,5 @@
 import Exec.Code.Local.Capacity.AuxiliaryGrowth
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -17,4 +17,4 @@ theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
     rw [if_neg live] at accepted
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
-end Exec.Code
+end Itasca.Runtime.Code

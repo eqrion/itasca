@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Common.NumericOperands
 import Exec.Code.Local.Relations.Common.InstructionCheckAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Numeric
 
 theorem integerInstruction_scalar (op : Instruction) (dst a b : U32) :
@@ -36,4 +36,4 @@ theorem numeric_instruction_accepts (function : runtime.bytecode.CompiledFunctio
   apply scalar_instruction_accepts function _ (integerOpcode op) left left right (integerInstruction_scalar op left left right)
   all_goals omega
 
-end Exec.Code
+end Itasca.Runtime.Code

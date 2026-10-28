@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryLoadSlots
 import Exec.Interp.Memory.MemoryDispatchBridge
 import Exec.Abs.Core.MemoryStep
-namespace Exec.Interp.MemoryDescriptor
+namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 
  theorem core_load_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -59,4 +59,4 @@ open Aeneas Aeneas.Std SpecExt
   · rename_i outside
     rw [if_neg outside] at abstract
     exact Or.inr ⟨effect,abstract⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

@@ -1,6 +1,6 @@
 import Exec.Spec.SimdMemoryLoad
 import Exec.Spec.SimdReplace
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt SpecExt.Builtins
 
 theorem lane_byte_count (ty : Jnn) :
@@ -70,4 +70,4 @@ theorem lane_load_trap (ty : Jnn) (s : store) (f : frame) (argument : memarg) (a
   · exact input
   · exact .admininstr_case_73
   · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

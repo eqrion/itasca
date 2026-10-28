@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Control.KnownControlStack
 import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Control.ReaderControlBoundary
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem structured_closed_not_body_wasm2 {form bt ops instruction}
@@ -72,4 +72,4 @@ theorem structured_reader_prefix_end_dormant_wasm2 {jumpTables : List U32} {emit
     exact ⟨outer, parent, savedOuter, savedParent, instruction, sourceSplit, savedSplit, closed, dead,
       certified, nextSame, reach'.close after.reachable instruction (by simp [dead]), fronts'.pop instruction,
       reader_end_boundary_wasm2 p savedSplit encoded opened afterState, afterState⟩
-end Exec.Code
+end Itasca.Runtime.Code

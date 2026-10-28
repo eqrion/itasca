@@ -1,7 +1,7 @@
 import Exec.Abs.Simd.Invariants
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec Ownership
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec Ownership
 
 def constant (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) (value : vec_) : AState :=
   ⟨s.store,s.ambient,{f with code := after, vals := f.vals ++ [.VCONST .V128 value]} :: rest,[]⟩
@@ -74,4 +74,4 @@ theorem constant_bound {s : store} {ambient : frame} {f : AFrame}
   have size : sizeOf after < sizeOf (instr.VCONST .V128 value :: after) := by simp
   exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

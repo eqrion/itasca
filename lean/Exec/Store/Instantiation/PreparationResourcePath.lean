@@ -8,7 +8,7 @@ import Exec.Store.Initialization.ElementStagingCauses
 import Exec.Store.Initialization.DataStagingCauses
 import Exec.Store.Initialization.PrecheckCertifiedResourceCauses
 import Exec.Store.Invariant.InstanceItemCauses
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 inductive PreparationPhase where
@@ -126,4 +126,4 @@ theorem PrecommitResourceEvidence.at_phase {M P F A : Type}
     (refusal : PreparationRefusal memory hooks floats allocator before module platform phase store inst error) :
     PrecommitResourceEvidence memory hooks floats allocator before module imports platform error :=
   fun _ _ => ⟨phase,store,inst,path,refusal⟩
-end Exec.Store
+end Itasca.Runtime.Store

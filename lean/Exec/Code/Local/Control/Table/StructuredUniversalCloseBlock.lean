@@ -4,7 +4,7 @@ import Exec.Code.Local.Control.Table.StructuredPrefixControl
 import Exec.Code.Local.Control.Common.UniversalRoot
 import Exec.Code.Local.Relations.Common.PrefixZipper
 import Exec.Code.Local.Relations.Common.Prefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Exact BLOCK END patching removes its resolution group and resumes the
@@ -84,5 +84,5 @@ theorem StructuredUniversalPrefix.close_block {jumpTables : List Aeneas.Std.U32}
       exact outerSaved.advance_current (.BLOCK bt child.source)
     · simpa only [resolve, lengthEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Exec.Code
+end Itasca.Runtime.Code
 

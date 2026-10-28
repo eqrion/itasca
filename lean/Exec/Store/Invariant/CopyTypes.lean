@@ -1,6 +1,6 @@
 import Exec.Store.Api.Define
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem copy_type_loop (source target : alloc.vec.Vec Itasca.types.ValueType)
@@ -63,4 +63,4 @@ theorem copy_type_spec {A : Type} (allocator : runtime.platform.Alloc A)
       step with copy_type_loop_results ty.results (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize (by scalar_tac) (by simp) as ⟨results, hr⟩
       simp [hp, hr]
 
-end Exec.Store
+end Itasca.Runtime.Store

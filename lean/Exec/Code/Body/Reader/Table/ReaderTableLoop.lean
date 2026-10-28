@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.ReaderTableBody
 import Itasca.Binary.Wasm1.EncodingComplete
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -63,4 +63,4 @@ theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
       · exact (BrTable.LabelsDecoded.snoc .nil decoded).append remaining
       · simp only [List.length_cons]
         omega
-end Exec.Code
+end Itasca.Runtime.Code

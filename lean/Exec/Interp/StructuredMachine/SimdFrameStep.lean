@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.SimdMemoryFrame
 import Exec.Interp.StructuredMachine.SimdConstantFrame
 import Exec.Interp.StructuredMachine.SimdFrameOutcome
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -79,4 +79,4 @@ theorem frame_point_step {M P F A : Type}
       rintro out ⟨ok,platformEq,mutation,metadata,pc,g,pcNext,effect⟩
       exact ⟨platformEq,mutation,metadata,pc,pcNext,Or.inl ⟨ok,g,effect⟩⟩
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

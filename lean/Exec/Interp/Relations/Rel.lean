@@ -6,7 +6,7 @@ import Exec.Code.Local.Relations.Common.Rel
 addresses, and emitted instruction locations; they contain no preservation or
 simulation theorem as a premise. Structured program-counter certificates are
 separate from the straight-line certificate available here. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A live contiguous region represents the given mathematical slot words.
@@ -98,4 +98,4 @@ theorem ValuesAt.operands {words : List U64} {base : Nat} {locals values : List 
   simp only [ValuesAt, Code.encodeValues_append] at h ⊢
   simpa only [Code.encodeValues_length] using h.append_right
 
-end Exec.Interp
+end Itasca.Runtime.Interp

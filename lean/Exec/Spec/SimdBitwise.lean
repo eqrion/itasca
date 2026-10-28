@@ -1,6 +1,6 @@
 import SpecExt.Builtins.BitwiseVector
 import Exec.Spec.IntegerBits
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def binary (op : vvbinop) (a b : BitVec 128) : BitVec 128 :=
@@ -52,4 +52,4 @@ theorem bitselect_step (a b c : BitVec 128) :
   exact .vvternop _ _ _ _ _ (bitselect_value a b c).symm
     (const_wf a) (const_wf b) (const_wf c) (.admininstr_case_23 ..) (const_wf _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -5,8 +5,8 @@ import Exec.Theorems.Api.InvocationResourcesAdequate
 
 /-! Source-level resource demand of an invocation, and how it rules out every resource cause
 of a public invocation error. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp
 
 /-- Source storage demand at a selected point, including defined and host
 callees and suspended callers. No native success or trace appears here. -/
@@ -105,4 +105,4 @@ theorem CanonicalInvocationResourceCause.excludes_boundary {A M P : Type}
     · exact reserve_ne_refusal_of_universal_bound available frames 1#usize refused
   · exact cause
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,7 +1,7 @@
 import Exec.Store.Preparation.PreparationResults
 import Exec.Store.Invariant.FunctionPayloadLoop
 import Exec.Store.Invariant.FunctionOrderLoop
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 theorem preparation_function_payload {M A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -93,4 +93,4 @@ theorem preparation_function_payload {M A : Type} (memory : runtime.platform.Mem
   · simpa only [typeSource] using payload
   · simpa only [typeStore_funcs, typeSource] using storeCount
   · simpa only [typeStore_funcs, typeSource, typeFuncs] using addressValues
-end Exec.Store
+end Itasca.Runtime.Store

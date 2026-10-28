@@ -2,7 +2,7 @@ import Exec.Code.Body.Control.Table.CumulativeTableExclusion
 import Exec.Code.Body.Reader.Common.StatefulReaderEmission
 import Exec.Code.Body.Reader.Table.ReaderStructuredDead
 import Exec.Code.Local.Relations.Common.StatefulEmissionTransport
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful callback only appends pair metadata. Live reader typing supplies
@@ -41,4 +41,4 @@ theorem StatefulReaderPost.indirect_prefix {jumpTables : List U32} {data env sou
     rw [frame]
     simp
 
-end Exec.Code
+end Itasca.Runtime.Code

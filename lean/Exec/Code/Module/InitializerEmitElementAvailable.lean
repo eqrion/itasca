@@ -1,7 +1,7 @@
 import Exec.Code.Module.InitializerOffsetAvailable
 import Exec.Code.Local.Capacity.AuxiliaryAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Element-segment bytecode emission accepts from source offset typing and a
@@ -24,8 +24,7 @@ theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Al
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect.length ≤ function.indirect.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.emit_element
-  simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,Itasca.module.Module.impl.env,
-    Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using lookup),bind_ok]
   cases mode : segment.mode with
   | Passive =>
@@ -110,4 +109,4 @@ theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Al
     · simp only [alloc.vec.Vec.length,appendedPairs,List.length_append,List.length_singleton]
       simp [firstPairs]
 
-end Exec.Code
+end Itasca.Runtime.Code

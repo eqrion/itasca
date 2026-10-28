@@ -7,7 +7,7 @@ stack before each callback. These proofs cover the allocation-aware loop, its
 reset, and the resulting concrete slot-layout invariant. Allocation rejection
 and checked height overflow remain explicit compiler errors. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def observedOffsets (height : Nat) : List Itasca.code.StackType → List Nat
@@ -158,4 +158,4 @@ theorem observedOffsets_values (height : Nat) (types : List Itasca.types.ValueTy
     simp [stackOffsets, hlocals]
   · rw [hh, concrete, observedHeight_values, localSlots, hlocals]
 
-end Exec.Code
+end Itasca.Runtime.Code

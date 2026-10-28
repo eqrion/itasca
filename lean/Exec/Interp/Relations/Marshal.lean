@@ -3,7 +3,7 @@ import Exec.Interp.Relations.Arguments
 import Exec.Interp.Relations.TypeSlots
 
 /-! API argument marshalling into the interpreter's live slot region. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem written_outside (words : List U64) (position index : Nat)
@@ -146,6 +146,6 @@ of every accepted argument, starting at slot zero. -/
   · intro j hj
     simp [argumentWords, Code.encodeValues] at hj
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
 

@@ -1,5 +1,5 @@
 import Exec.Spec.SimdNarrow
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem narrow_lanes_map (ty : NarrowWidth) (signed : Bool) (x : BitVec 128) :
@@ -54,4 +54,4 @@ theorem narrow_step (ty : NarrowWidth) (signed : Bool) (x y result : BitVec 128)
   · exact narrow_words_wf ty signed x
   · exact narrow_words_wf ty signed y
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.ReaderOpcode
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem saturating_float_descriptor {subopcode operation}
@@ -24,7 +24,7 @@ theorem wasm1_misc_immediate_false {token bytes}
   | numeric opcode operation meaning => simp [Numeric.opcodeMeaning] at meaning
   | memory opcode operation arg meaning => simp [MemoryMeaning.opcodeMeaning] at meaning
 
-end Exec.Code
+end Itasca.Runtime.Code
 
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std

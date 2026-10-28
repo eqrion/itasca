@@ -4,7 +4,7 @@ import Exec.Code.Local.Capacity.BudgetAvailability
 
 /-! Acceptance of synthetic initializers from source shape and available
 resources, rather than an assumed successful publication check. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem slots_fit_zero (function : runtime.bytecode.CompiledFunction) (count : U32)
@@ -98,4 +98,4 @@ theorem initializer_emit_available {A : Type} (ops : runtime.platform.Alloc A)
   rintro ⟨status,after,values⟩ ⟨rfl,rfl,appended⟩
   exact ⟨rfl,used,limits,appended⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

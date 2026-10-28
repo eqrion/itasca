@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerMappings
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Partial correctness for actual loops with a decreasing successful body.
@@ -128,8 +128,8 @@ theorem initializer_global_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop0.body at body
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.globals, Itasca.module.Env.impl.globals, bind_ok] at body
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
@@ -183,4 +183,4 @@ theorem initializer_global_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

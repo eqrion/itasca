@@ -5,7 +5,7 @@ import Exec.Interp.Simd.Common.SimdFrameCapacity
 import Exec.Interp.Relations.FrameStack
 import Exec.Code.Local.Relations.Common.WellFormed
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem SlotPrefix.simd_result (base : Nat) (words : List U64) (position : Nat)
@@ -48,4 +48,4 @@ theorem FrameProgram.simd_capacity {M : Type} {store : runtime.store.Store M}
     view shape (Code.well_formed_fetched compiled program.checked raw.pc.val instruction fetch)
   exact simd_frame_capacity slots raw.base compiled.slot_count operand operand wa wb wc wr allocated input output
 
-end Exec.Interp
+end Itasca.Runtime.Interp

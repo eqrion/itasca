@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdPureRelation
 import Exec.Interp.Simd.Common.SimdCompareSound
 import Exec.Interp.Simd.Float.SimdCompareFloatSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem pure_entry_35 {F : Type} (floats : runtime.platform.FloatOps F) :
@@ -340,4 +340,4 @@ theorem pure_entry_219 {F : Type} (floats : runtime.platform.FloatOps F) :
   cases meaning
   with_unfolding_all exact integer_compare_simd_sound floats .I64 (.GE .S) offset laneIndex bits x y z memory (by trivial)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

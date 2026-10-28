@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.LinearInstructionAcceptance
 import Exec.Code.Local.Relations.Common.ScalarEmission
 import Exec.Code.Local.Lowering.Float.FloatInstructionPublication
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem global_get_instruction_accepts (function : runtime.bytecode.CompiledFunction)
@@ -116,4 +116,4 @@ theorem ScalarEmission.instructions_accept {C before source emitted after}
     simp only [slots_append,slots,one,show width .I32 = 1 from rfl] at inputs
     apply memory_store_instruction_accepts function op address value offset <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

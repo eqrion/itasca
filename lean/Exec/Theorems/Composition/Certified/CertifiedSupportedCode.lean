@@ -5,7 +5,7 @@ import Exec.Interp.Relations.CompiledFunctions
 import Exec.Code.Local.Control.Common.CumulativeFunctionContext
 import Exec.Store.Invariant.CodeAgreement
 import Exec.Store.Invariant.CoreTypingExtension
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 /-- Reassigning ghost source code at unused instance keys preserves the full
@@ -31,4 +31,4 @@ theorem CertifiedSupportedStore.change_code {M : Type} {view : M → Slice U8}
     exact ⟨inst,code,signature,declared,body,epilogue,found,functionFound,signatureFound,
       (agrees instanceIndex.val inst found functionIndex.val).trans source,table,types,certificate⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

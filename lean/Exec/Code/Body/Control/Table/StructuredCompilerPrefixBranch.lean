@@ -5,7 +5,7 @@ import Exec.Code.Body.Callbacks.Common.CompilerPrefix
 import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
 import Exec.Code.Local.Control.Common.UniversalConditional
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A forward branch carries the complete compiler invariant into terminal
@@ -98,4 +98,4 @@ theorem StructuredCompilerPrefix.branch_if_forward {jumpTables : List Aeneas.Std
     layout conditionSlot resumePosition
   simpa only [sourceTypes.decoded] using next
 
-end Exec.Code
+end Itasca.Runtime.Code

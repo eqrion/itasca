@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -316,4 +316,4 @@ theorem compiler_drop_code_mono {A : Type} (ops : runtime.platform.Alloc A)
   exact compiler_op26_code_mono ops law before after state _ _ _ accepted
 
 
-end Exec.Code
+end Itasca.Runtime.Code

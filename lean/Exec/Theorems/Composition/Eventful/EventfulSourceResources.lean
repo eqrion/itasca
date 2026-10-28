@@ -2,8 +2,8 @@ import Exec.Theorems.Api.InvocationObjectExclusion
 import Exec.Theorems.Composition.Eventful.EventfulDispatchCauses
 import Exec.Theorems.Composition.Supported.SupportedSourceResources
 import Exec.Theorems.Composition.Supported.SupportedBoundaryCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Resource bounds at the actual reached machine. Host callbacks may change
 limits, so these are deliberately the reached store's limits. -/
@@ -59,4 +59,4 @@ theorem EventfulDispatchCause.source_resources {M P F A : Type}
     | Objects => exact cause.no_objects
   | _ => trivial
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

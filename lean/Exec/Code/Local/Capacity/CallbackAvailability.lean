@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.ObserveAvailability
 import Exec.Code.Local.Lowering.Common.NumericOperands
 import Exec.Code.Local.Lowering.Float.FloatOperands
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Numeric demand at a callback boundary. These are independent size,
@@ -20,4 +20,4 @@ structure CallbackDemand {A : Type} (compiler : runtime.compiler.FunctionCompile
   operands : state.vals.length ≤ bound
   slots : compiler.function.local_slots.val + 2*state.vals.length ≤ U32.max
 
-end Exec.Code
+end Itasca.Runtime.Code

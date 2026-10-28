@@ -1,7 +1,7 @@
 import Exec.Abs.Core.Correct
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
@@ -65,4 +65,4 @@ theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
     · rw [actualEq] at equation
       contradiction
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

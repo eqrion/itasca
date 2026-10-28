@@ -1,7 +1,7 @@
 import Exec.Interp.Machines.Slice.SliceHistory
 import Exec.Interp.Control.LoopBasis
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem execution_loop_error {M P F A : Type}
@@ -24,4 +24,4 @@ theorem execution_loop_divergent_active {M P F A : Type}
   rw [loop.eq_def] at divergent
   simp [executionBody, runtime.interp.invoke_with_loop1.body, empty] at divergent
 
-end Exec.Interp
+end Itasca.Runtime.Interp

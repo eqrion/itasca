@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Control.CloseBlock
 /-! Exact control-signature selection and the actual ordinary BLOCK callback.
 The callback retains the validator control height, source coordinate, signature
 widths and forward-fixup frame while leaving bytecode unchanged. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 inductive SignatureAt (signatures : Slice runtime.compiler.Signature) :
@@ -153,4 +153,4 @@ inductive SignatureAt (signatures : Slice runtime.compiler.Signature) :
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_block] using
     enter_block ops law compiler state ctrl prior bt signature pc controls selected valuesFit heightFits
       sourceFits position mapsFit framesFit reachable
-end Exec.Code
+end Itasca.Runtime.Code

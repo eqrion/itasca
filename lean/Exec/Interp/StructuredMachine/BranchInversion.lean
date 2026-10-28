@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Interp.StructuredMachine.SuspendedPoint
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 variable {jumpTables : List Aeneas.Std.U32}
 variable {emission : ContextEmission} [OrdinaryHeads emission]
@@ -34,4 +34,4 @@ theorem codeRel_branchIf_inv {C returns code labels stack pc next output depth a
   | branchIf lookup live layout condition fragment rest => exact Or.inr ⟨_, _, _, _, _, _, _, rfl, lookup, live, layout, condition, fragment, rest⟩
 
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

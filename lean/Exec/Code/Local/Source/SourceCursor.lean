@@ -1,5 +1,5 @@
 import Exec.Code.Local.Source.SourceLengths
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -206,4 +206,4 @@ theorem compiler_fixups_after_if_cursor {A : Type} (ops : runtime.platform.Alloc
   compiler_fixups_cursor ops before sites target index status output accepted
 
 
-end Exec.Code
+end Itasca.Runtime.Code

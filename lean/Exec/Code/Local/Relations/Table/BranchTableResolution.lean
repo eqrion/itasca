@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Table.BranchTableSites
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Resolve one physical table arm under any admissible completion plan. The
@@ -46,4 +46,4 @@ theorem TableTargetCode.resolve {A : Type}
     · rw [code,grouped,appended,width]
       exact resolvedCode_new_br before.function.code.val earlier later ⟨frame.fixups.val,label.target⟩
         frame.height source frame.results core.num.U32.MAX site sitePosition (prior.inside sites)
-end Exec.Code
+end Itasca.Runtime.Code

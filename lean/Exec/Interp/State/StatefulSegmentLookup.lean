@@ -1,6 +1,6 @@
 import Exec.Interp.State.StatefulLookup
 import Exec.Abs.Stateful.InitStore
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt
 
 theorem element_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -59,4 +59,4 @@ theorem element_object_binding_raw {M : Type} (view : M → Slice U8) (code : St
   refine ⟨address,rawObject,rawMapped,by simpa only [addressEq,Store.decodeInstance] using rawFound,?_⟩
   rw [←objectEq] at actualType
   exact actualType
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

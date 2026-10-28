@@ -1,6 +1,6 @@
 import Exec.Code.Local.Publication.ControlMapBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Physical frame owners of still-open control maps, in nesting order. -/
@@ -68,4 +68,4 @@ theorem ControlMapPublication.initial {A : Type} (compiler : runtime.compiler.Fu
     subst index
     simp [active] at inactive
 
-end Exec.Code
+end Itasca.Runtime.Code

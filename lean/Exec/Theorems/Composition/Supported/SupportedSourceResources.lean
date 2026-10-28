@@ -145,8 +145,8 @@ import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
 import Exec.Theorems.Composition.Supported.SupportedBoundaryCauses
 import Exec.Interp.Relations.SourceIndirectResources
 import Exec.Store.Invariant.FunctionCapacities
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- All defined-call Values refusals retain a selected source call and its
 source-certified frame requirement, including indirect calls. -/
@@ -188,4 +188,4 @@ theorem CumulativeFailure.source_allocation {M P A : Type} {allocator : runtime.
       exact ⟨address,base,words,site,capacity,refusal⟩
     · exact indirect.source_allocation view code decoded capacities typed
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

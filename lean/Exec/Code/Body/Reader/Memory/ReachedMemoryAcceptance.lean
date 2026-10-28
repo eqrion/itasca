@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Memory.ReaderMemoryAcceptance
 import Exec.Code.Body.Reader.Memory.ReaderMemoryTypes
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -145,4 +145,4 @@ theorem reached_profile_memory_store_available_wasm2 {data env locals index st}
     (reached_reader_memory_store_available_wasm2 p ops bound available source before after compiler out.core demand
       op capacity known monomorphic wholeLayout byte raw)
 
-end Exec.Code
+end Itasca.Runtime.Code

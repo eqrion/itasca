@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Trace
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem wf_trap : Forall wf_admininstr [admininstr.TRAP] := by
   intro i hi
@@ -60,7 +60,7 @@ theorem trap_labels (s : store) (f : frame) (labels : List Label)
     obtain ⟨m, tail⟩ := ih (values.take label.height) (label.after.map admininstr_instr) hr ht (wf_instrs hc.2)
     have rest := StepsHN.cons second tail
     have all := first.trans rest
-    exact ⟨n + (m + 1), by simpa [decodeLabels, instrContext, Exec.Spec.labelContext, vals] using all⟩
+    exact ⟨n + (m + 1), by simpa [decodeLabels, instrContext, Itasca.Runtime.Spec.labelContext, vals] using all⟩
 
 theorem trap_frame (s : store) (outer inner : frame) (arity : Nat)
     (hs : wf_store s) (ho : wf_frame outer) (hi : wf_frame inner) :
@@ -119,4 +119,4 @@ theorem unreachable_simulation (s : store) (ambient : frame) (f : AFrame)
   simpa [decode, decodeFrames, vals, instrContext, AFrame.arity, AFrame.toFrame, admininstr_instr] using
     StepsHN.cons lifted tail
 
-end Exec.Abs
+end Itasca.Runtime.Abs

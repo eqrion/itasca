@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Memory.MemoryOpcode
 import Exec.Code.Local.Lowering.Common.Lowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -134,4 +134,4 @@ theorem lower_memory_store_eq {A : Type} (ops : runtime.platform.Alloc A)
   unfold memoryStoreLowering
   simp only [addressOperand, valueOperand, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
     memoryStoreInstruction_make, core.option.Option.ok_or]
-end Exec.Code
+end Itasca.Runtime.Code

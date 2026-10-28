@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Accepted load readers replace exactly the live i32 address with the
@@ -97,4 +97,4 @@ theorem reader_memory_store_stack (st out : code.OpIterState) (data : Slice U8) 
           obtain ⟨rfl,rfl⟩ := accepted
           exact ⟨rest,by simpa only [remainingShape,List.append_assoc,List.cons_append,List.nil_append] using old,
             restValues,addressControls.trans (popControls.trans controls),check⟩
-end Exec.Code
+end Itasca.Runtime.Code

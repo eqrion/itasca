@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredPrefix
 import Exec.Code.Local.Relations.Control.ResolvedBranchPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredPrefix.resolved_branch {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals labels initial source start stack}
     {code : List Bytecode} {before after : List FixupTarget} {group : FixupTarget}
@@ -23,4 +23,4 @@ theorem StructuredPrefix.resolved_branch {jumpTables : List Aeneas.Std.U32} {emi
   exact ⟨resolvedCode code (before ++ group :: after), [], by simp,
     resolvedCode_length _ _, rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -7,7 +7,7 @@ import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
 import Exec.Interp.Simd.Common.SimdValuesTransition
 import Exec.Code.Local.Capacity.SimdMeaningBound
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1200000
@@ -101,4 +101,4 @@ theorem step_shuffle_frame {M P F A : Type}
       rfl
     simpa only [List.map_cons,List.map_nil,outputEq,frontEq] using tail
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

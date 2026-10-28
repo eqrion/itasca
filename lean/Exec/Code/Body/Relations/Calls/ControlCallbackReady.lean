@@ -1,6 +1,6 @@
 import Exec.Code.Body.Relations.Calls.OrdinaryCallbackReady
 import Exec.Code.Local.Callbacks.Common.FixupBudget
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 structure ControlCallbackReady {A} (compiler : runtime.compiler.FunctionCompiler A)
@@ -43,4 +43,4 @@ theorem StructuredReaderCompilerStateWasm2.frames_length {A}
   simp only [List.length_append,List.length_map,List.length_singleton] at physical count
   omega
 
-end Exec.Code
+end Itasca.Runtime.Code

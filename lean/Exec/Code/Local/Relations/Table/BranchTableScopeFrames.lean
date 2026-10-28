@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Table.BranchTableFrames
 import Exec.Code.Local.Relations.Table.BranchTableCallbackProduction
 import Exec.Code.Local.Relations.Table.BranchTableSites
 import Exec.Code.Local.Relations.Common.DormantFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem frame_maps_set (frames : List runtime.compiler.Frame) (index : Nat)
@@ -96,4 +96,4 @@ theorem compiler_br_table_scope_frames {A : Type} (ops : runtime.platform.Alloc 
       rw [emittedFrames] at member
       simpa only [emittedCodeEq] using (sites frame member).extend [.JumpTable selector start len]
     simpa only [codeEq, framesEq] using built.frame_sites emittedSites
-end Exec.Code
+end Itasca.Runtime.Code

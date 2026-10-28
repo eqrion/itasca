@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.ReturnStack
 import Exec.Interp.StructuredMachine.SupportedBoundarySemantics
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Interp.Calls.ReturnResult
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem Execution.return_complete {M : Type}
@@ -23,4 +23,4 @@ theorem Execution.return_complete {M : Type}
     (fun caller member => machine.typed.typed.heights caller (by simp [member]))
   obtain ⟨pc,cursor⟩ := ready.cursor
   cases rest <;> exact ⟨pc,rfl,⟨typed,machine.typed.contents⟩,StructuredMachine.return_supported machine.core results,result,stack,cursor⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

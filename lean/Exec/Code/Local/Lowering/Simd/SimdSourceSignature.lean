@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Simd.SimdPureSignature
 import Exec.Abs.Simd.Source
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 def simdLaneOutput (op : LaneOperation) : valtype :=
@@ -29,4 +29,4 @@ theorem SimdEmission.allowed {immediates constants C before source code after}
   | instruction front input output source opcode operand entry immediate instruction meaning metadata made position =>
     exact meaning.allowed
   | constant => exact .constant _
-end Exec.Code
+end Itasca.Runtime.Code

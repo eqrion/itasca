@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.PairSuccess
 import Exec.Code.Local.Relations.Common.StatefulSuccess
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -104,4 +104,4 @@ theorem lower_indirect_call_pair_success {A : Type} (ops : runtime.platform.Allo
   | Err error => simp [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
   | Ok entry => exact ⟨entry,paired,pair⟩
-end Exec.Code
+end Itasca.Runtime.Code

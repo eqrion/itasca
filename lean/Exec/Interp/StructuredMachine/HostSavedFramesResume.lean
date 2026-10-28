@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.HostReturnFrames
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Consume exactly the suspended stack produced by prepare_call. A host
@@ -32,4 +32,4 @@ theorem SavedFrames.resume_host_extended {M : Type} {beforeStore afterStore : ru
     FrameStackRel afterStore newSource after ({caller with vals := caller.vals ++ results} :: rest) ∧
       ReadyTop afterStore newSource after {caller with vals := caller.vals ++ results} :=
   (saved.store_prefix_extension retained bounds extension).resume_host frames effect types heights
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

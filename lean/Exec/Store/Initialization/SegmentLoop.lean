@@ -1,8 +1,8 @@
 import Exec.Store.Initialization.SegmentCodeReady
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 def segmentRemaining (code : runtime.bytecode.CompiledFunction) (exec : runtime.interp.Execution)
     (status : core.result.Result Unit runtime.ExecError) : Nat :=
@@ -80,4 +80,4 @@ theorem segment_loop_total {M P F A : Type}
           all_goals omega
   · exact ⟨.refl store, rfl, rfl, Or.inl rfl, Or.inr ⟨position, frames, positionBound⟩⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

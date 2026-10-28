@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdShift
 import Exec.Spec.SimdShiftSource
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem shift_packed (ty : Jnn) (kind : ShiftKind) (x result : U128) (amount : U32)
     (lanes : ∀ j, j < 128/lsize (lanetype_Jnn ty) →
@@ -47,4 +47,4 @@ theorem shift_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   rw [shift_dispatch_eq]
   step with shift_lanes_sound ty kind x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

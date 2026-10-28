@@ -1,6 +1,6 @@
 import Exec.Store.Api.GlobalLoop
 import Exec.Store.Api.GlobalValueSource
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem global_source_staging_loop {M P F A : Type}
@@ -59,8 +59,8 @@ theorem global_source_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env,
-      Itasca.module.Module.impl.env, module.Env.globals, Itasca.module.Env.impl.globals, bind_ok, hsource]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -120,4 +120,4 @@ theorem global_source_staging_loop {M P F A : Type}
         currentInst, hfound, hsource, hbindings, himports, hsegments, helements, hdatas, hmapElements, hmapData, hsourceContext, fun success => by simpa only [atEnd, List.take_length] using htyped success⟩
   · exact ⟨rfl, staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, rfl, rfl, rfl, rfl, sourceContext, matching⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

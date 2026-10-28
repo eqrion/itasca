@@ -6,7 +6,7 @@ import Exec.Store.Preparation.StagingGlobalTypes
 import Exec.Store.Instantiation.PublishInstance
 import Exec.Store.Linking.LinkedOwners
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -103,4 +103,4 @@ theorem prepared_commit_global_types {M P F A : Type}
   · simpa only [cache.globals, preparedSource] using globals
   · simpa only [preparedSource] using elements
 
-end Exec.Store
+end Itasca.Runtime.Store

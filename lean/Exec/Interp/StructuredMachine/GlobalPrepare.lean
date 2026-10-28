@@ -2,7 +2,7 @@ import Exec.Interp.StructuredMachine.GlobalPoint
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.State.GlobalCoreOperands
 
-namespace Exec.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.StructuredMachine.Global
 open Aeneas Aeneas.Std SpecExt
 
 theorem coreFramePoint_globalGet_prepare {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -62,4 +62,4 @@ theorem coreFramePoint_globalSet_prepare {M : Type} (view : M → Slice U8) (cod
     · simpa only [point.locals,List.map_append,Code.slots_append,typesEq] using position
     · simpa only [typeEq] using fetch
     · simpa only [typesEq] using tail
-end Exec.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.StructuredMachine.Global

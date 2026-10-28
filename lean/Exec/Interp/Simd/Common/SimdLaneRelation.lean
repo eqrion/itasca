@@ -4,7 +4,7 @@ import Exec.Interp.Simd.Integer.SimdExtractSignedSound
 import Exec.Interp.Simd.Common.SimdReplaceSound
 import Exec.Spec.PureWf
 import Exec.Spec.ByteEncoding
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 def laneResult (op : LaneOperation) (bits : BitVec 128) : val :=
@@ -48,4 +48,4 @@ theorem extract_result_value (ty : lanetype) (value : U128) (bounded : value.val
   · rw [valueEq]
     exact lt_of_lt_of_le (Nat.mod_lt _ (by positivity))
       (Nat.pow_le_pow_right (by decide) (by cases ty <;> decide))
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

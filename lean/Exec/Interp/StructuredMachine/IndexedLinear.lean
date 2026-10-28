@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Interp.Core.Linear
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 theorem structuredCode_linear_inv {emit types functions returns locals code jumpTables labels stack pc next output op after}
@@ -14,4 +14,4 @@ theorem structuredCode_linear_inv {emit types functions returns locals code jump
   | linear head ordinary fragment rest => exact Or.inr ⟨_,_,_,head,fragment,rest⟩
   | skip forward instruction rest => exact Or.inl ⟨_,forward,instruction,rest⟩
   | _ => simp_all [linearSource]
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

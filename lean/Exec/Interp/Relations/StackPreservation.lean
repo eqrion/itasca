@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.StackRelation
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Unchanged store identity, retained membership, and nonshrinking storage
@@ -16,4 +16,4 @@ theorem FrameBinding.retain {M : Type} {store : runtime.store.Store M}
   exact ⟨inst, fn, compiled, signature, identity.trans oldIdentity, member,
     hi, hf, hw, hc, hs, hm, hr, hl, bound.trans capacity⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

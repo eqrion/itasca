@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderOrdinarySafety
 import Exec.Code.Body.Reader.Common.ReaderProfileSafety
 import Exec.Code.Body.Reader.Calls.ReaderCallSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform.Alloc A)
@@ -29,4 +29,4 @@ theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform
     (fun state after => ObservedStack after state.vals.val) scalar
   intro capacity
   exact compiler_reader_wasm2_total ops law compiler st.core data env ctx ready shape capacity opcode scalar
-end Exec.Code
+end Itasca.Runtime.Code

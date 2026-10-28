@@ -7,7 +7,7 @@ import Exec.Code.Local.Relations.Common.ReaderOpcode
 import Exec.Code.Local.Relations.Common.BodyEncodingMisc
 import Exec.Code.Body.Reader.Table.ReaderTableCapacity
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful reader step in a fully encoded body retains the exact local
@@ -82,4 +82,4 @@ theorem TypedRunWasm2.executable_capacity_bound {A : Type}
     change after.function.slot_count.val ≤ max before.function.slot_count.val
       (before.function.local_slots.val + max (stackWords st.core.vals.val) (maximumStackWords samples))
     omega
-end Exec.Code
+end Itasca.Runtime.Code

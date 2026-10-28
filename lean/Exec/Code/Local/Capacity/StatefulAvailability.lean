@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.FinishBudgetAvailability
 import Exec.Code.Local.Capacity.AuxiliaryAvailability
 import Exec.Code.Local.Relations.Common.StatefulOperands
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every reference, table, memory-size/growth, and bulk-memory callback
@@ -51,4 +51,4 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

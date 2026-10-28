@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Integer.IntegerBinary
 import Exec.Interp.Numeric.Integer.IntExtend
 import Exec.Abs.Numeric.Conversion
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric
 
 def conversionOpcode : Conversion → U16
@@ -61,4 +61,4 @@ theorem scalar_eqz_exact {F : Type} (floats : runtime.platform.FloatOps F)
   cases ty
   · simpa only [eqzOpcode, integerWord32_toNat] using scalar_i32_eqz floats a b
   · simpa only [eqzOpcode, integerWord64_toNat] using scalar_i64_eqz floats a b
-end Exec.Interp
+end Itasca.Runtime.Interp

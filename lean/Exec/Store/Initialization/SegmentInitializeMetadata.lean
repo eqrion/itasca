@@ -2,7 +2,7 @@ import Exec.Store.Initialization.SegmentSyntheticMetadata
 import Exec.Store.Initialization.SegmentCompatibility
 import Exec.Store.Initialization.SegmentAccepted
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem initialize_segments_object_metadata {M P F A : Type}
@@ -51,4 +51,4 @@ theorem initialize_segments_compiled_object_metadata {M P F A : Type}
   exact initialize_segments_object_metadata memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound ready
 
-end Exec.Store
+end Itasca.Runtime.Store

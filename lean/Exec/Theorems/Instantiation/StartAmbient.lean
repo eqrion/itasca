@@ -19,11 +19,11 @@ import Exec.Interp.Machines.Slice.SliceDivergence
 import Exec.Interp.Relations.TypedArguments
 import Exec.Spec.Invocation
 import Exec.Store.Invariant.Typing
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std SpecExt
 
 def ambientStartConfiguration {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (ambient : frame) (address : runtime.FuncAddr) : config :=
   ⟨⟨Store.decodeStore view code store, ambient⟩, [.CALL_ADDR address.index.val]⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

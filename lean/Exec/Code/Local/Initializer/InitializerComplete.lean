@@ -1,6 +1,6 @@
 import Exec.Code.Local.Initializer.InitializerDataMappings
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source-indexed certificates for every retained read-only initializer. The
@@ -148,4 +148,4 @@ theorem initializer_lower {A : Type} (ops : runtime.platform.Alloc A)
                 exact ⟨mapped.globals.extend prefixFinal, mapped.elementValues.extend prefixFinal,
                   mapped.elementOffsets.extend prefixFinal, mapped.dataOffsets.extend prefixFinal⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

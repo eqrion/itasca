@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdShiftWord
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 @[step] theorem shift_lanes_loop (kind : ShiftKind) (op width amount : U32) (x initial : U128) (i : U32)
     (positive : 0 < width.val) (widthBound : width.val ≤ 64) (amountBound : amount.val < width.val)
@@ -38,4 +38,4 @@ open Aeneas Aeneas.Std Exec.Spec.Simd
     · have finished : index.val=128/width.val := by scalar_tac
       simpa [finished] using initialized
   · exact ⟨position,initializedPrefix⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

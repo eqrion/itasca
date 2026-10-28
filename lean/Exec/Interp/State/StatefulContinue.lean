@@ -1,5 +1,5 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- An ordinary source suffix may consume and produce values above every live
@@ -20,4 +20,4 @@ theorem FramePoint.continue {before afterStore raw f compiled C targets next out
     rw [values] at labels
     exact labels.replace_suffix heights
   · simpa only [List.map_append,pcNext] using tail
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

@@ -1,6 +1,6 @@
 import SpecExt.Host
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 mutual
   /-- Number of nested administrative frames in an instruction. -/
@@ -30,4 +30,4 @@ def frameDepth : config → Nat
 @[simp] theorem instrsDepth_singleton (ai : admininstr) :
     instrsDepth [ai] = instrDepth ai := by simp [instrsDepth]
 
-end Exec.Spec
+end Itasca.Runtime.Spec

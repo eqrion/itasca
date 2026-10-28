@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdLoweringSuccess
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -65,4 +65,4 @@ theorem simd_count_position {A : Type} (ops : runtime.platform.Alloc A)
   have same : first = operand := by simpa only [read,Result.ok.injEq,core.result.Result.Ok.injEq] using executed.symm
   subst first
   exact ⟨count,by simpa [offset,List.length_append,count] using position⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.SourceSyntax
 import Itasca.Module.Env.Basic
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Runtime export decoding resolves the same namespace entry as the generated
@@ -122,4 +122,4 @@ theorem exports_source_raw {M : Type} (store : runtime.store.Store M) (inst : ru
   have resolved := exports_source store inst shape valid code instanceIndex sourceSyntax
   rw [exports]
   simpa only [List.map_map, Function.comp_def, decodeInstance] using resolved
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdShiftBits
 import Exec.Interp.Numeric.Integer.IntCounts
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def unaryWord (action : U32) (value : U64) (signedValue : I64) : U64 :=
@@ -53,4 +53,4 @@ def unarySigns (width : Nat) (x : BitVec 128) : Nat → BitVec 32
   | 0 => 0
   | n+1 => unarySigns width x n |||
       ((((laneBits width n x).setWidth 64 >>> (width-1)).setWidth 32) <<< n)
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

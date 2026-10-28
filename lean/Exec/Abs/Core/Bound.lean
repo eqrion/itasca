@@ -1,6 +1,6 @@
 import Exec.Abs.Bound
 import Exec.Abs.Core.Pure
-namespace Exec.Abs.Core
+namespace Itasca.Runtime.Abs.Core
 
 /-- Code bounds depend on function bodies and frame continuations, so changing
 only source object contents retains them. -/
@@ -54,4 +54,4 @@ theorem instruction_bound (bound : Nat) (s : _root_.store) (ambient : frame) (f 
     repeat' first | split at step | contradiction
     all_goals exact advance_content_bound bounded step rfl ⟨ha,hl⟩
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

@@ -1,5 +1,5 @@
 import Exec.Code.Module.CompileSemantic
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual accepted tail validation agrees with every declared data count. -/
@@ -38,4 +38,4 @@ theorem CompileWitness.data_count {A : Type} {allocator : runtime.platform.Alloc
   rw [(w.initializers law).1]
   exact w.data_count_input
 
-end Exec.Code
+end Itasca.Runtime.Code

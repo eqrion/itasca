@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredPrefixDead
 import Exec.Code.Local.Control.Table.StructuredUniversalDormant
 import Exec.Code.Local.Control.Table.StructuredElseFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Opening source inside a terminal or omitted prefix retains only the saved
@@ -46,4 +46,4 @@ theorem StructuredCompilerPrefix.open_dormant {jumpTables : List Aeneas.Std.U32}
   | dormant _ retained =>
     exact retained.open_dormant child frame codeEq framesEq noGuard noBranches localsEq childEntered entry
 
-end Exec.Code
+end Itasca.Runtime.Code

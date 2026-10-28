@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerOrdinaryResults
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotone
 import Exec.Code.Local.Source.SourceCursor
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Ordinary callbacks retain map entries and owners. Code growth and source
@@ -39,4 +39,4 @@ theorem compiler_observe_map_publication {A : Type} (ops : runtime.platform.Allo
   rw [compiler_observe_cursor ops law before after state (.Ok ()) called rfl]
   exact forward
 
-end Exec.Code
+end Itasca.Runtime.Code

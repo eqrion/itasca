@@ -1,5 +1,5 @@
 import Exec.Spec.SegmentCopySlice
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 /-- A left-to-right in-place copy has written exactly its completed prefix.
 Reads from the remaining source interval still refer to the original list. -/
@@ -94,4 +94,4 @@ theorem CopySuffix.complete {T : Type} {before current : List T} {dst src count 
     current = before.setSlice! dst (before.slice src (src+count)) := by
   apply CopyPrefix.complete (count:=count) (src:=src) (dst:=dst) (before:=before) (current:=current) _ sourceBound targetBound
   exact ⟨state.length,fun j bound => state.written j (by omega) bound,by simpa using state.outside⟩
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

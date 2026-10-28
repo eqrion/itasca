@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerMinMax
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def integerMinMaxSupported (ty : Jnn) (_kind : IntegerMinMax) : Prop :=
   match ty with | .I64 => False | _ => True
@@ -18,4 +18,4 @@ theorem integer_minmax_source_wf (ty : Jnn) (kind : IntegerMinMax)
   all_goals constructor <;> constructor
   all_goals decide
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

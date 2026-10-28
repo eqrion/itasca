@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
 import Itasca.Wasm2.Trace.ControlRecords
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -63,4 +63,4 @@ theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisito
   obtain ⟨_,raw⟩ := profile_scalar_success visitor st out data env ctx index opcode before after ordinary accepted
   exact reader_single_callback_wasm2 visitor st.core data env ctx opcode before after out.core raw
 
-end Exec.Code
+end Itasca.Runtime.Code

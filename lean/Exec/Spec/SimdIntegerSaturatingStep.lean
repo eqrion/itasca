@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerSaturatingSource
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem integer_saturating_step (ty : Jnn) (kind : IntegerSaturating) (x y result : BitVec 128)
     (supported : integerSaturatingSupported ty kind)
@@ -19,4 +19,4 @@ theorem integer_saturating_step (ty : Jnn) (kind : IntegerSaturating) (x y resul
   · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_saturating_source_wf ty kind supported)
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

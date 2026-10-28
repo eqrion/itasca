@@ -4,7 +4,7 @@ import Mathlib.Data.Rat.Floor
 /-! The rational quotient in SpecTec's integer rules agrees with natural
 quotient and remainder for unsigned inputs. -/
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem truncz_nat_div (a b : Nat) :
     (truncz ((a : Rat) / (b : Rat))).toNat = a / b := by
@@ -118,4 +118,4 @@ theorem integer_remu_zero_relation (ty : Inn) (a : Nat) :
   · apply fun_binop_.fun_binop__case_9 .U _ _ none (.fun_irem__case_0 _ _)
     all_goals simp [Forall, list_, OMap, size, valtype_Inn]
 
-end Exec.Spec
+end Itasca.Runtime.Spec

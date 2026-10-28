@@ -1,7 +1,7 @@
 import Exec.Code.Local.Lowering.Common.NumericInstructionPublication
 import Exec.Code.Local.Relations.Common.CoreInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A typed local transfer fits whether the value occupies one word or two. -/
@@ -94,4 +94,4 @@ theorem LinearEmission.instructions_accept {locals before source emitted after}
     simp only [slots_append,slots] at inputs
     apply move_instruction_accepts function ty localSlot stackSlot <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

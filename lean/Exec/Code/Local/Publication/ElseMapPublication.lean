@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 import Exec.Code.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Exec.Code.Local.Relations.Control.ControlCursor
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -44,4 +44,4 @@ theorem compiler_else_map_publication {A : Type} (ops : runtime.platform.Alloc A
   rw [compiler_else_cursor ops law before after state bt called]
   exact forward
 
-end Exec.Code
+end Itasca.Runtime.Code

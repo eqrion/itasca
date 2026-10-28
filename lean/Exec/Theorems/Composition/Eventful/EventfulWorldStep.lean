@@ -2,8 +2,8 @@ import Exec.Contracts
 import Exec.Theorems.Composition.Eventful.EventfulWorld
 import Exec.Theorems.Composition.Eventful.EventfulDispatchCauses
 import Exec.Interp.Relations.StepRecording
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Cross-world simulation with the independent raw callsite recording. -/
 structure WorldRecordedTransition {M P F A : Type}
@@ -73,4 +73,4 @@ theorem EventfulWorld.history_ambient {M P F A : Type}
   induction history with
   | refl state => rfl
   | cons edge tail ih => exact ih.trans edge.ambient
-end Exec.Theorems
+end Itasca.Runtime.Theorems

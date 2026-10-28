@@ -3,7 +3,7 @@ import Exec.Code.Local.Checking.RootCloseInstructionPrefix
 import Exec.Code.Local.Relations.Control.ControlObservedLayout
 import Exec.Code.Body.Source.TypedLowering
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Source root geometry, the preceding live stack, and branch exits discharge every
@@ -86,4 +86,4 @@ theorem structured_root_checked_instructions {jumpTables : List U32}
   rw [frames]
   exact restEmpty
 
-end Exec.Code
+end Itasca.Runtime.Code

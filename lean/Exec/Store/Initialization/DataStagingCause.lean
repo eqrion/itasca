@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.DataAllocationCauses
 import Exec.Store.Invariant.NormalResult
 import Exec.Code.Local.Initializer.InitializerMappings
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Both exact allocation requests made when adding a passive data payload. -/
@@ -22,7 +22,7 @@ theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     after = store ∧ DataAllocationCause allocator store data error := by
   unfold runtime.store.instantiate.Store.add_instance_data at run
   simp only [Code.initializer_vec_index store.instances instanceIndex inst found,
-    runtime.compiler.ExecutableModule.tail,module.Module.tail,Itasca.module.Module.impl.tail,bind_ok,
+    runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok,
     Code.initializer_vec_index inst.module.module.tail.data index data selected] at run
   obtain ⟨copied,copiedRun,effect⟩ := WP.spec_imp_exists (copy_bytes_resource_causes allocator law data.init.deref)
   rw [copiedRun,bind_ok] at run
@@ -47,4 +47,4 @@ theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
       simp only [uncurry_apply_pair] at run
       obtain ⟨addresses,mapped,run⟩ := normal_bind_exists _ _ _ run
       simp at run
-end Exec.Store
+end Itasca.Runtime.Store

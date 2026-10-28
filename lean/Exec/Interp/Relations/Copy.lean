@@ -3,7 +3,7 @@ import Exec.Interp.Relations.Execute
 /-! The interpreter copies slots from low to high. The mathematical operation
 retains that order, including the behavior of overlapping source/destination
 ranges. Branch and return proofs additionally establish downward movement. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def copyWords (words : List U64) (dst src : Nat) : Nat → List U64
@@ -110,4 +110,4 @@ def ReturnEffect (before after : runtime.interp.Execution) (base src n : Nat) : 
   simp only [lift, bind_ok, alloc.vec.Vec.deref_mut]
   step* <;> simp_all [alloc.vec.Vec.pop, ReturnEffect] <;> first | assumption | omega
 
-end Exec.Interp
+end Itasca.Runtime.Interp

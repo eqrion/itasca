@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerArithmetic
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def integerArithmeticSupported (ty : Jnn) (kind : IntegerArithmetic) : Prop :=
   match ty,kind with | .I8,.mul => False | _,_ => True
@@ -18,4 +18,4 @@ theorem integer_arithmetic_source_wf (ty : Jnn) (kind : IntegerArithmetic)
   all_goals constructor <;> constructor
   all_goals decide
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

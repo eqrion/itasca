@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryLoadFootprint
 import Exec.Interp.Memory.MemoryCoreStep
-namespace Exec.Interp.MemoryDescriptor
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.MemoryDescriptor
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
  theorem step_load_footprint {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
@@ -40,4 +40,4 @@ open Aeneas Aeneas.Std SpecExt Exec.Spec
   intro out effect success
   obtain ⟨word,bound,footprint⟩ := effect.1 success
   exact ⟨word,bound,footprint.1⟩
-end Exec.Interp.MemoryDescriptor
+end Itasca.Runtime.Interp.MemoryDescriptor

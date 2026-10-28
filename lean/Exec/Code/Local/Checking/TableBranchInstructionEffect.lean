@@ -3,7 +3,7 @@ import Exec.Code.Local.Source.TableTransferBounds
 import Exec.Code.Local.Checking.LoopBranchInstructionPrefix
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- One actual table arm appends a checked transfer and an owned or backward
@@ -47,4 +47,4 @@ theorem compiler_table_branch_instruction_effect {A : Type} (ops : runtime.platf
       found position loop sourcePosition (by omega) (by simpa only [staged] using (show source.val+frame.results.val ≤ before.function.slot_count.val by omega))
       (safe.fixups.lookup found (by omega)) codeFits offsetsFit safe.coordinate branch
 
-end Exec.Code
+end Itasca.Runtime.Code

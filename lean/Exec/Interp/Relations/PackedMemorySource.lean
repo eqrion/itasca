@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.PackedMemory
 
-namespace Exec.Interp.PackedMemory
+namespace Itasca.Runtime.Interp.PackedMemory
 open Aeneas Aeneas.Std SpecExt
 
 private theorem machineBytes_wf (bytes : List U8) : Forall wf_byte (Store.decodeBytes bytes) := by
@@ -27,4 +27,4 @@ theorem load_word_decodes (op : Spec.PackedMemory) (sign : sx) (bytes : List U8)
   rw [load_word_value op sign _ (by rw [wordEq]; exact bounded)]
   simp only [Spec.PackedMemory.loaded,inv_ibytes_,wordEq]
 
-end Exec.Interp.PackedMemory
+end Itasca.Runtime.Interp.PackedMemory

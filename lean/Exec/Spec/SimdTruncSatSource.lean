@@ -1,5 +1,5 @@
 import Exec.Spec.SimdTruncSat
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def truncSatChoices (ty : Fnn) (sign : sx) (x : BitVec 128) : List (Option (List lane_)) :=
@@ -56,7 +56,7 @@ theorem trunc_sat_vector_relation (ty : Fnn) (sign : sx) (x result : BitVec 128)
   · apply fun_vcvtop__.fun_vcvtop___case_2 .F64 2 .I32 4 (truncSatSource .F64 sign)
       (.mk_uN x.toNat) (.mk_uN result.toNat) inputs [outputs] (.mk_num__0 .I32 (.mk_uN 0))
       (some (.mk_lane__0 .I32 (.mk_uN 0))) choices (some (some .ZERO))
-    · constructor; exact Exec.Spec.unsigned_num_wf .I32 0 (by decide)
+    · constructor; exact Itasca.Runtime.Spec.unsigned_num_wf .I32 0 (by decide)
     · constructor; exact .lane__case_0 _ _ _ (unsigned_wf_of_lt 32 0 (by decide)) rfl
     · exact lengths
     · exact trunc_sat_lists_relation .F64 sign x
@@ -73,4 +73,4 @@ theorem trunc_sat_vector_relation (ty : Fnn) (sign : sx) (x result : BitVec 128)
     · exact shapeOf_wf _
     · exact shapeOf_wf _
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

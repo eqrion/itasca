@@ -6,7 +6,7 @@ import Exec.Spec.IntegerBits
 set_option maxHeartbeats 1000000
 set_option maxRecDepth 4096
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalar_i32_add_eq {F : Type} (ops : runtime.platform.FloatOps F)
@@ -1231,4 +1231,4 @@ theorem scalar_i64_shru_sound {F : Type} (ops : runtime.platform.FloatOps F) (a 
   rw [hc]
   exact Spec.integer_shru_relation .I64 a.val b.val a.hBounds
 
-end Exec.Interp
+end Itasca.Runtime.Interp

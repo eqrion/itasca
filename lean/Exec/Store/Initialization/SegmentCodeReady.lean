@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentCertificate
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A finite straight-line initialization body. Every instruction carries only
@@ -86,4 +86,4 @@ theorem SegmentCodeReady.next_bound {M : Type} {store : runtime.store.Store M}
   have instructionEq := Option.some.inj last
   simp [instructionEq, segmentReturns] at continues
 
-end Exec.Store
+end Itasca.Runtime.Store

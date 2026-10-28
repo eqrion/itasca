@@ -1,5 +1,5 @@
 import Exec.Abs.Results
-namespace Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.Ownership
 
 /-- Source function and external references use distinct issued address spaces. -/
 structure Bounds where
@@ -146,4 +146,4 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
   apply defaultLocals_ownership
   assumption
 
-end Exec.Abs.Ownership
+end Itasca.Runtime.Abs.Ownership

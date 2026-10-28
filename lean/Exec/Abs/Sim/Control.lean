@@ -1,7 +1,7 @@
 import Exec.Abs.Sim.Int
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The abstract conditional selects the same block as the generated rule. -/
 theorem if_simulation (s : store) (ambient : frame) (f : AFrame)
@@ -193,4 +193,4 @@ theorem label_exit_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [hm]
   simpa [decodeLabels, instrContext, vals, AFrame.arity, AFrame.toFrame] using h₃
 
-end Exec.Abs
+end Itasca.Runtime.Abs

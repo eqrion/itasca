@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SegmentProgram
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Successful emission determines the appended instruction without a separate
@@ -45,4 +45,4 @@ theorem initializer_offset_success {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨_, rfl, values, ?_⟩
     first | exact .i32 _ _ | exact .global _ _ (by intro h; cases h)
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.StackRelation
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Updating the active PC retains the frame's metadata and allocated region. -/
@@ -31,4 +31,4 @@ theorem FrameBinding.advance_older {M : Type} {store : runtime.store.Store M}
     rw [List.dropLast_eq_take, List.length_set, List.take_set_of_le (by change exec.frames.length - 1 ≤ index.val; omega), ← List.dropLast_eq_take]
   exact List.mem_of_mem_dropLast (kept ▸ older)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

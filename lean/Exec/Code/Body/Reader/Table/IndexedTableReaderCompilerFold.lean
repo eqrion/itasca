@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerRoot
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem TypedRunWasm2.fold_indexed_tables {A : Type}
     (ops : runtime.platform.Alloc A)
@@ -40,4 +40,4 @@ theorem TypedRunWasm2.fold_indexed_tables {A : Type}
     · exact done
     · exact ih nextPoint
 
-end Exec.Code
+end Itasca.Runtime.Code

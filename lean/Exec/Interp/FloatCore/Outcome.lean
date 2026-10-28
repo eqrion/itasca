@@ -13,7 +13,7 @@ import Exec.Abs.Ownership.Core
 import Exec.Abs.Core
 import Exec.Interp.Core.Mutation
 import Exec.Interp.Relations.SourceCallCause
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Scalar Core traps are precise source failures, not arbitrary runtime errors. -/
@@ -26,4 +26,4 @@ variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.
   {codeLength pc : Nat} {pending : Bool} {source : Abs.AState}
   {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
 
-end Exec.Interp
+end Itasca.Runtime.Interp

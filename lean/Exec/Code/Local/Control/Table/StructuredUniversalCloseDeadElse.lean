@@ -10,7 +10,7 @@ import Exec.Code.Local.Callbacks.Common.FramePlanPop
 import Exec.Code.Local.Relations.Common.ResolvedGuards
 import Exec.Code.Local.Control.Common.UniversalRoot
 import Exec.Code.Local.Relations.Common.PrefixZipper
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- END of an explicit ELSE obtains both arm relations from retained uniform
@@ -125,5 +125,5 @@ theorem StructuredCompletedPrefix.close_else_dead {jumpTables : List Aeneas.Std.
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Exec.Code
+end Itasca.Runtime.Code
 

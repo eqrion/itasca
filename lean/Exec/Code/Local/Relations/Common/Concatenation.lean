@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Common.StructuredComposition
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Changing a label's retained source continuation does not change its
@@ -46,4 +46,4 @@ theorem LabelsShape.normal {left right} (shape : LabelsShape left right)
     rw [← head.normalLive]
     exact live a rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

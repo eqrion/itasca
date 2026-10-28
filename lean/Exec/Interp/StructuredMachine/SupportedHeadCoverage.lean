@@ -14,7 +14,7 @@ import Exec.Code.Local.Control.Table.StructuredCodePoint
 import Exec.Interp.StructuredMachine.Point
 import Exec.Code.Body.Lowering.Simd.SimdEmissionExclusion
 import Exec.Code.Local.Source.TypedSelectEmission
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem linearEmission_ready_head {locals before op emitted after}
@@ -57,9 +57,9 @@ theorem scalarEmission_ready_head {C before op emitted after}
   | store stack op argument address value offset memory available sourceOffset addressSlot valueSlot => exact .store op argument
   | float stack op => exact .float op
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- Static emission syntax classifies each retained non-erased linear head. -/
@@ -113,4 +113,4 @@ theorem frame_head_coverage {sourceStore raw f compiled C targets next output}
   have readyOp : ReadyInstruction op := by
     cases op <;> simp_all only [ReadyInstruction,ReadySource,code]
   exact code_head_coverage readyOp raw.pc.val (by simpa only [code] using point.code.current)
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

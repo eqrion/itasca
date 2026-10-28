@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Table.StatefulAuxiliaryTables
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem compiler_tables_pair_append (before after : runtime.bytecode.CompiledFunction)
@@ -11,4 +11,4 @@ theorem compiler_tables_pair_append (before after : runtime.bytecode.CompiledFun
   obtain ⟨simd,constants,jumps⟩ := auxiliary
   simp only [CompilerTables.ofFunction,CompilerTables.append,CompilerTables.mk.injEq,List.append_nil]
   exact ⟨pairs,simd,constants,jumps⟩
-end Exec.Code
+end Itasca.Runtime.Code

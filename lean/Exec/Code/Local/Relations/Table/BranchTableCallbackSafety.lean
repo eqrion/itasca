@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Table.BranchTableLowerSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -51,4 +51,4 @@ set_option maxRecDepth 4096
         exact compiler_observe_stack ops law {lowered with reachable := false,table_depths := cleared} state
     · step with runtime_clear labels as ⟨cleared,_⟩
       exact compiler_observe_stack ops law {compiler with budget,table_depths := cleared} state
-end Exec.Code
+end Itasca.Runtime.Code

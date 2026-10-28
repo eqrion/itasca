@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderPost
 import Exec.Code.Body.Reader.Common.ReaderStatefulMetadata
 import Exec.Code.Body.Reader.Common.ReaderStatefulBulk
 import Exec.Code.Body.Reader.Memory.ReaderMemoryMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_table_get_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
@@ -180,4 +180,4 @@ theorem reader_memory_grow_post_wasm2 {data env locals index st}
   try dsimp only [id] at equality
   simp only [Abs.Stateful.Instruction.source,equality]
 
-end Exec.Code
+end Itasca.Runtime.Code

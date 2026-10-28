@@ -7,7 +7,7 @@ import Exec.Code.Body.Reader.Common.ReaderProfile
 import Exec.Code.Local.Lowering.Common.LoweringArithmetic
 import Exec.Code.Local.Relations.Common.Prefix
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_memory_load_wasm2 {data env locals index st}
@@ -117,4 +117,4 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
   rw [callback,WP.spec_ok] at lowered
   obtain ⟨emitted,lower,emission⟩ := lowered rfl
   exact ⟨arg,front,values,oldTypes,post,emitted,⟨lower,SourceStack.of_map types concrete newTypes⟩,emission⟩
-end Exec.Code
+end Itasca.Runtime.Code

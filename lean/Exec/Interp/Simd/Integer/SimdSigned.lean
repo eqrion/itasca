@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdLanes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem shifted_signed (bits : BitVec 64) (width : Nat)
@@ -38,4 +38,4 @@ theorem shifted_signed (bits : BitVec 64) (width : Nat)
     _ = (v.bv.setWidth width.val).toInt := by
       rw [shiftEq, shifted_signed v.bv width.val positive bound,
         BitVec.toInt_signExtend_of_le bound]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.PrecheckWitness
 import Exec.Store.Instantiation.LinkedPreparedRun
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A Link rejection originates at the public import-count gate or the actual
@@ -77,4 +77,4 @@ theorem PrecommitOrigins.precheck {M : Type} {memory : runtime.platform.MemoryBu
     · cases impossible
   · exact staging
 
-end Exec.Store
+end Itasca.Runtime.Store

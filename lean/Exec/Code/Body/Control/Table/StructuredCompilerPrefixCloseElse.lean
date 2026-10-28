@@ -4,7 +4,7 @@ import Exec.Code.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Exec.Code.Local.Control.Table.StructuredUniversalCloseElse
 import Exec.Code.Local.Control.Table.StructuredElseFrames
 import Exec.Code.Local.Callbacks.Control.ScopeStackClose
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing an explicit ELSE joins the saved then arm and completed else
@@ -74,4 +74,4 @@ theorem StructuredCompilerPrefix.close_else {jumpTables : List Aeneas.Std.U32} {
     invariant.conditions.pop.advance _, (fun _ => sourceTypes.concrete), result.1, result.2, sources.aligned invariant.sources,
     invariant.codeBudget.advance (by omega) consumed,
     (invariant.controlBudget.transport maps (by simp [framesEq])).advance (Nat.le_of_lt consumed), cursor⟩
-end Exec.Code
+end Itasca.Runtime.Code

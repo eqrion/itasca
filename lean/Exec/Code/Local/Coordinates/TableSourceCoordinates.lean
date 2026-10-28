@@ -1,7 +1,7 @@
 import Exec.Code.Local.Coordinates.ControlSourceCoordinates
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Every separately streamed label retains the complete coordinate vector
@@ -104,4 +104,4 @@ theorem compiler_br_table_source_coordinates {A : Type} (ops : runtime.platform.
       exact compiler_observe_source_coordinates ops law {labeled with table_depths := cleared} after state
         (by simpa only [SourceCoordinates] using coordinates) (by simpa only [cursor] using forward) observed
 
-end Exec.Code
+end Itasca.Runtime.Code

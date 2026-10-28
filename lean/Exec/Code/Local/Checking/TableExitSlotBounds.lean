@@ -2,7 +2,7 @@ import Exec.Code.Local.Checking.FrameExitSlotBounds
 import Exec.Code.Local.Source.TableTransferBounds
 import Exec.Code.Local.Relations.Table.BranchTableMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Each actual table arm records an exit only for its source-bounded result
@@ -62,4 +62,4 @@ theorem compiler_lower_table_exit_slots {A : Type} (ops : runtime.platform.Alloc
   change before.function.code.length ≤ code.length
   exact growth.code
 
-end Exec.Code
+end Itasca.Runtime.Code

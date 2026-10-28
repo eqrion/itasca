@@ -1,8 +1,8 @@
 import Exec.Store.Initialization.SegmentDropSemantics
 import Exec.Interp.Relations.FrameStoreMetadata
 import Exec.Abs.Stateful.Transition
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_data_drop_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation)
@@ -47,4 +47,4 @@ theorem stateful_element_drop_effect {M : Type} (memory : runtime.platform.Memor
   rw [actual]
   simp [Abs.Stateful.evaluate,Abs.Stateful.elementDrop,moduleEq,sourceStore,decodeInstance,decodeStore,
     List.getElem?_map,mapped,List.getElem?_eq_getElem issued]
-end Exec.Theorems
+end Itasca.Runtime.Theorems

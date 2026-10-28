@@ -1,7 +1,7 @@
 import Exec.Code.Local.Source.SourceLengths
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -23,16 +23,16 @@ elab "sources_effect " h:ident " using " ops:term ", " law:term : tactic => with
     | ``runtime.compiler.lower.FunctionCompiler.finish_op =>
       `(tactic| have effect := compiler_finish_op_sources_result $ops $law _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Exec.Code.compiler_pc_sources
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_sources
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Exec.Code.compiler_patch_sources
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_sources
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 => do
-      let theoremName := mkIdent `Exec.Code.compiler_fixups_sources
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_sources
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1 => do
-      let theoremName := mkIdent `Exec.Code.compiler_fixups_after_if_sources
+      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_after_if_sources
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -94,4 +94,4 @@ macro "sources_step " h:ident " using " ops:term ", " law:term : tactic => `(tac
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | sources_split $h)
 
-end Exec.Code
+end Itasca.Runtime.Code

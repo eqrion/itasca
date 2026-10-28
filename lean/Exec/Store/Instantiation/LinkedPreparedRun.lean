@@ -1,5 +1,5 @@
 import Exec.Store.Instantiation.PreparedRun
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Empty address maps before linking the supplied external values. -/
@@ -22,4 +22,4 @@ structure LinkedPreparedRun {M P F A : Type}
   importsLength : imports.length = module.module.env.imports.length
   linkRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory before imports
     (.Ok ()) 0#usize (emptyInstance module) = .ok (before, .Ok (), seed)
-end Exec.Store
+end Itasca.Runtime.Store

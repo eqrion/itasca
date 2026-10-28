@@ -1,7 +1,7 @@
 import Exec.Interp.Memory.MemoryEncoding
 import Exec.Spec.SegmentCopySlice
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def scalarStorePayload (value : U64) (width : Nat) : List U8 :=
@@ -68,4 +68,4 @@ theorem scalarStoreBytes_source (bytes : List U8) (start : Nat) (value : U64) (w
   rw [List.map_setSlice!]
   rw [show (scalarStorePayload value width).map (fun b => byte.mk_byte b.val) =
     SpecExt.Builtins.integerBytes width value.val from scalarStorePayload_source value width]
-end Exec.Interp
+end Itasca.Runtime.Interp

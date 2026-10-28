@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.KnownPopStack
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem popped_prefix {poly before value after}
@@ -85,4 +85,4 @@ theorem typed_pop_prefix {poly before expected result after}
       exact ⟨trivial, trivial, segment, values, ⟨[], by simp⟩⟩
     · cases part <;> step as ⟨ty, tyEq⟩
       all_goals exact pop_types_prefix st outer segment _ values base
-end Exec.Code
+end Itasca.Runtime.Code

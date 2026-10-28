@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Control.BranchSkipForwardSafety
 import Exec.Code.Local.Relations.Control.BranchSkipLoopSafety
 import Exec.Code.Local.Callbacks.Calls.CallbackSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -91,4 +91,4 @@ private theorem branch_skip_underflow_total {A} (ops : runtime.platform.Alloc A)
           simp
     · exact branch_skip_underflow_total ops compiler frame index depth skip lookup position
         (by cases kindEq : frame.kind <;> simp_all)
-end Exec.Code
+end Itasca.Runtime.Code

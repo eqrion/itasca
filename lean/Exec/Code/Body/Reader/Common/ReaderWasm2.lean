@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Common.ReaderBasic
 import Itasca.Wasm2.Scalar.Step
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- A reader advances this precise source zipper; source instructions are not
@@ -159,4 +159,4 @@ theorem reader_numeric_wasm2 {data env locals index st}
   · simpa [vals, base] using stack
   · exact encoded.declared _
 
-end Exec.Code
+end Itasca.Runtime.Code

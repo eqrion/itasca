@@ -3,7 +3,7 @@ import Exec.Interp.Relations.PrefixEffect
 import Exec.Interp.State.GlobalSource
 import Exec.Abs.Core.Globals
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem core_global_get_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -85,4 +85,4 @@ theorem global_get2_core (view : M → Slice U8) (code : Store.CodeInterpretatio
   · rw [effect.2.1.1]
     exact (SlotPrefix.set _ _ _ _ (by omega)).trans (SlotPrefix.set _ _ _ _ (by omega))
 
-end Exec.Interp
+end Itasca.Runtime.Interp

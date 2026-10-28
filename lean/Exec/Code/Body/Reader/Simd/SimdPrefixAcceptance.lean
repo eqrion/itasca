@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Simd.ReaderSimdPure
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 import Itasca.Binary.Wasm1.EncodingUnique
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent decoding selects the exact successful source subopcode run. -/
@@ -33,4 +33,4 @@ theorem simd_prefix_available {W : Type} (target : code.OpVisitor W)
   have read := reader.read_u32_leb.complete data st.core.pos sub next decoded
   simpa only [Wasm2.Simd.prefixStep,read,bind_ok] using acceptance
 
-end Exec.Code
+end Itasca.Runtime.Code

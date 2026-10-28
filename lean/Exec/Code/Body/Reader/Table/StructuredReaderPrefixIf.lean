@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixBlock
 import Exec.Code.Local.Callbacks.Calls.ScopeCallbackIf
 import Exec.Code.Local.Relations.Control.ControlObservedLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_if_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -59,4 +59,4 @@ theorem structured_callback_if_prefix {jumpTables : List U32} {emit : List valty
     (by intro _; simpa only [retained.localsEq, child, SourceScope.enterIf, SourceScope.input] using conditionEq) observed
     newTypes rfl rfl (by simp [child, SourceScope.enterIf, codeEq]) rfl rfl rfl sources consumed (by rw [cursor])
 
-end Exec.Code
+end Itasca.Runtime.Code

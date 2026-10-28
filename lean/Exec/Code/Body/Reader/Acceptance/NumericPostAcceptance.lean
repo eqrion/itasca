@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderValues
 import Exec.Code.Local.Capacity.FinishBudgetAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A source numeric effect and exact reader post supply the live operand
@@ -60,4 +60,4 @@ theorem ReaderPostWasm2.float_available {data env locals index st out instructio
   · exact compiler_float_available_effect ops bound available compiler out demand [] op
       (fun impossible => False.elim (live impossible))
 
-end Exec.Code
+end Itasca.Runtime.Code

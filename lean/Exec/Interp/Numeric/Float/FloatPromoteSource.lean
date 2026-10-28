@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatPromote
 import Exec.Spec.FloatPromote
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem scalar_f64_promote_f32_source {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
@@ -20,4 +20,4 @@ theorem scalar_f64_promote_f32_source {F : Type} (ops : runtime.platform.FloatOp
   · exact .cvtop___case_3 _ _ _ _ _ (.cvtop__Fnn_1_Fnn_2_case_0 _ _ (by decide)) rfl rfl
   · decide
 
-end Exec.Interp
+end Itasca.Runtime.Interp

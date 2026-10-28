@@ -3,7 +3,7 @@ import Itasca.Module.Const.Syntax
 
 /-! Validator constant typing resolves to concrete initializer words using only
 issued function maps and the linked imported-global prefix. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The maps prepared by linking cover the source constant-expression context.
@@ -77,4 +77,4 @@ theorem InitializerImports.extend {M : Type}
       rw [← globals, List.getElem?_take] at read
       simpa [bound] using read
 
-end Exec.Store
+end Itasca.Runtime.Store

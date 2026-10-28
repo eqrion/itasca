@@ -1,5 +1,5 @@
 import Exec.Abs.Results
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Reference addresses carried by values fit a fixed address space. -/
 def ReferenceBound (bound : Nat) : val → Prop
@@ -36,4 +36,4 @@ def FrameReferencesBound (bound : Nat) (f : AFrame) : Prop :=
     | succ index =>
       simpa using valuesBound_cons.mpr ⟨(valuesBound_cons.mp bounded).1, ih (valuesBound_cons.mp bounded).2 index⟩
 
-end Exec.Abs
+end Itasca.Runtime.Abs

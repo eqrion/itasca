@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatOverflow
 import SpecExt.Builtins.Float.TruncRange
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 def TruncOutcome (expected : Option iN) (result : core.result.Result U64 runtime.ExecError) : Prop :=
@@ -59,9 +59,9 @@ def checkedTruncMagnitude (magnitude : U64) (negative : Bool) (width : U32) (sig
     Result.ok (.Ok result)
   else Result.ok (.Ok magnitude)
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem negative_magnitude_bits32 (magnitude : U64) (bound : magnitude.val ≤ 4294967296) :
@@ -81,9 +81,9 @@ theorem negative_magnitude_bits64 (magnitude : U64) :
   rw [Nat.and_two_pow_sub_one_eq_mod, core.num.U64.wrapping_sub_val_eq]
   norm_num [UScalar.size, U64.size, U64.numBits]
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem checked_magnitude_positive_32_false (magnitude : U64) (saturating : Bool) :
@@ -144,9 +144,9 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
     simp [tooLarge, TruncOutcome]
     simpa using convertMagnitude_inside 64 magnitude.val false true saturating (by simp) inside
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem checked_magnitude_negative_32_false (magnitude : U64) (saturating : Bool) :
@@ -220,9 +220,9 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
     rw [show ∀ n : Nat, n &&& 18446744073709551615 = n % 18446744073709551616 from fun n => Nat.and_two_pow_sub_one_eq_mod n 64, Nat.mod_mod]
     simpa using convertMagnitude_inside 64 magnitude.val true true saturating (by simp) inside
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem checked_magnitude_effect (magnitude : U64) (negative : Bool) (width : U32) (signed saturating : Bool)
@@ -240,4 +240,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   · exact checked_magnitude_negative_64_false magnitude saturating
   · exact checked_magnitude_negative_64_true magnitude saturating
 
-end Exec.Interp
+end Itasca.Runtime.Interp

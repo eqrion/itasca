@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.Syntax
 import Exec.Store.Invariant.ValueShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem function_ref_typed (s : _root_.store) (hwf : wf_store s)
@@ -225,4 +225,4 @@ theorem decoded_components_typed {M : Type} (view : M → Slice U8) (code : Code
     obtain ⟨raw, hr, rfl⟩ := List.mem_map.mp hd
     exact decodeData_typed _ hwf raw (segments.data raw hr)
 
-end Exec.Store
+end Itasca.Runtime.Store

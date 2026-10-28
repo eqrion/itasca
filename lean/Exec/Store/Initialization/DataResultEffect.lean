@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.DataEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 inductive DataResultEffect {M : Type} (store : runtime.store.Store M)
@@ -51,4 +51,4 @@ theorem DataResultEffect.count {M : Type} {store after : runtime.store.Store M}
     subst next
     simp [mapped]
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Publication.ControlMapPublicationEnter
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Exact frame and map appends from the enter callbacks establish ownership
@@ -24,4 +24,4 @@ theorem ControlMapPublication.enter_effect {A : Type}
   rw [origin,start]
   exact ⟨position,by omega,by omega⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

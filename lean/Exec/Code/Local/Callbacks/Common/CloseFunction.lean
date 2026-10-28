@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Control.CloseScope
 import Exec.Code.Local.Lowering.Common.Emit
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 @[step] theorem close_function_effect {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -102,4 +102,4 @@ open Aeneas Aeneas.Std
         scalar_tac
 
 
-end Exec.Code
+end Itasca.Runtime.Code

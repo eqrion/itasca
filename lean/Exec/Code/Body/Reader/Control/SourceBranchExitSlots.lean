@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Control.SourceBranchInstructionPrefix
 import Exec.Code.Local.Checking.BranchCallbackExitSlots
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed source label selection supplies every transfer and target premise
@@ -68,4 +68,4 @@ theorem StructuredCompilerPrefix.br_if_exit_slots
   exact compiler_branch_if_exit_slots ops law before middle index frame depth source condition resume
     found frameAt (by omega) conditionAt rfl order (by omega) held branch
 
-end Exec.Code
+end Itasca.Runtime.Code

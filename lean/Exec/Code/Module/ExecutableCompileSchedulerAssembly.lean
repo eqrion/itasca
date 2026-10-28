@@ -3,7 +3,7 @@ import Exec.Code.Module.CompileDriverFrame
 import Exec.Code.Module.ExecutableSchedulerFunctions
 import Exec.Code.Module.CompileSchedulerAssembly
 import Exec.Code.Module.ExecutableCompileAssembly
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.initial_executable_functions {A : Type} {ops : runtime.platform.Alloc A}
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
@@ -30,4 +30,4 @@ theorem CompileSourceCertificate.executable_functions_of_submission {A : Type} {
   have final : PartialExecutableModuleFunctions w.env (sourceFunctions c.raw) w.scheduler.functions.val := by
     simpa only [functions] using ledger
   exact w.defined_executable_functions law (final.complete w.functions.val (w.function_order law))
-end Exec.Code
+end Itasca.Runtime.Code

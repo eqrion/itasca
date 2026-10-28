@@ -1,6 +1,6 @@
 import Exec.Spec.FloatPure
 import Exec.Spec.IntegerExtend
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Integer conversion uses the concrete rational rounding definition. -/
@@ -33,8 +33,8 @@ theorem numeric_conversion_pure (source target : numtype) (op : cvtop__) (input 
   · exact wf_admininstr_val (.val_case_0 _ _ inputWf)
   · exact wf_admininstr_instr (.instr_case_18 _ _ _ opWf different)
   · exact wf_admininstr_val (.val_case_0 _ _ resultWf)
-end Exec.Spec
-namespace Exec.Spec
+end Itasca.Runtime.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem float_special_wf (target : Nat) (value : fN)
@@ -79,4 +79,4 @@ theorem float_convert_pure (source : Inn) (target : Fnn) (sign : sx) (bits : Nat
     exact round_wf _ (by cases target <;> decide) _ _
   · exact .cvtop___case_1 _ _ _ _ _ (.cvtop__Inn_1_Fnn_2_case_0 _ _ _) rfl rfl
   · cases source <;> cases target <;> decide
-end Exec.Spec
+end Itasca.Runtime.Spec

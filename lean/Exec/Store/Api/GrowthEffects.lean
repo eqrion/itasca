@@ -1,7 +1,7 @@
 import Exec.Representation.StoreInvariant
 import Exec.Store.Api.Grow
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 /-- The retained raw growth effect suffices to preserve shape, independently
 of the handler that produced it. -/
@@ -88,4 +88,4 @@ theorem TableGrowth.metadata {M : Type} {before : runtime.store.Store M} {index 
       out.2.elems = before.elems ∧ out.2.datas = before.datas := by
   rcases effect with ⟨_,same⟩ | ⟨old,words,count,lookup,values,capacity,used,limit,maximum,same⟩
   all_goals rw [same]; exact ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,rfl,rfl⟩
-end Exec.Store
+end Itasca.Runtime.Store

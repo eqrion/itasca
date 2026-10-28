@@ -49,7 +49,7 @@ import Exec.Interp.Control.NormalizeClosure
 import Exec.Interp.Machines.Slice.SliceMeasure
 import Exec.Interp.Relations.ExecutionLoop
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem history_append {S : Type} {next : S → List SpecExt.HostEvent → S → Prop}
@@ -60,4 +60,4 @@ theorem history_append {S : Type} {next : S → List SpecExt.HostEvent → S →
   | refl _ => simpa using right
   | cons step _ ih => simpa [Nat.add_assoc, Nat.add_comm, List.append_assoc] using Spec.Iterations.cons step (ih right)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

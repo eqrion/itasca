@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationCauses
 import Exec.Store.Api.DefineMemory
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
@@ -61,4 +61,4 @@ theorem define_memory_resource_causes {M A : Type} (memory : runtime.platform.Me
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,MemoryAllocationCause]
     omega
-end Exec.Store
+end Itasca.Runtime.Store

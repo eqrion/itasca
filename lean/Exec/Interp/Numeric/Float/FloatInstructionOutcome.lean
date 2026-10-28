@@ -8,7 +8,7 @@ import Exec.Interp.Numeric.Float.FloatConvertSource
 import Exec.Interp.Numeric.Float.FloatPromoteSource
 import Exec.Interp.Numeric.Float.FloatReinterpretSource
 import Exec.Interp.Numeric.Float.FloatTruncSource
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 def floatOpcode (op : Abs.Float.Instruction) : U16 :=
@@ -41,4 +41,4 @@ theorem signed_roundtrip64 (a : U64) : (IScalar.hcast .U64 (UScalar.hcast .I64 a
   with_unfolding_all change ((a.bv.setWidth 64).signExtend 64).toNat = a.bv.toNat
   rw [BitVec.signExtend_eq, BitVec.setWidth_eq]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

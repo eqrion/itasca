@@ -1,6 +1,6 @@
 import Exec.Spec.SimdReplace
 import SpecExt.Builtins.LaneLaws
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 def scalarOutput (ty : lanetype) (bits : Nat) : num_ :=
@@ -121,4 +121,4 @@ theorem extract_step (ty : lanetype) (index : Nat) (v : BitVec 128)
   | I8 => exact extract_pack_step .I8 index v valid
   | I16 => exact extract_pack_step .I16 index v valid
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

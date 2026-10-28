@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.World.WorldRecordedHistory
 import Exec.Platform.RecordingSpec
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def WorldRecordedLoopOutcome {M P : Type} {view : M → Slice U8} {expected : List valtype}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
@@ -73,4 +73,4 @@ theorem world_recorded_loop_finished {M P F A : Type}
       obtain ⟨n,reductions⟩ := EventfulWorld.history_source unrecorded
       simpa only [finishExecution,ambient] using outcome.prepend reductions.erase
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -3,7 +3,7 @@ import Exec.Interp.Numeric.Integer.IntSigned
 import Exec.Abs.Numeric.Binary
 import Exec.Spec.IntegerDeterminism
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def integerWord (ty : Inn) (raw : U64) : BitVec (sizenn (numtype_Inn ty)) :=
@@ -271,4 +271,4 @@ theorem scalar_binary_exact {F : Type} (floats : runtime.platform.FloatOps F)
   apply WP.spec_mono (scalar_binary_sound floats ty op a b)
   exact fun _ sound => sound.exact
 
-end Exec.Interp
+end Itasca.Runtime.Interp

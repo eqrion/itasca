@@ -11,7 +11,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 import Exec.Code.Body.Reader.Calls.ReaderIndirectCall
 import Exec.Code.Body.Reader.Common.ReaderTypedSelect
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual scalar/reference callbacks preserve previously emitted code slots. -/
@@ -98,4 +98,4 @@ theorem SimdReaderEvent.fixup_budget {A : Type} {ops : runtime.platform.Alloc A}
     (compiler_lower_simd_code_mono ops law before after out event.opcode event.a event.b event.bits
       (by omega) (by omega) event.callback)
 
-end Exec.Code
+end Itasca.Runtime.Code

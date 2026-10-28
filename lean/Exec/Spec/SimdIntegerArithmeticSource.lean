@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerArithmeticLists
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def integerArithmeticResult (ty : Jnn) (kind : IntegerArithmetic) (x y : BitVec 128) : uN :=
@@ -44,4 +44,4 @@ theorem integer_arithmetic_vector_relation (ty : Jnn) (kind : IntegerArithmetic)
     | exact maskWf
     | exact relation
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

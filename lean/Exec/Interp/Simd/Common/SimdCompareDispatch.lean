@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdCompareWord
 import Exec.Spec.SimdCompareShape
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 def integerCompareWidth (ty : Jnn) : U32 :=
@@ -66,4 +66,4 @@ theorem integer_compare_dispatch_eq (ty : Jnn) (op : vrelop_Jnn_N) (x y : U128)
   all_goals simp only [bind_ok]
   all_goals rfl
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

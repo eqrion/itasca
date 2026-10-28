@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentStep
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Segment execution changes buffers, table words and dropped-segment contents,
@@ -147,4 +147,4 @@ theorem segment_bulk_total {M : Type} (memory : runtime.platform.MemoryBuffer M)
     · exact Or.inl rfl
     · constructor <;> simp
 
-end Exec.Store
+end Itasca.Runtime.Store

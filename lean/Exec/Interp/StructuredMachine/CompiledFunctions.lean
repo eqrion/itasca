@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.CompiledFunctions
 import Exec.Code.Local.Relations.Common.CoreFunctionContext
 import Exec.Interp.StructuredMachine.FunctionCode
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- Concrete function lookup retains the canonical source context for mutable
@@ -35,4 +35,4 @@ theorem declared_types_not_bottom {C params declared results body compiled epilo
   rw [← certificate.2.locals] at present
   obtain ⟨rawType, _, rfl⟩ := List.mem_map.mp present
   cases rawType <;> decide
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

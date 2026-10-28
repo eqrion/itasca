@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.StatefulOperands
 import Exec.Code.Local.Relations.Common.StatefulSuccess
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual accepted non-pair callbacks produce their source-indexed emission. -/
@@ -103,4 +103,4 @@ theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
       signature locals arguments layout reachable concrete typed codeFits sourceFits coordinateFits single accepted
     exact ⟨⟨[],by simp [pairs]⟩,emission⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

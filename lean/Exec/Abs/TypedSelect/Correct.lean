@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Select
-namespace Exec.Abs.TypedSelect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.TypedSelect
+open SpecExt Itasca.Runtime.Spec
 
-open Exec.Abs.Core
+open Itasca.Runtime.Abs.Core
 
 theorem signature {C : context} {annotation : Option (List valtype)} {inputs outputs : List valtype}
     (typed : Instr_ok C (.SELECT annotation) ⟨.mk_list inputs,.mk_list outputs⟩) :
@@ -113,4 +113,4 @@ theorem progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
             (val_ok_wf leftTyped) (val_ok_wf rightTyped) bitsBound
           simpa only [split,next] using source
 
-end Exec.Abs.TypedSelect
+end Itasca.Runtime.Abs.TypedSelect

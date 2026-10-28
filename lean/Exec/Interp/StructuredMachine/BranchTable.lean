@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Table.BranchTable
 import Exec.Interp.Control.BrTableSource
 import Exec.Interp.StructuredMachine.Point
 import Exec.Abs.BrTableInvariants
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 /-- The side-table certificate selects an ordinary structured BR point. No
@@ -70,4 +70,4 @@ theorem step_brTable_point {M P F A : Type}
     (by simpa only [locals,List.map_append,Code.slots_append] using table.selectorSlot) typed.typed slots)
   rintro out ⟨success,exactState,sameStore,samePlatform,outputSlots,afterTyped,simulation⟩
   exact ⟨target,success,sameStore,samePlatform,exactState,outputSlots,point,⟨afterTyped,typed.contents⟩,simulation⟩
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

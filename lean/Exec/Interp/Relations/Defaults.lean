@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Rel
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem encode_defaultValue {ty : valtype} {value : val}
     (default : Abs.defaultValue ty = some value) :
@@ -60,5 +60,5 @@ theorem defaultLocals_types (types : List valtype) (values : List val)
         subst values
         simp only [List.map_cons, defaultValue_type hv, ih tail ht]
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

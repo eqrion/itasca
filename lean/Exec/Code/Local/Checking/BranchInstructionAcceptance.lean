@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 import Exec.Code.Local.Control.Common.Structured
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A branch's overlap-safe copy fits from the independently checked source
@@ -94,4 +94,4 @@ theorem branchIfInstructions_open_checks (function : runtime.bytecode.CompiledFu
           simpa only [Nat.reduceAdd,show start+3-1 = start+2 by omega] using ready
         | succ index => simp [branchIfInstructions,elided] at found
 
-end Exec.Code
+end Itasca.Runtime.Code

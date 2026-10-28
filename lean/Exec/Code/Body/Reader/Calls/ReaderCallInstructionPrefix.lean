@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Common.ReaderOrdinaryEffects
 import Exec.Code.Body.Relations.Common.ExecutableInstructionPrefix
 import Exec.Code.Local.Checking.FrameExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call reading bounds its source base and retains earlier instruction and exit-slot checks. -/
@@ -35,4 +35,4 @@ theorem reader_call_open_instructions_wasm2 {data env locals typeIndex st}
   intro index owned
   simpa only [PendingInstructionSite,stable.frames] using owned
 
-end Exec.Code
+end Itasca.Runtime.Code

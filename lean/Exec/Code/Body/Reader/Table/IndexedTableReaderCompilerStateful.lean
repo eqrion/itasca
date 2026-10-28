@@ -6,7 +6,7 @@ import Exec.Code.Local.Callbacks.Table.CompilerPairTableAppend
 import Exec.Code.Body.Reader.Table.StatefulReaderPrefixGeneric
 import Exec.Code.Body.Reader.Common.StatefulReaderBase
 import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
@@ -103,4 +103,4 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk {A : Type}
   rw [stateful_callback_lower ops before out.core op a b arguments] at callback
   exact ⟨op,a,b,arguments,callback,post⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

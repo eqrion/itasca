@@ -3,7 +3,7 @@ import Exec.Spec.Wf
 /-! Generated integer comparison relations. The input integers are interpreted
 at their declared width by the caller; comparisons always return an i32 Boolean. -/
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 theorem boolean_u32_wf (answer : Bool) :
     wf_uN 32 (.mk_uN (nat_of_bool answer)) := by
@@ -126,4 +126,4 @@ theorem integer_geu_relation (ty : Inn) (a b : Nat) :
   | I32 => exact .fun_relop__case_10 .U _ _ _ hi hn
   | I64 => exact .fun_relop__case_11 .U _ _ _ hi hn
 
-end Exec.Spec
+end Itasca.Runtime.Spec

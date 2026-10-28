@@ -2,7 +2,7 @@ import Exec.Abs.PureHead
 import Itasca.Module.Soundness
 import Itasca.Results.Unique
 import Itasca.Profile.EntrySound
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The store's code constructor for one independently decoded function. -/
@@ -32,4 +32,4 @@ theorem witness_type_profile {V : Type} {visitor : code.OpVisitor V}
   rw [← w.function_type]
   exact List.getElem_mem _
 
-end Exec.Code
+end Itasca.Runtime.Code

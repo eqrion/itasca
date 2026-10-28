@@ -3,7 +3,7 @@ import Exec.Code.Body.Reader.Acceptance.StatefulCallbackAcceptance
 import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 import Exec.Code.Body.Reader.Acceptance.ReaderProfileAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -147,4 +147,4 @@ theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
     have post := reader_table_fill_post_wasm2 p byte next decoded capacity value out.core read
     exact callbacks post value 0#u32 ⟨rfl,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

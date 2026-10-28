@@ -2,7 +2,7 @@ import Exec.Abs.PureHead
 import Exec.Abs.Memory.Descriptor
 import Exec.Abs.Float.Descriptor
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Source heads executed by `Core.instruction`: the `astep` heads, plus constants,
 select and the global and memory accesses it resolves against the store. -/
@@ -20,4 +20,4 @@ inductive ScalarHead : instr → Prop where
   | core {source} : CoreHead source → ScalarHead source
   | float (op : Float.Instruction) : ScalarHead op.source
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.InstanceItems
 import Exec.Store.Invariant.PrecommitError
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 theorem item_counts_loop_errors (counts : Array Usize 7#usize) (items start : Usize)
     (startBound : start.val ≤ counts.val.length) :
@@ -65,8 +65,8 @@ theorem element_items_loop_errors (module : runtime.compiler.ExecutableModule) (
   · rintro ⟨current, status, index⟩ ⟨errors, bound, total⟩
     dsimp only at errors bound total ⊢
     unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have hmore : index.val < module.module.env.elements.val.length := by simpa [alloc.vec.Vec.deref] using more
@@ -107,4 +107,4 @@ theorem element_items_loop_errors (module : runtime.compiler.ExecutableModule) (
   · exact ⟨True.intro, startBound, fun _ => rfl⟩
 
 
-end Exec.Store
+end Itasca.Runtime.Store

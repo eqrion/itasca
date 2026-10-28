@@ -1,5 +1,5 @@
 import Exec.Interp.Numeric.Float.Float
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem promote_loop_effect (fraction : U32)
@@ -38,4 +38,4 @@ open Aeneas Aeneas.Std
   · dsimp only
     exact ⟨0, by omega, by simp, rfl, positive, by omega⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

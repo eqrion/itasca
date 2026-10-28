@@ -2,7 +2,7 @@ import Exec.Interp.State.StatefulLookup
 import Exec.Interp.State.TableSource
 import Exec.Representation.StoreInvariant
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- Canonical source type bindings reconstruct the actual instance signature
@@ -62,4 +62,4 @@ theorem indirect_bindings_raw {M : Type} (view : M → Slice U8) (code : Store.C
     (signature_lookup_decodes view code store inst ambient typeIndex signature rawType moduleEq typeMapped typeFound).trans typeEq,
     table_lookup_decodes view code store inst ambient tableIndex address object moduleEq tableMapped tableFound⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

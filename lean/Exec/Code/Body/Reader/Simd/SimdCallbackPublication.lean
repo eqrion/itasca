@@ -3,7 +3,7 @@ import Exec.Code.Local.Publication.LiteralMapPublication
 import Exec.Code.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Visitor.Events
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- SIMD visitor arguments use the Wasm 2 subopcode interval. Constant and
@@ -64,4 +64,4 @@ theorem compiler_simd_hook_publication {A : Type} (ops : runtime.platform.Alloc 
       coordinates inside forward called,
     compiler_lower_simd_map_publication ops law before after state opcode a b bits lower upper called maps forward⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

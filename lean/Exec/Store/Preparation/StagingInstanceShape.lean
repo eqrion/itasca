@@ -1,7 +1,7 @@
 import Exec.Store.Preparation.StagingOwned
 import Exec.Store.Invariant.InstanceMapShape
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Successful actual initializer staging completes the new instance's structural
@@ -70,4 +70,4 @@ theorem staging_instance_shape {M P F A : Type}
     (by simpa only [source] using finalTables) finalOwners finalMemoryCount finalMemories finalGlobalCount
     globalAddresses elementTypes (by simpa only [source] using datas) dataAddresses
 
-end Exec.Store
+end Itasca.Runtime.Store

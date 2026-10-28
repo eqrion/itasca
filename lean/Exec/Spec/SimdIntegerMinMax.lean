@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareLists
 import Exec.Spec.IntegerSigned
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 inductive IntegerMinMax where | minS | minU | maxS | maxU
 
@@ -63,4 +63,4 @@ theorem integer_minmax_relation (kind : IntegerMinMax) {width : Nat} (a b : BitV
       · simpa [IntegerMinMaxRel,integerMinMaxBits,h,Int.le_of_lt h] using source
       · simpa [IntegerMinMaxRel,integerMinMaxBits,h,show ¬a.toInt ≥ b.toInt by omega] using source
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

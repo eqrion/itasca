@@ -1,7 +1,7 @@
 import Exec.Abs.Indirect.Transport
 import Exec.Abs.SupportedState
 
-namespace Exec.Abs.Indirect
+namespace Itasca.Runtime.Abs.Indirect
 
 theorem invoke_supported {s : AState} {f : AFrame} {rest : List AFrame} {address after next}
     (functions : FunctionsSupported s.store) (tail : Forall BinaryInstr after)
@@ -45,4 +45,4 @@ theorem step_supported {s ambient f rest table type after next}
     (fun item member => covered.active item (List.mem_cons_of_mem _ member)) stepped
 
 
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderMetadataPosts
 import Exec.Code.Local.Relations.Calls.StatefulCallbacks
 import Exec.Code.Body.Reader.Common.ReaderProfile
 import Itasca.Wasm2.Bulk.Dispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
@@ -83,4 +83,4 @@ theorem reader_stateful_bulk_wasm2 {data env locals index st}
     refine ⟨(.tableFill value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_table_fill_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
 
-end Exec.Code
+end Itasca.Runtime.Code

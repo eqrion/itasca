@@ -5,7 +5,7 @@ import Exec.Code.Body.Relations.Common.ReachedCompilerLedger
 import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Capacity.BodyReplay
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -96,4 +96,4 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
   intro counter
   cases counter <;> simp only [bodyResourceRate] <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

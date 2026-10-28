@@ -1,7 +1,7 @@
 import Exec.Interp.State.TableMutation
 import Exec.Abs.Stateful.Transition
-namespace Exec.Interp
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 theorem stateful_table_set_effect {M : Type}
     (memory : runtime.platform.MemoryBuffer M)
@@ -48,4 +48,4 @@ theorem stateful_table_set_effect {M : Type}
     simp only [Abs.Stateful.evaluate,Abs.Stateful.tableSet,splitValues,Abs.pop_append,Abs.Stateful.asReference_value,decoded]
     simp [decoded,moduleEq,sourceStore,decodeInstance,decodeStore,List.getElem?_map,mapped,issued,
       decodeTable,inside,alloc.vec.Vec.length]
-end Exec.Interp
+end Itasca.Runtime.Interp

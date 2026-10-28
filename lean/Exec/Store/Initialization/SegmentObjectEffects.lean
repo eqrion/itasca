@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentObjectMetadata
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem TableInitializationEffect.object_metadata {M : Type} {view : M → Slice U8}
@@ -67,4 +67,4 @@ theorem SegmentObjectMetadata.element_drop {M : Type} (view : M → Slice U8)
       (fun _ => ⟨rfl,Or.inl rfl⟩) ⟨rfl,Or.inr rfl⟩
   · intro i old found; exact ⟨old, found, Or.inl rfl⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileSubmit
 import Exec.Code.Module.ExecutableCollectedFunctions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Every occupied scheduler slot carries the corresponding declared function
@@ -76,4 +76,4 @@ theorem PartialExecutableModuleFunctions.complete {env sources pending}
   have same : actualType = typeIndex := by simpa [lookup] using actualLookup.symm
   subst actualType
   exact ⟨functions[index], source, found, sourceLookup, code⟩
-end Exec.Code
+end Itasca.Runtime.Code

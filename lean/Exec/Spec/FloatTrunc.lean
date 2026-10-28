@@ -1,5 +1,5 @@
 import Exec.Spec.FloatConvert
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem encodeSigned_num_wf (target : Inn) (value : Int) :
@@ -113,4 +113,4 @@ theorem float_truncation_pure (source : Fnn) (target : Inn) (sign : sx) (saturat
     · exact resultsWf result (by simp)
     · exact opWf
     · exact different
-end Exec.Spec
+end Itasca.Runtime.Spec

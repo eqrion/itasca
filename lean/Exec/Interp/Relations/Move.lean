@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Regions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The actual scalar/vector transfer emitted for a local copies exactly the
@@ -38,4 +38,4 @@ theorem dispatch_move_effect {M P F A : Type}
     with_unfolding_all apply WP.spec.ret
     exact ⟨success, by simpa only [scalar, copyWords] using slots, rfl, rfl⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

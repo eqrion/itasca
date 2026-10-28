@@ -1,7 +1,7 @@
 import Exec.Platform.Alloc
 import Exec.Generated.Equations
 
-namespace Exec.Platform
+namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 
 /-- Laws for the actual extracted memory dictionary, relative to the bytes used
@@ -19,4 +19,4 @@ structure MemoryLaws {M : Type} (ops : runtime.platform.MemoryBuffer M)
         List.replicate (n.val - (view m).length) 0#u8
     else view result.2 = view m ⦄
 
-end Exec.Platform
+end Itasca.Runtime.Platform

@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Control.SourceBranchInstructionPrefix
 import Exec.Code.Body.Reader.Control.ReaderBranchIfLayout
 import Exec.Code.Body.Reader.Control.ReaderBranchWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed br reading preserves checks of every stored word. -/
@@ -55,4 +55,4 @@ theorem reader_br_if_open_instructions_wasm2 {jumpTables : List U32} {data env s
     (invariant.known live) (monomorphic live) depth view out read
   exact ⟨scope,discarded,_,selected,input,targetStack⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

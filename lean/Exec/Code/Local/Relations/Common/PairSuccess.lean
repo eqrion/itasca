@@ -1,6 +1,6 @@
 import Exec.Code.Local.Callbacks.Common.CompilerOrdinaryMetadata
 import Exec.Code.Local.Initializer.InitializerExpression
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Successful pair allocation retains the whole compiler frame and appends
@@ -35,4 +35,4 @@ theorem compiler_pair_success {A : Type} (ops : runtime.platform.Alloc A)
       exact ⟨budget,pairs,rfl,(budget_push_success ops law before.budget budget before.function.indirect pairs (a,b) pushed).2,
         by simpa using valueEq⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

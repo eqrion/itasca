@@ -1,5 +1,5 @@
 import Exec.Spec.SimdIntegerSaturating
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 def integerSaturatingSupported (ty : Jnn) (_kind : IntegerSaturating) : Prop :=
   match ty with | .I8 | .I16 => True | _ => False
@@ -18,4 +18,4 @@ theorem integer_saturating_source_wf (ty : Jnn) (kind : IntegerSaturating)
   all_goals constructor <;> constructor
   all_goals decide
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

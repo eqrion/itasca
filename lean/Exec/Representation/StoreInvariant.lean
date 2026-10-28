@@ -3,7 +3,7 @@ import Exec.Representation.Store
 /-! Structural store invariants used before attaching the compiler's source-code
 certificate. These conditions describe retained objects and accounting; they do
 not assert preservation, simulation, or any desired API theorem. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryShape {M : Type} (view : M → Slice U8) (m : runtime.store.MemInst M) : Prop :=
@@ -252,4 +252,4 @@ theorem Shape.table_extend {M : Type} {view : M → Slice U8}
     (by simpa using hindex)
   simpa using hs.symm
 
-end Exec.Store
+end Itasca.Runtime.Store

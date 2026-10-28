@@ -1,6 +1,6 @@
 import Exec.Store.Linking.Link
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- A private external handle is either foreign or names an issued object.
@@ -134,4 +134,4 @@ theorem link_import_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
     rintro out ⟨status, unchanged, same⟩
     exact ⟨unchanged, Or.inl ⟨_, status, same⟩⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -4,8 +4,8 @@ import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.FloatConstantBounded
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.FloatConstant
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.StructuredMachine.FloatConstant
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 theorem step_float32_execution_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -212,4 +212,4 @@ theorem step_float64_execution_owned {M P F A : Type}
   rintro out ⟨success,sameStore,samePlatform,pc,g,forward,rest⟩
   exact ⟨success,sameStore,samePlatform,pc,g,rest⟩
 
-end Exec.Interp.StructuredMachine.FloatConstant
+end Itasca.Runtime.Interp.StructuredMachine.FloatConstant

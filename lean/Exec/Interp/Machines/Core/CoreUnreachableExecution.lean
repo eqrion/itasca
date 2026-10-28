@@ -24,7 +24,7 @@ import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Core.Pure
 import Exec.Spec.Extend
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem scalarEmission_not_unreachable {C before after emitted}
@@ -35,4 +35,4 @@ theorem scalarEmission_not_unreachable {C before after emitted}
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
 
-end Exec.Interp
+end Itasca.Runtime.Interp

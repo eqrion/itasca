@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredPrefixZipper
 import Exec.Code.Local.Control.Table.StructuredPrefixEmission
 import Exec.Code.Local.Control.Common.UniversalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredParentPrefixes.advance_current {jumpTables : List U32} {emission types functions returns locals code parents labels current}
     (saved : StructuredParentPrefixes (jumpTables := jumpTables) emission types functions returns locals code parents labels current)
@@ -72,4 +72,4 @@ theorem Lowered.structured_universal_advance {jumpTables : List U32} {A : Type} 
     refine ⟨?_, next.code⟩
     simpa only [codeEq, resolved] using (saved.extend [emitted]).advance_current instruction
 
-end Exec.Code
+end Itasca.Runtime.Code

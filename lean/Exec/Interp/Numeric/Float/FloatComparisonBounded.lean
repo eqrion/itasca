@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatComparisonScalar
 import Exec.Spec.FloatComparison
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Actual f32.eq dispatch takes the generated comparison step. -/
@@ -328,4 +328,4 @@ theorem scalar_f64_ge_source_bounded {F : Type} (ops : runtime.platform.FloatOps
   exact Spec.float_comparison_pure .F64 .GE (floatOfBits 64 a.val) (floatOfBits 64 b.val) value.val relation
     (floatOfBits_wf 64 (by omega) _) (floatOfBits_wf 64 (by omega) _) small
 
-end Exec.Interp
+end Itasca.Runtime.Interp

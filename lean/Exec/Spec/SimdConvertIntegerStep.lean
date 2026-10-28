@@ -1,6 +1,6 @@
 import Exec.Spec.SimdConvertIntegerSource
 import Exec.Spec.SimdFloatUnaryChoices
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem convert_integer_packed (ty : Fnn) (sign : sx) (x result : BitVec 128)
@@ -36,4 +36,4 @@ theorem convert_integer_step (ty : Fnn) (sign : sx) (x result : BitVec 128)
     · exact convert_integer_source_wf ty sign
   · exact const_wf result
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

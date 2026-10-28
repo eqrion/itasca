@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Table.FixupTablePreservation
 import Exec.Code.Body.Relations.Table.BranchTableTables
 import Exec.Code.Local.Capacity.AuxiliaryGrowth
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_br_table_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
@@ -35,4 +35,4 @@ theorem reader_table_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     compiler_read_br_table ops law before after st final data env _ accepted
   exact ⟨compiler_br_table_auxiliary_growth ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types callback,
     compiler_br_table_fixup_budget ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types budget callback⟩
-end Exec.Code
+end Itasca.Runtime.Code

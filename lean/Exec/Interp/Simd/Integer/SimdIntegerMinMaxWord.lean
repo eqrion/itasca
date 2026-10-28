@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerBinaryLoop
 import Exec.Spec.SimdIntegerMinMax
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 def integerMinMaxIndex (kind : IntegerMinMax) : U32 :=
   match kind with | .minS => 22#u32 | .minU => 23#u32 | .maxS => 24#u32 | .maxU => 25#u32
@@ -23,4 +23,4 @@ theorem integer_minmax_word (kind : IntegerMinMax) (width : U32)
   all_goals simp only [IScalar.lt_equiv,UScalar.lt_equiv,saEq,sbEq,integerMinMaxBits,aValue,bValue]
   all_goals split <;> simp_all only [WP.spec_ok]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

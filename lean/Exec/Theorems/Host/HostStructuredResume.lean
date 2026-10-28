@@ -4,9 +4,9 @@ import Exec.Theorems.Composition.Certified.CertifiedSupported
 import Exec.Interp.StructuredMachine.HostCallStack
 import Exec.Abs.HostCallSite
 import Exec.Interp.StructuredMachine.Execution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 
 theorem structured_host_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
     (rest : List Abs.AFrame) (after : List instr) (index address identity : Nat)
@@ -77,4 +77,4 @@ theorem host_structured_resume {M P : Type}
       exact ⟨fun instruction member => old.1 instruction (List.mem_cons_of_mem _ member),old.2⟩
     · exact machine.core.active item (List.mem_cons_of_mem _ member)
   · exact Abs.FramesReturn.replace machine.result rfl
-end Exec.Theorems
+end Itasca.Runtime.Theorems

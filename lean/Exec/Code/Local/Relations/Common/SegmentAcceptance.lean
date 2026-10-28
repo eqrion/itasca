@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.SlotAvailability
 import Exec.Code.Local.Relations.Common.SegmentProgram
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 private theorem offset_vector_width {env expr}
@@ -152,4 +152,4 @@ theorem segment_program_well_formed {module function} (program : SegmentProgram 
   · simp [jumps]
   · simp [controls]
 
-end Exec.Code
+end Itasca.Runtime.Code

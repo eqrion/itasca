@@ -5,7 +5,7 @@ import Exec.Code.Body.Reader.Common.ReaderReachabilitySteps
 import Exec.Code.Body.Reader.Control.ReaderScopeFronts
 import Exec.Code.Body.Reader.Control.ReaderControlBoundary
 import Exec.Code.Body.Reader.Common.ReaderKnownFronts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
@@ -126,4 +126,4 @@ theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit
     exact ⟨outer, parent, savedOuter, savedParent, instruction, sourceSplit, savedSplit, closed,
       certified, nextSame, reach'.close after.reachable instruction (fun _ => entered), fronts'.pop instruction,
       reader_end_boundary_wasm2 p savedSplit encoded opened afterState, afterState⟩
-end Exec.Code
+end Itasca.Runtime.Code

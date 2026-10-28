@@ -1,6 +1,6 @@
 import Exec.Interp.Control.LabelCompletion
 import Exec.Interp.StructuredMachine.Point
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 /-- Normal completion removes a source label at its retained fallthrough PC.
 The concrete words and PC are unchanged; the generated source semantics takes
@@ -41,4 +41,4 @@ theorem label_completion_point (exec : runtime.interp.Execution) (raw : runtime.
   · exact Abs.active_frame_preservation typed (Abs.label_exit_frame_preservation frameTyped) rfl
   · exact Abs.typed_label_end_simulation s ambient f rest label labels _ typed step
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

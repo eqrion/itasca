@@ -1,11 +1,11 @@
 import Exec.Store.Invariant.CopyTypes
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 @[step] theorem value_type_equal (a b : Itasca.types.ValueType) :
     types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ equal => equal = true ↔ a = b ⦄ := by
-  cases a <;> cases b <;> simp [types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
+  cases a <;> cases b <;> simp [
     Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 @[step] theorem same_func_type_loop (left right : alloc.vec.Vec Itasca.types.ValueType)
@@ -115,4 +115,4 @@ theorem decodeFuncType_injective : Function.Injective decodeFuncType := by
       cases hr'
       rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

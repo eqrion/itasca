@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdTruncSatLoop
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins SpecExt.Builtins.Float
 
 def truncSatCountU32 : Fnn → U32 | .F32 => 4#u32 | .F64 => 2#u32
 
@@ -42,4 +42,4 @@ theorem trunc_sat_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
     (by simp) (by simp) (by intro j above bound; simp [laneBits])
   cases ty <;> with_unfolding_all exact spec
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,7 +1,7 @@
 import Exec.Code.Body.Capacity.ExecutableCapacityFoldWasm2
 import Exec.Code.Body.Relations.Common.EntryCompilerInitial
 import Exec.Code.Local.Callbacks.Common.Finish
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual body validation bounds the compiled frame storage by source locals
@@ -53,4 +53,4 @@ theorem witness_compile_executable_capacity {A : Type} (ops : runtime.platform.A
           maximumStackWords samples := by
   have facts := (witness_compiler_start ops law w signatureTable functionTable endFits created).1
   exact witness_compiler_executable_capacity ops law w facts encoded compiled finalBudget finished
-end Exec.Code
+end Itasca.Runtime.Code

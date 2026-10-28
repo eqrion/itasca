@@ -3,7 +3,7 @@ import Exec.Interp.Relations.Synthetic
 /-! Resolve retained initializer certificates against concrete instance maps.
 The resolution relation describes source literals and store reads only; the
 machine theorem is derived from it and the compiler's syntactic certificate. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem initializerBits_low (lo hi : U64) :
@@ -100,4 +100,4 @@ theorem synthetic_resolved_initializer (law : Platform.AllocCorrect allocator)
     (by rw [compiled.capacity]; exact resolved.width)
   simpa [compiled.capacity] using hcode
 
-end Exec.Interp
+end Itasca.Runtime.Interp

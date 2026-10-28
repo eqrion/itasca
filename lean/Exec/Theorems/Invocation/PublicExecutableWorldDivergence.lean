@@ -5,8 +5,8 @@ import Exec.Theorems.Invocation.InvokeWorldDivergence
 
 /-! Public evolving-world divergence reflection and normal-return recovery.
 Lookup evidence is shared with terminal correspondence; source productivity remains separate. -/
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Actual public invocation divergence has a coherent infinite labeled source execution, or the
 source reaches a store on which a callback diverges, under the full API invariant and the explicit
@@ -52,4 +52,4 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
       exact Or.inr ⟨[],code,store,_,_,StepsH.refl initialWf,diverged⟩
   · rw [invoke_wrong_store memory hooks floats allocator exec store platform address args results owner] at divergent
     simp at divergent
-end Exec.Theorems
+end Itasca.Runtime.Theorems

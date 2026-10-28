@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderCompilerLocal
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerEmpty
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerCall
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerTerminal
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 /-- Actual accepted ordinary dispatch preserves the retained compiler/source
 point. All opcode-specific stack and callback facts are derived internally. -/
@@ -122,4 +122,4 @@ theorem StructuredReaderCompilerPointWasm2.ordinary {jumpTables : List U32} {A :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point
   exact state.ordinary ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode ordinary byte accepted
-end Exec.Code
+end Itasca.Runtime.Code

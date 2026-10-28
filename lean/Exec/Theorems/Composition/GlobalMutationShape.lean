@@ -1,9 +1,9 @@
 import Exec.Interp.State.GlobalMutation
 import Exec.Abs.Ownership.Bounds
 import Exec.Representation.StoreInvariant
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 private theorem encode_i32_small (value : val) (wellFormed : wf_val value)
     (typed : Code.valueType value = .I32) : (Code.encodeValue value)[0]! < 2^32 := by
@@ -90,4 +90,4 @@ theorem global_mutation_shape {M : Type} {view : M → Slice U8}
   apply shape.global_replace
   exact global_encoded_shape before old lo hi value (shape.globals old (List.mem_of_getElem? found))
     wellFormed typed represented high owned
-end Exec.Store
+end Itasca.Runtime.Store

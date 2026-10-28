@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Control.StructuredScopeCloseInstructionPrefix
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual Wasm 2 END reader supplies progress and a bounded source
@@ -39,4 +39,4 @@ theorem reader_nested_end_open_instructions_wasm2 {jumpTables : List U32}
   exact structured_scope_close_open_instructions ops law invariant sourceBound out.core p.current.ctrl.kind
     p.current.bt nonRoot maps held consumed endBound callback
 
-end Exec.Code
+end Itasca.Runtime.Code

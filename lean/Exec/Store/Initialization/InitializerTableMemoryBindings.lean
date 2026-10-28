@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableMemoryBindings
 import Exec.Store.Initialization.InitializerMetadata
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem InitializerFunctionMetadata.table_bindings {M : Type}
@@ -20,4 +20,4 @@ theorem InitializerFunctionMetadata.memory_bindings {M : Type} {view : M → Sli
   rw [metadata.source, metadata.memoryMap]
   exact MemoryBindings.prefix bindings metadata.identity (by simp [metadata.memories])
 
-end Exec.Store
+end Itasca.Runtime.Store

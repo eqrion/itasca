@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SlotCheckAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Scalar operator checking accepts the exact projection supplied by lowering
@@ -36,4 +36,4 @@ theorem store_instruction_accepts (function : runtime.bytecode.CompiledFunction)
   simp [runtime.bytecode.CompiledFunction.instruction_valid,scalar,load,projected,
     slots_fit_accepts function address 1#u32 input,slots_fit_accepts function value 1#u32 stored]
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Store.Linking.LinkMaps
 import Exec.Store.Invariant.TypeStaging
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -47,4 +47,4 @@ theorem complete_function_count {module : runtime.compiler.ExecutableModule}
   simp only [List.length_append] at length
   omega
 
-end Exec.Store
+end Itasca.Runtime.Store

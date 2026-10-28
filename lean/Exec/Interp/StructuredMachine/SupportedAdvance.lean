@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.Advance
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Abs.Supported.CumulativeStep
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 
@@ -35,4 +35,4 @@ theorem ordinary_cumulative_step
     fun _ h => transition.next_bound_supported machine.typed machine.core h⟩
   exact StructuredMachine.Execution.ordinary view code ambient source updatedSource rest expected beforePC beforePending machine stores
     extension raw index pc last lookup program point slots metadata effect preserved typed covered
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

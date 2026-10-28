@@ -6,7 +6,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 
-namespace Exec.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.StructuredMachine.Simd
 open Aeneas.Std
 
 /-- Reuse the retained SIMD continuation after the exact operand suffix has
@@ -30,4 +30,4 @@ theorem framePoint_continue
     exact labels.replace_suffix heights
   · simpa only [List.map_append,pcNext] using tail
 
-end Exec.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.StructuredMachine.Simd

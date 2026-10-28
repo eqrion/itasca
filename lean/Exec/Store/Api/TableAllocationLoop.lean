@@ -2,7 +2,7 @@ import Exec.Store.Api.TableMemoryOrder
 import Exec.Store.Invariant.TypeStagingLoop
 import Exec.Store.Preparation.PreparationResults
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual table loop allocates a decoded source suffix in order and issues
@@ -51,8 +51,7 @@ theorem table_allocation_staging_loop {M A : Type} (memory : runtime.platform.Me
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-      module.Env.table_types, Itasca.module.Env.impl.table_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.table_types.val.length := by
@@ -139,4 +138,4 @@ theorem table_allocation_success {M A : Type} (memory : runtime.platform.MemoryB
     (by simp only [List.length_map]; change next.tables.length = inst.tables.length + _; omega)
   exact ⟨(contents rfl).complete, complete.1, complete.2⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

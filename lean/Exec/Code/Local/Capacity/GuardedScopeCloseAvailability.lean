@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.ObserveBudgetAvailability
 import Exec.Code.Local.Callbacks.Control.CloseGuardedScope
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -90,4 +90,4 @@ theorem compiler_close_guarded_scope_available {A : Type} (ops : runtime.platfor
     reachable := scopeExitLive compiler.reachable frame}
   exact compiler_observe_available_budget ops bound available closed state request slotsFit
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.State.GlobalCoreEmission
 import Exec.Abs.Core.Globals
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem global_lookup_back {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -42,6 +42,6 @@ theorem global_set_typed_operand {s : store} (f : Abs.AFrame) (after : List inst
   cases operandTypes with
   | cons valueTyped tail =>
     cases tail
-    exact ⟨front,_,split,Exec.Spec.val_ok_wf valueTyped,heights⟩
+    exact ⟨front,_,split,Itasca.Runtime.Spec.val_ok_wf valueTyped,heights⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -16,7 +16,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefix
 import Exec.Code.Local.Checking.TerminalInstructionPrefix
 import Exec.Code.Local.Checking.ScalarExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source RETURN checks its full result suffix and retains recorded exits. -/
@@ -103,4 +103,4 @@ theorem reader_unreachable_open_instructions_wasm2 {jumpTables : List U32} {data
   exact ⟨compiler_unreachable_open_instructions ops law before after out.core codeFits sourceFits coordinateFits held callback,
     (compiler_unreachable_ordinary_result ops law before after out.core (.Ok ()) callback).exit_slots exits⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

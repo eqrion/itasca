@@ -7,7 +7,7 @@ import Exec.Store.Invariant.SourceBindings
 import Exec.Store.Invariant.CodeAgreement
 import Exec.Store.Invariant.SourceAllocationLists
 import Exec.Spec.AllocationModule
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact six-space source allocation content, obtained from the actual retained
@@ -102,4 +102,4 @@ theorem PreparedRun.allocation_content {M P F A : Type}
   · simpa only [metadata.tableMap] using tableAddresses
   · simpa only [metadata.memoryMap] using memoryAddresses
   · simpa only [elementValues.length_eq] using elementAddresses
-end Exec.Store
+end Itasca.Runtime.Store

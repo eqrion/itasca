@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.SegmentProgram
 import Exec.Spec.SegmentInitCases
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std SpecExt
 
 /-- Source instructions represented by the straight-line segment bytecode. -/
@@ -50,4 +50,4 @@ theorem segmentSource_wf (code : runtime.bytecode.CompiledFunction) (instruction
   · exact .admininstr_case_67 _ (Spec.Segment.index_wf _ (by scalar_tac))
   · exact .admininstr_case_55 _ (Spec.Segment.index_wf _ (by scalar_tac))
 
-end Exec.Code
+end Itasca.Runtime.Code

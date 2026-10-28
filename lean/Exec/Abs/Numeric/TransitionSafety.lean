@@ -2,8 +2,8 @@ import Exec.Abs.Numeric.Astep
 import Exec.Abs.Numeric.Transition
 import Exec.Abs.Numeric.InstructionSafety
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem transition_preservation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
@@ -36,4 +36,4 @@ theorem astep_preservation (s : store) (ambient : frame) (f : AFrame)
   rw [astep_typed_eq ⟨s, ambient, [], []⟩ f rest after op hf] at step
   exact transition_preservation s ambient f rest after op next typed step
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

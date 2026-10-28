@@ -2,7 +2,7 @@ import Exec.Store.Invariant.BindingMaps
 import Exec.Store.Invariant.FunctionSignatures
 import Exec.Store.Initialization.SegmentTypes
 import Exec.Code.Local.Source.SourceFunctionTyping
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem decodeFuncType_source (ty : types.FuncType) : decodeFuncType ty = EnvTranslation.funcType ty := by
@@ -80,4 +80,4 @@ theorem module_bindings_source {M : Type} (view : M → Slice U8) (code : CodeIn
   rw [contextEq]
   exact module_bindings_env view code store inst shape sourceSyntax instanceShape bounds types functions globals tables memories segments
 
-end Exec.Store
+end Itasca.Runtime.Store

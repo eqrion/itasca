@@ -1,7 +1,7 @@
 import Exec.Code.Local.Publication.EnterMapPublication
 import Exec.Code.Local.Coordinates.ControlSourceCoordinates
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Source-reader geometry needed to open a frame. These are local stack,
@@ -69,4 +69,4 @@ theorem compiler_scope_entry_publication {A : Type} (ops : runtime.platform.Allo
       geometry.controls geometry.selected geometry.valuesFit geometry.heightFits geometry.sourceFits position
       geometry.mapsFit geometry.framesFit dormant maps forward after called
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerPatchMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 abbrev CompilerSnapshot (A : Type) :=
@@ -66,4 +66,4 @@ theorem compiler_fixups_after_if_ordinary_result {A : Type} (ops : runtime.platf
       ops before sites target index status = .ok output) :
     CompilerOrdinaryStable before (snapshotCompiler output) :=
   compiler_fixups_ordinary_result ops before sites target index status output accepted
-end Exec.Code
+end Itasca.Runtime.Code

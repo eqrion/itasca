@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.BodyResourceRoom
 import Exec.Code.Local.Demand.RecordedDemand
 import Exec.Code.Body.Reader.Common.ReaderBasic
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Construct actual callback demand from the independent reference reader and
@@ -28,4 +28,4 @@ theorem reference_reader_demand {A R : Type}
     (.Ok ()) called tail
   exact room.demand budget metadata codeBudget sources cursor remaining out.core vectors.1
 
-end Exec.Code
+end Itasca.Runtime.Code

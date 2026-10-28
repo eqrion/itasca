@@ -1,6 +1,6 @@
 import Exec.Store.Invariant.BindingTyping
 import Exec.Store.Initialization.ElementTypes
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem GlobalTypeMap.source {M : Type} {store : runtime.store.Store M} {types addresses}
@@ -69,4 +69,4 @@ theorem data_addresses_typed {M : Type} (view : M → Slice U8) (code : CodeInte
       · exact decodeData_typed _ wellformed segment (bounds.data segment (List.mem_of_getElem? found))
     · exact ih (fun value member => issued value (by simp [member]))
 
-end Exec.Store
+end Itasca.Runtime.Store

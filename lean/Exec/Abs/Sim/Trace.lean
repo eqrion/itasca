@@ -1,12 +1,12 @@
 import Exec.Abs.Sim.Typing
 import Exec.Spec.Counted
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem stepsHN_label {n : Nat} {c c' : config} {events : List HostEvent}
     (h : StepsHN n c events c') (arity : Nat) (cont : List instr) (hc : Forall wf_instr cont) :
-    StepsHN n (Exec.Spec.labelContext arity cont c) events (Exec.Spec.labelContext arity cont c') := by
+    StepsHN n (Itasca.Runtime.Spec.labelContext arity cont c) events (Itasca.Runtime.Spec.labelContext arity cont c') := by
   apply h.map ?_ (fun _ _ _ h => stepH_label h arity cont hc)
   intro c hw
   cases c
@@ -46,7 +46,7 @@ theorem stepsHN_decodeLabels {n : Nat} {z z' : state} {code code' : List adminin
       (forall_nil _) (wf_instrs (hl label (by simp)).2)
     have h₄ := ih h₃ (values.take label.height) (fun l hm => hl l (by simp [hm]))
       (fun v hm => hv v (List.mem_of_mem_take hm))
-    simpa [decodeLabels, instrContext, Exec.Spec.labelContext, vals] using h₄
+    simpa [decodeLabels, instrContext, Itasca.Runtime.Spec.labelContext, vals] using h₄
 
 theorem stepsHN_decodeFrames {n : Nat} {s s' : store} (ambient : frame) (frames : List AFrame)
     {code code' : List admininstr} {events : List HostEvent}
@@ -66,4 +66,4 @@ theorem stepsHN_decodeFrames {n : Nat} {s s' : store} (ambient : frame) (frames 
     have h₄ := ih h₃ hr
     simpa [decodeFrames, activeFrame, instrContext, frameContext, vals] using h₄
 
-end Exec.Abs
+end Itasca.Runtime.Abs

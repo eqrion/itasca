@@ -5,7 +5,7 @@ import Exec.Code.Module.CapacityAssembly
 
 /-! Source-ordered executablecapacities certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual successful compilation establishes all defined-function source
@@ -50,4 +50,4 @@ theorem compile_executable_capacities {A : Type} (ops : runtime.platform.Alloc A
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates, (w.initializers law).2.1⟩
-end Exec.Code
+end Itasca.Runtime.Code

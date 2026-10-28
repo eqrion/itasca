@@ -1,5 +1,5 @@
 import Exec.Spec.TableAccess
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- A refused table growth returns the WebAssembly unsigned failure sentinel. -/
@@ -39,4 +39,4 @@ theorem table_grow_success_step (s : store) (f : frame) (index delta : Nat) (val
     exact ⟨Segment.ref_wf _,Segment.i32_wf _ hd,.admininstr_case_51 _ (Segment.index_wf _ hx)⟩
   · apply wf_config_make fresh hf
     simpa [Forall,Segment.i32] using Segment.i32_wf _ bounded
-end Exec.Spec
+end Itasca.Runtime.Spec

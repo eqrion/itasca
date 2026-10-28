@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Simd.ReaderSimdEvents
 import Exec.Code.Body.Reader.Acceptance.RecordedReaderAcceptance
 import Exec.Code.Local.Capacity.SimdCallbacksAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -116,4 +116,4 @@ theorem reached_profile_simd_memory_lane_available_wasm2 {data env locals index 
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Exec.Code
+end Itasca.Runtime.Code

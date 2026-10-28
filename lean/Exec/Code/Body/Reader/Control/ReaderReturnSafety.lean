@@ -4,7 +4,7 @@ import Itasca.Wasm2.Trace.ControlRecords
 import Exec.Code.Local.Relations.Common.TerminalSafety
 import Exec.Code.Body.Relations.Control.ReachedControlSafety
 import Itasca.Wasm2.Control.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_return_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
@@ -21,4 +21,4 @@ theorem compiler_return_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
   · exact WP.spec_mono (Wasm2.CallbackTrace.return_position state env index shape) (by simp)
   · intro out value read
     exact compiler_on_return_total ops law compiler out.core bodyFrame codeFits sourceFits coordinate
-end Exec.Code
+end Itasca.Runtime.Code

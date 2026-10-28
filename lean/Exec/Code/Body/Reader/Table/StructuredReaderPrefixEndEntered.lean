@@ -3,7 +3,7 @@ import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCloseLoop
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCloseIf
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixCloseElse
 import Exec.Code.Local.Relations.Control.ControlObservedLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_end_block_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -136,4 +136,4 @@ theorem structured_callback_end_else_prefix {jumpTables : List U32} {emit : List
     simpa [scopeExitLive, frameKind] using reachable
   exact invariant.close_else entered stack stable maps frame target sourceType condition noEntry yes yesExit yesNormal
     framesEq targetAt codeEq form signature exit layout sourceTypes sources consumed (by rw [cursor])
-end Exec.Code
+end Itasca.Runtime.Code

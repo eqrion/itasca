@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Rel
 import Exec.Interp.Relations.Copy
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Forward copies read the original source when moving downward or into a
@@ -123,4 +123,4 @@ theorem WordsAt.copy_append {words : List U64} {base src : Nat} {front value : L
     exact Or.inl (by omega)
   · exact input.copy (base + front.length) order destination
 
-end Exec.Interp
+end Itasca.Runtime.Interp

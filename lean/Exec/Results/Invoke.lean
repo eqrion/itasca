@@ -21,7 +21,7 @@ the bundles `Platform.Laws` and `HostLaws` of [Contracts](../Contracts.lean).
 
 open Aeneas Aeneas.Std SpecExt
 
-namespace Exec
+namespace Itasca.Runtime
 
 open Theorems Interp
 
@@ -103,4 +103,4 @@ theorem runtime.interp.invoke_with.no_spurious_errors {M P F A : Type}
   invoke_executable_world_no_spurious_errors memory hooks floats allocator view laws code callbacks limitsKept exec store platform valid address args
     results owner issued owned initial invoked typedArguments fits available continuing noOverflow
 
-end Exec
+end Itasca.Runtime

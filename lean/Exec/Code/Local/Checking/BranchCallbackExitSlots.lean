@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.NumericInstructionPrefix
 import Exec.Code.Local.Checking.BranchExitSlotBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Actual operand observation preserves every recorded forward-exit region. -/
@@ -67,4 +67,4 @@ theorem compiler_br_if_callback_exit_slots {A : Type} (ops : runtime.platform.Al
       exact compiler_observe_exit_slots ops law middle after state (branch live middle emitted) rest
   · exact compiler_observe_exit_slots ops law before after state held called
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.ObserveFrame
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem ObserveFrame.code {A : Type} {a b : runtime.compiler.FunctionCompiler A}
@@ -38,4 +38,4 @@ validator state, preserving code, labels, immutable metadata and deadness. -/
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
   simp only [dead, Bool.false_eq_true, ite_false]
   exact compiler_observe_frame ops law compiler state
-end Exec.Code
+end Itasca.Runtime.Code

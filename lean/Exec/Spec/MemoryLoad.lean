@@ -1,7 +1,7 @@
 import Exec.Spec.ByteEncoding
 import Exec.Spec.SegmentInitCases
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def numericLoadResult (ty : numtype) (bytes : List byte) (start : Nat) : List admininstr :=
@@ -66,4 +66,4 @@ theorem numeric_load_step (s : store) (f : frame) (ty : numtype) (argument : mem
     · exact input
     · exact .admininstr_case_73
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec
+end Itasca.Runtime.Spec

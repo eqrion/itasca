@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.InitializerExecute
 import Exec.Interp.Simd.Common.SimdValueSlots
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem dispatch_const_v128_values {M P F A : Type}
@@ -28,4 +28,4 @@ theorem dispatch_const_v128_values {M P F A : Type}
   refine ⟨ok,unchanged,exactSlots,?_⟩
   rw [exactSlots.1,position]
   exact represented.simd_vector_result value (by simpa only [position] using capacity)
-end Exec.Interp
+end Itasca.Runtime.Interp

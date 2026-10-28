@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdPairwiseLanes
 import Exec.Spec.SimdPairwiseSource
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem pairwise_packed (ty : PairwiseWidth) (signed : Bool) (x result : U128)
     (lanes : ∀ j, j < ty.widen.count → laneBits (ty.widen.width*2) j result.bv =
@@ -46,4 +46,4 @@ theorem pairwise_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   rw [pairwise_simd_eq]
   step with pairwise_lanes_sound ty signed x as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

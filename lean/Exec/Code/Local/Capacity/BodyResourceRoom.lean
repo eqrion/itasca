@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.SourceCallbackDemand
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Conservative per-byte charges after function-start preparation. Expanded
@@ -91,4 +91,4 @@ theorem BodyResourceRoom.scope {A : Type}
   exact scopeDemand_of_source compiler state bound position demand controls
     ((Nat.le_of_lt remaining).trans room.source_bound) (by have reserve := room.temporary; omega) (by omega)
 
-end Exec.Code
+end Itasca.Runtime.Code

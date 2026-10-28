@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.ReaderStructuredDead
 import Exec.Code.Body.Reader.Global.ReaderGlobalEmissions
 import Exec.Code.Body.Reader.Common.ReaderSelectEmissions
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_dead_global_get_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -89,4 +89,4 @@ theorem reader_prefix_dead_select_wasm2 {jumpTables : List U32} {data env source
   have cursor := compiler_core_cursor ops law before after out.core (.select false) callback
   exact ⟨values, post, post.structured_skip ops law invariant dead ordinary sources cursor
     27#u16 0#u32 0#u32 0#u128 callback⟩
-end Exec.Code
+end Itasca.Runtime.Code

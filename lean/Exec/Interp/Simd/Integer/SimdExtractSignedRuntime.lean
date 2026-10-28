@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdSigned
 import Exec.Interp.Simd.Common.SimdSplatSound
 import Exec.Spec.IntegerShift
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -37,4 +37,4 @@ def extractSignedOpcode (ty : packtype) : U32 :=
   all_goals rw [laneEq]
   all_goals simp [psize, UScalarTy.numBits]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

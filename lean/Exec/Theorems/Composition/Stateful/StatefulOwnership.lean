@@ -1,6 +1,6 @@
 import Exec.Theorems.Composition.Core.CoreOwnership
 import Exec.Abs.Stateful.Ownership
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem reference_value_owned {M : Type} (store : runtime.store.Store M)
@@ -26,8 +26,8 @@ theorem Shape.stateful_heap_owned {M : Type} {view : M → Slice U8} {store : ru
     obtain ⟨word,wordMember,rfl⟩ := List.mem_map.mp present
     exact reference_value_owned store raw.ty word (shape.elements raw rawMember word wordMember)
   · simp [decodeStore,ownershipBounds]
-end Exec.Store
-namespace Exec.Theorems
+end Itasca.Runtime.Store
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std
 
 theorem stateful_entry_owned {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
@@ -41,4 +41,4 @@ theorem stateful_entry_owned {M : Type} {view : M → Slice U8} {code : Store.Co
         (args.map Interp.sourceValue) defaults) :=
   ⟨(core_entry_owned shape ambient address moduleInst results body args locals defaults owned created).values,
     shape.stateful_heap_owned code⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

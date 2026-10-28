@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.OpenPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A possible static completion of one physical open frame. Future normal
@@ -82,4 +82,4 @@ theorem FramePlans.lookup {length locals frames labels groups}
       rw [decomp, List.getElem?_cons_succ]
       exact lookup
 
-end Exec.Code
+end Itasca.Runtime.Code

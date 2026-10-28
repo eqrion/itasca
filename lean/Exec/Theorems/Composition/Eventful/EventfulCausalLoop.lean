@@ -15,10 +15,10 @@ import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
 import Exec.Interp.Relations.EventfulNormalize
 import Exec.Interp.Machines.Slice.SliceDivergence
 import Exec.Theorems.Composition.Eventful.EventfulErrors
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 abbrev EventfulDispatchResult (M P : Type) :=
   core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

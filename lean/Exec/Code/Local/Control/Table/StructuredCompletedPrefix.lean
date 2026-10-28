@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalTerminal
 import Exec.Code.Local.Control.Table.StructuredPrefixClose
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A completed current arm, still quantified over every admissible future
@@ -38,4 +38,4 @@ theorem StructuredUniversalTerminal.completed {jumpTables : List Aeneas.Std.U32}
   obtain ⟨saved, body⟩ := invariant.prefixes label labels groups plans shape parentShapes
   exact ⟨saved, body.finish _ _ (Nat.le_refl _) (by simp [resolvedCode_length])⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

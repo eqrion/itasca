@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.TableDecodePrefix
 import Exec.Code.Local.Source.SourceBudget
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem table_source_word_room : 3*limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
@@ -24,4 +24,4 @@ theorem table_instruction_room {A : Type} {compiler : runtime.compiler.FunctionC
   have paid : compiler.function.code.val.length+1+2*(depths.length+1) ≤ 3*data.length := by omega
   exact paid.trans ((Nat.mul_le_mul_left 3 sourceBound).trans table_source_word_room)
 
-end Exec.Code
+end Itasca.Runtime.Code

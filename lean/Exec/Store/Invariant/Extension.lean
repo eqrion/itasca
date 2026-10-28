@@ -2,7 +2,7 @@ import Exec.Store.Preparation.Staging
 import Exec.Store.Invariant.Syntax
 import Exec.Spec.Extend
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem prefix_lookup {T : Type} (before after : List T)
@@ -142,4 +142,4 @@ theorem store_prefix_extends (before after : _root_.store)
   · exact hb
   · exact ha
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Code.Local.Relations.Calls.IndirectCallInversion
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 variable {jumpTables : List Aeneas.Std.U32}
 
@@ -43,4 +43,4 @@ theorem indirect_point_head {emission : ContextEmission} {pairs C returns code l
     subst_vars
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => simp at sourceEq
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

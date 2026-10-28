@@ -1,13 +1,13 @@
 import Exec.Representation.Layout
 import Exec.Code.Local.Lowering.Common.NumericOpcode
-import Exec.Generated.Types
+import Itasca.Generated.Types
 
 /-! Exact straight-line lowering for the integer/local vertical slice. This
 relation records slot operands and concrete emitted instructions; it does not
 assume compiler correctness. Structured control and module compilation extend
 this relation separately. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 abbrev Bytecode := runtime.bytecode.Instr
 
@@ -107,4 +107,4 @@ inductive LinearEmission (locals : List valtype) :
       LinearEmission locals (stack ++ [ty]) (.LOCAL_TEE (.mk_uN index.val))
         [move ty localSlot stackSlot] (stack ++ [ty])
 
-end Exec.Code
+end Itasca.Runtime.Code

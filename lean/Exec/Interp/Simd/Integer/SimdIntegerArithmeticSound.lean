@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticPacking
 import Exec.Spec.SimdIntegerArithmeticStep
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem integer_arithmetic_lanes_sound (ty : Jnn) (op : Spec.Simd.IntegerArithmetic) (x y : U128)
@@ -38,4 +38,4 @@ theorem integer_arithmetic_simd_eq {F : Type} (floats : runtime.platform.FloatOp
   step with integer_arithmetic_lanes_sound ty op x y supported as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

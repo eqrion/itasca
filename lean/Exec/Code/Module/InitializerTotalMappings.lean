@@ -1,5 +1,5 @@
 import Exec.Code.Module.InitializerTotalElement
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 
@@ -19,8 +19,8 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop0.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.globals, Itasca.module.Env.impl.globals, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < current.module.env.globals.val.length := by
@@ -54,7 +54,7 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop2.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok]
     split
     · rename_i more
@@ -101,8 +101,8 @@ theorem initializer_element_cost_step (elements : List Itasca.module.Element)
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop1.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < current.module.env.elements.val.length := by
@@ -126,4 +126,4 @@ theorem initializer_element_cost_step (elements : List Itasca.module.Element)
     · simp only [WP.spec_ok]
       exact ⟨same, by omega⟩
   · exact ⟨rfl, Nat.le_refl _⟩
-end Exec.Code
+end Itasca.Runtime.Code

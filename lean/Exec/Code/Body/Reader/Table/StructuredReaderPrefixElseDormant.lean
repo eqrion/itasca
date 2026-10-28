@@ -4,7 +4,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 import Exec.Code.Local.Relations.Control.ControlCursor
 import Exec.Code.Local.Relations.Control.ControlSources
 import Exec.Code.Local.Relations.Control.ControlMapCounts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual ELSE in an omitted IF changes only its retained source arm and
@@ -45,4 +45,4 @@ theorem structured_callback_else_dormant_prefix {jumpTables : List U32} {emit : 
   have cursor := compiler_else_cursor ops law before after state bt accepted
   exact ⟨noEntry, positionEq, invariant.begin_else_dormant unentered deadAfter stable maps prior frame
     framesEq afterFrames codeEq sourceType condition noEntry form positionEq  sources consumed (by rw [cursor])⟩
-end Exec.Code
+end Itasca.Runtime.Code

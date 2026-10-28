@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.Effect
 import Exec.Abs.Invoke
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 /-- The outermost active function retains the invocation's declared results;
 inner callees may have independent signatures. -/
@@ -101,4 +101,4 @@ theorem instruction_result (s : store) (ambient : frame) (f : AFrame)
     repeat' first | split at step | contradiction
     all_goals exact advance_result h step rfl
 
-end Exec.Abs
+end Itasca.Runtime.Abs

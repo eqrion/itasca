@@ -5,7 +5,7 @@ import Exec.Code.Local.Callbacks.Common.Observe
 /-! Exact backward loop-branch emission for arbitrary label depth, including
 zero-arity and identity-copy elision. Loop targets are already resolved and
 construct a source branch certificate without a forward-fixup assumption. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096 in
 @[step] theorem branch_transfer_loop {A : Type} (ops : runtime.platform.Alloc A)
@@ -190,4 +190,4 @@ set_option maxRecDepth 4096 in
     intro out effect accepted
     simpa [branchInstructions, elided] using effect accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

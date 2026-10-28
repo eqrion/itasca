@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.EmitAvailability
 import Exec.Code.Local.Capacity.ChargeAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Successful available emission retains every compiler field except the two
@@ -49,4 +49,4 @@ theorem compiler_emit_available_frame {A : Type} (ops : runtime.platform.Alloc A
   · rw [same]
   · simp [recorded,sourceEq]
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Api.TableFillLoop
 import Exec.Spec.TableFillAlgebra
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem fillTableWords_front (before : List U64) (start count : Nat) (value : U64) :
@@ -17,4 +17,4 @@ theorem fillTableWords_eq (before : List U64) (start count : Nat) (value : U64) 
   induction count generalizing before start with
   | zero => rfl
   | succ count ih => rw [fillTableWords_front,Spec.Segment.fillInto,ih]
-end Exec.Store
+end Itasca.Runtime.Store

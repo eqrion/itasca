@@ -6,7 +6,7 @@ import SpecExt.Builtins.Float.Sign
 /-! Refinement of the extracted NaN-canonicalizing wrappers. These lemmas use
 ordinary integer/bitvector semantics and the checked IEEE decoder. -/
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 @[step] theorem quiet32_bits (bits : U32) :
@@ -665,4 +665,4 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   simp only [WP.spec_ok, fcopysign_, List.mem_singleton, UScalar.val_or, UScalar.val_and]
   exact floatOfBits_copysign64 a.val b.val
 
-end Exec.Interp
+end Itasca.Runtime.Interp

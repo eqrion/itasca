@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.EntryTypedSteps
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -41,4 +41,4 @@ theorem wasm2_spine_values {env root parents C outer form inputs}
   | push parents C outer parent child ins spine header base resume notBody ih =>
     simp [List.flatMap_append, ih]
 
-end Exec.Code
+end Itasca.Runtime.Code

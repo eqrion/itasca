@@ -3,7 +3,7 @@ import Exec.Code.Local.Control.Common.StructuredComposition
 /-! Actual direct-call lowering constructs a retained structured certificate
 from source signature and compiler slot metadata. -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 set_option maxRecDepth 4096 in
@@ -59,4 +59,4 @@ set_option maxRecDepth 4096 in
     simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     exact finish_op ops law compiler state types _ before layout concrete codeFits sourceFits coordinateFits
 
-end Exec.Code
+end Itasca.Runtime.Code

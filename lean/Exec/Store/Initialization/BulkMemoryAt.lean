@@ -1,5 +1,5 @@
 import Exec.Store.Initialization.BulkMemory
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 theorem bulk_memory_init_at {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
@@ -96,4 +96,4 @@ theorem bulk_memory_init_at {M : Type} (ops : runtime.platform.MemoryBuffer M)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       MemoryInitializationEffect]
 
-end Exec.Store
+end Itasca.Runtime.Store

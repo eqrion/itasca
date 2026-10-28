@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.Execution
 import Exec.Code.Local.Relations.Common.StatefulEmission
 import Exec.Interp.StructuredMachine.OrdinaryHeads
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas.Std
 
 variable {jumpTables : List Aeneas.Std.U32}
@@ -52,4 +52,4 @@ theorem point_head {emission : StructuredMachine.ContextEmission} {pairs C retur
     subst_vars
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => cases op <;> simp [Abs.Stateful.Instruction.source] at sourceEq
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

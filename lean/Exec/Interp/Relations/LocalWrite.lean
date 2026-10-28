@@ -2,7 +2,7 @@ import Exec.Interp.Relations.LocalRegions
 import Exec.Interp.Relations.Move
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- LOCAL_SET and LOCAL_TEE use the same concrete transfer. Only their live
@@ -89,4 +89,4 @@ theorem dispatch_localWrite_refines {M P F A : Type}
   rw [written]
   simpa only [Code.encodeValue_length] using changed
 
-end Exec.Interp
+end Itasca.Runtime.Interp

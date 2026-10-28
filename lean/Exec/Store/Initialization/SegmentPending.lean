@@ -2,7 +2,7 @@ import Exec.Store.Initialization.BulkTable
 import Exec.Spec.SegmentInitCases
 import Exec.Spec.Context
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 def segmentValue (word : U64) : val := .CONST .I32 (.mk_num__0 .I32 (.mk_uN (bulkWord word).val))
@@ -51,4 +51,4 @@ theorem segmentPending_three (slots : List U64) (a b c : U64)
         subst z
         rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Simd.SimdSafety
 import Exec.Code.Local.Lowering.Simd.SimdBitsCallbacks
 
 /-! Normal return of every SIMD compiler callback from the actual visitor. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_on_simd_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -97,4 +97,4 @@ open Aeneas Aeneas.Std
   exact compiler_simd_total ops law compiler state _ _ _ _ (by decide) (by decide)
     codeFits sourceFits coordinateFits poolFits tableFits
 
-end Exec.Code
+end Itasca.Runtime.Code

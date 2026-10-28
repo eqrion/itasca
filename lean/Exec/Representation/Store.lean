@@ -6,7 +6,7 @@ which are not retained in the compiled Rust module. Compilation constructs this
 interpretation and its code relation; this parameter contains no execution
 correctness assumption. The first index names the retained instance, so equal
 compiled modules can carry distinct source certificates. All other objects decode directly from retained data. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev CodeInterpretation := Nat → runtime.compiler.ExecutableModule → Nat → funccode
@@ -124,4 +124,4 @@ theorem decodeStore_memory_update {M : Type} (view : M → Slice U8)
       {decodeStore view code s with MEMS := memories.val.map (decodeMemory view)} := by
   rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

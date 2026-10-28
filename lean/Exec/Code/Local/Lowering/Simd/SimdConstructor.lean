@@ -4,7 +4,7 @@ import Mathlib.Tactic.IntervalCases
 /-! Finite constructor/decoder correspondence. Sixteen bounded chunks keep
 elaboration local; each supported opcode still names its expected constructor,
 and unsupported cases remain explicit. No shared generated source table is used. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -497,4 +497,4 @@ theorem make_simd_roundtrip_bounded (op dst a entry : U32) (instruction : runtim
   · exact make_simd_roundtrip_224 op dst a entry instruction (by omega) h224 made
   exact make_simd_roundtrip_240 op dst a entry instruction (by omega) bounded made
 
-end Exec.Code
+end Itasca.Runtime.Code

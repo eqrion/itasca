@@ -1,6 +1,6 @@
 import Exec.Spec.SimdShiftSource
 import SpecExt.Builtins.Counts
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def popcountWords (bits : BitVec 128) : List uN :=
@@ -45,4 +45,4 @@ theorem popcount_step (bits result : BitVec 128)
     apply wf_vunop_.vunop__case_0 _ .I8 16 .POPCNT _ rfl
     exact .vunop_Jnn_N_case_2 _ _ rfl
   · exact const_wf result
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

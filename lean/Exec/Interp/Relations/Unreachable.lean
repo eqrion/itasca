@@ -2,7 +2,7 @@ import Exec.Interp.Relations.Fetch
 import Exec.Abs.Sim.Trap
 import Exec.Abs.Sim.Typing
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem dispatch_unreachable_eq {M P F A : Type}
@@ -51,4 +51,4 @@ theorem step_unreachable_refines {M P F A : Type}
   rw [dispatch_unreachable_eq]
   exact ⟨rfl, rfl, rfl, ⟨pc, hpc, rfl⟩, simulation⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

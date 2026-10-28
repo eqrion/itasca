@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.StatefulOpcode
 import Exec.Code.Local.Lowering.Common.Lowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -307,4 +307,4 @@ theorem lower_stateful_pair_eq {A : Type} (ops : runtime.platform.Alloc A)
   all_goals simp only [statefulLowering, statefulInstruction, pair, read, bind_ok, uncurry_apply_pair,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-end Exec.Code
+end Itasca.Runtime.Code

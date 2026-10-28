@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Calls.ReaderIndirectCall
 import Exec.Code.Body.Reader.Calls.ReaderCallEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Successful indirect-call checking exposes the actual function/table metadata
@@ -138,4 +138,4 @@ theorem reader_indirect_call_stack_wasm2 (st out : code.BodyState) (data : Slice
     (by simpa [List.map_append,Translate.valueType] using transfer)
   refine ⟨ft,tt,front,typeFound,tableFound,elem,?_,afterConcrete⟩
   simpa [List.map_append,Translate.valueType,List.append_assoc] using beforeTypes
-end Exec.Code
+end Itasca.Runtime.Code

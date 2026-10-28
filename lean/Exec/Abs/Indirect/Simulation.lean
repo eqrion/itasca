@@ -1,7 +1,7 @@
 import Exec.Spec.IndirectCallSource
 import Exec.Abs.Sim.Call
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 theorem indirect_call_simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (table type position address : Nat) (typeIndex : idx)
     (moduleInst : moduleinst) (params results types : List valtype) (body : List instr)
@@ -41,4 +41,4 @@ theorem indirect_call_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [decodeLabels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame, admininstr_instr, integerVal, Segment.i32, numtype_Inn, admininstr_val] using both
 
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

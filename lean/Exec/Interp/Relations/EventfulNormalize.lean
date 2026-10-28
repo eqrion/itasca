@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.EventfulControl
 import Exec.Interp.Control.NormalizeCompose
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem EventfulConcreteSim.trans
     {codeLength firstPC middlePC lastPC firstPending middlePending lastPending before middle after events rest}
@@ -29,4 +29,4 @@ theorem EventfulConcreteSim.prepend_normalization {count before middle}
   · simpa only [same] using simulation
   · simpa only [List.nil_append] using
       (ConcreteSim.of_source codeLength pc pc false false prefixSimulation).eventful.trans simulation
-end Exec.Interp
+end Itasca.Runtime.Interp

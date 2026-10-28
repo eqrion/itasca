@@ -48,7 +48,7 @@ import Exec.Code.Local.Source.SourceSubmission
 
 /-! Source-ordered slice certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual concrete source supplies every exact read used by the retained
@@ -74,4 +74,4 @@ theorem CompileSourceCertificate.available {A : Type} {ops : runtime.platform.Al
   · obtain ⟨buffer, read, _⟩ := actual.tail_read
     exact ⟨buffer, read, c.coherent.tail_eq buffer read⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

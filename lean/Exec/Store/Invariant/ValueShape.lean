@@ -1,6 +1,6 @@
 import Exec.Representation.StoreInvariant
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- API reference values name an existing object of this store. The additional
@@ -54,4 +54,4 @@ theorem encode_reference_shape {M : Type} (s : runtime.store.Store M)
   intro words hwords
   cases ty <;> exact hwords.1
 
-end Exec.Store
+end Itasca.Runtime.Store

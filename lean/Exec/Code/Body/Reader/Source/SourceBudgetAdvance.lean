@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.AcceptedReaderAdvance
 import Exec.Code.Local.Capacity.BodyResourceRoom
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The reached certificate and all compiler counters are retained together.
@@ -50,4 +50,4 @@ theorem source_budget_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) 
   refine ⟨held.1,held.2.1,⟨held.2.2.1,?_⟩,held.2.2.2.2⟩
   exact budget.advance held.2.2.2.1 (by have progress := held.2.2.2.2; omega) paid
 
-end Exec.Code
+end Itasca.Runtime.Code

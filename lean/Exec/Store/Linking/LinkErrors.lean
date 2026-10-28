@@ -1,6 +1,6 @@
 import Exec.Store.Preparation.AllocationErrors
 import Exec.Store.Linking.LinkEffects
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 macro "link_error_step " h:ident : tactic => `(tactic|
@@ -36,4 +36,4 @@ theorem link_import_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
   unfold runtime.store.instantiate.Store.link_import at run
   repeat' link_error_step run
 
-end Exec.Store
+end Itasca.Runtime.Store

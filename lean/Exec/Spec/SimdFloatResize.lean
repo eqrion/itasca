@@ -1,7 +1,7 @@
 import Exec.Spec.SimdFloatUnaryChoices
 import Exec.Spec.FloatPromote
 import Exec.Spec.FloatConvert
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins SpecExt.Builtins.Float
 
 inductive FloatResize where | demote | promote
@@ -29,4 +29,4 @@ theorem float_resize_source_wf (kind : FloatResize) :
   · rfl
   · rfl
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

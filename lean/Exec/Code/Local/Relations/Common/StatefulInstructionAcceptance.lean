@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.StatefulEmission
 import Exec.Code.Local.Relations.Common.ScalarEmissionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -70,4 +70,4 @@ theorem IndirectCallEmission.instructions_accept {pairs C before source emitted 
     · omega
     · exact row
 
-end Exec.Code
+end Itasca.Runtime.Code

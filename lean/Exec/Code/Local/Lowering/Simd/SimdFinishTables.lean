@@ -1,5 +1,5 @@
 import Exec.Code.Local.Lowering.Simd.SimdConstLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 theorem compiler_finish_simd_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -21,4 +21,4 @@ theorem compiler_finish_simd_tables {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨budget,code,sources,middleEq,_,_⟩ := compiler_emit_success ops law before middle instruction emitted
     rw [frame,middleEq]
     exact ⟨rfl,rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

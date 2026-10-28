@@ -1,7 +1,7 @@
 import Exec.Code.Body.Control.Table.StructuredCompilerPrefixRoot
 import Exec.Code.Local.Control.Table.StructuredFunctionBodyClose
 import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual final END resolves the retained root certificate and emits its
@@ -48,4 +48,4 @@ theorem StructuredCompilerPrefix.finish_body {jumpTables : List Aeneas.Std.U32} 
   have bound := (invariant.codeBudget.advance growth consumed).fetch_bound sourceBound
   exact ⟨target, invariant.metadata.trans stable, by simp [popped], relation,
     ⟨frame.height, count, height, returned⟩, endpoint, Nat.le_of_lt bound⟩
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.SimdExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem step_simd_supported_execution {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -48,4 +48,4 @@ theorem step_simd_supported_execution {M P F A : Type}
     apply SupportedStepOutcome.failure mutation error decoded
     rw [decoded] at trace
     exact Or.inl ⟨⟨.MemoryOutOfBounds,rfl,Or.inl (by simp [FloatCoreTrap])⟩,trace⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

@@ -1,6 +1,6 @@
 import Exec.Abs.Float.Transition
 import Exec.Interp.Core.OwnershipClosure
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Abs.Ownership
 
 theorem float_transition_frame_ownership (s : _root_.store) (ambient : frame)
@@ -22,4 +22,4 @@ theorem float_transition_frame_ownership (s : _root_.store) (ambient : frame)
     simp only [List.mem_singleton] at member
     subst value
     trivial
-end Exec.Interp
+end Itasca.Runtime.Interp

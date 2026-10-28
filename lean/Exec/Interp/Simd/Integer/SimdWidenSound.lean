@@ -1,8 +1,8 @@
 import Exec.Interp.Simd.Integer.SimdWidenLanes
 import Exec.Spec.SimdWidenMultiply
 import Exec.Spec.SimdExtendSource
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem widen_packed (ty : WidenWidth) (multiply high signed : Bool) (x y result : U128)
     (lanes : ∀ j, j < ty.count → laneBits (ty.width*2) j result.bv = widenBits multiply signed
@@ -54,4 +54,4 @@ theorem widen_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   rw [widen_simd_eq]
   step with widen_lanes_sound ty multiply high signed x y as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

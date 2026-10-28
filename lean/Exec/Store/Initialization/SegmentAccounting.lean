@@ -3,7 +3,7 @@ import Exec.Representation.StoreInvariant
 /-! Every stored element/data segment is retained by one instance map. This
 reachable-store invariant supplies allocation bounds not implied by Shape
 alone, which permits unreferenced raw segment entries. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 structure SegmentAccounting {M : Type} (store : runtime.store.Store M) : Prop where
@@ -77,4 +77,4 @@ theorem SegmentAccounting.append_instance {M : Type} {before after : runtime.sto
   · simp [elements, instances, accounted.elements]
   · simp [datas, instances, accounted.datas]
 
-end Exec.Store
+end Itasca.Runtime.Store

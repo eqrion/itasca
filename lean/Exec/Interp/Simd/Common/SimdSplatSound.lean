@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Common.SimdPacking
 import Exec.Spec.SimdShape
 set_option maxRecDepth 4096
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem splat_sound (ty : lanetype) (x : U64) (width : U32)
@@ -118,4 +118,4 @@ theorem splat_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with splat_lanes_sound ty a as ⟨value, source⟩
   exact ⟨value, rfl, source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

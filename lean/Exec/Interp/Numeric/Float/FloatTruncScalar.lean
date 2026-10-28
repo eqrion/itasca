@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Float.FloatTrunc32
 import Exec.Interp.Numeric.Float.FloatTrunc64
 set_option maxHeartbeats 1000000
 set_option maxRecDepth 2048
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 @[step] theorem scalar_i32_trunc_f32_s {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.float.scalar ops 168#u16 a b ⦃ result =>
@@ -420,4 +420,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   subst j
   exact trunc_int64_sound a 64#u32 false true (Or.inr rfl)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,6 +1,6 @@
 import Exec.Code.Body.Callbacks.Common.CompilerPrefixInitial
 import Exec.Code.Local.Source.SourceStartFrame
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual construction and successful function-start establish every component
@@ -34,4 +34,4 @@ theorem compiler_function_start_prefix {A : Type} (ops : runtime.platform.Alloc 
   exact CompilerPrefix.initial started types functions returns _ stack retained arms
     (sourceFrame.sources.aligned initialSources) codeBudget controlBudget
     (by rw [sourceFrame.cursor, newCursor]; rfl) live
-end Exec.Code
+end Itasca.Runtime.Code

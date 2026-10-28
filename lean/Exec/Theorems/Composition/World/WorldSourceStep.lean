@@ -1,8 +1,8 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldStep
 import Exec.Theorems.Composition.Cumulative.CumulativeNormalizeOutcome
 import Exec.Interp.Relations.EventfulNormalize
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Unbundled source-indexed form of the world result, used while erased
 source normalization changes the source point without executing a raw step. -/
@@ -99,4 +99,4 @@ theorem WorldSourceStepResult.prepend_normalization {M P F A : Type}
     · rcases cause with ⟨failure,decoded⟩ | host
       · exact Or.inl ⟨failure.prepend_normalization chain typed,decoded⟩
       · exact Or.inr (host.prepend prefixSteps rfl rfl)
-end Exec.Theorems
+end Itasca.Runtime.Theorems

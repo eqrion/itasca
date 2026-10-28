@@ -2,7 +2,7 @@ import Exec.Store.Initialization.PrecheckWitness
 import Exec.Store.Initialization.InitializerSource
 import Exec.Store.Invariant.SourceSyntax
 import SpecExt.Wasm1
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Source segment syntax comes directly from retained canonical metadata. -/
@@ -79,4 +79,4 @@ theorem source_segments_raw (inst : runtime.store.ModuleInst) (raw : ModuleBinar
   constructor
   · simp [sourceElements, elements, List.map_map, Function.comp_def]
   · simp [sourceDatas, datas, List.map_map, Function.comp_def]
-end Exec.Store
+end Itasca.Runtime.Store

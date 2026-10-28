@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.TableSourceTransferBounds
 import Exec.Code.Local.Checking.TableCallbackInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed labels and a source-paid stub budget discharge the actual complete
@@ -61,4 +61,4 @@ theorem StructuredCompilerPrefix.br_table_scratch_open_instructions
     rw [appended] at member
     exact geometry depth member index frame found position
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Store.Preparation.PreparedInitializers
 import Exec.Store.Initialization.SegmentAccounting
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual vector publication after preparation adds one fresh provisional
@@ -27,4 +27,4 @@ theorem publish_prepared_instance {M : Type} (store : runtime.store.Store M)
     · simp [emptyElements]
     · simp [emptyData]
 
-end Exec.Store
+end Itasca.Runtime.Store

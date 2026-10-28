@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.Float
 import Exec.Spec.FloatReinterpret
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem scalar_f64_reinterpret_i64_source {F : Type} (ops : runtime.platform.FloatOps F)
@@ -32,4 +32,4 @@ theorem scalar_i64_reinterpret_f64_source {F : Type} (ops : runtime.platform.Flo
   refine ⟨_, rfl, ?_⟩
   exact Spec.i64_reinterpret_f64_pure _ (by scalar_tac)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

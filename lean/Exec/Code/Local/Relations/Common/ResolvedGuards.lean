@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.FrameSites
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Resolution schedules can be divided at a selected IF guard. -/
@@ -65,4 +65,4 @@ theorem FramePlans.away_guard {length locals frames labels groups code}
       · exact current.branches.not_guard found site atSite
     · exact rest group remaining site atSite
 
-end Exec.Code
+end Itasca.Runtime.Code

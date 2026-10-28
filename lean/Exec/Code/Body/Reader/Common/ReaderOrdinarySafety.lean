@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Common.ReaderSaturatingSafety
 import Exec.Code.Body.Reader.Common.ReaderBulkSafety
 import Exec.Code.Body.Reader.Simd.ReaderSimdSafety
 import Itasca.Wasm2.Step.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 theorem compiler_reader_extended_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -75,4 +75,4 @@ theorem compiler_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
     have neq {a b : U8} (h : a ≠ b) : a.val ≠ b.val := fun he => h (UScalar.eq_of_val_eq he)
     exact ⟨neq h28,neq h37,neq h38,neq h208,neq h209,neq h210,neq h252,neq h253⟩)]
   exact compiler_reader_extended_total ops law compiler st data env ctx ready shape capacity opcode ordinary
-end Exec.Code
+end Itasca.Runtime.Code

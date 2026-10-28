@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Constant/segment staging changes only value and segment maps. The exact
@@ -102,4 +102,4 @@ theorem DataStageEffect.function_metadata {M : Type} {store after : runtime.stor
     constructor <;> try rfl
     simp [alloc.vec.Vec.length, alloc.vec.Vec.set_val_eq]
 
-end Exec.Store
+end Itasca.Runtime.Store

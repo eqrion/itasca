@@ -1,6 +1,6 @@
 import Exec.Interp.State.StatefulOperandSlots
 import Exec.Interp.Relations.Capacity
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem indirect_call_slots {exec : runtime.interp.Execution} {raw : runtime.interp.Frame}
@@ -23,4 +23,4 @@ theorem indirect_call_slots {exec : runtime.interp.Execution} {raw : runtime.int
   apply UScalar.eq_of_val_eq
   simp only [UScalar.cast_val_eq,word]
   exact Nat.mod_eq_of_lt bounded
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,8 +2,8 @@ import Exec.Theorems.Host.HostRecordingSite
 import Exec.Interp.StructuredMachine.FunctionEnd
 import Exec.Interp.StructuredMachine.NormalizeExecution
 import Exec.Interp.StructuredMachine.SupportedControlSemantics
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem HostFrameSite.recording_normal {M : Type}
 
@@ -129,4 +129,4 @@ theorem recording_host_site {M : Type}
     have result := recording_frame_host_site view code exec store index raw inst compiled C targets next output ambient f rest
       last hf hi hc program current.slots moduleEq pending point expected (by simpa only [position] using invariant) shaped owned address selected
     simpa only [position] using result
-end Exec.Theorems
+end Itasca.Runtime.Theorems

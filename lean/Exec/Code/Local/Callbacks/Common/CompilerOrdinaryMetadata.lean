@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 open Itasca.ResultFacts
 
@@ -53,4 +53,4 @@ theorem compiler_observe_ordinary_stable {A : Type} (ops : runtime.platform.Allo
     · exact Nat.le_max_left _ _
     · exact Nat.le_refl _
 
-end Exec.Code
+end Itasca.Runtime.Code

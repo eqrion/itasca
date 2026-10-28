@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerState
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 def StructuredReaderCompilerPointWasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
@@ -18,4 +18,4 @@ theorem StructuredReaderCompilerStateWasm2.point {jumpTables : List U32} {A : Ty
       parents current savedParents savedCurrent) :
     StructuredReaderCompilerPointWasm2 (jumpTables := jumpTables) emit initial compiler types functions returns locals data env sourceLocals index ft st :=
   ⟨parents, current, savedParents, savedCurrent, state⟩
-end Exec.Code
+end Itasca.Runtime.Code

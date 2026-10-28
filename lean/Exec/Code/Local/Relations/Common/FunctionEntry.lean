@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Local.LocalDeclarations
 import Exec.Code.Local.Callbacks.Control.EnterBlock
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The successful function-start callback establishes the zero-operand layout,
@@ -107,4 +107,4 @@ source coordinates, and the root control frame used by all later callbacks. -/
   constructor
   · constructor <;> simp [compilerLocals, alloc.vec.Vec.new, slots]
   · simp [alloc.vec.Vec.new]
-end Exec.Code
+end Itasca.Runtime.Code

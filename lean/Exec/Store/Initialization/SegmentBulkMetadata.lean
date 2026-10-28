@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.SegmentObjectEffects
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem segment_bulk_object_metadata {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -47,4 +47,4 @@ theorem segment_bulk_object_metadata {M : Type} (memory : runtime.platform.Memor
     exact .element_drop view store address _ (List.getElem?_eq_getElem issued)
 
 
-end Exec.Store
+end Itasca.Runtime.Store

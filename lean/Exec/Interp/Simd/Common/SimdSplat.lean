@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdLaneBits
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem lane_range (width index : Nat) (bound : index < 128/width) :
@@ -49,4 +49,4 @@ theorem lane_range (width index : Nat) (bound : index < 128/width) :
       ∀ j, j < 128/width.val → laneBits width.val j result.bv = x.bv.setWidth width.val ⦄ := by
   exact splat_loop x width 0#u128 0#u32 positive widthBound (by simp) (by simp)
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

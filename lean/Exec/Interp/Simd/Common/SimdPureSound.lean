@@ -5,7 +5,7 @@ import Exec.Interp.Simd.Integer.SimdPureInteger
 import Exec.Interp.Simd.Common.SimdPureConversions
 import Exec.Interp.Simd.Common.SimdPureUnary
 import Mathlib.Tactic.IntervalCases
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -398,4 +398,4 @@ theorem pure_dispatch_source {F : Type} (floats : runtime.platform.FloatOps F)
       ⦃ result => ∃ value, result = (.Ok value,memory) ∧ PureSourceEffect op x.bv y.bv z.bv value.bv ⦄ := by
   exact pure_entries floats laws opcode (Itasca.Wasm2.Simd.pure_bound meaning)
     op meaning offset laneIndex bits x y z memory
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

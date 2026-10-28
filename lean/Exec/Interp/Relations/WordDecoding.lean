@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Readback
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem decode_words_scalar (ty : Itasca.types.ValueType) (lo hi : U64)
@@ -28,8 +28,8 @@ theorem decode_words_represents (ty : Itasca.types.ValueType) (lo hi : U64)
 theorem WordsAt.decode_value {words : List U64} {position : Nat} (ty : Itasca.types.ValueType)
     (value : val) (wellFormed : wf_val value) (typed : sourceType ty = Code.valueType value)
     (represented : WordsAt words position (Code.encodeValue value)) :
-    Store.decodeWords ty (Exec.Interp.readPair words position ty).1 (Exec.Interp.readPair words position ty).2 = value := by
+    Store.decodeWords ty (Itasca.Runtime.Interp.readPair words position ty).1 (Itasca.Runtime.Interp.readPair words position ty).2 = value := by
   apply decode_words_represents ty _ _ value wellFormed typed
   exact represented.readPair ty (by rw [Code.encodeValue_length,←typed])
 
-end Exec.Interp
+end Itasca.Runtime.Interp

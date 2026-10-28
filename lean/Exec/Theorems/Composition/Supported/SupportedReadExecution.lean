@@ -1,7 +1,7 @@
 import Exec.Theorems.Composition.Supported.SupportedExecutionOutcome
 import Exec.Interp.StructuredMachine.StatefulReadExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem stateful_read_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -34,4 +34,4 @@ theorem stateful_read_execution_supported
   · apply SupportedStepOutcome.failure (by rw [sameStore];exact .refl_of_shape shaped sourceSyntax bounds) error (by rw [sameStore])
     exact Or.inl ⟨⟨.TableOutOfBounds,rfl,Or.inr (Or.inl rfl)⟩,trap⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

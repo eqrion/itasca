@@ -5,8 +5,8 @@ import Exec.Abs.Core.MemoryLoad
 import Exec.Abs.Core.MemoryStore
 
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- Every successful covered instruction preserves source store/frame typing
 and has a counted source simulation (or the bounded constant stutter). -/
@@ -21,8 +21,8 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
   cases covered with
   | pure allowed =>
     rw [instruction_slice s ambient f rest _ after allowed frameTyped] at equation
-    refine ⟨⟨Exec.Abs.instruction_preservation s ambient f rest _ after next allowed typed.typed equation,?_⟩,
-      Exec.Abs.instruction_simulation s ambient f rest _ after next allowed typed.typed equation⟩
+    refine ⟨⟨Itasca.Runtime.Abs.instruction_preservation s ambient f rest _ after next allowed typed.typed equation,?_⟩,
+      Itasca.Runtime.Abs.instruction_simulation s ambient f rest _ after next allowed typed.typed equation⟩
     simpa only [astep_store equation] using typed.contents
   | const ty value =>
     obtain ⟨actual,actualEq,fresh,simulation⟩ := constant_progress s ambient f rest after ty value typed
@@ -100,4 +100,4 @@ theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
         exact active_frame_preservation typed.typed (label_exit_frame_preservation (f := frame) frameTyped) rfl
       · contradiction
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

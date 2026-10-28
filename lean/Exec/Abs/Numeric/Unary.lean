@@ -3,8 +3,8 @@ import Exec.Abs.Sim.Int
 import Exec.Spec.IntegerExtend
 import SpecExt.Builtins.Counts
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec SpecExt.Builtins
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec SpecExt.Builtins
 
 theorem unary_relation (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_Inn ty))) :
     fun_unop_ (numtype_Inn ty) (.mk_unop__0 ty op)
@@ -55,4 +55,4 @@ theorem unary_pure (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_In
   · exact wf_admininstr_instr (.instr_case_14 _ _ (.unop__case_0 _ _ _ rfl))
   · exact wf_admininstr_val (integer_val_wf ty _ (word_bound ty (unary ty op bits)))
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

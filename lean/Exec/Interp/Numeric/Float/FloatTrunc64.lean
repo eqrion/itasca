@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatTruncTail
 import Exec.Interp.Numeric.Float.FloatCompareBits
 import SpecExt.Builtins.Float.TruncBounds
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 @[step] theorem trunc_int64_sound (bits : U64) (width : U32) (signed saturating : Bool)
@@ -121,4 +121,4 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
           simp only [checkedTruncMagnitude, lift, bind_ok] at effect
           rw [magnitudeValue] at effect
           exact effect
-end Exec.Interp
+end Itasca.Runtime.Interp

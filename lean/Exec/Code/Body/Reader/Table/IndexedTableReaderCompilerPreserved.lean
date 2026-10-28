@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem IndexedTableReaderCompilerPointWasm2.preserved_step {A : Type}
@@ -19,4 +19,4 @@ theorem IndexedTableReaderCompilerPointWasm2.preserved_step {A : Type}
     simpa only [targets] using point.tables.targets.trans growth
   · intro future
     simpa only [tables] using step future (point.future future)
-end Exec.Code
+end Itasca.Runtime.Code

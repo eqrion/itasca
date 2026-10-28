@@ -1,7 +1,7 @@
 import Exec.Abs.Simd.Exclusion
 import Exec.Code.Local.Relations.Common.ScalarEmission
 import Exec.Code.Local.Lowering.Simd.SimdSourceSignature
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 
 theorem LinearEmission.simd_tag {locals before source emitted after}
     (head : LinearEmission locals before source emitted after) : Abs.simdSourceTag source = false := by
@@ -18,4 +18,4 @@ theorem ScalarEmission.simd_tag {C before source emitted after}
   | store stack op => cases op <;> rfl
   | float stack op => cases op <;> rfl
   | _ => rfl
-end Exec.Code
+end Itasca.Runtime.Code

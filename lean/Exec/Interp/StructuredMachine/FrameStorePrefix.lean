@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.FrameStack
 import Exec.Interp.Relations.FrameStorePrefix
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem SavedFrame.store_prefix_extension {M : Type} {before after : runtime.store.Store M}
@@ -21,4 +21,4 @@ theorem SavedFrames.store_prefix_extension {M : Type} {before after : runtime.st
   | nil waiting => exact .nil waiting
   | cons head tail ih => exact .cons (head.store_prefix_extension retained bounds extension) ih
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

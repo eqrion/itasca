@@ -1,8 +1,8 @@
 import Exec.Abs.Memory.Semantics
 import Exec.Abs.Core.GlobalTyping
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem extern_mem_lookup {s : store} {address : Nat} {ty : memtype}
     (typed : Externaddr_ok s (.MEM address) (.MEM ty)) :
@@ -111,4 +111,4 @@ theorem memory_store_frame_continuation {s : store} {f : AFrame} {code : List in
       bindings localTypes locals prefixTyped returns ?_ hw
     simpa only [List.append_nil,baseEq] using continuation
 
-end Exec.Abs
+end Itasca.Runtime.Abs

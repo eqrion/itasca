@@ -4,7 +4,7 @@ import Exec.Code.Local.Lowering.Simd.SimdStaticTables
 import Exec.Code.Body.Reader.Simd.StructuredReaderCompilerSimd
 import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Body.Reader.Simd.ReaderSimdEventTables
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- SIMD dispatch preserves the compiler point quantified over future
@@ -52,4 +52,4 @@ theorem IndexedTableReaderCompilerPointWasm2.simd {A : Type}
   obtain ⟨_,_,nextPoint⟩ := state.simd ops law C contextLocals contextMemories next advance inbounds out
     sourceBound bodyBound byte accepted
   exact nextPoint
-end Exec.Code
+end Itasca.Runtime.Code

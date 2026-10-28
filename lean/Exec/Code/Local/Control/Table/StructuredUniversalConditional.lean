@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalBranch
 import Exec.Code.Local.Control.Table.StructuredResolvedConditionalPrefix
 import Exec.Code.Local.Control.Common.UniversalConditional
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current stack}
@@ -60,4 +60,4 @@ theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.St
     · by_cases elided : count = 0#u32 ∨ src = dst
       all_goals simpa [codeEq, SourceScope.advance, SourceScope.input, branchIfInstructions, elided, resumePosition] using terminal
 
-end Exec.Code
+end Itasca.Runtime.Code

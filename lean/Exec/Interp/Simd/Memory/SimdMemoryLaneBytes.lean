@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLaneEffect
 import Exec.Interp.Simd.Memory.SimdMemoryLoadSource
 import Exec.Interp.Simd.Common.SimdReplacePacking
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins
 
 theorem memoryLaneBytes_val (ty : Jnn) : (memoryLaneBytes ty).val = lsize (lanetype_Jnn ty)/8 := by
@@ -48,4 +48,4 @@ theorem vector_lane_load_bytes (ty : Jnn) (bytes : List U8) (start : Nat)
     omega
   rw [lengthEq,memoryLaneBytes_val] at exactBytes
   simpa only [ibytes_,proj_uN_0,memoryLaneBytes_val,Store.decodeBytes,List.map_take,List.map_drop] using exactBytes
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

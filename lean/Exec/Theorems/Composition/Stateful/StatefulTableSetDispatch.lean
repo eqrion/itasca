@@ -1,8 +1,8 @@
 import Exec.Interp.State.StatefulTableSetSlots
 import Exec.Interp.State.StatefulOperandValues
 import Exec.Interp.State.StatefulLookup
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Store Exec.Interp Exec.Interp.Stateful
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_table_set_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -60,4 +60,4 @@ theorem stateful_table_set_dispatch {M P F A : Type} (memory : runtime.platform.
     · obtain ⟨exactOut,transition⟩ := effect
       rw [exactOut]
       exact Or.inr ⟨rfl,rfl,by simpa only [indexEq] using transition⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

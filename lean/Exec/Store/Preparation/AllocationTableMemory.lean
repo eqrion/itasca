@@ -2,7 +2,7 @@ import Exec.Store.Api.TableStaging
 import Exec.Store.Api.MemoryStaging
 import Exec.Store.Invariant.BindingTyping
 import Exec.Spec.Allocation
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 theorem decode_table_allocation (ty : types.TableType) (elements : alloc.vec.Vec U64)
@@ -39,9 +39,9 @@ theorem MemoryStageEffect.decoded {M : Type} {view : M → Slice U8} {store : ru
   rcases effect with ⟨error, rfl⟩ | ⟨memories, buffer, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
   · cases success
   · simp only [appended, List.map_append, List.map_singleton, decode_memory_allocation view ty buffer zeros]
-end Exec.Store
+end Itasca.Runtime.Store
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The decoded suffix allocated so far corresponds exactly to a source slice. -/
@@ -67,4 +67,4 @@ theorem AllocationPrefix.complete {T U : Type} {allocate : T → U} {source : Li
     (hprefix : AllocationPrefix allocate source start original actual source.length) :
     actual = original ++ (source.drop start).map allocate := by
   simpa [AllocationPrefix] using hprefix
-end Exec.Store
+end Itasca.Runtime.Store

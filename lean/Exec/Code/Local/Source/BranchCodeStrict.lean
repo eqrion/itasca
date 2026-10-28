@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Common.CompilerCodeMonotoneTactic
 import Exec.Code.Local.Relations.Control.BranchSuccessEmit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -66,4 +66,4 @@ theorem compiler_branch_code_strict {A : Type} (ops : runtime.platform.Alloc A)
     simp only [runtime.compiler.control.FunctionCompiler.branch,Bool.false_eq_true,ite_false,ite_true] at called <;>
     repeat' strict_code_step called using ops, law
 
-end Exec.Code
+end Itasca.Runtime.Code

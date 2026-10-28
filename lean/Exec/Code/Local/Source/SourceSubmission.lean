@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.SubmissionTransfer
 import Itasca.Stream.FramingComplete
-namespace Exec.Code.SourceSubmission
+namespace Itasca.Runtime.Code.SourceSubmission
 open Aeneas Aeneas.Std Itasca ModuleBinary
 
 /-- The unconsumed source suffix is encoded at the actual next framing cursor.
@@ -95,4 +95,4 @@ theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.Streami
       (progress_submit source visitor state moduleId env code profile config entries Q environment tail available capacity batch)
       retired before after start pending capacity startBound initialProgress accepted
   exact final
-end Exec.Code.SourceSubmission
+end Itasca.Runtime.Code.SourceSubmission

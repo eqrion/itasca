@@ -3,7 +3,7 @@ import Exec.Store.Api.Grow
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Interp.Memory.MemoryDecode
 import Exec.Spec.MemoryGrowth
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 /-- A page-aligned natural byte count has the same rational page quotient used
@@ -74,4 +74,4 @@ theorem decode_memory_growth {M : Type} (view : M → Slice U8)
   · exact oldWf
   · rw [← exactMemory]
     exact freshWf
-end Exec.Store
+end Itasca.Runtime.Store

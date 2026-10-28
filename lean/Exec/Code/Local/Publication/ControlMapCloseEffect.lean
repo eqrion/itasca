@@ -1,6 +1,6 @@
 import Exec.Code.Local.Publication.ControlMapPublicationClose
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Exact scope-close effects establish the invariant for the remaining
@@ -27,4 +27,4 @@ theorem ControlMapPublication.close_effect {A : Type}
   · simp [activeControlMaps,frames]
   · simp [activeControlMaps,remaining]
 
-end Exec.Code
+end Itasca.Runtime.Code

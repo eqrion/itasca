@@ -7,7 +7,7 @@ import Exec.Store.Invariant.ValueRead
 under compiler syntax, resolved source operands, and the reference-index bound
 needed by the public primitive decoder. These premises mention no execution
 result or termination property. -/
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -128,4 +128,4 @@ theorem eval_const_owned (law : Platform.AllocCorrect allocator)
     step with combined as ⟨actual, howned, htyped⟩
     simp [howned, htyped]
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -4,7 +4,7 @@ import Exec.Code.Local.Callbacks.Common.EnterSafety
 import Exec.Code.Body.Reader.Common.ReaderBodySafety
 import Exec.Code.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Wasm2.Visitor.Total
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_enter_signature_wasm2 {data env locals index st out bt} {form : Frames.Form}
@@ -67,4 +67,4 @@ theorem compiler_enter_reader_total {A} (ops : runtime.platform.Alloc A)
       controls selected bound height coordinate pcBound codeFits sourceFits mapsFit framesFit
       (by rcases initial with rfl | rfl | rfl <;> simp [Frames.Form.kind])
     rcases initial with rfl | rfl | rfl <;> exact normal
-end Exec.Code
+end Itasca.Runtime.Code

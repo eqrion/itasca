@@ -1,7 +1,7 @@
 import Exec.Theorems.Compilation
 import Exec.Code.Module.CompilationAvailable
 
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent complete-profile source validity and explicit compiler
@@ -22,4 +22,4 @@ theorem compile_complete {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨executable,compiled⟩ := Code.compile_with_available ops law bound allocation bytes profile raw limits valid eligible
   exact ⟨executable,compiled,compile_accepted_certificate ops law bytes profile limits executable compiled⟩
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

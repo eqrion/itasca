@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.BranchTableBuild
 import Exec.Code.Local.Control.Control.UniversalBranch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Newly appended forward holes remain valid instruction sites; unrelated
@@ -31,4 +31,4 @@ theorem TableTargetsBuilt.frame_sites {A : Type}
   induction built with
   | nil => exact sites
   | cons _ _ _ _ _ _ effect rest ih => exact ih (effect.frame_sites sites)
-end Exec.Code
+end Itasca.Runtime.Code

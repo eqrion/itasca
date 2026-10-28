@@ -1,7 +1,7 @@
 import Exec.Store.Api.MemoryStaging
 import Exec.Store.Invariant.TypeStagingLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- The actual memory allocation loop establishes complete issued memory maps,
@@ -39,8 +39,7 @@ theorem memory_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, module.Module.env, Itasca.module.Module.impl.env,
-      module.Env.mem_types, Itasca.module.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by
@@ -87,4 +86,4 @@ theorem memory_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       simpa only [atEnd] using counting success
   · exact ⟨changed, instChanged, retained, objectBound, issued, startBound, fun _ => count⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

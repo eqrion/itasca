@@ -3,7 +3,7 @@ import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.Sim.Structured
 import Exec.Abs.ControlSafety
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem blockSignature_resolves (m : moduleinst) (bt : blocktype) (params results : List valtype)
@@ -64,4 +64,4 @@ theorem loop_source_step (s : store) (ambient : frame) (f : Abs.AFrame) (rest : 
   have resolved := blockSignature_resolves f.module bt params results signature
   simp [Abs.astep, Abs.enterLabel, resolved, height, args, show params.length ≤ f.vals.length by omega, Abs.advance]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

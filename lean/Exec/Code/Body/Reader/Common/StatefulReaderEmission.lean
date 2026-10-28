@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderPost
 import Exec.Code.Local.Relations.Common.StatefulLowered
 import Exec.Code.Local.Relations.Common.StatefulEffects
 import Exec.Code.Body.Source.TypedLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- The actual compiler callback and exact reader post determine an emitted
@@ -41,4 +41,4 @@ theorem StatefulReaderPost.emission {data env locals index st}
     compiler_stateful_cursor ops law before after out _ _ _ callback,pairs,values,emitted,front ++ output,
     sourcePost,⟨lowered,afterKnown,afterTypes⟩,beforeTypes ▸ emission⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

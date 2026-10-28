@@ -4,7 +4,7 @@ import Exec.Code.Body.Control.Common.OrdinaryEmbedding
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerNumeric
 import Exec.Code.Body.Reader.Float.StructuredReaderCompilerFloat
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerSaturating
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.float_base {A : Type}
@@ -64,4 +64,4 @@ theorem IndexedTableReaderCompilerPointWasm2.float_saturating {A : Type}
     subopcode endPosition subopcodeEq decoded sourceBound bodyBound byte accepted
   exact changed.point
 
-end Exec.Code
+end Itasca.Runtime.Code

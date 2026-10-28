@@ -1,5 +1,5 @@
 import Exec.Spec.SimdByteView
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 def byteShape : ishape := .mk_ishape (shapeOf .I8)
@@ -53,4 +53,4 @@ theorem shuffle_step (x y result : BitVec 128) (indices : List laneidx)
     rw [_root_.getElem!_pos (byteWords x ++ byteWords y) (proj_uN_0 indices[k]!) bound]
     exact List.getElem_mem _
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

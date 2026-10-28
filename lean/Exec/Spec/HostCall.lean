@@ -1,6 +1,6 @@
 import Exec.Spec.Wf
 import Exec.Spec.ExtensionTyping
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- Typed source arguments make a host-call redex well formed. -/
@@ -43,4 +43,4 @@ theorem host_trap_step {s s' : store} {f : frame} {fa : funcaddr} {id : Nat}
   have stores := extend_store_wf extension
   exact .host_trap host arguments extension sourceTyped (host_call_wf stores.1 ambient arguments)
     (wf_config_trap stores.2 ambient)
-end Exec.Spec
+end Itasca.Runtime.Spec

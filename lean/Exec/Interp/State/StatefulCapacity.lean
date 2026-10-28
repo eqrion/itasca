@@ -1,7 +1,7 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Abs.Stateful.Transition
 import Exec.Code.Local.Capacity.OperandBounds
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 private theorem first_checked (first second : Result Bool)
@@ -24,4 +24,4 @@ theorem read_valid_capacity (compiled : runtime.bytecode.CompiledFunction)
   all_goals first
     | (have bound := Code.slots_fit_true compiled first 1#u32 checked; scalar_tac)
     | (have bound := Code.slots_fit_true compiled first 1#u32 (first_checked _ _ checked); scalar_tac)
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

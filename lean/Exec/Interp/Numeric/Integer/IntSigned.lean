@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Integer.Int
 import Exec.Spec.IntegerSigned
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 set_option maxRecDepth 4096
@@ -363,4 +363,4 @@ theorem scalar_i64_rems_sound {F : Type} (ops : runtime.platform.FloatOps F) (a 
       rintro result ⟨value, same, relation⟩
       exact Or.inl ⟨value, same, Spec.integer_rems_result_relation .I64 _ _ _ relation⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

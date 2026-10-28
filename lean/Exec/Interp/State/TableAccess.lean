@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Fetch
 import Exec.Representation.Store
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 private theorem table_access_index_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
@@ -142,4 +142,4 @@ theorem table_size_effect (exec : runtime.interp.Execution) (store : runtime.sto
   rw [table_access_index_given store.tables address.index object issued,bind_ok]
   step* <;> simp_all [SlotsEffect]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

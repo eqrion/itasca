@@ -1,7 +1,7 @@
 import Exec.Interp.Numeric.Float.FloatSource
 import Exec.Spec.FloatConvert
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 theorem scalar_f32_convert_i32_s_source {F : Type} (ops : runtime.platform.FloatOps F)
@@ -117,4 +117,4 @@ theorem scalar_f32_demote_f64_source {F : Type} (ops : runtime.platform.FloatOps
   · exact .cvtop___case_3 _ _ _ _ _ (.cvtop__Fnn_1_Fnn_2_case_1 _ _ (by decide)) rfl rfl
   · decide
 
-end Exec.Interp
+end Itasca.Runtime.Interp

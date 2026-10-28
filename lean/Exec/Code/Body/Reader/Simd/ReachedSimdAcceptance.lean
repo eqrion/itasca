@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Simd.ReachedSimdScalarAcceptance
 import Exec.Code.Body.Reader.Simd.ReachedSimdMemoryAcceptance
 import Exec.Code.Body.Reader.Simd.ReachedSimdBitsAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Complete accepted SIMD dispatch: every pure, lane, memory, memory-lane,
@@ -54,4 +54,4 @@ theorem reached_profile_simd_available_wasm2 {data env locals index st}
             decoded demand known monomorphic wholeLayout simdBound byte reference
         · simp at raw
 
-end Exec.Code
+end Itasca.Runtime.Code

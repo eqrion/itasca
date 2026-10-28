@@ -1,5 +1,5 @@
 import Exec.Interp.State.StatefulOperandValues
-namespace Exec.Interp.Stateful
+namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt
 
 theorem three_i32_operands (store : _root_.store) (operands : List val)
@@ -31,4 +31,4 @@ theorem frame_three_i32_slots {exec : runtime.interp.Execution} {raw : runtime.i
   · simpa only [Nat.add_zero] using frame_read_scalar slots values position encoded 0 (by simp) (UScalar.cast .U64 a) (by simp)
   · exact frame_read_scalar slots values position encoded 1 (by simp) (UScalar.cast .U64 b) (by simp)
   · exact frame_read_scalar slots values position encoded 2 (by simp) (UScalar.cast .U64 c) (by simp)
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

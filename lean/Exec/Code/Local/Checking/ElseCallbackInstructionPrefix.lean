@@ -3,7 +3,7 @@ import Exec.Code.Local.Checking.ScopeEntryInstructionPrefix
 import Exec.Code.Local.Callbacks.Control.ElseSuccess
 import Exec.Code.Local.Callbacks.Common.CompilerCloseMetadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual ELSE preserves all stored instruction checks on live, terminated,
@@ -68,4 +68,4 @@ theorem compiler_else_open_instructions {A : Type} (ops : runtime.platform.Alloc
         exact ⟨frames,by simpa using afterFrames,original,rfl,by simpa using targetAt,by simpa using appended,by simpa using code⟩
     exact transition.instruction_prefix hasIf held growth
 
-end Exec.Code
+end Itasca.Runtime.Code

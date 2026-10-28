@@ -2,7 +2,7 @@ import Exec.Code.Local.Checking.TableLoopInstructionPrefix
 import Exec.Code.Local.Relations.Table.BranchTableLower
 import Exec.Code.Local.Relations.Common.CoreInstructionAcceptance
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The actual dispatch and all target stubs establish the complete instruction
@@ -77,4 +77,4 @@ theorem compiler_lower_table_open_instructions {A : Type} (ops : runtime.platfor
     change start.val+len.val ≤ before.function.jump_tables.val.length+before.table_depths.val.length
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

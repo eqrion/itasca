@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Simulation
 import Exec.Abs.Sim.Trace
 import Exec.Abs.Sim.Typed
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem mutable_counted_simulation (before afterStore : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (instruction : instr) (after : List instr)
@@ -46,4 +46,4 @@ theorem bulk_empty_simulation (before afterStore : store) (ambient : frame) (f :
     ha hl hv hc hr heights trace
   apply NextSim.counted (n:=count) _ positive
   simpa only [List.append_nil] using full
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

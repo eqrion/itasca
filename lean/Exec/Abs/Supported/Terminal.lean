@@ -1,8 +1,8 @@
 import Exec.Abs.Core.Terminal
 import Exec.Abs.Supported.CoreStuck
-namespace Exec.Abs.Supported
-open Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Supported
+open Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 theorem step_trap (s : AState) (typed : CoreTyped s) (covered : SupportedState s)
     (equation : step s = .trap) :
@@ -27,4 +27,4 @@ theorem step_trap (s : AState) (typed : CoreTyped s) (covered : SupportedState s
         simp only [step,astep,returnFrame,advance] at equation
         repeat' first | contradiction | split at equation
 
-end Exec.Abs.Supported
+end Itasca.Runtime.Abs.Supported

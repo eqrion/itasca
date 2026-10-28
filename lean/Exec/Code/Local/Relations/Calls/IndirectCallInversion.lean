@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Calls.IndirectCallEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem IndirectCallEmission.invert {pairs C before emitted after table type}
@@ -18,4 +18,4 @@ theorem IndirectCallEmission.invert {pairs C before emitted after table type}
     cases sourceEq
     exact ⟨front,params,results,typeIndex,tableIndex,entry,index,base,bounds,rfl,rfl,rfl,rfl,rfl,
       signature,tableFound,pair,basePosition,indexPosition⟩
-end Exec.Code
+end Itasca.Runtime.Code

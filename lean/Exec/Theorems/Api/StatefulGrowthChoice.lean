@@ -1,5 +1,5 @@
 import Exec.Abs.Stateful.Transition
-namespace Exec.Theorems
+namespace Itasca.Runtime.Theorems
 open SpecExt
 
 theorem stateful_memory_choice (state : Abs.AState) (f : Abs.AFrame) (front : List val)
@@ -42,4 +42,4 @@ theorem stateful_table_choice (state : Abs.AState) (f : Abs.AFrame) (front : Lis
     have decoded := congrArg Abs.Stateful.asReference refs.2
     simpa only [Abs.Stateful.asReference_value,Option.some.injEq] using decoded
   simpa only [deltaEq,refEq] using grown
-end Exec.Theorems
+end Itasca.Runtime.Theorems

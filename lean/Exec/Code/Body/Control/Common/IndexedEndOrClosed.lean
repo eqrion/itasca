@@ -17,7 +17,7 @@ import Exec.Code.Body.Reader.Table.StructuredReaderCompilerExtra
 import Exec.Code.Body.Reader.Table.IndexedTableReaderTable
 import Exec.Code.Body.Relations.Common.ExecutableEmission
 import Exec.Code.Body.Reader.Common.ReaderCompilerBounds
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
-end Exec.Code
+end Itasca.Runtime.Code

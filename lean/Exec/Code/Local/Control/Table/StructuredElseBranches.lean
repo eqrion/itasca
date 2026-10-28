@@ -2,7 +2,7 @@ import Exec.Code.Local.Control.Table.StructuredElseEvidence
 import Exec.Code.Local.Control.Table.StructuredUniversalConditional
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
 import Exec.Code.Local.Control.Common.UniversalConditional
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A forward branch strengthens only its selected future exit and appends
@@ -63,4 +63,4 @@ theorem StructuredUniversalElse.branch_if_forward {jumpTables : List Aeneas.Std.
   rw [grouped, appended, codeEq, resolved]
   exact (prior.extend (branchIfInstructions dst src count label.target condition resume)).advance (.BR_IF (.mk_uN depth))
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Interp.Numeric.Float.FloatValues
 import Exec.Interp.Relations.PrefixEffect
 import Exec.Interp.Numeric.Float.FloatBytecodeDispatch
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Float
 
 theorem step_float_values {M P F A : Type}
@@ -45,4 +45,4 @@ theorem step_float_values {M P F A : Type}
   simp only [bind_ok]
   with_unfolding_all apply WP.spec.ret
   exact ⟨rfl, rfl, pc, position, effect, prefixEffect⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

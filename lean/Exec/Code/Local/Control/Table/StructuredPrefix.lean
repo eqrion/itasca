@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Table.StructuredCodeAlgebra
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A builder invariant for a still-open source prefix. Its hole is another
@@ -129,5 +129,5 @@ theorem StructuredDeadPrefix.branchTable
   | cons first rest =>
     intro suffix tail next final order bound
     exact .branchTable gate ((table.extend suffix).weaken_next order bound) ⟨header.trans order,bound⟩
-end Exec.Code
+end Itasca.Runtime.Code
 

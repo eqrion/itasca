@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.Prefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- A suspended parent owns only the bytecode before its child-entry cursor.
@@ -10,4 +10,4 @@ def SuspendedPrefix (types functions : List functype) (returns locals : List val
   cursor ≤ code.length ∧
     CodePrefix types functions returns locals (code.take cursor) labels before source start cursor stack
 
-end Exec.Code
+end Itasca.Runtime.Code

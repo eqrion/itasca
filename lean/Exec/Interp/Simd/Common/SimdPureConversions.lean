@@ -6,7 +6,7 @@ import Exec.Interp.Simd.Integer.SimdDotSound
 import Exec.Interp.Simd.Common.SimdTruncSatSound
 import Exec.Interp.Simd.Integer.SimdConvertIntegerSound
 import Exec.Interp.Simd.Float.SimdFloatResizeSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem pure_entry_94 {F : Type} (floats : runtime.platform.FloatOps F) (laws : Platform.FloatOpsCorrect floats) :
@@ -310,4 +310,4 @@ theorem pure_entry_255 {F : Type} (floats : runtime.platform.FloatOps F) (laws :
   cases meaning
   with_unfolding_all exact convert_integer_simd_sound floats laws .F64 false offset laneIndex bits x y z memory
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

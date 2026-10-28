@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemoryFullStore
 import Exec.Interp.Simd.Memory.SimdMemoryStoreEncoding
 import Exec.Spec.SimdMemoryStore
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 theorem full_store_source (address value : U128) (offset lane : U32) (bytes : Slice U8)
     (s : store) (f : frame) (argument : memarg)
@@ -33,4 +33,4 @@ theorem full_store_source (address value : U128) (offset lane : U32) (bytes : Sl
     rfl
   · rw [if_neg fits] at source effect ⊢
     exact ⟨effect,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

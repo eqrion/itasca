@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Common.ReaderProfile
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual profile capacity guard is checked before ordinary decoding.
@@ -33,4 +33,4 @@ theorem reader_profile_scalar_reached {V} (visitor : code.OpVisitor V)
     | Ok unitValue =>
       cases unitValue
       simpa only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Std.uncurry,WP.spec_ok] using success
-end Exec.Code
+end Itasca.Runtime.Code

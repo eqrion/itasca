@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdIntegerSaturatingLanes
 import Exec.Spec.SimdIntegerSaturatingStep
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem integer_saturating_packed (ty : Jnn) (kind : IntegerSaturating) (x y result : U128)
     (lanes : ∀ j, j < 128/lsize (lanetype_Jnn ty) →
@@ -19,4 +19,4 @@ theorem integer_saturating_packed (ty : Jnn) (kind : IntegerSaturating) (x y res
   simp only [same] at packed
   with_unfolding_all exact congrArg uN.mk_uN packed.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

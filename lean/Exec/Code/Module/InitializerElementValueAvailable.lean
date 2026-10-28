@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerDataOffsetsAvailable
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Element values accept from independent initializer typing, with separate
@@ -23,8 +23,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
       initializerSize out.2.1 = initializerSize module + 1 ∧ out.2.2.2.length = indices.length + 1 ⦄ := by
   have segmentBound := (List.getElem?_eq_some_iff.mp lookup).1
   unfold runtime.compiler.initialize.lower_element_value
-  simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,Itasca.module.Module.impl.env,
-    Exec.module.Env.elements,Itasca.module.Env.impl.elements,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
   step as ⟨first,found⟩
   · simpa [alloc.vec.Vec.deref] using segmentBound
   have sameFirst : first = segment := by
@@ -35,7 +34,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
   have sameSecond : second = segment := by
     simpa [alloc.vec.Vec.deref,foundSecond,List.getElem?_eq_getElem segmentBound] using lookup
   rw [sameSecond]
-  have valueType : Exec.types.ElemType.value_type segment.elem =
+  have valueType : Itasca.types.ElemType.value_type segment.elem =
       .ok (Itasca.ModuleConstants.referenceValueType segment.elem) := by cases segment.elem <;> rfl
   rw [valueType,bind_ok]
   have valid : Itasca.ModuleConstants.Valid module.module.env expr
@@ -57,4 +56,4 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
     omega
   · simp [alloc.vec.Vec.length,mapped]
 
-end Exec.Code
+end Itasca.Runtime.Code

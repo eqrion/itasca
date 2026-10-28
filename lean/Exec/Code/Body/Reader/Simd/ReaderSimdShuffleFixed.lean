@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdShuffle
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The checked shuffle scan is followed by the same fixed operand reader as
@@ -39,4 +39,4 @@ theorem simd_shuffle_fixed (st out : code.OpIterState) (data : Slice U8)
           simpa only [parsedEq] using read
   rw [accepted,WP.spec_ok] at spec
   exact spec low high rfl
-end Exec.Code
+end Itasca.Runtime.Code

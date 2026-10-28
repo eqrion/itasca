@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredUniversalPrefix
 import Exec.Code.Local.Control.Common.UniversalPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem StructuredPrefix.emit_call {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels initial source start front params results}
@@ -65,5 +65,5 @@ theorem Lowered.structured_universal_call {jumpTables : List Aeneas.Std.U32} {A 
     simpa only [codeEq, resolved] using
       (saved.extend [runtime.bytecode.Instr.Call index base]).advance_current (.CALL (.mk_uN index.val))
 
-end Exec.Code
+end Itasca.Runtime.Code
 

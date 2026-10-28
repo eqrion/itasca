@@ -1,5 +1,5 @@
 import Exec.Interp.Relations.Arguments
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem checkArgument_error_kind {id value ty error}
@@ -36,4 +36,4 @@ theorem check_values_error_kind {M : Type} (memory : runtime.platform.MemoryBuff
   split at decision
   · exact checkArguments_error_kind decision.symm
   · simpa only [core.result.Result.Err.injEq] using Or.inl decision
-end Exec.Interp
+end Itasca.Runtime.Interp

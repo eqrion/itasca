@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdPacking
 import Exec.Spec.SimdShape
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem unpackLanes_write (ty : lanetype) (index : Nat) (v : BitVec 128) (x : BitVec 64)
@@ -39,4 +39,4 @@ theorem packLanes_write (ty : lanetype) (index : Nat) (v : BitVec 128) (x : BitV
     Spec.Simd.shapeOf_covers,
     Nat.mod_eq_of_lt (BitVec.toNat_lt_twoPow_of_le (by rfl))]
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

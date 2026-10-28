@@ -1,5 +1,5 @@
 import Exec.Spec.SimdShape
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 
 theorem mem_setproduct2 {A : Type} (head : A) (tail : List A) (tails : List (List A))
     (member : tail ∈ tails) : head::tail ∈ setproduct2_ A head tails := by
@@ -32,4 +32,4 @@ theorem mem_setproduct_map {I A : Type} (items : List I) (choices : I → List A
     · exact each head (by simp)
     · exact ih (by intro i member; exact each i (by simp [member]))
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

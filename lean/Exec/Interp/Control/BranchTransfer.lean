@@ -2,7 +2,7 @@ import Exec.Interp.Relations.Regions
 import Exec.Code.Local.Control.Common.Structured
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The compiler specializes short branch transfers to fixed-width copies. -/
@@ -130,4 +130,4 @@ theorem dispatch_branchTransfer_refines {M P F A : Type}
   simp only [FrameSlots, written]
   simpa only [destination, source, size, List.append_assoc] using copied
 
-end Exec.Interp
+end Itasca.Runtime.Interp

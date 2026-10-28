@@ -1,8 +1,8 @@
 import Exec.Abs.Indirect.Preservation
 import Exec.Abs.Indirect.Simulation
 import Exec.Abs.Core.Trap
-namespace Exec.Abs.Indirect
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Indirect
+open SpecExt Itasca.Runtime.Spec
 
 theorem next_simulation (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (table type : Nat) (after : List instr) (next : AState)
@@ -85,4 +85,4 @@ theorem trap_simulation (s : store) (ambient : frame) (f : AFrame) (rest : List 
       (front++args) [integerVal .I32 position] typed.typed.store typed.typed.ambient frameWf labelsWf allFront tailWf restWf allHeights
       (by simpa only [vals,List.map_cons,List.map_nil,admininstr_val,integerVal,numtype_Inn,admininstr_instr,Segment.i32,List.singleton_append] using source)
     simpa only [values] using full
-end Exec.Abs.Indirect
+end Itasca.Runtime.Abs.Indirect

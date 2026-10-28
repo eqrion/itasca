@@ -1,8 +1,8 @@
 import Exec.Interp.Relations.ReferenceNull
 import Exec.Interp.Relations.WordEncoding
 import Exec.Spec.References
-namespace Exec.Interp
-open Aeneas Aeneas.Std SpecExt Exec.Store
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 
 /-- The complete raw reference word uses exactly zero for either null type. -/
 theorem decode_ref_is_null (ty : Itasca.types.ElemType) (word : U64) :
@@ -18,4 +18,4 @@ theorem encode_decoded_ref (ty : Itasca.types.ElemType) (word : U64) :
   · simpa only [decodeWords,pairWords,sourceType,reduceCtorEq,ite_false] using encode_decode_words .FuncRef word 0#u64 (by simp)
   · simpa only [decodeWords,pairWords,sourceType,reduceCtorEq,ite_false] using encode_decode_words .ExternRef word 0#u64 (by simp)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

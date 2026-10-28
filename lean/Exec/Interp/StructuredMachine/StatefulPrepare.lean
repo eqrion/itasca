@@ -1,7 +1,7 @@
 import Exec.Interp.State.StatefulPrepare
 import Exec.Interp.StructuredMachine.StatefulProjection
-namespace Exec.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {jumpTables : List Aeneas.Std.U32}
 theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C returns code labels pc next output}
     [StructuredMachine.StatefulProjection emission pairs]
@@ -38,4 +38,4 @@ theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C ret
         simpa only [valueType_eq_abs] using Abs.resultsTyped_self_mem actualValues included
     · simpa only [frontTypes] using position
     · simpa only [frontTypes] using tail
-end Exec.Interp.Stateful
+end Itasca.Runtime.Interp.Stateful

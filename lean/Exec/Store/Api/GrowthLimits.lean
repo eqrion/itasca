@@ -1,5 +1,5 @@
 import Exec.Store.Api.GrowthEffects
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem MemoryGrowth.limits {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
@@ -13,4 +13,4 @@ theorem TableGrowth.limits {M : Type} {before : runtime.store.Store M} {index de
     (effect : TableGrowth before index delta value out) : out.2.limits = before.limits := by
   rcases effect with ⟨_,same⟩ | ⟨old,words,count,lookup,values,capacity,used,limit,maximum,same⟩
   all_goals rw [same]
-end Exec.Store
+end Itasca.Runtime.Store

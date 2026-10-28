@@ -7,7 +7,7 @@ import Exec.Code.Body.Reader.Common.StatefulReaderBulkDispatch
 import Exec.Code.Body.Reader.Calls.ReaderIndirectCall
 import Exec.Code.Body.Reader.Common.ReaderTypedSelect
 import Exec.Code.Body.Reader.Simd.ReaderSimdEvent
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Capacity follows the actual scalar/reference callback and canonical reader state. -/
@@ -68,4 +68,4 @@ theorem reader_typed_select_full_capacity_wasm2 {data env locals index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact compiler_core_capacity ops law before after out.core (.select true) callback
 
-end Exec.Code
+end Itasca.Runtime.Code

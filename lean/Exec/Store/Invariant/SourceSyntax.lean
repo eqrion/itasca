@@ -2,7 +2,7 @@ import Exec.Code.Local.Source.SourceFunctionTyping
 import Exec.Store.Invariant.FunctionTables
 import Exec.Store.Invariant.Syntax
 import Exec.Representation.NameSource
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical source typing supplies the syntax for an installed instance. -/
@@ -67,4 +67,4 @@ theorem StoreSyntax.staged {M : Type} {before after : runtime.store.Store M}
     subst index
     exact fresh inst found
 
-end Exec.Store
+end Itasca.Runtime.Store

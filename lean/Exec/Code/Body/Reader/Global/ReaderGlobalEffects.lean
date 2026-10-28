@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Local.ReaderLocalEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 /-- Successful global reads return the declared global type and append exactly
 that concrete operand to the physical validator stack. -/
@@ -63,4 +63,4 @@ theorem reader_global_set_effect (st out : code.OpIterState) (data : Slice U8) (
         exact ⟨ty, by simpa [List.getElem?_eq_getElem bound] using congrArg some lookup, mutable,
           by simp [values, nextValues, segmentShape, List.append_assoc]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

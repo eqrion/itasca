@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.CoreInstantiationSource
 import Exec.Theorems.Composition.SourceSupported
 import Exec.Code.Local.Source.SourceExecutable
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 theorem InstantiationCode.source_executable {M : Type} {view : M → Slice U8}
     {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
@@ -22,4 +22,4 @@ theorem InstantiationCode.source_executable {M : Type} {view : M → Slice U8}
     simp only [Code.sourceFunctions, List.length_zipWith, elaborated.code_count, Nat.min_self]
   exact store_supported_publish view before staged oldCode shape retained oldSlice inst (Code.sourceFunctions raw)
     sourceCount (Code.SourceExecutable.functions encoded) found matched.2 signatures
-end Exec.Store
+end Itasca.Runtime.Store

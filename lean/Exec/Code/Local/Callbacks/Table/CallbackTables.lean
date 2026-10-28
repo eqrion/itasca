@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Table.ControlTablePreservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -109,4 +109,4 @@ theorem compiler_if_tables {A : Type} (ops : runtime.platform.Alloc A)
       ops before state bt = .ok (.Ok (), after)) : CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function := by
   exact compiler_enter_tables ops law before after state .Then bt accepted
 
-end Exec.Code
+end Itasca.Runtime.Code

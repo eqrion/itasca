@@ -10,7 +10,7 @@ import Exec.Interp.Relations.ControlPoint
 import Exec.Interp.Relations.LocalCodePoint
 import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.ValueLookup
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 theorem step_localWrite_owned_forward {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -127,4 +127,4 @@ theorem step_localWrite_owned_forward {M P F A : Type}
       · simpa only [Bool.false_eq_true,ite_false,←valuesSplit] using FrameOwnershipClosure.local_set f (.LOCAL_SET (.mk_uN localIndex.val)::after) after front value localIndex.val
       · simpa only [ite_true,←valuesSplit] using FrameOwnershipClosure.local_tee f (.LOCAL_TEE (.mk_uN localIndex.val)::after) after front value localIndex.val
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

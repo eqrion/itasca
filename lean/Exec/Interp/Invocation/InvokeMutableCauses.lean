@@ -7,7 +7,7 @@ import Exec.Interp.Relations.TypeSlots
 import Exec.Interp.Relations.Ensure
 import Exec.Interp.Relations.ExecutionLoop
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem InvocationResourceCause.kind {A M : Type} {allocator : runtime.platform.Alloc A}
@@ -19,4 +19,4 @@ theorem InvocationResourceCause.kind {A M : Type} {allocator : runtime.platform.
   all_goals try contradiction
   case Exhausted reason => cases reason <;> simp_all [InvocationResourceCause]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

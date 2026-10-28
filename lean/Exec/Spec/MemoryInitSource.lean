@@ -3,7 +3,7 @@ import Exec.Spec.Wf
 import Mathlib.Tactic
 import SpecExt.Builtins.Bytes
 
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def zeroMemarg : memarg := ⟨.mk_uN 0,.mk_uN 0⟩
@@ -176,4 +176,4 @@ theorem memory_init_steps (s : store) (f : frame) (destination source count data
     have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,memoryInit,value,fresh] using combined
 
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

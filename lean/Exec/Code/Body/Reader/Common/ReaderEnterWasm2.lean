@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Calls.ReaderWasm2Call
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- The callback selected by a source control opener. -/
@@ -85,4 +85,4 @@ theorem reader_enter_wasm2 {data env locals index st}
       rcases initial with rfl | rfl | rfl <;> rfl
     simpa [opening] using trace
   · simp [signatures]
-end Exec.Code
+end Itasca.Runtime.Code

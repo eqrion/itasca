@@ -1,5 +1,5 @@
 import Exec.Spec.Allocation
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def allocationStore (s : store) (inst : moduleinst) (functions : List func)
@@ -116,4 +116,4 @@ theorem allocate_module (s : store) (source : module) (externals : List externad
     | exact List.range'_eq_map_range
     | simpa only [← sourceEq, Map] using sourceWf
     | simpa only [← layout] using instanceWf
-end Exec.Spec
+end Itasca.Runtime.Spec

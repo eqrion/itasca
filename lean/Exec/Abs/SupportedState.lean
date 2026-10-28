@@ -1,7 +1,7 @@
 import Exec.Abs.State
 import Exec.Abs.BinaryInstr
 
-namespace Exec.Abs
+namespace Itasca.Runtime.Abs
 
 /-- Source support is independent of values and concrete bytecode emission. -/
 def FrameSupported (f : AFrame) : Prop :=
@@ -32,4 +32,4 @@ theorem SupportedState.tail {before afterStore : store}
     exact ⟨fun instruction member => old.1 instruction (List.mem_cons_of_mem _ member),old.2⟩
   · exact covered.active item (List.mem_cons_of_mem _ member)
 
-end Exec.Abs
+end Itasca.Runtime.Abs

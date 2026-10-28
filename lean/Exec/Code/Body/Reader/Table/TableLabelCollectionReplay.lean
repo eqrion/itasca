@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Table.TableLoopReaderReplay
 import Exec.Code.Body.Reader.Table.TableDecodePrefix
 import Exec.Code.Body.Reader.Table.LabelCollectionAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Replay all actual Wasm 2 vector labels with independent scratch and branch
@@ -74,4 +74,4 @@ theorem compiler_table_loop_collect_available {A V : Type}
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,targetAfter),called,rfl,rfl,retained⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

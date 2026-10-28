@@ -1,6 +1,6 @@
 import Exec.Code.Module.CodeRegion
 import Mathlib.Tactic.IntervalCases
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -28,4 +28,4 @@ set_option maxHeartbeats 4000000
   cases instruction <;> norm_num [runtime.bytecode.Instr.simd, WP.spec_ok]
 
 
-end Exec.Code
+end Itasca.Runtime.Code

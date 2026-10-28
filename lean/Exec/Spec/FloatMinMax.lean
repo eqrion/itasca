@@ -1,6 +1,6 @@
 import Exec.Spec.FloatPure
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem float_min_wf (width : Nat) (hw : width = 32 ∨ width = 64) (a b : fN)
@@ -51,4 +51,4 @@ theorem float_f64_max_relation (a b : fN) (ha : wf_fN 64 a) (hb : wf_fN 64 b) :
   · exact float_max_wf 64 (by omega) a b ha hb
   · exact float_results_wf .F64 _ (float_max_wf 64 (by omega) a b ha hb)
 
-end Exec.Spec
+end Itasca.Runtime.Spec

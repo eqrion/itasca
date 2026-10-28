@@ -1,7 +1,7 @@
 import Exec.Code.Module.EntryAvailable
 import Exec.Code.Module.PreparedFunctionChecked
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- The actual entry parser, function-start callback, and complete body accept
@@ -41,4 +41,4 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
   subst result
   exact ⟨congrArg core.result.Result.Ok ending,ranges,instructions,w,ending,effect⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

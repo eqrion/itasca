@@ -1,10 +1,10 @@
 import Exec.Interp.StructuredMachine.OrdinaryHeads
 import Exec.Code.Local.Lowering.Float.FloatEmissionInversion
 import Exec.Interp.Machines.Core.CoreSelectPoint
-namespace Exec.Interp.StructuredMachine.Select
+namespace Itasca.Runtime.Interp.StructuredMachine.Select
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [FloatHeads family]
-open Aeneas Aeneas.Std SpecExt Exec.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem corePoint_select_head {C returns code labels stack pc next output} (after : List instr)
     (point : Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
       (.SELECT none :: after) pc next output) :
@@ -34,4 +34,4 @@ theorem corePoint_select_head {C returns code labels stack pc next output} (afte
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => simp at sourceEq
 
-end Exec.Interp.StructuredMachine.Select
+end Itasca.Runtime.Interp.StructuredMachine.Select

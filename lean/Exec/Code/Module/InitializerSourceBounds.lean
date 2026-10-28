@@ -2,7 +2,7 @@ import Exec.Code.Module.InitializerTotal
 import Exec.Code.Local.Capacity.SegmentBound
 import Itasca.Module.Elab.Metadata
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 private theorem leb_nonempty {bytes value} (h : Itasca.Leb128.Encoding bytes value) :
@@ -142,4 +142,4 @@ theorem initializer_source_headroom {R raw bytes profile env tail}
   dsimp only [initializerMappingCost, initializerElementCost]
   constructor <;> omega
 
-end Exec.Code
+end Itasca.Runtime.Code

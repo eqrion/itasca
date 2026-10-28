@@ -1,7 +1,7 @@
 import Exec.Abs.ControlSafety
 
-namespace Exec.Abs
-open SpecExt Exec.Spec Itasca.DeclarativeComplete
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec Itasca.DeclarativeComplete
 
 theorem zero_float_wf (ty : Fnn) :
     wf_val (.CONST (numtype_Fnn ty) (.mk_num__1 ty (.POS (.SUBNORM 0)))) := by
@@ -159,4 +159,4 @@ theorem call_preservation (s : store) (ambient : frame) (f : AFrame)
           · exact hcallerHeights
           · exact typed.heights frame (by simp [hm])
 
-end Exec.Abs
+end Itasca.Runtime.Abs

@@ -1,7 +1,7 @@
 import Exec.Interp.Host.HostReturnFrames
 import Exec.Interp.StructuredMachine.FrameStorePrefix
 
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas Aeneas.Std
 
 theorem SavedFrame.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
@@ -47,4 +47,4 @@ theorem host_return_stack {M : Type} {store : runtime.store.Store M} {sourceStor
   refine ⟨raw,compiled,functions,targets,next,output,?_,program,point.resume results types heights⟩
   simp only [effect.frames,frames,List.getLast?_concat]
 
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

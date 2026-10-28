@@ -4,7 +4,7 @@ import Exec.Code.Local.Capacity.SelectAvailability
 import Exec.Code.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.EventDispatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -152,4 +152,4 @@ theorem compiler_reader_select_available {A V : Type} (ops : runtime.platform.Al
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select]
   exact compiler_select_available ops bound available compiler final demand front ty false layout
 
-end Exec.Code
+end Itasca.Runtime.Code

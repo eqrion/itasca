@@ -1,7 +1,7 @@
 import Exec.Generated.Equations
 import Exec.Representation.Encoding
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def sourceType : Itasca.types.ValueType → valtype
@@ -262,4 +262,4 @@ def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
     (by simp) (by simp [ValueTypeSlotsState]) as ⟨amount, overflow, hs⟩
   cases overflow <;> simpa using hs
 
-end Exec.Interp
+end Itasca.Runtime.Interp

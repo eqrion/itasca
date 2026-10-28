@@ -1,6 +1,6 @@
 import Exec.Code.Local.Source.SourceSlice
 import Itasca.Stream.DriverSound
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem code_guards {env indices codes profile}
@@ -177,4 +177,4 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
   simp only [List.length_append] at hdLength
   simp only [Slice.len_val, Slice.length] at he hc hm ⊢
   omega
-end Exec.Code
+end Itasca.Runtime.Code

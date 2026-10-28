@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdCompareLoop
 import Exec.Interp.Simd.Common.SimdCompareDispatch
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 theorem integer_compare_loop (op : vrelop_Jnn_N) (x y : U128) (width : U32)
@@ -43,4 +43,4 @@ theorem integer_compare_loop (op : vrelop_Jnn_N) (x y : U128) (width : U32)
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Control.SegmentLoops
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 theorem segment_program_finish (module : runtime.compiler.ExecutableModule)
@@ -68,4 +68,4 @@ theorem SegmentProgram.change_module {before after : runtime.compiler.Executable
   cases certificate
   constructor <;> (try simp only [source]) <;> assumption
 
-end Exec.Code
+end Itasca.Runtime.Code

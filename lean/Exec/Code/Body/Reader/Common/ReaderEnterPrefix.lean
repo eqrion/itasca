@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.ReaderPopPrefix
 import Exec.Code.Local.Relations.Common.KnownPopStack
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 
@@ -64,8 +64,8 @@ def EntryPrefix (before after : code.OpIterState) : Prop :=
       rcases restPrefix with ⟨suffix,suffixEq⟩
       exact ⟨suffix, by rw [middleValues,values,← suffixEq,List.append_assoc]⟩
     · step*
-end Exec.Code
-namespace Exec.Code
+end Itasca.Runtime.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 
 theorem reader_enter_prefix_wasm2 {data env locals index st out bt} {form : Frames.Form}
@@ -101,4 +101,4 @@ theorem reader_enter_prefix_wasm2 {data env locals index st out bt} {form : Fram
         initial values base ⟨p.opened.shape.core.ordered, p.opened.shape.core.bounded⟩ capacity
       rw [rest, WP.spec_ok] at effect
       exact effect rfl
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Representation.StoreInvariant
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Interned indices agree exactly when their source signatures agree. -/
@@ -94,4 +94,4 @@ theorem Shape.table_function_target {M : Type} {view : M → Slice U8}
     omega
   · exact List.getElem?_eq_getElem bound
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.SegmentBound
 import Exec.Code.Module.CompileSource
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Accepted source bytes supply the binary framing and metadata coherence
@@ -29,4 +29,4 @@ theorem segment_compile_pc_bound {A : Type} (allocator : runtime.platform.Alloc 
   obtain ⟨validated, _, bounded⟩ := compile_source_validated allocator law bytes profile limits module accepted
   exact segment_validated_pc_bound certificate validated bounded
 
-end Exec.Code
+end Itasca.Runtime.Code

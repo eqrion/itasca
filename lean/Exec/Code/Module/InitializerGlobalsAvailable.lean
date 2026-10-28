@@ -1,6 +1,6 @@
 import Exec.Code.Module.InitializerAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Every remaining independently typed global is accepted by the actual
@@ -34,8 +34,8 @@ theorem initializer_globals_available {A : Type} (ops : runtime.platform.Alloc A
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop0.body
-    simp only [runtime.compiler.ExecutableModule.env,Exec.module.Module.env,
-      Itasca.module.Module.impl.env,Exec.module.Env.globals,Itasca.module.Env.impl.globals,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env,Itasca.module.Env.impl.globals,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.env.globals.val.length := by
@@ -64,4 +64,4 @@ theorem initializer_globals_available {A : Type} (ops : runtime.platform.Alloc A
       exact ⟨trivial,same,by simpa [last] using size,by simpa [last] using used,limits⟩
   · exact ⟨rfl,rfl,rfl,inside,rfl,rfl⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

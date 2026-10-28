@@ -6,7 +6,7 @@ import Exec.Abs.Core.Bound
 import Exec.Interp.StructuredMachine.SelectStep
 import Exec.Interp.StructuredMachine.OrdinaryExecution
 import Exec.Spec.Extend
-namespace Exec.Interp.StructuredMachine.Select
+namespace Itasca.Runtime.Interp.StructuredMachine.Select
 open Aeneas Aeneas.Std
 theorem step_select_core_execution_owned_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -60,7 +60,7 @@ theorem step_select_core_execution_owned_uniform {M P F A : Type}
     · exact StructuredMachine.core_step_supported machine.typed machine.core step
   exact ⟨success,sameStore,samePlatform,pc,g,
     Execution.ordinary view code ambient {f with code := .SELECT none::after} g rest expected raw.pc.val false machine
-      (.refl store) (Exec.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
+      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,uniform,StructuredMachine.owned_transition machine.typed machine.core transition,StructuredMachine.bound_transition machine.typed machine.core transition⟩
 theorem step_select_core_execution_owned {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -91,4 +91,4 @@ theorem step_select_core_execution_owned {M P F A : Type}
   rintro out ⟨success,same,platform,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,same,platform,pc,g,machine,simulation,ownership,bounded⟩
 
-end Exec.Interp.StructuredMachine.Select
+end Itasca.Runtime.Interp.StructuredMachine.Select

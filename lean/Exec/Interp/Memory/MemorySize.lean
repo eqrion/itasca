@@ -1,6 +1,6 @@
 import Exec.Interp.State.TableAccess
 import Exec.Platform.Memory
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Exact MEMORY_SIZE read and result-slot write; memory bytes are observed
@@ -32,4 +32,4 @@ theorem memory_size_handler {M : Type}
   step as ⟨pages,pagesEq⟩
   step* <;> simp_all [SlotsEffect]
   exact ⟨pages,pagesEq,rfl⟩
-end Exec.Interp
+end Itasca.Runtime.Interp

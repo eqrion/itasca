@@ -1,6 +1,6 @@
 import Exec.Code.Module.CompileSchedulerAssembly
 import Exec.Code.Module.SchedulerCapacities
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Initializer lowering appends synthetic functions without changing any
@@ -37,4 +37,4 @@ theorem CompileSourceCertificate.capacities_of_submission {A : Type} {ops : runt
   have final : PartialModuleCapacities profile w.env (sourceFunctions c.raw) w.scheduler.functions.val := by
     simpa only [functions] using ledger
   exact w.defined_capacities law (final.complete w.functions.val (w.function_order law))
-end Exec.Code
+end Itasca.Runtime.Code

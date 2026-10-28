@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Memory.SimdMemoryLaneBytes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 
@@ -38,8 +38,8 @@ theorem memory_splat_unfold (ty : Jnn) (offset lane : U32) (address value : U128
   all_goals funext word
   all_goals repeat (with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _;rw [bind_ok])
   all_goals with_unfolding_all rfl
-end Exec.Interp.Simd
-namespace Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem memory_splat_effect (ty : Jnn) (offset lane : U32) (address value : U128) (bytes : Slice U8) :
@@ -80,4 +80,4 @@ open Aeneas Aeneas.Std
     simpa only [wordEq,startEq,sizeVal,Nat.sub_zero,Spec.Simd.shapeOf,U64.bv] using packed
   · simp only [MemoryAddressEffect,Slice.len_val,sizeVal,fits,if_false] at effect
     simp only [effect,WP.spec_ok,if_neg fits]
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

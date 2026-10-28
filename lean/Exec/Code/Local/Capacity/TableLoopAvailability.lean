@@ -3,7 +3,7 @@ import Exec.Code.Local.Capacity.TableBranchWidths
 import Exec.Code.Local.Capacity.CallbackCapacityGrowth
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -105,4 +105,4 @@ theorem compiler_table_loop_available {A : Type} (ops : runtime.platform.Alloc A
   · refine ⟨Nat.le_refl _,inside,rfl,rfl,safe,widths,capacity,?_⟩
     simpa using CompilationBudgetEffect.refl compiler.budget
 
-end Exec.Code
+end Itasca.Runtime.Code

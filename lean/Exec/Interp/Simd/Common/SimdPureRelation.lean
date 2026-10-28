@@ -2,7 +2,7 @@ import Exec.Code.Local.Lowering.Simd.SimdEmission
 import Exec.Spec.SimdPureValues
 import Exec.Interp.Simd.Common.SimdWholeSound
 import Exec.Interp.Simd.Common.SimdSwizzleSound
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
 def pureResult (signature : Signature) (bits : BitVec 128) : val :=
@@ -67,4 +67,4 @@ theorem pure_entry_83 {F : Type} (floats : runtime.platform.FloatOps F) : PureEn
   change some Itasca.Wasm2.Simd.pure83 = some op at meaning
   cases meaning
   with_unfolding_all exact any_true_dispatch_sound floats offset laneIndex bits x y z memory
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

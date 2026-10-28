@@ -1,7 +1,7 @@
 import Exec.Code.Local.Capacity.SimdOpAvailability
 import Exec.Code.Local.Lowering.Simd.SimdBitsCallbacks
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The vector-constant hook preserves the actual packed source bits in
@@ -17,4 +17,4 @@ theorem compiler_on_simd_const_available {A : Type} (ops : runtime.platform.Allo
   rw [compiler_simd_constant_callback ops compiler state lo hi]
   exact compiler_simd_constant_op_available ops bound available compiler state demand (initializerBits lo hi) poolBound
 
-end Exec.Code
+end Itasca.Runtime.Code

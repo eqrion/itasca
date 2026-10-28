@@ -1,7 +1,7 @@
 import Exec.Code.Local.Relations.Common.Signatures
 /-! The actual scheduler loop constructs a source-aligned signature table
 from every module type, retaining exact value and word arities. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 def SignatureSequence (signatures : List runtime.compiler.Signature)
@@ -57,7 +57,7 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
   · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
     dsimp only at hi certified
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [module.Env.types, Itasca.module.Env.impl.types, bind_ok]
+    simp only [Itasca.module.Env.impl.types, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac
@@ -89,4 +89,4 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
       intro accepted
       simpa [same] using certified accepted
   · exact ⟨bound, fun accepted => ⟨prefixMatches accepted, rfl, rfl⟩⟩
-end Exec.Code
+end Itasca.Runtime.Code

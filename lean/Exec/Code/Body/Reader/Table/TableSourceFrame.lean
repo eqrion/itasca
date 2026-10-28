@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.TableLoopReaderReplay
 import Exec.Code.Body.Reader.Table.ReaderTableSafetyWasm2
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent source table loops retain operands and controls until their
@@ -74,4 +74,4 @@ theorem source_table_loop_marked {V : Type} (source : code.OpVisitor V)
   rw [same,lastMark] at mark
   simpa only [Result.ok.injEq] using mark.symm
 
-end Exec.Code
+end Itasca.Runtime.Code

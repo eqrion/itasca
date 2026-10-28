@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Common.FunctionEntry
 import Exec.Code.Module.SchedulerSafety
 import Itasca.Stream.BatchBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -30,7 +30,6 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
     exact bounded.2.1.trans issued.env.func_type_indices.property
   obtain ⟨⟨result,dispatched⟩,dispatch⟩ := stream.CodeBatch.next_entry.total batch fits
   unfold CompileScheduler.compile_entry
-  simp only [Exec.stream.CodeBatch.next_entry]
   rw [dispatch]
   cases result with
   | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -47,7 +46,7 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
       have := bounded.2.2
       omega
     simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-      uncurry_apply_pair, Budget.copy_state,Exec.stream.CodeBatch.code_offset,Itasca.stream.CodeBatch.impl.code_offset]
+      uncurry_apply_pair, Budget.copy_state,Itasca.stream.CodeBatch.impl.code_offset]
     obtain ⟨batchStart,startRun,startEq⟩ := WP.spec_imp_exists (Usize.add_spec (x := before.code_start) (y := dispatched.code_offset) startFits)
     rw [startRun]
     simp only [bind_ok,uncurry_apply_pair]
@@ -76,4 +75,4 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
           simp only [Option.isSome,Bool.false_eq_true,↓reduceIte]
           step
 
-end Exec.Code
+end Itasca.Runtime.Code

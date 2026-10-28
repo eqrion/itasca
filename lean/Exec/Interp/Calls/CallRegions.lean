@@ -2,7 +2,7 @@ import Exec.Interp.Calls.Call
 import Exec.Interp.Relations.Regions
 import Exec.Interp.Relations.Defaults
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem WordsAt.extend {words : List U64} {base : Nat} {bits : List Nat}
@@ -84,4 +84,4 @@ theorem CallEntryEffect.preserve_prefix
     omega
   · exact Or.inl (by omega)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

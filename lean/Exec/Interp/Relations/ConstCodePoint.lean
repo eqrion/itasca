@@ -3,7 +3,7 @@ import Exec.Interp.Relations.Execute
 import Exec.Interp.Relations.Regions
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem linearEmission_const32_inv {locals before after : List valtype} {emitted : List Code.Bytecode}
@@ -48,4 +48,4 @@ theorem linearEmission_const64_inv {locals before after : List valtype} {emitted
     simp [Abs.Numeric.decodeInstruction_source, Abs.Numeric.decodeInstruction] at decoded
   | _ => simp_all
 
-end Exec.Interp
+end Itasca.Runtime.Interp

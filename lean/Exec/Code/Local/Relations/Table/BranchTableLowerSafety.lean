@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.BranchTableLoopSafety
 import Exec.Code.Local.Lowering.Common.NumericSafety
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -56,4 +56,4 @@ set_option maxRecDepth 4096
             · change compiler.function.jump_tables.val.length ≤ code.val.length
               omega
           step with compiler_table_loop_total ops law next 0#usize (.Ok ()) Usize.max (Nat.le_refl _) (fun _ => safe)
-end Exec.Code
+end Itasca.Runtime.Code

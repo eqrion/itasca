@@ -12,8 +12,8 @@ import Exec.Abs.Core.Typing
 import Exec.Abs.Core.Pure
 import Exec.Interp.StructuredMachine.IntegerConstantPoint
 import Exec.Interp.StructuredMachine.ForwardJump
-namespace Exec.Interp.StructuredMachine.IntegerConstant
-open Exec.Interp.IntegerConstant
+namespace Itasca.Runtime.Interp.StructuredMachine.IntegerConstant
+open Itasca.Runtime.Interp.IntegerConstant
 open Aeneas Aeneas.Std SpecExt
 
 theorem step_integer32_core_forward {M P F A : Type}
@@ -154,4 +154,4 @@ theorem step_integer64_core_forward {M P F A : Type}
     · exact ConcreteSim.of_source _ _ _ _ _ simulation
     · exact Or.inr ⟨raw.base.val+dst.val,_,Nat.le_add_right _ _,by simpa only [destination] using capacity,written⟩
 
-end Exec.Interp.StructuredMachine.IntegerConstant
+end Itasca.Runtime.Interp.StructuredMachine.IntegerConstant

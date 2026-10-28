@@ -2,7 +2,7 @@ import Exec.Code.Local.Relations.Common.FunctionStartRaw
 import Exec.Code.Local.Relations.Common.FunctionEntry
 import Exec.Code.Local.Checking.OpenInstructionAppend
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- A pending branch site has a physical owner that will patch its target.
@@ -41,4 +41,4 @@ theorem compiler_start_instruction_prefix {A : Type} (ops : runtime.platform.All
   rw [code,emptyCode] at found
   simp at found
 
-end Exec.Code
+end Itasca.Runtime.Code

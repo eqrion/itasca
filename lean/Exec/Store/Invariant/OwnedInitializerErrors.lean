@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.InitializerErrors
 import Exec.Store.Invariant.PrecommitError
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -32,4 +32,4 @@ theorem eval_const_owned_errors (law : Platform.AllocCorrect allocator)
     obtain ⟨resource, rfl⟩ := errors.2.2.2 error status
     trivial
 
-end Exec.Store
+end Itasca.Runtime.Store

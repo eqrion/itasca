@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Move
 import Exec.Abs.Sim.Instruction
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem dispatch_localGet_refines {M P F A : Type}
@@ -61,4 +61,4 @@ theorem dispatch_localGet_refines {M P F A : Type}
       List.flatMap_nil, List.append_nil, Code.encodeValue_length] using represented
   simpa only [FrameSlots, List.append_assoc] using result
 
-end Exec.Interp
+end Itasca.Runtime.Interp

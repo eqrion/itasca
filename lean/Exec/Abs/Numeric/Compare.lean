@@ -1,8 +1,8 @@
 import Exec.Abs.Numeric.Unary
 import Exec.Spec.IntegerCompareSigned
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem compare_bound (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
     compare ty op a b < 2 ^ integerWidth .I32 := by
@@ -36,4 +36,4 @@ theorem compare_pure (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_
   integer_relop_pure ty op a.toNat b.toNat _ (word_bound ty a) (word_bound ty b)
     (compare_bound ty op a b) (compare_relation ty op a b)
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

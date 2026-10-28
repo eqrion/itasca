@@ -38,16 +38,16 @@ EXAMPLE_IMPORTS = {
 EXEC_LAYERS = {
     "Spec": {"Exec.Spec", "SpecExt", "Itasca.Spec", "Itasca.Support"},
     "Abs": {"Exec.Abs", "Exec.Spec", "SpecExt", "Itasca.Spec"},
-    "Generated": {"Exec.Generated", "Aeneas"},
-    "Platform": {"Exec.Platform", "Exec.Generated", "Exec.Spec", "SpecExt"},
-    "Representation": {"Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Abs", "SpecExt.Builtins", "Itasca"},
-    "Code": {"Exec.Code", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Abs", "Exec.Spec", "SpecExt.Builtins", "Itasca"},
-    "Interp": {"Exec.Interp", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Abs", "Exec.Code", "Exec.Spec", "SpecExt.Builtins", "Itasca.Support"},
-    "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
+    "Generated": {"Exec.Generated", "Itasca.Generated", "Aeneas"},
+    "Platform": {"Exec.Platform", "Exec.Generated", "Itasca.Generated", "Exec.Spec", "SpecExt"},
+    "Representation": {"Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Spec", "Exec.Abs", "SpecExt.Builtins", "Itasca"},
+    "Code": {"Exec.Code", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Abs", "Exec.Spec", "SpecExt.Builtins", "Itasca"},
+    "Interp": {"Exec.Interp", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Abs", "Exec.Code", "Exec.Spec", "SpecExt.Builtins", "Itasca.Support"},
+    "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
     "Theorems": {"Exec", "SpecExt", "Itasca", "Aeneas"},
     # Contracts stay below the constructions that assume them. The API invariant
     # is named until Theorems/Api leaves the Theorems layer.
-    "Contracts": {"Exec.Platform", "Exec.Generated", "Exec.Spec", "Exec.Representation", "Exec.Store",
+    "Contracts": {"Exec.Platform", "Exec.Generated", "Itasca.Generated", "Exec.Spec", "Exec.Representation", "Exec.Store",
                   "Exec.Interp.Relations", "Exec.Theorems.Api.ExecutableInv", "SpecExt"},
     "Results": {"Exec", "SpecExt", "Itasca", "Aeneas"},
     "Main": {"Exec.Contracts", "Exec.Results"},
@@ -121,8 +121,6 @@ def check_layer(name: str, imported: str, library: str) -> None:
         allowed = EXEC_LAYERS[layer] | FOUNDATIONS
         if layer in {"Spec", "Theorems", "Results", "Examples"}:
             allowed = allowed | SPEC_MODULES
-        if name in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
-            allowed = allowed | {"Itasca.Generated"}
     if library == "Exec" and layer == "Code" and under(imported, "Exec.Code"):
         source_stage = name.split(".")[2]
         target_stage = imported.split(".")[2]
@@ -134,11 +132,8 @@ def check_layer(name: str, imported: str, library: str) -> None:
         if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
             if not under(name, f"Exec.{owner}.{final}"):
                 raise ValueError(f"{name} imports {imported}, above its integration stage")
-    if library == "Exec" and imported == "Exec.Generated.Funs" and layer != "Generated":
+    if library == "Exec" and imported == "Itasca.Generated.Funs" and name != "Exec.Generated.Equations":
         raise ValueError(f"{name} imports {imported}; import Exec.Generated.Equations, which shares the runtime's equation lemmas")
-    if library == "Exec" and under(imported, "Itasca.Generated"):
-        if name not in {"Exec.Generated.FunsExternal", "Exec.Generated.TypesExternal"}:
-            raise ValueError(f"{name} imports {imported}, outside the Exec.{layer} layer; only external adapters may directly reuse validator generated declarations")
     # Reuse canonical source typing, environment caches, and the abstract
     # module-binding extension theorem without opening their entire hierarchies.
     if name == "Exec.Spec.SegmentCopySlice" and imported == "Aeneas.Data.List.List":

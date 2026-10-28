@@ -1,5 +1,5 @@
 import Exec.Code.Local.Control.Common.StructuredComposition
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 theorem Segment.extend {code pc instructions next} (segment : Segment code pc instructions next)
@@ -19,4 +19,4 @@ theorem IfSkip.extend {code yesExit noEntry exit yesNormal}
   | emitted fragment => exact .emitted (fragment.extend suffix)
   | direct normal otherwise => exact .direct normal otherwise
 
-end Exec.Code
+end Itasca.Runtime.Code

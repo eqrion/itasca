@@ -1,7 +1,7 @@
 import Exec.Abs.Numeric.Unary
 
-namespace Exec.Abs.Numeric
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Numeric
+open SpecExt Itasca.Runtime.Spec
 
 theorem Conversion.source_wf (op : Conversion) : wf_instr op.source := by
   cases op
@@ -37,4 +37,4 @@ theorem Conversion.pure (op : Conversion) (bits : BitVec (sizenn (numtype_Inn op
   · exact wf_admininstr_instr op.source_wf
   · exact wf_admininstr_val (integer_val_wf op.output _ (word_bound op.output (op.apply bits)))
 
-end Exec.Abs.Numeric
+end Itasca.Runtime.Abs.Numeric

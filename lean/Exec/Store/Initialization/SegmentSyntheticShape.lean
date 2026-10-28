@@ -1,9 +1,9 @@
 import Exec.Store.Initialization.SegmentLoopShape
 import Exec.Interp.Relations.Synthetic
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- The actual synthetic entry point allocates its private slots/frame, then
 runs the checked finite segment program. Allocation refusal and ordinary range
@@ -86,4 +86,4 @@ theorem segment_synthetic_shape {M P F A : Type}
         step with get_effect finalSlots.deref 1#usize
         exact ⟨afterShape, types⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

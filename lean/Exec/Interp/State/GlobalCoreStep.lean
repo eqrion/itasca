@@ -1,7 +1,7 @@
 import Exec.Interp.State.GlobalCoreDispatchValues
 import Exec.Interp.Relations.Fetch
-namespace Exec.Interp
-open Aeneas Aeneas.Std SpecExt Exec.Spec
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -93,4 +93,4 @@ theorem step_global_set_simulation (view : M → Slice U8) (code : Store.CodeInt
   cases abstract
   exact ⟨platformSame,success,⟨pc,pcNext,unchanged⟩,metadata,nextFrame,actual,fresh,extension,source,represented⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

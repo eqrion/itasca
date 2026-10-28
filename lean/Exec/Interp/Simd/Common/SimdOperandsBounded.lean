@@ -1,5 +1,5 @@
 import Exec.Interp.Simd.Common.SimdOperands
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 @[step] theorem simd_input_bounded (slots : Slice U64) (position : Usize) (width : U32)
@@ -17,4 +17,4 @@ open Aeneas Aeneas.Std
     step with get_effect as ⟨value,word⟩
     simp [simdInput,other,word]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.SimdAvailability
 import Exec.Code.Local.Capacity.DeadOpAvailability
 import Exec.Code.Local.Lowering.Simd.SimdDispatch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual ordinary dispatch for every meaningful nonconstant SIMD opcode
@@ -64,4 +64,4 @@ theorem compiler_simd_constant_op_available {A : Type} (ops : runtime.platform.A
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

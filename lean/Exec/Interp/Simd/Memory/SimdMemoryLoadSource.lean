@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Memory.SimdMemoryPlain
 import Exec.Interp.Simd.Memory.SimdMemoryEncoding
 import Exec.Spec.SimdMemoryLoad
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 
 theorem memory_bytes_wf (bytes : List U8) : Forall wf_byte (Store.decodeBytes bytes) := by
@@ -41,4 +41,4 @@ theorem full_load_source (address value : U128) (offset lane : U32) (bytes : Sli
   · rw [if_neg fits] at source effect
     rw [effect]
     exact ⟨rfl,rfl,source⟩
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

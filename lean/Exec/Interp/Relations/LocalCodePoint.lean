@@ -2,7 +2,7 @@ import Exec.Abs.Numeric.Decode
 import Exec.Interp.Relations.LocalWrite
 import Exec.Interp.Relations.Local
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 theorem linearEmission_localGet_inv {locals before after : List valtype} {emitted : List Code.Bytecode}
@@ -57,4 +57,4 @@ theorem linearEmission_localWrite_inv {locals before after : List valtype} {emit
     cases keep <;> simp [Abs.Numeric.decodeInstruction_source, Abs.Numeric.decodeInstruction] at decoded
   | _ => cases keep <;> simp_all
 
-end Exec.Interp
+end Itasca.Runtime.Interp

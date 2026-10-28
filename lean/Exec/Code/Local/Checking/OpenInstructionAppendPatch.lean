@@ -1,7 +1,7 @@
 import Exec.Code.Local.Checking.OpenInstructionPatch
 import Exec.Code.Local.Checking.OpenInstructionFragment
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- ELSE appends a possible skip and patches an earlier guard. The two effects
@@ -45,4 +45,4 @@ theorem OpenInstructionPrefix.append_patch {before after : runtime.bytecode.Comp
       omega
     simpa only [same] using checked
 
-end Exec.Code
+end Itasca.Runtime.Code

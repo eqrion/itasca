@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.CloseMapEffect
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 /-- Exact control-map vector update for a scope with a pending conditional branch. -/
 theorem close_guarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
@@ -91,4 +91,4 @@ theorem close_guarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
   · rw [hpcword]
     scalar_tac
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,5 +1,5 @@
 import Exec.Spec.SimdCompareFloat
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem forall2_map {I A B : Type} (items : List I) (f : I → A) (g : I → B)
@@ -57,4 +57,4 @@ theorem float_comparison_masks_wf (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 1
   cases ty <;> constructor
   all_goals first | rfl | exact unsigned_wf_of_lt _ _ (BitVec.isLt _)
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

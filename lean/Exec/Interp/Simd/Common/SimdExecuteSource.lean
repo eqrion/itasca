@@ -2,12 +2,12 @@ import Exec.Interp.Simd.Common.SimdMutation
 import Exec.Interp.Simd.Memory.SimdExecuteMemory
 import Exec.Interp.Memory.MemoryDecode
 import Exec.Interp.Relations.FrameStoreMetadata
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem execute_simd_source_mutation_bounded {M F : Type}
     (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
-    (interpretation : Exec.Store.CodeInterpretation) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (interpretation : Itasca.Runtime.Store.CodeInterpretation) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (instIndex function base : Usize) (op dst a entry : U32)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
@@ -29,7 +29,7 @@ theorem execute_simd_source_mutation_bounded {M F : Type}
       ⦃ result => ∃ value, result = (.Ok value,bytes) ∧ source value ⦄) :
     runtime.interp.execute_simd memory floats exec store instIndex function base op dst a entry
       ⦃ out => SimdStoreMutation view store out.2.2 ∧ ∃ value, source value ∧ out.1 = .Ok () ∧
-        Exec.Store.decodeStore view interpretation out.2.2 = Exec.Store.decodeStore view interpretation store ∧
+        Itasca.Runtime.Store.decodeStore view interpretation out.2.2 = Itasca.Runtime.Store.decodeStore view interpretation store ∧
         FrameStoreMetadata store out.2.2 ∧ SlotsEffect exec out.2.1
         (simdResultSlots exec.slots.val (base.val+dst.val) wr value) ⦄ := by
   cases lookup : inst.memories.val[0]? with
@@ -61,4 +61,4 @@ theorem execute_simd_source_mutation_bounded {M F : Type}
     · rw [changed]
       exact ⟨rfl,rfl,rfl,rfl⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

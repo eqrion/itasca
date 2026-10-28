@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Common.ReaderSignExtension
 import Exec.Code.Local.Lowering.Float.FloatOpcode
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_saturating_wasm2 {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
@@ -138,4 +138,4 @@ theorem reader_float_saturating_wasm2 {data env locals index st}
   rw [dispatch,hookEq] at callback
   exact ⟨operation,instruction,inputs,output,callback,read,converted,controls,position,values,numeric,instruction ▸ post⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

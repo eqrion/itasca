@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Recording a branch changes one frame's liveness and extends its fixups.
@@ -43,4 +43,4 @@ theorem pending_instruction_fixup {A : Type} (compiler : runtime.compiler.Functi
   obtain ⟨within,equal⟩ := List.getElem?_eq_some_iff.mp lookup
   exact ⟨frame,equal ▸ List.getElem_mem within,site,rfl,Or.inr member⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

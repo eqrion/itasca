@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Table.StructuredElseSource
 import Exec.Code.Local.Callbacks.Control.ElseFrames
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem StructuredElseEvidence.fresh {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels child label}
     (fresh : child.form.isElse = false) :
@@ -108,5 +108,5 @@ theorem StructuredUniversalElse.open_if {jumpTables : List Aeneas.Std.U32} {A : 
     rw [resolve]
     exact .cons child label (StructuredElseEvidence.fresh fresh) (arms.extend _)
 
-end Exec.Code
+end Itasca.Runtime.Code
 

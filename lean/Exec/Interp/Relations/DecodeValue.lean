@@ -1,9 +1,9 @@
 import Exec.Representation.Store
 
 /-! Primitive result decoding, independent of structural store invariants. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
-open Exec.Store
+open Itasca.Runtime.Store
 
 theorem cast_usize_exact (n : U64) (h : n.val ≤ Usize.max) :
     (UScalar.cast .Usize n).val = n.val := by
@@ -87,5 +87,5 @@ theorem decode_value_represents (ty : Itasca.types.ValueType) (lo hi : U64) (sto
   step with decode_value_boundary ty lo hi store referenceBound as ⟨result, hty, hvalue⟩
   exact ⟨hty, hvalue.trans decoded⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp
 

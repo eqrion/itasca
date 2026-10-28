@@ -3,8 +3,8 @@ import Exec.Abs.Core.MemoryTyping
 import Exec.Abs.Core.MemoryMutation
 import Exec.Abs.Core.Trap
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- A typed scalar load either produces the value prescribed by the generated
 memory rule, or takes a positive source reduction sequence to the bounds trap. -/
@@ -76,4 +76,4 @@ theorem load_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : 
           (by simpa [vals,admininstr_val,integerVal,Spec.Segment.i32,numtype_Inn] using source)
         simpa only [split] using full
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

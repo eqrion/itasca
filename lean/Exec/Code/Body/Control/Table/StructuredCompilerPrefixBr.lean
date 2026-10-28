@@ -11,7 +11,7 @@ import Exec.Code.Body.Callbacks.Common.CompilerPrefix
 import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
 import Exec.Code.Local.Control.Common.UniversalConditional
 import Exec.Code.Local.Callbacks.Control.ElseEvidence
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- The accepted callback realizes the selected source branch, for both forward
@@ -76,4 +76,4 @@ theorem StructuredCompilerPrefix.br_dead {jumpTables : List Aeneas.Std.U32} {A :
   have deadAfter : after.reachable = false := by rw [frame]; exact dead
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip _ dead deadAfter ordinary code sources consumed (by rw [cursor]), deadAfter⟩
-end Exec.Code
+end Itasca.Runtime.Code

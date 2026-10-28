@@ -6,7 +6,7 @@ import Exec.Code.Body.Reader.Common.ReaderExtendedFixups
 import Exec.Code.Body.Reader.Common.ReaderOpcodeClassification
 import Exec.Code.Body.Reader.Common.ReaderMiscAccepted
 import Exec.Code.Body.Reader.Simd.ReaderSimdEventDispatch
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful ordinary readers charge auxiliary entries and retain the
@@ -73,4 +73,4 @@ theorem reader_ordinary_ledger_wasm2 {data env locals index st}
     exact ⟨reader_typed_select_auxiliary_growth_wasm2 p ops law before after out ctx byte accepted,
       reader_typed_select_fixup_budget_wasm2 p ops law before after out ctx byte accepted⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

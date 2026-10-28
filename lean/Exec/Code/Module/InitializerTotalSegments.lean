@@ -1,5 +1,5 @@
 import Exec.Code.Module.InitializerTotalEmit
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 
@@ -25,8 +25,8 @@ set_option maxHeartbeats 2000000
   · rintro ⟨b, index, result, current⟩ ⟨code, pool, pairs⟩
     unfold runtime.compiler.initialize.lower_loop3.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env, Exec.module.Module.env,
-      Itasca.module.Module.impl.env, Exec.module.Env.elements, Itasca.module.Env.impl.elements, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,
+      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < m.module.env.elements.val.length := by
@@ -70,7 +70,7 @@ set_option maxHeartbeats 2000000
   · rintro ⟨b, index, result, current⟩ ⟨code, pool, pairs⟩
     unfold runtime.compiler.initialize.lower_loop4.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.tail, Exec.module.Module.tail,
+    simp only [runtime.compiler.ExecutableModule.tail,
       Itasca.module.Module.impl.tail, bind_ok]
     split
     · rename_i more
@@ -92,4 +92,4 @@ set_option maxHeartbeats 2000000
     · simp only [WP.spec_ok]
       exact ⟨by omega, by omega, pairs⟩
   · exact ⟨Nat.le_refl _, Nat.le_refl _, rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

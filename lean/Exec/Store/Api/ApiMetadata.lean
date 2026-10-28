@@ -3,7 +3,7 @@ import Exec.Representation.StoreInvariant
 import Exec.Store.Api.Grow
 import Exec.Store.Api.Write
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem decodeFunction_type {M : Type} (code : CodeInterpretation)
@@ -15,4 +15,4 @@ theorem decodeFunction_type {M : Type} (code : CodeInterpretation)
   cases function.code <;> simp [List.getElem?_eq_getElem hsignature]
   split <;> rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

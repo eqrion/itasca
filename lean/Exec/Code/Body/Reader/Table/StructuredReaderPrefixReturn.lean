@@ -3,7 +3,7 @@ import Exec.Code.Local.Relations.Control.KnownControlStack
 import Exec.Code.Body.Reader.Control.ReaderReturnStack
 import Exec.Code.Body.Reader.Common.ReaderRootFrame
 import Exec.Code.Body.Reader.Common.ReaderSpan
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -43,4 +43,4 @@ theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env 
       codeFits sourceFits coordinateFits callback
   · exact invariant.return_dead ops law out.core consumed (Bool.eq_false_iff.mpr reachable) callback
 
-end Exec.Code
+end Itasca.Runtime.Code

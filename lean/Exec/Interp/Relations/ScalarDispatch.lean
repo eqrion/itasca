@@ -4,7 +4,7 @@ import Exec.Interp.Numeric.Float.Float
 /-! The scalar dispatch boundary reads both operands before writing the result.
 A numeric trap leaves the complete execution state unchanged. These lemmas
 connect the separately checked opcode handlers to their actual slot mutations. -/
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Every field other than slot contents is preserved. -/
@@ -45,4 +45,4 @@ theorem execute_scalar_effect {F : Type} (ops : runtime.platform.FloatOps F)
   rw [hva', hvb', hn]
   cases numeric <;> step* <;> simp_all [ScalarEffect, SlotsEffect]
 
-end Exec.Interp
+end Itasca.Runtime.Interp

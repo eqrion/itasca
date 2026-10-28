@@ -4,8 +4,8 @@ import Exec.Abs.Ownership.Core
 import Exec.Abs.Core.Bound
 import Exec.Abs.Stateful.OwnershipPrimitives
 
-namespace Exec.Abs.TypedSelect
-open SpecExt Exec.Spec Exec.Abs.Ownership
+namespace Itasca.Runtime.Abs.TypedSelect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
 
 /-- Explicit select uses the deterministic value choice, with the type
 annotation retained in its source configuration. -/
@@ -56,4 +56,4 @@ theorem Step.next_owned {bounds before next} (step : Step before next)
       have values := frame.2
       aesop (add safe forward ValuesOwned.pop)
 
-end Exec.Abs.TypedSelect
+end Itasca.Runtime.Abs.TypedSelect

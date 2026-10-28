@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Table.ReaderTablePublication
 import Exec.Code.Local.Coordinates.LoweringTargetBounds
 import Exec.Code.Local.Coordinates.TableCallbackTargetBounds
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual Wasm 2 openings retain targets independently of the selected signature. -/
@@ -44,4 +44,4 @@ theorem reader_table_target_bounds_wasm2 {A : Type} (ops : runtime.platform.Allo
   exact compiler_br_table_target_bounds ops law {before with budget,table_depths := buffer} after final.core fallback
     types (by simpa only [JumpTableBounds] using held) callback
 
-end Exec.Code
+end Itasca.Runtime.Code

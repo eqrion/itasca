@@ -2,7 +2,7 @@ import Exec.Spec.Wf
 import Exec.Spec.Steps
 import Mathlib.Tactic
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def droppedDataStore (s : store) (f : frame) (index : Nat) : store :=
@@ -41,4 +41,4 @@ theorem element_drop_step (s : store) (f : frame) (index : Nat)
     exact .admininstr_case_55 _ (wf_uN.uN_case_0 32 index (by norm_num; omega))
   · exact wf_config_make fresh ambient (by simp [Forall])
 
-end Exec.Spec
+end Itasca.Runtime.Spec

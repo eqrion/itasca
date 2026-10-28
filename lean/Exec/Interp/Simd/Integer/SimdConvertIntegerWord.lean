@@ -1,6 +1,6 @@
 import Exec.Interp.Numeric.Float.Float
 import Exec.Interp.Simd.Float.SimdCompareFloatLanes
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 def convertIntegerWord {F : Type} (floats : runtime.platform.FloatOps F) (ty : Fnn) (signed : Bool) (a : U64) : Result U64 := do
@@ -48,4 +48,4 @@ def convertIntegerWord {F : Type} (floats : runtime.platform.FloatOps F) (ty : F
     step with quiet64_sound raw _ allowed (canonicalClosed_convert 32 64 (by omega) _ _) as ⟨value,chosen⟩
     exact ⟨by simpa [signedRound] using chosen,by with_unfolding_all exact value.bv.isLt⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

@@ -1,6 +1,6 @@
 import Exec.Code.Module.EnvironmentFunctionVectorAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Independent numerical eligibility of the compiler's environment phase. -/
@@ -36,8 +36,7 @@ theorem environment_ready_available {A : Type} (ops : runtime.platform.Alloc A)
     simp [Slice.len,alloc.vec.Vec.deref,alloc.vec.Vec.length] at *
     scalar_tac
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
-  simp only [module.Env.func_type_indices,Itasca.module.Env.impl.func_type_indices,
-    module.Env.types,Itasca.module.Env.impl.types,bind_ok,if_neg functions,if_neg types]
+  simp only [Itasca.module.Env.impl.func_type_indices,Itasca.module.Env.impl.types,bind_ok,if_neg functions,if_neg types]
   obtain ⟨captured,actual,first,same,firstShape,firstLength⟩ := WP.spec_imp_exists
     (environment_signatures_available ops bound available scheduler env 0#usize (by simp)
       demand.signatureWidths (by simpa using demand.signatureCapacity) (by simpa using demand.signatureReserve))
@@ -66,4 +65,4 @@ theorem environment_ready_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
   exact ⟨trivial,by rw [sameBudget,secondBudget]⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

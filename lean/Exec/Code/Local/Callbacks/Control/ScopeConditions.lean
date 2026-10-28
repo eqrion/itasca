@@ -1,6 +1,6 @@
 import Exec.Code.Local.Control.Common.UniversalInitial
 import Exec.Code.Local.Callbacks.Control.ElseSource
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The saved IF condition occupies the word immediately above its parameters.
@@ -66,4 +66,4 @@ theorem ScopeConditions.initial {locals returns} : ScopeConditions locals [] (So
   subst scope
   trivial
 
-end Exec.Code
+end Itasca.Runtime.Code

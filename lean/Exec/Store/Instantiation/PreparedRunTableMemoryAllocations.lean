@@ -1,6 +1,6 @@
 import Exec.Store.Instantiation.PreparedRun
 import Exec.Store.Preparation.PreparationTableMemoryAllocations
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 
 /-- The retained actual preparation calls allocate the source-defined table and
@@ -47,4 +47,4 @@ theorem PreparedRun.preparation_metadata {M P F A : Type}
       (by simpa only [trace.source] using cache) before.instances.len trace.typed trace.functions trace.tabled trace.prepared
       trace.typeInst trace.funcInst trace.tableInst trace.inst trace.typeRun trace.functionRun trace.tableRun trace.memoryRun
   exact ⟨functions, types, functionMap, typeMap, source.trans trace.source⟩
-end Exec.Store
+end Itasca.Runtime.Store

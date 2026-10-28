@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdComparePacking
 import Exec.Spec.SimdCompareStep
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem integer_compare_lanes_sound (ty : Jnn) (op : vrelop_Jnn_N) (x y : U128)
@@ -37,4 +37,4 @@ theorem integer_compare_simd_eq {F : Type} (floats : runtime.platform.FloatOps F
   step with integer_compare_lanes_sound ty op x y supported as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

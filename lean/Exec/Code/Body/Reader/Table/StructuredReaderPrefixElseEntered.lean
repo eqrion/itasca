@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Control.ElseSuccess
 import Exec.Code.Body.Reader.Table.StructuredReaderPrefixElseDormant
 import Exec.Code.Local.Relations.Control.ControlObservedLayout
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_else_entered_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -67,4 +67,4 @@ theorem structured_callback_else_entered_prefix {jumpTables : List U32} {emit : 
   exact ⟨noEntry, change.noPosition, invariant.begin_else entered live stack stable maps prior frame guard
     (alloc.vec.Vec.len before.function.code) condition core.num.U32.MAX noEntry fixups change sourceType form guardEq
     layout sourceTypes sources consumed (by rw [cursor])⟩
-end Exec.Code
+end Itasca.Runtime.Code

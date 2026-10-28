@@ -1,7 +1,7 @@
 import Exec.Interp.Calls.IndirectCall
 import Exec.Store.Invariant.CanonicalSignatures
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Store shape discharges reference/address safety; canonical signatures turn
@@ -124,4 +124,4 @@ theorem step_indirect_call_shaped {M P F A : Type}
     functionFound pairFound tableMapped tableFound input indexBound signatureFound baseOffset
     expectedFound cause post (outside next nextEq) (null next nextEq) (mismatch next nextEq) (called next nextEq)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

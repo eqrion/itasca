@@ -2,7 +2,7 @@ import Exec.Abs.Memory.Semantics
 import Exec.Abs.Core.Globals
 import Exec.Abs.Core.Select
 
-namespace Exec.Abs.Core
+namespace Itasca.Runtime.Abs.Core
 open SpecExt
 
 /-- Scalar loads resolve memory zero in the current instance and use unwrapped
@@ -41,4 +41,4 @@ def store (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr)
     else .stuck
   | _,_ => .stuck
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

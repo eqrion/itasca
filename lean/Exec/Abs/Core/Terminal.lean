@@ -3,8 +3,8 @@ import Exec.Abs.Core.MemoryLoad
 import Exec.Abs.Core.MemoryStore
 import Exec.Abs.Sim.Terminal
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 /-- Core traps are generated source traps: integer exceptional arithmetic,
 explicit unreachable, and scalar memory bounds failures. -/
@@ -60,4 +60,4 @@ theorem instruction_trap (s : _root_.store) (ambient : frame) (f : AFrame)
       contradiction
     · exact source
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

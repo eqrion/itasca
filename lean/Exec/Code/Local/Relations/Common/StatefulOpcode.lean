@@ -1,7 +1,7 @@
 import Exec.Abs.Stateful.Descriptor
-import Exec.Generated.Types
+import Itasca.Generated.Types
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Expanded opcodes use 0x100 plus the misc-prefix subopcode. -/
@@ -68,4 +68,4 @@ def StatefulPair (pairs : List (U32 × U32)) (op : Abs.Stateful.Instruction)
   | .tableCopy .. | .tableInit .. => pairs[entry.val]? = some (a, b)
   | _ => True
 
-end Exec.Code
+end Itasca.Runtime.Code

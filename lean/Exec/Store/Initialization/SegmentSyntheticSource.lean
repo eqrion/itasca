@@ -1,9 +1,9 @@
 import Exec.Store.Initialization.SegmentLoopSource
 import Exec.Interp.Relations.Synthetic
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
-open Exec.Interp
+open Itasca.Runtime.Interp
 
 /-- Segment execution can fail only at a memory or table range check. -/
 def SegmentExecutionStatus {T : Type} (result : core.result.Result T runtime.ExecError) : Prop :=
@@ -11,4 +11,4 @@ def SegmentExecutionStatus {T : Type} (result : core.result.Result T runtime.Exe
   | .Ok _ => True
   | .Err error => error = .Trap .MemoryOutOfBounds ∨ error = .Trap .TableOutOfBounds
 
-end Exec.Store
+end Itasca.Runtime.Store

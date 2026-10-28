@@ -1,6 +1,6 @@
 import Exec.Code.Local.Checking.OpenInstructionCompiler
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Appending a control fragment retains old checks and supplies each new word's
@@ -24,4 +24,4 @@ theorem OpenInstructionPrefix.append_open {before after : runtime.bytecode.Compi
       omega
     simpa only [same] using checked
 
-end Exec.Code
+end Itasca.Runtime.Code

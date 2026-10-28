@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.ReachedBodySafetyWasm2
 import Exec.Code.Local.Capacity.BudgetEffects
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Reuse the complete accepted-step certificate after acceptance has been
@@ -57,4 +57,4 @@ theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law 
   · exact .inl closed
   · exact .inr ⟨point',fresh⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

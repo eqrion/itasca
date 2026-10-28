@@ -1,6 +1,6 @@
 import Exec.Interp.Host.HostRecording
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 /-- The host target selected by the actual call bytecode. Failed lookups,
@@ -47,4 +47,4 @@ def stepHostEvents {M P : Type} (exec : runtime.interp.Execution)
   | some address => hostCallEvents address out
   | none => []
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Exec.Code.Body.Reader.Simd.ReaderSimdLane
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- Full SIMD memory readers retain both encoded immediates, validated memory
@@ -65,4 +65,4 @@ theorem reader_simd_memory_wasm2 {data env locals index st}
           simpa only [op.inputs_full full,Wasm2.Simd.MemoryOperation.outputs_pop,UScalar.ofNatCore_val_eq] using
             op.typed_runtime C env ⟨locals,p.ft.results⟩ wf matched arg 0#u8 checked.1
               (by simpa [Wasm2.Simd.MemoryOperation.runtime] using checked.2) (by simp [full])) encoded fixed
-end Exec.Code
+end Itasca.Runtime.Code

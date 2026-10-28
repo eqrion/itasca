@@ -11,7 +11,7 @@ import Exec.Store.Preparation.StagingCommitShape
 import Exec.Store.Instantiation.PublishInstance
 import Exec.Store.Linking.LinkedOwners
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -151,4 +151,4 @@ theorem PreparedRun.table_memory_bindings {M P F A : Type}
   · rw [trace.committed]
     exact MemoryBindings.prefix memoryMap rfl (by simp)
 
-end Exec.Store
+end Itasca.Runtime.Store

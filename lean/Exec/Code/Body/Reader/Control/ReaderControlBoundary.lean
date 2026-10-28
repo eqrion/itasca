@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm2.EncodingUnique
 import Exec.Code.Body.Reader.Common.ReaderBoundary
 import Exec.Code.Body.Reader.Common.ReaderEnterWasm2
 import Exec.Code.Body.Reader.Common.ReaderCloseWasm2
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderEnterPostWasm2.boundary {data env locals index st out form bt ins outs remaining base}
@@ -84,4 +84,4 @@ theorem reader_root_end_source_wasm2 {data env locals index st out source}
     (finished : out.core.pos.val = data.length)
     (body : Wasm2.BodyEncoding data source) : p.current.ops = source :=
   (reader_root_end_encoding_wasm2 p root encoded zipper finished).unique body
-end Exec.Code
+end Itasca.Runtime.Code

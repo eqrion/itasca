@@ -2,8 +2,8 @@ import Exec.Abs.Core.Typing
 import Exec.Abs.Preservation
 import Exec.Abs.Sim.Typed
 
-namespace Exec.Abs.Core
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Core
+open SpecExt Itasca.Runtime.Spec
 
 def select (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) : AResult :=
   match pop f.vals with
@@ -122,4 +122,4 @@ theorem select_progress (s : store) (ambient : frame) (f : AFrame) (rest : List 
             (val_ok_wf leftTyped) (val_ok_wf rightTyped) bitsBound
           simpa only [split,next] using source
 
-end Exec.Abs.Core
+end Itasca.Runtime.Abs.Core

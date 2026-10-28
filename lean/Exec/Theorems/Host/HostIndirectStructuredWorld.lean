@@ -1,9 +1,9 @@
 import Exec.Theorems.Host.HostIndirectSelectedWorld
 import Exec.Interp.Relations.StepRecordingLookup
 import Exec.Theorems.Composition.Supported.SupportedIndirectExecution
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Interp
-open Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Itasca.Runtime.Interp.StructuredMachine
 theorem step_indirect_host_structured_world {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -168,4 +168,4 @@ theorem step_indirect_host_structured_world {M P F A : Type}
           (castEq.trans word) functionAt signatureMapped signatureSame hostCode
       obtain ⟨afterCode,agrees,freshInv,rest⟩ := outcome
       exact Or.inr ⟨afterCode,agrees,freshInv,guard,actualSignature,base,pc,front,args,values,pcEq,⟨entry,selector,offset,fetch⟩,callActual,rest⟩
-end Exec.Theorems
+end Itasca.Runtime.Theorems

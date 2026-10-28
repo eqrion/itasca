@@ -3,7 +3,7 @@ import Exec.Store.Invariant.NormalResult
 import Exec.Store.Api.Define
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -38,13 +38,13 @@ elab "allocation_error_effect " h:ident " using " allocator:term ", " law:term :
     | ``runtime.reserve => `(tactic| have cause := reserve_errors $allocator $law _ _ _ $h)
     | ``runtime.store.Store.room => `(tactic| have cause := room_errors _ _ _ $h)
     | ``runtime.copy_type => do
-      let theoremName :=    mkIdent `Exec.Store.copy_type_errors
+      let theoremName :=    mkIdent `Itasca.Runtime.Store.copy_type_errors
       `(tactic| have cause := $theoremName $allocator $law _ _ $h)
     | ``runtime.store.Store.intern_type => do
-      let theoremName :=    mkIdent `Exec.Store.intern_type_errors
+      let theoremName :=    mkIdent `Itasca.Runtime.Store.intern_type_errors
       `(tactic| have cause := $theoremName _ $allocator $law _ _ _ $h)
     | ``runtime.store.copy_bytes => do
-      let theoremName :=    mkIdent `Exec.Store.copy_bytes_errors
+      let theoremName :=    mkIdent `Itasca.Runtime.Store.copy_bytes_errors
       `(tactic| have cause := $theoremName $allocator $law _ _ $h)
     | _ => throwError "not an allocation helper"
   evalTactic tac
@@ -116,4 +116,4 @@ theorem add_data_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (run : runtime.store.instantiate.Store.add_instance_data memory allocator store instanceIndex index = .ok out) : ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_data at run
   repeat' allocation_error_step run using allocator, law
-end Exec.Store
+end Itasca.Runtime.Store

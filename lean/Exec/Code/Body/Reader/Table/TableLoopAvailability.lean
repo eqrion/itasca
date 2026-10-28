@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Table.TableLabelCollectionReplay
 import Exec.Code.Body.Reader.Table.TableSourceFrame
 import Exec.Code.Local.Capacity.BranchTableAvailability
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -89,4 +89,4 @@ theorem compiler_table_reader_loop_available {A V : Type}
   rw [frame] at lowerEffect
   exact (effect.trans lowerEffect).weaken (by intro counter; cases counter <;> simp [bufferLength])
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Interp.Host.HostResults
 import Exec.Interp.Relations.Fetch
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- The extracted host-call continuation, after the callback's borrowed result
@@ -24,4 +24,4 @@ def hostResume {M : Type} (memory : runtime.platform.MemoryBuffer M)
   | .Err .Trap => Result.ok (.Err (.Trap .Host),{exec with host_results := results})
   | .Err .StackOverflow => Result.ok (.Err (.Exhausted .CallStack),{exec with host_results := results})
 
-end Exec.Interp
+end Itasca.Runtime.Interp

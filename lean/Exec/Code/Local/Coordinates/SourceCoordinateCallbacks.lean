@@ -2,7 +2,7 @@ import Exec.Code.Local.Coordinates.SourceCoordinates
 import Exec.Code.Local.Source.SourceCursor
 import Exec.Code.Local.Source.SourceStartFrame
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Function setup establishes the empty coordinate invariant before reading
@@ -235,4 +235,4 @@ theorem compiler_finish_op_source_coordinates_result {A : Type} (ops : runtime.p
   subst status
   exact compiler_finish_op_source_coordinates ops law before after state instruction held inside forward called
 
-end Exec.Code
+end Itasca.Runtime.Code

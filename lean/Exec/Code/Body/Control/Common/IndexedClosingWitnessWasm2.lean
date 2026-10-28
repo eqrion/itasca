@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Common.IndexedReaderCompilerBodyWasm2
 import Exec.Code.Body.Reader.Common.ReaderRootEnd
 import Exec.Code.Body.Reader.Common.ReaderMiscAccepted
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful step advances the retained canonical prefix or closes the
@@ -75,4 +75,4 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closing_of_opcode {A : T
     exact .inr (point.simd ops law C contextLocals matched.mems (fun tables => (inferInstance : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C))) next advance inbounds out sourceBound bodyBound simd accepted)
   · rw [typedSelect] at accepted
     exact .inr (point.typed_select ops law C (by intro tables input instruction code output h; exact .typedSelect h) contextLocals next advance inbounds out sourceBound bodyBound typedSelect accepted)
-end Exec.Code
+end Itasca.Runtime.Code

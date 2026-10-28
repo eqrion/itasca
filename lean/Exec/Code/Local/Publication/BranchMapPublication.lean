@@ -3,7 +3,7 @@ import Exec.Code.Local.Callbacks.Control.CompilerBranchMetadata
 import Exec.Code.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Exec.Code.Local.Relations.Control.ControlCursor
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Actual branch emission preserves every control-map publication bound;
@@ -19,4 +19,4 @@ theorem compiler_branch_map_publication {A : Type} (ops : runtime.platform.Alloc
     (compiler_branch_code_mono ops law before after depth skip conditional (.Ok ()) called)
   rw [compiler_branch_cursor ops law before after depth skip conditional called]
 
-end Exec.Code
+end Itasca.Runtime.Code

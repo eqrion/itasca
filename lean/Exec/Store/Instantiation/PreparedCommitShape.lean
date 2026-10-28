@@ -6,7 +6,7 @@ import Exec.Store.Preparation.StagingCommitShape
 import Exec.Store.Instantiation.PublishInstance
 import Exec.Store.Linking.LinkedOwners
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -118,4 +118,4 @@ theorem prepared_commit_shape {M P F A : Type}
   · simpa only [source, preparedSource] using metadata.function_table publishedFunctions
   · simpa only [source, preparedSource] using metadata.staged_functions publishedSignatures
 
-end Exec.Store
+end Itasca.Runtime.Store

@@ -1,6 +1,6 @@
 import Exec.Spec.SimdCompareShape
 import SpecExt.Builtins.LaneMap
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem forall3_map {I A B C : Type} (items : List I) (f : I → A) (g : I → B) (h : I → C)
@@ -57,4 +57,4 @@ theorem comparison_answers_wf (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128) 
   cases integerLaneCompare op (laneWord (lanetype_Jnn ty) x j) (laneWord (lanetype_Jnn ty) y j) <;>
     apply wf_uN.uN_case_0 <;> decide
 
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

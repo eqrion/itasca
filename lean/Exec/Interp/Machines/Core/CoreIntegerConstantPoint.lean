@@ -5,7 +5,7 @@ import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Interp.Control.StructuredPoint
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Interp.Relations.ConstCodePoint
-namespace Exec.Interp.IntegerConstant
+namespace Itasca.Runtime.Interp.IntegerConstant
 open Aeneas Aeneas.Std SpecExt
 
 theorem scalarEmission_integer32_inv {C before after emitted} (value : U32)
@@ -38,4 +38,4 @@ theorem scalarEmission_integer64_inv {C before after emitted} (value : U64)
   | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
   | _ => cases equality
 
-end Exec.Interp.IntegerConstant
+end Itasca.Runtime.Interp.IntegerConstant

@@ -1,7 +1,7 @@
 import Exec.Code.Module.InitializerSourceBounds
 import Exec.Code.Module.CompileAssembly
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 /-- The actual fresh compiler-driver input has enough space for initializer
@@ -22,4 +22,4 @@ theorem initializer_lower_source_total {A : Type} (ops : runtime.platform.Alloc 
   · simpa only [uninitializedModule, functionCount] using mapSpace
   · exact segmentSpace
 
-end Exec.Code
+end Itasca.Runtime.Code

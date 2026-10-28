@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.FixupPreservation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 4096
@@ -64,4 +64,4 @@ theorem compiler_branch_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
     omega
 
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Exec.Code.Local.Relations.Common.StatefulLowering
 import Exec.Code.Local.Relations.Calls.IndirectCallLowering
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -35,4 +35,4 @@ theorem compiler_indirect_call_auxiliary_tables {A : Type} (ops : runtime.platfo
     have tables := compiler_observe_tables ops law before after state status accepted
     simpa only [CompilerTables.ofFunction, CompilerTables.mk.injEq, compilerAuxiliaryTables] using
       congrArg (fun t : CompilerTables => (t.simd,t.constants,t.jumpTables)) tables
-end Exec.Code
+end Itasca.Runtime.Code

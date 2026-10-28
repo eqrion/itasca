@@ -2,7 +2,7 @@ import Exec.Code.Body.Reader.Table.IndexedTableReaderCompilerPoint
 import Exec.Code.Body.Reader.Table.StructuredReaderCompilerTable
 import Exec.Code.Body.Reader.Table.ReaderTableDecoded
 import Exec.Code.Body.Relations.Table.BranchTableTables
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.br_table {A : Type}
@@ -35,4 +35,4 @@ theorem IndexedTableReaderCompilerPointWasm2.br_table {A : Type}
   obtain ⟨advanced,_⟩ := state.br_table ops law point.tables next advance inbounds out depths fallback out.core.pos decoded
     future.jumpTables rfl (gate _ depths fallback) byte accepted
   exact advanced.point
-end Exec.Code
+end Itasca.Runtime.Code

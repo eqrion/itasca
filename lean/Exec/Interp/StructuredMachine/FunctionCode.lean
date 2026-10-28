@@ -1,6 +1,6 @@
 import Exec.Interp.StructuredMachine.Point
 import Exec.Code.Local.Control.Table.StructuredFunction
-namespace Exec.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 
 /-- Function-local emission metadata and complete syntactic compiler evidence. -/
@@ -15,4 +15,4 @@ theorem FunctionCode.entry {C params declared results body compiled epilogue}
     Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS results C.LOCALS compiled.code.val compiled.jump_tables.val
       [Code.functionRootLabel results compiled epilogue] [] body 0 epilogue.val results := by
   simpa only [certificate.1] using certificate.2.entry
-end Exec.Interp.StructuredMachine
+end Itasca.Runtime.Interp.StructuredMachine

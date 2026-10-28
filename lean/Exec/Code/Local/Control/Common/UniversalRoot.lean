@@ -4,7 +4,7 @@ import Exec.Code.Local.Relations.Common.Function
 import Exec.Code.Local.Relations.Common.LabelWiden
 import Exec.Code.Local.Relations.Common.Extension
 import Exec.Code.Local.Relations.Common.Prefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Final END fixes the root's coordinates and both liveness flags, producing
@@ -40,4 +40,4 @@ theorem root_scope_label (scope : SourceScope) (returns : List valtype)
   refine ⟨front.symm, ?_, results.symm⟩
   simp [SourceScope.branchTypes, form, results]
 
-end Exec.Code
+end Itasca.Runtime.Code

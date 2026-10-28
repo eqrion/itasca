@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.TransferAvailability
 import Exec.Code.Local.Capacity.CallbackCapacity
 import Exec.Code.Local.Lowering.Control.LoweringLoopBranch
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -150,4 +150,4 @@ theorem compiler_branch_loop_available {A : Type} (ops : runtime.platform.Alloc 
       lookup position kind (by intro empty; exact elided (Or.inl empty))
       (by intro same; exact elided (Or.inr same)) sourcePosition
 
-end Exec.Code
+end Itasca.Runtime.Code

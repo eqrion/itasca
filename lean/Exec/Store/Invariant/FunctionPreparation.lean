@@ -1,7 +1,7 @@
 import Exec.Store.Invariant.FunctionSignatureLoop
 import Exec.Store.Preparation.PreparationInputs
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
@@ -52,4 +52,4 @@ theorem prepare_function_signatures {M A : Type} (memory : runtime.platform.Memo
   have full := complete success
   simpa only [defined, ← List.map_append, List.take_append_drop] using full
 
-end Exec.Store
+end Itasca.Runtime.Store

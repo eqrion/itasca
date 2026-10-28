@@ -1,7 +1,7 @@
 import Exec.Store.Initialization.SegmentReady
 import Exec.Store.Invariant.InstantiationCode
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Initialization bulk operations retain every function and signature lookup
@@ -35,4 +35,4 @@ theorem start_function_resolves {M : Type} {store : runtime.store.Store M}
       List.map_eq_nil_iff] using decodedEmpty
   exact ⟨address, function, signature, mapped, owned, found, typed, empty⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

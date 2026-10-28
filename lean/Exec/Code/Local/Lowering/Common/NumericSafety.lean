@@ -4,7 +4,7 @@ import Exec.Code.Local.Lowering.Common.NumericLowering
 /-! Integer lowering returns normally even for missing operands. Only emission
 capacity and source-coordinate bounds are required; operand errors remain
 ordinary visitor errors. -/
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_operand_total {A} (ops : runtime.platform.Alloc A)
@@ -53,4 +53,4 @@ open Aeneas Aeneas.Std
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Exec.Code
+end Itasca.Runtime.Code

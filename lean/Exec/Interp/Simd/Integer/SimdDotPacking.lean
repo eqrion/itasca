@@ -1,7 +1,7 @@
 import Exec.Interp.Simd.Integer.SimdDotLoop
 import Exec.Spec.SimdDotSource
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd SpecExt.Builtins
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd SpecExt.Builtins
 
 theorem dot_packed (x y result : U128)
     (lanes : ∀ j, j < 4 → laneBits 32 j result.bv = dotBits x.bv y.bv j) :
@@ -16,4 +16,4 @@ theorem dot_packed (x y result : U128)
   simp only [same] at packed
   with_unfolding_all exact congrArg uN.mk_uN packed.symm
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

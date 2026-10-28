@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Common.SimdAveragePacking
 import Exec.Spec.SimdAverage
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
 @[step] theorem average_lanes_sound (ty : Jnn) (x y : U128)
@@ -38,4 +38,4 @@ theorem average_simd_eq {F : Type} (floats : runtime.platform.FloatOps F)
   step with average_lanes_sound ty x y supported as ⟨value,source⟩
   exact ⟨value,rfl,source⟩
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

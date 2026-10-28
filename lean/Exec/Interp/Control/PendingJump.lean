@@ -1,7 +1,7 @@
 import Exec.Interp.Relations.Fetch
 import Exec.Interp.Relations.Rel
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Administrative potential covers source constants, forward skip jumps,
@@ -83,4 +83,4 @@ theorem step_jump_exact {M P F A : Type}
   simp only [frames] at exactState
   exact ⟨success, exactState, sameStore, samePlatform⟩
 
-end Exec.Interp
+end Itasca.Runtime.Interp

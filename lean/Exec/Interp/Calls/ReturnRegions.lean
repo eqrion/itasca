@@ -1,6 +1,6 @@
 import Exec.Interp.Relations.Regions
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Successful return places exactly the source result words at the callee
@@ -68,4 +68,4 @@ theorem ReturnEffect.preserve_binding {M : Type} {store : runtime.store.Store M}
     rw [effect.1, copyWords_length]
     exact bound
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -1,7 +1,7 @@
 import Exec.Code.Local.Coordinates.SourceCoordinateTactic
 import Exec.Code.Local.Coordinates.OrdinarySourceCoordinates
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -397,4 +397,4 @@ theorem compiler_scalar_source_coordinates {A : Type} (ops : runtime.platform.Al
   · exact scalar_coordinates_272 ops law before after state a b bits held inside forward called
   · exact scalar_coordinates_273 ops law before after state a b bits held inside forward called
 
-end Exec.Code
+end Itasca.Runtime.Code

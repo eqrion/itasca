@@ -6,8 +6,8 @@ import Exec.Code.Local.Relations.Common.StatefulEmission
 import Exec.Interp.Relations.SourceIndirectCallCause
 import Exec.Interp.FloatCore.Outcome
 import Exec.Theorems.Composition.Cumulative.CumulativeMutationCertified
-namespace Exec.Theorems
-open Aeneas Aeneas.Std Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 def CumulativeTrap (trap : runtime.Trap) : Prop := FloatCoreTrap trap ∨ trap = .TableOutOfBounds ∨ trap = .UninitializedElement ∨ trap = .IndirectCallTypeMismatch
 
@@ -30,4 +30,4 @@ variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.
   {codeLength pc : Nat} {pending : Bool} {source : Abs.AState}
   {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

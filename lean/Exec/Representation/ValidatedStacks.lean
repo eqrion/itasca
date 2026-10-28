@@ -2,7 +2,7 @@ import Exec.Representation.StackLayout
 import Itasca.Wasm2.Invariant
 import Itasca.Profile.BodySpec
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- A source-only successful validation trace, recording every operand stack.
@@ -27,4 +27,4 @@ unreachable source positions. Scalars/references use one word and vectors two. -
 def maximumStackWords (samples : List (List code.StackType)) : Nat :=
   samples.foldr (fun stack bound => max (stackWords stack) bound) 0
 
-end Exec.Code
+end Itasca.Runtime.Code

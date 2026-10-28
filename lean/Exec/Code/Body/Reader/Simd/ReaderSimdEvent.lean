@@ -15,7 +15,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerDeadMetadata
 import Exec.Code.Body.Reader.Common.ReaderSpan
 import Exec.Code.Local.Callbacks.Table.CompilerTablePreservation
 import Exec.Code.Body.Reader.Simd.ReaderSimdCallbackEmission
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- All information retained from one actually accepted SIMD reader and
@@ -49,4 +49,4 @@ theorem SimdReaderEvent.capacity_step {A : Type} {ops : runtime.platform.Alloc A
   exact (compiler_lower_simd_effects ops law before after out event.opcode event.a event.b event.bits
     (by have number := event.number; omega) (by have number := event.number; omega) event.callback).2.2.2
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,8 +1,8 @@
 import Exec.Spec.SimdDot
 import Exec.Interp.Simd.Integer.SimdDotWord
 import Exec.Interp.Simd.Integer.SimdIntegerArithmeticLanes
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std Exec.Spec.Simd
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
 theorem dot_loop (x y initial : U128) (i : U32)
     (position : i.val ≤ 4)
@@ -85,4 +85,4 @@ theorem dot_loop (x y initial : U128) (i : U32)
   intro result lanes
   simpa using lanes
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

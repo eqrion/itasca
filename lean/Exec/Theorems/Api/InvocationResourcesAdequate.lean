@@ -67,8 +67,8 @@ import Exec.Abs.Supported.CumulativeStep
 import Exec.Theorems.Composition.Cumulative.CumulativeFailureErrors
 import Exec.Theorems.Composition.Supported.SupportedSourceResources
 import Exec.Interp.Calls.CallCauses
-namespace Exec.Theorems
-open Aeneas Aeneas.Std SpecExt Exec.Spec Exec.Interp
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp
 
 /-- A conservative primitive allocation bound covering any representable
 vector and additional request. This is independent of any invocation. -/
@@ -79,4 +79,4 @@ theorem reserve_ne_refusal_of_universal_bound {A T : Type} {allocator : runtime.
   rw [available T values n fits]
   simp
 
-end Exec.Theorems
+end Itasca.Runtime.Theorems

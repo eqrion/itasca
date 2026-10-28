@@ -1,6 +1,6 @@
 import Exec.Code.Local.Lowering.Common.Emit
 import Exec.Code.Local.Control.Common.Structured
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The compiler's copy helper elides an empty or identity transfer. -/
@@ -44,4 +44,4 @@ theorem compiler_copy_elided {A : Type} (ops : runtime.platform.Alloc A)
       exact eq
     simpa [transferInstruction, h1, h2] using
       compiler_emit ops law compiler (.CopyN dst src count) codeFits sourceFits coordinateFits
-end Exec.Code
+end Itasca.Runtime.Code

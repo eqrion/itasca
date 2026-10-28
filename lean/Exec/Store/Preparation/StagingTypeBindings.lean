@@ -4,7 +4,7 @@ import Exec.Store.Initialization.InitializerMetadata
 import Exec.Store.Initialization.ElementTypes
 import Exec.Store.Initialization.DataStagingLoop
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem InitializerFunctionMetadata.table_types {M : Type}
@@ -21,4 +21,4 @@ theorem segment_type_bindings_of_maps {M : Type} {store : runtime.store.Store M}
     (elements : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val) :
     SegmentTypeBindings store inst := ⟨tables.bindings, elements.bindings⟩
 
-end Exec.Store
+end Itasca.Runtime.Store

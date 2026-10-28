@@ -4,7 +4,7 @@ import Exec.Code.Body.Reader.Table.ReaderTableInputsWasm2
 import Exec.Code.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Wasm2.Trace.TableBytes
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -110,4 +110,4 @@ theorem reached_profile_br_table_available_wasm2 {jumpTables : List U32} {data e
   refine ⟨(.Ok (),out,targetAfter),called,rfl,rfl,?_⟩
   exact effect.weaken (by intro counter; cases counter <;> simp [lengthSource])
 
-end Exec.Code
+end Itasca.Runtime.Code

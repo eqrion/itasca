@@ -1,4 +1,4 @@
-import Exec.Generated.Types
+import Itasca.Generated.Types
 import SpecExt.Builtins.Float.Canonical
 
 /-! Exact embedding contract for the extracted float dictionary. Every method
@@ -6,7 +6,7 @@ returns normally. Finite/infinite results must belong to the specification set;
 any raw NaN is allowed only when that set contains a NaN. Canonicalization is
 an interpreter obligation, not an extra restriction on the embedding payload. -/
 
-namespace Exec.Platform
+namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 
 def FloatOutcome (value : fN) (allowed : List fN) : Prop :=
@@ -59,4 +59,4 @@ theorem floatOutcome_canonicalize (width : Nat) (value : fN) (allowed : List fN)
   · simpa [hn] using floatOutcome_nonNaN h hn
   · simpa [hn] using hc (floatOutcome_NaN h hn)
 
-end Exec.Platform
+end Itasca.Runtime.Platform

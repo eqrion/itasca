@@ -4,7 +4,7 @@ import Exec.Representation.Layout
 import Exec.Platform.Alloc
 import Itasca.Support.TypeTranslation
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_width (ty : Itasca.types.ValueType) :
@@ -66,4 +66,4 @@ open Aeneas Aeneas.Std
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Code
+end Itasca.Runtime.Code

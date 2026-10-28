@@ -1,7 +1,7 @@
 import Exec.Code.Local.Control.Common.StructuredLabels
 import Exec.Code.Local.Relations.Common.LayoutProofs
 import Itasca.Support.TypeTranslation
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- The actual epilogue determines whether the implicit root exit carries
@@ -19,4 +19,4 @@ theorem functionRootLabel_live {results compiled epilogue src count}
     count.val = slots results := by
   simpa only [functionRootLabel, found, decide_eq_true_eq] using live
 
-end Exec.Code
+end Itasca.Runtime.Code

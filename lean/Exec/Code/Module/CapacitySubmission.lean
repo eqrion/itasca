@@ -1,6 +1,6 @@
 import Exec.Code.Module.SchedulerSubmission
 import Exec.Code.Module.SchedulerCapacities
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual batch run preserves the per-index ledger once its actual entry
@@ -57,4 +57,4 @@ theorem compiler_poll_capacities {A : Type} (allocator : runtime.platform.Alloc 
     PartialModuleCapacities profile env sources after.functions.val ∧ schedulerStatic after = schedulerStatic before := by
   rw [(compiler_poll_accepted allocator before after batch accepted).2]
   exact ⟨initial, rfl⟩
-end Exec.Code
+end Itasca.Runtime.Code

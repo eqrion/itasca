@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Common.CompilerFixupMetadata
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 theorem compiler_patch_code_length {A : Type} (ops : runtime.platform.Alloc A)
@@ -62,4 +62,4 @@ theorem compiler_fixups_after_if_code_length {A : Type} (ops : runtime.platform.
       ops before sites target index status = .ok output) :
     (snapshotCompiler output).function.code.val.length = before.function.code.val.length :=
   compiler_fixups_code_length ops before sites target index status output accepted
-end Exec.Code
+end Itasca.Runtime.Code

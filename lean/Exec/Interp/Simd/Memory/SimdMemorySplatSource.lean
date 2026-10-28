@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Memory.SimdMemorySplat
 import Exec.Spec.SimdMemorySplat
-namespace Exec.Interp.Simd
+namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std SpecExt
 
 theorem splat_load_source (ty : Jnn) (address value : U128) (offset index : U32) (bytes : Slice U8)
@@ -38,4 +38,4 @@ theorem splat_load_source (ty : Jnn) (address value : U128) (offset index : U32)
     apply Spec.Simd.splat_load_trap ty s f argument (UScalar.cast .U32 address).val
       storeWf frameWf (by scalar_tac) operationWf
     simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memoryLaneBytes_val] using Nat.lt_of_not_ge fits
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd

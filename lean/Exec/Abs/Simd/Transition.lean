@@ -3,8 +3,8 @@ import Exec.Abs.Sim.Typed
 import Exec.Abs.Preservation
 import Exec.Spec.PureWf
 
-namespace Exec.Abs.Simd
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Simd
+open SpecExt Itasca.Runtime.Spec
 
 /-- A source pure reduction retains every permitted numerical result, including
 all permitted floating-point NaN choices. -/
@@ -121,4 +121,4 @@ theorem transition_simulation {s : store} {ambient : frame} {f : AFrame}
     apply NextSim.single
     simpa only [values] using simulated
 
-end Exec.Abs.Simd
+end Itasca.Runtime.Abs.Simd

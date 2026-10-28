@@ -2,7 +2,7 @@ import Exec.Code.Local.Capacity.TableLoopAvailability
 import Exec.Code.Local.Capacity.AuxiliaryAvailability
 import Exec.Code.Local.Lowering.Control.LoweringBranchIf
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -70,4 +70,4 @@ theorem compiler_lower_table_available {A : Type} (ops : runtime.platform.Alloc 
   simp only [WP.spec_ok,true_and]
   exact (emitEffect.trans effect).weaken (by intro counter; cases counter <;> simp [next] <;> omega)
 
-end Exec.Code
+end Itasca.Runtime.Code

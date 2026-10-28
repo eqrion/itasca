@@ -1,6 +1,6 @@
 import Exec.Store.Api.TableInitSemantics
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem bulk_table_init_refines {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -35,4 +35,4 @@ theorem bulk_table_init_refines {M : Type} (memory : runtime.platform.MemoryBuff
     (bulkWord destination) (bulkWord source) (bulkWord count) out moduleEq tableMapped mapped target resolved
     sameType shape sourceSyntax ambientWf elementBound (by scalar_tac) (by scalar_tac) (by scalar_tac)
 
-end Exec.Store
+end Itasca.Runtime.Store

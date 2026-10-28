@@ -1,7 +1,7 @@
 import Exec.Abs.Numeric.Semantics
 import Exec.Representation.Layout
 import Exec.Generated.Equations
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Abs.Numeric
 
 /-- Binary encodings of all scalar integer numeric instructions. -/
@@ -169,4 +169,4 @@ theorem integerOpcode_binary (op : Instruction) :
   | unary ty operator => cases ty <;> cases operator <;> rfl
   | eqz ty => cases ty <;> rfl
   | conversion operator => cases operator <;> rfl
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,6 +1,6 @@
 import Exec.Store.Initialization.BulkMemory
 import Exec.Spec.CopyInterval
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 /-- Forward overlap copying retains unread source bytes, so its result uses
@@ -100,4 +100,4 @@ theorem memory_copy_backward (before : Slice U8) (destination source count : Usi
       simp only [WP.spec_ok]
       exact (last ▸ copyState).complete sourceBound targetBound
   · exact ⟨Nat.le_refl _,Spec.Segment.CopySuffix.initial before.val destination.val source.val count.val⟩
-end Exec.Store
+end Itasca.Runtime.Store

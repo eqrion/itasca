@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Common.ResolvedPrefix
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 
 /-- Fixups cannot alter literal instructions whose constructors carry no
@@ -21,4 +21,4 @@ theorem resolvedCode_loop_head (code : List Bytecode) (groups : List FixupTarget
     (resolvedCode code groups)[index]? = some .LoopHead :=
   resolvedCode_fixed code groups index .LoopHead found (fun _ => rfl)
 
-end Exec.Code
+end Itasca.Runtime.Code

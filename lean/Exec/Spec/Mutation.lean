@@ -5,7 +5,7 @@ well-formedness premise; these facts do not assume the stronger `Store_ok`.
 Object relations preserve types and allow exactly the mutations admitted by
 SpecTec's extension relation. -/
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 
 /-- Each old address remains present and its object is related. -/
 def ObjectsExtend {α : Type} [Inhabited α] (R : α → α → Prop)
@@ -147,4 +147,4 @@ theorem extend_table_contents (n n' : Nat) (maximum : Option Nat) (ty : reftype)
       ⟨⟨⟨.mk_uN n', OMap uN.mk_uN maximum⟩, ty⟩, after⟩ := by
   exact .mk_Extend_tableinst _ _ _ _ _ _ hn hl hb ha
 
-end Exec.Spec
+end Itasca.Runtime.Spec

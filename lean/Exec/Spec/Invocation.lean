@@ -1,5 +1,5 @@
 import Exec.Spec.Context
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 /-- The generated invocation judgment fixes the ambient frame to the empty
@@ -16,4 +16,4 @@ theorem invocation_frame_wf {s : store} {address : funcaddr} {args : List val} {
     (invoked : fun_invoke s address args initial) : wf_frame invocationFrame := by
   cases invoked
   assumption
-end Exec.Spec
+end Itasca.Runtime.Spec

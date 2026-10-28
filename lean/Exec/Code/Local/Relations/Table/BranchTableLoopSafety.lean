@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Table.BranchTableSafety
 import Exec.Code.Local.Relations.Table.BranchTableSafetyEffects
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -61,4 +61,4 @@ set_option maxRecDepth 4096
         simpa only [progress] using advanced
     · simp [WP.spec_ok]
   · exact held
-end Exec.Code
+end Itasca.Runtime.Code

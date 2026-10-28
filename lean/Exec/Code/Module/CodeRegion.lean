@@ -1,6 +1,6 @@
 import Exec.Code.Module.Stream
 import Itasca.Binary.Leb128
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- The execution extraction's LEB reader is definitionally the canonical
@@ -86,4 +86,4 @@ including malformed and truncated modules. -/
     intro result post
     cases result <;> simpa only [and_assoc] using post
   · simp
-end Exec.Code
+end Itasca.Runtime.Code

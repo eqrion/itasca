@@ -1,6 +1,6 @@
 import Exec.Abs.Stateful.Reference
-namespace Exec.Abs.Stateful
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs.Stateful
+open SpecExt Itasca.Runtime.Spec
 
 theorem reference_operand {s : store} {value : val} {type : reftype}
     (typed : Val_ok s value (valtype_reftype type)) :
@@ -16,4 +16,4 @@ theorem reference_operand {s : store} {value : val} {type : reftype}
 
 @[simp] theorem reference_admin_value (value : ref) : admininstr_val (val_ref value) = admininstr_ref value := by
   cases value <;> rfl
-end Exec.Abs.Stateful
+end Itasca.Runtime.Abs.Stateful

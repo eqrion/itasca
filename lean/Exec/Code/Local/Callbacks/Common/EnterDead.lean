@@ -1,5 +1,5 @@
 import Exec.Code.Local.Callbacks.Control.EnterBlock
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
@@ -93,4 +93,4 @@ set_option maxRecDepth 4096 in
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Exec.Code
+end Itasca.Runtime.Code

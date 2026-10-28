@@ -1,7 +1,7 @@
 import Exec.Code.Body.Reader.Table.StructuredReaderDead
 import Exec.Code.Local.Relations.Common.KnownNumericStack
 import Exec.Code.Body.Reader.Float.FloatReaderFacts
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_float_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -35,4 +35,4 @@ theorem structured_reader_prefix_dead_float_wasm2 {jumpTables : List U32} {data 
   rw [hookEq] at callback
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (floatOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Exec.Code
+end Itasca.Runtime.Code

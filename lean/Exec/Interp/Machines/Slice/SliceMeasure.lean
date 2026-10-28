@@ -2,7 +2,7 @@ import Exec.Interp.Machines.Slice.SliceExecution
 import Exec.Interp.Control.NormalizeCompose
 import Exec.Interp.Relations.SourceCallCause
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- Increasing the fixed code bound preserves strict administrative progress.
@@ -31,4 +31,4 @@ theorem ConcreteSim.widen {small large beforePC afterPC : Nat}
   · exact Or.inl ⟨same, dispatchMeasure_widen bound decrease⟩
   · exact Or.inr steps
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -83,7 +83,7 @@ step `code.step`; the `_wasm2` dispatchers reduce `code.step_profile .Wasm2`
 to it first.
 -/
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_unreachable_effects {A : Type}
@@ -648,4 +648,4 @@ theorem reader_memory_store_effects_wasm2 {A : Type}
   reader_memory_store_effects ops law before after st.core out.core data env ctx op
     (base_step_wasm2 _ ordinary base sign misc accepted)
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -1,7 +1,7 @@
 import Exec.Store.Api.TableCopyEffect
 import Exec.Spec.TableCopySnapshot
 import Exec.Store.Api.TableInitSemantics
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem table_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -40,4 +40,4 @@ theorem table_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   simp only [alloc.vec.Vec.set_val_eq,List.map_set,decodeTable,lengthEq,refsEq,Spec.Segment.withRefs]
   rfl
 
-end Exec.Store
+end Itasca.Runtime.Store

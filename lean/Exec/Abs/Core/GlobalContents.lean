@@ -1,8 +1,8 @@
 import Exec.Abs.Core.GlobalMutation
 import Exec.Abs.Core.ContentExtension
 
-namespace Exec.Abs
-open SpecExt Exec.Spec
+namespace Itasca.Runtime.Abs
+open SpecExt Itasca.Runtime.Spec
 
 theorem StoreContentsTyped.global_write {s : store} (contents : StoreContentsTyped s)
     (wf : wf_store s) (f : frame) (index address : Nat) (object : globalinst) (value : val) (ty : valtype)
@@ -24,4 +24,4 @@ theorem StoreContentsTyped.global_write {s : store} (contents : StoreContentsTyp
     (congrArg store.GLOBALS (globalWrite_as_set s f index address object value mapped found))
     rfl rfl rfl rfl objectFresh
 
-end Exec.Abs
+end Itasca.Runtime.Abs

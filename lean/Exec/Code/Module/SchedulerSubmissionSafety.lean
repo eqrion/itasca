@@ -2,7 +2,7 @@ import Exec.Code.Module.SchedulerSafety
 import Exec.Code.Module.SubmitTotal
 import Exec.Code.Module.CompileSubmit
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -72,4 +72,4 @@ theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
     have := bounded.1
     omega
 
-end Exec.Code
+end Itasca.Runtime.Code

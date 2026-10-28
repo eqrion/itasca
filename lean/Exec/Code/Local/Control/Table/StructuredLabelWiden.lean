@@ -1,6 +1,6 @@
 import Exec.Code.Local.Relations.Common.LabelWiden
 import Exec.Code.Local.Control.Table.StructuredCode
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas.Std
 theorem BranchTableEntry.widenLabels {locals labels stack code depth entry next}
     (evidence : BranchTableEntry locals labels stack code depth entry next)
@@ -54,4 +54,4 @@ theorem StructuredCode.widenLabels {jumpTables : List U32} {emit types functions
   | return_ source size instruction remaining scope => exact .return_ source size instruction remaining scope
 
 
-end Exec.Code
+end Itasca.Runtime.Code

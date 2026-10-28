@@ -1,6 +1,6 @@
 import Exec.Code.Body.Reader.Control.ReaderReturn
 import Exec.Code.Body.Reader.Common.ReaderStacks
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 private theorem return_stack_suffix {before outer segment rest : List code.StackType} {results : List valtype}
@@ -30,4 +30,4 @@ theorem reader_return_stack_wasm2 (st out : code.BodyState) (env : module.Env) (
     rw [mono] at effect
     exact return_stack_suffix values known effect
 
-end Exec.Code
+end Itasca.Runtime.Code

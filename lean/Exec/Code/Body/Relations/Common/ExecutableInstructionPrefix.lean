@@ -1,7 +1,7 @@
 import Exec.Code.Body.Relations.Common.ExecutableInstructionAcceptance
 import Exec.Code.Local.Checking.CoreEmissionInstructionPrefix
 
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Captured table appends increase every local checker index space. The
@@ -42,4 +42,4 @@ theorem Lowered.executableInstructionPrefix {A : Type}
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Exec.Code
+end Itasca.Runtime.Code

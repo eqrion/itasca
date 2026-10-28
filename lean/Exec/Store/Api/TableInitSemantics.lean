@@ -5,7 +5,7 @@ import Exec.Store.Invariant.Syntax
 import Exec.Store.Invariant.Typing
 import Exec.Store.Initialization.BulkPreservation
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 
 theorem table_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
@@ -34,7 +34,7 @@ theorem table_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
       Spec.Segment.copyInto (table.elements.val.map (decodeRef table.ty))
         (segment.refs.val.map (decodeRef segment.ty)) destination source count := by
     rw [copied,copySegment_eq_copyInto,copyInto_map _ _ _ _ _ _ inside,sameType]
-  have lists := Exec.Representation.map_set_modify decodeTable
+  have lists := Itasca.Runtime.Representation.map_set_modify decodeTable
     (fun t => {t with REFS := Spec.Segment.copyInto t.REFS (decodeElement segment).REFS destination source count})
     store.tables.val tableAddress.index.val table {table with elements := words} target
     (by simp only [decodeTable,decodeElement,lengthEq,refsEq])
@@ -99,4 +99,4 @@ theorem TableInitializationEffect.refines {M : Type} (view : M → Slice U8) (co
     simp only [alloc.vec.Vec.length] at outside
     omega
 
-end Exec.Store
+end Itasca.Runtime.Store

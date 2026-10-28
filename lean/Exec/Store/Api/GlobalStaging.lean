@@ -1,7 +1,7 @@
 import Exec.Representation.Collection
 import Exec.Store.Initialization.Initializer
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem StagedPrefix.set_fresh_instance {M : Type} {before after : runtime.store.Store M}
@@ -22,4 +22,4 @@ theorem StagedPrefix.set_fresh_instance {M : Type} {before after : runtime.store
   · exact hprefix.externs
   · exact hprefix.instanceItems
 
-end Exec.Store
+end Itasca.Runtime.Store

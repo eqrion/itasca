@@ -1,5 +1,5 @@
 import Exec.Code.Local.Initializer.Initializer
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 
 /-- Packing a vector constant retains the full low and high words. -/
@@ -14,4 +14,4 @@ theorem initializerBits_val (lo hi : U64) :
   rw [Nat.mod_eq_of_lt hloWide,Nat.mod_eq_of_lt hhiWide,Nat.shiftLeft_eq,Nat.mod_eq_of_lt hshift]
   rw [Nat.or_comm,←Nat.shiftLeft_eq,←Nat.shiftLeft_add_eq_or_of_lt hlo,Nat.shiftLeft_eq]
   omega
-end Exec.Code
+end Itasca.Runtime.Code

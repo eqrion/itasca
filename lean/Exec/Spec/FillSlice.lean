@@ -1,6 +1,6 @@
 import Exec.Spec.TableFillAlgebra
 import Exec.Spec.SegmentCopySlice
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 
 theorem fillInto_effect {T : Type} (before : List T) (dst count : Nat) (value : T)
     (targetBound : dst+count ≤ before.length) :
@@ -41,4 +41,4 @@ theorem fillInto_eq_setSlice {T : Type} (before : List T) (dst count : Nat) (val
     · rw [List.setSlice!_getElem?_middle _ _ _ _ (by simp; omega)]
       have equal : dst+(index-dst) = index := by omega
       simpa only [equal,List.getElem?_replicate,show index-dst<count from by omega,if_true] using filled (index-dst) (by omega)
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

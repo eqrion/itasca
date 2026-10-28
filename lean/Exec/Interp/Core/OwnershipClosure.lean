@@ -1,6 +1,6 @@
 import Exec.Abs.Ownership.Core
 import Exec.Interp.Relations.Normalization
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Abs.Ownership
 
 /-- Value provenance is independent of source syntax and typing. -/
@@ -74,4 +74,4 @@ theorem ErasedSteps.ownership {count before after} (steps : ErasedSteps count be
   induction steps with
   | nil f => exact .refl f
   | cons step tail ih => exact step.ownership.trans ih
-end Exec.Interp
+end Itasca.Runtime.Interp

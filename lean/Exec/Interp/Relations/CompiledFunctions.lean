@@ -4,7 +4,7 @@ import Exec.Interp.Relations.FrameStack
 import Exec.Code.Local.Relations.Common.Function
 import Exec.Abs.PureHead
 
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 /-- A frame's retained signature list belongs to its actual instance. -/
@@ -31,4 +31,4 @@ theorem FrameProgram.resolve_call {M : Type} {store : runtime.store.Store M}
       store.types.val[function.signature.val]? = some rawType ∧ Store.decodeFuncType rawType = ty :=
   (program.function_table inst lookup).resolve index ty signature
 
-end Exec.Interp
+end Itasca.Runtime.Interp

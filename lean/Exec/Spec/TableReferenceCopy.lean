@@ -1,6 +1,6 @@
 import Exec.Spec.TableCopySource
 import Exec.Spec.TableAccess
-namespace Exec.Spec.Segment
+namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 theorem table_copy_reference_steps (s : store) (f : frame) (destination source targetTable sourceTable : Nat)
@@ -29,4 +29,4 @@ theorem tableWrite_other_length (s : store) (f : frame) (index other position : 
   · subst a
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,equal]
   · simp [List.getElem!_eq_getElem?_getD,List.getElem?_modify,equal]
-end Exec.Spec.Segment
+end Itasca.Runtime.Spec.Segment

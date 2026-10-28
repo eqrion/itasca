@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Rotations
-namespace Exec.Spec.Simd
+namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
 theorem integerBits_reverse (width : Nat) (bits : BitVec width) :
@@ -17,4 +17,4 @@ theorem irev_reverse (width : Nat) (bits : BitVec width) :
     irev_ width (.mk_uN bits.reverse.toNat) = .mk_uN bits.toNat := by
   unfold irev_ ibits_ inv_ibits_
   simp only [proj_uN_0,integerBits_reverse,List.reverse_reverse,integerBits_roundtrip bits.isLt]
-end Exec.Spec.Simd
+end Itasca.Runtime.Spec.Simd

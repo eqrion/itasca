@@ -1,6 +1,6 @@
 import Exec.Interp.Invocation.InvokeLoopRecording
 import Exec.Interp.Relations.StepActive
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem recordedInvokeLoop_step {M P F A : Type}
@@ -31,4 +31,4 @@ theorem recordedInvokeLoop_stopped {M P F A : Type}
   unfold Platform.Recording.loop
   rw [loop.eq_def]
   simp only [Platform.Recording.loopBody,executionBody_stopped memory hooks floats allocator state stopped,bind_ok,invokeLoopEvents,List.append_nil]
-end Exec.Interp
+end Itasca.Runtime.Interp

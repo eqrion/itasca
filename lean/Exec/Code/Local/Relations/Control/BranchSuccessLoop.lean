@@ -1,5 +1,5 @@
 import Exec.Code.Local.Relations.Control.BranchSuccessForward
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
@@ -162,4 +162,4 @@ theorem branch_elided_loop_success {A : Type} (ops : runtime.platform.Alloc A)
       have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
       simpa only [← kindEq, ← atIndex] using List.set_getElem_self inBounds
 
-end Exec.Code
+end Itasca.Runtime.Code

@@ -2,7 +2,7 @@ import Exec.Spec.ByteEncoding
 import Exec.Spec.TableInitSource
 import Exec.Spec.SegmentCopySlice
 
-namespace Exec.Spec
+namespace Itasca.Runtime.Spec
 open SpecExt
 
 def memoryPayloadWrite (s : store) (f : frame) (start : Nat) (payload : List byte) : store :=
@@ -104,4 +104,4 @@ theorem numeric_store_step (s : store) (f : frame) (ty : numtype) (argument : me
     · exact input
     · exact wf_config_trap storeWf frameWf
     · exact Segment.index_wf 0 (by norm_num)
-end Exec.Spec
+end Itasca.Runtime.Spec

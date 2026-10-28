@@ -9,7 +9,7 @@ import Exec.Code.Local.Callbacks.Common.CompilerLiteralMetadata
 import Exec.Code.Local.Callbacks.Common.CompilerMetadataTactic
 import Exec.Code.Body.Reader.Calls.ReaderCallEffects
 import Exec.Code.Local.Lowering.Calls.LoweringCall
-namespace Exec.Code
+namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 
 def FunctionParameterSlots {A : Type} (compiler : runtime.compiler.FunctionCompiler A) (env : module.Env) : Prop :=
@@ -80,4 +80,4 @@ theorem reader_emit_call_wasm2 {data env locals typeIndex st}
   refine ⟨?_, SourceStack.of_map (front ++ ft.results.val) concrete (by simp)⟩
   simpa only [List.map_append] using lowered rfl
 
-end Exec.Code
+end Itasca.Runtime.Code

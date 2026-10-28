@@ -5,7 +5,7 @@ import Exec.Interp.StructuredMachine.SyntaxClosure
 import Exec.Abs.Numeric.Effect
 import Exec.Abs.StepSafety
 import Exec.Abs.Core.Step
-namespace Exec.Interp
+namespace Itasca.Runtime.Interp
 
 theorem FrameOwnershipClosure.stateful {before after} (closure : FrameOwnershipClosure before after)
     {bounds s ambient rest} (owned : Abs.Ownership.StatefulOwned bounds ⟨s,ambient,before::rest,[]⟩) :
@@ -16,4 +16,4 @@ theorem FrameOwnershipClosure.stateful {before after} (closure : FrameOwnershipC
   · exact closure bounds (owned.values.2 _ (List.mem_cons_self ..))
   · exact owned.values.2 frame (List.mem_cons_of_mem _ member)
 
-end Exec.Interp
+end Itasca.Runtime.Interp

@@ -3,7 +3,7 @@ import Exec.Store.Initialization.InitializerCertificates
 import Exec.Code.Local.Relations.Common.SegmentData
 import Exec.Code.Local.Capacity.SegmentBound
 
-namespace Exec.Store
+namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store M)
@@ -106,4 +106,4 @@ theorem data_program_ready {M : Type} (store : runtime.store.Store M)
     · exact .bulk _ (.memory word address target (by simpa [encoded] using mapped) issued memoryMapped memoryIssued) (fun _ => room)
     · exact .bulk _ (.dataDrop word address (by simpa [encoded] using mapped) issued) (by simp)
 
-end Exec.Store
+end Itasca.Runtime.Store

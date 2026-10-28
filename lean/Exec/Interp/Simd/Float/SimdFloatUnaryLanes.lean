@@ -1,6 +1,6 @@
 import Exec.Interp.Simd.Float.SimdFloatUnaryWord
-namespace Exec.Interp.Simd
-open Aeneas Aeneas.Std SpecExt.Builtins Exec.Spec.Simd Platform
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std SpecExt.Builtins Itasca.Runtime.Spec.Simd Platform
 
 def floatUnaryOpcode (ty : Fnn) (op : vunop_Fnn_N) : U32 :=
   match ty,op with
@@ -55,4 +55,4 @@ theorem float_unary_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F
   intro result allowed
   simpa using allowed
 
-end Exec.Interp.Simd
+end Itasca.Runtime.Interp.Simd
