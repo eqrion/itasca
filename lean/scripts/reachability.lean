@@ -3,13 +3,17 @@ import Lean
 /-!
 # Reachability from the headline theorems
 
-Run with `lake env lean --run scripts/reachability.lean [--check] [OUT]`. Imports the
+Run with `lake env lean --run scripts/reachability.lean [--check] [--cone NAMES]... [OUT]`. Imports the
 `Itasca` and `Exec` audits and walks the constants used by every declaration of the
 root modules of both libraries; the execution proofs keep validator facts alive.
 Reports the source declarations of each library that no root reaches, grouped by module.
 `OUT` receives the full report, with source lines, and standard output a summary. With `--check`, the run
 fails if a module outside `allowlist` has no reachable declaration. Generated and
 audit modules are not reported.
+
+Each `--cone NAMES` (comma-separated root declarations) also reports the exclusive cone of that
+group: the source declarations reachable from the group but from no other root, with their line
+count and the modules they make up entirely.
 -/
 
 open Lean
@@ -71,21 +75,9 @@ def kind : ConstantInfo → String
   | .opaqueInfo _ => "opaque"
   | _ => "def"
 
-def main (args : List String) : IO UInt32 := do
-  let check := args.contains "--check"
-  let out? := (args.filter (· != "--check")).head?
-  initSearchPath (← findSysroot)
-  let env ← importModules (libraries.map fun lib => { module := lib ++ `Audit }) {}
-    (loadExts := false)
-  let modules := env.header.moduleNames
-  let modOf (n : Name) : Option Name := (env.getModuleIdxFor? n).map (modules[·.toNat]!)
-  for r in roots ++ allowlist do
-    unless modules.contains r do
-      IO.eprintln s!"missing root or allowlisted module {r}"; return 2
-  let mut stack : Array Name := #[]
-  for (n, _) in env.constants.map₁.toList do
-    if let some m := modOf n then
-      if isRoot m then stack := stack.push n
+/-- Every constant reachable from `start`, constructors of reached inductives included. -/
+def reach (env : Environment) (start : Array Name) : NameHashSet := Id.run do
+  let mut stack := start
   let mut seen : NameHashSet := {}
   while h : stack.size > 0 do
     let n := stack.back
@@ -97,6 +89,31 @@ def main (args : List String) : IO UInt32 := do
       unless seen.contains u do stack := stack.push u
     if let .inductInfo i := c then
       for ctor in i.ctors do stack := stack.push ctor
+  return seen
+
+def parseArgs : List String → Bool × Array (Array Name) × Option String
+  | [] => (false, #[], none)
+  | "--check" :: rest => let (_, cones, out) := parseArgs rest; (true, cones, out)
+  | "--cone" :: names :: rest =>
+    let (check, cones, out) := parseArgs rest
+    (check, #[(names.splitOn ",").toArray.map String.toName] ++ cones, out)
+  | path :: rest => let (check, cones, _) := parseArgs rest; (check, cones, some path)
+
+def main (args : List String) : IO UInt32 := do
+  let (check, cones, out?) := parseArgs args
+  initSearchPath (← findSysroot)
+  let env ← importModules (libraries.map fun lib => { module := lib ++ `Audit }) {}
+    (loadExts := false)
+  let modules := env.header.moduleNames
+  let modOf (n : Name) : Option Name := (env.getModuleIdxFor? n).map (modules[·.toNat]!)
+  for r in roots ++ allowlist do
+    unless modules.contains r do
+      IO.eprintln s!"missing root or allowlisted module {r}"; return 2
+  let mut rootDecls : Array Name := #[]
+  for (n, _) in env.constants.map₁.toList do
+    if let some m := modOf n then
+      if isRoot m then rootDecls := rootDecls.push n
+  let seen := reach env rootDecls
   let mut unused : Std.HashMap Name (Array (String × Name)) := {}
   let mut total : Std.HashMap Name Nat := {}
   for (n, c) in env.constants.map₁.toList do
@@ -125,4 +142,24 @@ def main (args : List String) : IO UInt32 := do
     for (m, _) in dead do
       IO.println s!"unused module {m}"
     failed := failed || (check && !dead.isEmpty)
+  for group in cones do
+    if let some n := group.find? (!env.contains ·) then
+      IO.eprintln s!"unknown cone root {n}"; return 2
+    let others := reach env (rootDecls.filter (!group.contains ·))
+    let mut decls := 0
+    let mut theorems := 0
+    let mut lines := 0
+    let mut perModule : Std.HashMap Name Nat := {}
+    for n in (reach env group).toArray do
+      if others.contains n then continue
+      let some c := env.find? n | continue
+      let some m := modOf n | continue
+      unless (libraryOf m).isSome && !isRoot m && isSource env n c do continue
+      decls := decls + 1
+      if c matches .thmInfo _ then theorems := theorems + 1
+      if let some r := declRangeExt.find? env n then
+        lines := lines + r.range.endPos.line + 1 - r.range.pos.line
+      perModule := perModule.insert m (perModule.getD m 0 + 1)
+    let whole := perModule.toArray.filter fun (m, k) => k == total.getD m 0
+    IO.println s!"cone {", ".intercalate (group.toList.map toString)}: {decls} declarations ({theorems} theorems, {lines} lines) in {perModule.size} modules, {whole.size} modules entirely"
   return if failed then 1 else 0
