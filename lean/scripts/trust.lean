@@ -11,7 +11,7 @@ declaration.
 
 open Lean
 
-def libraries : Array Name := #[`Itasca, `Exec]
+def libraries : Array Name := #[`Itasca]
 
 def allowed : Array Name := #[``propext, ``Classical.choice, ``Quot.sound]
 

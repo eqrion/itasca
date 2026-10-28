@@ -128,9 +128,9 @@ def timing(lib: str) -> None:
 
 def main(args: list[str]) -> None:
     if args and args[0] == "timing":
-        timing(args[1] if len(args) > 1 else "Exec")
+        timing(args[1] if len(args) > 1 else "Itasca/Runtime")
     else:
-        stats(args[0] if args else "Exec")
+        stats(args[0] if args else "Itasca/Runtime")
 
 
 if __name__ == "__main__":

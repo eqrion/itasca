@@ -18,7 +18,5 @@ lean_lib SpecTecGenerated where
 @[default_target]
 lean_lib Itasca
 
--- Execution and handwritten specification extensions have independent audits.
+-- Handwritten specification extensions have an independent audit.
 lean_lib SpecExt
-
-lean_lib Exec

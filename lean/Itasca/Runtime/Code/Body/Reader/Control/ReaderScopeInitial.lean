@@ -1,0 +1,16 @@
+import Itasca.Runtime.Code.Body.Reader.Control.ReaderScopeZipper
+import Itasca.Runtime.Code.Local.Callbacks.Control.ScopeFrame
+namespace Itasca.Runtime.Code
+open Aeneas Aeneas.Std Itasca
+
+theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
+    (ins outs : List types.ValueType) :
+    ReaderScopeZipperWasm2 [] (SourceScope.initial (outs.map Translate.valueType)) []
+      (Wasm2.Frames.Saved.fresh base .body bt ins outs) := by
+  refine ⟨.nil, ?_⟩
+  constructor
+  · exact .body
+  · rfl
+  · rfl
+  · rfl
+end Itasca.Runtime.Code

@@ -29,28 +29,28 @@ class AuditTests(unittest.TestCase):
             audit.check(self.root, library)
 
     def test_sink_coverage_and_idempotent_write(self):
-        self.put('Exec.Spec.Steps', 'import «wasm2.0»\n')
-        self.put('Exec.Abs.State', 'import Exec.Spec.Steps\n')
+        self.put('Itasca.Runtime.Spec.Steps', 'import «wasm2.0»\n')
+        self.put('Itasca.Runtime.Abs.State', 'import Itasca.Runtime.Spec.Steps\n')
         with self.assertRaisesRegex(ValueError, 'sink modules'):
-            self.check('Exec')
-        self.refresh('Exec')
-        self.check('Exec')
-        before = (self.root / 'Exec/Audit.lean').read_text()
-        self.refresh('Exec')
-        self.assertEqual(before, (self.root / 'Exec/Audit.lean').read_text())
-        self.assertEqual(audit.sinks(audit.load(self.root, 'Exec'), 'Exec'), ['Exec.Abs.State'])
+            self.check('Itasca')
+        self.refresh('Itasca')
+        self.check('Itasca')
+        before = (self.root / 'Itasca/Audit.lean').read_text()
+        self.refresh('Itasca')
+        self.assertEqual(before, (self.root / 'Itasca/Audit.lean').read_text())
+        self.assertEqual(audit.sinks(audit.load(self.root, 'Itasca'), 'Itasca'), ['Itasca.Runtime.Abs.State'])
 
     def test_disconnected_cycle_is_not_coverage(self):
-        self.put('Exec.Spec.A', 'import Exec.Spec.B\n')
-        self.put('Exec.Spec.B', 'import Exec.Spec.A\n')
-        with self.assertRaisesRegex(ValueError, 'Modules outside Exec.Audit'):
-            self.check('Exec')
+        self.put('Itasca.Runtime.Spec.A', 'import Itasca.Runtime.Spec.B\n')
+        self.put('Itasca.Runtime.Spec.B', 'import Itasca.Runtime.Spec.A\n')
+        with self.assertRaisesRegex(ValueError, 'Modules outside Itasca.Audit'):
+            self.check('Itasca')
 
-    def test_validator_cannot_import_execution_or_extensions(self):
-        for dependency in ['Exec.Spec.A', 'SpecExt.Builtins.Int']:
+    def test_validator_cannot_import_runtime_or_extensions(self):
+        for dependency in ['Itasca.Runtime.Spec.A', 'SpecExt.Builtins.Int']:
             with self.subTest(dependency=dependency):
                 self.put(dependency, '')
-                self.put('Itasca.Examples.A', f'import {dependency}\n')
+                self.put('Itasca.Stream.A', f'import {dependency}\n')
                 with self.assertRaisesRegex(ValueError, 'validator imports must stay independent'):
                     self.check('Itasca')
 
@@ -81,115 +81,115 @@ class AuditTests(unittest.TestCase):
         for source, dependency in audit.EXAMPLE_IMPORTS:
             audit.check_layer(source, dependency, source.split('.')[0])
 
-    def test_execution_results_and_examples_stay_on_top(self):
+    def test_runtime_results_and_examples_stay_on_top(self):
         for source, dependency, message in [
-            ('Exec.Contracts', 'Exec.Platform.Alloc', None),
-            ('Exec.Contracts', 'Exec.Theorems.Api.ExecutableInv', None),
-            ('Exec.Results.Invoke', 'Exec.Theorems.Invocation.A', None),
-            ('Exec.Results.Invoke', 'Exec.Contracts', None),
-            ('Exec.Main', 'Exec.Results.Invoke', None),
-            ('Exec.Examples.Host.A', 'Exec.Main', None),
-            ('Exec.Examples.Host.B', 'Exec.Examples.Host.A', None),
-            ('Exec.Examples.Host.B', 'Aeneas', None),
-            ('Exec.Theorems.Invocation.A', 'Exec.Results.Invoke', 'only Main and Examples'),
-            ('Exec.Theorems.Invocation.A', 'Exec.Main', 'only Main and Examples'),
-            ('Exec.Results.Host', 'Exec.Results.Invoke', 'only Main and Examples'),
-            ('Exec.Contracts', 'Exec.Theorems.Invocation.A', 'outside the Exec.Contracts'),
-            ('Exec.Contracts', 'Exec.Code.Module.A', 'outside the Exec.Contracts'),
-            ('Exec.Main', 'Exec.Theorems.Invocation.A', 'outside the Exec.Main'),
-            ('Exec.Examples.Host.A', 'Exec.Theorems.Host.A', 'examples import only Exec.Main'),
+            ('Itasca.Runtime.Contracts', 'Itasca.Runtime.Platform.Alloc', None),
+            ('Itasca.Runtime.Contracts', 'Itasca.Runtime.Theorems.Api.ExecutableInv', None),
+            ('Itasca.Results.Invoke', 'Itasca.Runtime.Theorems.Invocation.A', None),
+            ('Itasca.Results.Invoke', 'Itasca.Runtime.Contracts', None),
+            ('Itasca.Main', 'Itasca.Results.Invoke', None),
+            ('Itasca.Examples.Host.A', 'Itasca.Main', None),
+            ('Itasca.Examples.Host.B', 'Itasca.Examples.Host.A', None),
+            ('Itasca.Examples.Host.B', 'Aeneas', None),
+            ('Itasca.Runtime.Theorems.Invocation.A', 'Itasca.Results.Invoke', 'only Main and Examples'),
+            ('Itasca.Runtime.Theorems.Invocation.A', 'Itasca.Main', 'only Main and Examples'),
+            ('Itasca.Results.Host', 'Itasca.Results.Invoke', 'only Main and Examples'),
+            ('Itasca.Runtime.Contracts', 'Itasca.Runtime.Theorems.Invocation.A', 'outside the Itasca.Runtime.Contracts'),
+            ('Itasca.Runtime.Contracts', 'Itasca.Runtime.Code.Module.A', 'outside the Itasca.Runtime.Contracts'),
+            ('Itasca.Main', 'Itasca.Runtime.Theorems.Invocation.A', 'above the Main'),
+            ('Itasca.Examples.Host.A', 'Itasca.Runtime.Theorems.Host.A', 'examples import only Itasca.Main'),
         ]:
             with self.subTest(source=source, dependency=dependency):
                 if message is None:
-                    audit.check_layer(source, dependency, 'Exec')
+                    audit.check_layer(source, dependency, 'Itasca')
                 else:
                     with self.assertRaisesRegex(ValueError, message):
-                        audit.check_layer(source, dependency, 'Exec')
+                        audit.check_layer(source, dependency, 'Itasca')
 
-    def test_execution_layers(self):
+    def test_runtime_layers(self):
         for source, dependency, accepted in [
-            ('Exec.Abs.State', 'Exec.Generated.Types', False),
-            ('Exec.Abs.State', 'Exec.Spec.Steps', True),
-            ('Exec.Spec.Steps', 'Itasca.Support.A', True),
-            ('Exec.Spec.Steps', 'Itasca.Wasm2.A', False),
-            ('Exec.Interp.Loop', 'Exec.Representation.StoreInvariant', True),
-            ('Exec.Interp.Relations.Rel', 'Exec.Representation.Store', True),
-            ('Exec.Interp.Relations.Rel', 'Exec.Store.Api.Api', False),
-            ('Exec.Interp.Relations.SourceValueCauses', 'Exec.Representation.StoreCapacity', True),
-            ('Exec.Interp.Relations.SourceValueCauses', 'Exec.Store.CapacityDefinition.Extra', False),
-            ('Exec.Interp.Relations.SourceValueCauses', 'Exec.Store.Invariant.FunctionCapacities', False),
-            ('Exec.Interp.Numeric.Float.Float', 'SpecExt.Builtins.Float.Sign', True),
-            ('Exec.Interp.Numeric.Float.Float', 'SpecExt.Host', False),
-            ('Exec.Interp.Relations.PrefixEffect', 'Itasca.Support.Result', True),
-            ('Exec.Interp.Relations.PrefixEffect', 'Itasca.Handler.Step', False),
-            ('Exec.Interp.Relations.PrefixEffect', 'Itasca.Wasm2.Soundness', False),
-            ('Exec.Representation.StoreInvariant', 'Exec.Interp.Loop', False),
-            ('Exec.Store.Initialization.InitializerCertificates', 'Exec.Code.Local.Initializer.InitializerComplete', True),
-            ('Exec.Representation.StoreInvariant', 'Exec.Theorems.Invoke', False),
-            ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1', True),
-            ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1.Extra', False),
-            ('Exec.Store.Initialization.PrecheckSource', 'SpecExt.Host', False),
-            ('Exec.Store.Invariant.SourceStoreTyping', 'Exec.Abs.StoreTyping', True),
-            ('Exec.Store.Invariant.SourceStoreTyping', 'Exec.Abs.StoreTyping.Extra', False),
-            ('Exec.Spec.Wf', 'Exec.Abs.StoreTyping', False),
-            ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List', True),
-            ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas', False),
-            ('Exec.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List.Extra', False),
-            ('Exec.Spec.SegmentCopy', 'Aeneas.Data.List.List', False),
-            ('Exec.Spec.SegmentCopySlice', 'Aeneas.Data.List.List', True),
-            ('Exec.Spec.SegmentCopySlice', 'Aeneas.Data.List.List.Extra', False),
-            ('Exec.Spec.SegmentCopySlice', 'Aeneas', False),
-            ('Exec.Spec.SegmentCopySlice', 'Exec.Representation.Store', False),
-            ('Exec.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Syntax', True),
-            ('Exec.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Validation', False),
-            ('Exec.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Syntax.Extra', False),
-            ('Exec.Store.InitializerMappings', 'Itasca.Module.Elab.SegmentSyntax', True),
-            ('Exec.Store.InitializerMappings', 'Itasca.Module.Elab.Other', False),
-            ('Exec.Store.InitializerMappings', 'Itasca.Module.Elab.SegmentSyntax.Extra', False),
-            ('Exec.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Metadata', True),
-            ('Exec.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Metadata.Extra', False),
-            ('Exec.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Soundness', False),
-            ('Exec.Spec.ExternalMatching', 'Itasca.Module.Elab.Metadata', False),
-            ('Exec.Store.LinkingContext', 'Itasca.Module.Env.Basic', True),
-            ('Exec.Store.LinkingContext', 'Itasca.Module.Env.Basic.Extra', False),
-            ('Exec.Store.LinkingContext', 'Itasca.Module.Env.Validation', False),
-            ('Exec.Store.Invariant.FunctionTypingExtension', 'Exec.Abs.ModuleBindingsExtension', True),
-            ('Exec.Store.Invariant.FunctionTypingExtension', 'Exec.Abs.ModuleBindingsExtension.Extra', False),
-            ('Exec.Store.Invariant.FunctionTypingExtension', 'Exec.Abs.Sim', False),
-            ('Exec.Store.Initialization.InitializerResolve', 'Itasca.Stream.Soundness', False),
-            ('Exec.Platform.Float', 'SpecExt.Builtins.Int', True),
-            ('Exec.Code.Local.Relations.Common.Rel', 'Itasca.Stream.A', True),
-            ('Exec.Code.Local.Relations.Common.LayoutProofs', 'Exec.Platform.Alloc', True),
-            ('Exec.Platform.Alloc', 'Exec.Code.Local.Relations.Common.LayoutProofs', False),
-            ('Exec.Representation.Encoding', 'SpecExt.Builtins.Float.Encoding', True),
-            ('Exec.Representation.Encoding', 'SpecExt.Host', False),
-            ('Exec.Unknown.A', 'Lean', False),
+            ('Itasca.Runtime.Abs.State', 'Itasca.Runtime.Generated.Types', False),
+            ('Itasca.Runtime.Abs.State', 'Itasca.Runtime.Spec.Steps', True),
+            ('Itasca.Runtime.Spec.Steps', 'Itasca.Support.A', True),
+            ('Itasca.Runtime.Spec.Steps', 'Itasca.Wasm2.A', False),
+            ('Itasca.Runtime.Interp.Loop', 'Itasca.Runtime.Representation.StoreInvariant', True),
+            ('Itasca.Runtime.Interp.Relations.Rel', 'Itasca.Runtime.Representation.Store', True),
+            ('Itasca.Runtime.Interp.Relations.Rel', 'Itasca.Runtime.Store.Api.Api', False),
+            ('Itasca.Runtime.Interp.Relations.SourceValueCauses', 'Itasca.Runtime.Representation.StoreCapacity', True),
+            ('Itasca.Runtime.Interp.Relations.SourceValueCauses', 'Itasca.Runtime.Store.CapacityDefinition.Extra', False),
+            ('Itasca.Runtime.Interp.Relations.SourceValueCauses', 'Itasca.Runtime.Store.Invariant.FunctionCapacities', False),
+            ('Itasca.Runtime.Interp.Numeric.Float.Float', 'SpecExt.Builtins.Float.Sign', True),
+            ('Itasca.Runtime.Interp.Numeric.Float.Float', 'SpecExt.Host', False),
+            ('Itasca.Runtime.Interp.Relations.PrefixEffect', 'Itasca.Support.Result', True),
+            ('Itasca.Runtime.Interp.Relations.PrefixEffect', 'Itasca.Handler.Step', False),
+            ('Itasca.Runtime.Interp.Relations.PrefixEffect', 'Itasca.Wasm2.Soundness', False),
+            ('Itasca.Runtime.Representation.StoreInvariant', 'Itasca.Runtime.Interp.Loop', False),
+            ('Itasca.Runtime.Store.Initialization.InitializerCertificates', 'Itasca.Runtime.Code.Local.Initializer.InitializerComplete', True),
+            ('Itasca.Runtime.Representation.StoreInvariant', 'Itasca.Runtime.Theorems.Invoke', False),
+            ('Itasca.Runtime.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1', True),
+            ('Itasca.Runtime.Store.Initialization.PrecheckSource', 'SpecExt.Wasm1.Extra', False),
+            ('Itasca.Runtime.Store.Initialization.PrecheckSource', 'SpecExt.Host', False),
+            ('Itasca.Runtime.Store.Invariant.SourceStoreTyping', 'Itasca.Runtime.Abs.StoreTyping', True),
+            ('Itasca.Runtime.Store.Invariant.SourceStoreTyping', 'Itasca.Runtime.Abs.StoreTyping.Extra', False),
+            ('Itasca.Runtime.Spec.Wf', 'Itasca.Runtime.Abs.StoreTyping', False),
+            ('Itasca.Runtime.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List', True),
+            ('Itasca.Runtime.Store.Initialization.SegmentCopySlice', 'Aeneas', False),
+            ('Itasca.Runtime.Store.Initialization.SegmentCopySlice', 'Aeneas.Data.List.List.Extra', False),
+            ('Itasca.Runtime.Spec.SegmentCopy', 'Aeneas.Data.List.List', False),
+            ('Itasca.Runtime.Spec.SegmentCopySlice', 'Aeneas.Data.List.List', True),
+            ('Itasca.Runtime.Spec.SegmentCopySlice', 'Aeneas.Data.List.List.Extra', False),
+            ('Itasca.Runtime.Spec.SegmentCopySlice', 'Aeneas', False),
+            ('Itasca.Runtime.Spec.SegmentCopySlice', 'Itasca.Runtime.Representation.Store', False),
+            ('Itasca.Runtime.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Syntax', True),
+            ('Itasca.Runtime.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Validation', False),
+            ('Itasca.Runtime.Store.Initialization.InitializerResolve', 'Itasca.Module.Const.Syntax.Extra', False),
+            ('Itasca.Runtime.Store.InitializerMappings', 'Itasca.Module.Elab.SegmentSyntax', True),
+            ('Itasca.Runtime.Store.InitializerMappings', 'Itasca.Module.Elab.Other', False),
+            ('Itasca.Runtime.Store.InitializerMappings', 'Itasca.Module.Elab.SegmentSyntax.Extra', False),
+            ('Itasca.Runtime.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Metadata', True),
+            ('Itasca.Runtime.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Metadata.Extra', False),
+            ('Itasca.Runtime.Store.Linking.LinkRawTypes', 'Itasca.Module.Elab.Soundness', False),
+            ('Itasca.Runtime.Spec.ExternalMatching', 'Itasca.Module.Elab.Metadata', False),
+            ('Itasca.Runtime.Store.LinkingContext', 'Itasca.Module.Env.Basic', True),
+            ('Itasca.Runtime.Store.LinkingContext', 'Itasca.Module.Env.Basic.Extra', False),
+            ('Itasca.Runtime.Store.LinkingContext', 'Itasca.Module.Env.Validation', False),
+            ('Itasca.Runtime.Store.Invariant.FunctionTypingExtension', 'Itasca.Runtime.Abs.ModuleBindingsExtension', True),
+            ('Itasca.Runtime.Store.Invariant.FunctionTypingExtension', 'Itasca.Runtime.Abs.ModuleBindingsExtension.Extra', False),
+            ('Itasca.Runtime.Store.Invariant.FunctionTypingExtension', 'Itasca.Runtime.Abs.Sim', False),
+            ('Itasca.Runtime.Store.Initialization.InitializerResolve', 'Itasca.Stream.Soundness', False),
+            ('Itasca.Runtime.Platform.Float', 'SpecExt.Builtins.Int', True),
+            ('Itasca.Runtime.Code.Local.Relations.Common.Rel', 'Itasca.Stream.A', True),
+            ('Itasca.Runtime.Code.Local.Relations.Common.LayoutProofs', 'Itasca.Runtime.Platform.Alloc', True),
+            ('Itasca.Runtime.Platform.Alloc', 'Itasca.Runtime.Code.Local.Relations.Common.LayoutProofs', False),
+            ('Itasca.Runtime.Representation.Encoding', 'SpecExt.Builtins.Float.Encoding', True),
+            ('Itasca.Runtime.Representation.Encoding', 'SpecExt.Host', False),
+            ('Itasca.Runtime.Unknown.A', 'Lean', False),
         ]:
             with self.subTest(source=source, dependency=dependency):
                 if accepted:
-                    audit.check_layer(source, dependency, 'Exec')
+                    audit.check_layer(source, dependency, 'Itasca')
                 else:
                     with self.assertRaises(ValueError):
-                        audit.check_layer(source, dependency, 'Exec')
+                        audit.check_layer(source, dependency, 'Itasca')
 
-    def test_execution_foundations_and_integration_stages(self):
+    def test_runtime_foundations_and_integration_stages(self):
         for source, dependency in [
-            ('Exec.Representation.Store', 'Exec.Code.Local.Relations.A'),
-            ('Exec.Representation.Store', 'Exec.Store.Api.A'),
-            ('Exec.Code.Local.Relations.A', 'Exec.Code.Body.Reader.A'),
-            ('Exec.Code.Body.Reader.A', 'Exec.Code.Module.A'),
-            ('Exec.Interp.Relations.A', 'Exec.Interp.Invocation.A'),
-            ('Exec.Store.Api.A', 'Exec.Store.Instantiation.A'),
+            ('Itasca.Runtime.Representation.Store', 'Itasca.Runtime.Code.Local.Relations.A'),
+            ('Itasca.Runtime.Representation.Store', 'Itasca.Runtime.Store.Api.A'),
+            ('Itasca.Runtime.Code.Local.Relations.A', 'Itasca.Runtime.Code.Body.Reader.A'),
+            ('Itasca.Runtime.Code.Body.Reader.A', 'Itasca.Runtime.Code.Module.A'),
+            ('Itasca.Runtime.Interp.Relations.A', 'Itasca.Runtime.Interp.Invocation.A'),
+            ('Itasca.Runtime.Store.Api.A', 'Itasca.Runtime.Store.Instantiation.A'),
         ]:
             with self.subTest(source=source, dependency=dependency):
                 with self.assertRaises(ValueError):
-                    audit.check_layer(source, dependency, 'Exec')
-                audit.check_layer(dependency, source, 'Exec')
+                    audit.check_layer(source, dependency, 'Itasca')
+                audit.check_layer(dependency, source, 'Itasca')
 
     def test_builtin_layers(self):
         for dependency in ['Wasm2Prefix', 'Mathlib.Data.Nat.Basic', 'SpecExt.Builtins.Bits']:
             audit.check_layer('SpecExt.Builtins.Int', dependency, 'SpecExt')
-        for dependency in ['wasm2.0', 'Exec.Spec.Steps', 'Itasca.Generated.Types', 'SpecExt.Host']:
+        for dependency in ['wasm2.0', 'Itasca.Runtime.Spec.Steps', 'Itasca.Generated.Types', 'SpecExt.Host']:
             with self.assertRaises(ValueError):
                 audit.check_layer('SpecExt.Builtins.Int', dependency, 'SpecExt')
 
@@ -230,40 +230,40 @@ class AuditTests(unittest.TestCase):
                     audit.check_builtin_inventory(self.root)
 
     def test_generated_functions_only_through_equations(self):
-        audit.check_layer('Exec.Generated.Equations', 'Itasca.Generated.Funs', 'Exec')
-        for source in ['Exec.Representation.Store', 'Exec.Interp.Relations.A', 'Exec.Store.Api.A']:
+        audit.check_layer('Itasca.Runtime.Equations', 'Itasca.Generated.Funs', 'Itasca')
+        for source in ['Itasca.Runtime.Representation.Store', 'Itasca.Runtime.Interp.Relations.A', 'Itasca.Runtime.Store.Api.A']:
             with self.subTest(source=source):
-                audit.check_layer(source, 'Itasca.Generated.Types', 'Exec')
-                with self.assertRaisesRegex(ValueError, 'import Exec.Generated.Equations'):
-                    audit.check_layer(source, 'Itasca.Generated.Funs', 'Exec')
+                audit.check_layer(source, 'Itasca.Generated.Types', 'Itasca')
+                with self.assertRaisesRegex(ValueError, 'import Itasca.Runtime.Equations'):
+                    audit.check_layer(source, 'Itasca.Generated.Funs', 'Itasca')
         with self.assertRaises(ValueError):
-            audit.check_layer('Exec.Abs.State', 'Itasca.Generated.Types', 'Exec')
+            audit.check_layer('Itasca.Runtime.Abs.State', 'Itasca.Generated.Types', 'Itasca')
 
     def test_public_import_cannot_bypass_generated_boundary(self):
-        source, dependency = 'Exec.Generated.Equations', 'Itasca.Wasm2.Soundness'
+        source, dependency = 'Itasca.Runtime.Equations', 'Itasca.Wasm2.Soundness'
         self.put(dependency, '')
         self.put(source, f'module\npublic import {dependency}\n@[expose] public section\n')
-        with self.assertRaisesRegex(ValueError, 'outside the Exec.Generated layer'):
-            self.check('Exec')
+        with self.assertRaisesRegex(ValueError, 'outside the Itasca.Runtime.Equations layer'):
+            self.check('Itasca')
 
     def test_templates_are_excluded_but_cannot_be_imported(self):
         for name in ['FunsExternal_Template', 'TypesExternal_Template']:
-            self.put('Exec.Generated.' + name, 'import Nonexistent\n')
-            self.check('Exec')
-            self.put('Exec.Generated.Funs', f'import Exec.Generated.{name}\n')
+            self.put('Itasca.Generated.' + name, 'import Nonexistent\n')
+            self.check('Itasca')
+            self.put('Itasca.Generated.Funs', f'import Itasca.Generated.{name}\n')
             with self.assertRaisesRegex(ValueError, 'external-model template'):
-                self.check('Exec')
-            (self.root / 'Exec/Generated/Funs.lean').unlink()
+                self.check('Itasca')
+            (self.root / 'Itasca/Generated/Funs.lean').unlink()
 
     def test_import_tokens_and_missing_modules(self):
-        self.put('Exec.Abs.State', '/- import Exec.Generated.Types -/\npublic import Exec.Spec.Missing\n')
-        with self.assertRaisesRegex(ValueError, 'missing module Exec.Spec.Missing'):
-            self.check('Exec')
+        self.put('Itasca.Runtime.Abs.State', '/- import Itasca.Runtime.Generated.Types -/\npublic import Itasca.Runtime.Spec.Missing\n')
+        with self.assertRaisesRegex(ValueError, 'missing module Itasca.Runtime.Spec.Missing'):
+            self.check('Itasca')
 
     def test_cross_library_audits_cannot_be_imported(self):
-        self.put('Exec.Theorems.Invoke', 'import Itasca.Audit\n')
+        self.put('Itasca.Runtime.Theorems.Invoke', 'import SpecExt.Audit\n')
         with self.assertRaisesRegex(ValueError, 'audit entry point'):
-            self.check('Exec')
+            self.check('Itasca')
 
     def test_builtin_stages_ignore_comments_and_strings(self):
         self.put('SpecExt.Builtins.Int', '/- opaque fake : Nat -/\ndef s := "opaque fake"\nopaque iand_ : Nat := 0\n')
@@ -280,9 +280,9 @@ class AuditTests(unittest.TestCase):
         audit.check_builtins(self.root, 'complete')
 
     def test_missing_audit_fails_closed(self):
-        (self.root / 'Exec/Audit.lean').unlink()
+        (self.root / 'Itasca/Audit.lean').unlink()
         with self.assertRaisesRegex(ValueError, 'Missing audit module'):
-            self.check('Exec')
+            self.check('Itasca')
 
 
 if __name__ == '__main__':

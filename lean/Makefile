@@ -29,7 +29,7 @@ CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 	--include='core::clone::impls::{impl core::clone::Clone for u8}'
 
 .PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
- prove prove-exec trust script-tests audit-coverage audit-imports clean checkpoint spec-build spec-generate spec-update \
+ prove trust script-tests audit-coverage audit-imports clean checkpoint spec-build spec-generate spec-update \
  spec-compare spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
@@ -84,16 +84,12 @@ audit-imports:
 	python3 scripts/check_audit.py --write
 
 prove: audit-coverage
-	lake build
-
-prove-exec: audit-coverage
-	lake build SpecExt.Audit Exec.Audit Exec.Main
+	lake build Itasca SpecExt.Audit
 	mkdir -p .build
 	lake env lean --run scripts/reachability.lean --check .build/dead.txt
 
 # Headline theorems first, then every validator declaration.
 trust: prove
-	lake build Exec.Main
 	lake env lean --run scripts/trust.lean
 	ITASCA_AUDIT_VERBOSE=1 lake env lean Itasca/Audit.lean
 

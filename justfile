@@ -22,10 +22,6 @@ extract-check:
 prove:
     @make prove
 
-# Check execution proofs and handwritten specification extensions.
-prove-exec:
-    @make prove-exec
-
 check +modules:
     @cd lean && lake build {{ modules }}
 
@@ -42,11 +38,11 @@ dead *flags:
     @cd lean && lake env lean --run scripts/reachability.lean {{ flags }} .build/dead.txt
     @echo "Full report: lean/.build/dead.txt"
 
-exec-stats lib="Exec":
+exec-stats lib="Itasca/Runtime":
     @python3 lean/scripts/exec_stats.py {{ lib }}
 
 # Compare import-only and full elaboration time on a fixed file sample.
-exec-timing lib="Exec":
+exec-timing lib="Itasca/Runtime":
     @python3 lean/scripts/exec_stats.py timing {{ lib }}
 
 # Refresh each library audit after adding or moving proof files.

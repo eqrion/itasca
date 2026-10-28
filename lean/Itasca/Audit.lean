@@ -1,4 +1,3 @@
-import Itasca.Binary.Wasm1.EncodingUnique
 import Itasca.Examples.Module.CodeEntryRejection
 import Itasca.Examples.Module.CustomTrace
 import Itasca.Examples.Module.Functions
@@ -6,19 +5,13 @@ import Itasca.Examples.Module.ImportedGlobal
 import Itasca.Examples.Module.Negative
 import Itasca.Examples.Module.Sections
 import Itasca.Examples.Stream
+import Itasca.Examples.TrapHost
 import Itasca.Examples.Wasm1.ProfileBoundary
 import Itasca.Examples.Wasm2.Body
 import Itasca.Examples.Wasm2.DeclaredReferences
 import Itasca.Examples.Wasm2.Module
-import Itasca.Handler.RawControl
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Spec.Checks
-import Itasca.Stream.BatchBounds
-import Itasca.Stream.InvariantDriver
-import Itasca.Stream.ReachedBatch
-import Itasca.Visitor.InvariantBodyLoop
-import Itasca.Visitor.ReachedTableLabels
-import Itasca.Visitor.ReaderAcceptedProgress
-import Itasca.Wasm2.Visitor.ReachedTableLoop
 import Aeneas
 import Lean.Elab.Command
 import Lean.Util.CollectAxioms

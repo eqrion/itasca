@@ -4,9 +4,9 @@ import Lean
 # Reachability from the headline theorems
 
 Run with `lake env lean --run scripts/reachability.lean [--check] [--cone NAMES]... [OUT]`. Imports the
-`Itasca` and `Exec` audits and walks the constants used by every declaration of the
-root modules of both libraries; the execution proofs keep validator facts alive.
-Reports the source declarations of each library that no root reaches, grouped by module.
+`Itasca` audit and walks the constants used by every declaration of the root modules; the runtime
+proofs keep validator facts alive. Reports the source declarations that no root reaches, grouped
+by module.
 `OUT` receives the full report, with source lines, and standard output a summary. With `--check`, the run
 fails if a module outside `allowlist` has no reachable declaration. Generated and
 audit modules are not reported.
@@ -18,13 +18,13 @@ count and the modules they make up entirely.
 
 open Lean
 
-def libraries : Array Name := #[`Itasca, `Exec]
+def libraries : Array Name := #[`Itasca]
 
 /-- The reachability roots besides `Examples/`. -/
 def roots : Array Name := #[
   `Itasca.Main, `Itasca.Results.Validate, `Itasca.Results.Stream, `Itasca.Results.Batch,
   `Itasca.Results.Trace, `Itasca.Results.Unique,
-  `Exec.Main, `Exec.Results.Compile, `Exec.Results.Instantiate, `Exec.Results.Invoke]
+  `Itasca.Results.Compile, `Itasca.Results.Instantiate, `Itasca.Results.Invoke]
 
 /-- Modules kept without a reachable declaration, each with its reason. -/
 def allowlist : Array Name := #[
@@ -32,7 +32,7 @@ def allowlist : Array Name := #[
   `Itasca.Spec.Checks,
   -- Characterize the generated judgments changed by the SpecTec host-typing and
   -- export-membership patches; cited by the patch descriptions in `README.md`.
-  `Exec.Spec.Typing.HostTyping, `Exec.Spec.ModuleMembership]
+  `Itasca.Runtime.Spec.Typing.HostTyping, `Itasca.Runtime.Spec.ModuleMembership]
 
 def isRoot (mod : Name) : Bool :=
   roots.contains mod || libraries.any fun lib => (lib ++ `Examples).isPrefixOf mod

@@ -1,0 +1,55 @@
+import Itasca.Runtime.Theorems.Composition.Supported.SupportedExecutionOutcome
+import Itasca.Runtime.Theorems.Composition.Cumulative.CumulativeExecutionOutcome
+import Itasca.Runtime.Theorems.Composition.StoreMutationFacts
+import Itasca.Runtime.Interp.StructuredMachine.SupportedAdvance
+import Itasca.Runtime.Interp.StructuredMachine.UniformAdvance
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
+/-- Concrete mutation evidence and the full source/machine outcome of one
+cumulative dispatch. Fresh certification follows from the mutation witness. -/
+def UniformSupportedStepOutcome {M P A : Type} (allocator : runtime.platform.Alloc A)
+    (hooks : runtime.platform.Platform P M) (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (expected : List valtype) (codeLength pc : Nat) (pending : Bool) (source : Abs.AState)
+    (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P) : Prop :=
+  CumulativeStoreMutation view code store out.2.2.1 ∧
+    match out.1 with
+    | .Ok _ => StructuredMachine.UniformAdvance view code out.2.2.1 out.2.1 expected codeLength pc pending source
+    | .Err error => CumulativeFailure allocator hooks exec store platform source error ∧
+      Store.decodeStore view code out.2.2.1=source.store
+
+variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
+  {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
+  {store : runtime.store.Store M} {platform : P} {expected : List valtype}
+  {codeLength pc : Nat} {pending : Bool} {source : Abs.AState}
+  {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
+
+theorem UniformSupportedStepOutcome.success (mutation : CumulativeStoreMutation view code store out.2.2.1)
+    (status : out.1=.Ok ())
+    (advance : StructuredMachine.UniformAdvance view code out.2.2.1 out.2.1 expected codeLength pc pending source) :
+    UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out :=
+  ⟨mutation,by simpa only [status] using advance⟩
+
+theorem UniformSupportedStepOutcome.unchanged_success (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
+    (same : out.2.2.1=store) (status : out.1=.Ok ())
+    (advance : StructuredMachine.UniformAdvance view code store out.2.1 expected codeLength pc pending source) :
+    UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out := by
+  apply UniformSupportedStepOutcome.success (by rw [same]; exact .refl_of_shape shaped sourceSyntax bounds) status
+  simpa only [same] using advance
+
+theorem UniformSupportedStepOutcome.failure (mutation : CumulativeStoreMutation view code store out.2.2.1)
+    {error : runtime.ExecError} (status : out.1=.Err error)
+    (decoded : Store.decodeStore view code out.2.2.1=source.store)
+    (cause : CumulativeFailure allocator hooks exec store platform source error) :
+    UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out :=
+  ⟨mutation,by simpa only [status] using And.intro cause decoded⟩
+
+theorem UniformSupportedStepOutcome.forget
+    (outcome : UniformSupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out) :
+    SupportedStepOutcome allocator hooks view code exec store platform expected codeLength pc pending source out := by
+  obtain ⟨mutation, outcome⟩ := outcome
+  refine ⟨mutation, ?_⟩
+  cases status : out.1 with
+  | Ok value => exact (by simpa only [status] using outcome : StructuredMachine.UniformAdvance view code out.2.2.1 out.2.1 expected codeLength pc pending source).forget
+  | Err error => simpa only [status] using outcome
+end Itasca.Runtime.Theorems

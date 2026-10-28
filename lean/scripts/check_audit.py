@@ -12,7 +12,7 @@ import sys
 from lean_source import Token, header_imports, tokens
 
 ROOT = Path(__file__).resolve().parents[1]
-LIBRARIES = ("Itasca", "SpecExt", "Exec")
+LIBRARIES = ("Itasca", "SpecExt")
 # All builtin bodies now have definitions. This does not mark their runtime
 # simulation proofs complete. The checked-in policy prevents opaque regressions.
 BUILTIN_STAGE = "complete"
@@ -23,7 +23,7 @@ VALIDATOR_LAYERS = {
     "Binary": {"Binary", "Spec", "Support", "Generated"},
     "Handler": {"Handler", "Binary", "Spec", "Support", "Generated", "Visitor"},
     "Contracts": {"Module", "Profile", "Binary", "Spec", "Support", "Generated"},
-    "Main": {"Contracts", "Results"},
+    "Main": {"Contracts", "Results", "Itasca.Runtime.Contracts"},
 }
 # Headline results sit at the top: only the entry module and examples import them.
 RESULT_IMPORTERS = {"Main", "Examples"}
@@ -31,27 +31,33 @@ RESULT_IMPORTERS = {"Main", "Examples"}
 # exception names an example of a supporting result that is not a headline theorem.
 EXAMPLE_IMPORTS = {
     ("Itasca.Examples.Module.CustomTrace", "Itasca.Module.Custom.Trace"),
-    ("Exec.Examples.Host.AllocationCallbackExamples", "Exec.Store.Api.HostAvailability"),
 }
-# Representation owns shared certificates; no compiler, interpreter or store
-# construction proof can enter through that foundation.
-EXEC_LAYERS = {
-    "Spec": {"Exec.Spec", "SpecExt", "Itasca.Spec", "Itasca.Support"},
-    "Abs": {"Exec.Abs", "Exec.Spec", "SpecExt", "Itasca.Spec"},
-    "Generated": {"Exec.Generated", "Itasca.Generated", "Aeneas"},
-    "Platform": {"Exec.Platform", "Exec.Generated", "Itasca.Generated", "Exec.Spec", "SpecExt"},
-    "Representation": {"Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Spec", "Exec.Abs", "SpecExt.Builtins", "Itasca"},
-    "Code": {"Exec.Code", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Abs", "Exec.Spec", "SpecExt.Builtins", "Itasca"},
-    "Interp": {"Exec.Interp", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Abs", "Exec.Code", "Exec.Spec", "SpecExt.Builtins", "Itasca.Support"},
-    "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Itasca.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
-    "Theorems": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+# Headline results about the runtime. They and `Main` are the only validator-side
+# modules that import the runtime or the specification extensions.
+RUNTIME_RESULTS = {"Itasca.Results.Compile", "Itasca.Results.Instantiate", "Itasca.Results.Invoke"}
+# Runtime layers, under `Itasca.Runtime`. Representation owns shared certificates; no
+# compiler, interpreter or store construction proof can enter through that foundation.
+RUNTIME_LAYERS = {
+    "Spec": {"Itasca.Runtime.Spec", "SpecExt", "Itasca.Spec", "Itasca.Support"},
+    "Abs": {"Itasca.Runtime.Abs", "Itasca.Runtime.Spec", "SpecExt", "Itasca.Spec"},
+    "Equations": {"Itasca.Generated", "Aeneas"},
+    "Platform": {"Itasca.Runtime.Platform", "Itasca.Runtime.Equations", "Itasca.Generated", "Itasca.Runtime.Spec", "SpecExt"},
+    "Representation": {"Itasca.Runtime.Representation", "Itasca.Runtime.Equations", "Itasca.Runtime.Platform",
+                       "Itasca.Runtime.Spec", "Itasca.Runtime.Abs", "SpecExt.Builtins", "Itasca"},
+    "Code": {"Itasca.Runtime.Code", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations", "Itasca.Runtime.Platform",
+             "Itasca.Runtime.Abs", "Itasca.Runtime.Spec", "SpecExt.Builtins", "Itasca"},
+    "Interp": {"Itasca.Runtime.Interp", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations",
+               "Itasca.Runtime.Platform", "Itasca.Runtime.Abs", "Itasca.Runtime.Code", "Itasca.Runtime.Spec",
+               "SpecExt.Builtins", "Itasca.Support", "Itasca.Generated"},
+    "Store": {"Itasca.Runtime.Store", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations",
+              "Itasca.Runtime.Platform", "Itasca.Runtime.Spec", "Itasca.Runtime.Interp", "Itasca.Runtime.Code",
+              "Itasca.Generated"},
+    "Theorems": {"Itasca.Runtime", "Itasca", "SpecExt", "Aeneas"},
     # Contracts stay below the constructions that assume them. The API invariant
     # is named until Theorems/Api leaves the Theorems layer.
-    "Contracts": {"Exec.Platform", "Exec.Generated", "Itasca.Generated", "Exec.Spec", "Exec.Representation", "Exec.Store",
-                  "Exec.Interp.Relations", "Exec.Theorems.Api.ExecutableInv", "SpecExt"},
-    "Results": {"Exec", "SpecExt", "Itasca", "Aeneas"},
-    "Main": {"Exec.Contracts", "Exec.Results"},
-    "Examples": {"Exec", "SpecExt", "Itasca", "Aeneas"},
+    "Contracts": {"Itasca.Runtime.Platform", "Itasca.Runtime.Equations", "Itasca.Generated", "Itasca.Runtime.Spec",
+                  "Itasca.Runtime.Representation", "Itasca.Runtime.Store", "Itasca.Runtime.Interp.Relations",
+                  "Itasca.Runtime.Theorems.Api.ExecutableInv", "SpecExt"},
 }
 # Integration stages can use local proofs, but never flow back into them.
 COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
@@ -94,59 +100,70 @@ def check_layer(name: str, imported: str, library: str) -> None:
     if name == library + ".Audit":
         return
     layer = name.split(".")[1]
-    if library in {"Itasca", "Exec"}:
-        main = library + ".Main"
-        if (imported == main or under(imported, library + ".Results")) and layer not in RESULT_IMPORTERS:
-            raise ValueError(f"{name} imports {imported}; only Main and Examples import the headline results")
-        if (layer == "Examples" and under(imported, library) and imported != main
-                and not under(imported, library + ".Examples") and (name, imported) not in EXAMPLE_IMPORTS):
-            raise ValueError(f"{name} imports {imported}; examples import only {main}")
     if library == "Itasca":
-        if any(under(imported, other) for other in ("Exec", "SpecExt")):
+        # The runtime builds on the validator's headline results.
+        result = imported == "Itasca.Main" or under(imported, "Itasca.Results")
+        validator_result = result and imported != "Itasca.Main" and imported not in RUNTIME_RESULTS
+        if result and layer not in RESULT_IMPORTERS and not (layer == "Runtime" and validator_result):
+            raise ValueError(f"{name} imports {imported}; only Main and Examples import the headline results")
+        if (layer == "Examples" and under(imported, library) and imported != "Itasca.Main"
+                and not under(imported, "Itasca.Examples") and (name, imported) not in EXAMPLE_IMPORTS):
+            raise ValueError(f"{name} imports {imported}; examples import only Itasca.Main")
+        if layer == "Runtime":
+            check_runtime_layer(name, imported)
+            return
+        if (layer not in RESULT_IMPORTERS and name not in RUNTIME_RESULTS
+                and any(under(imported, other) for other in ("Itasca.Runtime", "SpecExt"))):
             raise ValueError(f"{name} imports {imported}; validator imports must stay independent")
         if layer in VALIDATOR_LAYERS and under(imported, "Itasca"):
-            if imported.split(".")[1] not in VALIDATOR_LAYERS[layer]:
+            if imported.split(".")[1] not in VALIDATOR_LAYERS[layer] and imported not in VALIDATOR_LAYERS[layer]:
                 raise ValueError(f"{name} imports {imported}, above the {layer}/ layer")
         return
-    if library == "SpecExt":
-        if layer == "Builtins":
-            allowed = {"SpecExt.Builtins", "Wasm2Prefix", "Lean", "Batteries", "Mathlib"}
-        elif layer in {"Host", "Wasm1"}:
-            allowed = FOUNDATIONS | {"wasm2.0", "SpecExt.Builtins"}
-        else:
-            raise ValueError(f"{name} has no declared SpecExt import layer")
+    if layer == "Builtins":
+        allowed = {"SpecExt.Builtins", "Wasm2Prefix", "Lean", "Batteries", "Mathlib"}
+    elif layer in {"Host", "Wasm1"}:
+        allowed = FOUNDATIONS | {"wasm2.0", "SpecExt.Builtins"}
     else:
-        if layer not in EXEC_LAYERS:
-            raise ValueError(f"{name} has no declared Exec import layer")
-        allowed = EXEC_LAYERS[layer] | FOUNDATIONS
-        if layer in {"Spec", "Theorems", "Results", "Examples"}:
-            allowed = allowed | SPEC_MODULES
-    if library == "Exec" and layer == "Code" and under(imported, "Exec.Code"):
-        source_stage = name.split(".")[2]
-        target_stage = imported.split(".")[2]
+        raise ValueError(f"{name} has no declared SpecExt import layer")
+    if not any(under(imported, prefix) for prefix in allowed):
+        raise ValueError(f"{name} imports {imported}, outside the {library}.{layer} layer")
+
+
+def check_runtime_layer(name: str, imported: str) -> None:
+    layer = name.split(".")[2]
+    if layer not in RUNTIME_LAYERS:
+        raise ValueError(f"{name} has no declared Itasca.Runtime import layer")
+    allowed = RUNTIME_LAYERS[layer] | FOUNDATIONS
+    if layer in {"Spec", "Theorems"}:
+        allowed = allowed | SPEC_MODULES
+    if layer == "Code" and under(imported, "Itasca.Runtime.Code"):
+        source_stage = name.split(".")[3]
+        target_stage = imported.split(".")[3]
         if source_stage not in COMPILER_STAGES or target_stage not in COMPILER_STAGES:
             raise ValueError(f"{name} or {imported} has no declared compiler stage")
         if COMPILER_STAGES[target_stage] > COMPILER_STAGES[source_stage]:
             raise ValueError(f"{name} imports {imported}, above its compiler stage")
     for owner, final in (("Interp", "Invocation"), ("Store", "Instantiation")):
-        if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
-            if not under(name, f"Exec.{owner}.{final}"):
+        if layer == owner and under(imported, f"Itasca.Runtime.{owner}.{final}"):
+            if not under(name, f"Itasca.Runtime.{owner}.{final}"):
                 raise ValueError(f"{name} imports {imported}, above its integration stage")
-    if library == "Exec" and imported == "Itasca.Generated.Funs" and name != "Exec.Generated.Equations":
-        raise ValueError(f"{name} imports {imported}; import Exec.Generated.Equations, which shares the runtime's equation lemmas")
+    if imported == "Itasca.Generated.Funs" and name != "Itasca.Runtime.Equations":
+        raise ValueError(f"{name} imports {imported}; import Itasca.Runtime.Equations, which shares the runtime's equation lemmas")
     # Reuse canonical source typing, environment caches, and the abstract
     # module-binding extension theorem without opening their entire hierarchies.
-    if name == "Exec.Spec.SegmentCopySlice" and imported == "Aeneas.Data.List.List":
+    if name == "Itasca.Runtime.Spec.SegmentCopySlice" and imported == "Aeneas.Data.List.List":
         return
-    if library == "Exec" and layer == "Store" and imported in {
+    if layer == "Store" and imported in {
         "Itasca.Module.Const.Syntax", "Itasca.Module.Elab.SegmentSyntax",
         "Itasca.Module.Env.Basic", "Itasca.Module.Elab.Metadata",
-        "Exec.Abs.ModuleBindingsExtension", "Exec.Abs.StoreTyping",
+        "Itasca.Runtime.Abs.ModuleBindingsExtension", "Itasca.Runtime.Abs.StoreTyping",
         "Aeneas.Data.List.List", "SpecExt.Wasm1",
     }:
         return
-    if not any(under(imported, prefix) for prefix in allowed):
-        raise ValueError(f"{name} imports {imported}, outside the {library}.{layer} layer")
+    # A validator prefix such as `Itasca` never admits the runtime itself.
+    runtime = under(imported, "Itasca.Runtime")
+    if not any(under(imported, prefix) and (under(prefix, "Itasca.Runtime") or not runtime) for prefix in allowed):
+        raise ValueError(f"{name} imports {imported}, outside the Itasca.Runtime.{layer} layer")
 
 
 def check_builtins(root: Path, stage: str = BUILTIN_STAGE) -> None:

@@ -1,0 +1,87 @@
+import Itasca.Runtime.Theorems.Api.StatefulMemoryGrowDispatch
+import Itasca.Runtime.Interp.State.StatefulContinue
+import Itasca.Runtime.Interp.StructuredMachine.StatefulPrepare
+import Itasca.Runtime.Interp.StructuredMachine.Execution
+import Itasca.Runtime.Abs.Cumulative.Step
+import Itasca.Runtime.Code.Local.Relations.Common.StatefulEmission
+namespace Itasca.Runtime.Theorems
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
+
+theorem stateful_memory_grow_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
+    [projection : Itasca.Runtime.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
+    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (last : index.val+1=exec.frames.length)
+    (frameFound : exec.frames.val[index.val]?=some raw)
+    (found : store.instances.val[raw.instance.val]?=some inst)
+    (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
+    (fetchBound : compiled.code.length≤U32.max)
+    (shapes : ∀ object∈store.memories.val,MemoryShape view object)
+    (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
+    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
+    (typed : Abs.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩) :
+    let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩
+    (∃ target : U32,raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
+      StructuredMachine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output) ∨
+    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+      out.1=.Ok () ∧ out.2.2.2=platform ∧ FrameStoreMetadata store out.2.2.1 ∧
+      ∃ pc : U32,∃ front : List val,∃ position : Nat,∃ result : U32,
+        pc.val=raw.pc.val+1 ∧ raw.base.val≤position ∧ position<exec.slots.length ∧
+        SlotsEffect {exec with frames:=exec.frames.set index {raw with pc:=pc}} out.2.1 (exec.slots.val.set position (UScalar.cast .U64 result)) ∧
+        (∃ address delta,address.val<store.memories.length ∧ MemoryGrowth view code store address delta (result,out.2.2.1)) ∧
+        FrameSlots out.2.1 {raw with pc:=pc} {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} ∧
+        StructuredMachine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} compiled C targets next output ∧
+        Abs.Cumulative.Step initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]}::rest,[]⟩) ⦄ := by
+  dsimp only
+  have frameTyped : Abs.FrameTyped (decodeStore view code store) {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} [] := by
+    cases typed.typed.frames with | cons head _ => exact head
+  rcases point_values (pairs:=compiled.indirect.val) (decodeStore view code store) f .memoryGrow after frameTyped point.code with jump | operation
+  · obtain ⟨target,forward,fetch,tail⟩ := jump
+    exact Or.inl ⟨target,forward,fetch,⟨point.bindings,point.locals,point.labels,tail⟩⟩
+  · obtain ⟨front,operands,input,result,first,second,a,b,entry,values,operandTypes,signature,heights,operandTyped,position,secondSlot,arguments,pair,fetch,tail⟩ := operation
+    have pcBound : raw.pc.val<U32.max := by
+      have inCode := (List.getElem?_eq_some_iff.mp fetch).1
+      change compiled.code.val.length≤U32.max at fetchBound
+      omega
+    have actualPosition : first.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType) := by
+      simpa only [point.locals] using position
+    have bindings : Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C := by
+      rw [←moduleEq]
+      exact point.bindings
+    apply Or.inr
+    apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled _ last frameFound found codeFound fetch pcBound
+    intro pc pcNext
+    let advanced := {exec with frames:=exec.frames.set index {raw with pc:=pc}}
+    let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩
+    obtain ⟨out,run,success,samePlatform,resultType,metadata,resultValue,written,mutation,represented,transition⟩ := WP.spec_imp_exists
+      (stateful_memory_grow_dispatch memory hooks floats allocator view laws code advanced store platform index raw inst C initial
+        {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} rest after front operands input result first second a entry signature
+        bindings found shapes rfl moduleEq slots values operandTypes operandTyped actualPosition)
+    rw [run]
+    apply WP.spec.ret
+    have operandLength : operands.length≥1 := by
+      have equal := congrArg List.length operandTypes
+      rw [List.length_map,signature.input_length] at equal
+      cases signature <;> simp_all [Abs.Stateful.Instruction.arity]
+    have capacity : raw.base.val+first.val<exec.slots.length := by
+      have allScalar := signature.inputs_scalar
+      have live := slots
+      have enough : Code.encodeValues operands ≠ [] := by
+        intro empty
+        have lengthEq := congrArg List.length empty
+        rw [Code.encodeValues_length,operandTypes] at lengthEq
+        cases signature <;> simp [Code.slots,Code.width] at lengthEq
+      have words := frame_read_suffix slots values actualPosition rfl
+      have firstWord := words 0 (List.length_pos_iff.mpr enough)
+      simpa only [Nat.add_zero] using firstWord.1
+    refine ⟨success,samePlatform,metadata,pc,front,raw.base.val+first.val,resultValue,pcNext,Nat.le_add_right _ _,capacity,written,mutation,represented,?_,?_⟩
+    · have safe := Abs.Stateful.transition_next .memoryGrow (decodeStore view code store) ambient f rest after
+        ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front++[Abs.integerVal .I32 resultValue.val]}::rest,[]⟩ typed transition
+      exact point.continue safe.2.1 front operands [Abs.integerVal .I32 resultValue.val] after values heights
+        (by simpa only [resultType,Code.valueType,Abs.integerVal,List.map_cons,List.map_nil,numtype_Inn,valtype_numtype] using tail) pc pcNext
+    · exact .stateful transition (by intro impossible;cases impossible)
+end Itasca.Runtime.Theorems
