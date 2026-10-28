@@ -364,13 +364,12 @@ uses the same actual event log in those source runs.
 [Public divergence](Exec/Results/Invoke.lean) yields
 coherent infinite source execution. [Actual finite prefixes](Exec/Results/Invoke.lean)
 have a uniform source-progress bound independent of host-published code sizes.
-[World-aware instantiation](Exec/Results/Instantiate.lean)
-retains rollback and committed initialization/start effects while callbacks may
-publish fresh code. These theorems require the explicit indexed callback and raw
-preservation laws. [Instantiation recording and resource causes](Exec/Results/Instantiate.lean)
-retain the same final interpretation and actual recorded event list. The
-resource accounting and raw-host-retention obligations are recorded in the
-execution reference. [No spurious errors](Exec/Results/Invoke.lean) shows
+[Instantiation](Exec/Results/Instantiate.lean) is total and runs no callback.
+It links, allocates and initializes the module, retains rollback before
+publication, classifies every resource error, and returns the resolved start
+function, which the embedder runs with `invoke_with`. Success reaches the call of
+that function in the source instantiation, so instantiate-then-invoke follows
+the source module start. [No spurious errors](Exec/Results/Invoke.lean) shows
 that an owned, typed call reports only traps when every source run of the
 invocation fits the store's value and frame limits (`SourceResourcesFit`, over
 all typed host replies), the allocator grants every request, interrupts

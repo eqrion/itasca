@@ -22,12 +22,11 @@ resource causes together. Shared
 that construction; ordinary invocation is a short projection. Generic weaker
 contracts remain available when capacities or recording-head evidence are absent.
 
-Evolving-world instantiation correspondence is constructed by
-[recorded source execution](Theorems/Instantiation/InstantiateExecutableWorldRecordedSource.lean).
-The actual-API recording adapter supplies ordinary correspondence by erasure.
-Resource causes remain a supporting construction below the combined
-recording/resource theorem, avoiding a cycle back through ordinary source
-correspondence.
+Instantiation is constructed in
+[InstantiateSource](Theorems/Instantiation/InstantiateSource.lean). It runs no
+host callback, so one total theorem gives the retained invariant, the source
+outcome and resource causes with the code interpretation that installs the new
+module's functions.
 
 ## Dependency layers
 
@@ -202,8 +201,7 @@ versions. Every module is reachable from [Main](Main.lean) or `Examples/`;
 the short allowlist in [`scripts/reachability.lean`](../scripts/reachability.lean).
 
 Shared slice lookup and list transport lemmas live in
-[Representation/Collection.lean](Representation/Collection.lean). Start-wrapper
-specializations use [Theorems/Instantiation/StartEquation.lean](Theorems/Instantiation/StartEquation.lean).
+[Representation/Collection.lean](Representation/Collection.lean).
 Keep shared helpers at the lowest layer supported by their actual dependencies.
 
 Run `just check Exec.Module` while iterating, `just audit-imports` after file
