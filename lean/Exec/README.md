@@ -15,12 +15,12 @@ reports declarations they do not reach. Each result is a short projection of
 the construction named below.
 
 Evolving-world invocation is constructed in
-[PublicExecutableWorldResources](Theorems/Invocation/PublicExecutableWorldResources.lean).
-It establishes correspondence, exact recording, the retained invariant and
-resource causes together. Shared
-[outcomes and erasure](Theorems/Invocation/ExecutableWorldOutcomes.lean) sit below
-that construction; ordinary invocation is a short projection. Generic weaker
-contracts remain available when capacities or recording-head evidence are absent.
+[PublicExecutableWorldResources](Theorems/Invocation/PublicExecutableWorldResources.lean)
+and [PublicExecutableWorldDivergence](Theorems/Invocation/PublicExecutableWorldDivergence.lean),
+and combined in [PublicBehaves](Theorems/Invocation/PublicBehaves.lean). The first
+establishes correspondence, exact recording, the retained invariant and resource
+causes together, over the shared
+[outcomes](Theorems/Invocation/ExecutableWorldOutcomes.lean).
 
 Instantiation is constructed in
 [InstantiateSource](Theorems/Instantiation/InstantiateSource.lean). It runs no

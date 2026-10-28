@@ -355,15 +355,13 @@ correctness, and bounded allocation availability. The envelope uses uniform
 source body/local/operand maxima and aggregates function and initializer costs;
 it need not accept every module exactly at a configured output limit.
 
-[Public world-aware invocation](Exec/Results/Invoke.lean)
-covers issued Wasm and host handles, retains the full `ExecutableInv` with the
-chosen final code interpretation, proves unchanged-state API rejection, and
-relates returned values, errors and final stores to source runs.
-[Exact public recording](Exec/Results/Invoke.lean)
-uses the same actual event log in those source runs.
-[Public divergence](Exec/Results/Invoke.lean) yields
-coherent infinite source execution. [Actual finite prefixes](Exec/Results/Invoke.lean)
-have a uniform source-progress bound independent of host-published code sizes.
+[Public invocation](Exec/Results/Invoke.lean) (`behaves`) covers issued Wasm
+and host handles. On return it retains the full `ExecutableInv` with the final
+code interpretation, proves unchanged-state API rejection, relates returned
+values, errors and final stores to source runs that use the actual recorded
+event log, and classifies every resource error. Divergence yields a coherent
+infinite source execution. `terminates` gives a return when the source has no
+infinite run.
 [Instantiation](Exec/Results/Instantiate.lean) is total and runs no callback.
 It links, allocates and initializes the module, retains rollback before
 publication, classifies every resource error, and returns the resolved start
