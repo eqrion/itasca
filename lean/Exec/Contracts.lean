@@ -1,5 +1,4 @@
-import Exec.Platform.Float
-import Exec.Platform.Memory
+import Exec.Platform.Laws
 import Exec.Store.Api.Grow
 import Exec.Store.Invariant.IssuedArguments
 import Exec.Interp.Relations.FrameStorePrefix
@@ -13,11 +12,12 @@ Every premise of a headline theorem is either a fact about the inputs (an accept
 issued handle, a source invocation) or one of the contracts below. None of them assumes that the
 runtime succeeds, terminates or agrees with the source semantics.
 
-This file holds definitions only. The host contracts that headline statements use and that were
-defined beside their proofs live here; the platform, compiler and source-resource contracts stay
-with their constructions until later phases bundle them. All are listed here.
+This file holds definitions only. `HostLaws` and the host contracts live here; the platform,
+compiler and source-resource contracts stay with their constructions. All are listed here.
 
 ## Platform operations
+
+[`Platform.Laws`](Platform/Laws.lean) bundles the float, allocator, interrupt and memory laws.
 
 | Contract | Obligation |
 | --- | --- |
@@ -30,7 +30,8 @@ with their constructions until later phases bundle them. All are listed here.
 ## Host callbacks
 
 A host callback may publish fresh code. Each call receives the current ghost code
-interpretation and chooses the next one, agreeing on previously issued keys.
+interpretation and chooses the next one, agreeing on previously issued keys. `HostLaws` bundles
+`HostWorldSound` with `HostRetention`, the frame, extern and issued-result laws below.
 
 | Contract | Obligation |
 | --- | --- |
@@ -82,6 +83,24 @@ def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
       Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄
+
+/-- Raw retention by every call of `host` from `store`. These laws do not follow from decoded
+source-store extension. -/
+structure HostRetention {M P : Type} (hooks : runtime.platform.Platform P M)
+    (store : runtime.store.Store M) (host : U64) : Prop where
+  framePrefix : ∀ p args results answer,
+    hooks.call_host p store host args results = .ok answer → Interp.FrameStorePrefix store answer.2.2.1
+  externs : ∀ p args results answer,
+    hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length
+  issued : ∀ p args results answer,
+    hooks.call_host p store host args results = .ok answer →
+      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value
+
+/-- The callback laws over stores satisfying `Inv`. -/
+structure HostLaws {M P : Type} (hooks : runtime.platform.Platform P M) (view : M → Slice U8)
+    (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop where
+  sound : HostWorldSound hooks view Inv
+  retains : ∀ code store, Inv code store → ∀ host, HostRetention hooks store host
 
 /-- Explicitly rule out callback-reported stack exhaustion. Normal host traps
 and invalid dynamically checked results remain source trap outcomes. -/

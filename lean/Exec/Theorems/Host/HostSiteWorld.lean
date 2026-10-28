@@ -21,13 +21,7 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀ host p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ host p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀ host p args results answer,
-      hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (retains : ∀ host, HostRetention hooks store host)
     {expected : List valtype} {pc : Nat} {pending : Bool} {source : Abs.AState}
     (site : StructuredHostSite view code exec store expected pc pending source)
     (typed : Abs.ATyped source) :
@@ -38,8 +32,7 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
   | @ready ambient f rest op after site kind =>
     exact host_ready_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify
       exec store platform valid expected ambient f rest op after site kind
-      (fun p host => callback host p) (fun p host => preserve host p)
-      (fun p host => externs host p) (fun p host => issued host p)
+      (fun p host => callback host p) retains
   | @normalize count pc s ambient before middle rest chain site ih =>
     apply WP.spec_mono (ih (chain.sound s ambient rest typed).1)
     intro out result

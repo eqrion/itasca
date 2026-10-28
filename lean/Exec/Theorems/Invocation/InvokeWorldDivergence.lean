@@ -10,21 +10,11 @@ theorem invoke_defined_world_infinite_source
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (certify : ∀code s,Inv code s → CertifiedSupportedStore view code s)
     (update : ∀code before after,Inv code before → CumulativeStoreMutation view code before after → Inv code after)
-    (sound : HostWorldSound hooks view Inv)
-    (preserve : ∀ code store, Inv code store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ code store, Inv code store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀ code store, Inv code store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (callbacks : HostLaws hooks view Inv)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
@@ -49,10 +39,10 @@ theorem invoke_defined_world_infinite_source
     function signature args results owner hf hs divergent
   have reached : ∃after prepared p,entry after prepared ∧
       runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared after p (.Ok ())=.div := by
-    apply invoke_prefix_divergent_entry memory hooks floats allocator allocation exec store platform address
+    apply invoke_prefix_divergent_entry memory hooks floats allocator laws.allocCorrect exec store platform address
       function signature args results owner hf hs accepted (fun value member=>(owned value member).1) entry ?_ ?_ divergent
     · intro prepared p identity empty represented
-      apply WP.spec_mono (call_defined_supported_entry memory hooks floats allocator allocation interrupts view code
+      apply WP.spec_mono (call_defined_supported_entry memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code
         prepared store p certified.shape certified.storeSyntax certified.segmentBounds certified.typed certified.supported certified.compiled
         ambient ambientWf address function signature instanceIndex functionIndex args empty identity represented accepted owned hf hs hw)
       intro out effect success
@@ -63,7 +53,7 @@ theorem invoke_defined_world_infinite_source
       let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
         ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
       apply WP.dspec_mono (world_loop_results memory hooks floats allocator Inv
-        (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid)
+        (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) ⟨code,machine⟩ valid)
       intro out result
       obtain ⟨finalCode,newValid,fresh,retained,agrees,extension,returned,failed⟩ := result.1
       refine ⟨retained,?_⟩
@@ -78,6 +68,6 @@ theorem invoke_defined_world_infinite_source
   let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
     ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
   have infinite := world_loop_infinite memory hooks floats allocator Inv
-    (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) ⟨code,machine⟩ valid bodyDivergent
+    (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) ⟨code,machine⟩ valid bodyDivergent
   exact infinite.prepend (StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf))
 end Exec.Theorems

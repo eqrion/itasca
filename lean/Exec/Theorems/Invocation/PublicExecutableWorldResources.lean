@@ -19,19 +19,11 @@ mutations and is preserved by callbacks. -/
 theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (executable : ∀c s,Inv c s → ExecutableInv view c s)
     (update : ∀c before after,Inv c before → CumulativeStoreMutation view c before after → Inv c after)
-    (sound : HostWorldSound hooks view Inv)
-    (preserve : ∀c store,Inv c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀c store,Inv c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issuedResults : ∀c store,Inv c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (callbacks : HostLaws hooks view Inv)
     (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
@@ -78,9 +70,9 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
         args (alloc.vec.Vec.deref signature.params) argumentIssued checked
       cases kind : function.code with
       | Wasm ii fi =>
-        apply WP.dspec_mono (invoke_defined_world_recorded_resources memory hooks floats allocator correct allocation interrupts view laws code
+        apply WP.dspec_mono (invoke_defined_world_recorded_resources memory hooks floats allocator view laws code
           Inv (fun c s held=>(executable c s held).toCertifiedApiStore.toCertifiedSupportedStore)
-          update (fun c s held=>(executable c s held).capacities) sound preserve externs issuedResults exec store platform valid Spec.invocationFrame ambientWf address function signature
+          update (fun c s held=>(executable c s held).capacities) callbacks exec store platform valid Spec.invocationFrame ambientWf address function signature
           ii fi args results owner owned hf hs kind checked)
         rintro ⟨out,events⟩ post
         obtain ⟨afterCode,fresh,kept,agrees,extension,success,failure⟩ := post
@@ -93,11 +85,11 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
         · intro error failed
           exact Or.inr ⟨function,signature,hf,hs,Or.inl ⟨ii,fi,kind,(failure error failed).2⟩⟩
       | Host identity =>
-        have total := invoke_host_world_recorded_resources memory hooks floats allocator allocation interrupts view code
+        have total := invoke_host_world_recorded_resources memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code
           Inv (fun c s held=>(executable c s held).shape) exec store platform valid executableValid.well_formed
           Spec.invocationFrame ambientWf address function identity signature args results owner hf kind hs owned checked
-          (fun p=>sound code store valid p identity)
-          (fun p=>preserve code store valid identity p) (fun p=>externs code store valid identity p) (fun p=>issuedResults code store valid identity p)
+          (fun p=>callbacks.sound code store valid p identity)
+          (callbacks.retains code store valid identity)
         apply WP.dspec_mono (WP.spec_dspec _ _ _ total)
         rintro ⟨out,events⟩ post
         obtain ⟨afterCode,⟨fresh,agrees,kept,extension,count⟩,success,failure⟩ := post
@@ -115,16 +107,8 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
 theorem invoke_executable_world_recorded_resources {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (sound : HostWorldSound hooks view (ExecutableInv view))
-    (preserve : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issuedResults : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
+    (callbacks : HostLaws hooks view (ExecutableInv view))
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
@@ -135,24 +119,15 @@ theorem invoke_executable_world_recorded_resources {M P F A : Type}
     recordedInvokeWith memory hooks floats allocator exec store platform address args results []
       ⦃ (out,events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
         ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error) ⦄div := by
-  exact invoke_executable_world_recorded_resources_with memory hooks floats allocator correct allocation
-    interrupts view laws (ExecutableInv view) (fun _ _ held=>held) (fun _ _ _ held mutation=>held.update mutation)
-    sound preserve externs issuedResults code exec store platform valid address args results issued
+  exact invoke_executable_world_recorded_resources_with memory hooks floats allocator view laws (ExecutableInv view) (fun _ _ held=>held) (fun _ _ _ held mutation=>held.update mutation)
+    callbacks code exec store platform valid address args results issued
     argumentIssued initial invoked
 
 theorem invoke_executable_world_source_resources {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (sound : HostWorldSound hooks view (ExecutableInv view))
-    (preserve : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issuedResults : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
+    (callbacks : HostLaws hooks view (ExecutableInv view))
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
@@ -167,6 +142,6 @@ theorem invoke_executable_world_source_resources {M P F A : Type}
         ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error ⦄div :=
   Platform.Recording.erase_dspec _ _ _
     (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])
-    (invoke_executable_world_recorded_resources memory hooks floats allocator correct allocation interrupts view laws code
-      sound preserve externs issuedResults exec store platform valid address args results issued argumentIssued initial invoked)
+    (invoke_executable_world_recorded_resources memory hooks floats allocator view laws code
+      callbacks exec store platform valid address args results issued argumentIssued initial invoked)
 end Exec.Theorems

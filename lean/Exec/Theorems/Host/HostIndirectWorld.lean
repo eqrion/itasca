@@ -40,10 +40,7 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀p args results answer,hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀p args results answer,hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store host) :
     let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
@@ -57,7 +54,7 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
   obtain ⟨⟨status,afterExec,afterStore,afterPlatform⟩,actual,outcome⟩ := WP.spec_imp_exists
     (step_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
       frameIndex raw inst compiled C targets next output ambient f rest table type after position sourceOperands address function host
-      positionSplit selectedSource functionAt hostCode owner last hf hi hc moduleEq binding slots program point expected machine owned.values callback preserve externs issued)
+      positionSplit selectedSource functionAt hostCode owner last hf hi hc moduleEq binding slots program point expected machine owned.values callback retains)
   dsimp only
   rw [actual,WP.spec_ok]
   rcases outcome with skip | called

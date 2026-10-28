@@ -33,13 +33,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀ p arguments defaults answer,
-      hooks.call_host p store identity arguments defaults = .ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ p arguments defaults answer,
-      hooks.call_host p store identity arguments defaults = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length)
-    (issued : ∀ p arguments defaults answer,
-      hooks.call_host p store identity arguments defaults = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store identity) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results ⦃ out => ∃ afterCode,
       (invariant afterCode out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧ FrameStorePrefix store out.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
@@ -94,7 +88,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         prepared store p valid address 0#usize ambient ambientWf function identity signature functionAt host signatureAt
         (args.val.map sourceValue) (by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed arguments).symm) arguments
         (Spec.resultsTyped_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
-        represented sourceWf callback preserve externs issued)
+        represented sourceWf callback retains)
     have sameDecode := Store.decodeStore_code_agrees view agrees
     rw [actual]
     simp only [WP.spec_ok]

@@ -43,13 +43,7 @@ theorem step_host_call_world_uniform {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀ p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀ p args results answer,
-      hooks.call_host p store host args results=.ok answer →
-      ∀ value∈answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store host) :
     let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩,
@@ -70,7 +64,7 @@ theorem step_host_call_world_uniform {M P F A : Type}
     WP.spec_imp_exists (step_host_call_structured_world_provenance memory hooks floats allocator allocation interrupts
       view code Inv certify exec store platform valid frameIndex raw caller compiled C targets next output ambient f rest
       index offset after address function host expected last hf hi hc fetched addressAt functionAt hostCode binding slots
-      program point machine owned.values callback preserve externs issued)
+      program point machine owned.values callback retains)
   dsimp only
   rw [actual,WP.spec_ok]
   intro success

@@ -1,3 +1,4 @@
+import Exec.Contracts
 import Exec.Theorems.Host.HostCallSource
 import Exec.Theorems.Composition.ExecutionCode
 import Exec.Interp.Relations.FrameStorePrefix
@@ -32,13 +33,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀ p args results answer,
-      hooks.call_host p store identity args results = .ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ p args results answer,
-      hooks.call_host p store identity args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length)
-    (issued : ∀ p args results answer,
-      hooks.call_host p store identity args results = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store identity) :
     runtime.interp.call memory hooks floats allocator exec store platform address base ⦃ out =>
       ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ invariant afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
@@ -80,7 +75,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         (signature.params.val.map sourceType) values := by simpa only [same] using arguments
     obtain ⟨nextFunction,nextFound,nextSignature⟩ := Store.host_signature_extension view afterCode store nextStore
       address function signature functionAt signatureAt (shape afterCode nextStore fresh) extension
-    have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := issued _ _ _ _ called
+    have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := retains.issued _ _ _ _ called
     step with host_resume_source_owned memory view afterCode store nextStore ambient {ready with host_args := args}
       address base nextFunction signature identity.val (signature.params.val.map sourceType) values
       ⟨returned⟩ status hostSource arguments extension sourceTyped wfAmbient nextFound nextSignature returnedIssued capacity
@@ -93,7 +88,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         · simp only [HostCallCauses,trapped]
         · simp only [HostCallCauses,exhausted]
           exact ⟨p,args.slice,defaults.slice,returned,by simpa only [reply] using called⟩
-    refine ⟨afterCode,agrees,fresh,preserve _ _ _ _ called,crossExtension,externs _ _ _ _ called,?_,?_,causes⟩
+    refine ⟨afterCode,agrees,fresh,retains.framePrefix _ _ _ _ called,crossExtension,retains.externs _ _ _ _ called,?_,?_,causes⟩
     ·
       obtain ⟨padding,slotsEq,metadata⟩ := preparation
       have readyIdentity : ready.store = exec.store := by

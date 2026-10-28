@@ -8,10 +8,7 @@ theorem uniform_eventful_inv_step_or_host
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (Inv : runtime.store.Store M → Prop)
     (update : ∀before after,Inv before → CumulativeStoreMutation view code before after → Inv after)
     {expected : List valtype} (machine : EventfulMachine M P view code expected)
@@ -28,7 +25,7 @@ theorem uniform_eventful_inv_step_or_host
       ∀error,out.1=.Err error → ∃events,
         EventfulInvocationError (Abs.decode machine.source) events
           (Store.decodeStore view code out.2.2.1) machine.source.ambient error ⦄ := by
-  rcases step_supported_host_site_uniform memory hooks floats allocator correct allocation interrupts view laws code
+  rcases step_supported_host_site_uniform memory hooks floats allocator view laws code
     machine.exec machine.store machine.platform machine.source expected machine.pc machine.pending
     machine.invariant.storeEq machine.certified.shape machine.certified.storeSyntax machine.certified.segmentBounds
     machine.certified.compiled machine.certified.typed machine.owned machine.invariant active with host | operation

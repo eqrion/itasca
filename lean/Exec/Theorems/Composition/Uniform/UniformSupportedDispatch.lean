@@ -1,3 +1,4 @@
+import Exec.Platform.Laws
 import Exec.Theorems.Composition.Uniform.UniformSupportedTransport
 import Exec.Theorems.Composition.Uniform.UniformSupportedStateful
 import Exec.Theorems.Composition.Uniform.UniformSupportedIndirect
@@ -39,9 +40,7 @@ theorem step_head_supported_host_site_uniform
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator) (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
@@ -86,7 +85,7 @@ theorem step_head_supported_host_site_uniform
       exact Or.inl ⟨⟨trap,rfl,Or.inl (by rcases kind with rfl | rfl <;> simp [FloatCoreTrap])⟩,count,positive,steps⟩
   | loop bt body =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_loop_execution_uniform memory hooks floats allocator interrupts platform index view code exec store raw inst compiled
+    apply WP.spec_mono (StructuredMachine.step_loop_execution_uniform memory hooks floats allocator laws.interruptsReturn platform index view code exec store raw inst compiled
       ambient f rest bt body after C targets next output hi slots last hf hc program point expected machine)
     intro out effect
     obtain ⟨sameStore,success | stopped⟩ := effect
@@ -95,7 +94,7 @@ theorem step_head_supported_host_site_uniform
     · apply UniformSupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) stopped.1 (by simp only [sameStore])
       exact Or.inr (Or.inl ⟨rfl,_,stopped.2⟩)
   | call functionIndex =>
-    rcases StructuredMachine.step_call_execution_uniform memory hooks floats allocator allocation interrupts view code exec store platform index raw inst compiled
+    rcases StructuredMachine.step_call_execution_uniform memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code exec store platform index raw inst compiled
       C targets next output ambient f rest functionIndex after compiledFunctions functionTyping last hf hi hc slots program point expected machine with host | operation
     · obtain ⟨address,function,host,offset,fetched,mapped,issued,hostCode⟩ := host
       exact Or.inl (.ready ⟨index,raw,inst,compiled,C,targets,next,output,last,hf,hi,hc,program,slots,moduleEq,point,machine,owned.values⟩ (Or.inl ⟨functionIndex,offset,address,function,host,rfl,fetched,mapped,issued,hostCode⟩))
@@ -173,7 +172,7 @@ theorem step_head_supported_host_site_uniform
     exact UniformSupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (StructuredMachine.UniformAdvance.of_frame machine simulation uniform ownership rfl bounded)
   | load operation argument =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Memory.step_memory_load_execution_owned_uniform memory hooks floats allocator platform index view laws code exec store raw inst compiled
+    apply WP.spec_mono (StructuredMachine.Memory.step_memory_load_execution_owned_uniform memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
       ambient f rest after operation argument C targets next output hi moduleEq slots last hf hc point expected machine program)
     intro out effect
     obtain ⟨samePlatform,changed,metadata,extension,success | trapped⟩ := effect
@@ -191,7 +190,7 @@ theorem step_head_supported_host_site_uniform
       exact Or.inl ⟨⟨.MemoryOutOfBounds,rfl,Or.inl (by simp [FloatCoreTrap])⟩,trapped.2.2⟩
   | store operation argument =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Memory.step_memory_store_execution_owned_uniform memory hooks floats allocator platform index view laws code exec store raw inst compiled
+    apply WP.spec_mono (StructuredMachine.Memory.step_memory_store_execution_owned_uniform memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
       ambient f rest after operation argument C targets next output hi moduleEq slots last hf hc point expected machine program)
     intro out effect
     obtain ⟨samePlatform,changed,metadata,extension,success | trapped⟩ := effect
@@ -209,16 +208,16 @@ theorem step_head_supported_host_site_uniform
       exact Or.inl ⟨⟨.MemoryOutOfBounds,rfl,Or.inl (by simp [FloatCoreTrap])⟩,trapped.2.2⟩
   | float operation =>
     apply Or.inr
-    apply WP.spec_mono (step_scalar_supported_execution_uniform memory hooks floats allocator correct exec store platform index raw inst compiled C targets next output
+    apply WP.spec_mono (step_scalar_supported_execution_uniform memory hooks floats allocator laws.floatsCorrect exec store platform index raw inst compiled C targets next output
       view code ambient f rest operation after last hf hi hc slots point expected machine program shaped sourceSyntax bounds)
     intro out result
     exact result.2.2
   | stateful operation =>
     apply Or.inr
-    exact stateful_execution_supported_uniform memory hooks floats allocator allocation view laws code exec store platform index raw inst compiled C targets next output
+    exact stateful_execution_supported_uniform memory hooks floats allocator laws.allocCorrect view laws.memoryLaws code exec store platform index raw inst compiled C targets next output
       ambient f rest after operation last hf hi hc moduleEq slots point expected machine program shaped sourceSyntax bounds owned
   | indirect table type =>
-    rcases step_indirect_supported_execution_uniform memory hooks floats allocator allocation interrupts view code exec store platform index raw inst compiled C targets next output
+    rcases step_indirect_supported_execution_uniform memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code exec store platform index raw inst compiled C targets next output
       ambient f rest table type after last hf hi hc moduleEq program slots point expected machine shaped compiledFunctions functionTyping with host | operation
     · exact Or.inl (.ready ⟨index,raw,inst,compiled,C,targets,next,output,last,hf,hi,hc,program,slots,moduleEq,point,machine,owned.values⟩ (Or.inr ⟨table,type,rfl,host⟩))
     · apply Or.inr
@@ -235,7 +234,7 @@ theorem step_head_supported_host_site_uniform
         · exact Or.inr (Or.inr ⟨index,raw,inst,compiled,last,hf,hi,hc,Or.inr ⟨code,cause⟩⟩)
   | simd operation =>
     apply Or.inr
-    exact step_simd_supported_execution_uniform memory hooks floats allocator view code laws correct exec store platform raw index inst compiled
+    exact step_simd_supported_execution_uniform memory hooks floats allocator view code laws.memoryLaws laws.floatsCorrect exec store platform raw index inst compiled
       C targets next output ambient f rest op after expected last hf hi hc program slots point operation machine shaped sourceSyntax bounds
   | typedSelect declared =>
     apply Or.inr
@@ -251,9 +250,7 @@ theorem step_ready_supported_host_site_uniform
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator) (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
@@ -291,7 +288,7 @@ theorem step_ready_supported_host_site_uniform
   | cons op after =>
     have same : {f with code:=op::after}=f := by rw [←source]
     have head := StructuredMachine.frame_head_coverage point ready op after source
-    have result := step_head_supported_host_site_uniform memory hooks floats allocator correct allocation interrupts view laws code exec store platform index raw inst compiled C targets next output
+    have result := step_head_supported_host_site_uniform memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output
       ambient f rest op after head last hf hi hc program slots moduleEq small (by simpa only [same] using point) expected
       (by simpa only [same] using machine) shaped sourceSyntax bounds compiledFunctions functionTyping (by simpa only [same] using owned)
     simpa only [same] using result
@@ -300,9 +297,7 @@ theorem step_frame_supported_host_site_uniform
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator) (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
@@ -350,7 +345,7 @@ theorem step_frame_supported_host_site_uniform
         ⟨target.val,false,_,effect.2.2.2.2.1,effect.2.2.2.2.2,effect.2.2.2.2.2.uniform_forward forward (by scalar_tac),fun _ h=>h,rfl,fun _ h=>h⟩
       exact outcome.prepend_normalization chain machine.typed.typed
     · have nextModule : g.module=Store.decodeInstance store inst := metadata.module.trans moduleEq
-      rcases step_ready_supported_host_site_uniform memory hooks floats allocator correct allocation interrupts view laws code exec store platform index raw inst compiled
+      rcases step_ready_supported_host_site_uniform memory hooks floats allocator view laws code exec store platform index raw inst compiled
         C labels stop types ambient g rest last hf hi hc nextProgram represented nextModule small continuation expected retained ready shaped sourceSyntax bounds compiledFunctions functionTyping (chain.ownership.stateful owned) with host | operation
       · exact Or.inl (.normalize chain host)
       · apply Or.inr
@@ -362,10 +357,7 @@ theorem step_supported_host_site_uniform
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (source : Abs.AState) (expected : List valtype) (pc : Nat) (pending : Bool)
     (decoded : source.store = Store.decodeStore view code store)
@@ -405,7 +397,7 @@ theorem step_supported_host_site_uniform
     have moduleEq := current.binding.module_lookup inst hi
     change s = Store.decodeStore view code store at decoded
     subst s
-    rcases step_frame_supported_host_site_uniform memory hooks floats allocator correct allocation interrupts view laws code exec store platform
+    rcases step_frame_supported_host_site_uniform memory hooks floats allocator view laws code exec store platform
       index raw inst compiled C targets next output ambient f rest
       last hf hi hc program current.slots moduleEq small pending point expected (by simpa only [position] using invariant) shaped sourceSyntax bounds compiledFunctions functionTyping owned with host | operation
     · exact Or.inl (by simpa only [position] using host)

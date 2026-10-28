@@ -31,22 +31,12 @@ theorem invoke_defined_world_recorded_resources
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats)
-    (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (certify : ∀ c s,Inv c s → CertifiedSupportedStore view c s)
     (update : ∀ c before after,Inv c before → CumulativeStoreMutation view c before after → Inv c after)
     (capacities : ∀ c s,Inv c s → Store.FunctionCapacities c s)
-    (sound : HostWorldSound hooks view Inv)
-    (preserve : ∀ c store, Inv c store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀ c store, Inv c store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀ c store, Inv c store →
-      ∀ host p args results answer, hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (callbacks : HostLaws hooks view Inv)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
@@ -101,7 +91,7 @@ theorem invoke_defined_world_recorded_resources
       (signature.results.val.map sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
-  refine WP.dspec_mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator true allocation exec store platform
+  refine WP.dspec_mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator true laws.allocCorrect exec store platform
     address function signature args results [] owner hf hs accepted (fun value member=>(owned value member).1)
     entry retained (.refl _) property errors ?_ ?_ ?_ ?_) ?_
   · intro error cause
@@ -117,7 +107,7 @@ theorem invoke_defined_world_recorded_resources
     exact ⟨results,n,by simpa only [Store.decodeFuncType,List.length_map] using Nat.le_trans (Nat.le_of_eq amount) (Nat.sub_le _ _),refusal⟩
   · intro prepared p identity empty represented
     unfold recordedCall Platform.Recording.run
-    apply WP.spec_bind (call_defined_supported_entry_outcomes memory hooks floats allocator allocation interrupts view code
+    apply WP.spec_bind (call_defined_supported_entry_outcomes memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code
       prepared store p certified.shape certified.storeSyntax certified.segmentBounds certified.typed certified.supported certified.compiled
       ambient ambientWf address function signature instanceIndex functionIndex args empty identity represented accepted owned hf hs hw)
     intro out outcome
@@ -141,7 +131,7 @@ theorem invoke_defined_world_recorded_resources
     let machine : EventfulWorld M P view (signature.results.val.map sourceType) :=
       ⟨code,⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩⟩
     apply WP.dspec_mono (world_recorded_loop_resource_results memory hooks floats allocator Inv capacities
-      (world_step_outcomes memory hooks floats allocator correct allocation interrupts view laws Inv certify update sound preserve externs issued _) machine valid)
+      (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) machine valid)
     rintro ⟨out,events⟩ outcome
     obtain ⟨⟨afterCode,newValid,fresh,kept,agrees,extension,success,failed⟩,causes⟩ := outcome
     refine ⟨kept,kept,?_,?_⟩

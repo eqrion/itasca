@@ -29,11 +29,20 @@ theorem grantAll_correct : Platform.AllocCorrect grantAll := by
 theorem grantAll_available (bound : Nat) : Platform.AllocationAvailable grantAll bound :=
   fun _ _ _ _ => rfl
 
-theorem trapHost_sound {M : Type} (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8) :
-    HostWorldSound (trapHost memory) view (ExecutableInv view) := by
-  intro code store held p host args results
-  rw [trapHost,WP.spec_ok]
-  exact ⟨code,(by intro index inst found fn; rfl),held,Spec.extend_store_refl _ held.well_formed,held.source_typed⟩
+/-- The callbacks of `trapHost` satisfy every host law. -/
+theorem trapHost_laws {M : Type} (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8) :
+    HostLaws (trapHost memory) view (ExecutableInv view) := by
+  refine ⟨?_,fun _ store _ _ => ⟨?_,?_,?_⟩⟩
+  · intro code store held p host args results
+    rw [trapHost,WP.spec_ok]
+    exact ⟨code,(by intro index inst found fn; rfl),held,Spec.extend_store_refl _ held.well_formed,held.source_typed⟩
+  all_goals
+    intro p args results answer called
+    simp only [trapHost,Result.ok.injEq] at called
+    subst answer
+  · exact .refl store
+  · exact Nat.le_refl _
+  · intro value member; cases member
 
 /-- The single answer of every callback. -/
 theorem trapHost_answer {M : Type} {memory : runtime.platform.MemoryBuffer M} {p : Unit}
@@ -60,11 +69,8 @@ theorem trapHost_no_spurious_errors {M F : Type}
       store.limits.max_values.val store.limits.max_frames.val) :
     runtime.interp.invoke_with memory (trapHost memory) floats grantAll exec store () address args results
       ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div :=
-  runtime.interp.invoke_with.no_spurious_errors memory (trapHost memory) floats grantAll correct
-    grantAll_correct (fun _ => by rw [trapHost,WP.spec_ok]; trivial) view laws code (trapHost_sound memory view)
-    (fun _ store _ _ _ _ _ _ called => by rw [trapHost_answer called]; exact .refl store)
-    (fun _ _ _ _ _ _ _ _ called => by rw [trapHost_answer called])
-    (fun _ _ _ _ _ _ _ _ called => by rw [trapHost_answer called]; intro value member; cases member)
+  runtime.interp.invoke_with.no_spurious_errors memory (trapHost memory) floats grantAll view
+    ⟨correct,grantAll_correct,fun _ => by rw [trapHost,WP.spec_ok]; trivial,laws⟩ code (trapHost_laws memory view)
     (fun _ _ _ _ _ _ _ _ called => by rw [trapHost_answer called])
     exec store () valid address args results owner issued owned initial invoked typedArguments fits
     (grantAll_available _) (fun _ _ refused => by simp [trapHost] at refused)

@@ -1,6 +1,5 @@
 import Exec.Theorems.Invocation.PublicExecutableWorldResources
 import Exec.Theorems.Invocation.SourceResources
-import Exec.Theorems.Api.ExecutableResourceInv
 import Exec.Interp.Relations.TypedArguments
 
 /-! Public invocation reports only traps when every source run fits the store limits, the
@@ -37,7 +36,7 @@ private theorem source_cause_excluded {M P F A : Type}
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after))
     (noOverflow : NoHostStackOverflow hooks (ExecutableInv view))
     (cause : ExecutableWorldInvocationSourceCause memory hooks floats allocator view
-      (ExecutableResourceInv view store.limits.max_values.val store.limits.max_frames.val) code store address args after error)
+      (fun c s=>ExecutableInv view c s ∧ s.limits=store.limits) code store address args after error)
     (kind : error=.Terminated ∨ error=.Exhausted .CallStack ∨ error=.Exhausted .Values ∨ error=.Exhausted .Allocation ∨ error=.Exhausted .Objects) :
     False := by
   rcases cause with ⟨early,_⟩ | ⟨function,signature,hf,hs,⟨ii,fi,_,defined⟩ | ⟨identity,_,host⟩⟩
@@ -49,8 +48,8 @@ private theorem source_cause_excluded {M P F A : Type}
     · exact canonical.excludes_boundary fits signatureFits initialWf available continuing kind
     · obtain ⟨previous,count,events,afterExec,afterStore,afterPlatform,_,steps,held,_,source,_⟩ := loop
       have resources := fits.reachable _ previous.machine.source (by simpa only [List.nil_append] using StepsH.cons firstStep steps)
-      exact source.excludes_boundary resources held.values held.frames available continuing
-        (noOverflow previous.code previous.machine.store held.toExecutableInv) kind
+      exact source.excludes_boundary resources (Nat.le_of_eq (by rw [held.2])) (Nat.le_of_eq (by rw [held.2]))
+        available continuing (noOverflow previous.code previous.machine.store held.1) kind
   · obtain ⟨lookup,typeEq⟩ := decoded_function (view:=view) (code:=code) hf hs
     have signatureFits := fits.signature _ lookup
     rw [typeEq] at signatureFits
@@ -62,16 +61,8 @@ overflow, every error the invocation returns is a trap. -/
 theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (sound : HostWorldSound hooks view (ExecutableInv view))
-    (preserve : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issuedResults : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
+    (callbacks : HostLaws hooks view (ExecutableInv view))
     (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results answer,
       hooks.call_host p store host args results=.ok answer → answer.2.2.1.limits=store.limits)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -89,25 +80,24 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     (noOverflow : NoHostStackOverflow hooks (ExecutableInv view)) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
       ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div := by
-  let Inv := ExecutableResourceInv view store.limits.max_values.val store.limits.max_frames.val
+  let Inv := fun c s=>ExecutableInv view c s ∧ s.limits=store.limits
   have initialWf : wf_config initial := by cases invoked; assumption
   have sourceEq := Spec.invocation_config invoked
   subst sourceEq
   have argumentIssued : ∀value∈args.val,Store.IssuedValue store value :=
     fun value member => (owned value member).issued
-  have resourceSound : HostWorldSound hooks view Inv := by
+  have resourceLaws : HostLaws hooks view Inv := by
+    refine ⟨?_,fun c s held=>callbacks.retains c s held.1⟩
     intro c s held p host arguments defaults
-    obtain ⟨answer,call,post⟩ := WP.spec_imp_exists (sound c s held.toExecutableInv p host arguments defaults)
-    have same := limitsKept c s held.toExecutableInv host p arguments defaults answer call
+    obtain ⟨answer,call,post⟩ := WP.spec_imp_exists (callbacks.sound c s held.1 p host arguments defaults)
+    have same := limitsKept c s held.1 host p arguments defaults answer call
     obtain ⟨afterCode,agrees,fresh,extension,typed⟩ := post
     rw [call,WP.spec_ok]
-    exact ⟨afterCode,agrees,⟨fresh,by simpa only [same] using held.values,by simpa only [same] using held.frames⟩,extension,typed⟩
+    exact ⟨afterCode,agrees,⟨fresh,same.trans held.2⟩,extension,typed⟩
   apply WP.dspec_mono (Platform.Recording.erase_dspec _ _ _
     (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])
-    (invoke_executable_world_recorded_resources_with memory hooks floats allocator correct allocation interrupts
-      view laws Inv (fun _ _ held=>held.toExecutableInv) (fun _ _ _ held mutation=>held.update mutation)
-      resourceSound (fun c s held=>preserve c s held.toExecutableInv) (fun c s held=>externs c s held.toExecutableInv)
-      (fun c s held=>issuedResults c s held.toExecutableInv) code exec store platform ⟨valid,Nat.le_refl _,Nat.le_refl _⟩
+    (invoke_executable_world_recorded_resources_with memory hooks floats allocator view laws Inv (fun _ _ held=>held.1) (fun _ _ _ held mutation=>⟨held.1.update mutation,by simpa only [mutation.limits] using held.2⟩)
+      resourceLaws code exec store platform ⟨valid,rfl⟩
       address args results issued argumentIssued _ invoked))
   rintro out ⟨events,_,⟨afterCode,_,_,_,_,_,_,failure⟩,causes⟩ error failed
   rcases failure error failed with ⟨rejected,_,_⟩ | executed

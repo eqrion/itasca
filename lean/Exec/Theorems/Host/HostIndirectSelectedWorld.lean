@@ -45,10 +45,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀p args results answer,hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀p args results answer,hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store host) :
     runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base ⦃ out =>
       ∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
@@ -102,7 +99,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     Inv (fun c s h => (certify c s h).shape)
     {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform valid
     address base f.toFrame frameWf function host signature functionAt hostCode signatureAt args argumentTypes'.symm
-    argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback preserve externs issued)
+    argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback retains)
   intro out result
   obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
   have same := Store.decodeStore_code_agrees view agrees

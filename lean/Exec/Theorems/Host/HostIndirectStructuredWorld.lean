@@ -39,10 +39,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀p args results answer,hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀p args results answer,hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀p args results answer,hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
+    (retains : HostRetention hooks store host) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       (hostStepAddress exec store=none ∧ (∃ target, compiled.code.val[raw.pc.val]?=some (.Jump target)) ∧ out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧
        ∃ finalPC, Execution view code store out.2.1
@@ -149,7 +146,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
       obtain ⟨out,callActual,outcome⟩ := WP.spec_imp_exists (call_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
         frameIndex raw compiled C targets next output ambient f rest table.val type.val position after front args params results pc base
         address function host actualSignature functionAt hostCode actualSignatureAt signatureTypes selectedSource last hf values bounded argumentTypes
-        (by rw [baseOffset,basePosition]) heights binding slots program point continuation expected machine owned callback preserve externs issued)
+        (by rw [baseOffset,basePosition]) heights binding slots program point continuation expected machine owned callback retains)
       rw [callActual,WP.spec_ok]
       have guard : hostStepAddress exec store=some address := by
         rw [hostStepAddress_at exec store frameIndex raw inst compiled (.CallIndirect entry selector offset) last hf hi hc fetch]

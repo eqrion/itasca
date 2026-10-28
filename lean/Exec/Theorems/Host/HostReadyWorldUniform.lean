@@ -31,10 +31,7 @@ theorem host_ready_world_uniform {M P F A : Type}
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
-    (preserve : ∀p host args results answer,hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀p host args results answer,hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issued : ∀p host args results answer,hooks.call_host p store host args results=.ok answer →
-      ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value) :
+    (retains : ∀ host, HostRetention hooks store host) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       UniformWorldSourceSuccess (view:=view)
         Inv code expected store
@@ -45,7 +42,7 @@ theorem host_ready_world_uniform {M P F A : Type}
     apply WP.spec_mono (step_host_call_world_uniform memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
       site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest index offset after address function host expected
       site.last site.frameAt site.instanceAt site.compiledAt fetch addressAt functionAt hostCode site.binding site.slots site.program site.point site.machine
-      (site.eventful (certify code store valid) platform).owned (fun p=>callback p host) (fun p=>preserve p host) (fun p=>externs p host) (fun p=>issued p host))
+      (site.eventful (certify code store valid) platform).owned (fun p=>callback p host) (retains host))
     intro out result
     exact UniformWorldSourceSuccess.unbundle result
   · obtain ⟨table,type,source,boundary⟩ := indirect
@@ -68,7 +65,7 @@ theorem host_ready_world_uniform {M P F A : Type}
       site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest table type after position operands
       ⟨store.id,address⟩ function host positionSplit resolved functionAt hostCode rfl site.last site.frameAt site.instanceAt site.compiledAt site.moduleEq
       site.binding site.slots site.program site.point expected site.machine (site.eventful (certify code store valid) platform).owned
-      (fun p=>callback p host) (fun p=>preserve p host) (fun p=>externs p host) (fun p=>issued p host))
+      (fun p=>callback p host) (retains host))
     intro out result
     exact UniformWorldSourceSuccess.unbundle result
 end Exec.Theorems
