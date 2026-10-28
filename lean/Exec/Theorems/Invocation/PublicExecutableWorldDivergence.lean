@@ -87,7 +87,7 @@ theorem invoke_executable_world_terminates {M P F A : Type}
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
       ⦃ out => ∃ events,
         recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok (out, events) ∧
-        ExecutableWorldRecordedOutcome view code store exec platform results initial out events ⦄ := by
+        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ⦄ := by
   have notdiv : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results ≠ .div := by
     intro divergent
     exact finite (invoke_executable_world_infinite_source memory hooks floats allocator correct allocation

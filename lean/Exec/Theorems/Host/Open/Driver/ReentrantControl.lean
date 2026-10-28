@@ -2,7 +2,156 @@ import Exec.Interp.Host.OpenExecutionLoop
 import Exec.Interp.Invocation.OpenInvoke
 import Exec.Interp.Host.HostRecording
 import Exec.Theorems.Host.Callbacks.CallbackActions
-import Exec.Theorems.Host.Reentrant.CallbackInstantiationNoHost
+import Exec.Theorems.Host.Reentrant.ReentrantInvocation
+import Exec.Theorems.Instantiation.InstantiateExecutableEventfulSource
+import Exec.Theorems.Composition.FrameStorePrefixStaged
+import Exec.Theorems.Api.CertifiedApi
+import Exec.Code.Module.CompileExecutableCapacities
+import Exec.Store.Invariant.FunctionCapacities
+import Exec.Code.Module.CompileExecutable
+import Exec.Theorems.Instantiation.InstantiateSourceOrigin
+import Exec.Theorems.Instantiation.PreparedCertifiedExecutableApi
+import Exec.Code.Local.Relations.Common.ScalarEmission
+import Exec.Code.Local.Control.Common.Structured
+import Exec.Code.Local.Control.Common.StructuredComposition
+import Exec.Code.Local.Control.Common.StructuredLabels
+import Exec.Interp.Control.StructuredPoint
+import Exec.Abs.ModuleBindingsExtension
+import Exec.Interp.Relations.SuspendedPoint
+import Exec.Interp.Relations.FrameStoreMetadata
+import Exec.Interp.Machines.Slice.SliceExecution
+import Exec.Abs.Core.Typing
+import Exec.Abs.Core
+import Exec.Abs.Ownership.Core
+import Exec.Interp.Core.Mutation
+import Exec.Interp.Relations.SourceCallCause
+import Exec.Interp.State.GlobalMutationStep
+import Exec.Interp.Control.PendingJump
+import Exec.Interp.StructuredMachine.SupportedHeadCoverage
+import Exec.Interp.Relations.ReferenceTransfers
+import Exec.Interp.Relations.SourceClosure
+import Exec.Interp.Core.Linear
+import Exec.Interp.Relations.PrefixDispatch
+import Exec.Abs.Core.Correct
+import Exec.Interp.Relations.ControlPoint
+import Exec.Interp.Numeric.Integer.NumericFetch
+import Exec.Interp.Numeric.Integer.NumericCodePoint
+import Exec.Abs.Numeric.TransitionSimulation
+import Exec.Abs.Core.Bound
+import Exec.Code.Local.Control.Table.StructuredCodeTableExclusion
+import Exec.Interp.StructuredMachine.Execution
+import Exec.Interp.StructuredMachine.OrdinaryExecution
+import Exec.Interp.StructuredMachine.OrdinaryStack
+import Exec.Interp.StructuredMachine.StackPreservation
+import Exec.Interp.Relations.StackPreservation
+import Exec.Interp.Relations.PrefixEffect
+import Exec.Interp.Control.SkipStack
+import Exec.Abs.Core.Step
+import Exec.Abs.Numeric.Effect
+import Exec.Abs.StepSafety
+import Exec.Abs.Core.Pure
+import Exec.Spec.Extend
+import Exec.Interp.Core.OwnershipClosure
+import Exec.Interp.Core.LocalInversion
+import Exec.Interp.Relations.LocalCodePoint
+import Exec.Interp.Relations.Fetch
+import Exec.Interp.Relations.ValueLookup
+import Exec.Interp.Relations.LocalCapacity
+import Exec.Interp.Relations.Capacity
+import Exec.Interp.Core.LocalPrefix
+import Exec.Interp.Machines.Core.CoreOwnership
+import Exec.Interp.Core.BoundClosure
+import Exec.Abs.Numeric.Decode
+import Exec.Interp.Control.BranchNoCopy
+import Exec.Interp.Control.BranchConditionStep
+import Exec.Interp.Relations.TypedOperands
+import Exec.Interp.Relations.ControlEntry
+import Exec.Interp.Control.LoopHead
+import Exec.Interp.Machines.Core.CoreIntegerConstantPoint
+import Exec.Interp.Machines.Core.CoreIntegerConstantSlots
+import Exec.Interp.Machines.Slice.SliceOpcode
+import Exec.Interp.State.GlobalCoreStep
+import Exec.Interp.State.GlobalCoreOperands
+import Exec.Code.Local.Capacity.GlobalCapacity
+import Exec.Interp.Machines.Core.CoreFloatConstantPoint
+import Exec.Interp.Machines.Core.CoreFloatConstantSlots
+import Exec.Interp.Relations.SelectSlots
+import Exec.Interp.Machines.Core.CoreSelectOperands
+import Exec.Interp.Memory.MemoryCoreTransition
+import Exec.Interp.Memory.MemoryCoreOperandBounds
+import Exec.Interp.Memory.MemoryCoreEmission
+import Exec.Interp.Memory.MemoryCoreStep
+import Exec.Interp.Memory.MemoryCoreResult
+import Exec.Interp.Memory.MemoryLoadStepFootprint
+import Exec.Abs.Bound
+import Exec.Abs.Numeric.Transition
+import Exec.Abs.ReferenceBounds
+import Exec.Interp.Machines.Core.CoreFunctionTyping
+import Exec.Abs.CallSafety
+import Exec.Interp.Calls.CallStack
+import Exec.Code.Local.Relations.Common.CoreFunction
+import Exec.Interp.Calls.CallRefinement
+import Exec.Abs.Results
+import Exec.Interp.Calls.ReturnRefinement
+import Exec.Interp.Calls.ReturnResult
+import Exec.Interp.Machines.Core.CoreUnreachableExecution
+import Exec.Interp.Relations.StackRelation
+import Exec.Interp.Relations.Epilogue
+import Exec.Interp.Relations.Normalization
+import Exec.Interp.Core.EmptyInversion
+import Exec.Interp.Control.LabelCompletion
+import Exec.Interp.Core.Erased
+import Exec.Interp.Control.NormalizeClosure
+import Exec.Interp.Control.NormalizeCompose
+import Exec.Interp.Machines.Slice.SliceMeasure
+import Exec.Store.Api.GlobalWriteExtension
+import Exec.Interp.Memory.MemoryMutation
+import Exec.Theorems.Composition.Core.CoreContents
+import Exec.Representation.Collection
+import Exec.Store.Invariant.FunctionTables
+import Exec.Interp.Relations.CompiledFunctions
+import Exec.Code.Local.Relations.Common.CoreFunctionContext
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Store.Invariant.ObjectExtension
+import Exec.Theorems.Composition.GlobalMutationShape
+import Exec.Theorems.Composition.Core.CoreOwnership
+import Exec.Spec.Mutation
+import Exec.Store.Invariant.InstantiationCode
+import Exec.Store.Initialization.SegmentObjectMetadata
+import Exec.Theorems.Instantiation.StartEquation
+import Exec.Theorems.Invocation.InvokeWorld
+import Exec.Theorems.Invocation.InvokeHostWorld
+import Exec.Theorems.Api.ExecutableInv
+import Exec.Theorems.Host.HostSegmentPublication
+import Exec.Theorems.Composition.Certified.CertifiedExecutable
+import Exec.Theorems.Composition.Entry
+import Exec.Code.Local.Relations.Common.Function
+import Exec.Interp.Machines.Slice.SliceHistory
+import Exec.Interp.Relations.Readback
+import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
+import Exec.Interp.Machines.Slice.SliceErrors
+import Exec.Interp.Invocation.InvokeDivergence
+import Exec.Interp.Machines.Slice.SliceDivergence
+import Exec.Interp.Relations.TypedArguments
+import Exec.Spec.Invocation
+import Exec.Store.Invariant.Typing
+import Exec.Store.Instantiation.InstantiateStart
+import Exec.Theorems.Instantiation.StartAmbient
+import Exec.Theorems.Instantiation.StartResolution
+import Exec.Theorems.Composition.Eventful.EventfulInstantiationResult
+import Exec.Theorems.Composition.Executable.ExecutableInstantiationResult
+import Exec.Theorems.Composition.InstantiationResult
+import Exec.Store.Initialization.SegmentInitializeSource
+import Exec.Store.Initialization.SegmentCounts
+import Exec.Store.Instantiation.InstantiateLinked
+import Exec.Store.Instantiation.InstantiateNoStart
+import Exec.Store.Invariant.Rollback
+import Exec.Code.Module.CompileCache
 
 /-! An executable combined driver with explicit suspended Wasm and host
 continuations. The only callback dictionary used by a tick is inert; real host
@@ -189,25 +338,5 @@ def platform {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
     match outcome with
     | .host (status,after,values) _ => .ok (status,token,after,values)
     | .invocation answer _ => .ok (.Err .Trap,token,answer.2.2.1,Slice.new _)
-
-/-- A genuine host-local loop in the combined implementation. The pending call
-and store remain present in every actual continuing tick. -/
-theorem host_loop_diverges {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (identity : U64) (args : Slice runtime.Value) :
-    run memory floats allocator (fun _ _=>[.jump 0])
-      (initialHost (fun _ _=>[.jump 0]) store identity args)=.div := by
-  apply loop_diverges_of_stream (tick memory floats allocator (fun _ _=>[.jump 0]))
-    (fun _=>initialHost (fun _ _=>[.jump 0]) store identity args)
-  intro n
-  simp [tick,initialHost]
-
-/-- The synchronous Platform method is connected to that same productive loop,
-not to an inferred Wasm execution or an assumed callback-normality law. -/
-theorem looping_platform_diverges {M F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (identity : U64) (args defaults : Slice runtime.Value) :
-    (platform memory floats allocator (fun _ _=>[.jump 0])).call_host () store identity args defaults=.div := by
-  simp only [platform,host_loop_diverges,bind_div]
 
 end Exec.Theorems.OpenReentrantControl

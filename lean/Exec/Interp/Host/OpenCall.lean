@@ -7,23 +7,12 @@ any callback is run. Its continuation uses the existing dynamic host resume. -/
 noncomputable section
 namespace Exec.Interp.OpenCall
 open Aeneas Aeneas.Std Result
-private theorem vec_deref_slice {T : Type} (v : alloc.vec.Vec T) : v.deref=v.slice := by
-  apply Slice.ext
-  simp only [alloc.vec.Vec.deref,Slice.from_val,alloc.vec.Vec.val]
 abbrev Answer (M P : Type) := core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P
 inductive CallPhase (M P : Type) where
   | done (answer : Answer M P)
   | pending (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
       (address : runtime.FuncAddr) (base : Usize) (identity : U64)
       (args defaults : alloc.vec.Vec runtime.Value)
-
-def resume {M P : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) : CallPhase M P → Result (Answer M P)
-  | .done answer => .ok answer
-  | .pending exec store platform address base identity args defaults => do
-    let (status,nextPlatform,after,values) ← hooks.call_host platform store identity args.slice defaults.slice
-    let (result,finished) ← hostResume memory exec after address base ⟨values⟩ status
-    .ok (result,finished,after,nextPlatform)
 
 def prepareCall
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -189,28 +178,4 @@ def prepareCall
         Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
     ok (.done (r1, exec, store, platform1))
 
-/-- Erasing the suspension point gives the exact synchronous extracted call,
-including early errors and dynamic result checks after callback effects. -/
-theorem erase {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (address : runtime.FuncAddr) (base : Usize) :
-    (do let phase ← prepareCall memory hooks floats allocator exec store platform address base
-        resume memory hooks phase) =
-      runtime.interp.call memory hooks floats allocator exec store platform address base := by
-  simp only [prepareCall,runtime.interp.call,Std.bind_assoc,bind_ok,resume,alloc.vec.Vec.deref_mut,vec_deref_slice,lift]
-  repeat' first | rfl | (congr 1; funext x) |
-    (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,resume,hostResume,alloc.vec.Vec.index_slice_index,vec_deref_slice]) |
-    (split <;> simp_all only [Std.bind_assoc,bind_ok,resume,hostResume,alloc.vec.Vec.index_slice_index,vec_deref_slice])
-
-/-- Preparation is independent of the callback implementation. A combined
-resumable driver can use an inert callback dictionary until it suspends. -/
-theorem prepareCall_independent {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (left right : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (address : runtime.FuncAddr) (base : Usize)
-    (interrupts : ∀p,left.interrupt p=right.interrupt p) :
-    prepareCall memory left floats allocator exec store platform address base=
-      prepareCall memory right floats allocator exec store platform address base := by
-  simp only [prepareCall,runtime.interp.interrupt,interrupts]
 end Exec.Interp.OpenCall

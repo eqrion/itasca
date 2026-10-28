@@ -31,15 +31,4 @@ theorem stepsH_trans {c c' c'' : config} {es rest : List HostEvent}
   | refl _ => simpa using h'
   | cons h _ ih => simpa [List.append_assoc] using StepsH.cons h (ih h')
 
-/-- An unlabelled extended step uses only the generated semantics. -/
-theorem stepH_nil_to_step {c c' : config} (h : StepH c [] c') : Step c c' := by
-  generalize he : ([] : List HostEvent) = es at h
-  induction h with
-  | step h => exact h
-  | host_return => cases he
-  | host_trap => cases he
-  | ctxt_label h h₁ h₂ h₃ h₄ ih => exact .ctxt_label _ _ _ _ _ _ (ih he) h₁ h₂ h₃ h₄
-  | ctxt_frame h h₁ h₂ h₃ h₄ ih => exact .ctxt_frame _ _ _ _ _ _ _ _ (ih he) h₁ h₂ h₃ h₄
-  | ctxt_instrs h hn h₁ h₂ h₃ h₄ ih => exact .ctxt_instrs _ _ _ _ _ _ (ih he) hn h₁ h₂ h₃ h₄
-
 end Exec.Spec

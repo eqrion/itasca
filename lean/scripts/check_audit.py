@@ -46,10 +46,9 @@ EXEC_LAYERS = {
     "Store": {"Exec.Store", "Exec.Representation", "Exec.Generated", "Exec.Platform", "Exec.Spec", "Exec.Interp", "Exec.Code"},
     "Theorems": {"Exec", "SpecExt", "Itasca", "Aeneas"},
     # Contracts stay below the constructions that assume them. The API invariant
-    # and checked host reply are named until Theorems/Api leaves the Theorems layer.
+    # is named until Theorems/Api leaves the Theorems layer.
     "Contracts": {"Exec.Platform", "Exec.Generated", "Exec.Spec", "Exec.Representation", "Exec.Store",
-                  "Exec.Interp.Relations", "Exec.Theorems.Api.ExecutableInv",
-                  "Exec.Theorems.Host.Chosen.HostChoiceMatching", "SpecExt"},
+                  "Exec.Interp.Relations", "Exec.Theorems.Api.ExecutableInv", "SpecExt"},
     "Results": {"Exec", "SpecExt", "Itasca", "Aeneas"},
     "Main": {"Exec.Contracts", "Exec.Results"},
     "Examples": {"Exec", "SpecExt", "Itasca", "Aeneas"},
@@ -58,7 +57,7 @@ EXEC_LAYERS = {
 COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
 # Basic checked programs cannot acquire reentrant or combined-driver contracts
 # through their implementation dependencies.
-HOST_STAGES = {"Callbacks": 0, "Chosen": 1, "Reentrant": 2, "Open": 3}
+HOST_STAGES = {"Callbacks": 0, "Reentrant": 1, "Open": 2}
 FOUNDATIONS = {"Init", "Lean", "Std", "Batteries", "Mathlib"}
 SPEC_MODULES = {"wasm2.0", "Wasm2Prefix", "Wasm2Builtins"}
 

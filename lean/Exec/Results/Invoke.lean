@@ -1,7 +1,7 @@
 import Exec.Theorems.Invocation.PublicExecutableWorldInvocation
 import Exec.Theorems.Invocation.PublicExecutableWorldResources
 import Exec.Theorems.Invocation.PublicExecutableWorldDivergence
-import Exec.Theorems.Invocation.PublicWorldChosenMatches
+import Exec.Theorems.Invocation.PublicNoSpuriousErrors
 import Exec.Theorems.Progress.ExecutableWorldFinite
 
 /-!
@@ -21,7 +21,8 @@ and raw frame, extern and issued-result retention.
 - Divergence: `diverges` reflects divergence into an infinite source run; `terminates` excludes
   divergence when the source has no infinite run.
 - Progress: `finite_progress` bounds the dispatches of a finite prefix by source steps.
-- Completeness: `chosen_complete` matches one preselected terminating source run.
+- Completeness: `no_spurious_errors` reports only traps when every source run fits the store
+  limits and the platform grants resources.
 -/
 
 open Aeneas Aeneas.Std SpecExt
@@ -32,8 +33,7 @@ open Theorems Interp
 
 /-- Issued public function handles may denote either Wasm or host functions. The actual API checks
 retain exact unchanged-state rejection; accepted calls preserve the full invariant with a chosen
-final code interpretation and refine source results, errors and store effects. The platform and
-host laws are the component-wise fields of `WorldInvocationLaws`. This is partial correctness:
+final code interpretation and refine source results, errors and store effects. This is partial correctness:
 divergence is allowed and characterized by `diverges`. -/
 theorem runtime.interp.invoke_with.sound {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -88,8 +88,8 @@ theorem runtime.interp.invoke_with.recorded_sound {M P F A : Type}
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
       ⦃ out => ∃events,
         recordedInvokeWith memory hooks floats allocator exec store platform address args results []=.ok (out,events) ∧
-        ExecutableWorldRecordedOutcome view code store exec platform results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view code store address args out.2.2.1 error ⦄div :=
+        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
+        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error ⦄div :=
   invoke_executable_world_source_resources memory hooks floats allocator correct allocation
     interrupts view laws code sound preserve externs issuedResults exec store platform valid address
     args results issued argumentIssued initial invoked
@@ -117,8 +117,8 @@ theorem runtime.interp.invoke_with.recorder_sound {M P F A : Type}
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial) :
     recordedInvokeWith memory hooks floats allocator exec store platform address args results []
-      ⦃ (out,events) => (ExecutableWorldRecordedOutcome view code store exec platform results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view code store address args out.2.2.1 error) ⦄div :=
+      ⦃ (out,events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
+        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error) ⦄div :=
   invoke_executable_world_recorded_resources memory hooks floats allocator correct allocation
     interrupts view laws code sound preserve externs issuedResults exec store platform valid address
     args results issued argumentIssued initial invoked
@@ -179,7 +179,7 @@ theorem runtime.interp.invoke_with.terminates {M P F A : Type}
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
       ⦃ out => ∃ events,
         recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok (out, events) ∧
-        ExecutableWorldRecordedOutcome view code store exec platform results initial out events ⦄ :=
+        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ⦄ :=
   invoke_executable_world_terminates memory hooks floats allocator correct allocation interrupts
     view laws code sound preserve externs issuedResults exec store platform valid address args
     results issued argumentIssued initial invoked finite
@@ -212,63 +212,42 @@ theorem runtime.interp.invoke_with.finite_progress {M P F A : Type}
   executable_world_finite_progress memory hooks floats allocator correct allocation interrupts view
     laws sound preserve externs issuedResults dispatches initial valid last trace
 
-/-- Corresponding-outcome completeness for both complete profiles and issued Wasm/host functions.
-Source capacities and primitive platform/callback compatibility exclude resource errors; recorder
-events and final stores match one preselected terminating source run. Interrupts must continue,
-and callbacks must not report stack exhaustion. It does not assert global source-step
-determinism. -/
-theorem runtime.interp.invoke_with.chosen_complete {choices : Spec.SourceChoices} (admissible : choices.Admissible)
-    (numericChoice : choices.numeric=Spec.firstNumericChoice) (vector : choices.vector=Spec.firstVectorChoice)
-    {M P F A : Type} {valueLimit frameLimit : Nat}
+/-- An owned, typed call reports only traps when every source run of the invocation fits the
+store's value and frame limits (`SourceResourcesFit`, over all typed host replies), the allocator
+grants every request, interrupts continue and callbacks keep the store limits and never report
+stack overflow. Divergence is allowed; `terminates` excludes it. -/
+theorem runtime.interp.invoke_with.no_spurious_errors {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (correct : Platform.FloatOpsCorrect floats) (allocation : Platform.AllocCorrect allocator)
-    (interrupts : ∀ p,hooks.interrupt p ⦃ _=>True ⦄)
+    (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (compatible : GrowthChoicesCompatible memory allocator view choices)
-    (sound : HostWorldChosenSound memory hooks view (ExecutableResourceInv view valueLimit frameLimit) choices)
-    (preserve : ∀code store,ExecutableResourceInv view valueLimit frameLimit code store → ∀host p args results answer,
+    (sound : HostWorldSound hooks view (ExecutableInv view))
+    (preserve : ∀c store,ExecutableInv view c store → ∀host p args results answer,
       hooks.call_host p store host args results=.ok answer → FrameStorePrefix store answer.2.2.1)
-    (externs : ∀code store,ExecutableResourceInv view valueLimit frameLimit code store → ∀host p args results answer,
+    (externs : ∀c store,ExecutableInv view c store → ∀host p args results answer,
       hooks.call_host p store host args results=.ok answer → store.externs.length≤answer.2.2.1.externs.length)
-    (issuedResults : ∀code store,ExecutableResourceInv view valueLimit frameLimit code store → ∀host p args results answer,
+    (issuedResults : ∀c store,ExecutableInv view c store → ∀host p args results answer,
       hooks.call_host p store host args results=.ok answer → ∀value∈answer.2.2.2.val,Store.IssuedValue answer.2.2.1 value)
+    (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results answer,
+      hooks.call_host p store host args results=.ok answer → answer.2.2.1.limits=store.limits)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (valid : ExecutableResourceInv view valueLimit frameLimit code store)
+    (valid : ExecutableInv view code store)
     (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store=store.id) (issued : Store.ExternalIssued store (.Func address))
-    (owned : ∀ value∈args.val,Store.ValueInStore store value)
+    (owned : ∀value∈args.val,Store.ValueInStore store value)
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial)
-    (sourceFunction : funcinst) (params resultsTypes : List valtype)
-    (sourceAt : (Store.decodeStore view code store).FUNCS[address.index.val]?=some sourceFunction)
-    (sourceType : sourceFunction.TYPE=.mk_functype (.mk_list params) (.mk_list resultsTypes))
-    (typedArguments : ResultsTyped (Store.decodeStore view code store) params (args.val.map sourceValue))
-
-    {events : List HostEvent} {target : config}
-    (run : Spec.ChoiceSteps choices 0 initial events target) (terminal : Spec.SourceTerminal target)
-    (signatureFits : signatureWords sourceFunction.TYPE≤valueLimit)
-    (entryCapacity : ∀words,SourceCanonicalFunctionCapacity (Store.decodeStore view code store) address.index.val words → words≤valueLimit)
-    (positiveFrames : 0<frameLimit)
-    (resources : ChosenWorldResources choices 0 initial valueLimit frameLimit)
+    (typedArguments : InvocationArgumentsTyped (Store.decodeStore view code store) address.index.val (args.val.map sourceValue))
+    (fits : SourceResourcesFit (Store.decodeStore view code store) address.index.val initial
+      store.limits.max_values.val store.limits.max_frames.val)
     (available : Platform.AllocationAvailable allocator (2*Usize.max))
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after))
-    (noOverflow : NoHostStackOverflow hooks (ExecutableResourceInv view valueLimit frameLimit)) :
+    (noOverflow : NoHostStackOverflow hooks (ExecutableInv view)) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out => ∃afterCode,ExecutableResourceInv view valueLimit frameLimit afterCode out.2.2.1 ∧
-        Store_ok (Store.decodeStore view afterCode out.2.2.1) ∧ FrameStorePrefix store out.2.2.1 ∧
-        Store.CodeAgreesOn store code afterCode ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
-        recordedInvokeWith memory hooks floats allocator exec store platform address args results []=.ok (out,events) ∧
-        match out.1 with
-        | .Ok _ => target=⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩ ∧
-            (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value)
-        | .Err (.Trap _) => target=⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,[.TRAP]⟩
-        | .Err _ => False ⦄ :=
-  invoke_executable_world_chosen_matches admissible numericChoice vector memory hooks floats
-    allocator correct allocation interrupts view laws code compatible sound preserve externs
-    issuedResults exec store platform valid address args results owner issued owned initial invoked
-    sourceFunction params resultsTypes sourceAt sourceType typedArguments run terminal signatureFits
-    entryCapacity positiveFrames resources available continuing noOverflow
+      ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div :=
+  invoke_executable_world_no_spurious_errors memory hooks floats allocator correct allocation interrupts
+    view laws code sound preserve externs issuedResults limitsKept exec store platform valid address args
+    results owner issued owned initial invoked typedArguments fits available continuing noOverflow
 
 end Exec

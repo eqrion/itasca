@@ -80,39 +80,9 @@ def readback {M P A : Type} (platformMemoryBufferInst : runtime.platform.MemoryB
         host_results := v8
       }, store2, platform2, results)
 
-def afterInitialCall {M P F A : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
-    (platformPlatformInst : runtime.platform.Platform P M) (platformFloatOpsInst : runtime.platform.FloatOps F)
-    (platformAllocInst : runtime.platform.Alloc A) (func : runtime.FuncAddr)
-    (results : alloc.vec.Vec runtime.Value) (answer : Answer M P) : Result (InvokeAnswer M P) := do
-  let (r5,exec2,store1,platform1) := answer
-  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-  match cf5 with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    let (i, v5, v6, v7, v8, store2, platform2, status) ←
-      runtime.interp.invoke_with_loop1 platformMemoryBufferInst
-        platformPlatformInst platformFloatOpsInst platformAllocInst
-        exec2 store1 platform1 (core.result.Result.Ok ())
-    readback platformMemoryBufferInst platformAllocInst func results
-      (i,v5,v6,v7,v8,store2,platform2,status)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r6 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Exec.runtime.ExecError)
-        residual
-    ok (r6, exec2, store1, platform1, results)
-
-
 inductive InvokePhase (M P : Type) where
   | done (answer : InvokeAnswer M P)
   | waiting (phase : CallPhase M P) (address : runtime.FuncAddr) (results : alloc.vec.Vec runtime.Value)
-
-def eraseInvoke {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A) : InvokePhase M P → Result (InvokeAnswer M P)
-  | .done answer => .ok answer
-  | .waiting phase address results => do
-    let answer ← resume memory hooks phase
-    afterInitialCall memory hooks floats allocator address results answer
 
 def prepareInvoke
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -189,23 +159,4 @@ def prepareInvoke
         Unit (core.convert.FromSame _root_.Exec.runtime.ExecError) residual
     ok (.done (r1, exec, store, platform, results))
 
-/-- Suspending initial host calls preserves the complete public setup/loop/
-readback computation exactly. No eligibility or callback-normality law is used
-for this equality of extracted computations. -/
-theorem erase_invoke {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value) :
-    (do let phase ← prepareInvoke memory hooks floats allocator exec store platform address args results
-        eraseInvoke memory hooks floats allocator phase)=
-      runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results := by
-  simp only [prepareInvoke,runtime.interp.invoke_with,Std.bind_assoc,bind_ok,lift,eraseInvoke,afterInitialCall,readback]
-  repeat' first | rfl | (congr 1; funext x) |
-    (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,eraseInvoke,afterInitialCall,readback]) |
-    (split <;> simp_all only [Std.bind_assoc,bind_ok,eraseInvoke,afterInitialCall,readback])
-  all_goals rw [←Std.bind_assoc,erase]
-  repeat' first | rfl | (congr 1; funext x) |
-    (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok]) |
-    (split <;> simp_all only [Std.bind_assoc,bind_ok])
 end Exec.Interp.OpenCall

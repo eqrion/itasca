@@ -10,7 +10,7 @@ import Exec.Results.Host
 The public guarantees of the slot runtime. Every headline theorem is stated in full in one of the
 files below; everything else in the library supports them. `profile_*` theorems quantify over both
 complete `ValidationProfile` values. The obligations the results place on an embedding (platform
-operations, host callbacks, compiler eligibility and chosen-run compatibility) are listed in
+operations, host callbacks, compiler eligibility and source resources) are listed in
 [Contracts](Contracts.lean).
 
 [Results/Compile](Results/Compile.lean), compilation:
@@ -25,21 +25,16 @@ operations, host callbacks, compiler eligibility and chosen-run compatibility) a
 - soundness: `runtime.interp.invoke_with.sound`, `recorded_sound`, `recorder_sound`
 - divergence: `runtime.interp.invoke_with.diverges`, `terminates`
 - progress: `runtime.interp.invoke_with.finite_progress`
-- completeness: `runtime.interp.invoke_with.chosen_complete`
+- completeness: `runtime.interp.invoke_with.no_spurious_errors`
 
 [Results/Host](Results/Host.lean), the certified synchronous host driver:
-- `Theorems.OpenReentrantControl.invoke.chosen_complete`
-- `Theorems.OpenReentrantControl.platform.invoke_chosen_complete`, `invoke_chosen_sound`,
-  `invoke_chosen_diverges`, `invoke_chosen_terminates`
 - `Theorems.OpenReentrantControl.platform.returning_call_host`, `returning_package`,
   `invoke_returning_terminates`
 
 [Contracts](Contracts.lean), embedder obligations:
 - platform: `Platform.AllocCorrect`, `Platform.AllocationAvailable`, `Platform.FloatOpsCorrect`,
   `Platform.MemoryLaws`
-- host callbacks: `HostWorldSound`, `WorldInvocationLaws`, `HostWorldChosenSound`,
-  `NoHostStackOverflow`
+- host callbacks: `HostWorldSound`, `NoHostStackOverflow`
 - compiler: `Code.ValidCompilationSource`, `Code.CompileEligible`
-- chosen runs: `Spec.SourceChoices.Admissible`, `GrowthChoicesCompatible`, `ChosenWorldResources`,
-  and the host-driver choice contracts
+- source resources: `SourceResourcesFit`, `Interp.SourceCanonicalFunctionCapacity`
 -/

@@ -60,18 +60,6 @@ theorem Program.refines (program : Program) :
     | false => exact .no hn
     | true => exact .yes hy
 
-/-- Every output value is issued, independently of the callback's arguments. -/
-theorem Program.issued {M : Type} (program : Program) (store : runtime.store.Store M) :
-    ∀ value ∈ program.evaluate.2.val, Store.IssuedValue store value := by
-  induction program with
-  | returned values =>
-    intro value member
-    simp only [Program.evaluate,Slice.from_val,List.mem_map] at member
-    obtain ⟨literal,_,rfl⟩ := member
-    cases literal <;> trivial
-  | trapped => simp [Program.evaluate]
-  | branch condition yes no hy hn => cases condition <;> assumption
-
 /-- Literal results belong to the current store; pure code cannot manufacture
 foreign references or unissued addresses. -/
 theorem Program.in_store {M : Type} (program : Program) (store : runtime.store.Store M) :

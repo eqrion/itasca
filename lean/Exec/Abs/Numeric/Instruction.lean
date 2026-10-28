@@ -55,12 +55,4 @@ theorem Instruction.pure_success (op : Instruction)
     subst result
     exact conv.pure a
 
-theorem Instruction.pure_trap (op : Instruction)
-    (a b : BitVec (sizenn (numtype_Inn op.input)))
-    (trap : op.apply a b = none) :
-    Step_pure (vals (op.operands a b) ++ [admininstr_instr op.source]) [.TRAP] := by
-  cases op with
-  | binary ty binop => exact binary_trap_pure ty binop a b trap
-  | unary | compare | eqz | conversion => simp only [apply, Option.some_ne_none] at trap
-
 end Exec.Abs.Numeric

@@ -79,7 +79,6 @@ def prepareIndirect
             platformFloatOpsInst platformAllocInst exec store platform
             { store := store.id, index := f } i13
 
-
 def prepareDirect
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -101,34 +100,5 @@ def prepareDirect
   let i3 ← base + i2
   prepareCall platformMemoryBufferInst platformPlatformInst
       platformFloatOpsInst platformAllocInst exec store platform addr i3
-
-
-theorem erase_direct {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (inst base : Usize) (func callee : U32) :
-    (do let phase ← prepareDirect memory hooks floats allocator exec store platform inst base func callee
-        resume memory hooks phase)=
-      runtime.interp.execute_call memory hooks floats allocator exec store platform inst base func callee := by
-  simp only [prepareDirect,runtime.interp.execute_call,Std.bind_assoc,erase]
-  repeat' first | rfl | (congr 1; funext x) |
-    (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from]) |
-    (split <;> simp_all only [Std.bind_assoc,bind_ok])
-  all_goals exact erase memory hooks floats allocator exec store platform _ _
-
-theorem erase_indirect {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-    (allocator : runtime.platform.Alloc A) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (inst function base : Usize) (entry index callee : U32) :
-    (do let phase ← prepareIndirect memory hooks floats allocator exec store platform inst function base entry index callee
-        resume memory hooks phase)=
-      runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform inst function base entry index callee := by
-  simp only [prepareIndirect,runtime.interp.execute_call_indirect,Std.bind_assoc,erase,resume,bind_ok]
-  repeat' first | rfl | (congr 1; funext x) |
-    (cases x <;> simp_all only [Std.uncurry,Std.bind_assoc,bind_ok,resume,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,core.convert.FromSame.from]) |
-    (split <;> simp_all only [Std.bind_assoc,bind_ok,resume,erase])
-  all_goals exact erase memory hooks floats allocator exec store platform _ _
 
 end Exec.Interp.OpenCall

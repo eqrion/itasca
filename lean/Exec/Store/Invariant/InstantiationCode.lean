@@ -18,11 +18,6 @@ def InstantiationCode {M : Type} (before ready : runtime.store.Store M)
     StagedFunctionSignatures before staged before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)
 
-theorem InstantiationCode.identity {M : Type} {before ready : runtime.store.Store M}
-    {inst : runtime.store.ModuleInst} (code : InstantiationCode before ready inst) : ready.id = before.id := by
-  obtain ⟨staged, count, rfl, retained, _, _, _⟩ := code
-  exact retained.identity
-
 theorem InstantiationCode.type_entries {M : Type} {before ready : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} (code : InstantiationCode before ready inst) :
     TypeEntries ready inst.module.module.env.types.val inst.types.val := by

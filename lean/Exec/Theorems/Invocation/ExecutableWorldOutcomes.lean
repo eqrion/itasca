@@ -2,11 +2,31 @@ import Exec.Theorems.Api.ExecutableInv
 import Exec.Theorems.Composition.Eventful.EventfulErrors
 import Exec.Spec.Invocation
 import Exec.Interp.Relations.FrameStorePrefix
+import Exec.Interp.Relations.ArgumentRejectionKind
 
 /-! Shared public invocation outcomes and erasure. These predicates retain a
 single final code interpretation and sit below the public API constructions. -/
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
+
+/-- The public entry checks that reject a call before any state changes: a handle from
+another store, or arguments that fail the callee signature check. -/
+def InvocationRejected {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (store : runtime.store.Store M) (address : runtime.FuncAddr) (args : Slice runtime.Value)
+    (error : runtime.ExecError) : Prop :=
+  (address.store≠store.id ∧ error=.WrongStore) ∨
+  ∃ function signature,store.funcs.val[address.index.val]?=some function ∧
+    store.types.val[function.signature.val]?=some signature ∧
+    runtime.interp.check_values memory store args (alloc.vec.Vec.deref signature.params)=.ok (.Err error)
+
+theorem InvocationRejected.kind {M : Type} {memory : runtime.platform.MemoryBuffer M}
+    {store : runtime.store.Store M} {address : runtime.FuncAddr} {args : Slice runtime.Value}
+    {error : runtime.ExecError} (rejected : InvocationRejected memory store address args error) :
+    error=.BadArguments ∨ error=.WrongStore := by
+  rcases rejected with ⟨_,rfl⟩ | ⟨function,signature,_,_,checked⟩
+  · exact Or.inr rfl
+  · exact check_values_error_kind memory store args _ error checked
+
 /-- Public source correspondence with the full API invariant, including hosts.
 Event lists are source witnesses; complete recording-log equality is separate. -/
 def ExecutableWorldInvocationOutcome {M P : Type} (view : M → Slice U8)
@@ -28,9 +48,10 @@ def ExecutableWorldInvocationOutcome {M P : Type} (view : M → Slice U8)
 
 /-- Public source correspondence at the exact concrete log, allowing callbacks
 to publish new code while preserving existing issued instances. -/
-def ExecutableWorldRecordedOutcome {M P : Type} (view : M → Slice U8)
-    (code : Store.CodeInterpretation) (before : runtime.store.Store M)
-    (exec : runtime.interp.Execution) (platform : P) (results : alloc.vec.Vec runtime.Value)
+def ExecutableWorldRecordedOutcome {M P : Type} (memory : runtime.platform.MemoryBuffer M)
+    (view : M → Slice U8) (code : Store.CodeInterpretation) (before : runtime.store.Store M)
+    (exec : runtime.interp.Execution) (platform : P) (address : runtime.FuncAddr)
+    (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (initial : config)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P × alloc.vec.Vec runtime.Value) (events : List HostEvent) : Prop :=
@@ -42,10 +63,11 @@ def ExecutableWorldRecordedOutcome {M P : Type} (view : M → Slice U8)
     ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
     (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value)) ∧
   (∀error,out.1=.Err error →
-    ((error=.BadArguments ∨ error=.WrongStore) ∧ out=(.Err error,exec,before,platform,results) ∧ events=[]) ∨
+    (InvocationRejected memory before address args error ∧ out=(.Err error,exec,before,platform,results) ∧ events=[]) ∨
     EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error)
 
 theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
+    {memory : runtime.platform.MemoryBuffer M} {address : runtime.FuncAddr} {args : Slice runtime.Value}
     {view : M → Slice U8} {code afterCode : Store.CodeInterpretation} {before : runtime.store.Store M}
     {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
     {initial : config} {out} {events : List HostEvent}
@@ -57,7 +79,7 @@ theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
       (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value))
     (failure : ∀error,out.1=.Err error →
       EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error) :
-    ExecutableWorldRecordedOutcome view code before exec platform results initial out events := by
+    ExecutableWorldRecordedOutcome memory view code before exec platform address args results initial out events := by
   refine ⟨afterCode,agrees,retained.1,retained.2.1,retained.2.2,?_,success,fun error failed=>Or.inr (failure error failed)⟩
   cases status : out.1 with
   | Ok value =>
@@ -71,10 +93,11 @@ theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
 /-- Forget the recorder equality while retaining the chosen final code world,
 source executions, and unchanged-state rejection. -/
 theorem ExecutableWorldRecordedOutcome.erase {M P : Type}
+    {memory : runtime.platform.MemoryBuffer M} {address : runtime.FuncAddr} {args : Slice runtime.Value}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {before : runtime.store.Store M}
     {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
     {initial : config} {out} {events : List HostEvent}
-    (recorded : ExecutableWorldRecordedOutcome view code before exec platform results initial out events) :
+    (recorded : ExecutableWorldRecordedOutcome memory view code before exec platform address args results initial out events) :
     ExecutableWorldInvocationOutcome view code before exec platform results initial out := by
   obtain ⟨afterCode,agrees,valid,retained,extension,reachable,success,failure⟩ := recorded
   refine ⟨afterCode,agrees,valid,retained,extension,?_,?_,?_⟩
@@ -84,6 +107,6 @@ theorem ExecutableWorldRecordedOutcome.erase {M P : Type}
     exact ⟨⟨events,(success ok).1⟩,(success ok).2⟩
   · intro error failed
     rcases failure error failed with early | execution
-    · exact Or.inl ⟨early.1,early.2.1⟩
+    · exact Or.inl ⟨early.1.kind,early.2.1⟩
     · exact Or.inr ⟨events,execution⟩
 end Exec.Theorems
