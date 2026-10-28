@@ -23,12 +23,14 @@ theorem world_step_outcomes
   intro world valid active
   rcases world_step_or_host memory hooks floats allocator view laws world.code
     Inv update world.machine valid active with site | ordinary
-  · obtain ⟨out,actual,result⟩ := WP.spec_imp_exists
-      (site.world_outcomes memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view world.code Inv certify
+  · rcases (site.world_outcomes memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view world.code Inv certify
         world.machine.exec world.machine.store world.machine.platform valid
         (fun host p => callbacks.sound world.code world.machine.store valid p host)
-        (callbacks.retains _ _ valid) world.machine.invariant.typed.typed)
-    rw [actual,WP.spec_ok]
-    exact result.bundle actual
-  · exact ordinary
+        (callbacks.retains _ _ valid) world.machine.invariant.typed.typed).imp_exists with
+      ⟨out,actual,result⟩ | ⟨actual,diverged⟩
+    · rw [actual,DivSpec.ok_iff]
+      exact result.bundle actual
+    · rw [actual]
+      exact .div _ diverged
+  · exact .of_spec _ _ _ _ ordinary
 end Exec.Theorems

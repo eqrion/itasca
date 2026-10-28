@@ -27,7 +27,7 @@ theorem execute_call_indirect_shaped {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = base.val+callee.val)
     (expectedFound : store.types.val[signature.val]? = some expected)
-    (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
+    (cause : Prop) (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P → Prop)
     (outside : ¬position.val < object.elements.length →
       post (.Err (.Trap .TableOutOfBounds),exec,store,platform))
@@ -42,17 +42,17 @@ theorem execute_call_indirect_shaped {M P F A : Type}
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE = Store.decodeFuncType expected →
-      runtime.interp.call memory hooks floats allocator exec store platform
-        {store := store.id,index := address} calleeBase ⦃ post ⦄) :
-    runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
-      instanceIndex functionIndex base entry index callee ⦃ post ⦄ := by
+      DivSpec cause (runtime.interp.call memory hooks floats allocator exec store platform
+        {store := store.id,index := address} calleeBase) post) :
+    DivSpec cause (runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
+      instanceIndex functionIndex base entry index callee) post := by
   apply execute_call_indirect_effect memory hooks floats allocator exec store platform
     instanceIndex functionIndex base entry index callee inst compiled table type tableAddress
     object position signature calleeBase instanceFound functionFound pairFound tableMapped
     tableFound input indexBound signatureFound baseOffset
     (fun reference selected nonzero => shape.table_function_target object
       (List.mem_of_getElem? tableFound) funcref position reference selected nonzero)
-    post outside null
+    cause post outside null
   · intro reference address function selected nonzero addressEq targetFound different
     have rawEq : reference.val = address.val+1 := by
       simpa only [shape.table_function_reference_cast object (List.mem_of_getElem? tableFound)
@@ -94,7 +94,7 @@ theorem step_indirect_call_shaped {M P F A : Type}
     (signatureFound : inst.types.val[type.val]? = some signature)
     (baseOffset : calleeBase.val = frame.base.val+callee.val)
     (expectedFound : store.types.val[signature.val]? = some expected)
-    (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
+    (cause : Prop) (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P → Prop)
     (outside : ∀ next : U32, next.val = frame.pc.val+1 → ¬position.val < object.elements.length →
       post (.Err (.Trap .TableOutOfBounds),{exec with frames := exec.frames.set frameIndex {frame with pc := next}},store,platform))
@@ -109,19 +109,19 @@ theorem step_indirect_call_shaped {M P F A : Type}
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       reference.val = address.val+1 →
       store.funcs.val[address.val]? = some function → (Store.decodeFunction code store function).TYPE = Store.decodeFuncType expected →
-      runtime.interp.call memory hooks floats allocator
+      DivSpec cause (runtime.interp.call memory hooks floats allocator
         {exec with frames := exec.frames.set frameIndex {frame with pc := next}} store platform
-        {store := store.id,index := address} calleeBase ⦃ post ⦄) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ post ⦄ := by
-  apply step_fetch memory hooks floats allocator exec store platform frameIndex frame
+        {store := store.id,index := address} calleeBase) post) :
+    DivSpec cause (runtime.interp.step memory hooks floats allocator exec store platform) post := by
+  apply step_fetch_div memory hooks floats allocator exec store platform frameIndex frame
     inst compiled (.CallIndirect entry index callee) last frameFound instanceFound functionFound
-    opcodeFound pcBound post
+    opcodeFound pcBound cause post
   intro next nextEq
   exact execute_call_indirect_shaped memory hooks floats allocator view code
     {exec with frames := exec.frames.set frameIndex {frame with pc := next}} store platform
     frame.instance frame.function frame.base entry index callee inst compiled table type
     tableAddress object position signature calleeBase expected shape funcref instanceFound
     functionFound pairFound tableMapped tableFound input indexBound signatureFound baseOffset
-    expectedFound post (outside next nextEq) (null next nextEq) (mismatch next nextEq) (called next nextEq)
+    expectedFound cause post (outside next nextEq) (null next nextEq) (mismatch next nextEq) (called next nextEq)
 
 end Exec.Interp

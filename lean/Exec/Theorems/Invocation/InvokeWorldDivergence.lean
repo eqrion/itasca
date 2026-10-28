@@ -6,6 +6,13 @@ import Exec.Interp.Invocation.InvokePrefixDivergence
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
+/-- A source run from `initial` reaches a configuration whose store decodes a runtime store on
+which some callback diverges. -/
+def HostCallDiverged {M P : Type} (hooks : runtime.platform.Platform P M) (view : M → Slice U8)
+    (initial : config) : Prop :=
+  ∃ events code store ambient instrs,
+    StepsH initial events ⟨⟨Store.decodeStore view code store,ambient⟩,instrs⟩ ∧ HostDiverges hooks store
+
 theorem invoke_defined_world_infinite_source
  {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -28,6 +35,8 @@ theorem invoke_defined_world_infinite_source
     (hw : function.code = .Wasm instanceIndex functionIndex)
     (divergent : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results=.div) :
     Spec.InfiniteSourceWithEvents
+      ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ ∨
+    HostCallDiverged hooks view
       ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ := by
   have certified := certify code store valid
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) => after=store ∧ ∃source,
@@ -67,7 +76,14 @@ theorem invoke_defined_world_infinite_source
   subst after
   let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
     ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
-  have infinite := world_loop_infinite memory hooks floats allocator Inv
-    (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) ⟨code,machine⟩ valid bodyDivergent
-  exact infinite.prepend (StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf))
+  have first : StepsH _ [] (Abs.decode source) := StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf)
+  rcases world_loop_infinite memory hooks floats allocator Inv
+      (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) ⟨code,machine⟩ valid bodyDivergent with
+    infinite | ⟨count,events,reached,history,diverged⟩
+  · exact Or.inl (infinite.prepend first)
+  · obtain ⟨n,reductions⟩ := EventfulWorld.history_source (world_recorded_history history)
+    refine Or.inr ⟨events,reached.code,reached.machine.store,reached.machine.source.ambient,
+      Abs.decodeFrames reached.machine.source.frames (vals reached.machine.source.results),?_,diverged⟩
+    have trace := Spec.stepsH_trans first reductions.erase
+    simpa only [List.nil_append,Abs.decode,reached.machine.invariant.storeEq] using trace
 end Exec.Theorems

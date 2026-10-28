@@ -90,7 +90,7 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
           Spec.invocationFrame ambientWf address function identity signature args results owner hf kind hs owned checked
           (fun p=>callbacks.sound code store valid p identity)
           (callbacks.retains code store valid identity)
-        apply WP.dspec_mono (WP.spec_dspec _ _ _ total)
+        apply WP.dspec_mono total.dspec
         rintro ⟨out,events⟩ post
         obtain ⟨afterCode,⟨fresh,agrees,kept,extension,count⟩,success,failure⟩ := post
         refine ⟨ExecutableWorldRecordedOutcome.of_executed agrees ⟨executable _ _ fresh,kept,extension⟩ ?_ ?_,?_⟩

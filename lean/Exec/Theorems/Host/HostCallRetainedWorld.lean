@@ -32,9 +32,9 @@ theorem call_host_source_retained_world {M P F A : Type}
       hooks.call_host p store identity args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store identity) :
-    runtime.interp.call memory hooks floats allocator exec store platform address base ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.call memory hooks floats allocator exec store platform address base) fun out =>
       ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ invariant afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length ≤ out.2.2.1.externs.length ∧
@@ -43,10 +43,10 @@ theorem call_host_source_retained_world {M P F A : Type}
         (out.1 = .Ok () → ResultsTyped (Store.decodeStore view afterCode out.2.2.1)
           (signature.results.val.map sourceType) (out.2.1.host_results.val.map sourceValue) ∧
           Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ∧
-      HostCallCauses allocator hooks exec store platform signature base identity out ⦄ := by
-  apply WP.spec_mono (call_host_composition_causes memory hooks floats allocator allocation interrupts
+      HostCallCauses allocator hooks exec store platform signature base identity out := by
+  apply DivSpec.mono (call_host_composition_causes memory hooks floats allocator allocation interrupts
     exec store platform address base function identity signature functionAt host signatureAt values
-    typed wellFormed fits represented
+    typed wellFormed fits represented (HostDiverges hooks store)
     (fun out => ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ invariant afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length ≤ out.2.2.1.externs.length ∧
@@ -64,8 +64,13 @@ theorem call_host_source_retained_world {M P F A : Type}
     · obtain ⟨afterCode,agrees,fresh,retained,extension,external,observed,causes⟩ := observed
       exact ⟨afterCode,agrees,fresh,retained,extension,external,Or.inr observed,causes⟩
   · intro ready p args defaults preparation frames capacity argsEq defaultsEq
-    obtain ⟨⟨status,nextPlatform,nextStore,returned⟩,called,afterCode,agrees,fresh,crossExtension,sourceTyped⟩ :=
-      WP.spec_imp_exists (callback p args.slice defaults.slice)
+    rcases (DivSpec.of_dspec (callback p args.slice defaults.slice)
+        (fun diverged => (⟨p,identity,args.slice,defaults.slice,diverged⟩ : HostDiverges hooks store))).imp_exists with
+      ⟨⟨status,nextPlatform,nextStore,returned⟩,called,afterCode,agrees,fresh,crossExtension,sourceTyped⟩ |
+      ⟨called,diverged⟩
+    swap
+    · rw [called,bind_div]
+      exact .div _ diverged
     rw [called,bind_ok]
     have same := Store.decodeStore_code_agrees view agrees
     have extension : Extend_store (Store.decodeStore view afterCode store)
@@ -88,7 +93,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         · simp only [HostCallCauses,trapped]
         · simp only [HostCallCauses,exhausted]
           exact ⟨p,args.slice,defaults.slice,returned,by simpa only [reply] using called⟩
-    refine ⟨afterCode,agrees,fresh,retains.framePrefix _ _ _ _ called,crossExtension,retains.externs _ _ _ _ called,?_,?_,causes⟩
+    refine .ret ⟨afterCode,agrees,fresh,retains.framePrefix _ _ _ _ called,crossExtension,retains.externs _ _ _ _ called,?_,?_,causes⟩
     ·
       obtain ⟨padding,slotsEq,metadata⟩ := preparation
       have readyIdentity : ready.store = exec.store := by
@@ -119,6 +124,8 @@ theorem call_host_source_retained_world {M P F A : Type}
     · intro success
       rcases effect with returned | failed
       · exact ⟨by simpa only [hostResults] using returned.2.2.1,by simpa only [hostResults] using returned.2.2.2.1⟩
-      · rcases failed.1 with trapped | ⟨exhausted,_⟩ <;> rw [success] at * <;> contradiction
+      · rcases failed.1 with trapped | ⟨exhausted,_⟩
+        · simp [trapped] at success
+        · simp [exhausted] at success
 
 end Exec.Theorems

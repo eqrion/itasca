@@ -20,21 +20,21 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : ∀ host, HostRetention hooks store host)
     {expected : List valtype} {pc : Nat} {pending : Bool} {source : Abs.AState}
     (site : StructuredHostSite view code exec store expected pc pending source)
     (typed : Abs.ATyped source) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       WorldSourceStepResult (view:=view)
-        memory hooks floats allocator Inv code expected exec store platform source pc pending out ⦄ := by
+        memory hooks floats allocator Inv code expected exec store platform source pc pending out := by
   induction site with
   | @ready ambient f rest op after site kind =>
     exact host_ready_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify
       exec store platform valid expected ambient f rest op after site kind
       (fun p host => callback host p) retains
   | @normalize count pc s ambient before middle rest chain site ih =>
-    apply WP.spec_mono (ih (chain.sound s ambient rest typed).1)
+    apply DivSpec.mono (ih (chain.sound s ambient rest typed).1)
     intro out result
     exact result.prepend_normalization chain typed
 end Exec.Theorems

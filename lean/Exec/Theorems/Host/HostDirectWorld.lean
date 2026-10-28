@@ -42,14 +42,14 @@ theorem step_host_call_world_outcomes {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store host) :
     let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩,
         raw.pc.val,false,machine,certify code store valid,owned⟩⟩
-    runtime.interp.step memory hooks floats allocator exec store platform
-      ⦃ out => WorldStepResult memory hooks floats allocator Inv before out ⦄ := by
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform)
+      fun out => WorldStepResult memory hooks floats allocator Inv before out := by
   let before : EventfulMachine M P view code expected :=
     ⟨store,exec,platform,
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩,
@@ -57,14 +57,18 @@ theorem step_host_call_world_outcomes {M P F A : Type}
   have guard : hostStepAddress exec store=some address := by
     rw [hostStepAddress_at exec store frameIndex raw caller compiled (.Call index offset) last hf hi hc fetched]
     exact hostInstructionAddress_direct exec store raw caller compiled index offset address function host addressAt functionAt hostCode
-  obtain ⟨⟨status,afterExec,afterStore,afterPlatform⟩,actual,afterCode,agrees,freshInv,fresh,
-      retained,extension,external,signature,base,pc,front,args,split,pcNext,site,callActual,causes,effect⟩ :=
-    WP.spec_imp_exists (step_host_call_structured_world_provenance memory hooks floats allocator allocation interrupts
+  rcases (step_host_call_structured_world_provenance memory hooks floats allocator allocation interrupts
       view code Inv certify exec store platform valid frameIndex raw caller compiled C targets next output ambient f rest
       index offset after address function host expected last hf hi hc fetched addressAt functionAt hostCode binding slots
-      program point machine owned.values callback retains)
+      program point machine owned.values callback retains).imp_exists with
+      ⟨⟨status,afterExec,afterStore,afterPlatform⟩,actual,afterCode,agrees,freshInv,fresh,
+      retained,extension,external,signature,base,pc,front,args,split,pcNext,site,callActual,causes,effect⟩ | ⟨actual,diverged⟩
+  swap
+  · dsimp only
+    rw [actual]
+    exact .div _ diverged
   dsimp only
-  rw [actual,WP.spec_ok]
+  rw [actual,DivSpec.ok_iff]
   have same := Store.decodeStore_code_agrees view agrees
   have labels : stepHostEvents exec store (status,afterExec,afterStore,afterPlatform)=
       hostCallEvents address (status,afterExec,afterStore,afterPlatform) := by

@@ -39,24 +39,28 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store host) :
     let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,
         ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
         raw.pc.val,false,machine,certify code store valid,owned⟩⟩
-    runtime.interp.step memory hooks floats allocator exec store platform
-      ⦃ out => WorldStepResult memory hooks floats allocator Inv before out ⦄ := by
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform)
+      fun out => WorldStepResult memory hooks floats allocator Inv before out := by
   let before : EventfulMachine M P view code expected :=
     ⟨store,exec,platform,
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩,
       raw.pc.val,false,machine,certify code store valid,owned⟩
-  obtain ⟨⟨status,afterExec,afterStore,afterPlatform⟩,actual,outcome⟩ := WP.spec_imp_exists
-    (step_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+  rcases (step_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
       frameIndex raw inst compiled C targets next output ambient f rest table type after position sourceOperands address function host
-      positionSplit selectedSource functionAt hostCode owner last hf hi hc moduleEq binding slots program point expected machine owned.values callback retains)
+      positionSplit selectedSource functionAt hostCode owner last hf hi hc moduleEq binding slots program point expected machine owned.values callback retains).imp_exists with
+      ⟨⟨status,afterExec,afterStore,afterPlatform⟩,actual,outcome⟩ | ⟨actual,diverged⟩
+  swap
+  · dsimp only
+    rw [actual]
+    exact .div _ diverged
   dsimp only
-  rw [actual,WP.spec_ok]
+  rw [actual,DivSpec.ok_iff]
   rcases outcome with skip | called
   · obtain ⟨guard,fetch,success,sameStore,samePlatform,finalPC,resumed,simulation⟩ := skip
     change status=.Ok () at success

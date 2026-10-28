@@ -73,9 +73,10 @@ theorem step_indirect_supported_execution
     by_cases host : SourceIndirectHostBoundary store initial
     · exact Or.inl host
     apply Or.inr
-    apply step_indirect_call_shaped memory hooks floats allocator view code exec store platform index raw entry selector offset
+    refine (step_indirect_call_shaped memory hooks floats allocator view code exec store platform index raw entry selector offset
       inst compiled table type tableAddress object positionWord signatureIndex base rawSignature shaped funcref last hf fetch
       (program.fetched_bound _ fetch) hi hc pair tableMapped tableFound input selectorBound signatureMapped baseOffset signatureFound
+      False _ ?_ ?_ ?_ ?_).spec
     · intro pc pcEq outside
       refine ⟨rfl,?_,?_⟩
       · intro impossible;cases impossible
@@ -109,6 +110,7 @@ theorem step_indirect_supported_execution
       cases defined : function.code with
       | Host id => exact (host ⟨f,rest,table.val,type.val,position,after,front++args,address,function,id,rfl,values,bounded,resolved,functionAt,defined⟩).elim
       | Wasm instanceIndex functionIndex =>
+        apply DivSpec.of_spec
         apply WP.spec_mono (StructuredMachine.call_indirect_selected memory hooks floats allocator allocation interrupts view code exec store platform index raw compiled C targets next output
           ambient f rest table.val type.val position after front args params results pc base {store:=store.id,index:=address} function instanceIndex functionIndex
           compiledFunctions functionTyping functionAt defined resolved (sameType.trans signatureEq) last hf pcEq values bounded argumentTypes

@@ -32,9 +32,9 @@ theorem invoke_host_world_outcomes {M P F A : Type}
       hooks.call_host p store identity arguments defaults ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store identity) :
-    runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results ⦃ out => ∃ afterCode,
+    DivSpec (HostDiverges hooks store) (runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results) fun out => ∃ afterCode,
       (invariant afterCode out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧ FrameStorePrefix store out.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
         store.externs.length ≤ out.2.2.1.externs.length) ∧
@@ -48,7 +48,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         (∀ value ∈ out.2.2.2.2.val, Store.ValueInStore out.2.2.1 value)) ∧
       (∀ error, out.1 = .Err error → ∃ events, EventfulInvocationError
         ⟨⟨Store.decodeStore view code store,ambient⟩, vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
-        events (Store.decodeStore view afterCode out.2.2.1) ambient error) ⦄ := by
+        events (Store.decodeStore view afterCode out.2.2.1) ambient error) := by
   have arguments := checked_arguments_typed memory view code store sourceWf args signature.params accepted owned
   have initialWf := Spec.host_call_wf (fa:=address.index.val) sourceWf ambientWf arguments
   have argsOwned := Store.source_values_owned store args.val owned
@@ -69,7 +69,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
       events (Store.decodeStore view afterCode after) ambient error
   let entry := fun (after : runtime.store.Store M) (entered : runtime.interp.Execution) => retained after ∧ entered.frames.val = [] ∧
     ∃ values, ValuesAt entered.slots.val 0 values ∧ property after values
-  refine WP.spec_mono (invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator false allocation exec store platform
+  refine DivSpec.mono (invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator (HostDiverges hooks store) allocation exec store platform
     address function signature args results owner functionAt signatureAt accepted
     (fun value member => (owned value member).1) entry retained
     ⟨.refl _,Nat.le_refl _⟩ property errors ?_ ?_ ?_ ?_) ?_
@@ -83,15 +83,17 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     exact ⟨afterCode,fresh,agrees,extension,[.call address.index.val (args.val.map sourceValue) (some values)], vals values,
       Spec.stepsH_single source⟩
   · intro prepared p executionId empty represented
-    obtain ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ := WP.spec_imp_exists
-      (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
+    rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
         prepared store p valid address 0#usize ambient ambientWf function identity signature functionAt host signatureAt
         (args.val.map sourceValue) (by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed arguments).symm) arguments
         (Spec.resultsTyped_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
-        represented sourceWf callback retains)
+        represented sourceWf callback retains).imp_exists with
+      ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ | ⟨actual,diverged⟩
+    swap
+    · rw [actual]
+      exact .div _ diverged
     have sameDecode := Store.decodeStore_code_agrees view agrees
-    rw [actual]
-    simp only [WP.spec_ok]
+    rw [actual,DivSpec.ok_iff]
     refine ⟨⟨kept,count⟩,?_,?_⟩
     · intro success
       rcases effect with ⟨error,status,_,_⟩ | ⟨effect,typed⟩
@@ -131,7 +133,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
   · intro after entered p enteredProof
     obtain ⟨kept,empty,values,represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩ := enteredProof
     have stopped : ¬0#usize < entered.frames.len := by simp [alloc.vec.Vec.len,empty,alloc.vec.Vec.length]
-    simp only [InvocationWP,ite_false]
+    apply DivSpec.of_spec
     simp only [runtime.interp.invoke_with_loop1]
     apply loop.spec_decr_nat (fun _ => 0) (fun state => state = (entered,after,p,.Ok ()))
     · rintro state rfl

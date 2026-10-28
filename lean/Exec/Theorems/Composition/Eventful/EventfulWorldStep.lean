@@ -1,3 +1,4 @@
+import Exec.Contracts
 import Exec.Theorems.Composition.Eventful.EventfulWorld
 import Exec.Theorems.Composition.Eventful.EventfulDispatchCauses
 import Exec.Interp.Relations.StepRecording
@@ -47,8 +48,9 @@ def WorldStepOutcomes {M P F A : Type}
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
   ∀ before : EventfulWorld M P view expected,
     Inv before.code before.machine.store → 0<before.machine.exec.frames.length →
-    runtime.interp.step memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform
-      ⦃ out => WorldStepResult memory hooks floats allocator Inv before out ⦄
+    DivSpec (HostDiverges hooks before.machine.store)
+      (runtime.interp.step memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform)
+      fun out => WorldStepResult memory hooks floats allocator Inv before out
 
 theorem world_recorded_history {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}

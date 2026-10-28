@@ -32,12 +32,16 @@ theorem world_loop_invariant_step {M P F A : Type}
     (active : 0<exec.frames.length) :
     runtime.interp.step memory hooks floats allocator exec store platform
       ⦃ (status,nextExec,nextStore,nextPlatform) =>
-        WorldLoopInvariant memory hooks floats allocator Inv initial (nextExec,nextStore,nextPlatform,status) ⦄ := by
+        WorldLoopInvariant memory hooks floats allocator Inv initial (nextExec,nextStore,nextPlatform,status) ⦄div := by
   obtain ⟨current,valid,count,events,history,sameExec,sameStore,samePlatform⟩ := invariant
   dsimp only at sameExec sameStore samePlatform
   obtain ⟨rfl,rfl,rfl⟩ := And.intro sameExec (And.intro sameStore samePlatform)
-  obtain ⟨⟨status,nextExec,nextStore,nextPlatform⟩,actual,outcome⟩ := WP.spec_imp_exists (steps current valid active)
-  rw [actual,WP.spec_ok]
+  rcases (steps current valid active).imp_exists with
+    ⟨⟨status,nextExec,nextStore,nextPlatform⟩,actual,outcome⟩ | ⟨actual,_⟩
+  swap
+  · rw [actual]
+    exact .div _
+  rw [actual,WP.dspec_ok]
   cases status with
   | Ok value =>
     cases value

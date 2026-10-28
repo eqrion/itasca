@@ -14,12 +14,12 @@ theorem execute_call_effect {M P F A : Type}
     (hi : store.instances.val[callerIndex.val]? = some caller)
     (ha : caller.funcs.val[func.val]? = some address)
     (hb : calleeBase.val = base.val + callee.val)
-    (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
+    (cause : Prop) (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P → Prop)
-    (called : runtime.interp.call memory hooks floats allocator exec store platform
-      address calleeBase ⦃ post ⦄) :
-    runtime.interp.execute_call memory hooks floats allocator exec store platform
-      callerIndex base func callee ⦃ post ⦄ := by
+    (called : DivSpec cause (runtime.interp.call memory hooks floats allocator exec store platform
+      address calleeBase) post) :
+    DivSpec cause (runtime.interp.execute_call memory hooks floats allocator exec store platform
+      callerIndex base func callee) post := by
   unfold runtime.interp.execute_call
   step with vec_index_given store.instances callerIndex caller hi as ⟨found, hfound⟩
   subst found
@@ -49,17 +49,17 @@ theorem step_direct_call {M P F A : Type}
     (pcBound : frame.pc.val < U32.max)
     (ha : caller.funcs.val[func.val]? = some address)
     (hb : calleeBase.val = frame.base.val + callee.val)
-    (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
+    (cause : Prop) (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P → Prop)
     (called : ∀ next : U32, next.val = frame.pc.val + 1 →
-      runtime.interp.call memory hooks floats allocator
+      DivSpec cause (runtime.interp.call memory hooks floats allocator
         { exec with frames := exec.frames.set index { frame with pc := next } }
-        store platform address calleeBase ⦃ post ⦄) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ post ⦄ := by
-  apply step_fetch memory hooks floats allocator exec store platform index frame
-    caller callerCode (.Call func callee) last hf hi hc hop pcBound post
+        store platform address calleeBase) post) :
+    DivSpec cause (runtime.interp.step memory hooks floats allocator exec store platform) post := by
+  apply step_fetch_div memory hooks floats allocator exec store platform index frame
+    caller callerCode (.Call func callee) last hf hi hc hop pcBound cause post
   intro next hnext
   exact execute_call_effect memory hooks floats allocator _ store platform
-    frame.instance frame.base func callee caller address calleeBase hi ha hb post (called next hnext)
+    frame.instance frame.base func callee caller address calleeBase hi ha hb cause post (called next hnext)
 
 end Exec.Interp

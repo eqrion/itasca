@@ -44,9 +44,9 @@ theorem call_indirect_host_structured_world {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store host) :
-    runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base) fun out =>
       ∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length≤out.2.2.1.externs.length ∧
@@ -61,7 +61,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
           (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
         (out.1=.Ok () → ∃finalPC,Execution view afterCode out.2.2.1 out.2.1
           ⟨Store.decodeStore view afterCode out.2.2.1,ambient,{f with code:=after,vals:=front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
-          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ⦄ := by
+          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) := by
   have certified := certify code store valid
   have argumentTypes' := argumentTypes.trans signatureTypes.1.symm
   have hostSource := Store.decode_host_function view code store address function host signature functionAt hostCode signatureAt
@@ -95,7 +95,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     intro value member
     apply Store.owned_result_fits store
     exact (owned.2 _ (List.mem_cons_self ..)).2 value (by rw [split]; exact List.mem_append_left _ (List.mem_append_right _ member))
-  apply WP.spec_mono (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code
+  apply DivSpec.mono (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code
     Inv (fun c s h => (certify c s h).shape)
     {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform valid
     address base f.toFrame frameWf function host signature functionAt hostCode signatureAt args argumentTypes'.symm

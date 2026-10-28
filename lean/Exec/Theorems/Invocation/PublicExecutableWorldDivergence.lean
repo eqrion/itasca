@@ -8,8 +8,9 @@ Lookup evidence is shared with terminal correspondence; source productivity rema
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp
 
-/-- Actual public invocation divergence has a coherent infinite labeled source
-execution under the full API invariant and the explicit callback laws. -/
+/-- Actual public invocation divergence has a coherent infinite labeled source execution, or the
+source reaches a store on which a callback diverges, under the full API invariant and the explicit
+callback laws. -/
 theorem invoke_executable_world_infinite_source {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -23,7 +24,8 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial)
     (divergent : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results=.div) :
-    Spec.InfiniteSourceWithEvents initial := by
+    Spec.InfiniteSourceWithEvents initial ∨ HostCallDiverged hooks view initial := by
+  have initialWf : wf_config initial := by cases invoked; assumption
   have ambientWf := Spec.invocation_frame_wf invoked
   have sourceEq := Spec.invocation_config invoked
   by_cases owner : address.store=store.id
@@ -45,8 +47,9 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
         Spec.invocationFrame ambientWf address function identity signature args results owner hf kind hs owned accepted
         (fun p=>callbacks.sound code store valid p identity)
         (callbacks.retains code store valid identity)
-      rw [divergent] at total
-      exact False.elim (WP.spec_div.mp total)
+      have diverged := total.diverged divergent
+      subst sourceEq
+      exact Or.inr ⟨[],code,store,_,_,StepsH.refl initialWf,diverged⟩
   · rw [invoke_wrong_store memory hooks floats allocator exec store platform address args results owner] at divergent
     simp at divergent
 end Exec.Theorems

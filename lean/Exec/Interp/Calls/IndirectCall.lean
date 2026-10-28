@@ -1,3 +1,4 @@
+import Exec.Platform.DivSpec
 import Exec.Interp.Calls.DirectCall
 set_option maxRecDepth 4096
 
@@ -27,7 +28,7 @@ theorem execute_call_indirect_effect {M P F A : Type}
       reference ≠ 0#u64 → ∃ address : Usize, ∃ function : runtime.store.FuncInst,
         (UScalar.cast .Usize reference).val = address.val+1 ∧
         store.funcs.val[address.val]? = some function)
-    (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
+    (cause : Prop) (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P → Prop)
     (outside : ¬position.val < object.elements.length →
       post (.Err (.Trap .TableOutOfBounds),exec,store,platform))
@@ -42,10 +43,10 @@ theorem execute_call_indirect_effect {M P F A : Type}
       object.elements.val[position.val]? = some reference → reference ≠ 0#u64 →
       (UScalar.cast .Usize reference).val = address.val+1 →
       store.funcs.val[address.val]? = some function → function.signature = signature →
-      runtime.interp.call memory hooks floats allocator exec store platform
-        {store := store.id,index := address} calleeBase ⦃ post ⦄) :
-    runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
-      instanceIndex functionIndex base entry index callee ⦃ post ⦄ := by
+      DivSpec cause (runtime.interp.call memory hooks floats allocator exec store platform
+        {store := store.id,index := address} calleeBase) post) :
+    DivSpec cause (runtime.interp.execute_call_indirect memory hooks floats allocator exec store platform
+      instanceIndex functionIndex base entry index callee) post := by
   unfold runtime.interp.execute_call_indirect
   step with vec_index_given store.instances instanceIndex inst instanceFound as ⟨found,hfound⟩
   subst found

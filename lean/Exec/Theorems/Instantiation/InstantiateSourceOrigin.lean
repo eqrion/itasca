@@ -7,7 +7,6 @@ import Exec.Interp.Machines.Slice.SliceExecution
 import Exec.Interp.Machines.Slice.SliceHistory
 import Exec.Interp.Relations.Readback
 import Exec.Abs.Results
-import Exec.Interp.Invocation.InvokeCompose
 import Exec.Interp.Invocation.InvokeChecks
 import Exec.Interp.Relations.Marshal
 import Exec.Representation.Collection

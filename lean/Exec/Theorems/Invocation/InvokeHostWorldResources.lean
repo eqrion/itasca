@@ -54,9 +54,10 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
       hooks.call_host p store identity arguments defaults ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store identity) :
-    recordedInvokeWith memory hooks floats allocator exec store platform address args results [] ⦃ (out,trace) => ∃ afterCode,
+    DivSpec (HostDiverges hooks store) (recordedInvokeWith memory hooks floats allocator exec store platform address args results [])
+      fun (out,trace) => ∃ afterCode,
       (invariant afterCode out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧ FrameStorePrefix store out.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
         store.externs.length ≤ out.2.2.1.externs.length) ∧
@@ -71,7 +72,7 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
       (∀ error, out.1 = .Err error → EventfulInvocationError
         ⟨⟨Store.decodeStore view code store,ambient⟩, vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
         trace (Store.decodeStore view afterCode out.2.2.1) ambient error ∧
-        InitialHostSourceResourceCause hooks allocator store out.2.2.1 identity signature error) ⦄ := by
+        InitialHostSourceResourceCause hooks allocator store out.2.2.1 identity signature error) := by
   have arguments := checked_arguments_typed memory view code store sourceWf args signature.params accepted owned
   have initialWf := Spec.host_call_wf (fa:=address.index.val) sourceWf ambientWf arguments
   have argsOwned := Store.source_values_owned store args.val owned
@@ -93,7 +94,7 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
       InitialHostSourceResourceCause hooks allocator store after identity signature error
   let entry := fun (after : runtime.store.Store M) (entered : runtime.interp.Execution) (trace : List HostEvent) => retained after ∧ entered.frames.val = [] ∧
     ∃ values, ValuesAt entered.slots.val 0 values ∧ property after values trace
-  refine WP.spec_mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator false allocation exec store platform
+  refine DivSpec.mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator (HostDiverges hooks store) allocation exec store platform
     address function signature args results [] owner functionAt signatureAt accepted
     (fun value member => (owned value member).1) entry retained
     ⟨.refl _,Nat.le_refl _⟩ property errors ?_ ?_ ?_ ?_) ?_
@@ -112,17 +113,19 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
     simp only [alloc.vec.Vec.length] at amount
     omega
   · intro prepared p executionId empty represented
-    obtain ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ := WP.spec_imp_exists
-      (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
+    rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
         prepared store p valid address 0#usize ambient ambientWf function identity signature functionAt host signatureAt
         (args.val.map sourceValue) (by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed arguments).symm) arguments
         (Spec.resultsTyped_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
-        represented sourceWf callback retains)
+        represented sourceWf callback retains).imp_exists with
+      ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ | ⟨actual,diverged⟩
+    swap
+    · simp only [recordedCall,Platform.Recording.run,actual,bind_div]
+      exact .div _ diverged
     have sameDecode := Store.decodeStore_code_agrees view agrees
     have recorded := (recordedCall_returned memory hooks floats allocator prepared store p address 0#usize [] called (hostCallEvents address called)).mpr
       ⟨actual,by simp only [List.nil_append,callHostEvents_host functionAt host]⟩
-    rw [recorded]
-    simp only [WP.spec_ok]
+    rw [recorded,DivSpec.ok_iff]
     refine ⟨⟨kept,count⟩,?_,?_⟩
     · intro success
       rcases effect with ⟨error,status,_,_⟩ | ⟨effect,typed⟩
@@ -170,9 +173,8 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
     obtain ⟨kept,empty,values,represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩ := enteredProof
     have stopped : ¬ActiveExecution (entered,after,p,.Ok ()) := by
       simp [ActiveExecution,empty,alloc.vec.Vec.length]
-    simp only [InvocationWP]
     rw [recordedInvokeLoop_stopped memory hooks floats allocator (entered,after,p,.Ok ()) stopped trace]
-    simp only [WP.spec_ok,finishExecution]
+    simp only [DivSpec.ok_iff,finishExecution]
     exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm),Spec.resultsTyped_wf typed,
       fun value member => Store.owned_result_fits after value (ownedResults value member),represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩,
       fun error impossible => by cases impossible⟩

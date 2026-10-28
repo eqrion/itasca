@@ -1,3 +1,4 @@
+import Exec.Platform.DivSpec
 import Exec.Interp.Host.HostResume
 import Exec.Interp.Host.HostArguments
 import Exec.Interp.Host.HostBuffers
@@ -80,6 +81,7 @@ theorem call_host_composition_causes {M P F A : Type}
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt exec.slots.val base.val values)
+    (cause : Prop)
     (post : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P → Prop)
     (resume : ∀ (ready : runtime.interp.Execution) (nextPlatform : P)
         (args results : alloc.vec.Vec runtime.Value),
@@ -87,13 +89,13 @@ theorem call_host_composition_causes {M P F A : Type}
       ready.frames = exec.frames →
       base.val + Code.slots (signature.results.val.map sourceType) ≤ ready.slots.length →
       args.val.map sourceValue = values → results.val = signature.results.val.map zeroValue →
-      (do
+      DivSpec cause (do
         let (status,p,s,returned) ← hooks.call_host nextPlatform store identity args.slice results.slice
         let (status,finished) ← hostResume memory {ready with host_args := args} s address base
           ⟨returned⟩ status
-        Result.ok (status,finished,s,p)) ⦃ post ⦄) :
-    runtime.interp.call memory hooks floats allocator exec store platform address base ⦃ out =>
-      (∃ error, out.1 = .Err error ∧ HostPreparationCause allocator hooks exec store platform signature base error ∧ out.2.2.1 = store) ∨ post out ⦄ := by
+        Result.ok (status,finished,s,p)) post) :
+    DivSpec cause (runtime.interp.call memory hooks floats allocator exec store platform address base) (fun out =>
+      (∃ error, out.1 = .Err error ∧ HostPreparationCause allocator hooks exec store platform signature base error ∧ out.2.2.1 = store) ∨ post out) := by
   obtain ⟨⟨decision,nextPlatform⟩,decisionEq,_⟩ := WP.spec_imp_exists (interrupts platform)
   unfold runtime.interp.call
   rw [interrupt_eq memory hooks platform nextPlatform decision decisionEq]
@@ -219,7 +221,7 @@ theorem call_host_composition_causes {M P F A : Type}
                   argsEmpty typed wellFormed fits argumentSlots as ⟨args,argsEq⟩
                 step with host_results_defaults clearedResults signature.results resultsEmpty as ⟨results,resultsEq⟩
                 have resumed := resume ready nextPlatform args results ⟨_,slots,fields⟩ frameEq resultCapacity argsEq resultsEq
-                have weakened := WP.spec_mono resumed (fun out property =>
+                have weakened := DivSpec.mono resumed (fun out property =>
                   Or.inr property : ∀ out, post out →
                     (∃ error, out.1 = .Err error ∧ HostPreparationCause allocator hooks exec store platform signature base error ∧ out.2.2.1 = store) ∨ post out)
                 convert weakened using 1

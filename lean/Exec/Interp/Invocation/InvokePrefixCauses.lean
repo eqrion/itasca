@@ -1,5 +1,6 @@
+import Exec.Platform.DivSpec
 import Exec.Interp.Relations.FrameStorePrefix
-import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Relations.Readback
 import Exec.Interp.Invocation.InvokeResourceCauses
 import Exec.Interp.Invocation.InvokeChecks
 import Exec.Interp.Relations.Marshal
@@ -32,7 +33,7 @@ original function and signature through checked raw metadata prefixes. -/
 theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (allowDivergence : Bool)
+    (cause : Prop)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
@@ -53,11 +54,11 @@ theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
         allocator.reserve results n = .ok (false,results)) → errorProperty after (.Exhausted .Allocation))
     (called : ∀ prepared p, prepared.store = store.id → prepared.frames.val = [] →
       ValuesAt prepared.slots.val 0 (args.val.map sourceValue) →
-      runtime.interp.call memory hooks floats allocator prepared store p address 0#usize ⦃ out =>
+      DivSpec cause (runtime.interp.call memory hooks floats allocator prepared store p address 0#usize) fun out =>
         retained out.2.2.1 ∧ (out.1 = .Ok () → entry out.2.2.1 out.2.1) ∧
-          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error) ⦄)
+          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error))
     (executed : ∀ enteredStore prepared p, entry enteredStore prepared →
-      InvocationWP allowDivergence
+      DivSpec cause
         (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared enteredStore p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           FrameStorePrefix store afterStore ∧ retained afterStore ∧
@@ -67,7 +68,7 @@ theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
             (∀ value ∈ values, ResultIndexFits value) ∧
             ValuesAt words.val 0 values ∧ property afterStore values) ∧
           (∀ error, status = .Err error → errorProperty afterStore error))) :
-    InvocationWP allowDivergence
+    DivSpec cause
       (runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results)
       (fun out => retained out.2.2.1 ∧ (out.1 = .Ok () → property out.2.2.1 (out.2.2.2.2.val.map sourceValue) ∧
         (∀ value ∈ out.2.2.2.2.val, OwnedBy out.2.2.1.id value)) ∧
@@ -79,9 +80,7 @@ theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
     have matched : List.Forall₂ (ArgumentMatches store.id) args.val signature.params.val := by
       simpa only [alloc.vec.Vec.deref, Slice.from_val] using checked.mp trivial
     exact argument_matches_rawtypes matched
-  cases allowDivergence
   all_goals
-    simp only [InvocationWP, Bool.false_eq_true, ite_false, ite_true] at executed ⊢
     unfold runtime.interp.invoke_with
     step with func_type_lookup memory store address function signature owner hf hs as ⟨found, same⟩
     subst found
@@ -173,7 +172,8 @@ theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
             cases unit
             simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
             step with executed calledStore entered calledPlatform (enteredProof rfl)
-              as ⟨id, finalWords, finalFrames, finalArgs, finalHostResults, finalStore, finalPlatform, status, kept,finalRetained,finished,loopError⟩
+              as ⟨id, finalWords, finalFrames, finalArgs, finalHostResults, finalStore, finalPlatform, status, post⟩
+            obtain ⟨kept,finalRetained,finished,loopError⟩ := post
             cases status with
             | Err error =>
               simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -203,13 +203,13 @@ theorem invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
                 step with read_results_owned finalWords finalStore emptyResults signature.results values empty types wellFormed fits represented
                   as ⟨returnedStore, returnedResults, sameStore, sameResults, resultOwners⟩
                 subst returnedStore
-                try simp only [WP.dspec_ok, WP.spec_ok]
+                try simp only [DivSpec.ok_iff]
                 exact ⟨finalRetained, (fun _ => ⟨by simpa only [sameResults] using satisfied,resultOwners⟩), by intro error impossible; cases impossible⟩
 
 theorem invoke_with_prefix_causes_composition_mode {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (allowDivergence : Bool)
+    (cause : Prop)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
@@ -227,11 +227,11 @@ theorem invoke_with_prefix_causes_composition_mode {M P F A : Type}
     (resourceError : ∀ after error, InvocationResourceCause allocator exec store signature results error → errorProperty after error)
     (called : ∀ prepared p, prepared.store = store.id → prepared.frames.val = [] →
       ValuesAt prepared.slots.val 0 (args.val.map sourceValue) →
-      runtime.interp.call memory hooks floats allocator prepared store p address 0#usize ⦃ out =>
+      DivSpec cause (runtime.interp.call memory hooks floats allocator prepared store p address 0#usize) fun out =>
         retained out.2.2.1 ∧ (out.1 = .Ok () → entry out.2.2.1 out.2.1) ∧
-          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error) ⦄)
+          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error))
     (executed : ∀ enteredStore prepared p, entry enteredStore prepared →
-      InvocationWP allowDivergence
+      DivSpec cause
         (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared enteredStore p (.Ok ()))
         (fun (_, words, _, _, _, afterStore, _, status) =>
           FrameStorePrefix store afterStore ∧ retained afterStore ∧
@@ -241,22 +241,15 @@ theorem invoke_with_prefix_causes_composition_mode {M P F A : Type}
             (∀ value ∈ values, ResultIndexFits value) ∧
             ValuesAt words.val 0 values ∧ property afterStore values) ∧
           (∀ error, status = .Err error → errorProperty afterStore error))) :
-    InvocationWP allowDivergence
+    DivSpec cause
       (runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results)
       (fun out => retained out.2.2.1 ∧ (out.1 = .Ok () → property out.2.2.1 (out.2.2.2.2.val.map sourceValue)) ∧
         (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error)) := by
-  cases allowDivergence
-  · apply WP.spec_mono (invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator false allocation
-      exec store platform address function signature args results owner hf hs accepted owned entry retained initial
-      property errorProperty (fun error cause => resourceError store error cause)
-      (fun after values kept satisfied refused => resourceError after _ (Or.inr refused)) called executed)
-    rintro out ⟨kept,success,errors⟩
-    exact ⟨kept,fun accepted => (success accepted).1,errors⟩
-  · apply WP.dspec_mono (invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator true allocation
-      exec store platform address function signature args results owner hf hs accepted owned entry retained initial
-      property errorProperty (fun error cause => resourceError store error cause)
-      (fun after values kept satisfied refused => resourceError after _ (Or.inr refused)) called executed)
-    rintro out ⟨kept,success,errors⟩
-    exact ⟨kept,fun accepted => (success accepted).1,errors⟩
+  apply DivSpec.mono (invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator cause allocation
+    exec store platform address function signature args results owner hf hs accepted owned entry retained initial
+    property errorProperty (fun error cause => resourceError store error cause)
+    (fun after values kept satisfied refused => resourceError after _ (Or.inr refused)) called executed)
+  rintro out ⟨kept,success,errors⟩
+  exact ⟨kept,fun accepted => (success accepted).1,errors⟩
 
 end Exec.Interp

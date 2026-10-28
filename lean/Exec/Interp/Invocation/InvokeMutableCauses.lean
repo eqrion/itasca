@@ -1,4 +1,3 @@
-import Exec.Interp.Invocation.InvokeCompose
 import Exec.Interp.Invocation.InvokeResourceCauses
 import Exec.Interp.Invocation.InvokeChecks
 import Exec.Interp.Relations.Marshal

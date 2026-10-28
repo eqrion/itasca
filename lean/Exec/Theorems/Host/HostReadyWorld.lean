@@ -30,16 +30,16 @@ theorem host_ready_world_outcomes {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : ∀ host, HostRetention hooks store host) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       WorldSourceStepResult (view:=view)
         memory hooks floats allocator Inv code expected exec store platform
-        ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ site.raw.pc.val false out ⦄ := by
+        ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ site.raw.pc.val false out := by
   rcases kind with direct | indirect
   · obtain ⟨index,offset,address,function,host,source,fetch,addressAt,functionAt,hostCode⟩ := direct
     subst op
-    apply WP.spec_mono (step_host_call_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+    apply DivSpec.mono (step_host_call_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
       site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest index offset after address function host expected
       site.last site.frameAt site.instanceAt site.compiledAt fetch addressAt functionAt hostCode site.binding site.slots site.program site.point site.machine
       (site.eventful (certify code store valid) platform).owned (fun p=>callback p host) (retains host))
@@ -61,7 +61,7 @@ theorem host_ready_world_outcomes {M P F A : Type}
         sourceTable sourceType position=some address.val at selected
       rw [←frameEq,←tableEq,←typeEq] at selected
       exact selected
-    apply WP.spec_mono (step_indirect_host_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+    apply DivSpec.mono (step_indirect_host_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
       site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest table type after position operands
       ⟨store.id,address⟩ function host positionSplit resolved functionAt hostCode rfl site.last site.frameAt site.instanceAt site.compiledAt site.moduleEq
       site.binding site.slots site.program site.point expected site.machine (site.eventful (certify code store valid) platform).owned

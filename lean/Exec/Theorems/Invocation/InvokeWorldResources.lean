@@ -91,9 +91,9 @@ theorem invoke_defined_world_recorded_resources
       (signature.results.val.map sourceType) 0 false ∧
     Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
-  refine WP.dspec_mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator true laws.allocCorrect exec store platform
+  refine (DivSpec.mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator True laws.allocCorrect exec store platform
     address function signature args results [] owner hf hs accepted (fun value member=>(owned value member).1)
-    entry retained (.refl _) property errors ?_ ?_ ?_ ?_) ?_
+    entry retained (.refl _) property errors ?_ ?_ ?_ ?_) ?_).dspec
   · intro error cause
     refine ⟨code,valid,(by intro index inst found fn; rfl),Spec.extend_store_refl _ storeWf,?_,Or.inl (InvocationResourceCause.canonical _ _ _ cause)⟩
     cases error <;> try simp only [InvocationResourceCause] at cause
@@ -107,6 +107,7 @@ theorem invoke_defined_world_recorded_resources
     exact ⟨results,n,by simpa only [Store.decodeFuncType,List.length_map] using Nat.le_trans (Nat.le_of_eq amount) (Nat.sub_le _ _),refusal⟩
   · intro prepared p identity empty represented
     unfold recordedCall Platform.Recording.run
+    apply DivSpec.of_spec
     apply WP.spec_bind (call_defined_supported_entry_outcomes memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code
       prepared store p certified.shape certified.storeSyntax certified.segmentBounds certified.typed certified.supported certified.compiled
       ambient ambientWf address function signature instanceIndex functionIndex args empty identity represented accepted owned hf hs hw)
@@ -130,6 +131,7 @@ theorem invoke_defined_world_recorded_resources
     subst after
     let machine : EventfulWorld M P view (signature.results.val.map sourceType) :=
       ⟨code,⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩⟩
+    refine DivSpec.of_dspec ?_ fun _ => trivial
     apply WP.dspec_mono (world_recorded_loop_resource_results memory hooks floats allocator Inv capacities
       (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) machine valid)
     rintro ⟨out,events⟩ outcome

@@ -39,13 +39,14 @@ theorem executionBody_active (state : ExecutionState M P) (active : ActiveExecut
     core.result.Result.is_ok]
 
 /-- Finite returns have exact concrete step histories; divergence is allowed,
-and panic or out-of-bounds failure is excluded by the local step contract. -/
+and panic or out-of-bounds failure is excluded by the local step contract, which
+may itself diverge. -/
 theorem execution_loop_trace_safe
     (invariant : ExecutionState M P → Prop) (post : ExecutionResult M P → Prop)
-    (stepTotal : ∀ exec store platform, invariant (exec, store, platform, .Ok ()) →
+    (stepSafe : ∀ exec store platform, invariant (exec, store, platform, .Ok ()) →
       0 < exec.frames.length →
       runtime.interp.step memory hooks floats allocator exec store platform
-        ⦃ (status, exec', store', platform') => invariant (exec', store', platform', status) ⦄)
+        ⦃ (status, exec', store', platform') => invariant (exec', store', platform', status) ⦄div)
     (finished : ∀ state, invariant state → ¬ActiveExecution state → post (finishExecution state))
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (status : core.result.Result Unit runtime.ExecError)
@@ -64,8 +65,8 @@ theorem execution_loop_trace_safe
     | Ok u =>
       cases u
       simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
-      step with stepTotal current currentStore currentPlatform hinv hframes
-      assumption
+      step with stepSafe current currentStore currentPlatform hinv hframes
+      simpa only [WP.dspec_ok]
     | Err error =>
       have hp := finished (current, currentStore, currentPlatform, .Err error) hinv (by simp [ActiveExecution])
       simpa [core.result.Result.is_ok, finishExecution] using hp
@@ -77,10 +78,10 @@ theorem execution_loop_trace_safe
 frames or a reported error. This is the outer-loop interface used by invocation. -/
 theorem execution_loop_stops
     (invariant : ExecutionState M P → Prop)
-    (stepTotal : ∀ exec store platform, invariant (exec, store, platform, .Ok ()) →
+    (stepSafe : ∀ exec store platform, invariant (exec, store, platform, .Ok ()) →
       0 < exec.frames.length →
       runtime.interp.step memory hooks floats allocator exec store platform
-        ⦃ (status, exec', store', platform') => invariant (exec', store', platform', status) ⦄)
+        ⦃ (status, exec', store', platform') => invariant (exec', store', platform', status) ⦄div)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (status : core.result.Result Unit runtime.ExecError)
     (initial : invariant (exec, store, platform, status)) :
@@ -88,7 +89,7 @@ theorem execution_loop_stops
       ⦃ result => ∃ state, invariant state ∧ ¬ActiveExecution state ∧ finishExecution state = result ⦄div := by
   apply WP.dspec_mono (execution_loop_trace_safe memory hooks floats allocator invariant
     (fun result => ∃ state, invariant state ∧ ¬ActiveExecution state ∧ finishExecution state = result)
-    stepTotal (by intro state hi hs; exact ⟨state, hi, hs, rfl⟩)
+    stepSafe (by intro state hi hs; exact ⟨state, hi, hs, rfl⟩)
     exec store platform status initial)
   rintro result ⟨count, trace, finalState⟩
   exact finalState

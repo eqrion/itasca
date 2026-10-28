@@ -89,10 +89,14 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
   have resourceLaws : HostLaws hooks view Inv := by
     refine ⟨?_,fun c s held=>callbacks.retains c s held.1⟩
     intro c s held p host arguments defaults
-    obtain ⟨answer,call,post⟩ := WP.spec_imp_exists (callbacks.sound c s held.1 p host arguments defaults)
+    rcases (DivSpec.of_dspec (cause:=True) (callbacks.sound c s held.1 p host arguments defaults)
+        fun _ => trivial).imp_exists with ⟨answer,call,post⟩ | ⟨call,_⟩
+    swap
+    · rw [call]
+      exact .div _
     have same := limitsKept c s held.1 host p arguments defaults answer call
     obtain ⟨afterCode,agrees,fresh,extension,typed⟩ := post
-    rw [call,WP.spec_ok]
+    rw [call,WP.dspec_ok]
     exact ⟨afterCode,agrees,⟨fresh,same.trans held.2⟩,extension,typed⟩
   apply WP.dspec_mono (Platform.Recording.erase_dspec _ _ _
     (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])

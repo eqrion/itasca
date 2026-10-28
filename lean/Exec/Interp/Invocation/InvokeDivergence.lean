@@ -1,4 +1,10 @@
-import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Invocation.InvokeChecks
+import Exec.Interp.Relations.Marshal
+import Exec.Representation.Collection
+import Exec.Interp.Relations.Readback
+import Exec.Interp.Relations.TypeSlots
+import Exec.Interp.Relations.Ensure
+import Exec.Interp.Relations.ExecutionLoop
 namespace Exec.Interp
 open Aeneas Aeneas.Std
 

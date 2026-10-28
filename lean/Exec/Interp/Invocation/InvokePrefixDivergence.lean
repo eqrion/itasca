@@ -42,10 +42,11 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
   have total : WP.spec
       (runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results)
       (fun out=>True ∧ (out.1=.Ok () → True) ∧ (∀error,out.1=.Err error → True)) := by
-    apply invoke_with_prefix_causes_composition_mode memory hooks floats allocator false allocation exec store platform
+    refine (invoke_with_prefix_causes_composition_mode memory hooks floats allocator False allocation exec store platform
       address function signature args results owner hf hs accepted owned entry (fun _=>True) trivial (fun _ _=>True)
-      (fun _ _=>True) (by intros; trivial)
+      (fun _ _=>True) (by intros; trivial) ?_ ?_).spec
     · intro prepared p identity empty arguments
+      apply DivSpec.of_spec
       apply WP.spec_mono (called prepared p identity empty arguments)
       intro out post
       exact ⟨trivial,post,by intros; trivial⟩
@@ -59,6 +60,7 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
         apply total_of_nondivergent safe
         intro divergent
         exact absent ⟨after,prepared,p,entered,divergent⟩
+      apply DivSpec.of_spec
       apply WP.spec_mono normal
       rintro out ⟨metadata,success⟩
       refine ⟨metadata,trivial,?_,by intros; trivial⟩

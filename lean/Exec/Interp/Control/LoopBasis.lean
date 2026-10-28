@@ -19,14 +19,14 @@ theorem NormalTrace.result {α β : Type} {body : α → Result (ControlFlow α 
   | done step => rw [loop.eq_def]; simp [step]
   | next step tail ih => rw [loop.eq_def]; simpa [step] using ih
 
-/-- A normally returning invariant-preserving body makes the loop safe even
-when the loop diverges. Every returned value has an exact finite body trace. -/
+/-- An invariant-preserving body that never fails makes the loop safe, whether the loop or
+one of its iterations diverges. Every returned value has an exact finite body trace. -/
 theorem loop_trace_dspec {α β : Type} (body : α → Result (ControlFlow α β))
     (invariant : α → Prop) (post : β → Prop)
-    (bodyTotal : ∀ state, invariant state → body state ⦃ out =>
+    (bodySafe : ∀ state, invariant state → body state ⦃ out =>
       match out with
       | .cont next => invariant next
-      | .done result => post result ⦄)
+      | .done result => post result ⦄div)
     (state : α) (initial : invariant state) :
     loop body state ⦃ result => ∃ count, NormalTrace body count state result ∧ post result ⦄div := by
   have adm : Lean.Order.admissible (fun run : α → Result β => ∀ state, invariant state →
@@ -38,13 +38,18 @@ theorem loop_trace_dspec {α β : Type} (body : α → Result (ControlFlow α β
     exact WP.dspec_func_admissible current _
   apply loop.fixpoint_induct body _ adm ?_ state initial
   intro run ih state initial
-  obtain ⟨out, hbody, hprop⟩ := WP.spec_imp_exists (bodyTotal state initial)
-  simp only [hbody, bind_ok]
-  cases out with
-  | done result => exact WP.dspec.ret ⟨0, .done hbody, hprop⟩
-  | cont next =>
-    apply WP.dspec_mono (ih next hprop)
-    rintro result ⟨count, trace, hpost⟩
-    exact ⟨count + 1, .next hbody trace, hpost⟩
+  have safe := bodySafe state initial
+  dsimp only
+  generalize hbody : body state = answer at safe ⊢
+  cases safe with
+  | div => rw [bind_div]; exact .div _
+  | @ret _ out hprop =>
+    rw [bind_ok]
+    cases out with
+    | done result => exact WP.dspec.ret ⟨0, .done hbody, hprop⟩
+    | cont next =>
+      apply WP.dspec_mono (ih next hprop)
+      rintro result ⟨count, trace, hpost⟩
+      exact ⟨count + 1, .next hbody trace, hpost⟩
 
 end Exec.Interp

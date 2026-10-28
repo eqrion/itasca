@@ -38,9 +38,9 @@ theorem step_indirect_host_structured_world {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store host) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       (hostStepAddress exec store=none ∧ (∃ target, compiled.code.val[raw.pc.val]?=some (.Jump target)) ∧ out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧
        ∃ finalPC, Execution view code store out.2.1
          ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected finalPC false ∧
@@ -67,15 +67,15 @@ theorem step_indirect_host_structured_world {M P F A : Type}
           (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
         (out.1=.Ok () → ∃finalPC,Execution view afterCode out.2.2.1 out.2.1
           ⟨Store.decodeStore view afterCode out.2.2.1,ambient,{f with code:=after,vals:=front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
-          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))))) ⦄ := by
+          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))))) := by
   have certified := certify code store valid
   have frameTyped : Abs.FrameTyped (Store.decodeStore view code store)
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
     cases machine.typed.typed.frames with | cons head _ => exact head
   rcases indirect_values_head table.val type.val after point frameTyped with skip | actual
   · obtain ⟨target,forward,fetch,tail⟩ := skip
-    apply WP.spec_mono (step_forward_jump memory hooks floats allocator view code exec store platform frameIndex raw inst compiled ambient
-      {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest expected C targets next output target last hf hi hc forward fetch slots tail machine program)
+    apply DivSpec.mono (.of_spec _ _ _ _ (step_forward_jump memory hooks floats allocator view code exec store platform frameIndex raw inst compiled ambient
+      {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest expected C targets next output target last hf hi hc forward fetch slots tail machine program))
     intro out effect
     refine Or.inl ⟨?_,⟨target,fetch⟩,effect.1,effect.2.1,effect.2.2.1,target.val,effect.2.2.2.2.1,effect.2.2.2.2.2⟩
     rw [hostStepAddress_at exec store frameIndex raw inst compiled (.Jump target) last hf hi hc fetch]
@@ -104,6 +104,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
     apply step_indirect_call_shaped memory hooks floats allocator view code exec store platform frameIndex raw entry selector offset
       inst compiled table type tableAddress object positionWord signatureIndex base rawSignature certified.shape funcref last hf fetch
       (program.fetched_bound _ fetch) hi hc pair tableMapped tableFound input selectorBound signatureMapped baseOffset signatureFound
+      (HostDiverges hooks store) _
     · intro pc pcEq outside
       have missing := indirect_resolve_outside view code store f table.val type.val position object tableLookup (by omega)
       rw [selectedSource] at missing
@@ -143,11 +144,15 @@ theorem step_indirect_host_structured_world {M P F A : Type}
       have continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
           compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results) after pc.val next output := by
         simpa only [pcEq] using tail.current
-      obtain ⟨out,callActual,outcome⟩ := WP.spec_imp_exists (call_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+      rcases (call_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
         frameIndex raw compiled C targets next output ambient f rest table.val type.val position after front args params results pc base
         address function host actualSignature functionAt hostCode actualSignatureAt signatureTypes selectedSource last hf values bounded argumentTypes
-        (by rw [baseOffset,basePosition]) heights binding slots program point continuation expected machine owned callback retains)
-      rw [callActual,WP.spec_ok]
+        (by rw [baseOffset,basePosition]) heights binding slots program point continuation expected machine owned callback
+        retains).imp_exists with ⟨out,callActual,outcome⟩ | ⟨callActual,diverged⟩
+      swap
+      · rw [callActual]
+        exact .div _ diverged
+      rw [callActual,DivSpec.ok_iff]
       have guard : hostStepAddress exec store=some address := by
         rw [hostStepAddress_at exec store frameIndex raw inst compiled (.CallIndirect entry selector offset) last hf hi hc fetch]
         have castEq := certified.shape.table_function_reference_cast object (List.mem_of_getElem? tableFound) funcref positionWord.val reference selected

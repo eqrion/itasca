@@ -1,6 +1,7 @@
+import Exec.Platform.DivSpec
 import Exec.Interp.Invocation.InvokeRecording
 import Exec.Interp.Relations.FrameStorePrefix
-import Exec.Interp.Invocation.InvokeCompose
+import Exec.Interp.Relations.Readback
 import Exec.Interp.Invocation.InvokeResourceCauses
 import Exec.Interp.Invocation.InvokeChecks
 import Exec.Interp.Relations.Marshal
@@ -34,7 +35,7 @@ original function and signature through checked raw metadata prefixes. -/
 theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (allowDivergence : Bool)
+    (cause : Prop)
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
@@ -55,11 +56,11 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
         allocator.reserve results n = .ok (false,results)) → errorProperty after (.Exhausted .Allocation) trace)
     (called : ∀ prepared p, prepared.store = store.id → prepared.frames.val = [] →
       ValuesAt prepared.slots.val 0 (args.val.map sourceValue) →
-      recordedCall memory hooks floats allocator prepared store p address 0#usize prior ⦃ (out,trace) =>
+      DivSpec cause (recordedCall memory hooks floats allocator prepared store p address 0#usize prior) fun (out,trace) =>
         retained out.2.2.1 ∧ (out.1 = .Ok () → entry out.2.2.1 out.2.1 trace) ∧
-          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error trace) ⦄)
+          (∀ error, out.1 = .Err error → errorProperty out.2.2.1 error trace))
     (executed : ∀ enteredStore prepared p entryTrace, entry enteredStore prepared entryTrace →
-      InvocationWP allowDivergence
+      DivSpec cause
         (recordedInvokeLoop memory hooks floats allocator prepared enteredStore p (.Ok ()) entryTrace)
         (fun ((_, words, _, _, _, afterStore, _, status),trace) =>
           FrameStorePrefix store afterStore ∧ retained afterStore ∧
@@ -69,7 +70,7 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
             (∀ value ∈ values, ResultIndexFits value) ∧
             ValuesAt words.val 0 values ∧ property afterStore values trace) ∧
           (∀ error, status = .Err error → errorProperty afterStore error trace))) :
-    InvocationWP allowDivergence
+    DivSpec cause
       (recordedInvokeWith memory hooks floats allocator exec store platform address args results prior)
       (fun (out,trace) => retained out.2.2.1 ∧ (out.1 = .Ok () → property out.2.2.1 (out.2.2.2.2.val.map sourceValue) trace ∧
         (∀ value ∈ out.2.2.2.2.val, OwnedBy out.2.2.1.id value)) ∧
@@ -81,9 +82,7 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
     have matched : List.Forall₂ (ArgumentMatches store.id) args.val signature.params.val := by
       simpa only [alloc.vec.Vec.deref, Slice.from_val] using checked.mp trivial
     exact argument_matches_rawtypes matched
-  cases allowDivergence
   all_goals
-    simp only [InvocationWP, Bool.false_eq_true, ite_false, ite_true] at executed ⊢
     unfold recordedInvokeWith
     step with func_type_lookup memory store address function signature owner hf hs as ⟨found, same⟩
     subst found
@@ -166,7 +165,8 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
           step with marshal_arguments words args signature.params store.id tags owned capacity
             as ⟨encoded, sameLength, represented⟩
           step with called ⟨store.id, encoded, frames, hostArgs, hostResults⟩ platform rfl empty represented
-            as ⟨status,entered,calledStore,calledPlatform,callTrace,calledRetained,enteredProof,callError⟩
+            as ⟨status,entered,calledStore,calledPlatform,callTrace,post⟩
+          obtain ⟨calledRetained,enteredProof,callError⟩ := post
           cases status with
           | Err error =>
             simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -175,7 +175,8 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
             cases unit
             simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
             step with executed calledStore entered calledPlatform callTrace (enteredProof rfl)
-              as ⟨id,finalWords,finalFrames,finalArgs,finalHostResults,finalStore,finalPlatform,status,finalTrace,kept,finalRetained,finished,loopError⟩
+              as ⟨id,finalWords,finalFrames,finalArgs,finalHostResults,finalStore,finalPlatform,status,finalTrace,post⟩
+            obtain ⟨kept,finalRetained,finished,loopError⟩ := post
             cases status with
             | Err error =>
               simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -205,7 +206,7 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
                 step with read_results_owned finalWords finalStore emptyResults signature.results values empty types wellFormed fits represented
                   as ⟨returnedStore, returnedResults, sameStore, sameResults, resultOwners⟩
                 subst returnedStore
-                try simp only [WP.dspec_ok, WP.spec_ok]
+                try simp only [DivSpec.ok_iff]
                 exact ⟨finalRetained, (fun _ => ⟨by simpa only [sameResults] using satisfied,resultOwners⟩), by intro error impossible; cases impossible⟩
 
 end Exec.Interp

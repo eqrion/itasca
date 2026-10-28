@@ -48,9 +48,9 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
         Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄)
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : HostRetention hooks store host) :
-    runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
       store.externs.length≤out.2.2.1.externs.length ∧
@@ -72,7 +72,7 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
           (out.1=.Ok () → ∃ finalPC, Execution view afterCode out.2.2.1 out.2.1
             ⟨Store.decodeStore view afterCode out.2.2.1,ambient,
               {f with code := after,vals := front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
-            Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ⦄ := by
+            Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) := by
   have certified := certify code store valid
   have current := point.code.current
   rw [point.locals] at current
@@ -129,16 +129,21 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
       exact (owned.2 _ (List.mem_cons_self ..)).2 value (by rw [split]; exact List.mem_append_right _ member)
     apply step_direct_call memory hooks floats allocator exec store platform frameIndex raw caller compiled
       index offset address base last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset
+      (HostDiverges hooks store) _
     intro pc hpc
     have tailCode : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
         compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++signature.results.val.map sourceType) after pc.val next output := by
       simpa only [hpc,signatureTypes.2,point.locals] using continuation
-    obtain ⟨out,callActual,result⟩ := WP.spec_imp_exists (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code
+    rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code
       Inv (fun c s h => (certify c s h).shape)
       {exec with frames := exec.frames.set frameIndex {raw with pc := pc}} store platform valid
       address base f.toFrame frameWf function host signature functionAt hostCode signatureAtStore args argumentTypes'.symm
-      argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback retains)
-    rw [callActual,WP.spec_ok]
+      argumentTyped (Exec.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback
+      retains).imp_exists with ⟨out,callActual,result⟩ | ⟨callActual,diverged⟩
+    swap
+    · rw [callActual]
+      exact .div _ diverged
+    rw [callActual,DivSpec.ok_iff]
     obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
     have same := Store.decodeStore_code_agrees view agrees
     have newMachine : Execution view afterCode store exec

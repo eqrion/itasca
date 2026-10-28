@@ -35,7 +35,7 @@ interpretation and chooses the next one, agreeing on previously issued keys. `Ho
 
 | Contract | Obligation |
 | --- | --- |
-| `HostWorldSound` | Each call returns normally, preserves the invariant, extends the decoded source store and leaves it typed (`Store_ok`). |
+| `HostWorldSound` | Each call that returns preserves the invariant, extends the decoded source store and leaves it typed (`Store_ok`). |
 | frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/FrameStorePrefix.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
 | extern retention | A call never shrinks `store.externs`. |
 | issued results, [`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) | Every value a call returns is issued by the post-call store. |
@@ -73,8 +73,8 @@ Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Stor
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt
 
-/-- The callback contract carries its current ghost interpretation explicitly.
-Its returned interpretation agrees on previously issued keys; fresh keys are
+/-- The callback contract carries its current ghost interpretation explicitly. A call may
+diverge; when it returns, its interpretation agrees on previously issued keys and fresh keys are
 chosen by publication. Raw metadata retention remains a separate hypothesis. -/
 def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
     (view : M → Slice U8) (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
@@ -82,7 +82,11 @@ def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
     hooks.call_host platform store host args results ⦃ answer => ∃ afterCode,
       Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div
+
+/-- Some callback diverges when called on `store`. -/
+def HostDiverges {M P : Type} (hooks : runtime.platform.Platform P M) (store : runtime.store.Store M) : Prop :=
+  ∃ platform host args results, hooks.call_host platform store host args results = .div
 
 /-- Raw retention by every call of `host` from `store`. These laws do not follow from decoded
 source-store extension. -/

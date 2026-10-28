@@ -5,8 +5,8 @@ import Exec.Main
 
 Callbacks trap without touching the store, interrupts always continue and the allocator grants
 every request. Together they discharge every host, interrupt and allocator premise of
-`runtime.interp.invoke_with.no_spurious_errors`; floats, memory and the source program remain
-parameters.
+`runtime.interp.invoke_with.no_spurious_errors` and the callback premise of `terminates`; floats,
+memory and the source program remain parameters.
 -/
 
 namespace Exec.Examples
@@ -34,7 +34,7 @@ theorem trapHost_laws {M : Type} (memory : runtime.platform.MemoryBuffer M) (vie
     HostLaws (trapHost memory) view (ExecutableInv view) := by
   refine ⟨?_,fun _ store _ _ => ⟨?_,?_,?_⟩⟩
   · intro code store held p host args results
-    rw [trapHost,WP.spec_ok]
+    rw [trapHost,WP.dspec_ok]
     exact ⟨code,(by intro index inst found fn; rfl),held,Spec.extend_store_refl _ held.well_formed,held.source_typed⟩
   all_goals
     intro p args results answer called
@@ -51,6 +51,12 @@ theorem trapHost_answer {M : Type} {memory : runtime.platform.MemoryBuffer M} {p
     answer=(.Err .Trap,p,store,Slice.new runtime.Value) := by
   simp only [trapHost,Result.ok.injEq] at called
   exact called.symm
+
+/-- No callback of `trapHost` diverges, so `terminates` needs only the source premise. -/
+theorem trapHost_returns {M : Type} (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8)
+    (initial : config) : ¬ HostCallDiverged (trapHost memory) view initial := by
+  rintro ⟨_,_,_,_,_,_,_,_,_,_,diverged⟩
+  simp [trapHost] at diverged
 
 theorem trapHost_no_spurious_errors {M F : Type}
     (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)

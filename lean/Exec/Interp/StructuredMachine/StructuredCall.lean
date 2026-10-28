@@ -159,8 +159,8 @@ theorem step_call_structured {M P F A : Type}
       have identity : exec.store = store.id := by
         obtain ⟨_, _, _, _, identity, _⟩ := binding
         exact identity
-      apply step_direct_call memory hooks floats allocator exec store platform frameIndex raw caller compiled
-        index offset address calleeBase last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset
+      refine (step_direct_call memory hooks floats allocator exec store platform frameIndex raw caller compiled
+        index offset address calleeBase last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset False _ ?_).spec
       intro pc hpc
       have tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
           (front.map Code.valueType ++ signature.results.val.map sourceType) after pc.val next output := by
@@ -182,7 +182,7 @@ theorem step_call_structured {M P F A : Type}
       rw [returned] at causes
       simp only [WP.spec_ok] at causes
       rw [returned]
-      apply WP.spec.ret
+      apply DivSpec.ret
       refine ⟨result.1, ?_, ?_⟩
       · intro success
         obtain ⟨stack, top, ready⟩ := result.2 success
