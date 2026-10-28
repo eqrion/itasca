@@ -275,10 +275,10 @@ at most one decoding, so the trees agree.
 4. Follow `Profile.Entry` into `ModuleSound.assembled_regions`, and the stream
    [Contracts](Itasca/Contracts.lean) if streaming interests you.
 5. Then completeness and traces.
-6. For execution, read [Exec/Main](Exec/Main.lean), the
-   [Exec/Results/](Exec/Results) files it lists, and the embedder obligations in
-   [Exec/Contracts](Exec/Contracts.lean). The
-   [execution proof guide](Exec/README.md) explains how they are assembled.
+6. For execution, read the runtime results that [Main](Itasca/Main.lean) lists
+   and the embedder obligations in
+   [Runtime/Contracts](Itasca/Runtime/Contracts.lean). The
+   [execution proof guide](Itasca/Runtime/README.md) explains how they are assembled.
 
 Declarations about an extracted Rust function hang off its name, such as
 `module.validate_module.profile_sound`. Other namespaces name a concept

@@ -145,7 +145,7 @@ impl<A: Alloc> Budget<A> {
 /// Validated metadata and immutable executable code, independent of any instance.
 ///
 /// Constructed only after the entire validation driver accepts, including its
-/// tail and every issued worker. `lean/Exec` proves the rewriting and its
+/// tail and every issued worker. `lean/Itasca/Runtime` proves the rewriting and its
 /// execution correct under explicit platform contracts.
 #[cfg_attr(not(charon), derive(Debug))]
 pub struct ExecutableModule {

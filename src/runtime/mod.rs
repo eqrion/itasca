@@ -1,7 +1,7 @@
 //! Slot-based execution of validated WebAssembly modules.
 //!
 //! The generic compiler, store, and interpreter are extracted to Lean, where
-//! `lean/Exec` proves their correctness under explicit platform contracts. The
+//! `lean/Itasca/Runtime` proves their correctness under explicit platform contracts. The
 //! `native` module instantiates them with the standard allocator and IEEE
 //! operations and is excluded from extraction.
 //!

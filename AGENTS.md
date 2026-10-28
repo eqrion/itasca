@@ -24,9 +24,9 @@ consumer API and checked theorem premises.
   exact generated signatures, checked by `Wasm2Builtins`. Temporary opaque
   placeholders are permitted only by the staged audit policy; they are not
   execution correctness proofs.
-- `lean/Exec/` has an independent audit. Validator proofs must never import
-  `Exec` or `SpecExt` directly. Execution changes must preserve the validator
-  extracted model and theorem statements.
+- `lean/Itasca/Runtime/` holds the runtime proofs. Validator proofs must never
+  import `Itasca.Runtime` or `SpecExt`. Runtime changes must preserve the
+  validator's extracted definitions and theorem statements.
 - Keep `lean/scripts/`: its audit-import and external-model checks are part of
   verification. Upstream trackers and archived Rocq records are not build inputs.
 
@@ -46,7 +46,7 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 ## Proof discipline
 
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
-kernel bypasses. `Itasca.Audit`, `SpecExt.Audit`, and `Exec.Audit` permit only `propext`, `Classical.choice`, and
+kernel bypasses. `Itasca.Audit` and `SpecExt.Audit` permit only `propext`, `Classical.choice`, and
 `Quot.sound`. Every new proof module must be reachable through its library's audit imports;
 run `just audit-imports` after adding or moving files. Keep `Support/`, `Spec/`,
 `Binary/`, and `Handler/` free of imports from higher layers.
@@ -58,8 +58,7 @@ the proof source tree. Report any trust-boundary change explicitly.
 
 ## Required checks
 
-- Handwritten Lean proofs or adapters: `just prove`; execution or specification
-  extensions additionally require `just prove-exec`.
+- Handwritten Lean proofs or adapters: `just prove`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
 - Aeneas source patches or pins: the Rust/extraction checks plus `just regressions`.

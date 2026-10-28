@@ -17,8 +17,8 @@ to install the pinned tools.
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
 | `src/runtime/` | Slot compiler, store, synchronous interpreter, and bit-oriented numeric primitives, with conditional execution proofs. |
-| `lean/Itasca/` | Validator models, proof layers, checked examples, and axiom audit. |
-| `lean/Exec/` | Runtime models, representation certificates, execution proofs, and independent audit. |
+| `lean/Itasca/` | Validator and runtime models, proof layers, checked examples, and axiom audit. |
+| `lean/Itasca/Runtime/` | Representation certificates and runtime proofs. |
 | `lean/SpecExt/` | Handwritten execution specification extensions and independent audit. |
 | `lean/SpecTec/` | Committed generated specification. |
 | `lean/scripts/` | Audit-import and concrete external-model checks, with their shared Lean tokenizer. |
@@ -48,8 +48,7 @@ just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
-just prove            # Build validator proofs and check audit coverage and axioms
-just prove-exec       # Build execution and specification-extension proofs
+just prove            # Build all proofs and check audit coverage, axioms and reachability
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
 just regressions      # Run patched Aeneas extraction regressions
@@ -58,7 +57,7 @@ just verify           # Run the complete verification sequence
 
 | Change | Required checks |
 | --- | --- |
-| Handwritten Lean proofs or adapters | `just prove`; execution/specification extensions also require `just prove-exec` |
+| Handwritten Lean proofs or adapters | `just prove` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
 | Aeneas source patch or pin | Rust/extraction checks plus `just regressions` |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
@@ -98,7 +97,7 @@ The implementation stays within the verified extraction subset:
 
 These constraints apply to the validator and its extracted dependencies. The
 [execution boundary](lean/README.md#execution-boundary) and
-[execution proof guide](lean/Exec/README.md) state the runtime premises. Runtime code additionally supports integer bitwise
+[execution proof guide](lean/Itasca/Runtime/README.md) state the runtime premises. Runtime code additionally supports integer bitwise
 operations and generic platform traits. Runtime extraction and the conditional
 T1–T7 execution proofs are checked. Keep the boundary one-way: audited
 validator code must not depend on runtime code. Native rounding operations,
@@ -139,8 +138,7 @@ entry to keep its borrow join extractable. Keep native platform wrappers outside
 Runtime implementation responsibilities are split between compiler callbacks,
 control and opcode lowering; interpreter operations and dispatch; store object
 access and staged instantiation; and native/platform boundaries. Proof layers
-and their import rules are documented in [Exec/README](lean/Exec/README.md).
-Execution proof changes require both `just prove` and `just prove-exec`.
+and their import rules are documented in [Runtime/README](lean/Itasca/Runtime/README.md).
 
 ## API and documentation
 
@@ -230,8 +228,8 @@ Place new proofs by layer, as described in the
 `Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
 in `Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
 `just audit-imports` after adding or moving files. Its declarations must also be
-used by a headline theorem or an example: `just prove-exec` runs the
-reachability check over both libraries. `just prove` rejects a stale
+used by a headline theorem or an example: `just prove` runs the
+reachability check. `just prove` rejects a stale
 audit import list and upward imports from the grammar layers. The audit checks
 all local declarations and rejects axioms beyond the three documented logical
 foundations. New proof-bearing adapters receive the same scrutiny as exported

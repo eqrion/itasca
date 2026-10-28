@@ -118,9 +118,9 @@ is stated in full under [lean/Itasca/Results/](lean/Itasca/Results), and the
 streaming premises are defined in
 [lean/Itasca/Contracts.lean](lean/Itasca/Contracts.lean).
 
-[lean/Exec/Main.lean](lean/Exec/Main.lean) does the same for execution: its
-results are stated under [lean/Exec/Results/](lean/Exec/Results), and every
-embedder obligation is listed in [lean/Exec/Contracts.lean](lean/Exec/Contracts.lean).
+It lists the runtime results too, stated in the same directory, and every
+runtime embedder obligation is listed in
+[lean/Itasca/Runtime/Contracts.lean](lean/Itasca/Runtime/Contracts.lean).
 
 TODO, summarize the execution proofs.
 

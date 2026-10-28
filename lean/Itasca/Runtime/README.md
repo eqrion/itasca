@@ -124,9 +124,6 @@ established. Atomic host return and trap require post-call `Store_ok`.
 `Platform.HostSound.of_invariant` derives this obligation from invariant
 preservation and its checked source-typing projection. Recorded, resource-cause,
 and divergence proofs retain the stronger host target.
-[Typing/HostStepPreservation](Spec/Typing/HostStepPreservation.lean) proves configuration
-preservation for every generated Wasm step, host step, evaluation context, and
-finite reduction sequence.
 
 ## Source typing
 

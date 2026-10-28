@@ -787,7 +787,7 @@ inductive code.SimdSignature where
 | SplatF64 : code.SimdSignature
 
 /-- [itasca::ValidationProfile]
-    Source: 'src/lib.rs', lines 67:0-72:1
+    Source: 'src/lib.rs', lines 71:0-76:1
     Visibility: public -/
 @[discriminant isize]
 inductive ValidationProfile where

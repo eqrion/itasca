@@ -2,7 +2,7 @@
 name = "itasca"
 version = "0.1.1"
 edition = "2021"
-description = "Formally verified WebAssembly validator"
+description = "Formally verified WebAssembly validator and runtime"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/eqrion/itasca"
 include = [
