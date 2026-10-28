@@ -1,5 +1,5 @@
 import Exec.Interp.Machines.Slice.SliceHistory
-import Exec.Interp.Control.LoopPrefix
+import Exec.Interp.Control.LoopBasis
 
 namespace Exec.Interp
 open Aeneas Aeneas.Std

@@ -27,25 +27,6 @@ theorem InvocationRejected.kind {M : Type} {memory : runtime.platform.MemoryBuff
   · exact Or.inr rfl
   · exact check_values_error_kind memory store args _ error checked
 
-/-- Public source correspondence with the full API invariant, including hosts.
-Event lists are source witnesses; complete recording-log equality is separate. -/
-def ExecutableWorldInvocationOutcome {M P : Type} (view : M → Slice U8)
-    (code : Store.CodeInterpretation) (before : runtime.store.Store M)
-    (exec : runtime.interp.Execution) (platform : P) (results : alloc.vec.Vec runtime.Value)
-    (initial : config)
-    (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
-      runtime.store.Store M × P × alloc.vec.Vec runtime.Value) : Prop :=
-  ∃ afterCode, Store.CodeAgreesOn before code afterCode ∧
-  ExecutableInv view afterCode out.2.2.1 ∧ FrameStorePrefix before out.2.2.1 ∧
-  Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode out.2.2.1) ∧
-  (∃events body,StepsH initial events ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,body⟩) ∧
-  (out.1=.Ok () → (∃events,StepsH initial events
-    ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
-    (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value)) ∧
-  (∀error,out.1=.Err error →
-    ((error=.BadArguments ∨ error=.WrongStore) ∧ out=(.Err error,exec,before,platform,results)) ∨
-    ∃events,EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error)
-
 /-- Public source correspondence at the exact concrete log, allowing callbacks
 to publish new code while preserving existing issued instances. -/
 def ExecutableWorldRecordedOutcome {M P : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -90,23 +71,4 @@ theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
     obtain ⟨body,steps⟩ := outcome.reachable
     exact ⟨body,steps⟩
 
-/-- Forget the recorder equality while retaining the chosen final code world,
-source executions, and unchanged-state rejection. -/
-theorem ExecutableWorldRecordedOutcome.erase {M P : Type}
-    {memory : runtime.platform.MemoryBuffer M} {address : runtime.FuncAddr} {args : Slice runtime.Value}
-    {view : M → Slice U8} {code : Store.CodeInterpretation} {before : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
-    {initial : config} {out} {events : List HostEvent}
-    (recorded : ExecutableWorldRecordedOutcome memory view code before exec platform address args results initial out events) :
-    ExecutableWorldInvocationOutcome view code before exec platform results initial out := by
-  obtain ⟨afterCode,agrees,valid,retained,extension,reachable,success,failure⟩ := recorded
-  refine ⟨afterCode,agrees,valid,retained,extension,?_,?_,?_⟩
-  · obtain ⟨body,steps⟩ := reachable
-    exact ⟨events,body,steps⟩
-  · intro ok
-    exact ⟨⟨events,(success ok).1⟩,(success ok).2⟩
-  · intro error failed
-    rcases failure error failed with early | execution
-    · exact Or.inl ⟨early.1.kind,early.2.1⟩
-    · exact Or.inr ⟨events,execution⟩
 end Exec.Theorems

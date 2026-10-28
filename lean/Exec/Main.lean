@@ -21,9 +21,7 @@ operations, host callbacks, compiler eligibility and source resources) are liste
 - `runtime.store.instantiate.Store.instantiate_with.spec`
 
 [Results/Invoke](Results/Invoke.lean), invocation of an issued function:
-- soundness: `runtime.interp.invoke_with.sound`, `recorded_sound`, `recorder_sound`
-- divergence: `runtime.interp.invoke_with.diverges`, `terminates`
-- progress: `runtime.interp.invoke_with.finite_progress`
+- behavior: `runtime.interp.invoke_with.behaves`, `terminates`
 - completeness: `runtime.interp.invoke_with.no_spurious_errors`
 
 [Contracts](Contracts.lean), embedder obligations:

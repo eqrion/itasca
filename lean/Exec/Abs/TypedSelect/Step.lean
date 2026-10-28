@@ -16,15 +16,6 @@ inductive Step : AState → AState → Prop where
         f rest after = .next next) :
       Step ⟨s,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ next
 
-theorem Step.correct {before next} (step : Step before next) (typed : CoreTyped before) :
-    CoreTyped next ∧ StepH (decode before) [] (decode next) := by
-  cases step with
-  | next equation =>
-    obtain ⟨actual,run,fresh,simulation⟩ := progress _ _ _ _ _ _ typed
-    have same := AResult.next.inj (equation.symm.trans run)
-    subst actual
-    exact ⟨fresh,simulation⟩
-
 theorem Step.next_supported {before next}
     (step : Step before next) (covered : SupportedState before) : SupportedState next := by
   cases step with
