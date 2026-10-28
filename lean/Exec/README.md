@@ -180,29 +180,12 @@ exclude modules whose actual output would fit exactly at a configured limit.
 
 ## Host composition
 
-The atomic host-call proofs remain directly in `Theorems/Host/`. The additions
-are grouped by the interfaces they build on:
-
-| Directory | Responsibility |
-| --- | --- |
-| `Theorems/Host/Callbacks/` | Executable checked action languages, independent effects, finite callback contracts, and host-local control. |
-| `Theorems/Host/Reentrant/` | Returning callback packages and depth-staged nested calls. |
-| `Theorems/Host/Open/Driver/` | Combined executable driver, continuation stack, guards, and effects. |
-| `Theorems/Host/Open/Completeness/` | Recovery of returning callback packages. |
-| `Examples/Host/` | Checked publication, finite reentry, and productive-divergence examples. |
-
-The groups build in the order Callbacks → Reentrant → Open. The audit permits
-imports of earlier groups and rejects imports of later groups.
-
-`Open/Driver/ReentrantControl` implements the synchronous driver using explicit
-continuations and fresh nested executions. Its ticks preserve the full store
-invariant and expanded history, including effects before divergence.
-[ReturningRecovery](Theorems/Host/Open/Completeness/ReturningRecovery.lean)
-recovers the ordinary returning callback package for the finite action subclass.
-
-These callback implementations are Lean models of the interface. Arbitrary
-Rust callbacks still need a refinement contract. Concrete publication currently
-supports modules with empty imports and no start function.
+The atomic host-call proofs live directly in `Theorems/Host/`. They take the
+callback laws of [Contracts](Contracts.lean) as premises and never model a
+particular callback. [Examples/TrapHost](Examples/TrapHost.lean) shows the laws
+are satisfiable: a trapping callback, continuing interrupts and a granting
+allocator discharge every host, interrupt and allocator premise of
+`no_spurious_errors`.
 
 ## Reading and extending the proofs
 

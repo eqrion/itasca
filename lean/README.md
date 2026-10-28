@@ -378,10 +378,10 @@ continue, and callbacks keep the store limits and never report stack overflow.
 It covers both complete profiles and issued Wasm/host functions; it does not
 assert source-step determinism.
 
-[Returning recovery](Exec/Results/Host.lean) proves that
-finite checked-action callbacks in the certified synchronous host driver recover
-the original callback package and absence-of-source-divergence invocation
-contract.
+The [trapping host example](Exec/Examples/TrapHost.lean) discharges every host,
+interrupt and allocator premise of `no_spurious_errors` with a callback that
+traps, continuing interrupts and an allocator that grants every request, so the
+callback contracts are satisfiable.
 
 The reviewed [native wrappers](../src/runtime/native.rs) forward compilation,
 invocation, instantiation, definitions and growth to the corresponding generic
