@@ -98,7 +98,9 @@ import Exec.Interp.Core.Erased
 import Exec.Interp.Control.NormalizeClosure
 import Exec.Interp.Control.NormalizeCompose
 import Exec.Interp.Machines.Slice.SliceMeasure
-import Exec.Store.Api.GlobalWriteExtension
+import Exec.Store.Invariant.SemanticApi
+import Exec.Store.Invariant.Syntax
+import Exec.Spec.Mutation
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Theorems.Composition.Core.CoreContents
 import Exec.Representation.Collection
@@ -109,7 +111,6 @@ import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Theorems.Composition.GlobalMutationShape
 import Exec.Theorems.Composition.Core.CoreOwnership
-import Exec.Spec.Mutation
 import Exec.Store.Invariant.InstantiationCode
 import Exec.Store.Initialization.SegmentObjectMetadata
 import Exec.Theorems.Composition.Eventful.EventfulHistory

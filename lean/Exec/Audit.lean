@@ -1,6 +1,5 @@
 import Exec.Code.Local.Capacity.LowerTableGrowth
-import Exec.Examples.Host.AllocationCallbackExamples
-import Exec.Examples.Host.OpenReentrantExamples
+import Exec.Examples.TrapHost
 import Exec.Spec.ModuleMembership
 import Mathlib.Data.List.Forall2
 import Itasca.Support.Result

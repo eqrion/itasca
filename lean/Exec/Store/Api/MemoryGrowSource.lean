@@ -1,4 +1,6 @@
-import Exec.Store.Api.MemoryGrowExtension
+import Exec.Representation.StoreInvariant
+import Exec.Store.Api.Grow
+import Exec.Store.Invariant.ObjectExtension
 import Exec.Interp.Memory.MemoryDecode
 import Exec.Spec.MemoryGrowth
 namespace Exec.Store

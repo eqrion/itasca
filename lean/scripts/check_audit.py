@@ -55,9 +55,6 @@ EXEC_LAYERS = {
 }
 # Integration stages can use local proofs, but never flow back into them.
 COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
-# Basic checked programs cannot acquire reentrant or combined-driver contracts
-# through their implementation dependencies.
-HOST_STAGES = {"Callbacks": 0, "Reentrant": 1, "Open": 2}
 FOUNDATIONS = {"Init", "Lean", "Std", "Batteries", "Mathlib"}
 SPEC_MODULES = {"wasm2.0", "Wasm2Prefix", "Wasm2Builtins"}
 
@@ -133,12 +130,6 @@ def check_layer(name: str, imported: str, library: str) -> None:
             raise ValueError(f"{name} or {imported} has no declared compiler stage")
         if COMPILER_STAGES[target_stage] > COMPILER_STAGES[source_stage]:
             raise ValueError(f"{name} imports {imported}, above its compiler stage")
-    if library == "Exec" and under(name, "Exec.Theorems.Host") and under(imported, "Exec.Theorems.Host"):
-        source_parts, target_parts = name.split("."), imported.split(".")
-        source_stage = HOST_STAGES.get(source_parts[3]) if len(source_parts) > 4 else None
-        target_stage = HOST_STAGES.get(target_parts[3]) if len(target_parts) > 4 else None
-        if source_stage is not None and target_stage is not None and target_stage > source_stage:
-            raise ValueError(f"{name} imports {imported}, above its host composition stage")
     for owner, final in (("Interp", "Invocation"), ("Store", "Instantiation")):
         if library == "Exec" and layer == owner and under(imported, f"Exec.{owner}.{final}"):
             if not under(name, f"Exec.{owner}.{final}"):

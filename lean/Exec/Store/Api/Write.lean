@@ -27,50 +27,6 @@ theorem check_value_owned {M : Type} (ops : runtime.platform.MemoryBuffer M)
     types.ValueType.Insts.CoreCmpPartialEqValueType.eq ty ty = .ok true := by
   cases ty <;> rfl
 
-/-- An owned, correctly typed write to a mutable global stores exactly the
-actual slot encoder's words, leaving every other store component unchanged. -/
-theorem global_write {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (s : runtime.store.Store M) (index : Usize) (value : runtime.Value)
-    (hindex : index.val < s.globals.length)
-    (hmutable : (s.globals.val[index.val]).ty.mutability = .Var)
-    (htype : (s.globals.val[index.val]).ty.valtype = Interp.rawType value)
-    (hv : Interp.ValueOwnedFits s.id value) :
-    runtime.store.Store.set_global ops s ⟨s.id, index⟩ value ⦃ answer =>
-      ∃ words : U64 × U64,
-        runtime.value.encode value = .ok words ∧
-        Interp.pairWords (Interp.rawType value) words = Code.encodeValue (Interp.sourceValue value) ∧
-        answer = (.Ok (), {s with globals := (s.globals.set index
-          {(s.globals.val[index.val]) with lo := words.1, hi := words.2})}) ⦄ := by
-  obtain ⟨words, hencode, hwords⟩ := WP.spec_imp_exists (Interp.encode_value_spec value s.id hv)
-  unfold runtime.store.Store.set_global
-  simp [runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch]
-  rw [check_value_owned ops s value hv]
-  simp
-  step as ⟨global, back, hglobal, hback⟩
-  simp only [hglobal, hmutable]
-  simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-    types.Mut.Insts.CoreCmpPartialEqMut.eq, Itasca.types.Mut.Insts.CoreCmpPartialEqMut.eq]
-  cases words
-  simpa [htype, hencode, hback] using hwords
-
-/-- The public mutable-global write preserves structural store validity for
-an existing, correctly typed, owned reference or numeric value. -/
-theorem global_write_preserves_shape {M : Type} (ops : runtime.platform.MemoryBuffer M)
-    (view : M → Slice U8) (s : runtime.store.Store M) (hs : Shape view s)
-    (index : Usize) (value : runtime.Value) (hindex : index.val < s.globals.length)
-    (hmutable : (s.globals.val[index.val]).ty.mutability = .Var)
-    (htype : (s.globals.val[index.val]).ty.valtype = Interp.rawType value)
-    (hv : ValueInStore s value) :
-    runtime.store.Store.set_global ops s ⟨s.id, index⟩ value ⦃ answer => Shape view answer.2 ⦄ := by
-  apply WP.spec_mono (global_write ops s index value hindex hmutable htype hv.1)
-  intro answer effect
-  rcases effect with ⟨words, hencode, _, hanswer⟩
-  have hcanonical := encode_global_shape s value (s.globals.val[index.val]).ty htype hv
-  rw [hencode] at hcanonical
-  simp only [WP.spec_ok] at hcanonical
-  rw [hanswer]
-  exact hs.global_replace index _ hcanonical
-
 @[simp] theorem element_value_type_exact (ty : Itasca.types.ElemType) :
     types.ElemType.value_type ty = .ok (elementValueType ty) := by
   cases ty <;> rfl

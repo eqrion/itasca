@@ -1,4 +1,6 @@
-import Exec.Store.Api.TableGrowExtension
+import Exec.Representation.StoreInvariant
+import Exec.Store.Api.Grow
+import Exec.Store.Invariant.ObjectExtension
 import Exec.Interp.State.TableSource
 import Exec.Spec.TableGrowth
 namespace Exec.Store

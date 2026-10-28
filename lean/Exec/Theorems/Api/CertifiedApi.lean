@@ -1,7 +1,12 @@
-import Exec.Theorems.Composition.Certified.CertifiedSupportedContent
+import Exec.Theorems.Composition.Certified.CertifiedSupported
+import Exec.Store.Invariant.SupportedFunctionTables
+import Exec.Abs.ModuleBindingsExtension
 import Exec.Theorems.Composition.Certified.CertifiedSupportedCode
 import Exec.Theorems.Composition.Certified.CertifiedExecutable
-import Exec.Theorems.Api.SupportedApiHost
+import Exec.Store.Invariant.TypeStaging
+import Exec.Store.Invariant.InternTypes
+import Exec.Store.Invariant.CoreTypingExtension
+import Exec.Store.Invariant.FunctionCapacities
 import Exec.Store.Api.ExportBounds
 import Exec.Store.Invariant.SourceStoreTyping
 namespace Exec.Theorems
@@ -18,7 +23,6 @@ structure CertifiedApiStore
 abbrev CertifiedExecutableApiStore {M : Type} :=
   @CertifiedApiStore M
 
-
 /-- The retained component, body, module-map and export certificates imply
 full generated source store typing; it is not an invariant field. -/
 theorem CertifiedApiStore.source_typed {M : Type} {view : M → Slice U8}
@@ -27,18 +31,6 @@ theorem CertifiedApiStore.source_typed {M : Type} {view : M → Slice U8}
     Store_ok (Store.decodeStore view code store) :=
   Store.decodeStore_typed view code store certified.shape certified.storeSyntax
     certified.typed certified.segmentBounds certified.exportBounds
-
-theorem CertifiedApiStore.content_update {M : Type} {view : M → Slice U8}
-    {code : Store.CodeInterpretation} {before after : runtime.store.Store M}
-    (certified : CertifiedApiStore view code before)
-    (identity : after.id = before.id) (functions : after.funcs = before.funcs)
-    (types : after.types = before.types) (instances : after.instances = before.instances)
-    (elements : after.elems = before.elems) (data : after.datas = before.datas)
-    (shape : Store.Shape view after)
-    (extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after)) :
-    CertifiedApiStore view code after :=
-  ⟨certified.toCertifiedSupportedStore.content_update identity functions types instances elements data shape extension,
-    certified.exportBounds.instances_eq instances⟩
 
 theorem CertifiedApiStore.update {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {before after : runtime.store.Store M}
@@ -60,12 +52,4 @@ theorem CertifiedApiStore.install_code {M : Type} {view : M → Slice U8}
     CertifiedApiStore view (Store.installCode code store.instances.len.val sources) store :=
   certified.change_code (Store.installCode_agrees store code sources)
 
-theorem CertifiedApiStore.host_definition {M : Type} {view : M → Slice U8}
-    {code : Store.CodeInterpretation} {before after : runtime.store.Store M}
-    (certified : CertifiedApiStore view code before)
-    (shape : Store.Shape view after) (effect : Store.HostDefinitionEffect before after) :
-    CertifiedApiStore view code after ∧
-      Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
-  have post := certified.toCertifiedSupportedStore.host_definition shape effect
-  exact ⟨⟨post.1,certified.exportBounds.instances_eq effect.instances⟩,post.2⟩
 end Exec.Theorems

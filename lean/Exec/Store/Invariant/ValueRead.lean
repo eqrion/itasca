@@ -13,14 +13,6 @@ theorem ReferenceShape.word_bound {M : Type} (s : runtime.store.Store M)
   · scalar_tac
   · cases ty <;> dsimp at hindex <;> scalar_tac
 
-/-- The actual word decoder returns the value observed by decodeStore. The only
-extra bound is on non-null reference encodings, supplied by ReferenceShape. -/
-theorem decode_value_boundary (ty : Itasca.types.ValueType) (lo hi : U64) (store : Usize)
-    (href : ty = .FuncRef ∨ ty = .ExternRef → lo.val ≤ Usize.max) :
-    runtime.value.decode ty lo hi store ⦃ value =>
-      Interp.rawType value = ty ∧ Interp.sourceValue value = decodeWords ty lo hi ⦄ := by
-  exact Interp.decode_value_boundary ty lo hi store href
-
 /-- Decoding canonical store words restores an owned API reference with an
 existing address. This establishes the caller invariant for values obtained
 through global and table accessors. -/

@@ -142,16 +142,4 @@ theorem store_prefix_extends (before after : _root_.store)
   · exact hb
   · exact ha
 
-/-- Staging preserves the specification store extension whenever both endpoints
-have their compiler-supplied syntax certificates. -/
-theorem staged_extends {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (before after : runtime.store.Store M)
-    (hb : Shape view before) (ha : Shape view after)
-    (sb : StoreSyntax code before) (sa : StoreSyntax code after)
-    (hprefix : StagedPrefix before after) :
-    Extend_store (decodeStore view code before) (decodeStore view code after) := by
-  obtain ⟨hf, hg, ht, hm, he, hd⟩ := decodeStore_prefix view code before after hb hprefix
-  exact store_prefix_extends _ _ (decodeStore_wf view code before hb sb)
-    (decodeStore_wf view code after ha sa) hf hg ht hm he hd
-
 end Exec.Store

@@ -1,4 +1,7 @@
-import Exec.Store.Invariant.SemanticRead
+import Exec.Store.Invariant.ValueRead
+import Exec.Representation.StoreInvariant
+import Exec.Store.Api.Grow
+import Exec.Store.Api.Write
 
 namespace Exec.Store
 open Aeneas Aeneas.Std

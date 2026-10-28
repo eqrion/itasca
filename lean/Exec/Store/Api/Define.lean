@@ -1,4 +1,5 @@
-import Exec.Store.Api.GrowthInvariant
+import Exec.Representation.StoreInvariant
+import Exec.Store.Api.Grow
 import Exec.Store.Api.Write
 
 namespace Exec.Store

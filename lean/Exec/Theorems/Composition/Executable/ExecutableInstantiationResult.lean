@@ -115,11 +115,12 @@ import Exec.Interp.Core.Erased
 import Exec.Interp.Control.NormalizeClosure
 import Exec.Interp.Control.NormalizeCompose
 import Exec.Interp.Machines.Slice.SliceMeasure
-import Exec.Store.Api.GlobalWriteExtension
+import Exec.Store.Invariant.SemanticApi
+import Exec.Store.Invariant.Syntax
+import Exec.Spec.Mutation
 import Exec.Interp.Memory.MemoryMutation
 import Exec.Store.Invariant.ObjectExtension
 import Exec.Theorems.Composition.GlobalMutationShape
-import Exec.Spec.Mutation
 import Exec.Interp.Relations.ExecutionLoop
 import Exec.Interp.Machines.Slice.SliceHistory
 import Exec.Interp.Machines.Slice.SliceErrors

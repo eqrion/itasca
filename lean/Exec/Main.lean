@@ -2,7 +2,6 @@ import Exec.Contracts
 import Exec.Results.Compile
 import Exec.Results.Instantiate
 import Exec.Results.Invoke
-import Exec.Results.Host
 
 /-!
 # Execution results
@@ -26,10 +25,6 @@ operations, host callbacks, compiler eligibility and source resources) are liste
 - divergence: `runtime.interp.invoke_with.diverges`, `terminates`
 - progress: `runtime.interp.invoke_with.finite_progress`
 - completeness: `runtime.interp.invoke_with.no_spurious_errors`
-
-[Results/Host](Results/Host.lean), the certified synchronous host driver:
-- `Theorems.OpenReentrantControl.platform.returning_call_host`, `returning_package`,
-  `invoke_returning_terminates`
 
 [Contracts](Contracts.lean), embedder obligations:
 - platform: `Platform.AllocCorrect`, `Platform.AllocationAvailable`, `Platform.FloatOpsCorrect`,

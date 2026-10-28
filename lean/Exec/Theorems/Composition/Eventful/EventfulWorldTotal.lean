@@ -1,6 +1,9 @@
 import Exec.Theorems.Composition.Eventful.EventfulWorldNonhost
 import Exec.Theorems.Host.HostSiteWorld
-import Exec.Theorems.Host.HostWorldSound
+import Exec.Theorems.Composition.ExecutionCode
+import Exec.Generated.Types
+import Exec.Spec.Extend
+import Exec.Contracts
 namespace Exec.Theorems
 open Aeneas Aeneas.Std Exec.Interp
 

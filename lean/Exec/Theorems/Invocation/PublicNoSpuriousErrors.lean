@@ -93,12 +93,8 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
   have initialWf : wf_config initial := by cases invoked; assumption
   have sourceEq := Spec.invocation_config invoked
   subst sourceEq
-  have argumentIssued : ∀value∈args.val,Store.IssuedValue store value := by
-    intro value member
-    obtain ⟨_,bound⟩ := owned value member
-    match value,bound with
-    | .FuncRef (some _),bound | .ExternRef (some _),bound => exact fun _ => bound
-    | .I32 _,_ | .I64 _,_ | .F32 _,_ | .F64 _,_ | .V128 _,_ | .FuncRef none,_ | .ExternRef none,_ => trivial
+  have argumentIssued : ∀value∈args.val,Store.IssuedValue store value :=
+    fun value member => (owned value member).issued
   have resourceSound : HostWorldSound hooks view Inv := by
     intro c s held p host arguments defaults
     obtain ⟨answer,call,post⟩ := WP.spec_imp_exists (sound c s held.toExecutableInv p host arguments defaults)

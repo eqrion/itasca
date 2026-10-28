@@ -21,11 +21,4 @@ theorem supported_function_compiled_prefix {M : Type} {view : M → Slice U8}
   · rw [decodeInstance_prefix before after retained inst (shape.instances inst (List.mem_of_getElem? found))]
     exact types
 
-theorem supported_compiled_functions_metadata {M : Type} {before after : runtime.store.Store M}
-    (code : CodeInterpretation) (identity : after.id = before.id)
-    (functions : after.funcs = before.funcs) (types : after.types = before.types)
-    (instances : after.instances = before.instances)
-    (compiled : Interp.StructuredMachine.CompiledFunctions code before) : Interp.StructuredMachine.CompiledFunctions code after := by
-  simpa only [Interp.StructuredMachine.CompiledFunctions, Interp.StructuredMachine.FunctionCompiled, Interp.FunctionTable,
-    decodeInstance, identity, functions, types, instances] using compiled
 end Exec.Store

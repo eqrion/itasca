@@ -47,20 +47,4 @@ theorem loop_trace_dspec {α β : Type} (body : α → Result (ControlFlow α β
     rintro result ⟨count, trace, hpost⟩
     exact ⟨count + 1, .next hbody trace, hpost⟩
 
-/-- An infinite sequence of normal continuing bodies denotes divergence of
-the actual Aeneas loop, proved through its least fixed-point induction. -/
-theorem loop_diverges_of_stream {α β : Type} (body : α → Result (ControlFlow α β))
-    (states : Nat → α)
-    (continues : ∀ n, body (states n) = .ok (.cont (states (n + 1)))) :
-    loop body (states 0) = .div := by
-  have safe := loop_trace_dspec body (fun state => ∃ n, state = states n) (fun _ => False)
-    (by
-      rintro state ⟨n, rfl⟩
-      rw [continues n]
-      exact WP.spec.ret ⟨n + 1, rfl⟩) (states 0) ⟨0, rfl⟩
-  generalize hrun : loop body (states 0) = result at safe ⊢
-  cases safe with
-  | ret h => exact False.elim h.choose_spec.2
-  | div => rfl
-
 end Exec.Interp

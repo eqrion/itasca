@@ -4,7 +4,8 @@ import Exec.Store.Invariant.CheckedValues
 import Exec.Spec.HostCall
 import Exec.Interp.Host.HostResume
 import Exec.Store.Invariant.HostSignature
-import Exec.Platform.HostSound
+import Exec.Generated.Types
+import Exec.Spec.Extend
 
 namespace Exec.Theorems
 open Aeneas Aeneas.Std SpecExt Exec.Interp

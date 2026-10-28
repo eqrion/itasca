@@ -9,7 +9,9 @@ import Exec.Store.Api.TableFillMutation
 import Exec.Store.Api.MemoryCopyMutation
 import Exec.Store.Api.TableCopyPreservation
 import Exec.Store.Initialization.SegmentObjectEffects
-import Exec.Store.Api.GlobalWriteExtension
+import Exec.Store.Invariant.SemanticApi
+import Exec.Store.Invariant.Syntax
+import Exec.Spec.Mutation
 import Exec.Interp.Core.Mutation
 import Exec.Interp.Machines.Core.CoreFunctionTyping
 import Exec.Abs.Core
@@ -22,7 +24,6 @@ import Exec.Store.Invariant.CoreTypingExtension
 import Exec.Abs.ModuleBindingsExtension
 import Exec.Theorems.Composition.GlobalMutationShape
 import Exec.Theorems.Composition.Core.CoreOwnership
-import Exec.Spec.Mutation
 import Exec.Store.Initialization.SegmentExtension
 import Exec.Store.Invariant.SourceSyntax
 import Exec.Store.Initialization.SegmentInitializeMetadata

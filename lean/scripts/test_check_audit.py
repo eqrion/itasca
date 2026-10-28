@@ -186,22 +186,6 @@ class AuditTests(unittest.TestCase):
                     audit.check_layer(source, dependency, 'Exec')
                 audit.check_layer(dependency, source, 'Exec')
 
-    def test_host_composition_stages(self):
-        for source_stage, source_rank in audit.HOST_STAGES.items():
-            for target_stage, target_rank in audit.HOST_STAGES.items():
-                source = f'Exec.Theorems.Host.{source_stage}.Program'
-                dependency = f'Exec.Theorems.Host.{target_stage}.Nested.Contract'
-                with self.subTest(source=source, dependency=dependency):
-                    if target_rank > source_rank:
-                        with self.assertRaisesRegex(ValueError, 'host composition stage'):
-                            audit.check_layer(source, dependency, 'Exec')
-                    else:
-                        audit.check_layer(source, dependency, 'Exec')
-        # Atomic host proofs and callers outside this hierarchy keep their
-        # existing library rules; these are not artificial integration stages.
-        audit.check_layer('Exec.Theorems.Host.Callbacks.Program', 'Exec.Theorems.Host.HostResume', 'Exec')
-        audit.check_layer('Exec.Theorems.Invocation.Public', 'Exec.Theorems.Host.Open.Driver.Model', 'Exec')
-
     def test_builtin_layers(self):
         for dependency in ['Wasm2Prefix', 'Mathlib.Data.Nat.Basic', 'SpecExt.Builtins.Bits']:
             audit.check_layer('SpecExt.Builtins.Int', dependency, 'SpecExt')

@@ -24,8 +24,7 @@ def libraries : Array Name := #[`Itasca, `Exec]
 def roots : Array Name := #[
   `Itasca.Main, `Itasca.Results.Validate, `Itasca.Results.Stream, `Itasca.Results.Batch,
   `Itasca.Results.Trace, `Itasca.Results.Unique,
-  `Exec.Main, `Exec.Results.Compile, `Exec.Results.Instantiate, `Exec.Results.Invoke,
-  `Exec.Results.Host]
+  `Exec.Main, `Exec.Results.Compile, `Exec.Results.Instantiate, `Exec.Results.Invoke]
 
 /-- Modules kept without a reachable declaration, each with its reason. -/
 def allowlist : Array Name := #[
