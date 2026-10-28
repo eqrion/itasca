@@ -370,25 +370,18 @@ publish fresh code. These theorems require the explicit indexed callback and raw
 preservation laws. [Instantiation recording and resource causes](Exec/Results/Instantiate.lean)
 retain the same final interpretation and actual recorded event list. The
 resource accounting and raw-host-retention obligations are recorded in the
-execution reference. [Chosen-world completeness](Exec/Results/Invoke.lean)
-additionally matches one terminating selected source run, including its final
-store and exact recorder events, under explicit source capacities, allocation
-availability, choice compatibility, continuing interrupts and returning-host
-resource laws. It covers both complete profiles and issued Wasm/host functions;
-it does not assert global source-step determinism.
+execution reference. [No spurious errors](Exec/Results/Invoke.lean) shows
+that an owned, typed call reports only traps when every source run of the
+invocation fits the store's value and frame limits (`SourceResourcesFit`, over
+all typed host replies), the allocator grants every request, interrupts
+continue, and callbacks keep the store limits and never report stack overflow.
+It covers both complete profiles and issued Wasm/host functions; it does not
+assert source-step determinism.
 
-[Combined chosen completeness](Exec/Results/Host.lean)
-establishes the corresponding outcome for the synchronous certified host driver
-from one terminating combined Wasm/host source run, including unbounded
-reentrancy and expanded nesting observations. Its premises require owned
-inputs, source-prefix capacities at the initial store limits, allocation
-availability and matching numeric, vector, growth, API and publication choices.
-The driver supplies continuing interrupts and excludes host stack exhaustion.
-[Selected divergence reflection](Exec/Results/Host.lean)
-separately constructs productive combined execution under the same policy.
 [Returning recovery](Exec/Results/Host.lean) proves that
-finite checked-action callbacks in this driver recover the original callback
-package and absence-of-source-divergence invocation contract.
+finite checked-action callbacks in the certified synchronous host driver recover
+the original callback package and absence-of-source-divergence invocation
+contract.
 
 The reviewed [native wrappers](../src/runtime/native.rs) forward compilation,
 invocation, instantiation, definitions and growth to the corresponding generic

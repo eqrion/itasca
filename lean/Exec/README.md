@@ -48,7 +48,7 @@ with proof fields, against the standard logical axiom allowlist.
 | `Exec/Interp/` | Concrete interpreter operations, machine preservation, source correspondence, and invocation. |
 | `Exec/Store/` | Issued-object API, linking, preparation, publication, initialization, and instantiation. |
 | `Exec/Theorems/` | Public API composition and specialized corollaries. |
-| `Exec/Contracts` | Definitions of the host and chosen-run obligations defined beside their proofs; it links the rest. |
+| `Exec/Contracts` | Definitions of the host obligations defined beside their proofs; it links the rest. |
 | `Exec/Results/`, `Exec/Main` | The headline theorems. Only `Main` and `Examples/` import them, and examples import only `Main`. |
 
 Store decoding and capacity contracts belong to `Representation`, below both
@@ -128,24 +128,10 @@ and divergence proofs retain the stronger host target.
 preservation for every generated Wasm step, host step, evaluation context, and
 finite reduction sequence.
 
-## Source choices and open execution
+## Source typing
 
 `Spec/Typing/` proves source configuration typing, value/stack inversion, and
-preservation. `Spec/Choices/` defines admissible scalar, SIMD, growth, and
-completed-host choices, their coverage, erasure, and outcome agreement.
-`Spec/Open/` adds suspended Wasm continuations, host control, expanded histories,
-and finite or infinite combined execution. These directories are source-only;
-they cannot depend on the extracted runtime.
-
-The choice proofs distinguish a selected outcome from global determinism.
-[Choices/Determinism](Spec/Choices/Determinism.lean) establishes fixed-policy
-one-step uniqueness outside active trap cleanup.
-[Choices/TrapNormalization](Spec/Choices/TrapNormalization.lean) proves that
-cleanup terminates with the same state and events, despite overlapping steps.
-[Choices/ChosenOutcomes](Spec/Choices/ChosenOutcomes.lean) combines the two to
-establish terminal outcome agreement and exclude infinite execution under a
-policy with a terminating run. `Abs/` and interpreter chosen adapters retain
-these policies through the existing simulations.
+preservation. It is source-only and cannot depend on the extracted runtime.
 
 ## Compiler completeness
 
@@ -200,31 +186,17 @@ are grouped by the interfaces they build on:
 | Directory | Responsibility |
 | --- | --- |
 | `Theorems/Host/Callbacks/` | Executable checked action languages, independent effects, finite callback contracts, and host-local control. |
-| `Theorems/Host/Chosen/` | Selected atomic host outcomes and primitive choice compatibility. |
-| `Theorems/Host/Reentrant/` | Returning callback packages, depth-staged nested calls, and no-start publication. |
-| `Theorems/Host/Open/Driver/` | Combined executable driver, continuation stack, guards, effects, and root adapters. |
-| `Theorems/Host/Open/Native/` | Partial native execution and finite invocation correspondence. |
-| `Theorems/Host/Open/Erasure/` | Erasing combined ticks and histories into synchronous native execution. |
-| `Theorems/Host/Open/Source/` | State representation, Wasm/control transitions, and selected source simulation. |
-| `Theorems/Host/Open/Completeness/` | Reference-prefix alignment and selected combined outcomes. |
+| `Theorems/Host/Reentrant/` | Returning callback packages and depth-staged nested calls. |
+| `Theorems/Host/Open/Driver/` | Combined executable driver, continuation stack, guards, and effects. |
+| `Theorems/Host/Open/Completeness/` | Recovery of returning callback packages. |
 | `Examples/Host/` | Checked publication, finite reentry, and productive-divergence examples. |
 
-The groups build in the order Callbacks → Chosen → Reentrant → Open. The audit
-permits imports of earlier groups and rejects imports of later groups. Within `Open/Source/`, `State/` holds representation and
-prefix invariants, `Wasm/` native preparation and Wasm steps, `Control/` host/API
-transitions, and `Chosen/` the selected-policy adapters. These are topic groups;
-imports between them follow the actual proof dependencies.
+The groups build in the order Callbacks → Reentrant → Open. The audit permits
+imports of earlier groups and rejects imports of later groups.
 
 `Open/Driver/ReentrantControl` implements the synchronous driver using explicit
 continuations and fresh nested executions. Its ticks preserve the full store
 invariant and expanded history, including effects before divergence.
-`Open/Erasure/` and `Open/Native/` connect those same ticks to the native
-routines. `Open/Source/` establishes combined source correspondence.
-[ChosenSourceCompleteness](Theorems/Host/Open/Completeness/ChosenSourceCompleteness.lean),
-stated in [Results/Host](Results/Host.lean), matches a terminating selected combined run; source-prefix capacities,
-allocation availability, and numeric/vector/growth/API/publication compatibility
-remain explicit premises. Reference Wasm segments retain the reference suffix's
-choice index across differing trap-cleanup lengths.
 [ReturningRecovery](Theorems/Host/Open/Completeness/ReturningRecovery.lean)
 recovers the ordinary returning callback package for the finite action subclass.
 
