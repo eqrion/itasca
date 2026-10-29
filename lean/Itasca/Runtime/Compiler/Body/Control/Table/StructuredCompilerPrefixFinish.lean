@@ -12,7 +12,7 @@ Root source-code relation and final compiled-body prefix. The finish theorem app
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The last source END fixes all root targets and obtains the body relation
@@ -54,7 +54,7 @@ theorem StructuredCompilerPrefix.root_relation {jumpTables : List Aeneas.Std.U32
   | dormant dead retained =>
     have impossible := retained.unentered
     simp [entered] at impossible
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -62,7 +62,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual final END resolves the retained root certificate and emits its
@@ -109,6 +109,6 @@ theorem StructuredCompilerPrefix.finish_body {jumpTables : List Aeneas.Std.U32} 
   have bound := (invariant.codeBudget.advance growth consumed).fetch_bound sourceBound
   exact ⟨target, invariant.metadata.trans stable, by simp [popped], relation,
     ⟨frame.height, count, height, returned⟩, endpoint, Nat.le_of_lt bound⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -32,4 +32,4 @@ theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := old
   letI : ScalarEmbedding C (emit ((CompilerTables.ofFunction before.function).append future)) := ⟨(includeCumulative ((CompilerTables.ofFunction before.function).append future)).scalar⟩
   exact state.core_extra ops law C contextLocals contextGlobals contextMemories next advance inbounds out sourceBound bodyBound opcode covered byte accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

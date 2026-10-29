@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.Signatures
 /-! The actual scheduler loop constructs a source-aligned signature table
 from every module type, retaining exact value and word arities. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def SignatureSequence (signatures : List runtime.compiler.Signature)
@@ -89,4 +89,4 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
       intro accepted
       simpa [same] using certified accepted
   · exact ⟨bound, fun accepted => ⟨prefixMatches accepted, rfl, rfl⟩⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

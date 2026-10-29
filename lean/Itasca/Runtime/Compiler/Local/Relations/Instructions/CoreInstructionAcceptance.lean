@@ -6,7 +6,7 @@ Numerical publication obligations for non-projected bytecode forms. Global/funct
 Main declarations: `CoreInstructionBounds`. A direct consumer is `Compiler.Local.Relations.Instructions.LinearInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -78,4 +78,4 @@ theorem CoreInstructionBounds.accepts {function : runtime.bytecode.CompiledFunct
   all_goals try simp_all only [Result.ok.injEq,decide_eq_true_eq,bind_ok]
   all_goals first | rfl | scalar_tac | (apply checked_difference_accepts; scalar_tac)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

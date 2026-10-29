@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
 its complete forward-fixup list, records the source/bytecode exit coordinates,
 and preserves reachability. The proof follows the actual extracted callback. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem compiler_pc_eq {A : Type} (ops : runtime.platform.Alloc A)
@@ -23,4 +23,4 @@ theorem compiler_pc_eq {A : Type} (ops : runtime.platform.Alloc A)
     simp only [UScalar.cast_val_eq, alloc.vec.Vec.len]
     scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

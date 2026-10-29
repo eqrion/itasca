@@ -18,8 +18,8 @@ theorem ConcreteSim.trans {codeLength firstPC middlePC lastPC firstPending middl
 /-- Source-only normalization can precede the real dispatch without losing
 its measured stutter or positive counted reduction guarantee. -/
 theorem ConcreteSim.prepend_normalization {count before middle} (chain : ErasedSteps count before middle)
-    (s : store) (ambient : frame) (rest : List Abs.AFrame)
-    (typed : Abs.ATyped ⟨s, ambient, before :: rest, []⟩)
+    (s : store) (ambient : frame) (rest : List SourceMachine.AFrame)
+    (typed : SourceMachine.ATyped ⟨s, ambient, before :: rest, []⟩)
     {codeLength pc target pending after}
     (simulation : ConcreteSim codeLength pc target false pending
       ⟨s, ambient, middle :: rest, []⟩ after) :

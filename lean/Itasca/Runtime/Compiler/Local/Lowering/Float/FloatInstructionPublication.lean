@@ -1,10 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOperands
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Float
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Float
 
-theorem floatInstruction_scalar (op : Instruction) (dst a b : U32) :
+theorem float_instruction_scalar (op : Instruction) (dst a b : U32) :
     runtime.bytecode.Instr.scalar (floatInstruction op dst a b) = .ok (some (floatOpcode op,dst,a,b)) := by
   cases op with
   | unary ty operator => cases ty <;> cases operator <;> rfl
@@ -36,7 +36,7 @@ theorem float_instruction_accepts (function : runtime.bytecode.CompiledFunction)
     runtime.bytecode.CompiledFunction.instruction_valid function (floatInstruction op left left right) = .ok true := by
   rw [slots_append,slots_numeric_replicate] at inputBound
   have positive : 0 < op.arity := by rcases op.arity_valid with one | two <;> omega
-  apply scalar_instruction_accepts function _ (floatOpcode op) left left right (floatInstruction_scalar op left left right)
+  apply scalar_instruction_accepts function _ (floatOpcode op) left left right (float_instruction_scalar op left left right)
   all_goals omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

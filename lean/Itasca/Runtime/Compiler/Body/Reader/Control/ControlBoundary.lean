@@ -10,7 +10,7 @@ Reader boundaries through scope entry and root closure.
 Main declarations: `ReaderEnterPostWasm2.boundary` and `reader_root_end_source_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseDormantWasm2Prefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderEnterPostWasm2.boundary {data env locals index st out form bt ins outs remaining base}
@@ -91,4 +91,4 @@ theorem reader_root_end_source_wasm2 {data env locals index st out source}
     (finished : out.core.pos.val = data.length)
     (body : Wasm2.BodyEncoding data source) : p.current.ops = source :=
   (reader_root_end_encoding_wasm2 p root encoded zipper finished).unique body
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

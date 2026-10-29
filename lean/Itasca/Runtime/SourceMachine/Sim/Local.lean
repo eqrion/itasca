@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Spec.Counted
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The read uses the active frame's locals, then lifts through every surrounding
@@ -27,7 +27,7 @@ theorem local_get_simulation (s : store) (ambient : frame) (f : AFrame)
       intro i hi
       simp only [List.mem_singleton] at hi
       subst i
-      exact .admininstr_case_43 _ (integer_uN_wf .I32 index hi32))
+      exact .admininstr_case_43 _ (integer_u_n_wf .I32 index hi32))
   have htarget : wf_config ⟨⟨s, f.toFrame⟩, [admininstr_val f.locals[index]!]⟩ :=
     wf_config_make hs hf (by
       intro i hi
@@ -86,7 +86,7 @@ theorem local_set_simulation (s : store) (ambient : frame) (f : AFrame)
       simp only [List.mem_cons, List.not_mem_nil, or_false] at hi
       rcases hi with rfl | rfl
       · exact wf_admininstr_val hx
-      · exact .admininstr_case_44 _ (integer_uN_wf .I32 index hi32))
+      · exact .admininstr_case_44 _ (integer_u_n_wf .I32 index hi32))
   have htarget : wf_config ⟨⟨s, { f.toFrame with LOCALS := f.locals.set index value }⟩, []⟩ :=
     wf_config_make hs hf' (forall_nil _)
   have relation : fun_with_local ⟨s, f.toFrame⟩ (.mk_uN index) value
@@ -97,12 +97,12 @@ theorem local_set_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [admininstr_val value, .LOCAL_SET (.mk_uN index)]⟩ []
       ⟨⟨s, { f.toFrame with LOCALS := f.locals.set index value }⟩, []⟩ :=
     .step (.local_set _ _ _ _ relation hsource htarget)
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame, admininstr_instr] using h₃
 
 /-- local.tee performs the generated duplication rule followed by local.set;
@@ -119,7 +119,7 @@ theorem local_tee_simulation (s : store) (ambient : frame) (f : AFrame)
       { f with code := .LOCAL_TEE (.mk_uN index) :: after, vals := baseValues ++ [value] } :: rest, []⟩) []
       (decode ⟨s, ambient,
       { f with code := after, locals := f.locals.set index value, vals := baseValues ++ [value] } :: rest, []⟩) := by
-  have hi := integer_uN_wf .I32 index hi32
+  have hi := integer_u_n_wf .I32 index hi32
   have htee : wf_admininstr (.LOCAL_TEE (.mk_uN index)) := .admininstr_case_45 _ hi
   have hset : wf_admininstr (.LOCAL_SET (.mk_uN index)) := .admininstr_case_44 _ hi
   have hvalue := wf_admininstr_val hx
@@ -134,17 +134,17 @@ theorem local_tee_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [admininstr_val value, .LOCAL_TEE (.mk_uN index)]⟩ []
       ⟨⟨s, f.toFrame⟩, [admininstr_val value, admininstr_val value, .LOCAL_SET (.mk_uN index)]⟩ :=
     .step (.pure _ _ _ (.local_tee value (.mk_uN index) hx htee hset) hsource htarget)
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   have expanded : StepH (decode ⟨s, ambient,
       { f with code := .LOCAL_TEE (.mk_uN index) :: after, vals := baseValues ++ [value] } :: rest, []⟩) []
       (decode ⟨s, ambient,
       { f with code := .LOCAL_SET (.mk_uN index) :: after, vals := (baseValues ++ [value]) ++ [value] } :: rest, []⟩) := by
     simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
       AFrame.toFrame, AFrame.arity]
-    rw [decodeLabels_move_values _ _ _ _ heights]
-    rw [List.append_assoc, decodeLabels_move_values _ _ _ _ heights]
+    rw [decode_labels_move_values _ _ _ _ heights]
+    rw [List.append_assoc, decode_labels_move_values _ _ _ _ heights]
     simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame, admininstr_instr] using h₃
   have valuesWf : Forall wf_val (baseValues ++ [value]) := forall_append hv (by
     intro x hx'; simp only [List.mem_singleton] at hx'; subst x; exact hx)
@@ -152,6 +152,6 @@ theorem local_tee_simulation (s : store) (ambient : frame) (f : AFrame)
     intro label h; have hh := heights label h; simp only [List.length_append, List.length_singleton]; omega
   have write := local_set_simulation s ambient f rest after (baseValues ++ [value]) value index
     hs ha hf hl valuesWf hx hc hr heights' hi32
-  exact .cons expanded (.cons write (.refl (stepH_wf write).2))
+  exact .cons expanded (.cons write (.refl (step_h_wf write).2))
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

@@ -8,7 +8,7 @@ Concrete function lookup retains the canonical source context for mutable instru
 Main declarations: `FunctionCompiled` and `CompiledFunctions`. A direct consumer is `Interp.Machine.Calls.CallLookup`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- Concrete function lookup retains the canonical source context for mutable
@@ -25,7 +25,7 @@ def FunctionCompiled {M : Type} (code : Store.CodeInterpretation)
         .FUNC (.mk_uN compiled.type_index.val) (declared.map local.LOCAL) body ∧
       FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType) ∧
       (Store.decodeInstance store inst).TYPES = inst.module.module.env.types.val.map Store.decodeFuncType ∧
-      FunctionCode (Code.moduleFunctionContext inst.module
+      FunctionCode (Compiler.moduleFunctionContext inst.module
         (signature.params.val.map sourceType ++ declared) (signature.results.val.map sourceType))
         (signature.params.val.map sourceType) declared (signature.results.val.map sourceType)
         body compiled epilogue
@@ -42,4 +42,4 @@ theorem declared_types_not_bottom {C params declared results body compiled epilo
   rw [← certificate.2.locals] at present
   obtain ⟨rawType, _, rfl⟩ := List.mem_map.mp present
   cases rawType <;> decide
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

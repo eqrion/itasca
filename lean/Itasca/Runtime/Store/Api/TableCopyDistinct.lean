@@ -175,7 +175,7 @@ theorem table_copy_distinct (tables : alloc.vec.Vec runtime.store.TableInst)
     dsimp only at indexBound wordValues currentEq ⊢
     have wordLength : words.length = table.elements.length := by
       simpa only [alloc.vec.Vec.length] using congrArg List.length wordValues |>.trans
-        (copySegment_length _ _ _ _ _)
+        (copy_segment_length _ _ _ _ _)
     have currentFound : current.val[tableIndex.val]? = some {table with elements := words} := by
       rw [currentEq]
       simp [alloc.vec.Vec.set_val_eq, tableBound]

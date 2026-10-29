@@ -10,7 +10,7 @@ Canonical independent immediate decoding determines every collected Wasm 2 targe
 Main declarations: `compiler_table_source_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableCapacity`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical independent immediate decoding determines every collected Wasm 2
@@ -38,4 +38,4 @@ theorem compiler_table_source_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     ⟨count,first,last,countDecoded,lengthEq,labelsDecoded,defaultDecoded⟩
   obtain ⟨rfl,rfl,_⟩ := decoded.unique encoded
   exact ⟨budget,buffer,types,bufferEq,callback⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

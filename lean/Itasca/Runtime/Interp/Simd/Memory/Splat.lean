@@ -70,17 +70,17 @@ open Aeneas Aeneas.Std
   have sizeVal : size.val = (memoryLaneBytes ty).val := by
     rw [sizeEq,shifted]
     apply Nat.mod_eq_of_lt
-    have small := memoryLaneBytes_small ty
+    have small := memory_lane_bytes_small ty
     scalar_tac
   step with memory_range bytes (UScalar.cast .U32 address) offset size
-    (by rw [sizeVal];exact memoryLaneBytes_small ty) as ⟨result,effect⟩
+    (by rw [sizeVal];exact memory_lane_bytes_small ty) as ⟨result,effect⟩
   by_cases fits : (UScalar.cast .U32 address).val + offset.val + (memoryLaneBytes ty).val ≤ bytes.length
   · simp only [MemoryAddressEffect,Slice.len_val,sizeVal,fits,if_true] at effect
     obtain ⟨start,rfl,startEq⟩ := effect
     unfold runtime.interp.simd.read
     step with read_loop_effect bytes size start 0#u128 0#usize
-      (by rw [sizeVal];exact memoryLaneBytes_small ty) (by omega) (by simp) as ⟨word,wordEq⟩
-    step with splat_packed (lanetype_Jnn ty) (UScalar.cast .U64 word) (shiftWidth ty) (shiftWidth_val ty)
+      (by rw [sizeVal];exact memory_lane_bytes_small ty) (by omega) (by simp) as ⟨word,wordEq⟩
+    step with splat_packed (lanetype_Jnn ty) (UScalar.cast .U64 word) (shiftWidth ty) (shift_width_val ty)
       as ⟨answer,packed⟩
     simp only [WP.spec_ok,if_pos fits]
     refine ⟨answer,rfl,?_⟩

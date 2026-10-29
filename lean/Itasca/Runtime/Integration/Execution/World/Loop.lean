@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.World.RecordedStep
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def WorldLoopInvariant {M P F A : Type}
@@ -83,10 +83,10 @@ def WorldLoopResult {M P : Type} {view : M → Slice U8} {expected : List valtyp
     Extend_store (Store.decodeStore view initial.code initial.machine.store) (Store.decodeStore view finalCode finalStore) ∧
     (status=.Ok () → ∃values events,
       ResultsTyped (Store.decodeStore view finalCode finalStore) expected values ∧
-      Abs.Ownership.ValuesOwned (Store.ownershipBounds finalStore) values ∧ ValuesAt result.2.1.val 0 values ∧
-      StepsH (Abs.decode initial.machine.source) events
+      SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds finalStore) values ∧ ValuesAt result.2.1.val 0 values ∧
+      StepsH (SourceMachine.decode initial.machine.source) events
         ⟨⟨Store.decodeStore view finalCode finalStore,initial.machine.source.ambient⟩,vals values⟩) ∧
-    (∀error,status=.Err error → ∃events,EventfulInvocationError (Abs.decode initial.machine.source) events
+    (∀error,status=.Err error → ∃events,EventfulInvocationError (SourceMachine.decode initial.machine.source) events
       (Store.decodeStore view finalCode finalStore) initial.machine.source.ambient error)
 
 theorem world_loop_finished {M P F A : Type}
@@ -118,7 +118,7 @@ theorem world_loop_finished {M P F A : Type}
       obtain ⟨n,reductions⟩ := EventfulWorld.history_source unrecorded
       refine ⟨current.machine.source.results,events,?_,current.machine.owned.values.1,represented,?_⟩
       · simpa only [finishExecution,current.machine.invariant.storeEq] using typed
-      · simpa only [finishExecution,Abs.decode,sourceEmpty,Abs.decodeFrames_nil,current.machine.invariant.storeEq,ambient] using reductions.erase
+      · simpa only [finishExecution,SourceMachine.decode,sourceEmpty,SourceMachine.decode_frames_nil,current.machine.invariant.storeEq,ambient] using reductions.erase
     · intro error impossible
       cases impossible
   | Err error =>
@@ -150,4 +150,4 @@ theorem world_loop_results {M P F A : Type}
   apply WP.dspec_mono (world_loop_stops memory hooks floats allocator Inv steps initial valid)
   rintro result ⟨state,invariant,stopped,same⟩
   exact ⟨same ▸ world_loop_finished memory hooks floats allocator Inv initial state invariant stopped,state,invariant,stopped,same⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

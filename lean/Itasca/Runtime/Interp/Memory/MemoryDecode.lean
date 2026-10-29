@@ -27,7 +27,7 @@ def numericMemoryType : numtype → Itasca.types.ValueType
   | .F32 => .F32
   | .F64 => .F64
 
-private theorem machineBytes_wf (bytes : List U8) : Forall wf_byte (Store.decodeBytes bytes) := by
+private theorem machine_bytes_wf (bytes : List U8) : Forall wf_byte (Store.decodeBytes bytes) := by
   intro byte member
   obtain ⟨raw,_,rfl⟩ := List.mem_map.mp member
   constructor
@@ -39,12 +39,12 @@ theorem numeric_load_word_decodes (ty : numtype) (bytes : List U8) (start : Nat)
       (scalarLoadBytes bytes start 0#u64 0 (Spec.scalarNumBytes ty)) 0#u64 =
       .CONST ty (inv_nbytes_ ty (Store.decodeBytes ((bytes.drop start).take (Spec.scalarNumBytes ty)))) := by
   have width : Spec.scalarNumBytes ty ≤ 8 := by cases ty <;> decide
-  have wordEq := scalarLoadBytes_source bytes start (Spec.scalarNumBytes ty) width inside
-  have payloadWf := machineBytes_wf ((bytes.drop start).take (Spec.scalarNumBytes ty))
+  have wordEq := scalar_load_bytes_source bytes start (Spec.scalarNumBytes ty) width inside
+  have payloadWf := machine_bytes_wf ((bytes.drop start).take (Spec.scalarNumBytes ty))
   have payloadLength : (Store.decodeBytes ((bytes.drop start).take (Spec.scalarNumBytes ty))).length = Spec.scalarNumBytes ty := by
     simp only [Store.decodeBytes,List.length_map,List.length_take,List.length_drop]
     omega
-  have bounded := Spec.integerOfBytes_bound _ payloadWf
+  have bounded := Spec.integer_of_bytes_bound _ payloadWf
   rw [payloadLength] at bounded
   cases ty <;> simp only [numericMemoryType,Store.decodeWords,wordEq,inv_nbytes_,inv_ibytes_,inv_fbytes_]
   · rw [Nat.mod_eq_of_lt (by simpa [Spec.scalarNumBytes] using bounded)]
@@ -64,11 +64,11 @@ open Aeneas Aeneas.Std
 def scalarStorePayload (value : U64) (width : Nat) : List U8 :=
   (List.range width).map (scalarStoreByte value)
 
-private theorem scalarStorePayload_at (value : U64) (width index : Nat) (inside : index < width) :
+private theorem scalar_store_payload_at (value : U64) (width index : Nat) (inside : index < width) :
     (scalarStorePayload value width)[index]! = scalarStoreByte value index := by
   simp [scalarStorePayload,List.getElem!_eq_getElem?_getD,inside]
 
-theorem scalarStoreBytes_copyInto (bytes : List U8) (start : Nat) (value : U64) (width index count : Nat)
+theorem scalar_store_bytes_copy_into (bytes : List U8) (start : Nat) (value : U64) (width index count : Nat)
     (inside : index + count ≤ width) :
     scalarStoreBytes bytes start value index count =
       Spec.Segment.copyInto bytes (scalarStorePayload value width) (start+index) index count := by
@@ -76,19 +76,19 @@ theorem scalarStoreBytes_copyInto (bytes : List U8) (start : Nat) (value : U64) 
   | zero => rfl
   | succ count ih =>
     simp only [scalarStoreBytes,Spec.Segment.copyInto]
-    rw [scalarStorePayload_at value width index (by omega)]
+    rw [scalar_store_payload_at value width index (by omega)]
     simpa only [Nat.add_assoc] using ih (bytes.set (start+index) (scalarStoreByte value index)) (index+1) (by omega)
 
-theorem scalarStoreBytes_setSlice (bytes : List U8) (start : Nat) (value : U64) (width : Nat)
+theorem scalar_store_bytes_set_slice (bytes : List U8) (start : Nat) (value : U64) (width : Nat)
     (inside : start + width ≤ bytes.length) :
     scalarStoreBytes bytes start value 0 width = bytes.setSlice! start (scalarStorePayload value width) := by
-  rw [scalarStoreBytes_copyInto bytes start value width 0 width (by omega)]
+  rw [scalar_store_bytes_copy_into bytes start value width 0 width (by omega)]
   simp only [Nat.add_zero]
-  rw [Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ (by simp [scalarStorePayload]) inside]
+  rw [Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ (by simp [scalarStorePayload]) inside]
   simp only [List.slice_zero_j, Nat.zero_add]
   rw [List.take_of_length_le (by simp [scalarStorePayload])]
 
-private theorem integerBytes_at (count value index : Nat) (inside : index < count) :
+private theorem integer_bytes_at (count value index : Nat) (inside : index < count) :
     (SpecExt.Builtins.integerBytes count value)[index]? = some (.mk_byte ((value / 256^index) % 256)) := by
   induction index generalizing count value with
   | zero => cases count <;> simp_all [SpecExt.Builtins.integerBytes]
@@ -99,12 +99,12 @@ private theorem integerBytes_at (count value index : Nat) (inside : index < coun
       simpa only [SpecExt.Builtins.integerBytes,List.getElem?_cons_succ,Nat.pow_succ,
         Nat.div_div_eq_div_mul,Nat.mul_comm] using ih count (value/256) (by omega)
 
-theorem scalarStorePayload_source (value : U64) (width : Nat) :
+theorem scalar_store_payload_source (value : U64) (width : Nat) :
     Store.decodeBytes (scalarStorePayload value width) = SpecExt.Builtins.integerBytes width value.val := by
   apply List.ext_getElem?
   intro index
   by_cases inside : index < width
-  · rw [integerBytes_at width value.val index inside]
+  · rw [integer_bytes_at width value.val index inside]
     simp only [Store.decodeBytes,scalarStorePayload,List.getElem?_map]
     simp only [List.getElem?_range inside,Option.map_some]
     congr 2
@@ -116,15 +116,15 @@ theorem scalarStorePayload_source (value : U64) (width : Nat) :
     rw [List.getElem?_eq_none (by simpa [Store.decodeBytes,scalarStorePayload] using outside),
       List.getElem?_eq_none (by simpa only [SpecExt.Builtins.integerBytes_length] using outside)]
 
-theorem scalarStoreBytes_source (bytes : List U8) (start : Nat) (value : U64) (width : Nat)
+theorem scalar_store_bytes_source (bytes : List U8) (start : Nat) (value : U64) (width : Nat)
     (inside : start+width ≤ bytes.length) :
     Store.decodeBytes (scalarStoreBytes bytes start value 0 width) =
       (Store.decodeBytes bytes).setSlice! start (SpecExt.Builtins.integerBytes width value.val) := by
-  rw [scalarStoreBytes_setSlice bytes start value width inside]
+  rw [scalar_store_bytes_set_slice bytes start value width inside]
   unfold Store.decodeBytes
   rw [List.map_setSlice!]
   rw [show (scalarStorePayload value width).map (fun b => byte.mk_byte b.val) =
-    SpecExt.Builtins.integerBytes width value.val from scalarStorePayload_source value width]
+    SpecExt.Builtins.integerBytes width value.val from scalar_store_payload_source value width]
 end Itasca.Runtime.Interp
 
 end
@@ -149,19 +149,19 @@ def numericStoreValue (ty : numtype) (word : U64) : num_ :=
   | .F32 => .mk_num__1 .F32 (Builtins.floatOfBits 32 (word.val % 2^32))
   | .F64 => .mk_num__1 .F64 (Builtins.floatOfBits 64 word.val)
 
-theorem numericStoreValue_decodes (ty : numtype) (word : U64) :
+theorem numeric_store_value_decodes (ty : numtype) (word : U64) :
     Store.decodeWords (numericMemoryType ty) word 0#u64 = .CONST ty (numericStoreValue ty word) := by
   cases ty <;> rfl
 
-theorem numericStoreValue_bytes (ty : numtype) (word : U64) :
+theorem numeric_store_value_bytes (ty : numtype) (word : U64) :
     nbytes_ ty (numericStoreValue ty word) = Builtins.integerBytes (Spec.scalarNumBytes ty) word.val := by
   cases ty
-  · simpa [nbytes_,numericStoreValue,ibytes_,proj_uN_0,Spec.scalarNumBytes] using Spec.integerBytes_mod 4 word.val
+  · simpa [nbytes_,numericStoreValue,ibytes_,proj_uN_0,Spec.scalarNumBytes] using Spec.integer_bytes_mod 4 word.val
   · rfl
   · have bits := Builtins.Float.float_bits_roundtrip_32 (word.val % 2^32) (Nat.mod_lt _ (by norm_num))
     change Builtins.integerBytes 4 (Builtins.floatBits 32 (Builtins.floatOfBits 32 (word.val % 2^32))) = _
     rw [bits]
-    exact Spec.integerBytes_mod 4 word.val
+    exact Spec.integer_bytes_mod 4 word.val
   · have bits := Builtins.Float.float_bits_roundtrip_64 word.val (by scalar_tac)
     simp [nbytes_,numericStoreValue,fbytes_,bits,Spec.scalarNumBytes]
 
@@ -194,7 +194,7 @@ theorem memory_unchanged_decodes {M : Type} (view : M → Slice U8) (code : Code
     (unchanged : view buffer = view object.buf) :
     decodeStore view code {store with memories := store.memories.set address.index {object with buf := buffer}} =
       decodeStore view code store := by
-  rw [decodeStore_memory_update]
+  rw [decode_store_memory_update]
   have same : decodeMemory view {object with buf := buffer} = decodeMemory view object := by
     simp only [decodeMemory,unchanged]
   have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view) id store.memories.val address.index.val
@@ -222,9 +222,9 @@ theorem memory_write_decodes {M : Type} (view : M → Slice U8) (code : CodeInte
   have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view)
     (fun m => {m with BYTES := splice m.BYTES payload start})
     store.memories.val address.index.val object {object with buf := buffer} found
-    (by simp only [decodeMemory,lengthEq,Spec.splice_setSlice (decodeBytes (view object.buf).val) payload start (by simpa [decodeBytes] using inside),written])
+    (by simp only [decodeMemory,lengthEq,Spec.splice_set_slice (decodeBytes (view object.buf).val) payload start (by simpa [decodeBytes] using inside),written])
   unfold Spec.memoryPayloadWrite
-  rw [memoryRead,decodeStore_memory_update]
+  rw [memoryRead,decode_store_memory_update]
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl
 end Itasca.Runtime.Interp

@@ -10,7 +10,7 @@ Accepted explicit-select bytes and their actual callback produce the typed emiss
 Main declarations: `reader_emit_typed_select_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.TypedSelectCheckedPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Accepted explicit-select bytes and their actual callback produce the typed
@@ -55,4 +55,4 @@ theorem reader_emit_typed_select_wasm2 {data env locals index st}
   exact ⟨ordinary,sources,cursor,ty,front,values,emitted,beforeTypes,post,
     ⟨lower,SourceStack.of_map types concrete output⟩,emission⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

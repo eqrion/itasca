@@ -14,8 +14,8 @@ Indirect-call ownership and transport through store/code bounds, used by support
 
 section
 
-namespace Itasca.Runtime.Abs.Indirect
-open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Indirect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
 
 theorem invoke_owned {bound s f rest next address after}
     (frame : FrameOwned bound f) (frames : ∀item∈rest,FrameOwned bound item)
@@ -26,8 +26,8 @@ theorem invoke_owned {bound s f rest next address after}
   cases stepped
   refine ⟨results,?_⟩
   simp only [List.mem_cons,forall_eq_or_imp]
-  refine ⟨⟨valuesOwned_append.mpr ⟨frame.2.drop _,?_⟩,valuesOwned_nil _⟩,⟨frame.1,frame.2.take _⟩,frames⟩
-  apply defaultLocals_ownership
+  refine ⟨⟨values_owned_append.mpr ⟨frame.2.drop _,?_⟩,values_owned_nil _⟩,⟨frame.1,frame.2.take _⟩,frames⟩
+  apply default_locals_ownership
   assumption
 
 theorem step_owned {bound s f rest next table type after}
@@ -44,7 +44,7 @@ theorem step_owned {bound s f rest next table type after}
       · cases stepped
       · apply invoke_owned (f:={f with vals:=front}) ⟨frame.1,?_⟩ frames results stepped
         exact (frame.2.pop popped).1
-end Itasca.Runtime.Abs.Indirect
+end Itasca.Runtime.SourceMachine.Indirect
 
 end
 
@@ -52,8 +52,8 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Indirect
-open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Indirect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
 
 theorem invoke_metadata {s f rest address after next}
     (stepped : invoke s f rest address after=.next next) :
@@ -124,6 +124,6 @@ theorem step_stateful_owned {bounds s ambient f rest table type after next}
   rw [(step_metadata stepped).1]
   exact owned.heap
 
-end Itasca.Runtime.Abs.Indirect
+end Itasca.Runtime.SourceMachine.Indirect
 
 end

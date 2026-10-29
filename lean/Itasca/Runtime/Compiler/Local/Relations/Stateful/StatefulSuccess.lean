@@ -8,13 +8,13 @@ Acceptance of either pair-based callback exposes its actual allocation.
 Main declarations: `lower_stateful_pair_success` and `compiler_finish_indirect`. A direct consumer is `Compiler.Local.Relations.Calls.IndirectCallLowering`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Acceptance of either pair-based callback exposes its actual allocation. -/
 theorem lower_stateful_pair_success {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Stateful.Instruction) (a b : U32)
+    (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (reachable : before.reachable = true) (pairOpcode : statefulUsesPair op = true)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (), after)) :
     ∃ entry paired, runtime.compiler.FunctionCompiler.pair ops before a b = .ok (.Ok entry, paired) := by
@@ -49,4 +49,4 @@ theorem compiler_finish_indirect {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨budget,code,sources,rfl,_,_⟩ := compiler_emit_success ops law before middle instruction emitted
     exact same
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

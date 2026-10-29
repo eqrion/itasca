@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.ScalarDispatchSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ExtendedNumericSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.SaturatingSafety
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 8192
 set_option maxHeartbeats 8000000
@@ -19,8 +19,8 @@ theorem source_numeric_byte_partition (opcode : U8) (lower : 69 ≤ opcode.val)
 
 theorem source_memory_byte_partition (opcode : U8) (lower : 40 ≤ opcode.val)
     (upper : opcode.val ≤ 62) :
-    (∃ op : Abs.Memory.Load, UScalar.cast .U8 (memoryLoadOpcode op) = opcode) ∨
-    (∃ op : Abs.Memory.Store, UScalar.cast .U8 (memoryStoreOpcode op) = opcode) := by
+    (∃ op : SourceMachine.Memory.Load, UScalar.cast .U8 (memoryLoadOpcode op) = opcode) ∨
+    (∃ op : SourceMachine.Memory.Store, UScalar.cast .U8 (memoryStoreOpcode op) = opcode) := by
   interval_cases h : opcode.val
   · exact Or.inl ⟨.full .I32, (UScalar.eq_equiv _ _).mpr h.symm⟩
   · exact Or.inl ⟨.full .I64, (UScalar.eq_equiv _ _).mpr h.symm⟩
@@ -48,7 +48,7 @@ theorem source_memory_byte_partition (opcode : U8) (lower : 40 ≤ opcode.val)
 
 theorem source_sign_byte_descriptor (opcode : U8) (lower : 192 ≤ opcode.val)
     (upper : opcode.val ≤ 196) :
-    ∃ op : Abs.Numeric.Instruction, 192 ≤ (integerOpcode op).val ∧
+    ∃ op : SourceMachine.Numeric.Instruction, 192 ≤ (integerOpcode op).val ∧
       UScalar.cast .U8 (integerOpcode op) = opcode := by
   interval_cases h : opcode.val
   · exact ⟨.unary .I32 .extend8,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
@@ -58,7 +58,7 @@ theorem source_sign_byte_descriptor (opcode : U8) (lower : 192 ≤ opcode.val)
   · exact ⟨.unary .I64 .extend32,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
 
 theorem source_saturating_descriptor (opcode : U32) (small : opcode.val < 8) :
-    ∃ op : Abs.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
+    ∃ op : SourceMachine.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
       opcode.val = (floatOpcode op).val - 256 := by
   interval_cases h : opcode.val
   · exact ⟨.truncate .F32 .I32 .S true,by decide,rfl⟩
@@ -70,4 +70,4 @@ theorem source_saturating_descriptor (opcode : U32) (small : opcode.val < 8) :
   · exact ⟨.truncate .F64 .I64 .S true,by decide,rfl⟩
   · exact ⟨.truncate .F64 .I64 .U true,by decide,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

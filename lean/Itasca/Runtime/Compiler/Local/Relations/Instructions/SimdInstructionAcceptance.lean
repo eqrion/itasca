@@ -7,7 +7,7 @@ SIMD checking accepts from the independently selected opcode shape, concrete inp
 Main declarations: `simd_instruction_accepts` and `simd_instruction_monotone`. A direct consumer is `Compiler.Local.Checking.OpenInstructionCompiler`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- SIMD checking accepts from the independently selected opcode shape,
@@ -57,4 +57,4 @@ theorem simd_instruction_monotone (before after : runtime.bytecode.CompiledFunct
     exact simd_instruction_accepts after instruction opcode dst input entry x y z output projected shapeRun
       (by omega) (by omega) (by omega)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseTransition
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An omitted IF arm changes only the source cursor and frame kind at ELSE.
@@ -75,4 +75,4 @@ theorem StructuredUniversalDormant.begin_else {jumpTables : List Aeneas.Std.U32}
     · simp [StructuredElseEvidence, next, SourceScope.begin_else, invariant.unentered]
     · simpa only [codeEq] using arms.outer
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

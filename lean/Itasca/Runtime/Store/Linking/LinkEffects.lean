@@ -137,7 +137,7 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
   cases a <;> cases b <;>
     simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, Itasca.types.Mut.Insts.CoreCmpPartialEqMut.eq]
 
-theorem elementValueType_injective : Function.Injective elementValueType := by
+theorem element_value_type_injective : Function.Injective elementValueType := by
   intro a b h
   cases a <;> cases b <;> simp_all [elementValueType]
 
@@ -171,7 +171,7 @@ theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
   step with value_type_ne (elementValueType required.elem) (elementValueType table.ty) as ⟨different, hdifferent⟩
   cases different
   · have htype : table.ty = required.elem := by
-      apply elementValueType_injective
+      apply element_value_type_injective
       have he : elementValueType required.elem = elementValueType table.ty := by simpa using hdifferent
       exact he.symm
     simp

@@ -6,7 +6,7 @@ Normal return of unreachable and return compiler callbacks.
 Main declarations: `compiler_on_unreachable_total` and `compiler_on_return_total`. A direct consumer is `Compiler.Body.Reader.Control.ReturnSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -65,4 +65,4 @@ set_option maxRecDepth 4096
   · rw [if_neg live]
     exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

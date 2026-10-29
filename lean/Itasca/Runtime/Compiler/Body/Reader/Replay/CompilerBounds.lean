@@ -9,7 +9,7 @@ Source-coordinate and body bounds retained by reader and compiler states.
 Main declarations: `ReaderBoundaryWasm2.source_bound` and `CompilerStable.body_bound`. A direct consumer is `Compiler.Body.Reader.Control.ClosedInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderBoundaryWasm2.source_bound {data env locals index ft st parents current}
@@ -29,4 +29,4 @@ theorem CompilerStable.body_bound {A : Type}
     current.function.body_start.val + length ≤ Usize.max := by
   rw [stable.fields.2.2.2.2.2.2.2.1]
   exact bound
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

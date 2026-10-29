@@ -44,7 +44,7 @@ Checked instruction prefixes for integer, float and memory reader operations. Li
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual unreachable numeric reading preserves both maintained checks. -/
@@ -54,7 +54,7 @@ theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (dead : before.reachable = false)
-    (op : Abs.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -78,7 +78,7 @@ theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (dead : before.reachable = false)
-    (op : Abs.Float.Instruction) (standard : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (standard : (floatOpcode op).val < 256)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -101,7 +101,7 @@ theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals inde
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
-    (dead : before.reachable = false) (op : Abs.Memory.Load)
+    (dead : before.reachable = false) (op : SourceMachine.Memory.Load)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -125,7 +125,7 @@ theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals ind
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
-    (dead : before.reachable = false) (op : Abs.Memory.Store)
+    (dead : before.reachable = false) (op : SourceMachine.Memory.Store)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -150,7 +150,7 @@ theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (dead : before.reachable = false)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
@@ -168,7 +168,7 @@ theorem reader_dead_sign_checked_prefix_wasm2 {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
-    (dead : before.reachable = false) (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (dead : before.reachable = false) (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -177,7 +177,7 @@ theorem reader_dead_sign_checked_prefix_wasm2 {data env sourceLocals index st}
   obtain ⟨operation,instruction,inputs,output,callback,_⟩ := reader_integer_sign_wasm2 p ops before after out ctx op extension byte accepted
   exact compiler_dead_op_checked_prefix ops law before after out.core (integerOpcode op) 0#u32 0#u32 0#u128 dead held exits callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -185,7 +185,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed integer reader progress preserves all stored instruction checks. -/
@@ -194,7 +194,7 @@ theorem reader_numeric_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
     (reachable : before.reachable = true)
@@ -210,7 +210,7 @@ theorem reader_numeric_open_instructions_wasm2 {data env locals index st}
     reader_emit_numeric_wasm2 p ops law before after out ctx contextLocals op baseOpcode known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_numeric_effects_wasm2 p ops law before after out ctx op byte accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual typed integer reader progress preserves all stored instruction checks. -/
 theorem reader_sign_open_instructions_wasm2 {data env locals index st}
@@ -218,7 +218,7 @@ theorem reader_sign_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
     (reachable : before.reachable = true)
@@ -234,9 +234,9 @@ theorem reader_sign_open_instructions_wasm2 {data env locals index st}
     reader_emit_sign_wasm2 p ops law before after out ctx contextLocals op extension known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_numeric_effects_wasm2 p ops law before after out ctx op byte accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -244,7 +244,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed floating-point reader progress preserves all stored instruction checks. -/
@@ -253,7 +253,7 @@ theorem reader_float_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Float.Instruction) (C : context)
+    (op : SourceMachine.Float.Instruction) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before) (baseOpcode : (floatOpcode op).val < 256)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
@@ -270,7 +270,7 @@ theorem reader_float_open_instructions_wasm2 {data env locals index st}
     reader_emit_float_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode baseOpcode known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_float_base_effects_wasm2 ops law before after _ out data env ctx _ op baseOpcode accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual typed floating-point reader progress preserves all stored instruction checks. -/
 theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
@@ -278,7 +278,7 @@ theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Float.Instruction) (C : context)
+    (op : SourceMachine.Float.Instruction) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
@@ -298,9 +298,9 @@ theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
     reader_emit_saturating_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode extension subopcode next subopcodeEq decoded known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_saturating_effects_wasm2 p ops law before after out ctx op extension subopcode next subopcodeEq decoded byte accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -308,7 +308,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
@@ -323,7 +323,7 @@ theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env so
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -354,7 +354,7 @@ theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sour
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -386,7 +386,7 @@ theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data en
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Memory.Load)
+    (op : SourceMachine.Memory.Load)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -418,7 +418,7 @@ theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data e
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Memory.Store)
+    (op : SourceMachine.Memory.Store)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -448,7 +448,7 @@ theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -479,7 +479,7 @@ theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val) (subopcode : U32) (next : Usize)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val) (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val-256)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
@@ -499,6 +499,6 @@ theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env
       codeFits sourceFits coordinateFits held exits byte accepted
   · exact reader_dead_saturating_checked_prefix_wasm2 p ops law before after out ctx contextSource (Bool.eq_false_iff.mpr live) op extension subopcode next subopcodeEq decoded held exits byte accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

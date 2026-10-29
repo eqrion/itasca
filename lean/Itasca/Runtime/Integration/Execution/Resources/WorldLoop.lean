@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.World.RecordedLoop
 import Itasca.Runtime.Integration.Execution.Resources.SourceCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A failed dispatch retains its actual reached world and source-sized
@@ -14,7 +14,7 @@ def WorldLoopResourceCause {M P F A : Type}
     (result : ExecutionResult M P) (error : runtime.ExecError) : Prop :=
   ∃ previous : EventfulWorld M P view expected, ∃ count events afterExec afterStore afterPlatform,
     Spec.Iterations (WorldRecordedTransition memory hooks floats allocator) count initial events previous ∧
-    StepsH (Abs.decode initial.machine.source) events (Abs.decode previous.machine.source) ∧
+    StepsH (SourceMachine.decode initial.machine.source) events (SourceMachine.decode previous.machine.source) ∧
     Inv previous.code previous.machine.store ∧
     runtime.interp.step memory hooks floats allocator previous.machine.exec previous.machine.store previous.machine.platform=
       .ok (.Err error,afterExec,afterStore,afterPlatform) ∧
@@ -51,7 +51,7 @@ theorem world_recorded_loop_resource_results {M P F A : Type}
       ⦃ (result,events) => WorldRecordedLoopOutcome Inv initial result events ∧
         ∀error,result.2.2.2.2.2.2.2=.Err error → WorldLoopResourceCause memory hooks floats allocator Inv initial result error ⦄div := by
   apply Platform.Recording.lift_dspec _ _ _ _
-    (recordedInvokeLoop_erase memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) [])
+    (recorded_invoke_loop_erase memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ()) [])
     (world_loop_stops memory hooks floats allocator Inv steps initial valid)
   rintro result ⟨state,invariant,stopped,same⟩
   obtain ⟨events,writer,source⟩ := world_recorded_loop_finished memory hooks floats allocator Inv initial state invariant stopped
@@ -60,4 +60,4 @@ theorem world_recorded_loop_resource_results {M P F A : Type}
   intro error failed
   apply invariant.source_resources capacities
   simpa only [finishExecution] using failed
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

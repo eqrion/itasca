@@ -7,7 +7,7 @@ Live metadata readers retain the precise full operand suffix used by the slot co
 Main declarations: `MetadataReaderPost.types`. A direct consumer is `Compiler.Body.Reader.Stateful.StatefulPost`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Live metadata readers retain the precise full operand suffix used by the
@@ -33,10 +33,10 @@ theorem MetadataReaderPost.types {data env locals index st}
   obtain ⟨C,outer,spine,header,base,typed,ctrls,blocks,stack⟩ := p.opened
   have middleBase : (Control.base middle).val = outer.length := by
     simp [Control.base,middleControls,ctrls,base]
-  have afterKnown := readFixed_known middle out outer p.current.vals (pops a) (output a)
+  have afterKnown := read_fixed_known middle out outer p.current.vals (pops a) (output a)
     (by simpa only [middleValues] using stack) middleBase
     (by simpa only [middleValues] using size) (by simpa only [middleValues] using known) read
-  have currentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (stack ▸ known)).2
+  have currentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (stack ▸ known)).2
   rw [monomorphic] at effect
   obtain ⟨front,beforeTypes,afterTypes⟩ := fixed_effect_types currentKnown effect
   obtain ⟨C',outer',spine',header',base',typed',ctrls',blocks',stack'⟩ := post.opened
@@ -51,4 +51,4 @@ theorem MetadataReaderPost.types {data env locals index st}
     rw [afterTypes,List.append_assoc]
     rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Module.CollectFunctions
 import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Capacity certificates retained in the scheduler's sparse vector. -/
@@ -98,4 +98,4 @@ theorem PartialModuleCapacities.complete {profile env sources pending}
   have same : actualType = typeIndex := by simpa [lookup] using actualLookup.symm
   subst actualType
   exact ⟨functions[index], source, found, sourceLookup, code⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

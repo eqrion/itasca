@@ -48,7 +48,7 @@ open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 def averageOpcode (ty : Jnn) : U32 :=
   match ty with | .I8 => 123#u32 | .I16 => 155#u32 | .I32 => 187#u32 | .I64 => 219#u32
 
-theorem averageOpcode_index (ty : Jnn) : (averageOpcode ty).val%32 = (27#u32).val := by
+theorem average_opcode_index (ty : Jnn) : (averageOpcode ty).val%32 = (27#u32).val := by
   cases ty <;> decide
 
 theorem average_loop (ty : Jnn) (x y : U128)
@@ -57,7 +57,7 @@ theorem average_loop (ty : Jnn) (x y : U128)
       y (integerCompareWidth ty) 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = averageBits
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
-  have widthEq := integerCompareWidth_val ty
+  have widthEq := integer_compare_width_val ty
   rw [←widthEq]
   apply integer_binary_loop x y 0#u128 (integerCompareWidth ty) (averageOpcode ty) 0#u32
     (by cases ty <;> decide) (by cases ty <;> decide)
@@ -66,7 +66,7 @@ theorem average_loop (ty : Jnn) (x y : U128)
   · intro j valid a b sa sb remainder aEq bEq _saEq _sbEq remainderEq
     have exactIndex : remainder = (27#u32) := by
       apply UScalar.eq_of_val_eq
-      exact remainderEq.trans (averageOpcode_index ty)
+      exact remainderEq.trans (average_opcode_index ty)
     subst remainder
     have aBits := lane_word_cast _ j x.bv a aEq
     have bBits := lane_word_cast _ j y.bv b bEq
@@ -120,8 +120,8 @@ theorem average_packed (ty : Jnn) (x y result : U128)
   have packed := pack_map_of_lanes (lanetype_Jnn ty) (128/lsize (lanetype_Jnn ty)) result.bv.toNat
     (fun j => (averageBits (laneBits (lsize (lanetype_Jnn ty)) j x.bv)
       (laneBits (lsize (lanetype_Jnn ty)) j y.bv)).toNat)
-    (by intro j valid; rw [←laneBits_toNat,lanes j valid])
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+    (by intro j valid; rw [←lane_bits_to_nat,lanes j valid])
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold averageResult averageWords Map
   rw [List.map_map]
   have same (bits : Nat) : laneOfBits (lanetype_Jnn ty) bits = .mk_lane__0 ty (.mk_uN bits) := by cases ty <;> rfl

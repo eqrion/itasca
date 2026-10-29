@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The accepted terminal callback produces the header and every ordered target
@@ -36,4 +36,4 @@ theorem compiler_br_table_production {A : Type} (ops : runtime.platform.Alloc A)
     emission,?_,rfl,rfl,tables,count,clearedEq,rfl,header⟩
   · simpa only [depthsEq,List.length_append,List.length_singleton] using lenEq
   · simpa only [depthsEq] using built
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

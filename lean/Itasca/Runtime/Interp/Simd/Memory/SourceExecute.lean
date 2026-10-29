@@ -51,7 +51,7 @@ theorem execute_simd_memory_source {M F : Type}
               Simd.memorySourceInput op argument imm.lane.val x.bv y.bv z.bv⟩ []
               ⟨⟨Store.decodeStore view interpretation out.2.2,f⟩,
                 (Spec.Simd.operandValues op.outputs value.bv 0 0).map admininstr_val⟩ ∧
-            Abs.Simd.MemoryChange (Store.decodeStore view interpretation store) f (Store.decodeStore view interpretation out.2.2)
+            SourceMachine.Simd.MemoryChange (Store.decodeStore view interpretation store) f (Store.decodeStore view interpretation out.2.2)
         | .Err error => error = .Trap .MemoryOutOfBounds ∧ out.2.1 = exec ∧
             Store.decodeStore view interpretation out.2.2 = Store.decodeStore view interpretation store ∧
             StepH ⟨⟨Store.decodeStore view interpretation store,f⟩,

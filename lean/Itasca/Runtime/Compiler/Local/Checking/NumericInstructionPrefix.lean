@@ -2,8 +2,8 @@ import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericInstructionPublication
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 /-- Observation preserves every instruction's operand check and pending branch
 owner, including in an unreachable source region. -/
@@ -24,4 +24,4 @@ theorem compiler_observe_open_instructions {A : Type} (ops : runtime.platform.Al
   have frames : after.frames = before.frames := by rw [frame]
   simpa only [PendingInstructionSite,frames] using owned
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

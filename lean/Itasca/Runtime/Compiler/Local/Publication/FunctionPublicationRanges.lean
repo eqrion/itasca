@@ -9,7 +9,7 @@ Source-coordinate checks and the published ranges of a compiled function. Functi
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 abbrev checkSourceCoordinate (function : runtime.bytecode.CompiledFunction) (index : Usize) : Result Bool := do
@@ -89,7 +89,7 @@ theorem check_source_instructions_accepts (function : runtime.bytecode.CompiledF
     · simp
   · exact ⟨rfl,inside⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -97,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual sourced instruction pass accepts from monotone, in-range
@@ -178,7 +178,7 @@ theorem well_formed_sourced_accepts (function : runtime.bytecode.CompiledFunctio
   apply check_control_maps_accepts function.controls function.body_start function.body_end
     (alloc.vec.Vec.len function.code) 0#usize (by scalar_tac) ranges
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -186,7 +186,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source-coordinate and control-target obligations of the actual final
@@ -218,6 +218,6 @@ theorem FunctionPublicationRanges.well_formed {function : runtime.bytecode.Compi
   well_formed_sourced_accepts function nonsynthetic nonempty held.sourceLength locals params returnStart returnCount
     last instructions held.sources held.targets held.controls
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

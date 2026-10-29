@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Invocation does not allocate store objects. Every initial host failure is
@@ -33,4 +33,4 @@ theorem EventfulDispatchCause.no_objects
     simp at impossible
   · obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := host
     simpa only [HostCallCauses,failed,HostPreparationCause] using refused
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

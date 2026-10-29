@@ -10,7 +10,7 @@ Complete-profile transport of a dormant else prefix.
 Main declarations: `structured_reader_prefix_else_dormant_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_else_dormant_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
@@ -64,4 +64,4 @@ theorem structured_reader_prefix_else_dormant_wasm2 {jumpTables : List U32} {emi
     reach.begin_else after.reachable _ condition noEntry.val noEntry false,
     fronts.begin_else _ condition noEntry.val noEntry false,
     reader_else_boundary_wasm2 p sourceForm encoded opened afterState, afterState⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CollectFunctions
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Moving a populated source slot into the dense vector succeeds when its
@@ -99,4 +99,4 @@ theorem collect_functions_available {A : Type} (ops : runtime.platform.Alloc A)
   rw [called,WP.spec_ok] at ordered ⊢
   exact ⟨same,functions,accepted,ordered functions accepted⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

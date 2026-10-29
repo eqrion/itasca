@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.SourceMachine.Safety
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 private theorem lookup_eq {α : Type} [Inhabited α] (values : List α) (index : Nat) (value : α)
@@ -16,4 +16,4 @@ theorem Signature.of_typed {C : context} {op : Instruction} {input output : List
     | assumption
     | (apply lookup_eq <;> assumption)
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

@@ -6,7 +6,7 @@ Forward label fixups never name an IF guard. The two branch constructors are rec
 Main declarations: `ForwardSites` and `FrameSites`. A direct consumer is `Compiler.Local.Callbacks.Control.ElseSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Forward label fixups never name an IF guard. The two branch constructors
@@ -86,7 +86,7 @@ theorem FrameSites.extend {code frame} (sitesOk : FrameSites code frame) (suffix
 theorem ForwardSites.patch {code sites} (sitesOk : ForwardSites code sites)
     (changed : List Usize) (target : U32) : ForwardSites (patchCode code changed target) sites := by
   intro site member
-  rw [patchCode_get]
+  rw [patch_code_get]
   rcases sitesOk site member with ⟨old, found⟩ | ⟨condition, old, found⟩
   · split
     · exact Or.inl ⟨target, by simp [found, retarget]⟩
@@ -100,9 +100,9 @@ theorem FrameSites.patch {code frame} (sitesOk : FrameSites code frame)
   refine ⟨sitesOk.branches.patch changed target, ?_⟩
   intro site atSite
   obtain ⟨condition, old, found⟩ := sitesOk.guard site atSite
-  rw [patchCode_get]
+  rw [patch_code_get]
   split
   · exact ⟨condition, target, by simp [found, retarget]⟩
   · exact ⟨condition, old, found⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

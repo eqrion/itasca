@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Stateful.Reference
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 theorem reference_operand {s : store} {value : val} {type : reftype}
@@ -16,4 +16,4 @@ theorem reference_operand {s : store} {value : val} {type : reftype}
 
 @[simp] theorem reference_admin_value (value : ref) : admininstr_val (val_ref value) = admininstr_ref value := by
   cases value <;> rfl
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

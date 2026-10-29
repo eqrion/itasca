@@ -10,7 +10,7 @@ A source run from `initial` reaches a configuration whose store decodes a runtim
 Main declarations: `HostCallDiverged` and `invoke_defined_world_infinite_source`. A direct consumer is `Integration.Invocation.Behaves`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A source run from `initial` reaches a configuration whose store decodes a runtime store on
@@ -47,10 +47,10 @@ theorem invoke_defined_world_infinite_source
       ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ := by
   have certified := certify code store valid
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) => after=store ∧ ∃source,
-    StructuredMachine.Execution view code store prepared source
+    Machine.Execution view code store prepared source
       (signature.results.val.map sourceType) 0 false ∧
-    Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
-    StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
+    SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
+    StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (SourceMachine.decode source)
   have accepted := invoke_divergent_arguments memory hooks floats allocator exec store platform address
     function signature args results owner hf hs divergent
   have reached : ∃after prepared p,entry after prepared ∧
@@ -75,22 +75,22 @@ theorem invoke_defined_world_infinite_source
       refine ⟨retained,?_⟩
       intro success
       obtain ⟨values,events,typed,ownedValues,represented,reductions⟩ := returned success
-      refine ⟨values,?_,Spec.resultsTyped_wf typed,?_,represented⟩
-      · simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm
+      refine ⟨values,?_,Spec.results_typed_wf typed,?_,represented⟩
+      · simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed typed).symm
       · intro value member
         exact Store.owned_result_fits _ value (ownedValues value member)
   obtain ⟨after,prepared,p,⟨same,source,invariant,ownedSource,ambientEq,sourceStep⟩,bodyDivergent⟩ := reached
   subst after
   let machine : EventfulMachine M P view code (signature.results.val.map sourceType) :=
     ⟨store,prepared,p,source,0,false,invariant,certified,ownedSource⟩
-  have first : StepsH _ [] (Abs.decode source) := StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf)
+  have first : StepsH _ [] (SourceMachine.decode source) := StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf)
   rcases world_loop_infinite memory hooks floats allocator Inv
       (world_step_outcomes memory hooks floats allocator view laws Inv certify update callbacks _) ⟨code,machine⟩ valid bodyDivergent with
     infinite | ⟨count,events,reached,history,diverged⟩
   · exact Or.inl (infinite.prepend first)
   · obtain ⟨n,reductions⟩ := EventfulWorld.history_source (world_recorded_history history)
     refine Or.inr ⟨events,reached.code,reached.machine.store,reached.machine.source.ambient,
-      Abs.decodeFrames reached.machine.source.frames (vals reached.machine.source.results),?_,diverged⟩
-    have trace := Spec.stepsH_trans first reductions.erase
-    simpa only [List.nil_append,Abs.decode,reached.machine.invariant.storeEq] using trace
-end Itasca.Runtime.Theorems
+      SourceMachine.decodeFrames reached.machine.source.frames (vals reached.machine.source.results),?_,diverged⟩
+    have trace := Spec.steps_h_trans first reductions.erase
+    simpa only [List.nil_append,SourceMachine.decode,reached.machine.invariant.storeEq] using trace
+end Itasca.Runtime.Integration

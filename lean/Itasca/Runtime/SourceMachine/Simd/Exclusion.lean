@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Simd.Source
 import Itasca.Runtime.SourceMachine.Core
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Source constructor tag used only to separate scalar/reference/control
 heads from SIMD heads in cumulative syntactic certificates. -/
@@ -35,4 +35,4 @@ theorem ScalarHead.simd_tag {source} (allowed : ScalarHead source) : simdSourceT
   | core old => exact old.simd_tag
   | float op => cases op <;> rfl
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

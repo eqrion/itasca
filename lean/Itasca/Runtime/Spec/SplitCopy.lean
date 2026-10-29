@@ -3,7 +3,7 @@ namespace Itasca.Runtime.Spec.Segment
 
 /-- A write in the left half of a split buffer reconstructs the corresponding
 write in the original buffer. -/
-theorem setSlice_split_left {T : Type} (before payload : List T) (split start : Nat)
+theorem set_slice_split_left {T : Type} (before payload : List T) (split start : Nat)
     (splitBound : split ≤ before.length) (inside : start+payload.length ≤ split) :
     (before.take split).setSlice! start payload ++ before.drop split = before.setSlice! start payload := by
   have leftRoom : payload.length ≤ (before.take split).length-start := by simp only [List.length_take]; omega
@@ -18,7 +18,7 @@ theorem setSlice_split_left {T : Type} (before payload : List T) (split start : 
   simpa only [List.append_assoc] using congrArg (fun rest => before.take start ++ payload ++ rest) combine
 
 /-- A write starting at the right half reconstructs its original-buffer write. -/
-theorem setSlice_split_right {T : Type} (before payload : List T) (split : Nat)
+theorem set_slice_split_right {T : Type} (before payload : List T) (split : Nat)
     (inside : split+payload.length ≤ before.length) :
     before.take split ++ (before.drop split).setSlice! 0 payload = before.setSlice! split payload := by
   have room : payload.length ≤ before.length-split := by omega

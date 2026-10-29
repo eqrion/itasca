@@ -6,7 +6,7 @@ Byte-coordinate spans consumed by accepted reader steps.
 Main declarations: `reader_span_wasm2` and `ReaderPostWasm2.span`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_span_wasm2 {data env locals index st token next}
@@ -21,4 +21,4 @@ theorem ReaderPostWasm2.span {data env locals index st out instruction poly valu
     (post : ReaderPostWasm2 p out instruction poly values) :
     st.core.pos.val ≤ out.pos.val ∧ out.pos.val ≤ data.length := reader_span_wasm2 p post.encoded
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

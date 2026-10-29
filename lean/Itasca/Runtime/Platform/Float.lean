@@ -12,11 +12,11 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 def FloatOutcome (value : fN) (allowed : List fN) : Prop :=
   if isNaN value then ∃ choice ∈ allowed, isNaN choice = true else value ∈ allowed
 
-theorem floatOutcome_nonNaN {value : fN} {allowed : List fN}
+theorem float_outcome_non_nan {value : fN} {allowed : List fN}
     (h : FloatOutcome value allowed) (hn : isNaN value = false) : value ∈ allowed := by
   simpa [FloatOutcome, hn] using h
 
-theorem floatOutcome_NaN {value : fN} {allowed : List fN}
+theorem float_outcome_nan {value : fN} {allowed : List fN}
     (h : FloatOutcome value allowed) (hn : isNaN value = true) :
     ∃ choice ∈ allowed, isNaN choice = true := by
   simpa [FloatOutcome, hn] using h
@@ -52,11 +52,11 @@ structure FloatOpsCorrect {F : Type} (ops : runtime.platform.FloatOps F) : Prop 
   f32_demote_f64 : ∀ a, ops.f32_demote_f64 a ⦃ result =>
     FloatOutcome (floatOfBits 32 result.val) (demote__ 64 32 (floatOfBits 64 a.val)) ⦄
 
-theorem floatOutcome_canonicalize (width : Nat) (value : fN) (allowed : List fN)
+theorem float_outcome_canonicalize (width : Nat) (value : fN) (allowed : List fN)
     (h : FloatOutcome value allowed) (hc : CanonicalClosed width allowed) :
     (if isNaN value then fN.POS (.NAN (canon_ width)) else value) ∈ allowed := by
   cases hn : isNaN value
-  · simpa [hn] using floatOutcome_nonNaN h hn
-  · simpa [hn] using hc (floatOutcome_NaN h hn)
+  · simpa [hn] using float_outcome_non_nan h hn
+  · simpa [hn] using hc (float_outcome_nan h hn)
 
 end Itasca.Runtime.Platform

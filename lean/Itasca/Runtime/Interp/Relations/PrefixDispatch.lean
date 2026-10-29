@@ -54,7 +54,7 @@ theorem execute_jump_if_non_zero_prefix (exec : runtime.interp.Execution) (base 
     rw [← same]
     exact .refl _ _
 
-theorem dispatch_scalar_prefix (exec : runtime.interp.Execution) (base : Usize) (op : U16) (instruction : Code.Bytecode)
+theorem dispatch_scalar_prefix (exec : runtime.interp.Execution) (base : Usize) (op : U16) (instruction : Compiler.Bytecode)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution)
     (returned : runtime.interp.dispatch_scalar floats exec base op instruction = .ok out) :
     SlotPrefix base.val exec.slots.val out.2.slots.val := by
@@ -63,9 +63,9 @@ theorem dispatch_scalar_prefix (exec : runtime.interp.Execution) (base : Usize) 
   exact execute_scalar_prefix floats exec base op operands.1 operands.2.1 operands.2.2 out returned
 
 /-- Bytecode classes that never write below the current frame base. -/
-inductive PrefixInstruction : Code.Bytecode → Prop where
-  | numeric (op : Abs.Numeric.Instruction) (dst a b : U32) : PrefixInstruction (Code.integerInstruction op dst a b)
-  | integer (ty : Inn) (op : Code.IntegerBinary) (a b : U32) : PrefixInstruction (op.target ty a b)
+inductive PrefixInstruction : Compiler.Bytecode → Prop where
+  | numeric (op : SourceMachine.Numeric.Instruction) (dst a b : U32) : PrefixInstruction (Compiler.integerInstruction op dst a b)
+  | integer (ty : Inn) (op : Compiler.IntegerBinary) (a b : U32) : PrefixInstruction (op.target ty a b)
   | eqz32 (dst a b : U32) : PrefixInstruction (.I32Eqz dst a b)
   | eqz64 (dst a b : U32) : PrefixInstruction (.I64Eqz dst a b)
   | const32 (dst value : U32) : PrefixInstruction (.Const32 dst value)
@@ -92,7 +92,7 @@ theorem pair_result_prefix (exec : runtime.interp.Execution) (base : Usize)
   exact preserves result run
 
 theorem dispatch_prefix (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (index inst function base : Usize) (instruction : Code.Bytecode)
+    (index inst function base : Usize) (instruction : Compiler.Bytecode)
     (allowed : PrefixInstruction instruction)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P)
     (returned : runtime.interp.dispatch memory hooks floats allocator exec store platform
@@ -102,10 +102,10 @@ theorem dispatch_prefix (exec : runtime.interp.Execution) (store : runtime.store
   | numeric op dst a b =>
     rw [dispatch_integer_eq] at returned
     exact pair_result_prefix exec base store platform _
-      (execute_scalar_prefix floats exec base (Code.integerOpcode op) dst a b) out returned
+      (execute_scalar_prefix floats exec base (Compiler.integerOpcode op) dst a b) out returned
   | integer ty op a b =>
     cases ty <;> cases op <;>
-      simp only [Code.IntegerBinary.target, runtime.interp.dispatch] at returned <;>
+      simp only [Compiler.IntegerBinary.target, runtime.interp.dispatch] at returned <;>
       exact pair_result_prefix exec base store platform _ (dispatch_scalar_prefix floats exec base _ _) out returned
   | eqz32 dst a b | eqz64 dst a b =>
     simp only [runtime.interp.dispatch] at returned
@@ -162,7 +162,7 @@ theorem spec_value_eq {T : Type} (computation : Result T) (value : T)
 
 theorem step_prefix (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (instruction : Code.Bytecode)
+    (compiled : runtime.bytecode.CompiledFunction) (instruction : Compiler.Bytecode)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
@@ -184,7 +184,7 @@ theorem step_prefix (exec : runtime.interp.Execution) (store : runtime.store.Sto
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.interp.Frame) exec.frames index = .ok raw at hframe
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.ModuleInst) store.instances raw.instance = .ok inst at hinst
   change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.bytecode.CompiledFunction) inst.module.functions raw.function = .ok compiled at hcompiled
-  change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Code.Bytecode) compiled.code (UScalar.cast .Usize raw.pc) = .ok instruction at hinstruction
+  change alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Compiler.Bytecode) compiled.code (UScalar.cast .Usize raw.pc) = .ok instruction at hinstruction
   unfold runtime.interp.step at returned
   simp only [lift, hiindex, hframe, hinst, hcompiled, hinstruction, bind_ok] at returned
   cases hnext : U32.checked_add raw.pc 1#u32 with

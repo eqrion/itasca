@@ -16,7 +16,7 @@ Recorded host invocation outcomes and their source resource evidence.
 Main declarations: `InitialHostInvocationCause.source_resources` and `invoke_host_world_recorded_resources`. A direct consumer is `Integration.Invocation.Resources`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InitialHostInvocationCause.source_resources {M P F A : Type}
@@ -71,7 +71,7 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
       (out.1 = .Ok () →
         ResultsTyped (Store.decodeStore view afterCode out.2.2.1) (signature.results.val.map sourceType)
           (out.2.2.2.2.val.map sourceValue) ∧
-        Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
+        SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
         StepsH ⟨⟨Store.decodeStore view code store,ambient⟩, vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
           trace
           ⟨⟨Store.decodeStore view afterCode out.2.2.1,ambient⟩, vals (out.2.2.2.2.val.map sourceValue)⟩ ∧
@@ -88,7 +88,7 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
     invariant afterCode after ∧ Store.CodeAgreesOn store code afterCode ∧
     Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
     ResultsTyped (Store.decodeStore view afterCode after) (signature.results.val.map sourceType) values ∧
-    Abs.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
+    SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
     StepsH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
       trace
       ⟨⟨Store.decodeStore view afterCode after,ambient⟩,vals values⟩
@@ -122,16 +122,16 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
   · intro prepared p executionId empty represented
     rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
         prepared store p valid address 0#usize ambient ambientWf function identity signature functionAt host signatureAt
-        (args.val.map sourceValue) (by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed arguments).symm) arguments
-        (Spec.resultsTyped_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
+        (args.val.map sourceValue) (by simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed arguments).symm) arguments
+        (Spec.results_typed_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
         represented sourceWf callback retains).imp_exists with
       ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ | ⟨actual,diverged⟩
     swap
     · simp only [recordedCall,Platform.Recording.run,actual,bind_div]
       exact .div _ diverged
-    have sameDecode := Store.decodeStore_code_agrees view agrees
-    have recorded := (recordedCall_returned memory hooks floats allocator prepared store p address 0#usize [] called (hostCallEvents address called)).mpr
-      ⟨actual,by simp only [List.nil_append,callHostEvents_host functionAt host]⟩
+    have sameDecode := Store.decode_store_code_agrees view agrees
+    have recorded := (recorded_call_returned memory hooks floats allocator prepared store p address 0#usize [] called (hostCallEvents address called)).mpr
+      ⟨actual,by simp only [List.nil_append,call_host_events_host functionAt host]⟩
     rw [recorded,DivSpec.ok_iff]
     refine ⟨⟨kept,count⟩,?_,?_⟩
     · intro success
@@ -180,9 +180,9 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
     obtain ⟨kept,empty,values,represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩ := enteredProof
     have stopped : ¬ActiveExecution (entered,after,p,.Ok ()) := by
       simp [ActiveExecution,empty,alloc.vec.Vec.length]
-    rw [recordedInvokeLoop_stopped memory hooks floats allocator (entered,after,p,.Ok ()) stopped trace]
+    rw [recorded_invoke_loop_stopped memory hooks floats allocator (entered,after,p,.Ok ()) stopped trace]
     simp only [DivSpec.ok_iff,finishExecution]
-    exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm),Spec.resultsTyped_wf typed,
+    exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed typed).symm),Spec.results_typed_wf typed,
       fun value member => Store.owned_result_fits after value (ownedResults value member),represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩,
       fun error impossible => by cases impossible⟩
   · rintro ⟨out,trace⟩ ⟨kept,success,errors⟩
@@ -208,4 +208,4 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
         have equal : error=reported := by simpa only [status,core.result.Result.Err.injEq] using failed
         subst reported
         exact source
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

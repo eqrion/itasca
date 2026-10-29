@@ -25,7 +25,7 @@ def floatCompareOpcode (ty : Fnn) (op : vrelop_Fnn_N) : U32 :=
   | .F64,.LE => 75#u32
   | .F64,.GE => 76#u32
 
-theorem floatCompareIndex_roundtrip (op : vrelop_Fnn_N) :
+theorem float_compare_index_roundtrip (op : vrelop_Fnn_N) :
     UScalar.cast .U16 (UScalar.cast .U32 (floatCompareIndex op)) = floatCompareIndex op := by
   cases op <;> rfl
 
@@ -40,13 +40,13 @@ theorem float_compare_loop (ty : Fnn) (op : vrelop_Fnn_N) (x y : U128) :
       ⦃ result => ∀ j, j < 128/lsize (lanetype_Fnn ty) →
         laneBits (lsize (lanetype_Fnn ty)) j result.bv =
           comparisonBits (lsize (lanetype_Fnn ty)) (floatLanePredicate ty op x.bv y.bv j) ⦄ := by
-  have widthEq := floatCompareWidth_val ty
+  have widthEq := float_compare_width_val ty
   rw [←widthEq]
   apply comparison_loop x y 0#u128 (floatCompareWidth ty) (UScalar.cast .U32 (floatCompareIndex op))
     0#u32 true (by cases ty <;> decide) (by cases ty <;> decide)
     (floatLanePredicate ty op x.bv y.bv)
   · intro j valid a b aEq bEq
-    simp only [if_true,floatCompareIndex_roundtrip]
+    simp only [if_true,float_compare_index_roundtrip]
     rw [widthEq] at aEq bEq
     have aBound : a.val < 2^lsize (lanetype_Fnn ty) := by rw [aEq]; exact BitVec.isLt _
     have bBound : b.val < 2^lsize (lanetype_Fnn ty) := by rw [bEq]; exact BitVec.isLt _

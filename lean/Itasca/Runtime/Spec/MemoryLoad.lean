@@ -43,7 +43,7 @@ theorem numeric_load_step (s : store) (f : frame) (ty : numtype) (argument : mem
       simp only [List.length_take,List.length_drop]
       dsimp only [bytes,start]
       omega
-    have valueWf := numericBytes_wf ty _ payloadWf payloadLength
+    have valueWf := numeric_bytes_wf ty _ payloadWf payloadLength
     have output := wf_config_make storeWf frameWf (show Forall wf_admininstr [.CONST ty (inv_nbytes_ ty ((bytes.drop start).take (scalarNumBytes ty)))] from by
       simpa [Forall] using wf_admininstr.admininstr_case_13 _ _ valueWf)
     apply StepH.step
@@ -52,7 +52,7 @@ theorem numeric_load_step (s : store) (f : frame) (ty : numtype) (argument : mem
     · simp [proj_num__0]
     · exact numeric_size_present ty
     · simpa only [numeric_byte_count,proj_num__0,proj_uN_0,Option.get!_some,bytes,start] using
-        numericBytes_roundtrip ty _ payloadWf payloadLength
+        numeric_bytes_roundtrip ty _ payloadWf payloadLength
     · exact input
     · exact .admininstr_case_13 _ _ valueWf
     · exact Segment.index_wf 0 (by norm_num)

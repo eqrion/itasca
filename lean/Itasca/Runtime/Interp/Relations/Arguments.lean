@@ -44,13 +44,13 @@ noncomputable def checkArguments (id : Usize) : List runtime.Value → List Itas
       | .Err error => .Err error
   | _, _ => .Err .BadArguments
 
-theorem checkArgument_ok_iff (id : Usize) (value : runtime.Value) (ty : Itasca.types.ValueType) :
+theorem check_argument_ok_iff (id : Usize) (value : runtime.Value) (ty : Itasca.types.ValueType) :
     checkArgument id value ty = .Ok () ↔ ArgumentMatches id value ty := by
   classical
   simp [checkArgument, ArgumentMatches]
   split <;> simp_all
 
-theorem checkArguments_ok_iff (id : Usize) (values : List runtime.Value)
+theorem check_arguments_ok_iff (id : Usize) (values : List runtime.Value)
     (types : List Itasca.types.ValueType) :
     checkArguments id values types = .Ok () ↔ List.Forall₂ (ArgumentMatches id) values types := by
   induction values generalizing types with
@@ -60,7 +60,7 @@ theorem checkArguments_ok_iff (id : Usize) (values : List runtime.Value)
     | nil => simp [checkArguments]
     | cons ty types =>
       simp only [checkArguments, List.forall₂_cons]
-      have hok := checkArgument_ok_iff id value ty
+      have hok := check_argument_ok_iff id value ty
       cases hc : checkArgument id value ty with
       | Ok unit =>
         cases unit
@@ -186,7 +186,7 @@ theorem check_values_accepts_iff {M : Type}
   step with check_values_effect memory store values types as ⟨out, hout⟩
   subst out
   split
-  · exact checkArguments_ok_iff store.id values.val types.val
+  · exact check_arguments_ok_iff store.id values.val types.val
   · rename_i hn
     constructor
     · intro h; cases h

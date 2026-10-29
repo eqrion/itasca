@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Sim.Context
 import Itasca.Runtime.SourceMachine.Measure
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Constants are already values in SpecTec's administrative instruction syntax.
@@ -14,7 +14,7 @@ theorem decode_const (s : store) (ambient : frame) (f : AFrame)
       { f with code := after, vals := f.vals ++ [.CONST ty value] } :: rest, []⟩ := by
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append,
     AFrame.toFrame, List.map_cons, admininstr_instr]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   rfl
 
 /-- Nop is a real specification step, under arbitrarily many labels and callers. -/
@@ -30,9 +30,9 @@ theorem nop_simulation (s : store) (ambient : frame) (f : AFrame)
   have hw' : wf_config ⟨⟨s, f.toFrame⟩, []⟩ := wf_config_make hs hf (forall_nil _)
   have h : StepH ⟨⟨s, f.toFrame⟩, [.NOP]⟩ [] ⟨⟨s, f.toFrame⟩, []⟩ :=
     .step (.pure _ _ _ (.nop .admininstr_case_0) hw hw')
-  have h₁ := stepH_instrs h [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels f.vals hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs h [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels f.vals hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simpa [decode, decodeFrames, instrContext, vals, AFrame.toFrame, AFrame.arity, admininstr_instr] using h₃
 
 /-- Reuse a generated pure reduction under the flat operand stack and every
@@ -57,12 +57,12 @@ theorem pure_stack_simulation (s : store) (ambient : frame) (f : AFrame)
   have hw' := wf_config_vals hs hf hp
   have step : StepH ⟨⟨s, f.toFrame⟩, vals consumed ++ [admininstr_instr instruction]⟩ []
       ⟨⟨s, f.toFrame⟩, vals produced⟩ := .step (.pure _ _ _ h hw hw')
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights, decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights, decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame] using h₃
 
 /-- Drop discards the top value and leaves the remaining operand stack intact. -/
@@ -93,12 +93,12 @@ theorem stack_step_simulation (s : store) (ambient : frame) (f : AFrame)
       { f with code := instruction :: after, vals := baseValues ++ consumed } :: rest, []⟩) []
       (decode ⟨s, ambient,
       { f with code := after, vals := baseValues ++ produced } :: rest, []⟩) := by
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights, decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights, decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame] using h₃
 
 /-- Lift a pure source rewrite that replaces the current instruction by a
@@ -125,12 +125,12 @@ theorem pure_code_simulation (s : store) (ambient : frame) (f : AFrame)
     wf_config_make hs hf (forall_append (wf_vals hp) (wf_instrs hrepl))
   have step : StepH ⟨⟨s, f.toFrame⟩, vals consumed ++ [admininstr_instr instruction]⟩ []
       ⟨⟨s, f.toFrame⟩, vals produced ++ replacement.map admininstr_instr⟩ := .step (.pure _ _ _ h hw hw')
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity, List.map_append]
-  rw [decodeLabels_move_values _ _ _ _ heights, decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights, decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame] using h₃
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

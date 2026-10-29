@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -88,4 +88,4 @@ theorem reached_profile_else_available_wasm2 {jumpTables : List U32} {data env s
   rintro ⟨kind,bt⟩ _ _
   exact invariant.else_available ops bound available out.core capacity fixups _ condition form bt
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

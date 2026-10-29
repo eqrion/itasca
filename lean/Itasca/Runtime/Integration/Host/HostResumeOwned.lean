@@ -3,7 +3,7 @@ import Itasca.Runtime.Spec.HostCall
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Interp.Host.HostResume
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Successful host checks produce exactly the encoded results; rejected
@@ -26,7 +26,7 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
     (functionAt : after.funcs.val[address.index.val]? = some function)
     (signatureAt : after.types.val[function.signature.val]? = some signature)
     (issued : ∀ value ∈ results.val, Store.IssuedValue after value)
-    (capacity : base.val + Code.slots (signature.results.val.map sourceType) ≤ exec.slots.length) :
+    (capacity : base.val + Compiler.slots (signature.results.val.map sourceType) ≤ exec.slots.length) :
     hostResume memory exec after address base results status ⦃ out =>
       out.2.host_args = exec.host_args ∧ out.2.host_results = results ∧
       out.2.frames = exec.frames ∧ out.2.store = exec.store ∧
@@ -36,10 +36,10 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
           ⟨⟨Store.decodeStore view code after,ambient⟩,vals (results.val.map sourceValue)⟩ ∧
         ResultsTyped (Store.decodeStore view code after) (signature.results.val.map sourceType)
           (results.val.map sourceValue) ∧
-        Abs.Ownership.ValuesOwned (Store.ownershipBounds after) (results.val.map sourceValue) ∧
+        SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds after) (results.val.map sourceValue) ∧
         ValuesAt out.2.slots.val base.val (results.val.map sourceValue) ∧
         out.2.slots.length = exec.slots.length ∧
-        (∀ j, j < base.val ∨ base.val + Code.slots (signature.results.val.map sourceType) ≤ j →
+        (∀ j, j < base.val ∨ base.val + Compiler.slots (signature.results.val.map sourceType) ≤ j →
           out.2.slots.val[j]? = exec.slots.val[j]?)) ∨
        ((out.1 = .Err (.Trap .Host) ∨ out.1 = .Err (.Exhausted .CallStack) ∧ status = .Err .StackOverflow) ∧
         out.2.slots = exec.slots ∧
@@ -67,10 +67,10 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
       cases unitValue
       obtain ⟨typed,owned,tags⟩ := accepted rfl
       simp only [runtime.interp.check_failed,bind_ok,Bool.false_eq_true,ite_false]
-      have widths : (Code.encodeValues (results.val.map sourceValue)).length =
-          Code.slots (signature.results.val.map sourceType) := by
-        rw [Code.encodeValues_length]
-        simp only [List.map_map,Function.comp_def,sourceValue_type]
+      have widths : (Compiler.encodeValues (results.val.map sourceValue)).length =
+          Compiler.slots (signature.results.val.map sourceType) := by
+        rw [Compiler.encode_values_length]
+        simp only [List.map_map,Function.comp_def,source_value_type]
         change signature.results.val = results.val.map rawType at tags
         rw [tags,List.map_map]
         rfl
@@ -79,4 +79,4 @@ theorem host_resume_source_owned {M : Type} (memory : runtime.platform.MemoryBuf
         as ⟨words,length,represented,preserved⟩
       exact Or.inl ⟨Spec.host_return_step host arguments extension sourceTyped typed wfAmbient,
         typed,Store.source_values_owned after results.val owned,represented,length,by simpa only [widths] using preserved⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

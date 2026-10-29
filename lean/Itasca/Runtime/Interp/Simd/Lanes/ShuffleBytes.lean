@@ -32,7 +32,7 @@ def selectedByte (shuffle : Bool) (x y : BitVec 128) (n : Nat) : BitVec 8 :=
     apply BitVec.eq_of_toNat_eq
     rw [BitVec.toNat_setWidth]
     change value.val % 2^8 = _
-    rw [bits,laneBits_toNat]
+    rw [bits,lane_bits_to_nat]
     simp
   · rename_i rest
     have large : ¬n.val < 16 := by scalar_tac
@@ -47,7 +47,7 @@ def selectedByte (shuffle : Bool) (x y : BitVec 128) (n : Nat) : BitVec 8 :=
         apply BitVec.eq_of_toNat_eq
         rw [BitVec.toNat_setWidth]
         change value.val % 2^8 = _
-        rw [bits,laneBits_toNat]
+        rw [bits,lane_bits_to_nat]
         simp [indexEq]
       · rename_i outside
         have large32 : ¬n.val < 32 := by scalar_tac
@@ -94,7 +94,7 @@ def shuffleByte (op : U32) (bits x y : U128) (index : Nat) : BitVec 8 :=
       have selectorCast : (UScalar.cast .U32 selector).val =
           (laneBits 8 index.val (if op = 13#u32 then bits else y).bv).toNat := by
         rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt (by scalar_tac)]
-        rw [selectorEq,laneBits_toNat]
+        rw [selectorEq,lane_bits_to_nat]
         rfl
       simp only [lift,bind_ok]
       step with shuffle_select as ⟨value,valueEq⟩

@@ -17,12 +17,12 @@ theorem swizzle_byte_source (bits x y : U128) (j : Nat) :
     (shuffleByte 14#u32 bits x y j).toNat =
       proj_uN_0 ((Spec.Simd.swizzleWords x.bv)[Spec.Simd.byteAt y.bv j]!) := by
   change (selectedByte false x.bv y.bv (laneBits 8 j y.bv).toNat).toNat = _
-  rw [laneBits_toNat]
+  rw [lane_bits_to_nat]
   change (selectedByte false x.bv y.bv (Spec.Simd.byteAt y.bv j)).toNat = _
-  rw [Spec.Simd.swizzleWords_get _ _ (Spec.Simd.byteAt_bound _ _)]
+  rw [Spec.Simd.swizzle_words_get _ _ (Spec.Simd.byte_at_bound _ _)]
   by_cases first : Spec.Simd.byteAt y.bv j < 16
   · simp only [selectedByte,if_pos first]
-    exact laneBits_toNat 8 _ x.bv
+    exact lane_bits_to_nat 8 _ x.bv
   · simp [selectedByte,first,proj_uN_0]
 
 theorem swizzle_packed (bits x y result : U128)
@@ -34,7 +34,7 @@ theorem swizzle_packed (bits x y result : U128)
   have selected (j : Nat) (valid : j < 16) :
       result.val/2^(lsize lanetype.I8*j)%2^lsize lanetype.I8 = values j := by
     change result.bv.toNat/2^(8*j)%2^8 = _
-    rw [←laneBits_toNat,lanes j valid,swizzle_byte_source]
+    rw [←lane_bits_to_nat,lanes j valid,swizzle_byte_source]
   have packed := SpecExt.Builtins.pack_map_of_lanes .I8 16 result.val values selected
   have valueBound : result.val < 2^(lsize lanetype.I8*16) := by
     change result.val < 2^128

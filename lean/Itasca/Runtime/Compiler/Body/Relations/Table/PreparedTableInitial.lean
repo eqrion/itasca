@@ -12,7 +12,7 @@ Initial reader/compiler and compiler-table certificates for a prepared function 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem indexed_prepared_compiler_start (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -75,7 +75,7 @@ theorem indexed_prepared_compiler_initial_wasm2 (jumpTables : List U32) (emit : 
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
   exact ⟨facts, (StructuredReaderCompilerStateWasm2.initial _ _ _ _ _ _ _ _ _ lookup bodyBound compiled).point⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -83,7 +83,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem prepared_compiler_table_boundary {A : Type} (ops : runtime.platform.Alloc A)
@@ -127,6 +127,6 @@ theorem indexed_table_prepared_compiler_initial_wasm2
     ops law w bodyBound signatureTable functionTable endFits created startedCall
   exact ⟨(all .empty).1,⟨prepared_compiler_table_boundary ops law w created startedCall,fun more => (all more).2⟩⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

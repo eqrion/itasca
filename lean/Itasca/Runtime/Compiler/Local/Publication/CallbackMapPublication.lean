@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Actual br callback retains all control-map publication bounds. -/
@@ -87,4 +87,4 @@ theorem compiler_return_map_publication {A : Type} (ops : runtime.platform.Alloc
   rw [compiler_return_cursor ops law before after state called]
   exact forward
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

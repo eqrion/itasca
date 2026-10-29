@@ -8,11 +8,11 @@ The completed module context has no ambient function-local declarations.
 Main declarations: `moduleSourceContext` and `CoreFunctionTyped`. A direct consumer is `Interp.Machine.Calls.CallLookup`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 /-- The completed module context has no ambient function-local declarations. -/
 def moduleSourceContext (module : runtime.compiler.ExecutableModule) : context :=
   {moduleFunctionContext module [] [] with RETURN := none}
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
@@ -26,9 +26,9 @@ def CoreFunctionTyped {M : Type} (view : M → Slice U8) (code : Store.CodeInter
       ∃ inst index locals body,
         store.instances.val[instanceIndex.val]? = some inst ∧
         code instanceIndex.val inst.module functionIndex.val = .FUNC index locals body ∧
-        Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)
-          (Code.moduleSourceContext inst.module) ∧
-        Func_ok (Code.moduleSourceContext inst.module) (.FUNC index locals body)
+        SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)
+          (Compiler.moduleSourceContext inst.module) ∧
+        Func_ok (Compiler.moduleSourceContext inst.module) (.FUNC index locals body)
           (Store.decodeFunction code store function).TYPE
 
 def CoreFunctionsTyped {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -38,7 +38,7 @@ def CoreFunctionsTyped {M : Type} (view : M → Slice U8) (code : Store.CodeInte
 theorem CoreFunctionsTyped.functions_typed {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {store : runtime.store.Store M}
     (typed : CoreFunctionsTyped view code store) :
-    Abs.FunctionsTyped (Store.decodeStore view code store) := by
+    SourceMachine.FunctionsTyped (Store.decodeStore view code store) := by
   intro fn member
   obtain ⟨function, present, rfl⟩ := List.mem_map.mp member
   have body := typed function present
@@ -48,5 +48,5 @@ theorem CoreFunctionsTyped.functions_typed {M : Type} {view : M → Slice U8}
     simp only [CoreFunctionTyped, kind] at body
     obtain ⟨inst, index, locals, instructions, found, source, bindings, body⟩ := body
     simp only [Store.decodeFunction, kind, found, source] at body ⊢
-    exact ⟨Code.moduleSourceContext inst.module, bindings, rfl, rfl, rfl, body⟩
+    exact ⟨Compiler.moduleSourceContext inst.module, bindings, rfl, rfl, rfl, body⟩
 end Itasca.Runtime.Interp

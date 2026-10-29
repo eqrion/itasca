@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -20,16 +20,16 @@ elab "indirect_effect " h:ident " using " ops:term ", " law:term : tactic => wit
     | ``runtime.compiler.lower.FunctionCompiler.finish_op =>
       `(tactic| have effect := compiler_finish_op_indirect $ops $law _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_indirect
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_pc_indirect
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_indirect
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_patch_indirect
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_indirect
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_indirect
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1 => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_after_if_indirect
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_after_if_indirect
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -65,4 +65,4 @@ macro "indirect_step " h:ident " using " ops:term ", " law:term : tactic => `(ta
   | sources_split $h)
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

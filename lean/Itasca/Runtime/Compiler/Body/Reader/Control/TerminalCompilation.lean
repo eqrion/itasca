@@ -21,7 +21,7 @@ Return and unreachable source-prefix transitions and structured compilation. Ter
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.return_live {jumpTables : List Aeneas.Std.U32} {A : Type} (ops : runtime.platform.Alloc A)
@@ -84,7 +84,7 @@ theorem StructuredCompilerPrefix.return_dead {jumpTables : List Aeneas.Std.U32} 
   have deadAfter : after.reachable = false := by rw [frame]; exact dead
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip .RETURN dead deadAfter ordinary code sources consumed (by rw [cursor]), deadAfter⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -92,7 +92,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 theorem StructuredCompilerPrefix.unreachable {jumpTables : List Aeneas.Std.U32} {A : Type} (ops : runtime.platform.Alloc A)
@@ -137,7 +137,7 @@ theorem StructuredCompilerPrefix.unreachable {jumpTables : List Aeneas.Std.U32} 
     have deadAfter : after.reachable = false := by rw [frame]; exact dead
     have unchanged : after.function.code = before.function.code := by rw [frame]
     exact ⟨invariant.skip .UNREACHABLE dead deadAfter ordinary unchanged sources consumed (by rw [cursor]), deadAfter⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -145,7 +145,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -185,7 +185,7 @@ theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env 
       codeFits sourceFits coordinateFits callback
   · exact invariant.return_dead ops law out.core consumed (Bool.eq_false_iff.mpr reachable) callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -193,7 +193,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -219,7 +219,7 @@ theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data
   have consumed : p.start.val < out.core.pos.val := by have position := p.pos; have span := post.span; omega
   exact ⟨post, invariant.unreachable ops law out.core consumed callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -227,7 +227,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.unreachable {jumpTables : List U32} {A : Type}
@@ -274,6 +274,6 @@ theorem StructuredReaderCompilerStateWasm2.return_ {jumpTables : List U32} {A : 
   exact state.advance next advance inbounds post
     (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

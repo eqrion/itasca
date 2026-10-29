@@ -9,7 +9,7 @@ Every accepted Wasm 2 reader step preserves both concrete checking invariants fr
 Main declarations: `IndexedTableReaderCompilerPointWasm2.checked_prefix`. A direct consumer is `Compiler.Body.Reader.Checking.SourceCheckedStepsWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 
@@ -67,4 +67,4 @@ theorem IndexedTableReaderCompilerPointWasm2.checked_prefix {A : Type}
     exact state.control_checked_prefix ops law ctx rfl C matched contextLocals beforeMetadata beforeSignatures
       initialLayout initialLocals initialCapacity beforeExtent beforeBound maps fixups held exits next advance inbounds out kind byte accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

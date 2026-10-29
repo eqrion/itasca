@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Local.Publication.CallbackMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.ElseMapPublication
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Visitor events whose publication preservation does not require new or
@@ -97,4 +97,4 @@ theorem NonScopePublicationAction.of_range (action : Action)
   | exact .table _ _
   | exact .else_ _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

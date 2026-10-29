@@ -7,7 +7,7 @@ stack before each callback. These proofs cover the allocation-aware loop, its
 reset, and the resulting concrete slot-layout invariant. Allocation rejection
 and checked height overflow remain explicit compiler errors. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def observedOffsets (height : Nat) : List Itasca.code.StackType → List Nat
@@ -115,14 +115,14 @@ def observedHeight (height : Nat) : List Itasca.code.StackType → Nat
   split <;> simp_all
   scalar_tac
 
-theorem observedHeight_values (height : Nat) (types : List Itasca.types.ValueType) :
+theorem observed_height_values (height : Nat) (types : List Itasca.types.ValueType) :
     observedHeight height (types.map Itasca.code.StackType.Val) =
       height + slots (types.map Itasca.Translate.valueType) := by
   induction types generalizing height with
   | nil => simp [observedHeight, slots]
   | cons ty rest ih => simp [observedHeight, compilerStackWidth, slots, ih, Nat.add_assoc]
 
-theorem observedOffsets_values (height : Nat) (types : List Itasca.types.ValueType) :
+theorem observed_offsets_values (height : Nat) (types : List Itasca.types.ValueType) :
     observedOffsets height (types.map Itasca.code.StackType.Val) =
       (List.range types.length).map (fun index =>
         height + offset (types.map Itasca.Translate.valueType) index) := by
@@ -154,8 +154,8 @@ theorem observedOffsets_values (height : Nat) (types : List Itasca.types.ValueTy
   refine ⟨?_, ?_, ?_, ?_, hcap⟩
   · simpa [hls, hlocals] using localSlots
   · simpa [hlo, hlocals] using localOffsets
-  · rw [hoff, concrete, observedOffsets_values, localSlots]
+  · rw [hoff, concrete, observed_offsets_values, localSlots]
     simp [stackOffsets, hlocals]
-  · rw [hh, concrete, observedHeight_values, localSlots, hlocals]
+  · rw [hh, concrete, observed_height_values, localSlots, hlocals]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -8,7 +8,7 @@ SIMD full-vector and lane-memory reader facts, preserving their distinct access 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Full SIMD memory readers retain both encoded immediates, validated memory
@@ -74,7 +74,7 @@ theorem reader_simd_memory_wasm2 {data env locals index st}
           simpa only [op.inputs_full full,Wasm2.Simd.MemoryOperation.outputs_pop,UScalar.ofNatCore_val_eq] using
             op.typed_runtime C env ⟨locals,p.ft.results⟩ wf matched arg 0#u8 checked.1
               (by simpa [Wasm2.Simd.MemoryOperation.runtime] using checked.2) (by simp [full])) encoded fixed
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -82,7 +82,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem simd_memory_lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
@@ -163,6 +163,6 @@ theorem reader_simd_memory_lane_wasm2 {data env locals index st}
             simpa only [op.inputs_lane laned,Wasm2.Simd.MemoryOperation.outputs_pop,UScalar.ofNatCore_val_eq] using
               op.typed_runtime C env ⟨locals,p.ft.results⟩ wf matched arg lane checked.1
                 (by simpa [Wasm2.Simd.MemoryOperation.runtime] using checked.2) (fun _ => by simpa only [Wasm2.Simd.MemoryOperation.runtime,U8.ofNatCore_val_eq] using laneBound)) encoded fixed
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

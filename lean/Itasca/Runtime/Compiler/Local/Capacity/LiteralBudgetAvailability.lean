@@ -9,7 +9,7 @@ Literal callback availability and its exact capacity effect. ScalarLiteralKind c
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -31,7 +31,7 @@ def ScalarLiteralKind.lowering {A : Type} (kind : ScalarLiteralKind) (ops : runt
     let word ← lift (UScalar.cast .U64 bits)
     runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Const64 compiler.height word)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -39,7 +39,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -106,6 +106,6 @@ theorem compiler_vector_literal_available_budget {A : Type} (ops : runtime.platf
     (.ConstV128 compiler.height index) ⦃ out => _ ⦄
   exact finish_op_available_budget ops bound available _ state fresh _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

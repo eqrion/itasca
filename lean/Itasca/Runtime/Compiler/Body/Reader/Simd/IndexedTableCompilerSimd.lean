@@ -15,7 +15,7 @@ SIMD compilation under the structured reader invariant and the indexed compiler-
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual SIMD dispatch extends the same canonical source zipper and the
@@ -42,7 +42,7 @@ theorem StructuredReaderCompilerStateWasm2.simd {jumpTables : List U32} {A : Typ
   obtain ⟨extra,tables,compiled,mono⟩ := event.prefix law contextLocals state.compiled
     state.reach.current sourceBound bodyBound
   exact ⟨extra,tables,(state.advance next advance inbounds event.post (event.meaning.declared _) compiled mono).point⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -50,7 +50,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- SIMD dispatch preserves the compiler point quantified over future
@@ -98,6 +98,6 @@ theorem IndexedTableReaderCompilerPointWasm2.simd {A : Type}
   obtain ⟨_,_,nextPoint⟩ := state.simd ops law C contextLocals contextMemories next advance inbounds out
     sourceBound bodyBound byte accepted
   exact nextPoint
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

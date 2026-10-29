@@ -36,7 +36,7 @@ Source resource causes for an invocation whose initial issued function is a host
 Main declarations: `InitialHostSourceResourceCause`. A direct consumer is `Integration.Api.InitialHostResourcesAdequate`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def InitialHostSourceResourceCause {M P A : Type}
@@ -50,4 +50,4 @@ def InitialHostSourceResourceCause {M P A : Type}
   | .Exhausted .Objects => False
   | _ => True
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

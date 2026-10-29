@@ -106,14 +106,14 @@ theorem table_copy_reference_steps (s : store) (f : frame) (destination source t
     (targetInside : destination < (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS.length) :
     StepsH ⟨⟨s,f⟩,[i32 destination,i32 source,.TABLE_GET (.mk_uN sourceTable),.TABLE_SET (.mk_uN targetTable)]⟩ []
       ⟨⟨tableWrite s f targetTable destination (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS[source]!,f⟩,[]⟩ := by
-  have loaded := stepH_instrs (table_get_step s f sourceTable source hs hf hy hi)
+  have loaded := step_h_instrs (table_get_step s f sourceTable source hs hf hy hi)
     [.CONST .I32 (.mk_num__0 .I32 (.mk_uN destination))] [.TABLE_SET (.mk_uN targetTable)]
     (by simpa [Forall] using wf_val.val_case_0 _ _ ((by cases i32_wf destination hd; assumption)))
     (by simpa [Forall] using wf_admininstr.admininstr_case_49 _ (index_wf _ ht))
   have stored := table_write_step s f targetTable destination (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS[source]! hs hf hd ht mapped targetInside
-  exact stepsH_trans (stepsH_single (by simpa [instrContext,vals,admininstr_val,i32,sourceInside] using loaded)) (stepsH_single stored)
+  exact steps_h_trans (steps_h_single (by simpa [instrContext,vals,admininstr_val,i32,sourceInside] using loaded)) (steps_h_single stored)
 
-theorem tableWrite_other_length (s : store) (f : frame) (index other position : Nat) (value : ref)
+theorem table_write_other_length (s : store) (f : frame) (index other position : Nat) (value : ref)
     (address : f.MODULE.TABLES[other]! < s.TABLES.length) :
     (fun_table ⟨tableWrite s f index position value,f⟩ (.mk_uN other)).REFS.length =
       (fun_table ⟨s,f⟩ (.mk_uN other)).REFS.length := by
@@ -156,19 +156,19 @@ theorem table_copy_forward_steps (s : store) (f : frame) (destination source cou
     StepsH ⟨⟨s,f⟩,operands destination source count ++ [(.TABLE_COPY (.mk_uN targetTable) (.mk_uN sourceTable))]⟩ []
       ⟨⟨tableCopyForward s f targetTable sourceTable destination source count,f⟩,[]⟩ := by
   induction count generalizing s destination source with
-  | zero => exact stepsH_single (table_copy_zero s f destination source targetTable sourceTable hs hf hd hi ht hy (by simpa using inside))
+  | zero => exact steps_h_single (table_copy_zero s f destination source targetTable sourceTable hs hf hd hi ht hy (by simpa using inside))
   | succ count ih =>
     have order : destination ≤ source := by omega
     have srcInside : source < (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS.length := by omega
     let value := (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS[source]!
     let fresh := tableWrite s f targetTable destination value
-    have hw := tableWrite_wf s f targetTable destination value hs
-    have lengthEq := tableWrite_table_length s f targetTable destination value address
-    have sourceLengthEq := tableWrite_other_length s f targetTable sourceTable destination value sourceAddress
+    have hw := table_write_wf s f targetTable destination value hs
+    have lengthEq := table_write_table_length s f targetTable destination value address
+    have sourceLengthEq := table_write_other_length s f targetTable sourceTable destination value sourceAddress
     have afterWf := (wf_config_parts (init_config_wf fresh f (destination+1) (source+1) count _ hw hf
       (by omega) (by omega) (by omega) (.admininstr_case_53 _ _ (index_wf _ ht) (index_wf _ hy)))).2
     have first := table_copy_forward_expand s f destination source count targetTable sourceTable hs hf (by omega) (by omega) hn ht hy inside order
-    have second := stepsH_instrs (table_copy_reference_steps s f destination source targetTable sourceTable hs hf hd hi ht hy mapped srcInside (by omega)) []
+    have second := steps_h_instrs (table_copy_reference_steps s f destination source targetTable sourceTable hs hf hd hi ht hy mapped srcInside (by omega)) []
       (operands (destination+1) (source+1) count ++ [(.TABLE_COPY (.mk_uN targetTable) (.mk_uN sourceTable))]) (by simp [Forall]) afterWf
     have rest := ih fresh (destination+1) (source+1) hw (by omega) (by omega) (by omega)
       (by simpa [fresh,tableWrite] using address) (by simpa [fresh,tableWrite] using sourceAddress)
@@ -176,7 +176,7 @@ theorem table_copy_forward_steps (s : store) (f : frame) (destination source cou
       (by rw [show (fun_table ⟨fresh,f⟩ (.mk_uN sourceTable)).REFS.length = (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS.length from sourceLengthEq,
               show (fun_table ⟨fresh,f⟩ (.mk_uN targetTable)).REFS.length = (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS.length from lengthEq]; omega)
       (Or.inl (by omega))
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans second rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans second rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,tableCopyForward,value,fresh] using combined
 
 theorem table_copy_backward_steps (s : store) (f : frame) (destination source count targetTable sourceTable : Nat)
@@ -189,26 +189,26 @@ theorem table_copy_backward_steps (s : store) (f : frame) (destination source co
     StepsH ⟨⟨s,f⟩,operands destination source count ++ [(.TABLE_COPY (.mk_uN targetTable) (.mk_uN sourceTable))]⟩ []
       ⟨⟨tableCopyBackward s f targetTable sourceTable destination source count,f⟩,[]⟩ := by
   induction count generalizing s with
-  | zero => exact stepsH_single (table_copy_zero s f destination source targetTable sourceTable hs hf hd hi ht hy (by simpa using inside))
+  | zero => exact steps_h_single (table_copy_zero s f destination source targetTable sourceTable hs hf hd hi ht hy (by simpa using inside))
   | succ count ih =>
     have order : source < destination := by omega
     have srcInside : source+count < (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS.length := by omega
     let value := (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS[source+count]!
     let fresh := tableWrite s f targetTable (destination+count) value
-    have hw := tableWrite_wf s f targetTable (destination+count) value hs
-    have lengthEq := tableWrite_table_length s f targetTable (destination+count) value address
-    have sourceLengthEq := tableWrite_other_length s f targetTable sourceTable (destination+count) value sourceAddress
+    have hw := table_write_wf s f targetTable (destination+count) value hs
+    have lengthEq := table_write_table_length s f targetTable (destination+count) value address
+    have sourceLengthEq := table_write_other_length s f targetTable sourceTable (destination+count) value sourceAddress
     have afterWf := (wf_config_parts (init_config_wf fresh f destination source count _ hw hf hd hi
       (by omega) (.admininstr_case_53 _ _ (index_wf _ ht) (index_wf _ hy)))).2
     have first := table_copy_backward_expand s f destination source count targetTable sourceTable hs hf hd hi hn ht hy inside tableBounds order
-    have second := stepsH_instrs (table_copy_reference_steps s f (destination+count) (source+count) targetTable sourceTable hs hf (by omega) (by omega) ht hy mapped srcInside (by omega)) [] (operands destination source count ++ [(.TABLE_COPY (.mk_uN targetTable) (.mk_uN sourceTable))]) (by simp [Forall]) afterWf
+    have second := steps_h_instrs (table_copy_reference_steps s f (destination+count) (source+count) targetTable sourceTable hs hf (by omega) (by omega) ht hy mapped srcInside (by omega)) [] (operands destination source count ++ [(.TABLE_COPY (.mk_uN targetTable) (.mk_uN sourceTable))]) (by simp [Forall]) afterWf
     have rest := ih fresh hw (by omega) (by simpa [fresh,tableWrite] using address)
       (by simpa [fresh,tableWrite] using sourceAddress)
       (by simpa only [fresh,lengthEq,sourceLengthEq] using tableBounds)
       (by rw [show (fun_table ⟨fresh,f⟩ (.mk_uN sourceTable)).REFS.length = (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS.length from sourceLengthEq,
               show (fun_table ⟨fresh,f⟩ (.mk_uN targetTable)).REFS.length = (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS.length from lengthEq]; omega)
       (Or.inl order)
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans second rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans second rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,tableCopyBackward,value,fresh] using combined
 end Itasca.Runtime.Spec.Segment
 
@@ -223,7 +223,7 @@ open SpecExt
 
 def withRefs (table : tableinst) (refs : List ref) : tableinst := {table with REFS := refs}
 
-theorem tableCopyForward_same_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
+theorem table_copy_forward_same_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
     (address : f.MODULE.TABLES[targetTable]! < s.TABLES.length)
     (sourceAddress : f.MODULE.TABLES[sourceTable]! < s.TABLES.length)
     (aliasEq : f.MODULE.TABLES[targetTable]! = f.MODULE.TABLES[sourceTable]!) :
@@ -243,7 +243,7 @@ theorem tableCopyForward_same_words (s : store) (f : frame) (targetTable sourceT
     generalize same : f.MODULE.TABLES[sourceTable]! = a at address sourceAddress ⊢
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,List.set_set,address]
 
-theorem tableCopyForward_distinct_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
+theorem table_copy_forward_distinct_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
     (address : f.MODULE.TABLES[targetTable]! < s.TABLES.length)
     (sourceAddress : f.MODULE.TABLES[sourceTable]! < s.TABLES.length)
     (aliasEq : f.MODULE.TABLES[targetTable]! ≠ f.MODULE.TABLES[sourceTable]!) :
@@ -263,7 +263,7 @@ theorem tableCopyForward_distinct_words (s : store) (f : frame) (targetTable sou
     generalize sourceEq : f.MODULE.TABLES[sourceTable]! = b at sourceAddress aliasEq ⊢
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,List.getElem?_eq_getElem sourceAddress,List.set_set,address,aliasEq]
 
-theorem tableCopyBackward_same_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
+theorem table_copy_backward_same_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
     (address : f.MODULE.TABLES[targetTable]! < s.TABLES.length)
     (sourceAddress : f.MODULE.TABLES[sourceTable]! < s.TABLES.length)
     (aliasEq : f.MODULE.TABLES[targetTable]! = f.MODULE.TABLES[sourceTable]!) :
@@ -283,7 +283,7 @@ theorem tableCopyBackward_same_words (s : store) (f : frame) (targetTable source
     generalize same : f.MODULE.TABLES[sourceTable]! = a at address sourceAddress ⊢
     simp [List.getElem!_eq_getElem?_getD,List.getElem?_eq_getElem address,List.set_set,address]
 
-theorem tableCopyBackward_distinct_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
+theorem table_copy_backward_distinct_words (s : store) (f : frame) (targetTable sourceTable destination source count : Nat)
     (address : f.MODULE.TABLES[targetTable]! < s.TABLES.length)
     (sourceAddress : f.MODULE.TABLES[sourceTable]! < s.TABLES.length)
     (aliasEq : f.MODULE.TABLES[targetTable]! ≠ f.MODULE.TABLES[sourceTable]!) :
@@ -329,31 +329,31 @@ theorem table_copy_steps (s : store) (f : frame) (destination source count targe
   by_cases direction : destination ≤ source
   · have run := table_copy_forward_steps s f destination source count targetTable sourceTable hs hf hd hi hn ht hy mapped address sourceAddress tableBounds inside (Or.inl direction)
     by_cases same : f.MODULE.TABLES[targetTable]! = f.MODULE.TABLES[sourceTable]!
-    · rw [tableCopyForward_same_words _ _ _ _ _ _ _ address sourceAddress same] at run
+    · rw [table_copy_forward_same_words _ _ _ _ _ _ _ address sourceAddress same] at run
       have sameSource : (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS = (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS := by simp only [fun_table,proj_uN_0,same]
-      have snapshot := copyForwardPlain_snapshot (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS
+      have snapshot := copy_forward_plain_snapshot (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS
         (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS destination source 0 count count
         (CopyPrefix.initial _ _ _) (by omega) direction (by simpa only [sameSource] using inside.1) inside.2
       simp only [Nat.add_zero,fun_table,proj_uN_0] at snapshot
       rw [snapshot] at run
       simpa only [tableCopy,same] using run
     · simp only [fun_table,proj_uN_0] at inside
-      rw [tableCopyForward_distinct_words _ _ _ _ _ _ _ address sourceAddress same,
-        copyInto_eq_setSlice _ _ _ _ _ inside.1 inside.2] at run
+      rw [table_copy_forward_distinct_words _ _ _ _ _ _ _ address sourceAddress same,
+        copy_into_eq_set_slice _ _ _ _ _ inside.1 inside.2] at run
       exact run
   · have run := table_copy_backward_steps s f destination source count targetTable sourceTable hs hf hd hi hn ht hy mapped address sourceAddress tableBounds inside (Or.inl (by omega))
     by_cases same : f.MODULE.TABLES[targetTable]! = f.MODULE.TABLES[sourceTable]!
-    · rw [tableCopyBackward_same_words _ _ _ _ _ _ _ address sourceAddress same] at run
+    · rw [table_copy_backward_same_words _ _ _ _ _ _ _ address sourceAddress same] at run
       have sameSource : (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS = (fun_table ⟨s,f⟩ (.mk_uN sourceTable)).REFS := by simp only [fun_table,proj_uN_0,same]
-      have snapshot := copyBackward_snapshot (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS
+      have snapshot := copy_backward_snapshot (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS
         (fun_table ⟨s,f⟩ (.mk_uN targetTable)).REFS destination source count count
         (CopySuffix.initial _ _ _ _) (by omega) (by omega) (by simpa only [sameSource] using inside.1) inside.2
       simp only [fun_table,proj_uN_0] at snapshot
       rw [snapshot] at run
       simpa only [tableCopy,same] using run
     · simp only [fun_table,proj_uN_0] at inside
-      rw [tableCopyBackward_distinct_words _ _ _ _ _ _ _ address sourceAddress same,
-        copyBackwardFrom_snapshot _ _ _ _ _ inside.1 inside.2] at run
+      rw [table_copy_backward_distinct_words _ _ _ _ _ _ _ address sourceAddress same,
+        copy_backward_from_snapshot _ _ _ _ _ inside.1 inside.2] at run
       exact run
 end Itasca.Runtime.Spec.Segment
 

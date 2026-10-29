@@ -10,7 +10,7 @@ Normal return of scalar memory reader callbacks.
 Main declarations: `compiler_reader_memory_load_total` and `compiler_reader_memory_store_total`. A direct consumer is `Compiler.Body.Reader.Safety.ScalarDispatchSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_memory_load_total {A} (ops : runtime.platform.Alloc A)
@@ -18,7 +18,7 @@ theorem compiler_reader_memory_load_total {A} (ops : runtime.platform.Alloc A)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
-    (op : Abs.Memory.Load) :
+    (op : SourceMachine.Memory.Load) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (memoryLoadOpcode op)) compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
@@ -37,7 +37,7 @@ theorem compiler_reader_memory_store_total {A} (ops : runtime.platform.Alloc A)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
-    (op : Abs.Memory.Store) :
+    (op : SourceMachine.Memory.Store) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (memoryStoreOpcode op)) compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
@@ -51,4 +51,4 @@ theorem compiler_reader_memory_store_total {A} (ops : runtime.platform.Alloc A)
     exact compiler_memory_store_total ops law compiler state op arg.offset arg.align
       ready.codeFits ready.sourceFits ready.coordinateFits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

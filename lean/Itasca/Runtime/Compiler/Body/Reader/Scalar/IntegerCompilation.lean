@@ -24,7 +24,7 @@ Live/dormant integer-operation prefixes, including sign extension, and their str
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_numeric_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -35,7 +35,7 @@ theorem structured_reader_prefix_dead_numeric_wasm2 {jumpTables : List U32} {dat
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
-    (op : Abs.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
@@ -58,7 +58,7 @@ theorem structured_reader_prefix_dead_numeric_wasm2 {jumpTables : List U32} {dat
   rw [hookEq] at callback
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (integerOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -66,7 +66,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_numeric_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -78,7 +78,7 @@ theorem structured_reader_prefix_numeric_wasm2 {jumpTables : List U32} {data env
     (embedding : LinearEmbedding locals emit)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
@@ -103,7 +103,7 @@ theorem structured_reader_prefix_numeric_wasm2 {jumpTables : List U32} {data env
   · simpa only [retained.localsEq, inputTypes] using emission
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -111,7 +111,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_sign_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -123,7 +123,7 @@ theorem structured_reader_prefix_sign_wasm2 {jumpTables : List U32} {data env so
     (embedding : LinearEmbedding locals emit)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
@@ -156,7 +156,7 @@ theorem structured_reader_prefix_dead_sign_wasm2 {jumpTables : List U32} {data e
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
@@ -175,7 +175,7 @@ theorem structured_reader_prefix_dead_sign_wasm2 {jumpTables : List U32} {data e
     simpa [Control.base, controls] using base
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (integerOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -183,7 +183,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.numeric {jumpTables : List U32} {A : Type}
@@ -194,7 +194,7 @@ theorem StructuredReaderCompilerStateWasm2.numeric {jumpTables : List U32} {A : 
     (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial before types functions returns locals data env ctx.locals index ft st
       parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Numeric.Instruction) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (out : code.BodyState) (op : SourceMachine.Numeric.Instruction) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (integerOpcode op)))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -222,6 +222,6 @@ theorem StructuredReaderCompilerStateWasm2.numeric {jumpTables : List U32} {A : 
         state.compiled reach op (by omega) byte accepted
       exact ⟨values, state.advance next advance inbounds post (integer_source_declared op _) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

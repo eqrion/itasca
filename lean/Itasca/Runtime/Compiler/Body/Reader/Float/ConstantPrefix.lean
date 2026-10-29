@@ -17,7 +17,7 @@ Live and dormant floating-point constant prefixes and their compiler-state compo
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -73,7 +73,7 @@ theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourc
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const ops before out.core value = _ at callback
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const, lift, bind_ok] using callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -81,7 +81,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -103,7 +103,7 @@ theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLoca
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f32 value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff _).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff _).mp (invariant.known reachable)
   have decoded := (SourceStack.of_map rawTypes concrete rfl).decoded
   have layout : CompilerLayout before (rawTypes.map Translate.valueType) := decoded ▸ retained.layout
   have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
@@ -116,7 +116,7 @@ theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLoca
     reader_emit_float32_wasm2 p ops law before after C (contextCodeLocals.trans retained.localsEq.symm) out ctx contextLocals rawTypes concrete layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨value, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨value, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [decoded] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
@@ -139,7 +139,7 @@ theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLoca
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f64 value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff _).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff _).mp (invariant.known reachable)
   have decoded := (SourceStack.of_map rawTypes concrete rfl).decoded
   have layout : CompilerLayout before (rawTypes.map Translate.valueType) := decoded ▸ retained.layout
   have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
@@ -152,11 +152,11 @@ theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLoca
     reader_emit_float64_wasm2 p ops law before after C (contextCodeLocals.trans retained.localsEq.symm) out ctx contextLocals rawTypes concrete layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨value, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨value, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [decoded] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -164,7 +164,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem StructuredReaderCompilerStateWasm2.float32 {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -218,6 +218,6 @@ theorem StructuredReaderCompilerStateWasm2.float64 {jumpTables : List U32} {A : 
       state.compiled live (by simpa only [p, ReaderBoundaryWasm2.pending, global_simps] using byte) (by simpa only [code.OP_F64_CONST] using accepted)
     exact (state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices, ScalarConst.f64]) compiled (by simp [dead])).point
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

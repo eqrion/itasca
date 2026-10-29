@@ -6,7 +6,7 @@ Scalar operator checking accepts the exact projection supplied by lowering when 
 Main declarations: `scalar_instruction_accepts` and `store_instruction_accepts`. A direct consumer is `Compiler.Local.Relations.Instructions.SimdInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Scalar operator checking accepts the exact projection supplied by lowering
@@ -42,4 +42,4 @@ theorem store_instruction_accepts (function : runtime.bytecode.CompiledFunction)
   simp [runtime.bytecode.CompiledFunction.instruction_valid,scalar,load,projected,
     slots_fit_accepts function address 1#u32 input,slots_fit_accepts function value 1#u32 stored]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

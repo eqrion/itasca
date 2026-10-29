@@ -42,7 +42,7 @@ def extractSignedOpcode (ty : packtype) : U32 :=
   all_goals simp only [lift, bind_ok, WP.spec_ok]
   all_goals refine ⟨_, rfl, ?_⟩
   all_goals rw [UScalar.cast_val_eq, Nat.mod_eq_of_lt (by scalar_tac)]
-  all_goals rw [IScalar.hcast_val_eq, signedEq, ←Spec.signedValue_bitvec, BitVec.toNat_setWidth]
+  all_goals rw [IScalar.hcast_val_eq, signedEq, ←Spec.signed_value_bitvec, BitVec.toNat_setWidth]
   all_goals change (SpecExt.Builtins.signedValue _ (laneValue.val % _) % _).toNat = _
   all_goals rw [laneEq]
   all_goals simp [psize, UScalarTy.numBits]

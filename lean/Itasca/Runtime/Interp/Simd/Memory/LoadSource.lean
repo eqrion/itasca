@@ -43,7 +43,7 @@ theorem full_load_source (address value : U128) (offset lane : U32) (bytes : Sli
     rw [effect]
     refine ⟨rfl,?_⟩
     dsimp only
-    rw [vectorLoadBytes_source _ _ _ (by decide) fits]
+    rw [vector_load_bytes_source _ _ _ (by decide) fits]
     simpa only [inv_vbytes_,inv_ibytes_,Store.decodeBytes,List.map_take,List.map_drop] using source
   · rw [if_neg fits] at source effect
     rw [effect]

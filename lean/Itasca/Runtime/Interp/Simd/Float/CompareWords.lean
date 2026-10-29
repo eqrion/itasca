@@ -16,7 +16,7 @@ def floatCompareIndex (op : vrelop_Fnn_N) : U16 :=
   match op with
   | .EQ => 0#u16 | .NE => 1#u16 | .LT => 2#u16 | .GT => 3#u16 | .LE => 4#u16 | .GE => 5#u16
 
-theorem floatCompareWidth_val (ty : Fnn) : (floatCompareWidth ty).val = lsize (lanetype_Fnn ty) := by
+theorem float_compare_width_val (ty : Fnn) : (floatCompareWidth ty).val = lsize (lanetype_Fnn ty) := by
   cases ty <;> rfl
 
 theorem float_compare_word (ty : Fnn) (op : vrelop_Fnn_N) (a b : U64)

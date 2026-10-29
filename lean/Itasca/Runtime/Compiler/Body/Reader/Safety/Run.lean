@@ -7,7 +7,7 @@ Only a reader's actual successful result needs a returning compiler hook. Parser
 Main declarations: `reader_run_reached` and `compiler_select_raw_total`. A direct consumer is `Compiler.Body.Reader.Calls.Safety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -68,4 +68,4 @@ theorem compiler_select_raw_total {A} (ops : runtime.platform.Alloc A)
     · unfold runtime.compiler.lower.FunctionCompiler.op
       rw [if_neg live]
       exact compiler_observe_stack ops law compiler state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

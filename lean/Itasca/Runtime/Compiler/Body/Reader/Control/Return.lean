@@ -7,7 +7,7 @@ The source effect of an accepted return reader step.
 Main declarations: `reader_return_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ControlEffects`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_return_wasm2 {data env locals index st}
@@ -45,4 +45,4 @@ theorem reader_return_wasm2 {data env locals index st}
     · simpa using afterValues
     · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

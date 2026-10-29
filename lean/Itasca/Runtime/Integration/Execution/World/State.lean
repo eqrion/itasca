@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.World.ExecutionCode
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- A change of ghost world at the same raw store preserves the source state,
@@ -59,8 +59,8 @@ theorem EventfulWorld.history_source {M P F A : Type}
     {before after : EventfulWorld M P view expected} {n : Nat}
     {events : List SpecExt.HostEvent}
     (history : Spec.Iterations (EventfulWorldTransition memory hooks floats allocator) n before events after) :
-    ∃ count, Spec.StepsHN count (Itasca.Runtime.Abs.decode before.machine.source) events
-      (Itasca.Runtime.Abs.decode after.machine.source) := by
+    ∃ count, Spec.StepsHN count (Itasca.Runtime.SourceMachine.decode before.machine.source) events
+      (Itasca.Runtime.SourceMachine.decode after.machine.source) := by
   induction history with
   | refl state => exact ⟨0,.refl state.machine.invariant.typed.typed.decode_wf⟩
   | @cons n first middle last events rest edge tail ih =>
@@ -84,10 +84,10 @@ theorem EventfulWorld.history_metadata {M P F A : Type}
     Store.CodeAgreesOn before.machine.store before.code after.code := by
   induction history with
   | refl state =>
-    exact ⟨Spec.extend_store_refl _ (Store.decodeStore_wf view state.code _
+    exact ⟨Spec.extend_store_refl _ (Store.decode_store_wf view state.code _
       state.machine.certified.shape state.machine.certified.storeSyntax),.refl _,by intro index inst found function; rfl⟩
   | cons edge tail ih =>
     exact ⟨Spec.extend_store_trans edge.extension ih.1,edge.metadata.trans ih.2.1,
       edge.agrees.trans_prefix edge.metadata ih.2.2⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -48,13 +48,13 @@ theorem val_ok_wf {s : store} {v : val} {t : valtype} (h : Val_ok s v t) : wf_va
   | vectype _ _ _ hw => exact hw
   | reftype _ _ hr _ => cases hr <;> simp only [val_ref] <;> constructor
 
-theorem resultsTyped_length {s : store} {ts : List valtype} {vs : List val}
+theorem results_typed_length {s : store} {ts : List valtype} {vs : List val}
     (h : ResultsTyped s ts vs) : vs.length = ts.length := by
   induction h with
   | nil => rfl
   | cons _ _ ih => simp [ih]
 
-theorem resultsTyped_wf {s : store} {ts : List valtype} {vs : List val}
+theorem results_typed_wf {s : store} {ts : List valtype} {vs : List val}
     (h : ResultsTyped s ts vs) : Forall wf_val vs := by
   induction h with
   | nil => exact forall_nil _

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableBoundary
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableSourceGrowth
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Uniform successful callback effects, including an unreachable source path. -/
@@ -21,4 +21,4 @@ theorem compiler_br_table_effects {A : Type} (ops : runtime.platform.Alloc A)
   · have deadBefore : before.reachable=false := by cases same : before.reachable <;> simp_all
     obtain ⟨fixed,code,_,_,_,_,_,_⟩ := compiler_br_table_dead_effect ops law before after state fallback types deadBefore accepted
     exact ⟨fixed,source.1,source.2,boundary,dead,by rw [code]; omega⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

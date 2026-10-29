@@ -45,9 +45,9 @@ theorem ElementTypeMap.source {M : Type} {store : runtime.store.Store M} {entrie
     apply List.Forall₂.cons ?_ ih
     refine ⟨decodeElement segment, ?_, ?_⟩
     · simp only [decodeStore, List.getElem?_map, found, Option.map_some]
-    · have checked := decodeElement_typed view code store wellformed segment
+    · have checked := decode_element_typed view code store wellformed segment
         (shape.elements segment (List.mem_of_getElem? found)) (bounds.elements segment (List.mem_of_getElem? found))
-      simpa only [decodeElement, typed, decodeElemType_source] using checked
+      simpa only [decodeElement, typed, decode_elem_type_source] using checked
 
 theorem data_addresses_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (addresses : List Usize)
@@ -66,7 +66,7 @@ theorem data_addresses_typed {M : Type} (view : M → Slice U8) (code : CodeInte
     apply List.Forall₂.cons
     · refine ⟨decodeData segment, ?_, ?_⟩
       · simp only [decodeStore, List.getElem?_map, found, Option.map_some]
-      · exact decodeData_typed _ wellformed segment (bounds.data segment (List.mem_of_getElem? found))
+      · exact decode_data_typed _ wellformed segment (bounds.data segment (List.mem_of_getElem? found))
     · exact ih (fun value member => issued value (by simp [member]))
 
 end Itasca.Runtime.Store

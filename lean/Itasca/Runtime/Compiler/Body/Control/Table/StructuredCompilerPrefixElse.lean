@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCompleted
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalElse
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackElse
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- ELSE retains the completed then arm and restores the sibling's exact
@@ -57,4 +57,4 @@ theorem StructuredCompilerPrefix.begin_else {jumpTables : List Aeneas.Std.U32} {
     (invariant.controlBudget.transport maps (by simp [change.afterFrames, change.beforeFrames])).advance (Nat.le_of_lt consumed), cursor⟩
   simpa only [sourceTypes.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

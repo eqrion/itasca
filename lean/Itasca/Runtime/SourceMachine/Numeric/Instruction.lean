@@ -17,7 +17,7 @@ Integer instruction soundness from unary, binary, comparison and conversion oper
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec SpecExt.Builtins
 
 theorem unary_relation (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_Inn ty))) :
@@ -69,7 +69,7 @@ theorem unary_pure (ty : Inn) (op : unop_Inn) (bits : BitVec (sizenn (numtype_In
   · exact wf_admininstr_instr (.instr_case_14 _ _ (.unop__case_0 _ _ _ rfl))
   · exact wf_admininstr_val (integer_val_wf ty _ (word_bound ty (unary ty op bits)))
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -77,7 +77,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem binary_relation (ty : Inn) (op : binop_Inn)
@@ -153,7 +153,7 @@ theorem binary_relation (ty : Inn) (op : binop_Inn)
   | ROTL => exact integer_rotleft_relation ty a b.toNat
   | ROTR => exact integer_rotright_relation ty a b.toNat
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -161,7 +161,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem binary_pure (ty : Inn) (op : binop_Inn)
@@ -224,8 +224,8 @@ theorem binary_trap_simulation (s : store) (ambient : frame) (f : AFrame)
       [admininstr_instr (.BINOP (numtype_Inn ty) (.mk_binop__0 ty op))]⟩ []
       ⟨⟨s, f.toFrame⟩, [.TRAP]⟩ :=
     .step (.pure _ _ _ (binary_trap_pure ty op a b trap) before (wf_config_make hs hf wf_trap))
-  have lifted := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
+  have lifted := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
       f.labels baseValues hl hv) ha hr
   have frameWf : Forall FrameWf ({ f with code := after, vals := baseValues } :: rest) := by
     intro frame hm; simp only [List.mem_cons] at hm
@@ -236,9 +236,9 @@ theorem binary_trap_simulation (s : store) (ambient : frame) (f : AFrame)
   refine ⟨n + 1, by omega, ?_⟩
   have all := StepsHN.cons lifted tail
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeFrames, operands, vals, instrContext, AFrame.toFrame, AFrame.arity, List.append_assoc] using all
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -246,7 +246,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem compare_bound (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
@@ -281,7 +281,7 @@ theorem compare_pure (ty : Inn) (op : relop_Inn) (a b : BitVec (sizenn (numtype_
   integer_relop_pure ty op a.toNat b.toNat _ (word_bound ty a) (word_bound ty b)
     (compare_bound ty op a b) (compare_relation ty op a b)
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -289,7 +289,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem Conversion.source_wf (op : Conversion) : wf_instr op.source := by
@@ -326,7 +326,7 @@ theorem Conversion.pure (op : Conversion) (bits : BitVec (sizenn (numtype_Inn op
   · exact wf_admininstr_instr op.source_wf
   · exact wf_admininstr_val (integer_val_wf op.output _ (word_bound op.output (op.apply bits)))
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -334,7 +334,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem unary_frame_preservation {s : store} {f : AFrame} {code : List instr}
@@ -347,12 +347,12 @@ theorem unary_frame_preservation {s : store} {f : AFrame} {code : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
       List.append_cancel_right_eq] at hstack
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     have hresult := integer_val_typed hs ty result hr
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues ++ [integerVal ty result] }) C
       bindings localTypes locals ?_ returns ?_ hw
@@ -371,12 +371,12 @@ theorem conversion_frame_preservation {s : store} {f : AFrame} {code : List inst
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
       List.append_cancel_right_eq] at hstack
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     have hresult := integer_val_typed hs target result hr
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues ++ [integerVal target result] }) C
       bindings localTypes locals ?_ returns ?_ hw
@@ -386,7 +386,7 @@ theorem conversion_frame_preservation {s : store} {f : AFrame} {code : List inst
         integerVal, valueType, numtype_Inn, valtype_numtype, hstack] using hafter
 
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -394,12 +394,12 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
 theorem UnaryOperator.opcode_bound {ty : Inn} (op : UnaryOperator ty) : op.opcode < 65536 := by
   cases ty <;> cases op <;> decide
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -407,7 +407,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
@@ -458,7 +458,7 @@ theorem Instruction.pure_success (op : Instruction)
     subst result
     exact conv.pure a
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -466,7 +466,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.frame_preservation (op : Instruction)
@@ -517,6 +517,6 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
   cases op with
   | binary ty binop => exact binary_trap_simulation s ambient f rest after front ty binop a b trap hs ha hf hl hv hc hr heights
   | unary | compare | eqz | conversion => simp only [apply, Option.some_ne_none] at trap
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end

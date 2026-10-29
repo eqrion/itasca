@@ -4,10 +4,10 @@ import Itasca.Runtime.Compiler.Local.Checking.CoreEmissionInstructionPrefix
 /-!
 Captured table appends increase every local checker index space. The contents are separately related to source syntax by emission certificates.
 
-Main declarations: `instruction_check_extends_of_tables_append` and `Lowered.executableInstructionPrefix`. A direct consumer is `Compiler.Body.Reader.Calls.InstructionPrefix`.
+Main declarations: `instruction_check_extends_of_tables_append` and `Lowered.executable_instruction_prefix`. A direct consumer is `Compiler.Body.Reader.Calls.InstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Captured table appends increase every local checker index space. The
@@ -32,7 +32,7 @@ theorem instruction_check_extends_of_tables_append (before after : runtime.bytec
 /-- All ordinary complete-profile source emissions preserve checking of every
 stored instruction, including outstanding branches in older code. Appended
 SIMD, constant, and indirect-call metadata are allowed. -/
-theorem Lowered.executableInstructionPrefix {A : Type}
+theorem Lowered.executable_instruction_prefix {A : Type}
     {before after : runtime.compiler.FunctionCompiler A} {instruction input output source C}
     (lowered : Lowered before after instruction output) (layout : CompilerLayout before input)
     (live : before.reachable = true) (locals : C.LOCALS = compilerLocals before)
@@ -48,4 +48,4 @@ theorem Lowered.executableInstructionPrefix {A : Type}
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

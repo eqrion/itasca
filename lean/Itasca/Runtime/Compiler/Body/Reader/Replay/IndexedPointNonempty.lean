@@ -6,7 +6,7 @@ The complete-profile reached reader likewise has an active source control frame.
 Main declarations: `IndexedTableReaderCompilerPointWasm2.ctrls_nonempty`. A direct consumer is `Compiler.Body.Reader.Publication.SourcePublicationAdvanceWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete-profile reached reader likewise has an active source control frame. -/
@@ -19,4 +19,4 @@ theorem IndexedTableReaderCompilerPointWasm2.ctrls_nonempty {A : Type}
   rw [controls]
   simp
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

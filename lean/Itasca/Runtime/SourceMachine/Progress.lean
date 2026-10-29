@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Safety
 import Itasca.Runtime.SourceMachine.PureHead
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem const_progress (s : store) (ambient : frame) (f : AFrame)
@@ -12,7 +12,7 @@ theorem const_progress (s : store) (ambient : frame) (f : AFrame)
       { f with code := .CONST (numtype_Inn ty) (.mk_num__0 ty number) :: code } :: rest, []⟩ ≠ .stuck := by
   cases h with
   | mk C bindings localTypes locals values returns hc hw =>
-    have hi := codeStack_wf hc (.CONST (numtype_Inn ty) (.mk_num__0 ty number)) (by simp)
+    have hi := code_stack_wf hc (.CONST (numtype_Inn ty) (.mk_num__0 ty number)) (by simp)
     cases hi with
     | instr_case_13 _ _ hn =>
       obtain ⟨bits, heq, hb⟩ := integer_num_inv hn
@@ -23,7 +23,7 @@ theorem const_progress (s : store) (ambient : frame) (f : AFrame)
         cases ty <;>
           simp_all [astep, integer, integerWidth, numtype_Inn, advance]
 
-theorem blockType_of_typing {C : context} {m : moduleinst} {bt : blocktype}
+theorem block_type_of_typing {C : context} {m : moduleinst} {bt : blocktype}
     {ft : functype} (types : C.TYPES = m.TYPES) (h : Blocktype_ok C bt ft) :
     blockType m bt = some ft := by
   cases h with
@@ -47,7 +47,7 @@ theorem value_types_concrete (values : List val) :
     Forall (fun ty => ty ≠ valtype.BOT) (values.map valueType) := by
   intro ty hty
   obtain ⟨value, _, rfl⟩ := List.mem_map.mp hty
-  exact valueType_ne_bot value
+  exact value_type_ne_bot value
 
 def EmptyShape (labels : List Label) (stack results : List valtype) : Prop :=
   match labels with
@@ -68,17 +68,17 @@ theorem code_empty_shape {C : context} {labels : List Label}
     exact ⟨saved, by rw [heq], height⟩
 
 /-- Every permitted local type has the zero/null default prescribed by Wasm. -/
-theorem defaultValue_exists {ty : valtype} (h : ty ≠ .BOT) :
+theorem default_value_exists {ty : valtype} (h : ty ≠ .BOT) :
     ∃ value, defaultValue ty = some value := by
   cases ty <;> simp_all [defaultValue]
 
-theorem defaultLocals_exists (types : List valtype)
+theorem default_locals_exists (types : List valtype)
     (h : Forall (fun ty => ty ≠ valtype.BOT) types) :
     ∃ values, defaultLocals (types.map local.LOCAL) = some values := by
   induction types with
   | nil => exact ⟨[], rfl⟩
   | cons ty types ih =>
-    obtain ⟨value, hv⟩ := defaultValue_exists (h ty (by simp))
+    obtain ⟨value, hv⟩ := default_value_exists (h ty (by simp))
     obtain ⟨values, hs⟩ := ih (fun ty ht => h ty (by simp [ht]))
     exact ⟨value :: values, by simp [defaultLocals, hv, hs]⟩
 
@@ -92,6 +92,6 @@ theorem function_defaults {s : store} {fn : funcinst} {index : idx}
   generalize hft : fn.TYPE = ft at typed
   cases typed with
   | mk_Func_ok _ types _ _ _ _ _ nonbot _ _ _ _ =>
-    exact defaultLocals_exists types nonbot
+    exact default_locals_exists types nonbot
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

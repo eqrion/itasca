@@ -13,7 +13,7 @@ Prepared compiler-batch source certificates. Entry uniqueness and conservative f
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Conservative per-function charges from independent source maxima. -/
@@ -81,7 +81,7 @@ theorem prepared_allowance_le_rate (ctx : code.Context) (length bodyBytes localC
   intro counter
   cases counter <;> simp only [preparedFunctionAllowance,functionDemandRate] <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -89,7 +89,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Pure entry decoding determines all inputs to source body demand. Grouping
@@ -133,7 +133,7 @@ theorem prepared_entry_unique {data env index start profile}
     exact List.append_cancel_right (left.symm.trans second.body_bytes.suffix))
   exact ⟨typeEq,ctxEq,bodyEq,localsEq.2,finishEq⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -141,7 +141,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- One independently prepared source entry suffices to establish all entry
@@ -157,7 +157,7 @@ theorem EntryResourceDemand.of_prepared {A : Type} {budget : runtime.compiler.Bu
   obtain ⟨typeEq,ctxEq,bodyEq,_,_⟩ := prepared_entry_unique prepared other
   simpa only [← typeEq,← ctxEq,← bodyEq] using demand
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -165,7 +165,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independently prepared, encoded, and typed source entries in byte/index
@@ -185,6 +185,6 @@ inductive PreparedBatchSource (data : Slice U8) (env : module.Env) (profile : Va
       (rest : PreparedBatchSource data env profile bodyBytes localCount peak (index+1) next entries finish) :
       PreparedBatchSource data env profile bodyBytes localCount peak index start (entry::entries) finish
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

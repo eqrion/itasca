@@ -7,14 +7,14 @@ import Itasca.Runtime.Integration.Compilation.Complete
 Soundness, normal return and completeness of `runtime.compiler.compile_with` and
 `runtime.compiler.compile_default_with` for both complete validation profiles.
 
-Acceptance yields `Theorems.CompilationCertificate`: one independently encoded, elaborated, typed
-source module in the selected profile, related to the compiled code by `Theorems.ModuleCodeRel`
+Acceptance yields `Integration.CompilationCertificate`: one independently encoded, elaborated, typed
+source module in the selected profile, related to the compiled code by `Integration.ModuleCodeRel`
 (metadata, accessor types, function and initializer code, and decoded frame capacities). The code
 relations are syntactic; they assume no machine execution. The certificate lives with its
-construction in `Runtime/Theorems/Compilation.lean` because internal host-publication proofs use it.
+construction in `Runtime/Integration/Compilation/Certificate.lean` because internal host-publication proofs use it.
 
 Soundness and normal return need only `Platform.AllocCorrect`. Completeness additionally needs
-independent source validity, the source-only `Code.CompileEligible` envelope, and
+independent source validity, the source-only `Compiler.CompileEligible` envelope, and
 `Platform.AllocationAvailable`; see [Contracts](../Runtime/Contracts.lean).
 -/
 
@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Runtime
 
-open Itasca Theorems
+open Itasca Integration
 
 /-- Every accepted compilation constructs its source module and complete module code relation
 under the allocator law. Neither an accepted-body nor an opcode-subset premise is needed. -/
@@ -40,7 +40,7 @@ theorem runtime.compiler.compile_with.profile_spec {A} (ops : runtime.platform.A
     (limits : runtime.compiler.CompileLimits) :
     runtime.compiler.compile_with ops bytes profile limits ⦃ result =>
       ∀ executable, result = .Ok executable → CompilationCertificate bytes profile executable ⦄ := by
-  obtain ⟨result,run,_⟩ := WP.spec_imp_exists (Code.compile_with_total ops law bytes profile limits)
+  obtain ⟨result,run,_⟩ := WP.spec_imp_exists (Compiler.compile_with_total ops law bytes profile limits)
   rw [run,WP.spec_ok]
   intro executable accepted
   exact compile_accepted_certificate ops law bytes profile limits executable (by simpa only [accepted] using run)
@@ -52,7 +52,7 @@ theorem runtime.compiler.compile_default_with.profile_spec {A} (ops : runtime.pl
     runtime.compiler.compile_default_with ops bytes profile ⦃ result =>
       ∀ executable, result = .Ok executable → CompilationCertificate bytes profile executable ⦄ := by
   unfold runtime.compiler.compile_default_with
-  step with Code.compiler_default_limits_total as ⟨limits⟩
+  step with Compiler.compiler_default_limits_total as ⟨limits⟩
   step with runtime.compiler.compile_with.profile_spec ops law bytes profile limits as ⟨result,certificate⟩
   cases result with
   | Ok executable => simpa using certificate
@@ -69,8 +69,8 @@ configured limits. -/
 theorem runtime.compiler.compile_with.profile_complete {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : Code.ValidCompilationSource bytes profile raw)
-    (eligible : Code.CompileEligible A bytes profile raw limits bound) :
+    (limits : runtime.compiler.CompileLimits) (valid : Compiler.ValidCompilationSource bytes profile raw)
+    (eligible : Compiler.CompileEligible A bytes profile raw limits bound) :
     ∃ executable, runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable) ∧
       CompilationCertificate bytes profile executable :=
   compile_complete ops law bound allocation bytes profile raw limits valid eligible
@@ -80,8 +80,8 @@ certificate. -/
 theorem runtime.compiler.compile_with.profile_complete_spec {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : Code.ValidCompilationSource bytes profile raw)
-    (eligible : Code.CompileEligible A bytes profile raw limits bound) :
+    (limits : runtime.compiler.CompileLimits) (valid : Compiler.ValidCompilationSource bytes profile raw)
+    (eligible : Compiler.CompileEligible A bytes profile raw limits bound) :
     runtime.compiler.compile_with ops bytes profile limits ⦃ result =>
       ∃ executable, result = .Ok executable ∧ CompilationCertificate bytes profile executable ⦄ := by
   obtain ⟨executable,compiled,certificate⟩ := compile_complete ops law bound allocation bytes profile raw limits valid eligible

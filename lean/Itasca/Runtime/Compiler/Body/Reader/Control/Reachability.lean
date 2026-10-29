@@ -6,7 +6,7 @@ Every entered child was opened from a monomorphic suspended source parent. This 
 Main declarations: `ReaderParentReachability` and `ReaderReachability`. A direct consumer is `Compiler.Body.Reader.Control.BlockDormantPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Every entered child was opened from a monomorphic suspended source parent.
@@ -93,4 +93,4 @@ theorem ReaderReachability.pop {Saved : Type} {poly : Saved → Bool}
   exact parentMono (entered live)
 
 abbrev ReaderReachabilityWasm2 := ReaderReachability (fun saved : Wasm2.Frames.Saved => saved.ctrl.polymorphic_base)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

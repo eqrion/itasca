@@ -36,7 +36,7 @@ theorem full_store_source (address value : U128) (offset lane : U32) (bytes : Sl
   · rw [if_pos fits] at source effect ⊢
     obtain ⟨status,byteEffect⟩ := effect
     refine ⟨status,?_,source⟩
-    rw [byteEffect,vectorStoreBytes_source bytes.val ((UScalar.cast .U32 address).val+offset.val) value (16) fits]
+    rw [byteEffect,vector_store_bytes_source bytes.val ((UScalar.cast .U32 address).val+offset.val) value (16) fits]
     rfl
   · rw [if_neg fits] at source effect ⊢
     exact ⟨effect,source⟩

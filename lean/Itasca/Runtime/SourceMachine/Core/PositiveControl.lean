@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Instruction
 import Itasca.Runtime.SourceMachine.Core.Step
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem typed_loop_positive (s : store) (ambient : frame) (f : AFrame)
@@ -12,12 +12,12 @@ theorem typed_loop_positive (s : store) (ambient : frame) (f : AFrame)
   have frames := typed.frames
   cases frames with
   | cons hf hr =>
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨C, first, args, inputs, outputs, bindings, _, hop, hsplit, hargs, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop with
     | loop _ _ _ ins outs hbt hbody hC hi hnew =>
-      have hbt' := blockType_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
-      have hlen := resultsTyped_length hargs
+      have hbt' := block_type_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
+      have hlen := results_typed_length hargs
       have htypes := results_type_of_typed hargs
       have hheight : f.vals.length - inputs.length = first.length := by rw [hsplit, List.length_append, hlen]; omega
       have hbound : inputs.length ≤ f.vals.length := by rw [hsplit, List.length_append, hlen]; omega
@@ -25,9 +25,9 @@ theorem typed_loop_positive (s : store) (ambient : frame) (f : AFrame)
         rw [hheight, hsplit, List.drop_left]
         exact htypes
       have result := loop_simulation s ambient f rest after body first args bt inputs outputs
-        typed.store typed.ambient hw hl hfirst (resultsTyped_wf hargs)
-        (fun i hm => hc i (by simp [hm])) (framesTyped_wf hr) heights hi
-        (blockType_spec s f bt _ hbt') hlen
+        typed.store typed.ambient hw hl hfirst (results_typed_wf hargs)
+        (fun i hm => hc i (by simp [hm])) (frames_typed_wf hr) heights hi
+        (block_type_spec s f bt _ hbt') hlen
       have hnext : next = ⟨s, ambient,
           { f with code := body, labels := ⟨inputs, outputs, [.LOOP bt body], first.length, after⟩ :: f.labels } :: rest, []⟩ := by
         simpa [astep, enterLabel, hbt', hbound, htail, hheight, hsplit, hlen, htypes, advance] using step.symm
@@ -42,13 +42,13 @@ theorem typed_if_positive (s : store) (ambient : frame) (f : AFrame)
   have hf : FrameTyped s { f with code := .IFELSE bt yes no :: after } [] := by
     cases typed.frames with | cons h _ => exact h
   have hr : Forall FrameWf rest := by
-    cases typed.frames with | cons _ h => exact framesTyped_wf h
-  obtain ⟨hw, hl, hv, hc⟩ := frameTyped_wf hf
+    cases typed.frames with | cons _ h => exact frames_typed_wf h
+  obtain ⟨hw, hl, hv, hc⟩ := frame_typed_wf hf
   have hafter : Forall wf_instr after := fun i hm => hc i (by simp [hm])
   have hi : wf_instr (.IFELSE bt yes no) := hc (.IFELSE bt yes no) (by simp)
   obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
   cases hop
-  obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands
+  obtain ⟨args, conditions, rfl, hargs, hcond⟩ := results_typed_split hoperands
   cases hcond with
   | cons hvalue hend =>
     cases hend
@@ -58,7 +58,7 @@ theorem typed_if_positive (s : store) (ambient : frame) (f : AFrame)
     simp only [astep, hvals, pop_append, hbits, advance, AResult.next.injEq] at step
     rw [← step]
     have result := if_simulation s ambient f rest after (first ++ args) bits bt yes no
-      typed.store typed.ambient hw hl (forall_append hfirst (resultsTyped_wf hargs)) hafter hr
+      typed.store typed.ambient hw hl (forall_append hfirst (results_typed_wf hargs)) hafter hr
       (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi
     simpa only [← hvals] using result
 
@@ -70,8 +70,8 @@ theorem typed_br_if_positive (s : store) (ambient : frame) (f : AFrame)
   have hf : FrameTyped s { f with code := .BR_IF (.mk_uN depth) :: after } [] := by
     cases typed.frames with | cons h _ => exact h
   have hr : Forall FrameWf rest := by
-    cases typed.frames with | cons _ h => exact framesTyped_wf h
-  obtain ⟨hw, hl, hv, hc⟩ := frameTyped_wf hf
+    cases typed.frames with | cons _ h => exact frames_typed_wf h
+  obtain ⟨hw, hl, hv, hc⟩ := frame_typed_wf hf
   have hafter : Forall wf_instr after := fun i hm => hc i (by simp [hm])
   have hi : wf_instr (.BR_IF (.mk_uN depth)) := hc (.BR_IF (.mk_uN depth)) (by simp)
   have hi32 : depth < 2 ^ 32 := by
@@ -80,7 +80,7 @@ theorem typed_br_if_positive (s : store) (ambient : frame) (f : AFrame)
       | uN_case_0 _ bounds => norm_num at bounds ⊢; omega
   obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
   cases hop
-  obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands
+  obtain ⟨args, conditions, rfl, hargs, hcond⟩ := results_typed_split hoperands
   cases hcond with
   | cons hvalue hend =>
     cases hend
@@ -90,8 +90,8 @@ theorem typed_br_if_positive (s : store) (ambient : frame) (f : AFrame)
     simp only [astep, hvals, pop_append, hbits, advance, AResult.next.injEq] at step
     rw [← step]
     have result := br_if_simulation s ambient f rest after (first ++ args) bits depth
-      typed.store typed.ambient hw hl (forall_append hfirst (resultsTyped_wf hargs)) hafter hr
+      typed.store typed.ambient hw hl (forall_append hfirst (results_typed_wf hargs)) hafter hr
       (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi32
     simpa only [← hvals] using result
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

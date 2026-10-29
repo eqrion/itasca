@@ -17,7 +17,7 @@ Source-derived frame capacities through compiler entry, scheduler submission and
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Initializer lowering appends synthetic functions without changing any
@@ -42,7 +42,7 @@ theorem CompileSourceCertificate.initial_capacities {A : Type} {ops : runtime.pl
     (by simp [initialScheduler, alloc.vec.Vec.new])
   rw [prepared.2.2.1]
   apply PartialModuleCapacities.empty
-  rw [sourceFunctions_length (by rw [c.functions, c.codeCount]), c.functions]
+  rw [source_functions_length (by rw [c.functions, c.codeCount]), c.functions]
 
 theorem CompileSourceCertificate.capacities_of_submission {A : Type} {ops : runtime.platform.Alloc A}
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
@@ -54,7 +54,7 @@ theorem CompileSourceCertificate.capacities_of_submission {A : Type} {ops : runt
   have final : PartialModuleCapacities profile w.env (sourceFunctions c.raw) w.scheduler.functions.val := by
     simpa only [functions] using ledger
   exact w.defined_capacities law (final.complete w.functions.val (w.function_order law))
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -62,7 +62,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual batch run preserves the per-index ledger once its actual entry
@@ -119,7 +119,7 @@ theorem compiler_poll_capacities {A : Type} (allocator : runtime.platform.Alloc 
     PartialModuleCapacities profile env sources after.functions.val ∧ schedulerStatic after = schedulerStatic before := by
   rw [(compiler_poll_accepted allocator before after batch accepted).2]
   exact ⟨initial, rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -127,7 +127,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler's actual entry construction, issued batch validation, and
@@ -215,9 +215,9 @@ theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops :
   have certificate := w.compile_executable_capacity law reachable bounded origin signatureTable functionTable entry body
 
   refine ⟨entry.typeIdx, sourceFunctionCode entry.typeIdx rawEntry, typeFound,
-    sourceFunctions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
+    source_functions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
   simpa only [sourceFunctionCode, ModuleBinary.Code.declared, ModuleLocals.declared, groups, List.map_map, Function.comp_def] using certificate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -225,7 +225,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Captured module tables and the exact source-indexed certificate ledger
@@ -250,7 +250,7 @@ theorem SchedulerCapacity.transport {A : Type} {profile env sources}
     by simpa only [fields.2.1] using initial.functionSlots,
     by simpa only [fields.2.2] using initial.origin, functions⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -258,7 +258,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A submitted batch's real entry calls are certified against exactly its
@@ -333,7 +333,7 @@ theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_capacities ops current next worker ready.functions accepted
     exact ready.transport same functions
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -343,7 +343,7 @@ section
 
 /-! Source-ordered executablecapacities certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual successful compilation establishes all defined-function source
@@ -388,6 +388,6 @@ theorem compile_executable_capacities {A : Type} (ops : runtime.platform.Alloc A
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates, (w.initializers law).2.1⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

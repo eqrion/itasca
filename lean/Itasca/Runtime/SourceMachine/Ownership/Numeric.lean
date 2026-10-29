@@ -1,8 +1,8 @@
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Ownership.Bounds
 
-namespace Itasca.Runtime.Abs.Ownership
-open Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Ownership
+open Itasca.Runtime.SourceMachine.Numeric
 
 theorem finish_ownership {bound s f rest next after front op a b}
     (results : ValuesOwned bound s.results)
@@ -14,7 +14,7 @@ theorem finish_ownership {bound s f rest next after front op a b}
   split at step
   · contradiction
   · apply ownership_advance (step := step) results ?_ frames
-    exact ⟨locals, valuesOwned_append.mpr ⟨values, by simp [ValuesOwned, ValueOwned, integerVal]⟩⟩
+    exact ⟨locals, values_owned_append.mpr ⟨values, by simp [ValuesOwned, ValueOwned, integerVal]⟩⟩
 
 theorem transition_ownership {bound s f rest next after op}
     (results : ValuesOwned bound s.results)
@@ -38,4 +38,4 @@ theorem transition_ownership {bound s f rest next after op}
           split at step
           · contradiction
           · exact finish_ownership results frame.1 (frontBound.pop second).1 frames step
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

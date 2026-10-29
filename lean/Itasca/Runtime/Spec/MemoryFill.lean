@@ -13,7 +13,7 @@ namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
 def fillByte (value : Nat) : byte := .mk_byte (value % 256)
-theorem fillByte_wf (value : Nat) : wf_byte (fillByte value) := by
+theorem fill_byte_wf (value : Nat) : wf_byte (fillByte value) := by
   change wf_byte (.mk_byte (value % 256))
   constructor
   have := Nat.mod_lt value (by decide : 0 < 256)
@@ -28,7 +28,7 @@ theorem memory_write_i32_step (s : store) (f : frame) (position value : Nat)
     (inside : position < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
     StepH ⟨⟨s,f⟩,[i32 position,i32 value,storeByte]⟩ []
       ⟨⟨memoryWrite s f position (fillByte value),f⟩,[]⟩ := by
-  have fresh := memoryWrite_wf s f position (fillByte value) hs (fillByte_wf value)
+  have fresh := memory_write_wf s f position (fillByte value) hs (fill_byte_wf value)
   apply StepH.step
   apply Step.store_pack_val _ _ .I32 _ 8 zeroMemarg [fillByte value] _
   · simp [proj_num__0]
@@ -41,7 +41,7 @@ theorem memory_write_i32_step (s : store) (f : frame) (position value : Nat)
   · exact (fill_byte_encoding value).symm
   · apply wf_config_make hs hf
     simp only [Forall,List.mem_cons,List.not_mem_nil,false_implies,forall_const,and_true,forall_eq_or_imp]
-    exact ⟨i32_wf _ hp,i32_wf _ hv,storeByte_wf⟩
+    exact ⟨i32_wf _ hp,i32_wf _ hv,store_byte_wf⟩
   · exact wf_config_make fresh hf (by simp [Forall])
 
 theorem memory_fill_trap (s : store) (f : frame) (destination value count : Nat)
@@ -78,14 +78,14 @@ theorem memory_fill_expand (s : store) (f : frame) (destination value count : Na
     apply wf_config_make hs hf
     simp only [operands,List.cons_append,List.nil_append,Forall,List.mem_cons,List.not_mem_nil,
       false_implies,forall_const,and_true,forall_eq_or_imp]
-    exact ⟨i32_wf _ hd,i32_wf _ hv,storeByte_wf,i32_wf _ (next32_bound _),i32_wf _ hv,
+    exact ⟨i32_wf _ hd,i32_wf _ hv,store_byte_wf,i32_wf _ (next32_bound _),i32_wf _ hv,
       i32_wf _ (by omega),.admininstr_case_64⟩
   apply StepH.step
   apply Step.read _ _ _ ?_ input output
   have read := Step_read.memory_fill_succ ⟨s,f⟩ (.mk_num__0 .I32 (.mk_uN destination))
     (.CONST .I32 (.mk_num__0 .I32 (.mk_uN value))) (count+1) (.mk_uN (next32 destination)) zeroMemarg
-    (by simp [proj_num__0]) (next32_add destination) (.fun_memarg0_case_0 zeroMemarg_wf)
-    (Nat.succ_ne_zero count) inside input (i32_wf _ hd) storeByte_wf (i32_wf _ (next32_bound _))
+    (by simp [proj_num__0]) (next32_add destination) (.fun_memarg0_case_0 zero_memarg_wf)
+    (Nat.succ_ne_zero count) inside input (i32_wf _ hd) store_byte_wf (i32_wf _ (next32_bound _))
     (by simpa [i32] using i32_wf count (by omega)) .admininstr_case_64
   simpa [operands,i32,storeByte,admininstr_val] using read
 
@@ -100,15 +100,15 @@ theorem memory_fill_steps (s : store) (f : frame) (destination value count : Nat
     StepsH ⟨⟨s,f⟩,operands destination value count ++ [.MEMORY_FILL]⟩ []
       ⟨⟨memoryFill s f destination value count,f⟩,[]⟩ := by
   induction count generalizing s destination with
-  | zero => exact stepsH_single (memory_fill_zero s f destination value hs hf hd hv (by simpa using inside))
+  | zero => exact steps_h_single (memory_fill_zero s f destination value hs hf hd hv (by simpa using inside))
   | succ count ih =>
     let fresh := memoryWrite s f destination (fillByte value)
-    have hw := memoryWrite_wf s f destination (fillByte value) hs (fillByte_wf value)
-    have lengthEq := memoryWrite_mem_length s f destination (fillByte value) address
+    have hw := memory_write_wf s f destination (fillByte value) hs (fill_byte_wf value)
+    have lengthEq := memory_write_mem_length s f destination (fillByte value) address
     have afterWf := (wf_config_parts (init_config_wf fresh f (next32 destination) value count _ hw hf (next32_bound _) hv
       (by omega) .admininstr_case_64)).2
     have first := memory_fill_expand s f destination value count hs hf hd hv hn inside
-    have second := stepH_instrs (memory_write_i32_step s f destination value hs hf hd hv mapped (by omega)) []
+    have second := step_h_instrs (memory_write_i32_step s f destination value hs hf hd hv mapped (by omega)) []
       (operands (next32 destination) value count ++ [.MEMORY_FILL]) (by simp [Forall]) afterWf
     have rest := ih fresh (next32 destination) hw (next32_bound _) (by omega)
       (by simpa [fresh,memoryWrite] using address)
@@ -116,7 +116,7 @@ theorem memory_fill_steps (s : store) (f : frame) (destination value count : Nat
             (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length from lengthEq]
           have := next32_le destination
           omega)
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans (steps_h_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,memoryFill,fresh] using combined
 end Itasca.Runtime.Spec.Segment
 
@@ -129,7 +129,7 @@ section
 namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
-theorem memoryFill_eq (s : store) (f : frame) (destination value count : Nat)
+theorem memory_fill_eq (s : store) (f : frame) (destination value count : Nat)
     (address : f.MODULE.MEMS[0]! < s.MEMS.length)
     (memoryBound : (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length ≤ 2^32)
     (inside : destination+count ≤ (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
@@ -147,7 +147,7 @@ theorem memoryFill_eq (s : store) (f : frame) (destination value count : Nat)
       simp only [memoryFill,fillInto,memoryWrite]
     · have dstBound : destination+1 < 2^32 := by omega
       have dstNext : next32 destination = destination+1 := Nat.mod_eq_of_lt dstBound
-      have lengthEq := memoryWrite_mem_length s f destination (fillByte value) address
+      have lengthEq := memory_write_mem_length s f destination (fillByte value) address
       rw [memoryFill,dstNext,ih (memoryWrite s f destination (fillByte value)) (destination+1)
         (by simpa [memoryWrite] using address)
         (by simpa only [lengthEq] using memoryBound) (by rw [lengthEq]; omega)]

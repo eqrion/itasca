@@ -6,7 +6,7 @@ At a complete callback boundary, each retained fixup was paid for by an emitted 
 Main declarations: `FixupBudget`. A direct consumer is `Compiler.Local.Callbacks.Fixups.FixupPreservation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- At a complete callback boundary, each retained fixup was paid for by an
@@ -68,4 +68,4 @@ theorem FixupBudget.lookup {frames codeLength} (budget : FixupBudget frames code
     frame.fixups.val.length < Usize.max :=
   (budget frame (List.mem_of_getElem? selected)).trans_lt capacity
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

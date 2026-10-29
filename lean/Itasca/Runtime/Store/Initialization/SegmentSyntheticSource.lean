@@ -45,7 +45,7 @@ theorem segment_synthetic_source_causes {M P F A : Type}
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[function.val]? = some code)
     (ready : SegmentCodeReady store inst code code.slot_count.val)
-    (sourceCode : CodeInterpretation) (flow : Code.SegmentFlow 0 code.code.val)
+    (sourceCode : CodeInterpretation) (flow : Compiler.SegmentFlow 0 code.code.val)
     (compatible : ∀ instruction ∈ code.code.val, SegmentBulkCompatible store inst code instruction)
     (globals : ∀ index address value, .GlobalGet 0#u32 index ∈ code.code.val →
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some value → value.ty.valtype = .I32)
@@ -54,7 +54,7 @@ theorem segment_synthetic_source_causes {M P F A : Type}
     runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store ∧
         SyntheticPreparationCause allocator store code (.Exhausted reason)) ∨
-        SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Code.segmentSource code code.code.val⟩ []
+        SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Compiler.segmentSource code code.code.val⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩, match out.1 with | .Ok _ => [] | .Err _ => [.TRAP]⟩ ⦄ := by
   unfold runtime.interp.run_synthetic
   step with vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩

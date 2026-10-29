@@ -6,7 +6,7 @@ Successful emission determines the appended instruction without a separate capac
 Main declarations: `initializer_emit_success` and `initializer_offset_success`. A direct consumer is `Compiler.Local.Relations.Segments.SegmentData`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Successful emission determines the appended instruction without a separate
@@ -51,4 +51,4 @@ theorem initializer_offset_success {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨_, rfl, values, ?_⟩
     first | exact .i32 _ _ | exact .global _ _ (by intro h; cases h)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

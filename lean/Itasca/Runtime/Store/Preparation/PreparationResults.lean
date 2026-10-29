@@ -7,7 +7,7 @@ import Itasca.Runtime.Store.Api.MemoryStaging
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-theorem typeParts_inj {M : Type} (a b : runtime.store.Store M)
+theorem type_parts_inj {M : Type} (a b : runtime.store.Store M)
     (s t : core.result.Result Unit runtime.ExecError) (i j : runtime.store.ModuleInst) :
     typeParts a s i = typeParts b t j ↔ a = b ∧ s = t ∧ i = j := by
   cases i; cases j

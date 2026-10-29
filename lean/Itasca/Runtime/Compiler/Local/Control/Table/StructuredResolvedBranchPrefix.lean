@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredPrefix.resolved_branch {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals labels initial source start stack}
     {code : List Bytecode} {before after : List FixupTarget} {group : FixupTarget}
@@ -16,11 +16,11 @@ theorem StructuredPrefix.resolved_branch {jumpTables : List Aeneas.Std.U32} {emi
         (before ++ {group with sites := group.sites ++ [site]} :: after))
       labels initial (source ++ [.BR (.mk_uN depth)]) start
       (code.length + (branchInstructions dst src count group.target).length) := by
-  rw [resolvedCode_new_br code before after group dst src count old site position inside]
+  rw [resolved_code_new_br code before after group dst src count old site position inside]
   apply (prior.extend (branchInstructions dst src count group.target)).terminal
   apply StructuredDeadPrefix.branch lookup live layout
   rw [target]
   exact ⟨resolvedCode code (before ++ group :: after), [], by simp,
-    resolvedCode_length _ _, rfl⟩
+    resolved_code_length _ _, rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

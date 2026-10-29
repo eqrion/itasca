@@ -7,7 +7,7 @@ The initial reader boundary before body compilation.
 Main declarations: `ReaderBoundaryWasm2.initial`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedCompilerInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderBoundaryWasm2.initial (data : Slice U8) (env : module.Env)
@@ -27,4 +27,4 @@ theorem ReaderBoundaryWasm2.initial (data : Slice U8) (env : module.Env)
   · simpa [Wasm2.Frames.trace, Wasm2.Frames.Saved.trace, Wasm2.Frames.Saved.fresh,
       Wasm2.Frames.Form.opening, Wasm2.initial] using Wasm2.Consumed.nil (data := data) 0#usize (by simp)
   · simp [Wasm2.Frames.trace, Wasm2.Frames.Saved.trace, Wasm2.Frames.Saved.fresh, Wasm2.Frames.Form.opening]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

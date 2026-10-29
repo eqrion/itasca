@@ -4,13 +4,13 @@ import Itasca.Support.ControlTranslation
 import Itasca.Runtime.Representation.Values
 /-! Compiler signature capture: total exact word counting, retained source
 value/word arities, and source block-signature resolution. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def signatureSlots (types : List Itasca.types.ValueType) : Nat :=
   slots (types.map Itasca.Translate.valueType)
 
-theorem signatureSlots_eq (types : List Itasca.types.ValueType) :
+theorem signature_slots_eq (types : List Itasca.types.ValueType) :
     signatureSlots types = Interp.valueTypeSlots types := by
   have same : Itasca.Translate.valueType = Interp.sourceType := by
     funext ty
@@ -24,7 +24,7 @@ theorem signatureSlots_eq (types : List Itasca.types.ValueType) :
       | .Err error => error = .Host ∧ U32.max < signatureSlots types.val ⦄ := by
   unfold runtime.compiler.type_slots
   step with Interp.value_type_slots types as ⟨slots, hs⟩
-  rw [← signatureSlots_eq] at hs
+  rw [← signature_slots_eq] at hs
   have maxCast : (UScalar.cast .Usize core.num.U32.MAX).val = U32.max := by
     simp [core.num.U32.MAX, U32.rMax, U32.max, U32.numBits]
   cases slots with
@@ -102,4 +102,4 @@ The slot accumulator is total, and rejects only a width above the u32 bound. -/
         · simpa [signatureSlots, alloc.vec.Vec.deref] using hparams
         · simpa [signatureSlots, alloc.vec.Vec.deref] using hresults
       · simp [runtime.compiler.visitor_result]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

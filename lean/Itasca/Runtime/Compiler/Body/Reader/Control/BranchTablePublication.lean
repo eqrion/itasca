@@ -11,7 +11,7 @@ Actual Wasm 2 table decoding, selector handling and label collection retain publ
 Main declarations: `reader_table_publication_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.JumpTargets`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual Wasm 2 table decoding, selector handling and label collection retain
@@ -32,4 +32,4 @@ theorem reader_table_publication_wasm2 {A : Type} (ops : runtime.platform.Alloc 
     compiler_br_table_map_publication ops law {before with budget,table_depths := buffer} after final.core fallback
       types (maps.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) forward callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

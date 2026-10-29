@@ -12,7 +12,7 @@ Actual source-typed local get reading preserves every stored instruction check.
 Main declarations: `reader_local_get_open_instructions_wasm2` and `reader_memory_store_open_instructions_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed local get reading preserves every stored instruction check. -/
@@ -37,7 +37,7 @@ theorem reader_local_get_open_instructions_wasm2 {data env locals typeIndex st}
     reader_emit_local_get_wasm2 p ops law before after out ctx contextLocals localsMatch types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_local_get_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed local set reading preserves every stored instruction check. -/
 theorem reader_local_set_open_instructions_wasm2 {data env locals typeIndex st}
@@ -62,7 +62,7 @@ theorem reader_local_set_open_instructions_wasm2 {data env locals typeIndex st}
   have tables := (reader_local_set_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
   rw [input] at layout
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed local tee reading preserves every stored instruction check. -/
 theorem reader_local_tee_open_instructions_wasm2 {data env locals typeIndex st}
@@ -87,7 +87,7 @@ theorem reader_local_tee_open_instructions_wasm2 {data env locals typeIndex st}
   have tables := (reader_local_tee_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
   rw [input] at layout
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed global get reading preserves every stored instruction check. -/
 theorem reader_global_get_open_instructions_wasm2 {data env locals typeIndex st}
@@ -112,7 +112,7 @@ theorem reader_global_get_open_instructions_wasm2 {data env locals typeIndex st}
     reader_emit_global_get_wasm2 p ops law before after out ctx contextLocals C localsMatch globalsMatch types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_global_get_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed global set reading preserves every stored instruction check. -/
 theorem reader_global_set_open_instructions_wasm2 {data env locals typeIndex st}
@@ -138,7 +138,7 @@ theorem reader_global_set_open_instructions_wasm2 {data env locals typeIndex st}
   have tables := (reader_global_set_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed select reading preserves every stored instruction check. -/
 theorem reader_select_open_instructions_wasm2 {data env locals typeIndex st}
@@ -163,7 +163,7 @@ theorem reader_select_open_instructions_wasm2 {data env locals typeIndex st}
   have tables := (reader_select_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable localsMatch.symm emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed memory load reading preserves every stored instruction check. -/
 theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
@@ -171,7 +171,7 @@ theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Memory.Load) (C : context)
+    (op : SourceMachine.Memory.Load) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -189,7 +189,7 @@ theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
     reader_emit_memory_load_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode contextMemories known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_memory_load_effects_wasm2 ops law before after _ out data env ctx _ op accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual source-typed memory store reading preserves every stored instruction check. -/
 theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
@@ -197,7 +197,7 @@ theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Memory.Store) (C : context)
+    (op : SourceMachine.Memory.Store) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -215,6 +215,6 @@ theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
     reader_emit_memory_store_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode contextMemories known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_memory_store_effects_wasm2 ops law before after _ out data env ctx _ op accepted).tables
   rw [input] at layout
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable contextLocalsCode emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

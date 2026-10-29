@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Execution.World.RecordedStep
 import Itasca.Runtime.Integration.Execution.Resources.FailureNormalization
 import Itasca.Runtime.Interp.Relations.EventfulNormalize
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Unbundled source-indexed form of the world result, used while erased
@@ -12,7 +12,7 @@ def WorldSourceStepResult {M P F A : Type}
     {view : M → Slice U8} (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (code : Store.CodeInterpretation) (expected : List valtype)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (source : Abs.AState) (pc : Nat) (pending : Bool) (out : EventfulDispatchResult M P) : Prop :=
+    (source : SourceMachine.AState) (pc : Nat) (pending : Bool) (out : EventfulDispatchResult M P) : Prop :=
   match out.1 with
   | .Ok _ => ∃ next : EventfulWorld M P view expected,
       Inv next.code next.machine.store ∧ out=(.Ok (),next.machine.exec,next.machine.store,next.machine.platform) ∧
@@ -25,7 +25,7 @@ def WorldSourceStepResult {M P F A : Type}
       Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧
       FrameStorePrefix store out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧
       Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode out.2.2.1) ∧
-      EventfulInvocationError (Abs.decode source) (stepHostEvents exec store out)
+      EventfulInvocationError (SourceMachine.decode source) (stepHostEvents exec store out)
         (Store.decodeStore view afterCode out.2.2.1) source.ambient error ∧
       ((CumulativeFailure allocator hooks exec store platform source error ∧
         Store.decodeStore view code out.2.2.1=source.store) ∨
@@ -70,16 +70,16 @@ theorem WorldSourceStepResult.prepend_normalization {M P F A : Type}
     {view : M → Slice U8} {expected : List valtype}
     {Inv : Store.CodeInterpretation → runtime.store.Store M → Prop} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
-    {count pc : Nat} {s : _root_.store} {ambient : frame} {before middle : Abs.AFrame} {rest : List Abs.AFrame}
+    {count pc : Nat} {s : _root_.store} {ambient : frame} {before middle : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     {out : EventfulDispatchResult M P}
     (chain : ErasedSteps count before middle)
-    (typed : Abs.ATyped ⟨s,ambient,before::rest,[]⟩)
+    (typed : SourceMachine.ATyped ⟨s,ambient,before::rest,[]⟩)
     (result : WorldSourceStepResult (view:=view)
       memory hooks floats allocator Inv code expected exec store platform ⟨s,ambient,middle::rest,[]⟩ pc false out) :
     WorldSourceStepResult (view:=view)
       memory hooks floats allocator Inv code expected exec store platform ⟨s,ambient,before::rest,[]⟩ pc false out := by
   have normalized := chain.sound s ambient rest typed
-  have prefixSteps : StepsH (Abs.decode ⟨s,ambient,before::rest,[]⟩) [] (Abs.decode ⟨s,ambient,middle::rest,[]⟩) := by
+  have prefixSteps : StepsH (SourceMachine.decode ⟨s,ambient,before::rest,[]⟩) [] (SourceMachine.decode ⟨s,ambient,middle::rest,[]⟩) := by
     rcases normalized.2 with ⟨rank,same⟩ | simulation
     · simpa only [same] using StepsH.refl typed.decode_wf
     · rcases simulation with ⟨same,decrease⟩ | ⟨n,positive,steps⟩
@@ -99,4 +99,4 @@ theorem WorldSourceStepResult.prepend_normalization {M P F A : Type}
     · rcases cause with ⟨failure,decoded⟩ | host
       · exact Or.inl ⟨failure.prepend_normalization chain typed,decoded⟩
       · exact Or.inr (host.prepend prefixSteps rfl rfl)
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

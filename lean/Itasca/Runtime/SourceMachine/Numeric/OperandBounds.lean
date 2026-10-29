@@ -1,8 +1,7 @@
 import Itasca.Runtime.SourceMachine.Numeric.OperandsCore
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Sim.Typed
-
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
  theorem Instruction.typed_operands_bounds (op : Instruction) {s : store} {f : AFrame}
     {after : List instr} (typed : FrameTyped s { f with code := op.source :: after } []) :
@@ -29,4 +28,4 @@ open SpecExt Itasca.Runtime.Spec
         obtain ⟨wa, hwa⟩ := word_exists _ a ha
         exact ⟨first, wa, wa, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa] using hsplit, hfirst, heights⟩
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

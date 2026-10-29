@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixPop
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An unentered source subtree emits no executable body. Its enclosing
@@ -74,13 +74,13 @@ theorem StructuredUniversalTerminal.open_dormant {jumpTables : List Aeneas.Std.U
       have prior : StructuredDeadPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val pending)
           (parentLabel :: outerLabels) current.input current.source current.bodyPc
           (resolvedCode before.function.code.val pending).length := by
-        simpa only [resolvedCode_length] using prefixCode
+        simpa only [resolved_code_length] using prefixCode
       rw [resolve]
       apply StructuredParentPrefixes.push saved parentLabel child parentShape
-      · simp [entry, resolvedCode_length]
+      · simp [entry, resolved_code_length]
       · unfold StructuredParentPrefix
         simp only [parentEntered, childEntered, ite_true, Bool.false_eq_true, ite_false]
-        simpa only [entry, resolvedCode_length] using prior.suspend
+        simpa only [entry, resolved_code_length] using prior.suspend
 
 theorem StructuredUniversalDormant.open_dormant {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current}
@@ -120,7 +120,7 @@ theorem StructuredUniversalDormant.open_dormant {jumpTables : List Aeneas.Std.U3
       have saved := invariant.prefixes parentLabel outerLabels pending oldPlans parentShape parentShapes
       rw [resolve]
       apply StructuredParentPrefixes.push saved parentLabel child parentShape
-      · simp [entry, resolvedCode_length]
+      · simp [entry, resolved_code_length]
       · simp [StructuredParentPrefix, invariant.unentered]
 
 /-- Closing an unentered child restores the terminal prefix of its entered
@@ -140,7 +140,7 @@ theorem StructuredUniversalDormant.close_terminal {jumpTables : List Aeneas.Std.
   refine ⟨localsEq, sites, ?_⟩
   intro parentLabel labels groups plans parentShape parentShapes
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, resolvedCode_length]
+    simp [codeEq, resolved_code_length]
   have outer : FramePlans before.function.code.val.length locals after.frames.val (parentLabel :: labels) groups := by
     simpa only [lengthEq] using plans
   have oldParentShape : ScopeLabel parent parentLabel :=
@@ -153,9 +153,9 @@ theorem StructuredUniversalDormant.close_terminal {jumpTables : List Aeneas.Std.
   obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
   have restored := parentSaved.close_unentered parentEntered invariant.unentered instruction
   refine ⟨?_, ?_⟩
-  · rw [codeEq, ← resolvedCode_append_groups]
+  · rw [codeEq, ← resolved_code_append_groups]
     exact outerSaved.advance_current instruction
-  · simpa only [codeEq, ← resolvedCode_append_groups, resolvedCode_length,
+  · simpa only [codeEq, ← resolved_code_append_groups, resolved_code_length,
       SourceScope.advance, SourceScope.input] using restored
 
 /-- If the parent was itself unentered, closing its child preserves that
@@ -175,7 +175,7 @@ theorem StructuredUniversalDormant.close_dormant {jumpTables : List Aeneas.Std.U
   refine ⟨parentEntered, localsEq, sites, ?_⟩
   intro parentLabel labels groups plans parentShape parentShapes
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, resolvedCode_length]
+    simp [codeEq, resolved_code_length]
   have outer : FramePlans before.function.code.val.length locals after.frames.val (parentLabel :: labels) groups := by
     simpa only [lengthEq] using plans
   have oldParentShape : ScopeLabel parent parentLabel :=
@@ -186,8 +186,8 @@ theorem StructuredUniversalDormant.close_dormant {jumpTables : List Aeneas.Std.U
     simpa using List.Forall₂.cons oldParentShape parentShapes
   have saved := invariant.prefixes label (parentLabel :: labels) _ allPlans shape allShapes
   obtain ⟨outerSaved, _, _, _⟩ := saved.pop
-  rw [codeEq, ← resolvedCode_append_groups]
+  rw [codeEq, ← resolved_code_append_groups]
   exact outerSaved.advance_current instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

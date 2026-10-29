@@ -13,7 +13,7 @@ Open-instruction and checked-prefix preservation for typed-select reader steps.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed select uses the source-selected width for its instruction check. -/
@@ -39,13 +39,13 @@ theorem reader_typed_select_open_instructions_wasm2 {data env locals index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   change runtime.compiler.lower.FunctionCompiler.op ops before out.core 28#u16 0#u32 0#u32 0#u128 = _ at callback
   have tables := compiler_core_tables ops law before after out.core (.select true) callback
-  have growth := lowered.1.instructionCheckExtends tables
+  have growth := lowered.1.instruction_check_extends tables
   rw [input] at layout
-  exact ⟨lowered.1.executableInstructionPrefix layout reachable localsMatch.symm
+  exact ⟨lowered.1.executable_instruction_prefix layout reachable localsMatch.symm
     (.typedSelect emission) (by intro depths fallback same; cases same) growth held stable.frames,
     exits.retained (congrArg alloc.vec.Vec.val stable.frames) stable.capacity⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -53,7 +53,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed select preserves both invariants for either source reachability bit;
@@ -91,6 +91,6 @@ theorem reader_typed_select_checked_prefix_wasm2 {jumpTables : List U32} {data e
     exact compiler_dead_op_checked_prefix ops law before after out.core 28#u16 0#u32 0#u32 0#u128
       (Bool.eq_false_iff.mpr live) held exits callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

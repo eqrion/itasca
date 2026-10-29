@@ -33,7 +33,7 @@ theorem instantiate_compiled_precommit_origins {M P F A : Type}
       .ok (.Err error, staged, host, false)) :
     PrecommitError profile error ∧ host = platform ∧ StagedPrefix before staged ∧
       PrecommitOrigins memory view before staged module imports error := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
@@ -81,7 +81,7 @@ theorem instantiate_compiled_precommit_resource_causes {M P F A : Type}
       .ok (.Err error, staged, host, false)) :
     host = platform ∧ StagedPrefix before staged ∧
       PrecommitResourceEvidence memory hooks floats allocator before module imports platform error := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law

@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Invariant.CheckedValues
 /-! Lookup evidence for an owned public function handle. This API-layer evidence
 is shared by correspondence, typing and divergence; representation foundations
 remain independent of public invocation setup. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- The function and signature selected by one public function handle. -/
@@ -28,4 +28,4 @@ def ExecutableInv.call_entry {M : Type} {view : M → Slice U8}
   have signatureBound : function.signature.val < store.types.val.length :=
     (valid.shape.functions function (List.mem_of_getElem? hf)).1
   exact ⟨function,store.types.val[function.signature.val],hf,List.getElem?_eq_getElem signatureBound,signatureBound⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

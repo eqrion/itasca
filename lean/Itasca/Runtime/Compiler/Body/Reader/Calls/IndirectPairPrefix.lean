@@ -6,7 +6,7 @@ The compiler index-pair prefix of an indirect-call reader step.
 Main declarations: `reader_indirect_call_pair_prefix_wasm2`. A direct consumer is `Compiler.Body.Control.Table.IndexedTablePointIndirectCall`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals typeIndex st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals typeIndex st) {A : Type}
@@ -49,4 +49,4 @@ theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env
       rw [frame]; simp
     exact ⟨[],pairs⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

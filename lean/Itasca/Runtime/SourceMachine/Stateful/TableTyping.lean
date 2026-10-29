@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
 import Itasca.Runtime.SourceMachine.Core.MemoryTyping
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def tableElementType : tabletype → reftype
@@ -83,4 +83,4 @@ theorem memory_pages_bound {s : store} (contents : StoreContentsTyped s) {object
       norm_num at bound
       exact bound
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

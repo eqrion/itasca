@@ -2,26 +2,26 @@ import Itasca.Runtime.Integration.Execution.Dispatch.HostSite
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
 import Itasca.Runtime.Interp.Relations.StepRecordingInversion
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem HostFrameSite.indirect_recording_boundary {M : Type}
 
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (table type : U32) (after : List instr)
     (site : HostFrameSite view code exec store expected ambient
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest)
-    [StructuredMachine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
+    [Machine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
     (shaped : Store.Shape view store) (address : runtime.FuncAddr)
     (selected : hostStepAddress exec store=some address) :
     SourceIndirectHostBoundary store ⟨Store.decodeStore view code store,ambient,
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ := by
-  have frameTyped : Abs.FrameTyped (Store.decodeStore view code store) {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
+  have frameTyped : SourceMachine.FrameTyped (Store.decodeStore view code store) {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
     cases site.machine.typed.typed.frames with | cons head _ => exact head
-  rcases StructuredMachine.indirect_values_head table.val type.val after site.point frameTyped with skip | actual
+  rcases Machine.indirect_values_head table.val type.val after site.point frameTyped with skip | actual
   · obtain ⟨target,forward,fetch,tail⟩ := skip
-    rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+    rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
     simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
   · obtain ⟨front,args,params,results,position,typeIndex,tableIndex,entry,selector,offset,bounds,typeEq,tableEq,values,bounded,arguments,argumentTypes,heights,caller,
       signature,tableType,pair,basePosition,indexPosition,fetch,tail⟩ := actual
@@ -30,7 +30,7 @@ theorem HostFrameSite.indirect_recording_boundary {M : Type}
     subst typeIndex
     subst tableIndex
     have moduleEq : f.module=Store.decodeInstance store site.inst := site.moduleEq
-    have bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store site.inst) site.context := by
+    have bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store site.inst) site.context := by
       simpa only [moduleEq] using site.point.bindings
     obtain ⟨signatureIndex,rawSignature,tableAddress,object,signatureMapped,signatureFound,signatureEq,tableMapped,tableFound,funcref,typeLookup,tableLookup⟩ :=
       indirect_bindings_raw view code store site.inst f.toFrame site.context shaped (List.mem_of_getElem? site.instanceAt) bindings moduleEq type table _ bounds signature tableType
@@ -38,9 +38,9 @@ theorem HostFrameSite.indirect_recording_boundary {M : Type}
     have wordAt : exec.slots.val[site.raw.base.val+selector.val]?=some exec.slots.val[site.raw.base.val+selector.val]! := by
       rw [getElem!_pos exec.slots.val (site.raw.base.val+selector.val) selectorBound]
       exact List.getElem?_eq_getElem selectorBound
-    rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+    rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
     obtain ⟨reference,function,host,referenceAt,nonzero,word,addressStore,functionAt,sameSignature,hostCode⟩ :=
-      hostInstructionAddress_indirect_inv exec store site.raw site.inst site.compiled entry selector offset table type tableAddress object exec.slots.val[site.raw.base.val+selector.val]! signatureIndex
+      host_instruction_address_indirect_inv exec store site.raw site.inst site.compiled entry selector offset table type tableAddress object exec.slots.val[site.raw.base.val+selector.val]! signatureIndex
         pair tableMapped tableFound wordAt signatureMapped address selected
     have castEq := shaped.table_function_reference_cast object (List.mem_of_getElem? tableFound) funcref _ reference referenceAt
     have fullWord : reference.val=address.index.val+1 := castEq.symm.trans word
@@ -55,41 +55,41 @@ theorem HostFrameSite.indirect_recording_boundary {M : Type}
 theorem HostFrameSite.direct_recording_instruction {M : Type}
 
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (index : U32) (after : List instr)
     (site : HostFrameSite view code exec store expected ambient
       {f with code:=.CALL (.mk_uN index.val)::after} rest)
-    [StructuredMachine.OrdinaryHeads (emission site.compiled)]
+    [Machine.OrdinaryHeads (emission site.compiled)]
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
     DirectHostInstruction store site.raw site.inst site.compiled (.CALL (.mk_uN index.val)) := by
-  rcases StructuredMachine.codeRel_call_inv index site.point.code.current with skip | actual
+  rcases Machine.code_rel_call_inv index site.point.code.current with skip | actual
   · obtain ⟨target,forward,fetch,tail⟩ := skip
-    rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+    rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
     simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
   · obtain ⟨front,params,results,base,values,signature,offset,fetch,tail⟩ := actual
-    rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
-    obtain ⟨function,host,addressAt,functionAt,hostCode⟩ := hostInstructionAddress_direct_inv exec store site.raw site.inst site.compiled index base address selected
+    rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+    obtain ⟨function,host,addressAt,functionAt,hostCode⟩ := host_instruction_address_direct_inv exec store site.raw site.inst site.compiled index base address selected
     exact ⟨index,base,address,function,host,rfl,fetch,addressAt,functionAt,hostCode⟩
 
 theorem HostFrameSite.recording_ready {M : Type}
 
-    [∀compiled,StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀compiled,StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀compiled,StructuredMachine.RecordingHeads (emission compiled)]
+    [∀compiled,Machine.OrdinaryHeads (emission compiled)]
+    [∀compiled,Machine.IndirectProjection (emission compiled) compiled.indirect.val]
+    [∀compiled,Machine.RecordingHeads (emission compiled)]
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (op : instr) (after : List instr)
     (site : HostFrameSite view code exec store expected ambient {f with code:=op::after} rest)
     (ready : ReadyInstruction op) (shaped : Store.Shape view store)
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
     StructuredHostSite view code exec store expected site.raw.pc.val false
       ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ := by
-  obtain ⟨instruction,fetch,selectedHead⟩ := hostStepAddress_instruction exec store site.index site.raw site.inst site.compiled
+  obtain ⟨instruction,fetch,selectedHead⟩ := host_step_address_instruction exec store site.index site.raw site.inst site.compiled
     site.last site.frameAt site.instanceAt site.compiledAt address selected
-  have calls := hostInstructionAddress_callTag exec store site.raw site.inst site.compiled instruction address selectedHead
-  rcases StructuredMachine.code_recording_source ready site.point.code.current fetch calls with direct | indirect
+  have calls := host_instruction_address_call_tag exec store site.raw site.inst site.compiled instruction address selectedHead
+  rcases Machine.code_recording_source ready site.point.code.current fetch calls with direct | indirect
   · obtain ⟨index,rfl⟩ := direct
     exact .ready site (Or.inl (site.direct_recording_instruction index after address selected))
   · obtain ⟨table,type,rfl⟩ := indirect
     exact .ready site (Or.inr ⟨table,type,rfl,site.indirect_recording_boundary table type after shaped address selected⟩)
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

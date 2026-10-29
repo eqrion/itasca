@@ -21,8 +21,8 @@ theorem shift_packed (ty : Jnn) (kind : ShiftKind) (x result : U128) (amount : U
     (fun j => (shiftBits kind (laneBits (lsize (lanetype_Jnn ty)) j x.bv)
       (amount.val % lsize (lanetype_Jnn ty))).toNat) (by
       intro j valid
-      rw [←laneBits_toNat,lanes j valid])
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+      rw [←lane_bits_to_nat,lanes j valid])
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   with_unfolding_all exact congrArg uN.mk_uN packed.symm
 
 @[step] theorem shift_lanes_sound (ty : Jnn) (kind : ShiftKind) (x y : U128) :

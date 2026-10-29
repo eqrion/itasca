@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackElse
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Ordinary END resolves forward branches and removes the inner physical
@@ -37,7 +37,7 @@ theorem ScopeFrameStack.close_guard {A : Type} {locals parents parent current}
   apply stack.pop frame frames
   intro scope other member shape
   apply shape.transport maps
-  · simp [code, patchCode_length]
+  · simp [code, patch_code_length]
   · rw [code]
     exact (shape.entryCode.set_guard guard condition old target found
       (shape.toScopeFrameShape.guard_distinct guard (distinct other member))).patch_branches patchedSites target
@@ -65,4 +65,4 @@ theorem ScopeFrameStack.begin_else_dormant {A : Type} {locals parents current}
   change current.entry ≤ noEntry.val
   rw [position]
   exact shape.entryBound
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

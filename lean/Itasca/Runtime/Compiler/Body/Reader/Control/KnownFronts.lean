@@ -7,7 +7,7 @@ Entered scopes retain concrete saved operands even when the current unreachable 
 Main declarations: `ScopeConcreteFronts` and `ReaderKnownFronts`. A direct consumer is `Compiler.Body.Reader.Control.ElseEnteredPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Entered scopes retain concrete saved operands even when the current
@@ -66,4 +66,4 @@ theorem ReaderKnownFronts.pop {parents parent current values segment}
     (instruction : instr) : ReaderKnownFronts parents (parent.advance instruction) values := by
   obtain ⟨prior, known⟩ := fronts.prior.pop
   exact ⟨prior, known⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

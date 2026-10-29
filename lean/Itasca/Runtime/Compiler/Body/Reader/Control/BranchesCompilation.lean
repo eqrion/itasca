@@ -30,7 +30,7 @@ Direct and conditional branch prefixes and structured compilation. Live/dormant 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The accepted callback realizes the selected source branch, for both forward
@@ -95,7 +95,7 @@ theorem StructuredCompilerPrefix.br_dead {jumpTables : List Aeneas.Std.U32} {A :
   have deadAfter : after.reachable = false := by rw [frame]; exact dead
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip _ dead deadAfter ordinary code sources consumed (by rw [cursor]), deadAfter⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -103,7 +103,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.br_if_live {jumpTables : List Aeneas.Std.U32} {A : Type} (ops : runtime.platform.Alloc A)
@@ -180,7 +180,7 @@ theorem StructuredCompilerPrefix.br_if_dead {jumpTables : List Aeneas.Std.U32} {
   change ObserveFrame before after at frame
   have code : after.function.code = before.function.code := by rw [frame]
   exact ⟨invariant.skip _ dead (reach.trans dead) ordinary code sources consumed (by rw [cursor]), reach⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -188,7 +188,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_br_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -216,7 +216,7 @@ theorem structured_reader_prefix_br_wasm2 {jumpTables : List U32} {data env sour
     exact invariant.br_live ops law out.core consumed reachable depth view scope selected discarded input callback
   · exact invariant.br_dead ops law out.core consumed (Bool.eq_false_iff.mpr reachable) depth view callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -224,7 +224,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -255,7 +255,7 @@ theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env s
       ((Nat.le_of_lt p.inbounds).trans sourceBound) callback
   · exact invariant.br_if_dead ops law out.core consumed (Bool.eq_false_iff.mpr reachable) depth view callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -263,7 +263,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.br {jumpTables : List U32} {A : Type}
@@ -307,6 +307,6 @@ theorem StructuredReaderCompilerStateWasm2.br_if {jumpTables : List U32} {A : Ty
     (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled
     (fun live => state.reach.current (reach.symm.trans live))⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

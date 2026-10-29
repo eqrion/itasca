@@ -12,7 +12,7 @@ SIMD step invariant preservation, combining constants and memory operations with
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec Ownership
 
 theorem numeric_value_owned {value : val} {output : valtype}
@@ -40,15 +40,15 @@ theorem transition_owned {s : store} {ambient : frame} {f : AFrame}
     have active := owned.values.2 _ (List.mem_cons_self ..)
     change FrameOwned bounds f at active
     change f.vals = front ++ operands at values
-    refine ⟨⟨valuesOwned_nil _,?_⟩,owned.heap⟩
+    refine ⟨⟨values_owned_nil _,?_⟩,owned.heap⟩
     intro item member
     simp only [List.mem_cons] at member
     rcases member with rfl | member
-    · refine ⟨active.1,valuesOwned_append.mpr ⟨?_,?_⟩⟩
+    · refine ⟨active.1,values_owned_append.mpr ⟨?_,?_⟩⟩
       · have before := active.2
         rw [values] at before
-        exact (valuesOwned_append.mp before).1
-      · exact valuesOwned_cons.mpr ⟨numeric_value_owned signature.output_numeric effect.2 bounds,valuesOwned_nil _⟩
+        exact (values_owned_append.mp before).1
+      · exact values_owned_cons.mpr ⟨numeric_value_owned signature.output_numeric effect.2 bounds,values_owned_nil _⟩
     · exact owned.values.2 item (List.mem_cons_of_mem _ member)
 
 theorem transition_core_typed {s : store} {ambient : frame} {f : AFrame}
@@ -74,7 +74,7 @@ theorem transition_bound {s : store} {ambient : frame} {f : AFrame}
     have size : sizeOf after < sizeOf (source :: after) := by simp
     exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end
 
@@ -82,7 +82,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec Ownership
 
 def constant (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) (value : vec_) : AState :=
@@ -94,13 +94,13 @@ theorem constant_frame_preservation {s : store} {f : AFrame} {after : List instr
     FrameTyped s {f with code := after, vals := f.vals ++ [.VCONST .V128 value]} [] := by
   cases typed with
   | mk C bindings localTypes locals values returns code contextWf =>
-    have instructionWf := codeStack_wf code (.VCONST .V128 value) (by simp)
+    have instructionWf := code_stack_wf code (.VCONST .V128 value) (by simp)
     have resultWf : wf_val (.VCONST .V128 value) := by
       cases instructionWf
       constructor <;> assumption
     simp only [List.append_nil] at code
     obtain ⟨prefixTypes, ins, outs, instruction, stack, continuation⟩ :=
-      codeStack_after (value_types_concrete f.vals) code
+      code_stack_after (value_types_concrete f.vals) code
     cases instruction
     simp only [List.append_nil] at stack
     have resultTyped := Val_ok.vectype s .V128 value storeWf resultWf
@@ -125,12 +125,12 @@ theorem constant_simulation {s : store} {ambient : frame} {f : AFrame}
       (constant ⟨s,ambient,{f with code := .VCONST .V128 value :: after} :: rest,[]⟩ f rest after value) := by
   have hf : FrameTyped s {f with code := .VCONST .V128 value :: after} [] := by
     cases typed.frames with | cons h _ => exact h
-  have heights := frameTyped_heights hf
+  have heights := frame_typed_heights hf
   apply Or.inl
   constructor
   · simp only [constant,decode,decodeFrames,vals,List.map_nil,List.nil_append,
       AFrame.toFrame,List.map_cons,admininstr_instr]
-    rw [decodeLabels_move_values _ _ _ _ heights]
+    rw [decode_labels_move_values _ _ _ _ heights]
     rfl
   · simp [constant,administrativeMeasure]
 
@@ -138,12 +138,12 @@ theorem constant_owned {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {value : vec_} {bounds}
     (owned : StatefulOwned bounds ⟨s,ambient,{f with code := .VCONST .V128 value :: after} :: rest,[]⟩) :
     StatefulOwned bounds (constant ⟨s,ambient,{f with code := .VCONST .V128 value :: after} :: rest,[]⟩ f rest after value) := by
-  refine ⟨⟨valuesOwned_nil _,?_⟩,owned.heap⟩
+  refine ⟨⟨values_owned_nil _,?_⟩,owned.heap⟩
   intro item member
   simp only [constant,List.mem_cons] at member
   rcases member with rfl | member
   · have active := owned.values.2 _ (List.mem_cons_self ..)
-    exact ⟨active.1,valuesOwned_append.mpr ⟨active.2,by simp [ValuesOwned,ValueOwned]⟩⟩
+    exact ⟨active.1,values_owned_append.mpr ⟨active.2,by simp [ValuesOwned,ValueOwned]⟩⟩
   · exact owned.values.2 item (List.mem_cons_of_mem _ member)
 
 theorem constant_bound {s : store} {ambient : frame} {f : AFrame}
@@ -156,7 +156,7 @@ theorem constant_bound {s : store} {ambient : frame} {f : AFrame}
   have size : sizeOf after < sizeOf (instr.VCONST .V128 value :: after) := by simp
   exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end
 
@@ -164,7 +164,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec Ownership
 
 theorem MemorySignature.results_owned {source inputs outputs}
@@ -177,11 +177,11 @@ theorem MemorySignature.results_owned {source inputs outputs}
     | cons value tail =>
       simp only [List.map_cons,List.cons.injEq,List.map_eq_nil_iff] at types
       rcases types with ⟨typeEq,rfl⟩
-      exact valuesOwned_cons.mpr ⟨numeric_value_owned (Or.inl rfl) typeEq bounds,valuesOwned_nil _⟩
+      exact values_owned_cons.mpr ⟨numeric_value_owned (Or.inl rfl) typeEq bounds,values_owned_nil _⟩
   cases signature
   all_goals first
     | exact vectorResults types
-    | have empty := List.map_eq_nil_iff.mp types; subst values; exact valuesOwned_nil _
+    | have empty := List.map_eq_nil_iff.mp types; subst values; exact values_owned_nil _
 
 theorem MemoryChange.heap_owned {before frame after bounds}
     (change : MemoryChange before frame after) (owned : StatefulHeapOwned bounds before) :
@@ -200,14 +200,14 @@ theorem memory_transition_owned {s : _root_.store} {ambient : frame} {f : AFrame
     have active := owned.values.2 _ (List.mem_cons_self ..)
     change FrameOwned bounds f at active
     change f.vals = front ++ operands at values
-    refine ⟨⟨valuesOwned_nil _,?_⟩,change.heap_owned owned.heap⟩
+    refine ⟨⟨values_owned_nil _,?_⟩,change.heap_owned owned.heap⟩
     intro item member
     simp only [List.mem_cons] at member
     rcases member with rfl | member
-    · refine ⟨active.1,valuesOwned_append.mpr ⟨?_,signature.results_owned resultTypes bounds⟩⟩
+    · refine ⟨active.1,values_owned_append.mpr ⟨?_,signature.results_owned resultTypes bounds⟩⟩
       have before := active.2
       rw [values] at before
-      exact (valuesOwned_append.mp before).1
+      exact (values_owned_append.mp before).1
     · exact owned.values.2 item (List.mem_cons_of_mem _ member)
 
 theorem memory_transition_bound {s : _root_.store} {ambient : frame} {f : AFrame}
@@ -231,7 +231,7 @@ theorem memory_transition_bound {s : _root_.store} {ambient : frame} {f : AFrame
       rw [change.functions]
       exact bounded.functions
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end
 
@@ -239,7 +239,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec Ownership
 
 /-- Relational SIMD execution, preserving source nondeterminism in pure results
@@ -302,7 +302,7 @@ theorem Step.trap_simulation {before} (step : Step before .trap) (typed : CoreTy
   cases step with
   | memory signature transition => exact memory_transition_trap_simulation signature typed.typed transition
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end
 
@@ -310,7 +310,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 
 /-- SIMD consumes its source head without changing any remaining source syntax.
 The argument is independent of the eventual cumulative instruction family. -/
@@ -327,6 +327,6 @@ theorem Step.next_supported {before next}
     | next front operands results store values types resultTypes change effect =>
       exact covered.tail change.functions _
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end

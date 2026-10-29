@@ -6,7 +6,7 @@ Oversized function bodies reject before initialization or visitor calls.
 Main declarations: `reader_body_too_large`. A direct consumer is `Compiler.Module.CompileTotal`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Oversized function bodies reject before initialization or visitor calls. -/
@@ -17,4 +17,4 @@ theorem reader_body_too_large {V} (visitor : code.OpVisitor V) (profile : Valida
       .ok (.Err .BodyTooLarge,value) := by
   have guard : Slice.len data > limits.MAX_FUNCTION_BYTES := by simpa using large
   simp only [code.validate_body_with,guard,↓reduceIte]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

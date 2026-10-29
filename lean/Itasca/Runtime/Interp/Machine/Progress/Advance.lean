@@ -8,7 +8,7 @@ A returned mutable-machine step retains the complete current state, source simul
 Main declarations: `Advance`. A direct consumer is `Interp.Machine.Progress.OrdinaryAdvance`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- A returned mutable-machine step retains the complete current state,
@@ -16,22 +16,22 @@ source simulation and reference provenance for every initial issued bound. -/
 def Advance
  {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (exec : runtime.interp.Execution)
-    (expected : List valtype) (codeLength pc : Nat) (pending : Bool) (before : Abs.AState) : Prop :=
+    (expected : List valtype) (codeLength pc : Nat) (pending : Bool) (before : SourceMachine.AState) : Prop :=
   ∃ nextPC nextPending after,
     Execution view code store exec after expected nextPC nextPending ∧
     ConcreteSim codeLength pc nextPC pending nextPending before after ∧
-    (∀ bounds, Abs.Ownership.StatefulOwned bounds before → Abs.Ownership.StatefulOwned bounds after) ∧ after.ambient = before.ambient ∧
-    (∀ bound, Abs.CodeBound bound before → Abs.CodeBound bound after)
+    (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds before → SourceMachine.Ownership.StatefulOwned bounds after) ∧ after.ambient = before.ambient ∧
+    (∀ bound, SourceMachine.CodeBound bound before → SourceMachine.CodeBound bound after)
 
  theorem Advance.of_frame  {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution}
-    {expected : List valtype} {codeLength pc : Nat} {pending : Bool} {before : Abs.AState}
-    {nextPC : U32} {nextPending : Bool} {after : Abs.AState}
+    {expected : List valtype} {codeLength pc : Nat} {pending : Bool} {before : SourceMachine.AState}
+    {nextPC : U32} {nextPending : Bool} {after : SourceMachine.AState}
     (machine : Execution view code store exec after expected nextPC.val nextPending)
     (simulation : ConcreteSim codeLength pc nextPC.val pending nextPending before after)
-    (ownership : ∀ bounds, Abs.Ownership.StatefulOwned bounds before → Abs.Ownership.StatefulOwned bounds after)
+    (ownership : ∀ bounds, SourceMachine.Ownership.StatefulOwned bounds before → SourceMachine.Ownership.StatefulOwned bounds after)
     (ambient : after.ambient = before.ambient)
-    (bounded : ∀ bound, Abs.CodeBound bound before → Abs.CodeBound bound after) :
+    (bounded : ∀ bound, SourceMachine.CodeBound bound before → SourceMachine.CodeBound bound after) :
     Advance view code store exec expected codeLength pc pending before :=
   ⟨nextPC.val,nextPending,after,machine,simulation,ownership,ambient,bounded⟩
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

@@ -6,7 +6,7 @@ Lift available Wasm 2 scalar dispatch through its actual profile capacity guard,
 Main declarations: `profile_scalar_available_wasm2` and `profile_base_available_wasm2`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedNumericAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Lift available Wasm 2 scalar dispatch through its actual profile capacity
@@ -63,4 +63,4 @@ theorem profile_base_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [called]
   simpa [core.result.Result.Insts.CoreOpsTry.branch] using held
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

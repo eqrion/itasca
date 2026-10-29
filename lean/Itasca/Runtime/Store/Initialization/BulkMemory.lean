@@ -31,9 +31,9 @@ theorem bulk_memory_init {M : Type} (ops : runtime.platform.MemoryBuffer M)
     runtime.interp.bulk.execute ops store instIndex function 0#usize slots (.MemoryInit 0#u32 data)
       ⦃ out => MemoryInitializationEffect view store memoryAddress.index memory segment
         (bulkWord destination) (bulkWord source) (bulkWord count) out ⦄ := by
-  have read0 := Code.initializer_slice_index slots 0#usize destination destinationSlot
-  have read1 := Code.initializer_slice_index slots 1#usize source sourceSlot
-  have read2 := Code.initializer_slice_index slots 2#usize count countSlot
+  have read0 := Compiler.initializer_slice_index slots 0#usize destination destinationSlot
+  have read1 := Compiler.initializer_slice_index slots 1#usize source sourceSlot
+  have read2 := Compiler.initializer_slice_index slots 2#usize count countSlot
   simp only [runtime.interp.bulk.execute, lift, bind_ok, bulk_zero_cast, bulk_zero_add,
     read0, read1, read2]
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual, actualEq⟩

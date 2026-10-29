@@ -19,39 +19,39 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 /-!
 Conditional-branch execution with retained ownership.
 
-Main declarations: `step_branchIf_owned_uniform`. A direct consumer is `Interp.Machine.Control.ControlExecution`.
+Main declarations: `step_branch_if_owned_uniform`. A direct consumer is `Interp.Machine.Control.ControlExecution`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
-theorem step_branchIf_owned_uniform {M P F A : Type}
+theorem step_branch_if_owned_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (depth : Nat) (after : List instr) (branchAllowed : Abs.BinaryInstr (.BR (.mk_uN depth)))
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (depth : Nat) (after : List instr) (branchAllowed : SourceMachine.BinaryInstr (.BR (.mk_uN depth)))
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩)
+    (typed : SourceMachine.CoreTyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint s raw { f with code := .BR_IF (.mk_uN depth) :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame) (targets' : List Code.LabelTarget) (next' : Nat)
+      ∃ (pc : U32) (g : SourceMachine.AFrame) (targets' : List Compiler.LabelTarget) (next' : Nat)
         (output' : List valtype) (pending : Bool),
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
         ControlPoint s { raw with pc := pc } g compiled C targets' next' output' pending ∧
-        Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
+        SourceMachine.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SyntaxClosure { f with code := .BR_IF (.mk_uN depth) :: after } g ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false pending
@@ -62,7 +62,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
           ⟨s,ambient,g::rest,[]⟩ [] ∧
         FrameOwnershipClosure {f with code := .BR_IF (.mk_uN depth) :: after} g ∧
         FrameBoundClosure {f with code := .BR_IF (.mk_uN depth) :: after} g ⦄ := by
-  rcases codeRel_branchIf_inv point.code.current with skip | branch
+  rcases code_rel_branch_if_inv point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     have targetPoint : FramePoint s { raw with pc := target }
         { f with code := .BR_IF (.mk_uN depth) :: after } compiled C targets next output :=
@@ -76,39 +76,39 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
     · rw [exactState]
     · rw [exactState]
       exact slots
-    · exact Or.inl ⟨rfl, dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩
+    · exact Or.inl ⟨rfl, dispatch_measure_forward _ _ _ _ forward continuation.entry_bound⟩
   · obtain ⟨before, target, dst, src, count, cond, resume, shape, staticLookup, live, layout,
       condition, fragment, continuation⟩ := branch
-    have frameTyped : Abs.FrameTyped s { f with code := .BR_IF (.mk_uN depth) :: after } [] := by
+    have frameTyped : SourceMachine.FrameTyped s { f with code := .BR_IF (.mk_uN depth) :: after } [] := by
       cases typed.typed.frames with | cons h _ => exact h
     obtain ⟨values, bits, valueSplit, valueTypes, bitsBound⟩ := frame_integer_suffix frameTyped before .I32 shape
-    have valueSplit : f.vals = values ++ [Abs.integerVal .I32 bits] := valueSplit
-    have typed' : Abs.ATyped ⟨s, ambient,
-        { f with code := .BR_IF (.mk_uN depth) :: after, vals := values ++ [Abs.integerVal .I32 bits] } :: rest, []⟩ := by
+    have valueSplit : f.vals = values ++ [SourceMachine.integerVal .I32 bits] := valueSplit
+    have typed' : SourceMachine.ATyped ⟨s, ambient,
+        { f with code := .BR_IF (.mk_uN depth) :: after, vals := values ++ [SourceMachine.integerVal .I32 bits] } :: rest, []⟩ := by
       simpa only [← valueSplit] using typed.typed
-    have slots' : FrameSlots exec raw { f with vals := values ++ [Abs.integerVal .I32 bits] } := by
+    have slots' : FrameSlots exec raw { f with vals := values ++ [SourceMachine.integerVal .I32 bits] } := by
       simpa only [← valueSplit] using slots
-    have position : cond.val = Code.slots ((f.locals ++ values).map Code.valueType) := by
-      simpa only [point.locals,List.map_append, Code.slots_append, valueTypes] using condition
-    have sourceStep := branchIf_source_step s ambient f rest after depth values bits bitsBound
-    have sourcePositive := Abs.typed_br_if_positive s ambient {f with vals := values ++ [Abs.integerVal .I32 bits]}
+    have position : cond.val = Compiler.slots ((f.locals ++ values).map Compiler.valueType) := by
+      simpa only [point.locals,List.map_append, Compiler.slots_append, valueTypes] using condition
+    have sourceStep := branch_if_source_step s ambient f rest after depth values bits bitsBound
+    have sourcePositive := SourceMachine.typed_br_if_positive s ambient {f with vals := values ++ [SourceMachine.integerVal .I32 bits]}
       rest after depth _ typed' sourceStep
     have testUniform (pc : U32) : UniformConcreteSim raw.pc.val pc.val false false
         ⟨s,ambient,{f with code := .BR_IF (.mk_uN depth)::after}::rest,[]⟩
         ⟨s,ambient,{f with code := if bits = 0 then after else .BR (.mk_uN depth)::after,vals := values}::rest,[]⟩ [] := by
       apply UniformConcreteSim.single
       simpa only [← valueSplit] using sourcePositive
-    have typedAfter := Abs.instruction_preservation s ambient
-      { f with vals := values ++ [Abs.integerVal .I32 bits] } rest (.BR_IF (.mk_uN depth)) after _ (.br_if _) typed' sourceStep
-    have frameAfter : Abs.FrameTyped s
+    have typedAfter := SourceMachine.instruction_preservation s ambient
+      { f with vals := values ++ [SourceMachine.integerVal .I32 bits] } rest (.BR_IF (.mk_uN depth)) after _ (.br_if _) typed' sourceStep
+    have frameAfter : SourceMachine.FrameTyped s
         { f with code := if bits = 0 then after else .BR (.mk_uN depth) :: after, vals := values } [] := by
       cases typedAfter.frames with | cons h _ => exact h
     have labelsAfter : LabelsMatch values f.labels targets := by
-      have old : LabelsMatch (values ++ [Abs.integerVal .I32 bits]) f.labels targets := by
+      have old : LabelsMatch (values ++ [SourceMachine.integerVal .I32 bits]) f.labels targets := by
         simpa only [← valueSplit] using point.labels
-      have h := old.replace_suffix (after := []) (Abs.frameTyped_heights frameAfter)
+      have h := old.replace_suffix (after := []) (SourceMachine.frame_typed_heights frameAfter)
       simpa only [List.append_nil] using h
-    have layout' : Code.BranchLayout (f.locals.map Code.valueType) (values.map Code.valueType) target dst src count := by
+    have layout' : Compiler.BranchLayout (f.locals.map Compiler.valueType) (values.map Compiler.valueType) target dst src count := by
       simpa only [point.locals,valueTypes] using layout
     have ownershipDrop : ∀ code labels, FrameOwnershipClosure {f with code := .BR_IF (.mk_uN depth) :: after}
         {f with code,labels,vals := values} := by
@@ -118,14 +118,14 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
       · intro value member; exact Or.inr (by simp [valueSplit,member])
     by_cases noCopy : count = 0#u32 ∨ src = dst
     · obtain ⟨label, front, discarded, results, lookup, matching, split, height, arity, types,
-        destination, source, size⟩ := labelsAfter.branchLayout f.locals depth target staticLookup dst src count layout'
-      have typedSplit : Abs.ATyped ⟨s, ambient,
-          { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ discarded ++ results ++ [Abs.integerVal .I32 bits] } :: rest, []⟩ := by
+        destination, source, size⟩ := labelsAfter.branch_layout f.locals depth target staticLookup dst src count layout'
+      have typedSplit : SourceMachine.ATyped ⟨s, ambient,
+          { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ discarded ++ results ++ [SourceMachine.integerVal .I32 bits] } :: rest, []⟩ := by
         simpa only [split] using typed'
-      have slotsSplit : FrameSlots exec raw { f with vals := front ++ discarded ++ results ++ [Abs.integerVal .I32 bits] } := by
+      have slotsSplit : FrameSlots exec raw { f with vals := front ++ discarded ++ results ++ [SourceMachine.integerVal .I32 bits] } := by
         simpa only [split] using slots'
       have labelsSplit : LabelsMatch (front ++ discarded ++ results) f.labels targets := by simpa only [split] using labelsAfter
-      have frameSplit : Abs.FrameTyped s
+      have frameSplit : SourceMachine.FrameTyped s
           { f with code := if bits = 0 then after else .BR (.mk_uN depth) :: after, vals := front ++ discarded ++ results } [] := by
         simpa only [split] using frameAfter
       obtain ⟨actual, targetNext, targetOutput, actualAt, _, targetPoint⟩ :=
@@ -136,18 +136,18 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
       subst actual
       have fetched : compiled.code.val[raw.pc.val]? = some (.JumpIfNonZero cond target.target) := by
         simpa only [Nat.add_zero] using fragment.fetch
-          (index := 0) (by simp only [Code.branchIfInstructions, if_pos noCopy, List.getElem?_cons_zero])
+          (index := 0) (by simp only [Compiler.branchIfInstructions, if_pos noCopy, List.getElem?_cons_zero])
       have fusedUniform (pc : U32) : UniformConcreteSim raw.pc.val pc.val false false
           ⟨s,ambient,{f with code := .BR_IF (.mk_uN depth)::after}::rest,[]⟩
           ⟨s,ambient,branchIfFrame f after depth label front discarded results bits::rest,[]⟩ [] := by
-        obtain ⟨count,positive,steps⟩ := branchIf_source_positive s ambient f rest after depth label front discarded results bits
+        obtain ⟨count,positive,steps⟩ := branch_if_source_positive s ambient f rest after depth label front discarded results bits
           bitsBound lookup height arity types typedSplit
         apply UniformConcreteSim.of_steps positive
         simpa only [← split,← valueSplit] using steps
       have resumePc : resume.val = raw.pc.val + 1 := by
         obtain ⟨_, _, _, _, h⟩ := fragment
-        simpa only [Code.branchIfInstructions, if_pos noCopy, List.length_singleton] using h
-      apply WP.spec_mono (step_branchIfNoCopy_refines memory hooks floats allocator exec store platform
+        simpa only [Compiler.branchIfInstructions, if_pos noCopy, List.length_singleton] using h
+      apply WP.spec_mono (step_branch_if_no_copy_refines memory hooks floats allocator exec store platform
         index raw inst compiled cond target.target bits s ambient f rest after depth label front discarded results
         last hf hi hc pcBound fetched bitsBound lookup height arity types
         (branch_no_transfer destination source size noCopy) (by simpa only [split, List.append_assoc] using position)
@@ -186,12 +186,12 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
             tauto
     · have fetched : compiled.code.val[raw.pc.val]? = some (.JumpIfZero cond resume) := by
         simpa only [Nat.add_zero] using fragment.fetch
-          (index := 0) (by simp only [Code.branchIfInstructions, if_neg noCopy, List.getElem?_cons_zero])
-      have parts : Code.branchIfInstructions dst src count target.target cond resume =
-          [.JumpIfZero cond resume] ++ Code.branchInstructions dst src count target.target := by
-        simp only [Code.branchIfInstructions, Code.branchInstructions, if_neg noCopy, List.cons_append, List.nil_append]
+          (index := 0) (by simp only [Compiler.branchIfInstructions, if_neg noCopy, List.getElem?_cons_zero])
+      have parts : Compiler.branchIfInstructions dst src count target.target cond resume =
+          [.JumpIfZero cond resume] ++ Compiler.branchInstructions dst src count target.target := by
+        simp only [Compiler.branchIfInstructions, Compiler.branchInstructions, if_neg noCopy, List.cons_append, List.nil_append]
       obtain ⟨guard, branchFragment⟩ := fragment.split parts
-      apply WP.spec_mono (step_branchGuard_refines memory hooks floats allocator exec store platform
+      apply WP.spec_mono (step_branch_guard_refines memory hooks floats allocator exec store platform
         index raw inst compiled cond resume bits s ambient f rest after depth values last hf hi hc pcBound
         fetched bitsBound position typed' slots')
       intro out effect
@@ -199,7 +199,7 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
       have branchPoint : FramePoint s { raw with pc := pc }
           { f with code := .BR (.mk_uN depth) :: after, vals := values } compiled C targets next output := by
         refine ⟨point.bindings,point.locals,labelsAfter, ⟨?_, point.code.targets, point.code.normal, point.code.exit, point.code.root⟩⟩
-        apply Code.StructuredCode.branch staticLookup live (by simpa only [point.locals] using layout')
+        apply Compiler.StructuredCode.branch staticLookup live (by simpa only [point.locals] using layout')
         · simpa only [hpc, List.length_singleton] using branchFragment
         · exact continuation.pc_le_next
         · exact continuation.next_le_length
@@ -222,4 +222,4 @@ theorem step_branchIf_owned_uniform {M P F A : Type}
         · simpa only [if_pos zero] using FrameBoundClosure.tail f (.BR_IF (.mk_uN depth)) after f.locals values
         · simpa only [if_neg zero] using FrameBoundClosure.replace f (.BR_IF (.mk_uN depth)) (.BR (.mk_uN depth)) after f.locals values (by simp)
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

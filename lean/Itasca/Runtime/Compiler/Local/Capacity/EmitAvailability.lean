@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A representable bytecode PC excludes the actual instruction-index rejection. -/
@@ -21,4 +21,4 @@ theorem compiler_pc_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [pcEq,UScalar.cast_val_eq]
   scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

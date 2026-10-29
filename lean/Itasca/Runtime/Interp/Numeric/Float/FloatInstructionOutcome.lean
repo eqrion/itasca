@@ -11,7 +11,7 @@ import Itasca.Runtime.Interp.Numeric.Float.FloatTruncSource
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 
-def floatOpcode (op : Abs.Float.Instruction) : U16 :=
+def floatOpcode (op : SourceMachine.Float.Instruction) : U16 :=
   UScalar.ofNat op.opcode (by have := op.opcode_bound; change op.opcode ≤ 65535; omega)
 
 def floatInput (ty : numtype) (value : U64) : Nat :=
@@ -19,7 +19,7 @@ def floatInput (ty : numtype) (value : U64) : Nat :=
   | .I32 | .F32 => (UScalar.cast .U32 value).val
   | .I64 | .F64 => value.val
 
-def FloatScalarOutcome (op : Abs.Float.Instruction) (a b : U64)
+def FloatScalarOutcome (op : SourceMachine.Float.Instruction) (a b : U64)
     (result : core.result.Result U64 runtime.ExecError) : Prop :=
   match result with
   | .Ok value => op.Result (floatInput op.input a) (floatInput op.input b) (some value.val)

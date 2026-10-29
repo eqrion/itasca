@@ -9,7 +9,7 @@ Every emitted ordinary instruction, with the function-local index-pair, SIMD and
 Main declarations: `ExecutableEmission`. A direct consumer is `Compiler.Body.Relations.Checking.ExecutableInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Every emitted ordinary instruction, with the function-local index-pair, SIMD
@@ -38,4 +38,4 @@ instance (tables C) : OrdinaryEmbedding tables.indirect C (ExecutableEmission ta
 instance (tables C) : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C) :=
   ⟨.simd⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -11,7 +11,7 @@ Structured compiler else checked instruction prefixes and their reader-step lift
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source THEN geometry provides the owned guard needed by actual ELSE in
@@ -57,7 +57,7 @@ theorem StructuredCompilerPrefix.else_open_instructions {A : Type}
     norm_num [limits.MAX_MODULE_BYTES] at sourceBound
     scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -65,7 +65,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
@@ -98,6 +98,6 @@ theorem reader_else_open_instructions_wasm2 {jumpTables : List U32} {data env so
     omega
   exact invariant.else_open_instructions ops law out.core _ condition form p.current.bt sourceBound held callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

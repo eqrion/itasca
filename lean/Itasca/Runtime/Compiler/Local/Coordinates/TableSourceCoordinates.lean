@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Every separately streamed label retains the complete coordinate vector
@@ -29,7 +29,7 @@ theorem compiler_table_branch_source_coordinates {A : Type} (ops : runtime.platf
     (by simpa only [SourceCoordinates,staged] using held) (by simpa only [staged] using inside) branch
 
 /-- Finite table lowering retains one source origin for all of its stubs. -/
-theorem TableBranchRun.sourceCoordinates {A : Type} {ops : runtime.platform.Alloc A}
+theorem TableBranchRun.source_coordinates {A : Type} {ops : runtime.platform.Alloc A}
     (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
     {index : Nat} (run : TableBranchRun ops before index after) :
     SourceCoordinates before →
@@ -56,9 +56,9 @@ theorem compiler_lower_table_source_coordinates {A : Type} (ops : runtime.platfo
     (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     SourceCoordinates after ∧ after.next_source = before.next_source := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
-  have coordinates := emission.sourceCoordinates held inside
+  have coordinates := emission.source_coordinates held inside
   obtain ⟨budget,code,sources,frame,_,_⟩ := emission
-  obtain ⟨final,cursor⟩ := run.sourceCoordinates law coordinates (by simpa only [frame] using inside)
+  obtain ⟨final,cursor⟩ := run.source_coordinates law coordinates (by simpa only [frame] using inside)
   exact ⟨final,by simpa only [frame] using cursor⟩
 
 /-- Collecting labels changes budget and scratch only; final dispatch and
@@ -104,4 +104,4 @@ theorem compiler_br_table_source_coordinates {A : Type} (ops : runtime.platform.
       exact compiler_observe_source_coordinates ops law {labeled with table_depths := cleared} after state
         (by simpa only [SourceCoordinates] using coordinates) (by simpa only [cursor] using forward) observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

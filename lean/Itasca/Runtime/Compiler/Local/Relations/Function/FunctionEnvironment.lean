@@ -6,7 +6,7 @@ Function entry and local declarations preserve the scheduler signature tables an
 Main declarations: `FunctionEnvironment`. A direct consumer is `Compiler.Body.Relations.Entry.FunctionStartFacts`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -26,7 +26,7 @@ elab "environment_frame_effect " h:ident " using " ops:term ", " law:term : tact
   let ty ← inferType hyp
   let some (_, lhs, _) := ty.eq? | throwError "not an equation"
   if lhs.getAppFn.constName? = some ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start_loop then
-    let theoremName := mkIdent `Itasca.Runtime.Code.compiler_locals_environment_frame
+    let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_locals_environment_frame
     evalTactic (← `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ $h))
   else
     throwError "not local declaration loop"
@@ -123,4 +123,4 @@ theorem compiler_function_start_environment_frame {A : Type} (ops : runtime.plat
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start at accepted
   repeat' environment_frame_step accepted using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

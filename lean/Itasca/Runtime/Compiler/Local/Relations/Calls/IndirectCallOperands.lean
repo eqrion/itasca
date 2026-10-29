@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An indirect call's table selector is the final i32 operand; its argument
@@ -46,4 +46,4 @@ theorem indirect_call_operand {A : Type} (ops : runtime.platform.Alloc A)
     exact List.take_left
   change index.val = slots (compilerLocals compiler) + offset ((front ++ params) ++ [valtype.I32]) (((front ++ params) ++ [valtype.I32]).length - 1) at position
   simpa only [offset, take, slots_append, Nat.add_assoc] using position
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

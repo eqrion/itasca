@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Ownership.Slice
 import Itasca.Runtime.SourceMachine.Core.Pure
 import Itasca.Runtime.SourceMachine.Core.PureMetadata
-namespace Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec
 
 def GlobalsOwned (bounds : Bounds) (s : _root_.store) : Prop :=
@@ -35,12 +35,12 @@ theorem select_owned {bounds s f rest next after}
   repeat' first | split at step | contradiction
   all_goals
     apply owned_advance step globals results ?_ frames
-    refine ⟨frame.1,valuesOwned_append.mpr ⟨?_,?_⟩⟩
+    refine ⟨frame.1,values_owned_append.mpr ⟨?_,?_⟩⟩
     · aesop (add safe forward ValuesOwned.pop)
-    · apply valuesOwned_cons.mpr
+    · apply values_owned_cons.mpr
       constructor
       · aesop (add safe forward ValuesOwned.pop)
-      · exact valuesOwned_nil _
+      · exact values_owned_nil _
 
 theorem global_get_owned {bounds s f rest next index after}
     (globals : GlobalsOwned bounds s.store)
@@ -54,8 +54,8 @@ theorem global_get_owned {bounds s f rest next index after}
     split at step
     · contradiction
     next object found =>
-      exact owned_advance step globals results ⟨frame.1,valuesOwned_append.mpr
-        ⟨frame.2,valuesOwned_cons.mpr ⟨globals object (List.mem_of_getElem? found),valuesOwned_nil _⟩⟩⟩ frames
+      exact owned_advance step globals results ⟨frame.1,values_owned_append.mpr
+        ⟨frame.2,values_owned_cons.mpr ⟨globals object (List.mem_of_getElem? found),values_owned_nil _⟩⟩⟩ frames
 
 theorem global_set_owned {bounds s f rest next index after}
     (globals : GlobalsOwned bounds s.store)
@@ -83,7 +83,7 @@ theorem load_owned {bounds s f rest next after op argument}
     repeat' first | split at step | contradiction
     all_goals
       apply owned_advance step globals results ?_ frames
-      refine ⟨frame.1,valuesOwned_append.mpr ⟨owned,?_⟩⟩
+      refine ⟨frame.1,values_owned_append.mpr ⟨owned,?_⟩⟩
       cases op <;> simp [Memory.Load.value,ValuesOwned,ValueOwned]
   · contradiction
 
@@ -113,19 +113,19 @@ theorem instruction_owned (bounds : Bounds) (s : _root_.store) (ambient : frame)
   cases covered with
   | pure pure =>
     rw [Core.instruction_slice s ambient f rest op after pure typed] at step
-    exact ⟨instruction_ownership bounds s ambient f rest op after next [] pure frame frames (valuesOwned_nil _) step,
+    exact ⟨instruction_ownership bounds s ambient f rest op after next [] pure frame frames (values_owned_nil _) step,
       by rw [astep_store step]; exact globals⟩
   | const ty value =>
-    exact owned_advance step globals (valuesOwned_nil _) ⟨frame.1,
-      valuesOwned_append.mpr ⟨frame.2,by simp [ValuesOwned,ValueOwned]⟩⟩ frames
-  | select => exact select_owned globals (valuesOwned_nil _) frame frames step
-  | global_get index => cases index; exact global_get_owned globals (valuesOwned_nil _) frame frames step
-  | global_set index => cases index; exact global_set_owned globals (valuesOwned_nil _) frame frames step
+    exact owned_advance step globals (values_owned_nil _) ⟨frame.1,
+      values_owned_append.mpr ⟨frame.2,by simp [ValuesOwned,ValueOwned]⟩⟩ frames
+  | select => exact select_owned globals (values_owned_nil _) frame frames step
+  | global_get index => cases index; exact global_get_owned globals (values_owned_nil _) frame frames step
+  | global_set index => cases index; exact global_set_owned globals (values_owned_nil _) frame frames step
   | load op argument =>
     rw [Core.instruction_load] at step
-    exact load_owned globals (valuesOwned_nil _) frame frames step
+    exact load_owned globals (values_owned_nil _) frame frames step
   | store op argument =>
     rw [Core.instruction_store] at step
-    exact store_owned globals (valuesOwned_nil _) frame frames step
+    exact store_owned globals (values_owned_nil _) frame frames step
 
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

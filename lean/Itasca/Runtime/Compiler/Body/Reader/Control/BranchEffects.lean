@@ -7,7 +7,7 @@ Checked branch arguments form the exact source suffix of a live concrete stack.
 Main declarations: `reader_br_arguments` and `reader_br_if_arguments`. A direct consumer is `Compiler.Body.Reader.Control.BranchLayout`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Checked branch arguments form the exact source suffix of a live concrete stack. -/
@@ -66,7 +66,7 @@ theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env 
   | Ok raw =>
     rw [poly] at conditionEffect
     have segmentEq := typed_pop_exact known conditionEffect
-    have remainingKnown : ConcreteStack remaining := (concreteStack_append.mp (segmentEq ▸ known)).1
+    have remainingKnown : ConcreteStack remaining := (concrete_stack_append.mp (segmentEq ▸ known)).1
     obtain ⟨⟨argumentResult, argumentState⟩, popArguments, argumentControls, _, rest, argumentValues, _, transfer⟩ := WP.spec_imp_exists
       (code.pop_results.realizes conditionState env view expected outer remaining resolved conditionValues
         (by simpa [Control.base, conditionControls] using middleBase))
@@ -81,8 +81,8 @@ theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env 
       rw [argumentPoly] at transfer
       have interpreted := realized_concrete_types remainingKnown (transfer rfl _ (Sequence.realizes_default false rest))
       have restKnown := concrete_stack_transfer remainingKnown (transfer rfl)
-      obtain ⟨remainingTypes, remainingEq⟩ := (concreteStack_iff remaining).mp remainingKnown
-      obtain ⟨restTypes, restEq⟩ := (concreteStack_iff rest).mp restKnown
+      obtain ⟨remainingTypes, remainingEq⟩ := (concrete_stack_iff remaining).mp remainingKnown
+      obtain ⟨restTypes, restEq⟩ := (concrete_stack_iff rest).mp restKnown
       have rawTypes : remainingTypes = restTypes ++ expected := by
         apply List.map_injective_iff.mpr Translate.valueType_injective
         simpa [remainingEq, restEq, Sequence.stackTypes, List.map_append, List.map_map,
@@ -104,4 +104,4 @@ theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env 
         subst out
         refine ⟨remaining, segmentEq, ?_, Sequence.stackTypes rest, interpreted.symm⟩
         simpa [argumentValues, remainingShape, List.append_assoc] using finalValues
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

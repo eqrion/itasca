@@ -6,7 +6,7 @@ An accepted vector constant retains all sixteen encoded bytes, its exact compile
 Main declarations: `reader_simd_constant_wasm2`. A direct consumer is `Compiler.Body.Reader.Simd.Dispatch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An accepted vector constant retains all sixteen encoded bytes, its exact
@@ -52,4 +52,4 @@ theorem reader_simd_constant_wasm2 {data env locals index st}
     exact reader_simd_fixed_post p middle.pos out.core [] (some .V128) _ capacity
       (Wasm2.Simd.vectorConstant_wf low high) (Wasm2.Simd.vectorConstant_declared _ low high)
       (fun C wf _ => Wasm2.Simd.vectorConstant_typed C low high wf) encoded fixed
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

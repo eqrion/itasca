@@ -8,7 +8,7 @@ Normal return of scope-closing reader callbacks.
 Main declarations: `StructuredCompilerPrefix.close_reader_total`. A direct consumer is `Compiler.Body.Reader.Control.ControlSafetyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -42,4 +42,4 @@ theorem StructuredCompilerPrefix.close_reader_total {jumpTables : List U32} {A}
       apply invariant.end_total ops law bounded out.core kind bt _ emitCoordinate
       simpa only [data.2.2.2] using coordinate
     | true => exact invariant.else_total ops law bounded fixups out.core bt emitCoordinate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

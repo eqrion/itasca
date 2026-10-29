@@ -14,7 +14,7 @@ SIMD emitted and callback prefixes and their structured event composition, prese
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.simd_dead_prefix {jumpTables : List U32} {data env sourceLocals index st}
@@ -35,7 +35,7 @@ theorem ReaderPostWasm2.simd_dead_prefix {jumpTables : List U32} {data env sourc
   unfold runtime.compiler.lower.FunctionCompiler.op at accepted
   rw [if_neg (by simp [dead])] at accepted
   exact ⟨prefixProof,deadAfter,compiler_observe_tables ops law before after out (.Ok ()) accepted⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -43,7 +43,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete SIMD prefix step handles live emission and polymorphic dead
@@ -92,9 +92,9 @@ theorem ReaderPostWasm2.simd_callback_prefix {jumpTables : List U32} {data env s
         retained.layout reachable codeFits sourceFits coordinateFits accepted
     have consumed : p.start.val < out.pos.val := by have pos := p.pos; have span := post.span; omega
     refine ⟨extra,tables,?_,fun _ => monomorphic reachable⟩
-    apply invariant.ordinary reachable ordinary lowered _ sources consumed (by rw [cursor]) emission.not_branchTable
+    apply invariant.ordinary reachable ordinary lowered _ sources consumed (by rw [cursor]) emission.not_branch_table
     simpa only [oldTypes] using (SimdEmbedding.lift (emit := emit) emission)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -102,7 +102,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem SimdReaderEvent.prefix {jumpTables : List U32} {A : Type} {ops : runtime.platform.Alloc A}
     {data env sourceLocals index st p initial before after out C}
@@ -120,6 +120,6 @@ theorem SimdReaderEvent.prefix {jumpTables : List U32} {A : Type} {ops : runtime
         out.vals.val out.pos.val ∧ (after.reachable = true → p.current.ctrl.polymorphic_base = false) :=
   event.post.simd_callback_prefix ops law C event.effect event.read event.capacity contextLocals invariant monomorphic
     event.opcode event.sub event.a event.b event.bits event.number event.meaning sourceBound bodyBound event.callback
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

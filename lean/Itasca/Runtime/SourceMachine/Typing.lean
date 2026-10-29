@@ -6,14 +6,14 @@ import Itasca.Spec.TypingInversion
 generated value/instruction predicates; whole-state preservation and progress
 require the label/caller typing invariant and are not asserted here. -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 def integerWidth : Inn → Nat
   | .I32 => 32
   | .I64 => 64
 
-theorem integer_uN_wf (ty : Inn) (bits : Nat) (h : bits < 2 ^ integerWidth ty) :
+theorem integer_u_n_wf (ty : Inn) (bits : Nat) (h : bits < 2 ^ integerWidth ty) :
     wf_uN (integerWidth ty) (.mk_uN bits) := by
   apply wf_uN.uN_case_0
   cases ty <;> norm_num [integerWidth] at h ⊢ <;> omega
@@ -22,7 +22,7 @@ theorem integer_num_wf (ty : Inn) (bits : Nat) (h : bits < 2 ^ integerWidth ty) 
     wf_num_ (numtype_Inn ty) (.mk_num__0 ty (.mk_uN bits)) := by
   apply wf_num_.num__case_0 _ _ _ ?_ ?_ rfl
   · cases ty <;> decide
-  · cases ty <;> exact integer_uN_wf _ bits h
+  · cases ty <;> exact integer_u_n_wf _ bits h
 
 theorem integer_val_wf (ty : Inn) (bits : Nat) (h : bits < 2 ^ integerWidth ty) :
     wf_val (integerVal ty bits) :=
@@ -94,7 +94,7 @@ pending callee results must never be counted as part of that prefix. -/
 def FrameHeights (f : AFrame) : Prop :=
   ∀ label ∈ f.labels, label.height ≤ f.vals.length
 
-theorem codeStack_height_bound {C : context} {labels : List Label}
+theorem code_stack_height_bound {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results) :
     ∀ label ∈ labels, label.height ≤ stack.length := by
@@ -108,12 +108,12 @@ theorem codeStack_height_bound {C : context} {labels : List Label}
     · have hh := nesting label hm
       simp only [List.length_append]; omega
 
-theorem frameTyped_heights {s : store} {f : AFrame} (h : FrameTyped s f []) : FrameHeights f := by
+theorem frame_typed_heights {s : store} {f : AFrame} (h : FrameTyped s f []) : FrameHeights f := by
   cases h with
   | mk C _ _ _ _ _ code _ =>
     intro label hm
     simpa only [List.length_append, List.length_nil, Nat.add_zero, List.length_map] using
-      codeStack_height_bound code label hm
+      code_stack_height_bound code label hm
 
 theorem replace_frame_heights {f f' : AFrame} {rest : List AFrame}
     (h : Forall FrameHeights (f :: rest)) (hf' : FrameHeights f') :
@@ -152,7 +152,7 @@ structure ATyped (s : AState) : Prop where
   heights : Forall FrameHeights s.frames
 
 /-- A concrete value can never have the bottom stack type. -/
-theorem valueType_ne_bot (value : val) : valueType value ≠ .BOT := by
+theorem value_type_ne_bot (value : val) : valueType value ≠ .BOT := by
   cases value <;> simp only [valueType]
   · rename_i ty value
     cases ty <;> decide
@@ -223,4 +223,4 @@ theorem integer_val_inv {s : store} {ty : Inn} {value : val}
   | val_case_3 address => cases ty <;> simp_all [valueType, valtype_numtype, numtype_Inn]
   | val_case_4 address => cases ty <;> simp_all [valueType, valtype_numtype, numtype_Inn]
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

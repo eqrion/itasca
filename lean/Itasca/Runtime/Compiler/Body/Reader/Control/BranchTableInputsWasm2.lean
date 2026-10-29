@@ -10,7 +10,7 @@ Source scopes and input signatures of decoded br_table reader steps.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical target checks and the saved source zipper discharge every static
@@ -50,7 +50,7 @@ theorem reader_table_scopes_wasm2 {data env locals index st}
   refine ⟨scope,discarded,selected',chain.all_entered entered scope ?_,?_⟩
   · simpa only [List.mem_reverse] using List.mem_of_getElem? selected'
   · simpa only [values] using whole
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -58,7 +58,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -87,7 +87,7 @@ theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (by simp only [List.length_append,List.length_singleton]; omega)).1
   rw [allEq] at targets
   have wholeKnown : ConcreteStack (outer++p.current.vals) := values ▸ known
-  have segmentKnown := (concreteStack_append.mp wholeKnown).2
+  have segmentKnown := (concrete_stack_append.mp wholeKnown).2
   have popSpec := code.pop_with_type.segment {st.core with pos := first} outer p.current.vals .I32
     values (by simpa [Control.base,controls] using base)
   rw [popCall,WP.spec_ok] at popSpec
@@ -97,7 +97,7 @@ theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
     simpa [Control.polymorphic,controls] using monomorphic
   rw [poly] at popEffect
   have segmentEq := typed_pop_exact segmentKnown popEffect
-  have remainingKnown := (concreteStack_append.mp (segmentEq ▸ segmentKnown)).1
+  have remainingKnown := (concrete_stack_append.mp (segmentEq ▸ segmentKnown)).1
   have outerEq : outer=(p.parents.map Wasm2.Frames.Saved.vals).flatten := by
     simpa only [List.flatMap_def] using wasm2_spine_values spine
   have scopes := reader_table_scopes_wasm2 p same fronts chain entered popped remaining
@@ -106,6 +106,6 @@ theorem reader_table_inputs_wasm2 {V : Type} (visitor : code.OpVisitor V)
   refine ⟨Sequence.stackTypes popped.vals.val,?_,scopes⟩
   simp only [values,segmentEq,poppedValues,Sequence.stackTypes,List.map_append,List.map_cons,List.map_nil,
     Translate.valueType,List.append_assoc]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

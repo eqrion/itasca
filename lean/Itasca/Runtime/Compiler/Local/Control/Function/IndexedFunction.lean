@@ -8,7 +8,7 @@ Contextual function syntax with the actual retained jump table. The certificate 
 Main declarations: `IndexedFunctionCode` and `DefinedIndexedFunctionCode`. A direct consumer is `Compiler.Body.Relations.Executable.ExecutableFunction`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Contextual function syntax with the actual retained jump table. The
@@ -33,4 +33,4 @@ def DefinedIndexedFunctionCode
       (signature.results.val.map Itasca.Translate.valueType))
       (signature.params.val.map Itasca.Translate.valueType) declared
       (signature.results.val.map Itasca.Translate.valueType) body compiled epilogue
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

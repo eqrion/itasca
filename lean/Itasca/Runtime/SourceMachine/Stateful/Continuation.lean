@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.SourceMachine.Sim.Typed
 import Itasca.Runtime.SourceMachine.Core.Typing
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 /-- A typed active instruction exposes its actual operands and the continuation
@@ -19,13 +19,13 @@ theorem frame_operands {s : store} {f : AFrame} {op : instr} {code : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨prefixTypes,inputs,outputs,operation,splitTypes,continuation,heights⟩ :=
-      codeStack_after_bounds (value_types_concrete f.vals) hc
+      code_stack_after_bounds (value_types_concrete f.vals) hc
     have all : ResultsTyped s (prefixTypes ++ inputs) f.vals := by rw [←splitTypes]; exact values
-    obtain ⟨front,operands,split,frontTyped,operandTyped⟩ := resultsTyped_split all
+    obtain ⟨front,operands,split,frontTyped,operandTyped⟩ := results_typed_split all
     refine ⟨C,front,operands,inputs,outputs,bindings,localTypes,operation,split,operandTyped,
-      resultsTyped_wf frontTyped,?_,?_⟩
+      results_typed_wf frontTyped,?_,?_⟩
     · intro label member
-      rw [resultsTyped_length frontTyped]
+      rw [results_typed_length frontTyped]
       exact heights label member
     · intro produced producedTyped
       have typedValues := List.rel_append frontTyped producedTyped
@@ -35,4 +35,4 @@ theorem frame_operands {s : store} {f : AFrame} {op : instr} {code : List instr}
       · simpa only [ResultsTyped,resultTypes] using typedValues
       · simpa only [List.append_nil,resultTypes] using continuation
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

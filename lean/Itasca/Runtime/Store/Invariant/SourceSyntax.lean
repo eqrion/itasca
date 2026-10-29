@@ -11,26 +11,26 @@ theorem instance_syntax_source (oldCode : CodeInterpretation) (fresh : Nat)
     (elaborates : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw) :
-    InstanceSyntax (installCode oldCode fresh (Code.sourceFunctions raw)) fresh inst := by
+    InstanceSyntax (installCode oldCode fresh (Compiler.sourceFunctions raw)) fresh inst := by
   constructor
   · intro entry member
-    rw [decodeName_source]
+    rw [decode_name_source]
     have exports := congrArg ModuleBinary.Module.exports matched.1
     simp only [ModuleElaboration.fromEnv] at exports
-    exact Code.source_export_name_wf elaborates typed (ModuleEnv.rawExport entry)
+    exact Compiler.source_export_name_wf elaborates typed (ModuleEnv.rawExport entry)
       (by rw [exports]; exact List.mem_map.mpr ⟨entry, member, rfl⟩)
   · intro function bound
     have functions := congrArg ModuleBinary.Module.functions matched.1
     simp only [ModuleElaboration.fromEnv] at functions
-    have length : (Code.sourceFunctions raw).length = raw.functions.length := by
-      simp only [Code.sourceFunctions, List.length_zipWith, elaborates.code_count, Nat.min_self]
-    have sourceBound : function < (Code.sourceFunctions raw).length := by
+    have length : (Compiler.sourceFunctions raw).length = raw.functions.length := by
+      simp only [Compiler.sourceFunctions, List.length_zipWith, elaborates.code_count, Nat.min_self]
+    have sourceBound : function < (Compiler.sourceFunctions raw).length := by
       rw [length, functions]; exact bound
-    let source := (Code.sourceFunctions raw)[function]
-    have found : (Code.sourceFunctions raw)[function]? = some source :=
+    let source := (Compiler.sourceFunctions raw)[function]
+    have found : (Compiler.sourceFunctions raw)[function]? = some source :=
       List.getElem?_eq_some_iff.mpr ⟨sourceBound, rfl⟩
-    rw [installCode_lookup oldCode fresh _ inst.module function source found]
-    exact Code.source_functions_wf elaborates typed source (List.mem_of_getElem? found)
+    rw [install_code_lookup oldCode fresh _ inst.module function source found]
+    exact Compiler.source_functions_wf elaborates typed source (List.mem_of_getElem? found)
 
 /-- Reinterpreting only fresh instance keys preserves all old syntax. -/
 theorem StoreSyntax.code_agrees {M : Type} {store : runtime.store.Store M}

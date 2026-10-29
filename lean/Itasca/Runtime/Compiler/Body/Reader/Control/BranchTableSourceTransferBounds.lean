@@ -7,7 +7,7 @@ Source typing of every table label supplies overlap-safe transfer bounds and alr
 Main declarations: `StructuredCompilerPrefix.table_transfer_geometry`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableInstructionPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source typing of every table label supplies overlap-safe transfer bounds
@@ -46,4 +46,4 @@ theorem StructuredCompilerPrefix.table_transfer_geometry
   have entry := shape.entryBound
   cases form : scope.form <;> simp_all [ScopeForm.kind,SourceScope.frameStart]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

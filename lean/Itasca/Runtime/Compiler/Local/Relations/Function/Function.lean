@@ -8,7 +8,7 @@ The actual epilogue determines whether the implicit root exit carries its declar
 Main declarations: `functionRootLabel`. A direct consumer is `Compiler.Local.Relations.Function.CoreFunction`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- The actual epilogue determines whether the implicit root exit carries
@@ -20,10 +20,10 @@ def functionRootLabel (results : List valtype) (compiled : runtime.bytecode.Comp
     | _ => false
   ⟨[], results, results, epilogue, epilogue.val, [], [], live, live⟩
 
-theorem functionRootLabel_live {results compiled epilogue src count}
+theorem function_root_label_live {results compiled epilogue src count}
     (found : compiled.code.val[epilogue.val]? = some (.Return src count))
     (live : (functionRootLabel results compiled epilogue).branchLive = true) :
     count.val = slots results := by
   simpa only [functionRootLabel, found, decide_eq_true_eq] using live
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

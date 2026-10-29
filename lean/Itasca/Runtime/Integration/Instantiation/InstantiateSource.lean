@@ -12,7 +12,7 @@ import Itasca.Runtime.Store.Instantiation.PrecommitSource
 
 /-! Public instantiation links, allocates and initializes a module and returns its start
 function without running it. The construction is total and uses no host callback. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store SpecExt
 
 /-- The returned start function is the one the module declares, resolved through the new
@@ -73,7 +73,7 @@ def InstantiationResourceCause {M P F A : Type}
     ∃ ready inst,
       ready.instances.val[before.instances.len.val]?=some inst ∧ inst.module=module ∧
       fun_instantiate (decodeStore view oldCode before) (ModuleElaboration.moduleOf raw) (imports.val.map decodeExternal)
-        (sourceInstantiationConfiguration view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready inst raw) ∧
+        (sourceInstantiationConfiguration view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready inst raw) ∧
       runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id,before.instances.len⟩ false=
         runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false ∧
       after=ready ∧ SegmentSetupCause allocator ready inst.module error
@@ -107,7 +107,7 @@ theorem commit_instance_source {M P F A : Type}
         ∀ error,out.1=.Err error → (error=.Trap .MemoryOutOfBounds ∨ error=.Trap .TableOutOfBounds) ∨
           (out.2.1=store ∧ SegmentSetupCause allocator store inst.module error) ⦄ := by
   have bindings := certified.shape.initializer_bindings (List.mem_of_getElem? found)
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
   have valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile := by
     rw [(witness.initializers law).2.1]
     exact (witness.semantic law).1
@@ -122,7 +122,7 @@ theorem commit_instance_source {M P F A : Type}
   have initSource := initialize_segments_raw_source_causes memory hooks floats allocator view laws law store platform identity.index
     inst bytes profile limits accepted found code certified.shape certified.storeSyntax certified.segmentBounds
     imports bindings types (moduleStartFrame store inst)
-    (moduleStartFrame_wf code store identity.index inst certified.storeSyntax found) rfl raw matched continuation continuationWf
+    (module_start_frame_wf code store identity.index inst certified.storeSyntax found) rfl raw matched continuation continuationWf
   obtain ⟨⟨status,initialized,host⟩,initRun,fresh,extension,metadata,hostEq⟩ :=
     WP.spec_imp_exists (initialize_segments_certified_supported memory hooks floats allocator view laws law
       store platform identity.index inst bytes profile limits accepted found code certified.toCertifiedSupportedStore
@@ -208,12 +208,12 @@ theorem commit_instance_source {M P F A : Type}
         cases same
         exact ⟨rfl,index,start,mapped,owner,(List.getElem?_eq_some_iff.mp hf).1⟩
       · have call := module_start_resolve view code initialized inst index address initializedInv.well_formed
-          (moduleStartFrame_wf code initialized identity.index inst initializedInv.storeSyntax afterFound) mapped
+          (module_start_frame_wf code initialized identity.index inst initializedInv.storeSyntax afterFound) mapped
         have prefixSteps : StepsH (sourceInstantiationConfiguration view code store inst raw) []
             (moduleStartConfiguration view code initialized inst index) := by
           simpa only [continuation,start,Option.map_some,Option.toList_some,moduleStartConfiguration] using reduced
         simpa only [InitializedSource,ambientStartConfiguration,List.nil_append,Option.toList_some,
-          List.map_cons,List.map_nil] using Spec.stepsH_trans prefixSteps (Spec.stepsH_single call)
+          List.map_cons,List.map_nil] using Spec.steps_h_trans prefixSteps (Spec.steps_h_single call)
 
 /-- Accepted compilation and public instantiation, with the code interpretation that installs the
 new module's source functions. -/
@@ -232,11 +232,11 @@ theorem instantiate_compiled_source {M P F A : Type}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
-        ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1 ∧
+        ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
           Interp.FrameStorePrefix before out.2.1 ∧
           Extend_store (decodeStore view oldCode before)
-            (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1) ∧
-          InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Code.sourceFunctions raw))
+            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) ∧
+          InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
             before module imports raw platform out.1 out.2.1 out.2.2 ∧
           ∀ error,out.1=.Err error → InstantiationResourceCause memory hooks floats allocator
             view oldCode before module imports platform raw out.2.1 error ⦄ := by
@@ -254,17 +254,17 @@ theorem instantiate_compiled_source {M P F A : Type}
       error staged platform returned
     obtain ⟨_,_,evidence⟩ := instantiate_compiled_precommit_resource_causes memory hooks floats allocator law view laws
       before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles error staged platform returned
-    obtain ⟨compiledWitness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+    obtain ⟨compiledWitness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
     have profileEq := (compiledWitness.initializers law).2.1
     obtain ⟨out,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
       (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained returned)
     rw [run,WP.spec_ok]
-    have rollbackInv : ExecutableInv view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) before :=
-      ⟨old.toCertifiedApiStore.install_code (Code.sourceFunctions raw),old.segmentAccounting,
-        old.capacities.code_agrees (installCode_agrees before oldCode (Code.sourceFunctions raw))⟩
+    have rollbackInv : ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) before :=
+      ⟨old.toCertifiedApiStore.install_code (Compiler.sourceFunctions raw),old.segmentAccounting,
+        old.capacities.code_agrees (install_code_agrees before oldCode (Compiler.sourceFunctions raw))⟩
     have rollbackExtension : Extend_store (decodeStore view oldCode before)
-        (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) out.2.1) := by
-      rw [storeEq,decodeStore_code_agrees view (installCode_agrees before oldCode (Code.sourceFunctions raw))]
+        (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) := by
+      rw [storeEq,decode_store_code_agrees view (install_code_agrees before oldCode (Compiler.sourceFunctions raw))]
       exact Spec.extend_store_refl _ old.well_formed
     refine ⟨(by simpa only [storeEq] using rollbackInv),(by simpa only [storeEq] using Interp.FrameStorePrefix.refl before),
       rollbackExtension,Or.inl ⟨error,resultEq,by simpa only [profileEq] using cause,storeEq,hostEq,?_⟩,?_⟩
@@ -285,7 +285,7 @@ theorem instantiate_compiled_source {M P F A : Type}
       · rename_i limit
         exact Or.inl ⟨storeEq,limit,rfl,staged,returned,evidence⟩
   · have initialWf : wf_config (sourceInstantiationConfiguration view
-        (installCode oldCode before.instances.len.val (Code.sourceFunctions raw)) ready inst raw) := by
+        (installCode oldCode before.instances.len.val (Compiler.sourceFunctions raw)) ready inst raw) := by
       have wf : ∀ s m xs c, fun_instantiate s m xs c → wf_config c := by
         intro s m xs c h
         cases h
@@ -297,7 +297,7 @@ theorem instantiate_compiled_source {M P F A : Type}
       simpa only [source] using matched
     have tail := commit_instance_source memory hooks floats allocator view laws law ready platform
       ⟨before.id,before.instances.len⟩ inst bytes profile limits acceptedInst found
-      (installCode oldCode before.instances.length (Code.sourceFunctions raw))
+      (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
       ⟨readyCertified,readyAccounting,readyCapacities old.capacities⟩ initializers types table raw matchedInst initialWf
     unfold runtime.store.instantiate.Store.instantiate_with
     rw [←continued]
@@ -305,7 +305,7 @@ theorem instantiate_compiled_source {M P F A : Type}
     rintro ⟨result,after,host,committed⟩ ⟨hostEq,commit,valid,tailExtension,retained,success,initializedSource,causes⟩
     dsimp only at hostEq commit valid tailExtension retained success initializedSource causes ⊢
     subst committed host
-    have outcome : InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Code.sourceFunctions raw))
+    have outcome : InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
         before module imports raw platform result after platform :=
       Or.inr ⟨inst,_,retained.instance_lookup found,source,rfl,allocated,initializedSource,success⟩
     cases result with
@@ -324,4 +324,4 @@ theorem instantiate_compiled_source {M P F A : Type}
         · rcases trap with impossible | impossible <;> cases impossible
         · exact Or.inr ⟨ready,inst,found,source,allocated,continued,unchanged,setup⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

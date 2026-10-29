@@ -7,7 +7,7 @@ The source effect of an accepted unreachable reader step.
 Main declarations: `reader_unreachable_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.TerminalInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_unreachable_wasm2 {data env locals index st}
@@ -35,4 +35,4 @@ theorem reader_unreachable_wasm2 {data env locals index st}
   · simpa using markedVals
   · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

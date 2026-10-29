@@ -57,7 +57,7 @@ theorem memory_extend_unfold (ty : WidenWidth) (signed : Bool)
   all_goals split <;> try contradiction
   all_goals repeat (with_unfolding_all change (Aeneas.Std.bind (Result.ok _) _) = _;rw [bind_ok])
   all_goals with_unfolding_all rfl
-theorem memoryExtendLoop_eq (ty : WidenWidth) (signed : Bool) (value : U128) :
+theorem memory_extend_loop_eq (ty : WidenWidth) (signed : Bool) (value : U128) :
     memoryExtendLoop ty signed value =
       runtime.interp.simd.memory_op_loop0 (memoryExtendOpcode ty signed) value (widenWidth ty) 0#u128 0#u32 := by
   cases ty <;> cases signed <;> with_unfolding_all rfl
@@ -82,9 +82,9 @@ open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
   intro answer lanes
   apply widen_packed ty false false signed value value answer
   intro j valid
-  rw [widenWidth_val] at lanes
+  rw [widen_width_val] at lanes
   have selected := lanes j valid
-  simpa only [widenWidth_val,widenBits,Bool.false_eq_true,↓reduceIte,Nat.add_zero] using selected
+  simpa only [widen_width_val,widenBits,Bool.false_eq_true,↓reduceIte,Nat.add_zero] using selected
 
 @[step] theorem memory_extend_effect (ty : WidenWidth) (signed : Bool)
     (offset lane : U32) (address value : U128) (bytes : Slice U8) :
@@ -95,7 +95,7 @@ open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
           (vectorLoadBytes bytes.val ((UScalar.cast .U32 address).val+offset.val) 0#u128 0 8).bv
       else out = (.Err (.Trap .MemoryOutOfBounds),bytes) ⦄ := by
   rw [memory_extend_unfold]
-  simp only [memoryExtendLoop_eq]
+  simp only [memory_extend_loop_eq]
   step with memory_range bytes (UScalar.cast .U32 address) offset 8#usize (by decide) as ⟨result,effect⟩
   by_cases fits : (UScalar.cast .U32 address).val+offset.val+8 ≤ bytes.length
   · simp only [MemoryAddressEffect,Slice.len_val,show (8#usize).val=8 by simp,fits,if_true] at effect

@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Sim.Step
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Sim.Terminal
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 def entryState (s : store) (ambient : frame) (address : funcaddr)
@@ -11,4 +11,4 @@ def entryState (s : store) (ambient : frame) (address : funcaddr)
   ⟨s, ambient, [⟨address, results, args ++ defaults, moduleInst,
     [⟨results, results, [], 0, []⟩], body, []⟩], []⟩
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

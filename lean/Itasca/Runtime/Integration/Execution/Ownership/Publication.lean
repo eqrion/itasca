@@ -10,22 +10,22 @@ for every new defined function by its actual source index. -/
 theorem store_supported_publish {M : Type} (view : M → Slice U8)
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (oldSlice : Abs.FunctionsSupported (decodeStore view oldCode before))
+    (oldSlice : SourceMachine.FunctionsSupported (decodeStore view oldCode before))
     (inst : runtime.store.ModuleInst) (sources : List funccode)
     (sourceCount : sources.length = inst.module.module.env.func_type_indices.val.length)
     (supported : ∀ source ∈ sources, match source with
-      | .HOST _ => False | .FUNC _ _ body => Forall Abs.BinaryInstr body)
+      | .HOST _ => False | .FUNC _ _ body => Forall SourceMachine.BinaryInstr body)
     (found : after.instances.val[before.instances.len.val]? = some inst)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
-    Abs.FunctionsSupported (decodeStore view (installCode oldCode before.instances.len.val sources) after) := by
+    SourceMachine.FunctionsSupported (decodeStore view (installCode oldCode before.instances.len.val sources) after) := by
   intro decoded present
   obtain ⟨function, member, rfl⟩ := List.mem_map.mp present
   rcases staged function member with old | ⟨index, bound, encoded, signature⟩
-  · rw [decodeFunction_prefix _ before after retained view shape function old]
+  · rw [decode_function_prefix _ before after retained view shape function old]
     simp only [alloc.vec.Vec.len_val]
-    rw [decodeFunction_code_agrees (installCode_agrees before oldCode sources) function]
+    rw [decode_function_code_agrees (install_code_agrees before oldCode sources) function]
     exact oldSlice _ (List.mem_map.mpr ⟨function, old, rfl⟩)
   · have resolves := List.forall₂_drop (importedFuncs inst.module.module.env.imports.val).length cache.funcs
     have count : inst.module.module.env.func_type_indices.val.length =
@@ -36,7 +36,7 @@ theorem store_supported_publish {M : Type} (view : M → Slice U8)
     have sourceFound : sources[index.val]? = some source := List.getElem?_eq_getElem sourceBound
     have known := supported source (List.mem_of_getElem? sourceFound)
     simp only [decodeFunction, encoded, found,
-      installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
+      install_code_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
     cases same : source <;> simpa only [same] using known
 
 end Itasca.Runtime.Store

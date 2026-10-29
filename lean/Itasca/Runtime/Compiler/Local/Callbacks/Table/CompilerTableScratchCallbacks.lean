@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchControl
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -63,4 +63,4 @@ theorem compiler_if_depths {A : Type} (ops : runtime.platform.Alloc A)
       ops before state bt = .ok (.Ok (), after)) : after.table_depths = before.table_depths := by
   exact compiler_enter_depths ops law before after state .Then bt accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

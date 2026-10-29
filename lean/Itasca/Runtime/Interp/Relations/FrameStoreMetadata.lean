@@ -14,7 +14,7 @@ structure FrameStoreMetadata {M : Type} (before after : runtime.store.Store M) :
 theorem FrameStoreMetadata.refl {M : Type} (store : runtime.store.Store M) :
     FrameStoreMetadata store store := ⟨rfl,rfl,rfl,rfl⟩
 
-theorem FrameStoreMetadata.decodeInstance {M : Type} {before after : runtime.store.Store M}
+theorem FrameStoreMetadata.decode_instance {M : Type} {before after : runtime.store.Store M}
     (metadata : FrameStoreMetadata before after) (inst : runtime.store.ModuleInst) :
     Store.decodeInstance after inst = Store.decodeInstance before inst := by
   simp only [Store.decodeInstance, metadata.types]
@@ -28,7 +28,7 @@ theorem FrameBinding.store_metadata {M : Type} {before after : runtime.store.Sto
     (metadata : FrameStoreMetadata before after) {exec raw source}
     (binding : FrameBinding before exec raw source) : FrameBinding after exec raw source := by
   simpa only [FrameBinding, metadata.identity, metadata.functions, metadata.types,
-    metadata.instances, metadata.decodeInstance] using binding
+    metadata.instances, metadata.decode_instance] using binding
 
 theorem FrameProgram.store_metadata {M : Type} {before after : runtime.store.Store M}
     (metadata : FrameStoreMetadata before after) {raw compiled locals results functions}

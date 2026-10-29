@@ -8,11 +8,11 @@ Inversion of complete-profile emission into its operation-family cases.
 Main declarations: `LinearEmission.executable_extension_tag` and `ExecutableEmission.typed_select_inv`. A direct consumer is `Interp.Machine.Coverage.Heads`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem LinearEmission.executable_extension_tag {locals before source emitted after}
-    (head : LinearEmission locals before source emitted after) : Abs.executableExtensionTag source = false := by
+    (head : LinearEmission locals before source emitted after) : SourceMachine.executableExtensionTag source = false := by
   cases head with
   | binary stack ty op => cases op <;> rfl
   | numeric stack op => cases op with
@@ -21,7 +21,7 @@ theorem LinearEmission.executable_extension_tag {locals before source emitted af
   | _ => rfl
 
 theorem ScalarEmission.executable_extension_tag {C before source emitted after}
-    (head : ScalarEmission C before source emitted after) : Abs.executableExtensionTag source = false := by
+    (head : ScalarEmission C before source emitted after) : SourceMachine.executableExtensionTag source = false := by
   cases head with
   | linear h => exact h.executable_extension_tag
   | float stack op => cases op <;> rfl
@@ -40,4 +40,4 @@ theorem ExecutableEmission.typed_select_inv {tables C before declared emitted af
   | typedSelect h => subst equal; exact h
   | branchTable => cases equal
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

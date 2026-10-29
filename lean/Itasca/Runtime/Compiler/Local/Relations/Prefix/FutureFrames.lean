@@ -6,7 +6,7 @@ A possible static completion of one physical open frame. Future normal liveness 
 Main declarations: `FrameFuture` and `frameGroups`. A direct consumer is `Compiler.Local.Relations.Prefix.PrefixZipper`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A possible static completion of one physical open frame. Future normal
@@ -89,4 +89,4 @@ theorem FramePlans.lookup {length locals frames labels groups}
       rw [decomp, List.getElem?_cons_succ]
       exact lookup
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

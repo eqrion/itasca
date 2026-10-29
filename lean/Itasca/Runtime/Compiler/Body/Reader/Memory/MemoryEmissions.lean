@@ -14,7 +14,7 @@ Scalar memory load/store emission from accepted reader steps.
 Main declarations: `reader_emit_memory_load_wasm2` and `reader_emit_memory_store_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.CoreInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_memory_load_wasm2 {data env locals index st}
@@ -22,7 +22,7 @@ theorem reader_emit_memory_load_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Memory.Load) (C : context)
+    (op : SourceMachine.Memory.Load) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -55,13 +55,13 @@ theorem reader_emit_memory_load_wasm2 {data env locals index st}
   have cursor := compiler_core_cursor ops law before after out.core (.load op arg.offset arg.align) callback
   refine ⟨ordinary,sources,cursor,?_⟩
   obtain ⟨sourceC,outer,spine,header,base,typed,ctrls,blocks,vals⟩ := p.opened
-  have currentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ known)).2
+  have currentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ known)).2
   have poly : Control.polymorphic st.core = false := by simpa [Control.polymorphic,ctrls] using monomorphic
   have baseEq : (Control.base st.core).val = outer.length := by simpa [Control.base,ctrls] using base
   obtain ⟨rest,shape,stack,controls,checked⟩ := reader_memory_load_stack st.core out.core data env _ _ arg outer p.current.vals
     vals baseEq poly currentKnown capacity read
   obtain ⟨front,types,oldTypes,concrete,newTypes⟩ := memory_load_stack_types known vals shape stack
-  simp only [memoryRawType_translate] at oldTypes newTypes
+  simp only [memory_raw_type_translate] at oldTypes newTypes
   rw [oldTypes] at layout
   obtain ⟨memory,available⟩ := memory_reader_available env arg _ C contextMemories checked
   have lowered := compiler_memory_load_emission ops law before out.core types front op arg.offset arg.align
@@ -76,7 +76,7 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Memory.Store) (C : context)
+    (op : SourceMachine.Memory.Store) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -109,13 +109,13 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
   have cursor := compiler_core_cursor ops law before after out.core (.store op arg.offset arg.align) callback
   refine ⟨ordinary,sources,cursor,?_⟩
   obtain ⟨sourceC,outer,spine,header,base,typed,ctrls,blocks,vals⟩ := p.opened
-  have currentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ known)).2
+  have currentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ known)).2
   have poly : Control.polymorphic st.core = false := by simpa [Control.polymorphic,ctrls] using monomorphic
   have baseEq : (Control.base st.core).val = outer.length := by simpa [Control.base,ctrls] using base
   obtain ⟨rest,shape,stack,controls,checked⟩ := reader_memory_store_stack st.core out.core data env _ _ arg outer p.current.vals
     vals baseEq poly currentKnown read
   obtain ⟨front,types,oldTypes,concrete,newTypes⟩ := memory_store_stack_types known vals shape stack
-  simp only [memoryRawType_translate] at oldTypes newTypes
+  simp only [memory_raw_type_translate] at oldTypes newTypes
   rw [oldTypes] at layout
   obtain ⟨memory,available⟩ := memory_reader_available env arg _ C contextMemories checked
   have lowered := compiler_memory_store_emission ops law before out.core types front op arg.offset arg.align
@@ -124,4 +124,4 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
   rw [callback,WP.spec_ok] at lowered
   obtain ⟨emitted,lower,emission⟩ := lowered rfl
   exact ⟨arg,front,values,oldTypes,post,emitted,⟨lower,SourceStack.of_map types concrete newTypes⟩,emission⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -4,15 +4,15 @@ import Itasca.Runtime.Interp.Calls.ReturnRefinement
 /-!
 Returning retains only the existing result suffix and the saved callers; no returned reference can acquire a different owner.
 
-Main declarations: `returnedState_owned`. A direct consumer is `Interp.Machine.Memory`.
+Main declarations: `returned_state_owned`. A direct consumer is `Interp.Machine.Memory`.
 -/
 
 namespace Itasca.Runtime.Interp
-open Abs.Ownership
+open SourceMachine.Ownership
 
 /-- Returning retains only the existing result suffix and the saved callers;
 no returned reference can acquire a different owner. -/
-theorem returnedState_owned {s : store} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+theorem returned_state_owned {s : store} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (results : List val) (subset : ∀ value ∈ results, value ∈ f.vals) :
     ∀ bounds, CoreOwned bounds ⟨s,ambient,f::rest,[]⟩ →
       CoreOwned bounds (returnedState s ambient rest results) := by
@@ -23,10 +23,10 @@ theorem returnedState_owned {s : store} {ambient : frame} {f : Abs.AFrame} {rest
   | nil => exact ⟨⟨values,by simp [returnedState]⟩,owned.globals⟩
   | cons caller rest =>
     have saved := owned.values.2 caller (by simp)
-    refine ⟨⟨valuesOwned_nil _,?_⟩,owned.globals⟩
+    refine ⟨⟨values_owned_nil _,?_⟩,owned.globals⟩
     intro item member
     change item ∈ {caller with vals := caller.vals++results}::rest at member
     rcases List.mem_cons.mp member with rfl | member
-    · exact ⟨saved.1,valuesOwned_append.mpr ⟨saved.2,values⟩⟩
+    · exact ⟨saved.1,values_owned_append.mpr ⟨saved.2,values⟩⟩
     · exact owned.values.2 item (by simp [member])
 end Itasca.Runtime.Interp

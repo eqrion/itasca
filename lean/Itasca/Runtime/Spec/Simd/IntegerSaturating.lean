@@ -34,18 +34,18 @@ theorem integer_saturating_relation (kind : IntegerSaturating) {width : Nat}
   cases kind with
   | addS =>
     exact .fun_iadd_sat__case_1 _ _ _ _ _ _ (bitvec_signed _ b) (bitvec_signed _ a)
-      (by simpa only [integerSaturatingBits,clamp_signed_toInt _ _ positive] using bitvec_inv_signed width (BitVec.ofInt width (clampLane width true (a.toInt+b.toInt)))) wf
+      (by simpa only [integerSaturatingBits,clamp_signed_to_int _ _ positive] using bitvec_inv_signed width (BitVec.ofInt width (clampLane width true (a.toInt+b.toInt)))) wf
   | subS =>
     exact .fun_isub_sat__case_1 _ _ _ _ _ _ (bitvec_signed _ b) (bitvec_signed _ a)
-      (by simpa only [integerSaturatingBits,clamp_signed_toInt _ _ positive] using bitvec_inv_signed width (BitVec.ofInt width (clampLane width true (a.toInt-b.toInt)))) wf
+      (by simpa only [integerSaturatingBits,clamp_signed_to_int _ _ positive] using bitvec_inv_signed width (BitVec.ofInt width (clampLane width true (a.toInt-b.toInt)))) wf
   | addU =>
-    simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_toNat,Nat.cast_add,proj_uN_0] using
+    simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_to_nat,Nat.cast_add,proj_uN_0] using
       fun_iadd_sat_.fun_iadd_sat__case_0 width (.mk_uN a.toNat) (.mk_uN b.toNat)
-        (by simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_toNat,Nat.cast_add,proj_uN_0] using wf)
+        (by simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_to_nat,Nat.cast_add,proj_uN_0] using wf)
   | subU =>
-    simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_toNat,proj_uN_0] using
+    simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_to_nat,proj_uN_0] using
       fun_isub_sat_.fun_isub_sat__case_0 width (.mk_uN a.toNat) (.mk_uN b.toNat)
-        (by simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_toNat,proj_uN_0] using wf)
+        (by simpa only [IntegerSaturatingRel,integerSaturatingBits,clamp_unsigned_to_nat,proj_uN_0] using wf)
 
 end Itasca.Runtime.Spec.Simd
 
@@ -140,7 +140,7 @@ theorem integer_saturating_vector_relation (ty : Jnn) (kind : IntegerSaturating)
   have nonY := integer_lanes_nonempty ty y
   have relation := saturating_words_relation ty kind x y
   have maskWf := saturating_words_wf ty kind x y
-  have shapeWf := shapeOf_wf (lanetype_Jnn ty)
+  have shapeWf := shape_of_wf (lanetype_Jnn ty)
   cases ty <;> cases kind
   all_goals first
     | apply fun_vbinop_.fun_vbinop__case_16 (var_1_lst := saturatingWords _ _ x y) (var_0_lst := saturatingWords _ _ x y) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat))
@@ -186,7 +186,7 @@ theorem integer_saturating_step (ty : Jnn) (kind : IntegerSaturating) (x y resul
   · simp
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_saturating_source_wf ty kind supported)
+  · exact .admininstr_case_26 _ _ (shape_of_wf _) (integer_saturating_source_wf ty kind supported)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

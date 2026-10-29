@@ -15,7 +15,7 @@ theorem PreparedRun.export_bounds {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Itasca.ModuleEnv.Cache module.module.env tables memories)
     (valid : Itasca.ModuleEnv.Valid module.module.env module.profile)
-    (compiled : Code.InitializerMappings module) (old : ExportBounds before) : ExportBounds ready := by
+    (compiled : Compiler.InitializerMappings module) (old : ExportBounds before) : ExportBounds ready := by
   obtain ⟨inst,found,source,_,_,retained,_,_⟩ := trace.shape_data laws law shape accounted cache valid compiled
   obtain ⟨actual,actualFound,_,count,_,_⟩ := trace.global_types laws law shape accounted cache valid compiled
   have bounded : ExportBounds trace.dataStore := by

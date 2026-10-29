@@ -1,12 +1,12 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Coverage of every independently decoded function body by the complete
 execution source grammar. This predicate imposes no subset restriction. -/
 def ModuleExecutable (raw : ModuleBinary.Module) : Prop :=
-  ∀ entry ∈ raw.codes, Forall Abs.BinaryInstr entry.body
+  ∀ entry ∈ raw.codes, Forall SourceMachine.BinaryInstr entry.body
 
 namespace SourceExecutable
 private theorem rep_all {α : Type} {R : α → List U8 → Prop} {P : α → Prop}
@@ -29,7 +29,7 @@ private theorem padded_all {α : Type} {R : α → List U8 → Prop} {P : α →
     exact rep_all entry entriesEncoded
 
 theorem body_bytes {profile source bytes} (encoded : Profile.BodyBytes profile source bytes) :
-    Forall Abs.BinaryInstr source := by
+    Forall SourceMachine.BinaryInstr source := by
   cases profile with
   | Wasm1 =>
     obtain ⟨tokens, encoded, inner, rfl, emitted⟩ := encoded
@@ -41,7 +41,7 @@ theorem body_bytes {profile source bytes} (encoded : Profile.BodyBytes profile s
     exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
 
 theorem code {profile entry bytes} (encoded : Profile.CodeEncoding profile entry bytes) :
-    Forall Abs.BinaryInstr entry.body := by
+    Forall SourceMachine.BinaryInstr entry.body := by
   obtain ⟨size, locals, body, _, _, bodyEncoded, _⟩ := encoded
   exact body_bytes bodyEncoded
 
@@ -59,12 +59,12 @@ theorem functions {profile raw bytes}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile) :
     ∀ source ∈ sourceFunctions raw, match source with
       | .HOST _ => False
-      | .FUNC _ _ body => Forall Abs.BinaryInstr body := by
+      | .FUNC _ _ body => Forall SourceMachine.BinaryInstr body := by
   have all : ∀ (indices : List U32) (entries : List ModuleBinary.Code),
-      (∀ entry ∈ entries, Forall Abs.BinaryInstr entry.body) →
+      (∀ entry ∈ entries, Forall SourceMachine.BinaryInstr entry.body) →
       ∀ source ∈ List.zipWith sourceFunctionCode indices entries, match source with
         | .HOST _ => False
-        | .FUNC _ _ body => Forall Abs.BinaryInstr body := by
+        | .FUNC _ _ body => Forall SourceMachine.BinaryInstr body := by
     intro indices
     induction indices with
     | nil => simp
@@ -80,4 +80,4 @@ theorem functions {profile raw bytes}
   exact all raw.functions raw.codes (module encoded)
 
 end SourceExecutable
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

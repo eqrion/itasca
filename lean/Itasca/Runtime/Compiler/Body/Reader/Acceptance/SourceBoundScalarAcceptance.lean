@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ScalarAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundBaseAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- All ordinary scalar readers accept at a reached source/compiler prefix
@@ -46,4 +46,4 @@ theorem IndexedTableReaderCompilerPointWasm2.scalar_available_from_source {A : T
     (fun live => by simpa [Control.polymorphic,ctrls] using state.reach.current live)
     state.compiled.known (fun live => (state.compiled.live live).2.layout) raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

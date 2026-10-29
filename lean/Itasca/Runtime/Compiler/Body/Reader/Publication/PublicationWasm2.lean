@@ -11,7 +11,7 @@ Every accepted Wasm 2 reader step preserves both publication invariants from its
 Main declarations: `reader_publication_wasm2`. A direct consumer is `Compiler.Body.Reader.Publication.SourcePublicationAdvanceWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -88,4 +88,4 @@ theorem reader_publication_wasm2 {jumpTables : List U32}
   exact compiler_non_scope_hook_publication ops law before after out.core
     (.of_range action range ordinary) coordinates maps inside forward callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

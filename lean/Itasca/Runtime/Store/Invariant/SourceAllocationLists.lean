@@ -24,7 +24,7 @@ theorem GlobalSourceValues.types {s inst sources values}
     (values.map decodeGlobal).map globalinst.TYPE = sources.map (fun original => Translate.globalType original.gtype) := by
   induction related with
   | nil => rfl
-  | cons current rest ih => simp only [List.map_cons, decodeGlobal_type_source, current.1, ih]
+  | cons current rest ih => simp only [List.map_cons, decode_global_type_source, current.1, ih]
 
 theorem GlobalSourceValues.evaluations {s inst sources values}
     (related : GlobalSourceValues s inst sources values) :
@@ -48,7 +48,7 @@ theorem ElementSourceSegments.types {s inst sources values}
     (values.map decodeElement).map eleminst.TYPE = sources.map (fun original => Translate.referenceType original.elem) := by
   induction related with
   | nil => rfl
-  | cons current rest ih => simp only [List.map_cons, decodeElement, decodeElemType_source, current.1, ih]
+  | cons current rest ih => simp only [List.map_cons, decodeElement, decode_elem_type_source, current.1, ih]
 
 theorem ElementSourceValues.evaluations {s inst ty sources values}
     (related : ElementSourceValues s inst ty sources values) :
@@ -58,7 +58,7 @@ theorem ElementSourceValues.evaluations {s inst ty sources values}
   | nil => exact .nil
   | cons current rest ih =>
     apply List.Forall₂.cons _ ih
-    simpa only [refVal_eq] using current
+    simpa only [ref_val_eq] using current
 
 theorem ElementSourceSegments.evaluations {s inst sources values}
     (related : ElementSourceSegments s inst sources values) :

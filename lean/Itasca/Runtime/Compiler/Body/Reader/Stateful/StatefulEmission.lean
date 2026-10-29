@@ -9,13 +9,13 @@ The actual compiler callback and exact reader post determine an emitted stateful
 Main declarations: `StatefulReaderPost.emission`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- The actual compiler callback and exact reader post determine an emitted
 stateful instruction and the complete append to its function-local pair table. -/
 theorem StatefulReaderPost.emission {data env locals index st}
-    {p : Pending data env .Wasm2 locals index st} {out : code.OpIterState} {op : Abs.Stateful.Instruction}
+    {p : Pending data env .Wasm2 locals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (C : context) (a b : U32)
@@ -37,7 +37,7 @@ theorem StatefulReaderPost.emission {data env locals index st}
           op.source [emitted] output := by
   obtain ⟨values,sourcePost,typesPost⟩ := post
   obtain ⟨front,input,output,signature,beforeTypes,afterTypes,afterKnown⟩ := typesPost C matched known monomorphic
-  obtain ⟨types,concrete⟩ := (concreteStack_iff _).mp afterKnown
+  obtain ⟨types,concrete⟩ := (concrete_stack_iff _).mp afterKnown
   have typed : types.map Translate.valueType = front ++ output := by
     simpa only [concrete,Sequence.stackTypes,List.map_map,Function.comp_def] using afterTypes
   rw [beforeTypes] at layout
@@ -48,4 +48,4 @@ theorem StatefulReaderPost.emission {data env locals index st}
     compiler_stateful_cursor ops law before after out _ _ _ callback,pairs,values,emitted,front ++ output,
     sourcePost,⟨lowered,afterKnown,afterTypes⟩,beforeTypes ▸ emission⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -9,7 +9,7 @@ Source-scope entry forms and their nesting geometry. ScopeNesting gives ancestor
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def SourceScope.enterBlock (bt : blocktype) (front params results : List valtype)
@@ -84,7 +84,7 @@ theorem FrameScope.enter_if {A : Type} (compiler : runtime.compiler.FunctionComp
   · change entry.val + (if entered then 1 else 0) ≤ compiler.function.code.val.length
     omega
   · exact guard
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -92,7 +92,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Nested source scopes begin after their parent's body entry. The extra local
@@ -203,6 +203,6 @@ theorem ScopeNesting.enter_if {A : Type} {locals parents current frame}
     ScopeNesting (parents ++ [current])
       (SourceScope.enterIf bt condition front params results compiler.function.code.val.length entered) :=
   .push nested _ shape.bodyBound (by simp [SourceScope.enterIf])
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

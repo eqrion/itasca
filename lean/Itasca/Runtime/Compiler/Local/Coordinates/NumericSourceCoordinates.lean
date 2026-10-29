@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.OrdinarySourceCoordinates
 import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateTactic
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -10,7 +10,7 @@ set_option maxHeartbeats 4000000
 its checked descriptor dispatch, independently of source operand typing. -/
 theorem compiler_numeric_dispatch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Numeric.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ state.pos.val)
@@ -27,7 +27,7 @@ theorem compiler_numeric_dispatch_source_coordinates {A : Type} (ops : runtime.p
 its checked descriptor dispatch, independently of source operand typing. -/
 theorem compiler_float_dispatch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Float.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Float.Instruction)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ state.pos.val)
@@ -44,7 +44,7 @@ theorem compiler_float_dispatch_source_coordinates {A : Type} (ops : runtime.pla
 its checked descriptor dispatch, independently of source operand typing. -/
 theorem compiler_memory_load_dispatch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Memory.Load) (offset alignment : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Memory.Load) (offset alignment : U32)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ state.pos.val)
@@ -61,7 +61,7 @@ theorem compiler_memory_load_dispatch_source_coordinates {A : Type} (ops : runti
 its checked descriptor dispatch, independently of source operand typing. -/
 theorem compiler_memory_store_dispatch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Memory.Store) (offset alignment : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Memory.Store) (offset alignment : U32)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ state.pos.val)
@@ -74,4 +74,4 @@ theorem compiler_memory_store_dispatch_source_coordinates {A : Type} (ops : runt
   · exact compiler_dead_source_coordinates ops law before after state _ _ _ _
       (by cases h : before.reachable <;> simp_all) held forward called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

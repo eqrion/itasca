@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -105,4 +105,4 @@ theorem compiler_br_if_source_coordinates {A : Type} (ops : runtime.platform.All
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at called
   repeat' control_coordinates_step called using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

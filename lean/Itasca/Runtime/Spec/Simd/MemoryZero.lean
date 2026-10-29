@@ -43,7 +43,7 @@ theorem zero_load_step (width : Nat) (supported : width = 32 ∨ width = 64)
       simp only [List.length_take,List.length_drop]
       dsimp only [bytes,start]
       omega
-    have bounded := integerOfBytes_bound _ payloadWf
+    have bounded := integer_of_bytes_bound _ payloadWf
     rw [payloadLength] at bounded
     have narrow : wf_uN width (.mk_uN (integerOfBytes ((bytes.drop start).take (width/8)))) := by
       apply unsigned_wf_of_lt
@@ -59,7 +59,7 @@ theorem zero_load_step (width : Nat) (supported : width = 32 ∨ width = 64)
     apply Step.read _ _ _ ?_ input output
     apply Step_read.vload_zero_val _ _ _ _ _ (.mk_uN (integerOfBytes ((bytes.drop start).take (width/8))))
     · simp [proj_num__0]
-    · have roundtrip := integerBytes_ofBytes _ payloadWf
+    · have roundtrip := integer_bytes_of_bytes _ payloadWf
       rw [payloadLength] at roundtrip
       simpa only [ibytes_,proj_uN_0,byteCount,proj_num__0,Option.get!_some,bytes,start,payloadLength]
         using roundtrip

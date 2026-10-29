@@ -7,7 +7,7 @@ A successful actual finish retains the compiler's function and witnesses that it
 Main declarations: `compiler_finish_accepted`. A direct consumer is `Compiler.Local.Callbacks.Metadata.CompilerMetadata`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- A successful actual finish retains the compiler's function and witnesses
@@ -29,4 +29,4 @@ theorem compiler_finish_accepted {A : Type} (ops : runtime.platform.Alloc A)
       obtain ⟨checked, check, accepted⟩ := bind_ok_inv _ _ _ accepted
       cases checked <;> simp_all
     · simp at accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

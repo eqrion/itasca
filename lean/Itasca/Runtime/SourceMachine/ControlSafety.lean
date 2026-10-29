@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Preservation
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec Itasca.DeclarativeComplete
 
 theorem instrs_prepend {C : context} {op : instr} {front inputs outputs results : List valtype}
@@ -15,7 +15,7 @@ theorem instrs_prepend {C : context} {op : instr} {front inputs outputs results 
 
 /-- A primitive instruction can be restored before a typed continuation when
 its operands lie above every saved label height. -/
-theorem codeStack_prepend {C : context} {labels : List Label}
+theorem code_stack_prepend {C : context} {labels : List Label}
     {front inputs outputs results : List valtype} {op : instr} {after : List instr}
     (hop : Instr_ok (labelContext C labels) op ⟨.mk_list inputs, .mk_list outputs⟩)
     (hw : wf_instr op) (heights : ∀ label ∈ labels, label.height ≤ front.length)
@@ -53,7 +53,7 @@ theorem instrs_prepend_sequence {C : context} {before after : List instr}
     Instrs_ok C (before ++ after) ⟨.mk_list (front ++ inputs), .mk_list results⟩ :=
   append (.frame C before front inputs outputs hbefore (wellFormed hbefore).1 (wellFormed hbefore).2) hafter
 
-theorem codeStack_prepend_sequence {C : context} {labels : List Label}
+theorem code_stack_prepend_sequence {C : context} {labels : List Label}
     {front inputs outputs results : List valtype} {before after : List instr}
     (hbefore : Instrs_ok (labelContext C labels) before ⟨.mk_list inputs, .mk_list outputs⟩)
     (heights : ∀ label ∈ labels, label.height ≤ front.length)
@@ -86,7 +86,7 @@ theorem codeStack_prepend_sequence {C : context} {labels : List Label}
 
 /-- The typed continuation for any branch target can be recovered by unwinding
 the explicit labels; the saved prefix is the current stack below its height. -/
-theorem codeStack_branch_target {C : context} {labels : List Label}
+theorem code_stack_branch_target {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results)
     (depth : Nat) (target : Label) (lookup : labels[depth]? = some target) :
@@ -99,7 +99,7 @@ theorem codeStack_branch_target {C : context} {labels : List Label}
     | zero =>
       simp only [List.getElem?_cons_zero, Option.some.injEq] at lookup
       subst target
-      have hh := codeStack_prepend_sequence cont
+      have hh := code_stack_prepend_sequence cont
         (fun outer ho => by rw [height]; exact nesting outer ho) after
       simpa only [List.drop_succ_cons, List.drop_zero, ← height, List.take_left] using hh
     | succ depth =>
@@ -125,10 +125,10 @@ theorem block_preservation (s : store) (ambient : frame) (f : AFrame)
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
       obtain ⟨front, inputs, outputs, hop, hstack, hafter, heights⟩ :=
-        codeStack_after_bounds (value_types_concrete f.vals) hc
+        code_stack_after_bounds (value_types_concrete f.vals) hc
       cases hop with
       | block _ _ _ ins outs hbt hbody hC hi hnew =>
-        have hbt' := blockType_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
+        have hbt' := block_type_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
         have hlen := congrArg List.length hstack
         simp only [List.length_map, List.length_append] at hlen
         have hheight : f.vals.length - inputs.length = front.length := by omega
@@ -164,11 +164,11 @@ theorem loop_preservation (s : store) (ambient : frame) (f : AFrame)
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
       obtain ⟨front, inputs, outputs, hop, hstack, hafter, heights⟩ :=
-        codeStack_after_bounds (value_types_concrete f.vals) hc
+        code_stack_after_bounds (value_types_concrete f.vals) hc
       have original := hop
       cases hop with
       | loop _ _ _ ins outs hbt hbody hC hi hnew =>
-        have hbt' := blockType_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
+        have hbt' := block_type_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
         have hlen := congrArg List.length hstack
         simp only [List.length_map, List.length_append] at hlen
         have hheight : f.vals.length - inputs.length = front.length := by omega
@@ -199,7 +199,7 @@ theorem if_frame_preservation {s : store} {f : AFrame} {after : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter, heights⟩ :=
-      codeStack_after_bounds (value_types_concrete (baseValues ++ [integerVal .I32 bits])) hc
+      code_stack_after_bounds (value_types_concrete (baseValues ++ [integerVal .I32 bits])) hc
     cases hop with
     | «if» _ _ _ _ inputs outputs hbt hyes hno hC hi hnew =>
       have hbase : baseValues.map valueType = front ++ inputs := by
@@ -215,9 +215,9 @@ theorem if_frame_preservation {s : store} {f : AFrame} {after : List instr}
           split <;> assumption
       have hop' := Instr_ok.block (labelContext C f.labels) bt (if bits = 0 then no else yes)
         inputs outs hbt hbody hC hblock hnew
-      have hcode := codeStack_prepend hop' hblock heights hafter
+      have hcode := code_stack_prepend hop' hblock heights hafter
       have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-        simpa using resultsTyped_take baseValues.length values
+        simpa using results_typed_take baseValues.length values
       exact FrameTyped.mk (f := { f with code := .BLOCK bt (if bits = 0 then no else yes) :: after, vals := baseValues }) C bindings localTypes locals hvalues returns
         (by simpa only [List.append_nil, hbase] using hcode) hw
 
@@ -231,14 +231,14 @@ theorem br_if_frame_preservation {s : store} {f : AFrame} {after : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter, heights⟩ :=
-      codeStack_after_bounds (value_types_concrete (baseValues ++ [integerVal .I32 bits])) hc
+      code_stack_after_bounds (value_types_concrete (baseValues ++ [integerVal .I32 bits])) hc
     cases hop with
     | br_if _ _ types hi ht hC hinst =>
       have hbase : baseValues.map valueType = front ++ outs := by
         simpa only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
           numtype_Inn, valtype_numtype, ← List.append_assoc, List.append_cancel_right_eq] using hstack
       have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-        simpa using resultsTyped_take baseValues.length values
+        simpa using results_typed_take baseValues.length values
       apply FrameTyped.mk (f := { f with code := if bits = 0 then after else .BR depth :: after, vals := baseValues }) C bindings localTypes locals hvalues returns ?_ hw
       by_cases hz : bits = 0
       · simpa only [hz, ↓reduceIte, List.append_nil, hbase] using hafter
@@ -246,7 +246,7 @@ theorem br_if_frame_preservation {s : store} {f : AFrame} {after : List instr}
           cases hinst with | instr_case_8 _ hidx => exact .instr_case_7 _ hidx
         have hop' : Instr_ok (labelContext C f.labels) (.BR depth) ⟨.mk_list outs, .mk_list outs⟩ := by
           simpa using Instr_ok.br (labelContext C f.labels) depth [] outs outs hi ht hC hbr
-        simpa only [hz, ↓reduceIte, List.append_nil, hbase] using codeStack_prepend hop' hbr heights hafter
+        simpa only [hz, ↓reduceIte, List.append_nil, hbase] using code_stack_prepend hop' hbr heights hafter
 
 /-- Branching preserves the recovered target continuation and carries exactly
 its typed result suffix over the saved prefix below the target height. -/
@@ -261,7 +261,7 @@ theorem br_preservation (s : store) (ambient : frame) (f : AFrame)
     cases hf with
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
-      obtain ⟨front, ins, outs, hop, hstack⟩ := codeStack_head (value_types_concrete f.vals) hc
+      obtain ⟨front, ins, outs, hop, hstack⟩ := code_stack_head (value_types_concrete f.vals) hc
       cases hop with
       | br _ _ discarded types outputs hi ht _ _ =>
         have hi' : depth < f.labels.length := by simpa [labelContext, proj_uN_0] using hi
@@ -276,16 +276,16 @@ theorem br_preservation (s : store) (ambient : frame) (f : AFrame)
           omega
         have hsuffix : ResultsTyped s target.branchTypes (f.vals.drop (f.vals.length - target.arity)) := by
           rw [htypes, hoff]
-          apply resultsTyped_drop
+          apply results_typed_drop
           simpa only [hstack, List.append_assoc] using values
         have hsuffixTypes := results_type_of_typed hsuffix
-        have hpref := resultsTyped_take target.height values
+        have hpref := results_typed_take target.height values
         let frame' : AFrame := { f with vals := f.vals.take target.height ++ f.vals.drop (f.vals.length - target.arity), labels := f.labels.drop (depth + 1), code := target.cont ++ target.after }
         have hf' : FrameTyped s frame' [] := by
           apply FrameTyped.mk (f := frame') C bindings localTypes locals ?_ returns ?_ hw
           · simpa only [frame', ResultsTyped, List.map_append, hsuffixTypes] using List.rel_append hpref hsuffix
           · simpa only [frame', List.append_nil, List.map_append, List.map_take, hsuffixTypes] using
-              codeStack_branch_target hc depth target lookup
+              code_stack_branch_target hc depth target lookup
         simp only [astep, branch, lookup] at step
         split at step
         · have heq : next = ⟨s, ambient, frame' :: rest, []⟩ := by
@@ -294,4 +294,4 @@ theorem br_preservation (s : store) (ambient : frame) (f : AFrame)
           exact active_frame_preservation typed hf' rfl
         · contradiction
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

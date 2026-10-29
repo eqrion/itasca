@@ -9,7 +9,7 @@ Lookup of independently encoded entries and their batch source positions. The ba
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Prefix-unique encodings identify an entry by the number of preceding
@@ -65,7 +65,7 @@ theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
   exact ⟨⟨w.groups, source⟩, encoded_entry_lookup (Profile.code_prefix_unique profile)
     whole prefixEncoding lastEncoding joined bound, rfl, body⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -73,7 +73,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The reachable worker's validated prefix identifies its next exact entry
@@ -111,7 +111,7 @@ theorem source_entry_offset {prior entries remaining : List ModuleBinary.Code} {
   rw [List.getElem?_append_left (List.getElem?_eq_some_iff.mp found).1]
   exact found
 
-theorem sourceFunctions_lookup {raw : ModuleBinary.Module} {index : Nat} {typeIndex entry}
+theorem source_functions_lookup {raw : ModuleBinary.Module} {index : Nat} {typeIndex entry}
     (typeFound : raw.functions[index]? = some typeIndex)
     (codeFound : raw.codes[index]? = some entry) :
     (sourceFunctions raw)[index]? = some (sourceFunctionCode typeIndex entry) := by
@@ -123,6 +123,6 @@ theorem sourceFunctions_lookup {raw : ModuleBinary.Module} {index : Nat} {typeIn
   simp only [sourceFunctions, List.getElem_zipWith]
   rw [(List.getElem?_eq_some_iff.mp typeFound).2, (List.getElem?_eq_some_iff.mp codeFound).2]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -9,7 +9,7 @@ An unrecognized base-profile opcode rejects before visiting the compiler.
 Main declarations: `reader_opcode_wasm1` and `reader_accepted_opcode_wasm2`. A direct consumer is `Compiler.Body.Reader.Replay.OrdinaryLedger`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 16384
@@ -84,4 +84,4 @@ theorem reader_accepted_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
     · simp at accepted
     · simp [rejected,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

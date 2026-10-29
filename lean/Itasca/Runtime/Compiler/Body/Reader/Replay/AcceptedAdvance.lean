@@ -7,7 +7,7 @@ Reuse the complete accepted-step certificate after acceptance has been construct
 Main declarations: `accepted_reader_advance_wasm2`. A direct consumer is `Compiler.Body.Reader.Source.SourceBudgetAdvance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Reuse the complete accepted-step certificate after acceptance has been
@@ -63,4 +63,4 @@ theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law 
   · exact .inl closed
   · exact .inr ⟨point',fresh⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

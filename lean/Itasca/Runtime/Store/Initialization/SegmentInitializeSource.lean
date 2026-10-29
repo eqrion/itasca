@@ -25,7 +25,7 @@ def segmentRawSource (raw : Itasca.ModuleBinary.Module) : List admininstr :=
   (Spec.Segment.elementPrograms (raw.elements.map Itasca.ModuleElaboration.element)).flatten.map admininstr_instr ++
   (Spec.Segment.dataPrograms (raw.data.map Itasca.ModuleData.translate)).flatten.map admininstr_instr
 
-theorem segmentModuleSource_raw (module : runtime.compiler.ExecutableModule)
+theorem segment_module_source_raw (module : runtime.compiler.ExecutableModule)
     (raw : Itasca.ModuleBinary.Module)
     (matched : Itasca.ModuleElaboration.Matches module.module.env module.module.tail raw) :
     segmentModuleSource module = segmentRawSource raw := by
@@ -51,7 +51,7 @@ def SegmentSetupCause {M A : Type} (allocator : runtime.platform.Alloc A)
     (store : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (error : runtime.ExecError) : Prop :=
   ∃ code, module.functions.val[module.initialization.val]? = some code ∧
-    Code.SegmentProgram module code ∧ Interp.SyntheticPreparationCause allocator store code error
+    Compiler.SegmentProgram module code ∧ Interp.SyntheticPreparationCause allocator store code error
 
 theorem initialize_segments_source_causes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -63,7 +63,7 @@ theorem initialize_segments_source_causes {M P F A : Type}
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[inst.module.initialization.val]? = some code)
     (ready : SegmentCodeReady store inst code code.slot_count.val)
-    (sourceCode : CodeInterpretation) (flow : Code.SegmentFlow 0 code.code.val)
+    (sourceCode : CodeInterpretation) (flow : Compiler.SegmentFlow 0 code.code.val)
     (compatible : ∀ instruction ∈ code.code.val, SegmentBulkCompatible store inst code instruction)
     (globals : ∀ index address value, .GlobalGet 0#u32 index ∈ code.code.val →
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some value → value.ty.valtype = .I32)
@@ -72,7 +72,7 @@ theorem initialize_segments_source_causes {M P F A : Type}
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => (∃ reason, out.1 = .Err (.Exhausted reason) ∧ out.2.1 = store ∧
         Interp.SyntheticPreparationCause allocator store code (.Exhausted reason)) ∨
-        SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Code.segmentSource code code.code.val⟩ []
+        SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,Compiler.segmentSource code code.code.val⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩, segmentResult out.1⟩ ⦄ := by
   unfold runtime.interp.initialize_segments
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
@@ -105,10 +105,10 @@ theorem initialize_segments_compiled_source_causes {M P F A : Type}
         SegmentSetupCause allocator store inst.module (.Exhausted reason)) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,segmentModuleSource inst.module⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩,segmentResult out.1⟩ ⦄ := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Code.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
   have instanceShape := shape.instances inst (List.mem_of_getElem? found)
   have ready := segment_program_ready store inst code program pcBound instanceShape imports bindings valid.elements dataValid
   have compatible := segment_program_compatible store inst code program types valid.elements
@@ -168,7 +168,7 @@ theorem initialize_segments_raw_source_causes {M P F A : Type}
     refine Or.inr ⟨status,?_⟩
     have contextual := segment_steps_suffix _ _ _ out.1 after reduced afterWf
     simpa only [Spec.instrContext,vals,List.map_nil,List.nil_append,
-      segmentModuleSource_raw inst.module raw matched] using contextual
+      segment_module_source_raw inst.module raw matched] using contextual
 
 end Itasca.Runtime.Store
 

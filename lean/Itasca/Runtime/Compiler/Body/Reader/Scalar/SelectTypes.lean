@@ -7,7 +7,7 @@ The full operand-stack types of untyped select.
 Main declarations: `select_full_stack_types`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedSimpleAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem select_full_stack_types {before after outer segment result : List code.StackType} {selected}
@@ -18,7 +18,7 @@ theorem select_full_stack_types {before after outer segment result : List code.S
       Sequence.stackTypes before = front ++ [Translate.valueType ty, Translate.valueType ty, .I32] ∧
       after = types.map code.StackType.Val ∧
       types.map Translate.valueType = front ++ [Translate.valueType ty] := by
-  have both := concreteStack_append.mp (old ▸ known)
+  have both := concrete_stack_append.mp (old ▸ known)
   have selectedKnown := (concrete_select_effect both.2 effect).2
   cases selected with
   | Bot => exact False.elim (selectedKnown rfl)
@@ -28,4 +28,4 @@ theorem select_full_stack_types {before after outer segment result : List code.S
       exact ⟨rest, rfl, by simpa [StackSemantics.selectedType, Translate.valueType] using transfer⟩
     obtain ⟨front, types, prior, concrete, output⟩ := numeric_full_stack_types known old new numeric
     exact ⟨ty, front, types, rfl, by simpa [Translate.valueType] using prior, concrete, output⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -8,7 +8,7 @@ Finishing a compiled entry while retaining its executable certificate.
 Main declarations: `executable_witness_compiler_finish`. A direct consumer is `Compiler.Body.Relations.Entry.EntryCompilerExecutable`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Alloc A)
@@ -50,6 +50,6 @@ theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Al
   · have contextEq : sourceFunctionContext env
         (w.ft.params.val.map Translate.valueType ++ (ModuleLocals.declared w.groups).map Translate.valueType)
         (w.ft.results.val.map Translate.valueType) = EnvTranslation.context env w.ctx := by
-      rw [← sourceFunctionContext_reader env w.ctx, w.context_locals, List.map_append, w.context_results]
+      rw [← source_function_context_reader env w.ctx, w.context_locals, List.map_append, w.context_results]
     simpa only [contextEq, EnvTranslation.context, same] using certificate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

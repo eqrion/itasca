@@ -8,7 +8,7 @@ Normal return of profile-filtered ordinary reader steps.
 Main declarations: `compiler_reader_profile_wasm2_ordinary_total`. A direct consumer is `Compiler.Body.Reader.Replay.ReachedSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform.Alloc A)
@@ -36,4 +36,4 @@ theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform
     (fun state after => ObservedStack after state.vals.val) scalar
   intro capacity
   exact compiler_reader_wasm2_total ops law compiler st.core data env ctx ready shape capacity opcode scalar
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

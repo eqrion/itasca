@@ -8,7 +8,7 @@ Data offset mappings and complete initializer lowering. The mapping evidence con
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def sourceDataOffset (segment : Itasca.module.Data) : Option Itasca.types.ConstExpr :=
@@ -173,7 +173,7 @@ theorem initializer_data_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -181,7 +181,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source-indexed certificates for every retained read-only initializer. The
@@ -329,6 +329,6 @@ theorem initializer_lower {A : Type} (ops : runtime.platform.Alloc A)
                 exact ⟨mapped.globals.extend prefixFinal, mapped.elementValues.extend prefixFinal,
                   mapped.elementOffsets.extend prefixFinal, mapped.dataOffsets.extend prefixFinal⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

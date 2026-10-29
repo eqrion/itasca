@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Safety
 import Itasca.Runtime.SourceMachine.Numeric.Semantics
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem word_bound (ty : Inn) (bits : BitVec (sizenn (numtype_Inn ty))) :
@@ -46,4 +46,4 @@ def Instruction.operands (op : Instruction)
         exact ⟨first, wa, wa, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa] using hsplit⟩
 
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

@@ -13,7 +13,7 @@ Local-index bounds and normal return of local get/set/tee reader callbacks.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful local parsing checks the namespace before the compiler callback,
@@ -77,7 +77,7 @@ theorem reader_local_tee_bound (st out : code.OpIterState) (data : Slice U8) (ct
       simp only [Result.ok.injEq,Prod.mk.injEq,core.result.Result.Ok.injEq] at tail
       obtain ⟨rfl,rfl⟩ := tail
       exact post.2.choose
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -85,7 +85,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual local.get dispatch returns normally on parsing rejection as well as
@@ -147,6 +147,6 @@ theorem compiler_reader_local_tee_total {A} (ops : runtime.platform.Alloc A)
       (by simpa [ready.namespaces.offsets] using bound)
       (by simpa [ready.namespaces.locals] using bound)
       ready.codeFits ready.sourceFits ready.coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

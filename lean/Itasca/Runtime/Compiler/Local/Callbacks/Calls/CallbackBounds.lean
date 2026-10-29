@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
 import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Observation bounds every prefix, including bottom-valued dormant stacks. -/
@@ -11,7 +11,7 @@ theorem ObservedStack.prefix_bound {A} {compiler : runtime.compiler.FunctionComp
   have max : compiler.height.val ≤ U32.max := by scalar_tac
   rw [observed.height] at max
   by_cases small : count ≤ values.length
-  · have mono := stackWords_take_mono values small
+  · have mono := stack_words_take_mono values small
     simp only [List.take_length] at mono
     omega
   · simpa [List.take_of_length_le (by omega : values.length ≤ count)] using max
@@ -30,4 +30,4 @@ theorem SourceCodeBudget.callback_headroom {A} {compiler : runtime.compiler.Func
   norm_num [Itasca.limits.MAX_MODULE_BYTES] at bounded
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -6,7 +6,7 @@ Validated data offsets and emitted data-initializer programs.
 Main declarations: `valid_offset_shape` and `emit_data_program`. A direct consumer is `Compiler.Local.Relations.Segments.SegmentFinish`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem valid_offset_shape {env : Itasca.module.Env} {expr : Itasca.types.ConstExpr}
@@ -118,4 +118,4 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
                   · rw [firstFields]
                   · exact .inr ⟨rfl, by rw [firstFields]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

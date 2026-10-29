@@ -59,25 +59,25 @@ theorem select_slots {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (front : List val) (left right : val) (bits : Nat)
     (a b condition : U32) (ty : valtype)
-    (values : ValuesAt exec.slots.val raw.base.val (front ++ [left,right,Abs.integerVal .I32 bits]))
-    (leftType : Code.valueType left = ty) (rightType : Code.valueType right = ty)
-    (leftPos : a.val = Code.slots (front.map Code.valueType))
-    (rightPos : b.val = a.val+Code.width ty) (conditionPos : condition.val = b.val+Code.width ty)
+    (values : ValuesAt exec.slots.val raw.base.val (front ++ [left,right,SourceMachine.integerVal .I32 bits]))
+    (leftType : Compiler.valueType left = ty) (rightType : Compiler.valueType right = ty)
+    (leftPos : a.val = Compiler.slots (front.map Compiler.valueType))
+    (rightPos : b.val = a.val+Compiler.width ty) (conditionPos : condition.val = b.val+Compiler.width ty)
     (bitsBound : bits < 2^32) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index raw.instance raw.function raw.base
-      (Code.selectInstruction (decide (Code.width ty = 2)) a b condition) ⦃ out =>
+      (Compiler.selectInstruction (decide (Compiler.width ty = 2)) a b condition) ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ValuesAt out.2.1.slots.val raw.base.val (front ++ [if bits = 0 then right else left]) ∧
       {out.2.1 with slots := exec.slots} = exec ∧
       SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ⦄ := by
   have words : WordsAt exec.slots.val raw.base.val
-      ((Code.encodeValues front ++ Code.encodeValue left ++ Code.encodeValue right) ++ [bits]) := by
-    simpa only [ValuesAt,Code.encodeValues_append,Code.encodeValues,Code.encodeValue,Abs.integerVal,
+      ((Compiler.encodeValues front ++ Compiler.encodeValue left ++ Compiler.encodeValue right) ++ [bits]) := by
+    simpa only [ValuesAt,Compiler.encode_values_append,Compiler.encodeValues,Compiler.encodeValue,SourceMachine.integerVal,
       numtype_Inn,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,List.append_nil,List.append_assoc] using values
-  have frontLength : (Code.encodeValues front).length = a.val := by rw [Code.encodeValues_length,leftPos]
-  have leftLength : (Code.encodeValue left).length = Code.width ty := by rw [Code.encodeValue_length,leftType]
-  have rightLength : (Code.encodeValue right).length = Code.width ty := by rw [Code.encodeValue_length,rightType]
-  have conditionLength : (Code.encodeValues front ++ Code.encodeValue left ++ Code.encodeValue right).length = condition.val := by
+  have frontLength : (Compiler.encodeValues front).length = a.val := by rw [Compiler.encode_values_length,leftPos]
+  have leftLength : (Compiler.encodeValue left).length = Compiler.width ty := by rw [Compiler.encode_value_length,leftType]
+  have rightLength : (Compiler.encodeValue right).length = Compiler.width ty := by rw [Compiler.encode_value_length,rightType]
+  have conditionLength : (Compiler.encodeValues front ++ Compiler.encodeValue left ++ Compiler.encodeValue right).length = condition.val := by
     simp only [List.length_append,frontLength,leftLength,rightLength]
     omega
   obtain ⟨bound,wordEq⟩ := words.append_right 0 (by simp)
@@ -89,34 +89,34 @@ theorem select_slots {M P F A : Type}
     constructor
     · intro eq; have v := congrArg UScalar.val eq; change (UScalar.cast .U32 exec.slots.val[raw.base.val+condition.val]!).val = 0 at v; rwa [castEq] at v
     · intro eq; apply UScalar.eq_of_val_eq; change (UScalar.cast .U32 exec.slots.val[raw.base.val+condition.val]!).val = 0; rw [castEq,eq]
-  have widthPositive := Code.width_positive ty
-  have sourceBound : raw.base.val+b.val+Code.width ty ≤ exec.slots.length := by omega
-  have destinationBound : raw.base.val+a.val+Code.width ty ≤ exec.slots.length := by omega
+  have widthPositive := Compiler.width_positive ty
+  have sourceBound : raw.base.val+b.val+Compiler.width ty ≤ exec.slots.length := by omega
+  have destinationBound : raw.base.val+a.val+Compiler.width ty ≤ exec.slots.length := by omega
   have representation : ∀ newWords,
-      newWords = (if bits = 0 then copyWords exec.slots.val (raw.base.val+a.val) (raw.base.val+b.val) (Code.width ty) else exec.slots.val) →
+      newWords = (if bits = 0 then copyWords exec.slots.val (raw.base.val+a.val) (raw.base.val+b.val) (Compiler.width ty) else exec.slots.val) →
       ValuesAt newWords raw.base.val (front ++ [if bits = 0 then right else left]) ∧
       SlotPrefix raw.base.val exec.slots.val newWords := by
     intro newWords effect
     rw [effect]
     by_cases zero : bits = 0
     · rw [if_pos zero,if_pos zero]
-      have input : WordsAt exec.slots.val (raw.base.val+b.val) (Code.encodeValue right) := by
+      have input : WordsAt exec.slots.val (raw.base.val+b.val) (Compiler.encodeValue right) := by
         have last := words.append_left.append_right
         simpa only [List.length_append,frontLength,leftLength,← rightPos,Nat.add_assoc] using last
       have copied := words.append_left.append_left.append_left.copy_append input
         (Or.inl (by omega)) (by simpa only [rightLength] using sourceBound)
         (by simpa only [frontLength,rightLength] using destinationBound)
-      refine ⟨?_,SlotPrefix.copy raw.base.val exec.slots.val (raw.base.val+a.val) (raw.base.val+b.val) (Code.width ty) (by omega)⟩
+      refine ⟨?_,SlotPrefix.copy raw.base.val exec.slots.val (raw.base.val+a.val) (raw.base.val+b.val) (Compiler.width ty) (by omega)⟩
       rw [frontLength,rightLength] at copied
-      simpa only [ValuesAt,Code.encodeValues_append,Code.encodeValues,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,
+      simpa only [ValuesAt,Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,
         List.append_nil,frontLength,rightLength] using copied
     · rw [if_neg zero,if_neg zero]
       refine ⟨?_,.refl _ _⟩
-      simpa only [ValuesAt,Code.encodeValues_append,Code.encodeValues,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,List.append_nil] using words.append_left.append_left
-  have scalarWidth : Code.width ty = 1 ∨ Code.width ty = 2 := by cases ty <;> decide
+      simpa only [ValuesAt,Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,List.append_nil] using words.append_left.append_left
+  have scalarWidth : Compiler.width ty = 1 ∨ Compiler.width ty = 2 := by cases ty <;> decide
   rcases scalarWidth with width | width
-  · have narrow : decide (Code.width ty = 2) = false := by simp [width]
-    rw [show Code.selectInstruction (decide (Code.width ty = 2)) a b condition = .Select a b condition by simp [narrow,Code.selectInstruction]]
+  · have narrow : decide (Compiler.width ty = 2) = false := by simp [width]
+    rw [show Compiler.selectInstruction (decide (Compiler.width ty = 2)) a b condition = .Select a b condition by simp [narrow,Compiler.selectInstruction]]
     simp only [runtime.interp.dispatch]
     obtain ⟨out,result,success,changed,fields⟩ := WP.spec_imp_exists
       (select_effect exec raw.base a b condition hc (by omega) (by omega))
@@ -127,8 +127,8 @@ theorem select_slots {M P F A : Type}
     simp only [zeroEq] at converted
     have fresh := representation updated.slots.val (by simpa only [width] using converted)
     exact ⟨success,rfl,rfl,fresh.1,fields,fresh.2⟩
-  · have wide : decide (Code.width ty = 2) = true := by simp [width]
-    rw [show Code.selectInstruction (decide (Code.width ty = 2)) a b condition = .Select2 a b condition by simp [wide,Code.selectInstruction]]
+  · have wide : decide (Compiler.width ty = 2) = true := by simp [width]
+    rw [show Compiler.selectInstruction (decide (Compiler.width ty = 2)) a b condition = .Select2 a b condition by simp [wide,Compiler.selectInstruction]]
     simp only [runtime.interp.dispatch]
     obtain ⟨out,result,success,changed,fields⟩ := WP.spec_imp_exists
       (select2_effect exec raw.base a b condition hc (by omega) (by omega))

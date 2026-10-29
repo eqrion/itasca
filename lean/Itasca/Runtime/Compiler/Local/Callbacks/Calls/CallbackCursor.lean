@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -87,4 +87,4 @@ theorem compiler_br_if_cursor {A : Type} (ops : runtime.platform.Alloc A)
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
   repeat' control_cursor_step accepted using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

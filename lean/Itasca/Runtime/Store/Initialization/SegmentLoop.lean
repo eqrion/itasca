@@ -26,7 +26,7 @@ theorem SegmentCodeReady.transport {M : Type} {store after : runtime.store.Store
 
 theorem segment_program_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (program : Code.SegmentProgram inst.module code)
+    (program : Compiler.SegmentProgram inst.module code)
     (pcBound : code.code.length < U32.max)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst)

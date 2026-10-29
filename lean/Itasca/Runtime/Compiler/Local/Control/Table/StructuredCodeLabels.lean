@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem StructuredCode.Targets.cons {emission types functions returns locals code jumpTables label labels next after}
@@ -112,4 +112,4 @@ theorem StructuredCode.ordinary_block {emission types functions returns locals c
     StructuredCode emission types functions returns locals code jumpTables labels (front ++ params) (.BLOCK bt body :: after) pc next final :=
   StructuredCode.block signature bodyCode (fun live => rest (Or.inl live)) (fun live => rest (Or.inr live)) bounds
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

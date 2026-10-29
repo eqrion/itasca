@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
 
 /-! SELECT normal return from raw observed offsets. Polymorphic stacks and
 rejected emission/observation outcomes require no final body certificate. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_operand_observed {A} (ops : runtime.platform.Alloc A)
@@ -62,7 +62,7 @@ set_option maxHeartbeats 1000000 in
       (compiler_operand_observed ops compiler values observed 1#usize (by decide) (by simpa using (show 1 ≤ values.length by omega)))
     have ordered : left.val ≤ right.val := by
       rw [leftValue, rightValue]
-      simpa using Nat.add_le_add_left (stackWords_take_mono values
+      simpa using Nat.add_le_add_left (stack_words_take_mono values
         (a := values.length - 3) (b := values.length - 2) (by omega)) compiler.function.local_slots.val
     have sub : (right - left) ⦃ _ => True ⦄ := by step
     obtain ⟨difference, differenceCall, _⟩ := WP.spec_imp_exists sub
@@ -77,4 +77,4 @@ set_option maxHeartbeats 1000000 in
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

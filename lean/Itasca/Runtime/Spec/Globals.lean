@@ -7,7 +7,7 @@ open SpecExt
 def globalWrite (s : store) (f : frame) (index : Nat) (value : val) : store :=
   {s with GLOBALS := s.GLOBALS.modify f.MODULE.GLOBALS[index]! (fun global => {global with VALUE := value})}
 
-theorem globalWrite_wf (s : store) (f : frame) (index : Nat) (value : val)
+theorem global_write_wf (s : store) (f : frame) (index : Nat) (value : val)
     (hs : wf_store s) (hv : wf_val value) : wf_store (globalWrite s f index value) := by
   cases s with | MKstore funcs globals tables mems elems datas =>
   cases hs with | store_case_ _ _ _ _ _ _ hfn hg ht hm hd =>
@@ -44,7 +44,7 @@ theorem global_set_step (s : store) (f : frame) (index : Nat) (value : val)
     (hv : wf_val value) (mapped : index < f.MODULE.GLOBALS.length) :
     StepH ⟨⟨s,f⟩,[admininstr_val value,.GLOBAL_SET (.mk_uN index)]⟩ []
       ⟨⟨globalWrite s f index value,f⟩,[]⟩ := by
-  have outputWf := globalWrite_wf s f index value hs hv
+  have outputWf := global_write_wf s f index value hs hv
   apply StepH.step
   apply Step.global_set
   · exact .fun_with_global_case_0 s f (.mk_uN index) value mapped

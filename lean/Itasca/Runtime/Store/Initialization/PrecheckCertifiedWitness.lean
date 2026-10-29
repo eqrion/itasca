@@ -16,7 +16,7 @@ theorem element_precheck_certified_witness (law : Platform.AllocCorrect allocato
     (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (allowed : ErrorAllowed (PrecheckCause view store inst) status)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -37,7 +37,7 @@ theorem data_precheck_certified_witness (law : Platform.AllocCorrect allocator)
     (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (allowed : ErrorAllowed (PrecheckCause view store inst) status)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.tail.data.val,
       Itasca.ModuleData.Valid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)

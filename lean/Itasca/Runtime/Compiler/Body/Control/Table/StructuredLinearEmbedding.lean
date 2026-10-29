@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixAdvance
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.ordinary_linear {jumpTables : List U32} {A : Type}
@@ -15,7 +15,7 @@ theorem StructuredCompilerPrefix.ordinary_linear {jumpTables : List U32} {A : Ty
     (sources : SourceProgress before after) (consumed : position < nextPosition)
     (cursor : after.next_source.val ≤ nextPosition) :
     StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance instruction) nextRaw nextPosition :=
-  invariant.ordinary reachable ordinary lowered (embedding emission) sources consumed cursor emission.not_branchTable
+  invariant.ordinary reachable ordinary lowered (embedding emission) sources consumed cursor emission.not_branch_table
 
 theorem StructuredCompilerPrefix.ordinary_empty_linear {jumpTables : List U32} {A : Type}
     {initial before after : runtime.compiler.FunctionCompiler A}
@@ -28,5 +28,5 @@ theorem StructuredCompilerPrefix.ordinary_empty_linear {jumpTables : List U32} {
     (sources : SourceProgress before after) (consumed : position < nextPosition)
     (cursor : after.next_source.val ≤ nextPosition) :
     StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance instruction) nextRaw nextPosition :=
-  invariant.ordinary_empty reachable ordinary lowered (embedding emission) sources consumed cursor emission.not_branchTable
-end Itasca.Runtime.Code
+  invariant.ordinary_empty reachable ordinary lowered (embedding emission) sources consumed cursor emission.not_branch_table
+end Itasca.Runtime.Compiler

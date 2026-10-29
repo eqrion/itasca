@@ -72,8 +72,8 @@ open SpecExt.Builtins
 
 theorem pairwise_source_wf (ty : PairwiseWidth) (signed : Bool) : wf_admininstr (pairwiseSource ty signed) := by
   apply wf_admininstr.admininstr_case_36
-  · exact .ishape_case_0 _ _ (shapeOf_wf _) rfl
-  · exact .ishape_case_0 _ _ (shapeOf_wf _) rfl
+  · exact .ishape_case_0 _ _ (shape_of_wf _) rfl
+  · exact .ishape_case_0 _ _ (shape_of_wf _) rfl
   · apply wf_vextunop__.vextunop___case_0
     · apply wf_vextunop__Jnn_1_M_1_Jnn_2_M_2.vextunop__Jnn_1_M_1_Jnn_2_M_2_case_0
       cases ty <;> decide
@@ -101,8 +101,8 @@ theorem pairwise_vector_relation (ty : PairwiseWidth) (signed : Bool) (x : BitVe
     · exact integer_lanes_nonempty .I8 x
     · exact pairwise_interleave .i8 signed x
     · rfl
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact pairwise_words_wf .i8 signed x
     · rfl
     · rfl
@@ -121,8 +121,8 @@ theorem pairwise_vector_relation (ty : PairwiseWidth) (signed : Bool) (x : BitVe
     · exact integer_lanes_nonempty .I16 x
     · exact pairwise_interleave .i16 signed x
     · rfl
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact pairwise_words_wf .i16 signed x
     · rfl
     · rfl

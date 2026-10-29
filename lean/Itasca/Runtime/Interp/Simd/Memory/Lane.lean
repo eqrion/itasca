@@ -20,7 +20,7 @@ def memoryLaneBytes : Jnn → Usize
   | .I8 => UScalar.cast .Usize 1#u32 | .I16 => UScalar.cast .Usize 2#u32
   | .I32 => UScalar.cast .Usize 4#u32 | .I64 => UScalar.cast .Usize 8#u32
 
-theorem memoryLaneBytes_small (ty : Jnn) : (memoryLaneBytes ty).val ≤ 16 := by cases ty <;> simp [memoryLaneBytes]
+theorem memory_lane_bytes_small (ty : Jnn) : (memoryLaneBytes ty).val ≤ 16 := by cases ty <;> simp [memoryLaneBytes]
 
 theorem memory_lane_unfold (ty : Jnn) (store : Bool) (offset index : U32) (address value : U128) (memory : Slice U8) :
     runtime.interp.simd.memory_op (memoryLaneOpcode ty store) offset index address value memory = (do

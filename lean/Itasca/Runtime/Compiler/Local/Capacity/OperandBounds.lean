@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
 import Itasca.Support.Result
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 @[step] theorem slots_fit_spec (f : runtime.bytecode.CompiledFunction) (start count : U32) :
@@ -71,7 +71,7 @@ theorem const64_valid_bounds (f : runtime.bytecode.CompiledFunction) (dst : U32)
   have bound := slots_fit_true f dst 1#u32 checked
   scalar_tac
 
-theorem jumpIfZero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond target : U32)
+theorem jump_if_zero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond target : U32)
     (checked : runtime.bytecode.CompiledFunction.instruction_valid f (.JumpIfZero cond target) = .ok true) :
     cond.val < f.slot_count.val ∧ target.val < f.code.length := by
   simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,
@@ -83,7 +83,7 @@ theorem jumpIfZero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond ta
   have targetBound := Result.ok_injective targetRun
   scalar_tac
 
-theorem jumpIfNonZero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond target : U32)
+theorem jump_if_non_zero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond target : U32)
     (checked : runtime.bytecode.CompiledFunction.instruction_valid f (.JumpIfNonZero cond target) = .ok true) :
     cond.val < f.slot_count.val ∧ target.val < f.code.length := by
   simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,
@@ -95,4 +95,4 @@ theorem jumpIfNonZero_valid_bounds (f : runtime.bytecode.CompiledFunction) (cond
   have targetBound := Result.ok_injective targetRun
   scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

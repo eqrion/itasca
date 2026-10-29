@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -109,7 +109,7 @@ elab "depths_effect " h:ident " using " ops:term : tactic => withMainContext do
     | ``runtime.compiler.control.FunctionCompiler.patch =>
       `(tactic| have effect := compiler_patch_depths $ops _ _ _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.branch => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_branch_depths
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_branch_depths
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -149,4 +149,4 @@ theorem compiler_table_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
     after.table_depths = before.table_depths := by
   unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   repeat' depths_step accepted using ops
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

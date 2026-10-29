@@ -1,10 +1,10 @@
 import Itasca.Runtime.SourceMachine.Core.ContentExtension
 import Itasca.Runtime.SourceMachine.Memory.Semantics
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
-theorem memoryPayloadWrite_as_set (s : store) (f : frame) (address start : Nat)
+theorem memory_payload_write_as_set (s : store) (f : frame) (address start : Nat)
     (object : meminst) (payload : List byte) (mapped : f.MODULE.MEMS[0]? = some address)
     (found : s.MEMS[address]? = some object) :
     Spec.memoryPayloadWrite s f start payload =
@@ -29,13 +29,13 @@ theorem splice_wf (bytes payload : List byte) (start : Nat)
   · exact fresh byte (List.mem_of_mem_take middle)
   · exact old byte (List.mem_of_mem_drop last)
 
-theorem memoryPayloadWrite_extends (s : store) (f : frame) (address start : Nat)
+theorem memory_payload_write_extends (s : store) (f : frame) (address start : Nat)
     (object : meminst) (payload : List byte) (wf : wf_store s) (contents : StoreContentsTyped s)
     (mapped : f.MODULE.MEMS[0]? = some address) (found : s.MEMS[address]? = some object)
     (payloadWf : Forall wf_byte payload) : Extend_store s (Spec.memoryPayloadWrite s f start payload) := by
   have typed := contents.memories object (List.mem_of_getElem? found)
-  have freshWf := memoryPayloadWrite_wf s f start payload wf payloadWf
-  rw [memoryPayloadWrite_as_set s f address start object payload mapped found] at freshWf ⊢
+  have freshWf := memory_payload_write_wf s f start payload wf payloadWf
+  rw [memory_payload_write_as_set s f address start object payload mapped found] at freshWf ⊢
   apply extend_store_set_mem _ _ _ wf freshWf
   intro bound
   have atAddress : s.MEMS[address]! = object := by simp [List.getElem!_eq_getElem?_getD,found]
@@ -79,7 +79,7 @@ theorem StoreContentsTyped.memory_write {s : store} (contents : StoreContentsTyp
     (wf : wf_store s) (f : frame) (address start : Nat) (object : meminst) (payload : List byte)
     (mapped : f.MODULE.MEMS[0]? = some address) (found : s.MEMS[address]? = some object)
     (payloadWf : Forall wf_byte payload) : StoreContentsTyped (Spec.memoryPayloadWrite s f start payload) := by
-  have extension := memoryPayloadWrite_extends s f address start object payload wf contents mapped found payloadWf
+  have extension := memory_payload_write_extends s f address start object payload wf contents mapped found payloadWf
   have freshWf := (extend_store_wf extension).2
   have typed := contents.memories object (List.mem_of_getElem? found)
   have objectFresh : Meminst_ok (Spec.memoryPayloadWrite s f start payload)
@@ -90,7 +90,7 @@ theorem StoreContentsTyped.memory_write {s : store} (contents : StoreContentsTyp
       exact .mk_Meminst_ok _ _ _ _ typeOk (by simpa only [splice_length] using length) freshWf
         (.meminst_case_ _ _ typeWf (splice_wf bytes payload start byteWf payloadWf)) typeWf
   exact contents.memory_replacement extension address {object with BYTES := splice object.BYTES payload start}
-    (congrArg store.MEMS (memoryPayloadWrite_as_set s f address start object payload mapped found))
+    (congrArg store.MEMS (memory_payload_write_as_set s f address start object payload mapped found))
     rfl rfl rfl rfl objectFresh
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

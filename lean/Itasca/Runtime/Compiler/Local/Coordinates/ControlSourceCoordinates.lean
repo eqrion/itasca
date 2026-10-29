@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateTactic
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -53,4 +53,4 @@ theorem compiler_else_source_coordinates {A : Type} (ops : runtime.platform.Allo
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at called
   repeat' coordinates_step called using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

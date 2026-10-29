@@ -2,7 +2,7 @@ import Itasca.Runtime.Spec.TableFill
 import Itasca.Runtime.Spec.SegmentCopySlice
 namespace Itasca.Runtime.Spec.Segment
 
-theorem fillInto_effect {T : Type} (before : List T) (dst count : Nat) (value : T)
+theorem fill_into_effect {T : Type} (before : List T) (dst count : Nat) (value : T)
     (targetBound : dst+count ≤ before.length) :
     (∀ j, j < count → (fillInto before dst value count)[dst+j]? = some value) ∧
     (∀ j, j < dst ∨ dst+count ≤ j → (fillInto before dst value count)[j]? = before[j]?) := by
@@ -26,10 +26,10 @@ theorem fillInto_effect {T : Type} (before : List T) (dst count : Nat) (value : 
       have distinct : dst ≠ j := by omega
       simpa only [fillInto,List.getElem?_set,distinct,if_false] using tailOutside
 
-theorem fillInto_eq_setSlice {T : Type} (before : List T) (dst count : Nat) (value : T)
+theorem fill_into_eq_set_slice {T : Type} (before : List T) (dst count : Nat) (value : T)
     (targetBound : dst+count ≤ before.length) :
     fillInto before dst value count = before.setSlice! dst (List.replicate count value) := by
-  obtain ⟨filled,outside⟩ := fillInto_effect before dst count value targetBound
+  obtain ⟨filled,outside⟩ := fill_into_effect before dst count value targetBound
   apply List.ext_getElem?
   intro index
   by_cases first : index < dst

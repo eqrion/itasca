@@ -6,7 +6,7 @@ import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Integration.Execution.InstantiationSource
 import Itasca.Runtime.Store.Invariant.ExecutableInstantiationCode
 import Itasca.Runtime.Compiler.Module.CompileDataCount
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The actual preparation trace constructs source typing and retained compiler
@@ -22,25 +22,25 @@ theorem prepared_certified_executable_api {M P F A : Type}
     (accounted : SegmentAccounting before)
     {tables memories} (cache : ModuleEnv.Cache module.module.env tables memories)
     (valid : ModuleEnv.Valid module.module.env module.profile)
-    (initializers : Code.InitializerMappings module)
+    (initializers : Compiler.InitializerMappings module)
     (raw : ModuleBinary.Module)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     {profile bytes}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile)
-    (functions : Code.ExecutableModuleFunctions module (Code.sourceFunctions raw))
+    (functions : Compiler.ExecutableModuleFunctions module (Compiler.sourceFunctions raw))
     (dataCount : ∀ count, module.module.env.data_count = some count →
       count.val = module.module.tail.data.val.length)
     (bounds : SegmentBounds ready) :
     ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
-      CertifiedExecutableApiStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready ∧
+      CertifiedExecutableApiStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready ∧
       SegmentAccounting ready ∧
-      Abs.ModuleBindings (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready)
+      SourceMachine.ModuleBindings (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready)
         (decodeInstance ready inst) (ModuleElaboration.contextOf raw) := by
   obtain ⟨inst,found,source,certified,counted,bindings⟩ :=
     prepared_certified_executable trace laws law oldCode old.toCertifiedSupportedStore accounted
       cache valid initializers raw elaborated typed matched encoded functions dataCount bounds
   exact ⟨inst,found,source,⟨certified,trace.export_bounds laws law old.shape accounted cache valid initializers old.exportBounds⟩,
     counted,bindings⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

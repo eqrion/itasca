@@ -19,7 +19,7 @@ theorem signed_lane_num_wf (width bits : Nat) (bound : bits < 2^width) :
 
 theorem extract_signed_wf (ty : packtype) (index : Nat) (valid : index < 128/psize ty) :
     wf_admininstr (.VEXTRACT_LANE (shapeOf (lanetype_packtype ty)) (some .S) (.mk_uN index)) := by
-  apply wf_admininstr.admininstr_case_34 _ _ _ (shapeOf_wf _) (index_wf (lanetype_packtype ty) index (by cases ty <;> exact valid)) (by decide)
+  apply wf_admininstr.admininstr_case_34 _ _ _ (shape_of_wf _) (index_wf (lanetype_packtype ty) index (by cases ty <;> exact valid)) (by decide)
   cases ty <;> decide
 
 theorem extract_signed_step (ty : packtype) (index : Nat) (v : BitVec 128)
@@ -45,6 +45,6 @@ theorem extract_signed_step (ty : packtype) (index : Nat) (v : BitVec 128)
   · exact const_wf v
   · exact extract_signed_wf ty index valid
   · exact .admininstr_case_13 _ _ wf
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
 
 end Itasca.Runtime.Spec.Simd

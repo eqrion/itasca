@@ -96,19 +96,19 @@ parameter and result equality. -/
       cases right
       simp
 
-theorem sourceType_injective : Function.Injective Interp.sourceType := by
+theorem source_type_injective : Function.Injective Interp.sourceType := by
   intro a b heq
   cases a <;> cases b <;> simp_all [Interp.sourceType]
 
-theorem decodeFuncType_injective : Function.Injective decodeFuncType := by
+theorem decode_func_type_injective : Function.Injective decodeFuncType := by
   intro a b heq
   cases a with
   | mk ap ar =>
     cases b with
     | mk bp br =>
       simp only [decodeFuncType, functype.mk_functype.injEq, list.mk_list.injEq] at heq
-      have hp := List.map_injective_iff.mpr sourceType_injective heq.1
-      have hr := List.map_injective_iff.mpr sourceType_injective heq.2
+      have hp := List.map_injective_iff.mpr source_type_injective heq.1
+      have hr := List.map_injective_iff.mpr source_type_injective heq.2
       have hp' := alloc.vec.Vec.ext ap bp hp
       have hr' := alloc.vec.Vec.ext ar br hr
       cases hp'

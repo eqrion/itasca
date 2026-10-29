@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableGrowth
 import Itasca.Binary.Wasm1.BrTableLabels
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Each accepted label consumes at least one source byte, including nonminimal
@@ -24,4 +24,4 @@ theorem table_immediate_byte_bound {data start depths fallback next}
   have defaultBytes := defaultDecoded.span
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

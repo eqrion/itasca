@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeNesting
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A successful actual BLOCK callback creates its source-aligned frame
@@ -123,4 +123,4 @@ theorem callback_loop_scope {A : Type} (ops : runtime.platform.Alloc A)
   · intro scope frame old
     exact old.extend [.LoopHead] (codeEq) (by simp [mapsEq])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

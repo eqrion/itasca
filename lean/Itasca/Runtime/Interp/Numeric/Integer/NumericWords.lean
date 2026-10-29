@@ -3,17 +3,17 @@ import Itasca.Runtime.Interp.Relations.Rel
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 
 namespace Itasca.Runtime.Interp
-open Aeneas Aeneas.Std Abs.Numeric
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
-theorem integerWord_of_val (ty : Inn) (raw : U64)
+theorem integer_word_of_val (ty : Inn) (raw : U64)
     (word : BitVec (sizenn (numtype_Inn ty))) (same : raw.val = word.toNat) :
     integerWord ty raw = word := by
   apply BitVec.eq_of_toNat_eq
   cases ty with
   | I32 =>
-    rw [integerWord32_toNat, same, Nat.mod_eq_of_lt]
+    rw [integer_word32_to_nat, same, Nat.mod_eq_of_lt]
     exact word.isLt
-  | I64 => simpa only [integerWord64_toNat] using same
+  | I64 => simpa only [integer_word64_to_nat] using same
 
 theorem WordsAt.unary_result {words : List U64} {base : Nat} {front : List Nat} {a : Nat}
     (h : WordsAt words base (front ++ [a])) (value : U64) :
@@ -36,16 +36,16 @@ theorem integer_binary_words {F : Type} (floats : runtime.platform.FloatOps F)
     (a b : BitVec (sizenn (numtype_Inn op.input)))
     (words : WordsAt exec.slots.val base.val (front ++ [a.toNat, b.toNat]))
     (hl : left.val = front.length) (hr : right.val = front.length + 1) :
-    runtime.interp.execute_scalar floats exec base (Code.integerOpcode op) left left right ⦃
+    runtime.interp.execute_scalar floats exec base (Compiler.integerOpcode op) left left right ⦃
       NumericWordsEffect op a b exec base.val front ⦄ := by
   have operand := words.append_right
   have ha : base.val + left.val < exec.slots.length := by simpa [hl] using (operand 0 (by simp)).1
   have hb : base.val + right.val < exec.slots.length := by simpa [hr, Nat.add_assoc] using (operand 1 (by simp)).1
   have va : integerWord op.input exec.slots.val[base.val + left.val]! = a := by
-    apply integerWord_of_val
+    apply integer_word_of_val
     simpa [hl] using (operand 0 (by simp)).2
   have vb : integerWord op.input exec.slots.val[base.val + right.val]! = b := by
-    apply integerWord_of_val
+    apply integer_word_of_val
     simpa [hr, Nat.add_assoc] using (operand 1 (by simp)).2
   apply WP.spec_mono (execute_integer_effect floats exec base op left left right ha hb ha)
   rintro out ⟨numeric, exactResult, effect⟩
@@ -72,12 +72,12 @@ theorem integer_unary_words {F : Type} (floats : runtime.platform.FloatOps F)
     (one : op.arity = 1)
     (words : WordsAt exec.slots.val base.val (front ++ [a.toNat]))
     (hl : left.val = front.length) :
-    runtime.interp.execute_scalar floats exec base (Code.integerOpcode op) left left left ⦃
+    runtime.interp.execute_scalar floats exec base (Compiler.integerOpcode op) left left left ⦃
       NumericWordsEffect op a b exec base.val front ⦄ := by
   have operand := words.append_right
   have ha : base.val + left.val < exec.slots.length := by simpa [hl] using (operand 0 (by simp)).1
   have va : integerWord op.input exec.slots.val[base.val + left.val]! = a := by
-    apply integerWord_of_val
+    apply integer_word_of_val
     simpa [hl] using (operand 0 (by simp)).2
   apply WP.spec_mono (execute_integer_effect floats exec base op left left left ha ha ha)
   rintro out ⟨numeric, exactResult, effect⟩

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact control-map ranges required by the final publication checker. Unlike
@@ -11,4 +11,4 @@ def FinalControlMapBounds (function : runtime.bytecode.CompiledFunction) : Prop 
     function.body_start.val ≤ entry.source_start.val ∧ entry.source_end.val ≤ function.body_end.val ∧
     entry.source_start.val < entry.source_end.val
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

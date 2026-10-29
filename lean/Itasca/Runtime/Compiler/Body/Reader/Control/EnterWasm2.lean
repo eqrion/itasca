@@ -6,7 +6,7 @@ The callback selected by a source control opener.
 Main declarations: `enterAction` and `ReaderEnterPostWasm2`. A direct consumer is `Compiler.Body.Reader.Control.BlockDormantPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- The callback selected by a source control opener. -/
@@ -92,4 +92,4 @@ theorem reader_enter_wasm2 {data env locals index st}
       rcases initial with rfl | rfl | rfl <;> rfl
     simpa [opening] using trace
   · simp [signatures]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

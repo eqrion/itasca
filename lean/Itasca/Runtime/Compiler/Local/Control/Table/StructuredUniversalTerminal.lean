@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem TerminalEmission.structured_prefix {jumpTables : List Aeneas.Std.U32} {locals returns stack instruction emitted}
     (emission : TerminalEmission locals returns stack instruction emitted)
@@ -48,10 +48,10 @@ theorem StructuredUniversalPrefix.terminate {jumpTables : List Aeneas.Std.U32} {
       ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
     have old := invariant.resolved oldPlans oldShape parentShapes
     have saved := (invariant.prefixes label labels groups oldPlans oldShape parentShapes).1
-    have resolved := resolvedCode_append_code before.function.code.val [emitted] groups old.inside
+    have resolved := resolved_code_append_code before.function.code.val [emitted] groups old.inside
     refine ⟨?_, ?_⟩
     · simpa only [codeEq, resolved] using (saved.extend [emitted]).advance_current instruction
-    · have fetched : (resolvedCode before.function.code.val groups ++ [emitted])[before.function.code.val.length]? = some emitted := by simp [← resolvedCode_length before.function.code.val groups]
+    · have fetched : (resolvedCode before.function.code.val groups ++ [emitted])[before.function.code.val.length]? = some emitted := by simp [← resolved_code_length before.function.code.val groups]
       have terminal := (old.code.extend [emitted]).terminal (emission.structured_prefix fetched)
       simpa only [codeEq, resolved, List.length_append, List.length_singleton, SourceScope.advance, SourceScope.input] using terminal
 
@@ -75,5 +75,5 @@ theorem StructuredUniversalTerminal.skip {jumpTables : List Aeneas.Std.U32} {A :
     exact ⟨by simpa only [codeEq] using saved.advance_current instruction,
       by simpa only [codeEq, SourceScope.advance, SourceScope.input] using terminal.skip_source [instruction]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

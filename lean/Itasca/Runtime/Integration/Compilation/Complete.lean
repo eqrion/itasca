@@ -7,7 +7,7 @@ Independent complete-profile source validity and explicit compiler eligibility i
 Main declarations: `compile_complete`. A direct consumer is `Itasca.Results.Compile`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent complete-profile source validity and explicit compiler
@@ -21,11 +21,11 @@ actual output happens to lie exactly at the configured limits. -/
 theorem compile_complete {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : Code.ValidCompilationSource bytes profile raw)
-    (eligible : Code.CompileEligible A bytes profile raw limits bound) :
+    (limits : runtime.compiler.CompileLimits) (valid : Compiler.ValidCompilationSource bytes profile raw)
+    (eligible : Compiler.CompileEligible A bytes profile raw limits bound) :
     ∃ executable, runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable) ∧
       CompilationCertificate bytes profile executable := by
-  obtain ⟨executable,compiled⟩ := Code.compile_with_available ops law bound allocation bytes profile raw limits valid eligible
+  obtain ⟨executable,compiled⟩ := Compiler.compile_with_available ops law bound allocation bytes profile raw limits valid eligible
   exact ⟨executable,compiled,compile_accepted_certificate ops law bytes profile limits executable compiled⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

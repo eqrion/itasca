@@ -1,10 +1,10 @@
 import Itasca.Runtime.SourceMachine.ControlSafety
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Generated source typing exposes the nesting bound below every active
 label. This ensures downward branch transfers preserve saved outer prefixes. -/
-theorem codeStack_outer_heights {C : context} {labels : List Label}
+theorem code_stack_outer_heights {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results)
     (depth : Nat) (target : Label) (lookup : labels[depth]? = some target) :
@@ -27,6 +27,6 @@ theorem FrameTyped.outer_heights {s : store} {frame : AFrame} {incoming : List v
     ∀ label ∈ frame.labels.drop (depth + 1), label.height ≤ target.height := by
   cases typed with
   | mk C bindings localTypes locals values returns code wf =>
-    exact codeStack_outer_heights code depth target lookup
+    exact code_stack_outer_heights code depth target lookup
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

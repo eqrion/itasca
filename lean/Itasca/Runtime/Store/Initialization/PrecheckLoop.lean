@@ -71,7 +71,7 @@ def ElementPrecheckReady {M : Type} (store : runtime.store.Store M)
   | .Active tableIndex offset => ∃ function code words addr table,
       inst.module.element_offsets.val[index.val]? = some (some function) ∧
       inst.module.functions.val[function.val]? = some code ∧
-      Code.InitializerCode code offset .I32 ∧
+      Compiler.InitializerCode code offset .I32 ∧
       Interp.InitializerResolution store inst offset .I32 words ∧
       inst.tables.val[tableIndex.val]? = some addr ∧ store.tables.val[addr.index.val]? = some table
   | _ => True
@@ -82,7 +82,7 @@ def DataPrecheckReady {M : Type} (store : runtime.store.Store M)
   | .Active memoryIndex offset => ∃ function code words addr mem,
       inst.module.data_offsets.val[index.val]? = some (some function) ∧
       inst.module.functions.val[function.val]? = some code ∧
-      Code.InitializerCode code offset .I32 ∧
+      Compiler.InitializerCode code offset .I32 ∧
       Interp.InitializerResolution store inst offset .I32 words ∧
       inst.memories.val[memoryIndex.val]? = some addr ∧ store.memories.val[addr.index.val]? = some mem
   | _ => True

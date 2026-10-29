@@ -14,7 +14,7 @@ Availability of SIMD opcode construction and compiler callbacks. Immediate-meani
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 8000000
@@ -35,7 +35,7 @@ theorem SimdImmediateMeaning.constructor_available {C opcode immediate input sou
       | lane _ _ _ decoded _ _ => change none = some _ at decoded; contradiction
       | memory _ _ _ decoded _ _ _ _ _ _ => change none = some _ at decoded; contradiction)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -43,7 +43,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -124,7 +124,7 @@ theorem compiler_simd_nonconstant_available {A : Type} (ops : runtime.platform.A
           demand.sourceReserve,demand.coordinate,demand.instruction,demand.operands,demand.slots⟩
       exact finish_op_available_effect ops bound available allocated state afterDemand instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -132,7 +132,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual ordinary dispatch for every meaningful nonconstant SIMD opcode
@@ -194,6 +194,6 @@ theorem compiler_simd_constant_op_available {A : Type} (ops : runtime.platform.A
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

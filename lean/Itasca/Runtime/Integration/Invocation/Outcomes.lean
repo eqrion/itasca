@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 
 /-! Shared public invocation outcomes and erasure. These predicates retain a
 single final code interpretation and sit below the public API constructions. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The public entry checks that reject a call before any state changes: a handle from
@@ -71,4 +71,4 @@ theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
     obtain ⟨body,steps⟩ := outcome.reachable
     exact ⟨body,steps⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -18,7 +18,7 @@ import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- Segment writes and drops preserve the complete static cumulative
@@ -31,8 +31,8 @@ theorem CertifiedSupportedStore.segments {M : Type} {view : M → Slice U8}
       Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
   have syntaxAfter := certified.storeSyntax.instances_eq metadata.space.instances
   have extension := metadata.extends code
-    (Store.decodeStore_wf view code before certified.shape certified.storeSyntax)
-    (Store.decodeStore_wf view code after shape syntaxAfter)
+    (Store.decode_store_wf view code before certified.shape certified.storeSyntax)
+    (Store.decode_store_wf view code after shape syntaxAfter)
   refine ⟨⟨shape, syntaxAfter, Store.core_functions_typed_metadata metadata.space.functions metadata.space.signatures metadata.space.instances extension certified.typed,
     ?supported, ?compiled,
     metadata.segment_bounds certified.segmentBounds⟩, extension⟩
@@ -43,7 +43,7 @@ theorem CertifiedSupportedStore.segments {M : Type} {view : M → Slice U8}
     funext function
     simp only [Store.decodeFunction,Store.decodeInstance,metadata.space.signatures,metadata.space.instances]
   case compiled =>
-    simpa only [Interp.StructuredMachine.CompiledFunctions,Interp.StructuredMachine.FunctionCompiled,
+    simpa only [Interp.Machine.CompiledFunctions,Interp.Machine.FunctionCompiled,
       Interp.FunctionTable,Store.decodeInstance,metadata.space.identity,metadata.space.functions,
       metadata.space.signatures,metadata.space.instances] using certified.compiled
 
@@ -78,4 +78,4 @@ theorem initialize_segments_certified_supported {M P F A : Type}
   rw [run, WP.spec_ok] at shaped normal ⊢
   have retained := certified.segments metadata shaped.1
   exact ⟨retained.1, retained.2, metadata, normal.2⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

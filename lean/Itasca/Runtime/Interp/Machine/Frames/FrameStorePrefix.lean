@@ -7,7 +7,7 @@ Saved-frame transport through a preserved store prefix.
 Main declarations: `SavedFrame.store_prefix_extension` and `SavedFrames.store_prefix_extension`. A direct consumer is `Interp.Machine.Calls.HostReturnFrames`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem SavedFrame.store_prefix_extension {M : Type} {before after : runtime.store.Store M}
@@ -28,4 +28,4 @@ theorem SavedFrames.store_prefix_extension {M : Type} {before after : runtime.st
   | nil waiting => exact .nil waiting
   | cons head tail ih => exact .cons (head.store_prefix_extension retained bounds extension) ih
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

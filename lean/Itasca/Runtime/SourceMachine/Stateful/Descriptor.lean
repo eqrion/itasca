@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.State
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 
 /-- Source-indexed reference, table and bulk-memory instructions. -/
 inductive Instruction where
@@ -79,4 +79,4 @@ def Instruction.arity : Instruction → Nat
 theorem Instruction.arity_le_three (op : Instruction) : op.arity ≤ 3 := by
   cases op <;> simp [Instruction.arity]
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

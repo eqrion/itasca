@@ -36,7 +36,7 @@ theorem prepared_commit_table_memory_bindings {M P F A : Type}
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
     (valid : Valid seed.module.module.env seed.module.profile)
-    (compiled : Code.InitializerMappings seed.module)
+    (compiled : Compiler.InitializerMappings seed.module)
     (instanceRoom : before.instances.length < before.limits.max_instances.val)
     (elementCapacity : before.elems.length + seed.module.module.env.elements.val.length ≤ Usize.max)
     (dataCapacity : before.datas.length + seed.module.module.tail.data.val.length ≤ Usize.max)
@@ -141,7 +141,7 @@ theorem PreparedRun.table_memory_bindings {M P F A : Type}
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Code.InitializerMappings module) :
+    (valid : Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module) :
     ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       TableBindings ready inst.module.module.env.table_types.val inst.tables.val ∧
       MemoryBindings view ready inst.module.module.env.mem_types.val inst.memories.val := by

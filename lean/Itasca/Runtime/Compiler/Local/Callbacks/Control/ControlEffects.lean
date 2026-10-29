@@ -16,7 +16,7 @@ tables, the branch-table depths, emitted code, the fixup budget, and slot
 capacity.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 structure ControlEffects {A : Type} (before after : runtime.compiler.FunctionCompiler A)
@@ -110,4 +110,4 @@ theorem compiler_br_if_effects {A : Type} (ops : runtime.platform.Alloc A)
     fun budget => compiler_br_if_fixup_budget ops law before after state depth types budget accepted,
     compiler_br_if_capacity ops law before after state depth types accepted⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

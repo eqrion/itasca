@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.ConditionalInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A source loop frame points to its retained entry hook. -/
@@ -95,7 +95,7 @@ theorem StructuredCompilerPrefix.br_if_open_instructions
   have layout := (invariant.live live).2.layout.height
   have localsEq := (invariant.live live).2.localsEq
   rw [input] at layout
-  simp only [slots_append,slots,show Itasca.Runtime.Code.width (.I32 : valtype) = 1 from rfl,localsEq] at layout
+  simp only [slots_append,slots,show Itasca.Runtime.Compiler.width (.I32 : valtype) = 1 from rfl,localsEq] at layout
   have test : condition.val+1 ≤ before.function.slot_count.val := by omega
   have room := invariant.codeBudget
   have resumeFits : before.function.code.val.length+3 < 2^32 := by
@@ -113,4 +113,4 @@ theorem StructuredCompilerPrefix.br_if_open_instructions
     exact compiler_branch_if_forward_open_instructions ops law before middle frame index depth source condition resume
       found frameAt loop (by omega) conditionAt rfl order (by omega) test held branch
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

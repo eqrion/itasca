@@ -7,7 +7,7 @@ A reader advances this precise source zipper; source instructions are not recove
 Main declarations: `ReaderPostWasm2`. A direct consumer is `Compiler.Body.Reader.Control.Boundary`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- A reader advances this precise source zipper; source instructions are not
@@ -166,4 +166,4 @@ theorem reader_numeric_wasm2 {data env locals index st}
   · simpa [vals, base] using stack
   · exact encoded.declared _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

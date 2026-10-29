@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual fresh construction and function-start introduce only the root frame,
@@ -32,4 +32,4 @@ theorem compiler_start_exit_slots {A : Type} (ops : runtime.platform.Alloc A)
   subst frame
   simp at live
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

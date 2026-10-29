@@ -11,7 +11,7 @@ Branch-table target bounds from strict branch-code growth through the target loo
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -76,7 +76,7 @@ theorem compiler_branch_code_strict {A : Type} (ops : runtime.platform.Alloc A)
     simp only [runtime.compiler.control.FunctionCompiler.branch,Bool.false_eq_true,ite_false,ite_true] at called <;>
     repeat' strict_code_step called using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -84,7 +84,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A table stub records its PC before lowering its branch. Actual branch code
@@ -109,7 +109,7 @@ theorem compiler_table_branch_target_bounds {A : Type} (ops : runtime.platform.A
   · simpa only [position,staged] using growth
 
 /-- Every actual branch in the finite lowering loop retains bounded targets. -/
-theorem TableBranchRun.jumpTableBounds {A : Type} {ops : runtime.platform.Alloc A}
+theorem TableBranchRun.jump_table_bounds {A : Type} {ops : runtime.platform.Alloc A}
     (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
     {index : Nat} (run : TableBranchRun ops before index after) (held : JumpTableBounds before) :
     JumpTableBounds after := by
@@ -128,9 +128,9 @@ theorem compiler_lower_table_target_bounds {A : Type} (ops : runtime.platform.Al
     (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     JumpTableBounds after := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
-  exact run.jumpTableBounds law (emission.jumpTableBounds held)
+  exact run.jump_table_bounds law (emission.jump_table_bounds held)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -138,7 +138,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Streamed labels retain all jump-table targets and code. -/
@@ -186,6 +186,6 @@ theorem compiler_br_table_target_bounds {A : Type} (ops : runtime.platform.Alloc
       exact compiler_observe_jump_table_bounds ops law {labeled with table_depths := cleared} after state
         (by simpa only [JumpTableBounds] using coordinates) observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

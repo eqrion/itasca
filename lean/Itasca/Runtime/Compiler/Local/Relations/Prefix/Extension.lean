@@ -6,7 +6,7 @@ Extension of source/code segment and guarded-skip certificates.
 Main declarations: `Segment.extend` and `IfSkip.extend`. A direct consumer is `Compiler.Local.Relations.Prefix.Prefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem Segment.extend {code pc instructions next} (segment : Segment code pc instructions next)
@@ -26,4 +26,4 @@ theorem IfSkip.extend {code yesExit noEntry exit yesNormal}
   | emitted fragment => exact .emitted (fragment.extend suffix)
   | direct normal otherwise => exact .direct normal otherwise
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

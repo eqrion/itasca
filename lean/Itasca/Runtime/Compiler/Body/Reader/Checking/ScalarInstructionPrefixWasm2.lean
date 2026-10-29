@@ -20,7 +20,7 @@ Checked prefixes for constants, nop/drop and dormant scalar reader cases, compos
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
@@ -44,7 +44,7 @@ theorem reader_const32_open_instructions_wasm2 {data env locals index st}
     reader_emit_const32_wasm2 p ops law before after out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_i32_const_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_const64_open_instructions_wasm2 {data env locals index st}
@@ -67,7 +67,7 @@ theorem reader_const64_open_instructions_wasm2 {data env locals index st}
     reader_emit_const64_wasm2 p ops law before after out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_i64_const_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.linearInstructionPrefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.linear_instruction_prefix layout reachable emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_float32_open_instructions_wasm2 {data env locals index st}
@@ -91,7 +91,7 @@ theorem reader_float32_open_instructions_wasm2 {data env locals index st}
     reader_emit_float32_wasm2 p ops law before after C localTypes out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_f32_const_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localTypes emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable localTypes emission tables held stable.frames,stable.exit_slots exits⟩
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_float64_open_instructions_wasm2 {data env locals index st}
@@ -115,9 +115,9 @@ theorem reader_float64_open_instructions_wasm2 {data env locals index st}
     reader_emit_float64_wasm2 p ops law before after C localTypes out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
   have tables := (reader_f64_const_effects ops law before after st.core out.core data env ctx
     (base_step_wasm2 _ (by decide) (by decide) rfl (by simp only [global_simps]; decide) (by simpa only [global_simps] using accepted))).tables
-  exact ⟨lowered.1.floatCoreInstructionPrefix layout reachable localTypes emission tables held stable.frames,stable.exit_slots exits⟩
+  exact ⟨lowered.1.float_core_instruction_prefix layout reachable localTypes emission tables held stable.frames,stable.exit_slots exits⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -125,7 +125,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- All scalar source reader kinds preserve both checks in unreachable code.
@@ -153,7 +153,7 @@ theorem reader_dead_scalar_checked_prefix {A : Type} (ops : runtime.platform.All
     rw [dispatch] at callback
     exact compiler_dead_op_checked_prefix ops law before after out opcode a b bits dead held exits callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -161,7 +161,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual nop reading preserves instruction and recorded exit-slot checks. -/
@@ -201,7 +201,7 @@ theorem reader_drop_open_instructions_wasm2 {A : Type}
   obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
   exact compiler_nop_drop_open_instructions ops law before after out.core true held exits callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -209,7 +209,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Every scalar reader kind preserves both instruction and recorded exit-slot
@@ -244,7 +244,7 @@ theorem reader_scalar_checked_prefix_wasm2 {jumpTables : List U32} {data env sou
     have known := invariant.known live
     have layout := retained.layout
     have localTypes : C.LOCALS = compilerLocals before := contextLocals.trans retained.localsEq.symm
-    obtain ⟨rawTypes,concrete⟩ := (concreteStack_iff st.core.vals.val).mp known
+    obtain ⟨rawTypes,concrete⟩ := (concrete_stack_iff st.core.vals.val).mp known
     have literalLayout : CompilerLayout before (rawTypes.map Translate.valueType) := by
       simpa only [concrete,Sequence.stackTypes,List.map_map,Function.comp_def] using layout
     cases kind with
@@ -280,6 +280,6 @@ theorem reader_scalar_checked_prefix_wasm2 {jumpTables : List U32} {data env sou
     exact reader_dead_scalar_checked_prefix ops law before after st.core out.core data env ctx kind
       (Bool.eq_false_iff.mpr live) codeFits sourceFits coordinateFits held exits raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

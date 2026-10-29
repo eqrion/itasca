@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Both direct and selected indirect calls explain exhaustion by decoded
@@ -8,10 +8,10 @@ source FRAME_ nesting at the actual failure site. -/
 theorem CumulativeFailure.frame_depth
     {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : Abs.AState} {sourceStore : _root_.store}
-    (stack : StructuredMachine.FrameStackRel store sourceStore exec source.frames)
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {sourceStore : _root_.store}
+    (stack : Machine.FrameStackRel store sourceStore exec source.frames)
     (failure : CumulativeFailure allocator hooks exec store platform source (.Exhausted .CallStack)) :
-    store.limits.max_frames.val ≤ Spec.frameDepth (Abs.decode source) := by
+    store.limits.max_frames.val ≤ Spec.frameDepth (SourceMachine.decode source) := by
   rcases failure with ⟨⟨trap,kind,_⟩,_⟩ | ⟨kind,_⟩ | rejected
   · cases kind
   · cases kind
@@ -29,7 +29,7 @@ theorem CumulativeFailure.frame_depth
 /-- A termination result retains the exact interrupt decision, including calls. -/
 theorem CumulativeFailure.interrupted {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : Abs.AState}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState}
     (failure : CumulativeFailure allocator hooks exec store platform source .Terminated) :
     ∃ after, hooks.interrupt platform = .ok (.Terminate,after) := by
   rcases failure with ⟨⟨trap,kind,_⟩,_⟩ | ⟨kind,decision⟩ | rejected
@@ -43,4 +43,4 @@ theorem CumulativeFailure.interrupted {M P A : Type} {allocator : runtime.platfo
     · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,
         fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
       exact cause
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

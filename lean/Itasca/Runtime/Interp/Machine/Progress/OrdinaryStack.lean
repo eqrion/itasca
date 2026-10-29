@@ -9,14 +9,14 @@ Ordinary bytecode changes only the active source's live values and code. Its obs
 Main declarations: `FrameStackRel.ordinary`. A direct consumer is `Interp.Machine.Emission.Unreachable`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- Ordinary bytecode changes only the active source's live values and code.
 Its observed prefix law preserves all suspended frames at once. -/
 theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store M}
     {sourceStore nextSourceStore : _root_.store}
-    {exec after : runtime.interp.Execution} {source updatedSource : Abs.AFrame} {rest : List Abs.AFrame}
+    {exec after : runtime.interp.Execution} {source updatedSource : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore exec (source :: rest))
     (stores : FrameStoreMetadata store nextStore) (extension : Extend_store sourceStore nextSourceStore)
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
@@ -24,7 +24,7 @@ theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store
     (lookup : exec.frames.val[index.val]? = some raw)
     (binding : FrameBinding store exec raw source)
     {compiled C targets next output pending}
-    (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS)
     (point : ControlPoint nextSourceStore { raw with pc := pc } updatedSource compiled C targets next output pending)
     (slots : FrameSlots after { raw with pc := pc } updatedSource)
     (metadata : FrameMetadata source updatedSource)
@@ -60,7 +60,7 @@ theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store
     · exact metadata.results.trans hr
     · exact metadata.locals.trans hl
   · exact ⟨(program.store_metadata stores).lookup, program.checked, program.fetchBound,
-      program.localSlots.trans (congrArg Code.slots metadata.locals).symm,
+      program.localSlots.trans (congrArg Compiler.slots metadata.locals).symm,
       by simpa only [metadata.results] using program.epilogue⟩
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

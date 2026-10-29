@@ -8,7 +8,7 @@ Integer source-machine transition contracts and compatibility with the retained 
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
  theorem Instruction.apply_unary (op : Instruction)
     (a b : BitVec (sizenn (numtype_Inn op.input))) (one : op.arity = 1) :
@@ -32,7 +32,7 @@ namespace Itasca.Runtime.Abs.Numeric
     simp only [hb, BitVec.ofNat_toNat, pop_append, ha]
     simp [finish]
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -40,7 +40,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
 theorem binary_add_nat (ty : Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
     (a + b).toNat = (a.toNat + b.toNat) % 2^integerWidth ty := by
@@ -85,14 +85,14 @@ theorem finish_eq (s f rest after front) (ty : Inn)
   simp only [finish, Instruction.apply, Instruction.output, compare, BitVec.toNat_ofNat]
   split <;> simp_all
 
-theorem finish_ltU (s f rest after front) (ty : Inn)
+theorem finish_lt_u (s f rest after front) (ty : Inn)
     (a b : BitVec (sizenn (numtype_Inn ty))) :
     finish s f rest after front (.compare ty (.LT .U)) a b =
       advance s { f with code := after, vals := front ++ [integerVal .I32 (if a.toNat < b.toNat then 1 else 0)] } rest := by
   simp only [finish, Instruction.apply, Instruction.output, compare, BitVec.toNat_ofNat]
   split <;> simp_all
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -100,7 +100,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
 theorem pop_two (front : List val) (a b : val) :
     pop (front ++ [a,b]) = some (front ++ [a], b) := by
@@ -146,7 +146,7 @@ theorem astep_operands (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [numtype_Inn] at ha hb <;>
       simp only [Instruction.source, numtype_Inn, astep, Instruction.operands,
         Instruction.arity, Instruction.input, if_false, Nat.reduceEqDiff, pop_two, pop_append,
-        ha, hb, ite_true, ite_false, if_pos rfl, finish_eq, finish_ltU]
+        ha, hb, ite_true, ite_false, if_pos rfl, finish_eq, finish_lt_u]
     all_goals
       first
       | rfl
@@ -175,7 +175,7 @@ theorem astep_typed_eq (s : AState) (f : AFrame) (rest : List AFrame)
     cases f; simp_all
   rw [same, astep_operands, transition_operands_code]
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end
 
@@ -183,7 +183,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
 theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Instruction) (next : AState)
@@ -198,6 +198,6 @@ theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [advance, AResult.next.injEq] at step
       exact ⟨_, step.symm⟩
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric
 
 end

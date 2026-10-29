@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Emission.EmissionSources
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Code and source coordinates grow by the same number of entries. -/
@@ -242,4 +242,4 @@ theorem compiler_fixups_after_if_sources {A : Type} (ops : runtime.platform.Allo
   have sources := compiler_fixups_after_if_sources_unchanged ops before sites target index status output accepted
   simp [SourceProgress, code, sources]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

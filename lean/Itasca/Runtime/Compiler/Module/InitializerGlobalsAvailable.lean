@@ -10,7 +10,7 @@ Availability of constant/global initializers and their global-segment fold.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent constant-expression typing supplies the vector-width condition
@@ -80,7 +80,7 @@ theorem initializer_global_available {A : Type} (ops : runtime.platform.Alloc A)
     simp only [List.length_append,List.length_singleton]
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -88,7 +88,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every remaining independently typed global is accepted by the actual
@@ -152,6 +152,6 @@ theorem initializer_globals_available {A : Type} (ops : runtime.platform.Alloc A
       exact ⟨trivial,same,by simpa [last] using size,by simpa [last] using used,limits⟩
   · exact ⟨rfl,rfl,rfl,inside,rfl,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

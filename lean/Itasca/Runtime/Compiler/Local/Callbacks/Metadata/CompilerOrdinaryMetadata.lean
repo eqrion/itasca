@@ -6,7 +6,7 @@ Ordinary instructions leave the frame stack and its control-map entries fixed.
 Main declarations: `compilerOrdinaryMetadata` and `CompilerOrdinaryStable`. A direct consumer is `Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca.ResultFacts
 
@@ -60,4 +60,4 @@ theorem compiler_observe_ordinary_stable {A : Type} (ops : runtime.platform.Allo
     · exact Nat.le_max_left _ _
     · exact Nat.le_refl _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.CompileAssembly
 import Itasca.Runtime.Compiler.Module.CompilerDrain
 import Itasca.Runtime.Compiler.Module.CodeRegion
 import Itasca.Stream.DriverSound
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -64,4 +64,4 @@ theorem compile_source_validated {A : Type} (allocator : runtime.platform.Alloc 
   obtain ⟨w⟩ := compile_accepted allocator bytes profile limits executable accepted
   obtain ⟨validated, size⟩ := w.source_validated law
   exact ⟨validated, (w.initializers law).2.1, size⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

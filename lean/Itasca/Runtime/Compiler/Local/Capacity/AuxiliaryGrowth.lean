@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -120,4 +120,4 @@ theorem compiler_indirect_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

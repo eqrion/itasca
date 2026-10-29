@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
     (hfloat : ty = .F32 → lo.val < 2^32) :
-    Code.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
+    Compiler.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
       some (decodeWords ty lo hi, []) := by
   exact Interp.decode_words_code ty lo hi hfloat
 
@@ -27,8 +27,8 @@ theorem decode_encoded_value {M : Type} (s : runtime.store.Store M)
     intro ht
     simp only [GlobalShape, ht] at hcanonical
     exact hcanonical.1
-  have hround := Code.decode_encode (Interp.sourceValue value) (Interp.sourceValue_wf value) []
-  simp only [List.append_nil, Interp.sourceValue_type] at hround
+  have hround := Compiler.decode_encode (Interp.sourceValue value) (Interp.source_value_wf value) []
+  simp only [List.append_nil, Interp.source_value_type] at hround
   rw [← hwords, decode_words_code _ _ _ hfloat] at hround
   exact congrArg Prod.fst (Option.some.inj hround)
 

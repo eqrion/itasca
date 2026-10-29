@@ -13,7 +13,7 @@ Availability of end callbacks for root bodies, ordinary scopes and guarded scope
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -72,7 +72,7 @@ theorem compiler_close_body_available {A : Type} (ops : runtime.platform.Alloc A
       frames := rest
       reachable := live}
     have codeLength : code.length = compiler.function.code.length := by
-      simp only [alloc.vec.Vec.length,effect,List.drop_zero,patchCode_length]
+      simp only [alloc.vec.Vec.length,effect,List.drop_zero,patch_code_length]
     have closedDemand (live : Bool) : CallbackDemand (closed live) state bound := by
       refine ⟨?_,?_,demand.sourceCapacity,?_,demand.sourceReserve,demand.coordinate,
         demand.instruction,demand.operands,demand.slots⟩
@@ -85,7 +85,7 @@ theorem compiler_close_body_available {A : Type} (ops : runtime.platform.Alloc A
     | exact finish_op_available_effect ops bound available (closed false) state (closedDemand false)
         (.Return frame.height 0#u32)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -93,7 +93,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -182,7 +182,7 @@ theorem compiler_close_guarded_scope_available {A : Type} (ops : runtime.platfor
     reachable := scopeExitLive compiler.reachable frame}
   exact compiler_observe_available_budget ops bound available closed state request slotsFit
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -190,7 +190,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -271,7 +271,7 @@ theorem compiler_close_scope_available {A : Type} (ops : runtime.platform.Alloc 
     reachable := scopeExitLive compiler.reachable frame}
   exact compiler_observe_available_budget ops bound available closed state request slotsFit
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -279,7 +279,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every end callback accepts from retained scope ownership and independent
@@ -323,6 +323,6 @@ theorem compiler_end_available {A : Type} (ops : runtime.platform.Alloc A)
       rw [post.2]
       exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

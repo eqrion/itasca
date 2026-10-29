@@ -6,7 +6,7 @@ A monomorphic realization of concrete validator operands contains no bottom type
 Main declarations: `concrete_realization` and `concrete_numeric_effect`. A direct consumer is `Compiler.Local.Relations.Control.KnownControlStack`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -34,7 +34,7 @@ theorem concrete_realization {values : List code.StackType} {types : List valtyp
         exact translated_not_bot v
     simpa only [List.mem_cons, not_or] using And.intro (Ne.symm head) (ih tail)
 
-theorem stackTypes_concrete {values : List code.StackType}
+theorem stack_types_concrete {values : List code.StackType}
     (known : valtype.BOT ∉ Sequence.stackTypes values) : ConcreteStack values := by
   intro value member eq
   subst value
@@ -47,7 +47,7 @@ theorem concrete_stack_transfer {before after : List code.StackType} {inputs : L
     (known : ConcreteStack before)
     (transfer : ∀ types, Sequence.Realizes false after types →
       Sequence.Realizes false before (types ++ inputs)) : ConcreteStack after := by
-  apply stackTypes_concrete
+  apply stack_types_concrete
   have noBot := concrete_realization known
     (transfer _ (Sequence.realizes_default false after))
   exact fun member => noBot (List.mem_append_left _ member)
@@ -65,12 +65,12 @@ theorem concrete_select_effect {before after : List code.StackType} {selected : 
     intro eq
     subst selected
     simp [StackSemantics.selectedType] at noBot
-  exact ⟨concreteStack_append.mpr ⟨restKnown, by simpa [ConcreteStack] using selectedKnown⟩, selectedKnown⟩
+  exact ⟨concrete_stack_append.mpr ⟨restKnown, by simpa [ConcreteStack] using selectedKnown⟩, selectedKnown⟩
 theorem concrete_numeric_effect {before after : List code.StackType} {inputs output}
     (known : ConcreteStack before)
     (effect : StackSemantics.NumericEffect false before inputs output after) :
     ConcreteStack after := by
   obtain ⟨rest, rfl, transfer⟩ := effect
-  exact concreteStack_append.mpr ⟨concrete_stack_transfer known transfer, by simp [ConcreteStack]⟩
+  exact concrete_stack_append.mpr ⟨concrete_stack_transfer known transfer, by simp [ConcreteStack]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

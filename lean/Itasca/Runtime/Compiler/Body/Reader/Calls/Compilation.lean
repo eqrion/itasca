@@ -15,7 +15,7 @@ Live and dormant direct-call source prefixes and their structured compiler-state
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_call_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -56,7 +56,7 @@ theorem structured_reader_prefix_call_wasm2 {jumpTables : List U32} {data env so
   · simpa only [retained.localsEq] using arguments
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -64,7 +64,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_call_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -89,7 +89,7 @@ theorem structured_reader_prefix_dead_call_wasm2 {jumpTables : List U32} {data e
   change runtime.compiler.lower.FunctionCompiler.op ops before out.core 16#u16 callee 0#u32 0#u128 = _ at callback
   exact ⟨callee, values, post, post.structured_dead_op ops law invariant dead 16#u16 callee 0#u32 0#u128 callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -97,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.call {jumpTables : List U32} {A : Type}
@@ -128,6 +128,6 @@ theorem StructuredReaderCompilerStateWasm2.call {jumpTables : List U32} {A : Typ
       state.compiled reach byte accepted
     exact ⟨callee, values, state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

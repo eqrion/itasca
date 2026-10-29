@@ -8,7 +8,7 @@ End/else reader inversion, including metadata and the resumed source zipper. The
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxHeartbeats 2000000
 /-- Successful END/ELSE metadata belongs to the frame actually removed or switched. -/
@@ -45,7 +45,7 @@ theorem reader_end_info_metadata (st : code.BodyState) (env : module.Env) (isEls
            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
            Std.uncurry, bind_ok] at accepted)
   all_goals simp_all
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -53,7 +53,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 private theorem no_parent_body {env root parents C outer form ins}
@@ -190,6 +190,6 @@ theorem reader_else_wasm2 {data env locals index st}
   have afterState := p.end_after true 0x05#u8 rfl byte
   rw [erased, WP.spec_ok] at afterState
   exact ⟨callback, read, form, encoded, results, opened, afterState rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

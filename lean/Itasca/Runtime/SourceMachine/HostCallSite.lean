@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.HostTyping
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Spec.HostCall
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The source context around an abstract host boundary is recovered from
@@ -26,7 +26,7 @@ theorem host_call_site (s : store) (ambient : frame) (f : AFrame)
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
       obtain ⟨front, ins, outs, hop, hstack, hafter, heights⟩ :=
-        codeStack_after_bounds (value_types_concrete f.vals) hc
+        code_stack_after_bounds (value_types_concrete f.vals) hc
       cases hop with
       | call _ _ inputs outputs hi ht _ wfInstruction =>
         simp only [labelContext, proj_uN_0] at hi ht
@@ -44,14 +44,14 @@ theorem host_call_site (s : store) (ambient : frame) (f : AFrame)
         have hheight : f.vals.length - ins.length = front.length := by omega
         have hbound : ins.length ≤ f.vals.length := by omega
         have hargs : ResultsTyped s ins (f.vals.drop front.length) := by
-          apply resultsTyped_drop (before := front)
+          apply results_typed_drop (before := front)
           simpa only [hstack] using values
         have hargtypes := results_type_of_typed hargs
         have hfront : (f.vals.take front.length).map valueType = front := by
           rw [List.map_take, hstack, List.take_left]
         have hcaller : FrameTyped s { f with vals := f.vals.take front.length, code := after } outs := by
           apply FrameTyped.mk (f := { f with vals := f.vals.take front.length, code := after }) C
-            bindings localTypes locals (resultsTyped_take front.length values) returns ?_ hw
+            bindings localTypes locals (results_typed_take front.length values) returns ?_ hw
           simpa only [hfront] using hafter
         have hcallerHeights : FrameHeights { f with vals := f.vals.take front.length, code := after } := by
           intro label hm
@@ -64,12 +64,12 @@ theorem host_call_site (s : store) (ambient : frame) (f : AFrame)
           simp [astep,call,hresolve,hfn,htype',hbound,hheight,hargtypes,hcode] at observed
           obtain ⟨rfl,rfl,rfl,rfl⟩ := observed
           refine ⟨f.vals.take front.length,(List.take_append_drop _ _).symm,rfl,hresolve,?_,hw,
-            codeStack_labels_wf hc,?_,?_,framesTyped_wf hr,hcallerHeights⟩
+            code_stack_labels_wf hc,?_,?_,frames_typed_wf hr,hcallerHeights⟩
           · cases wfInstruction with
             | instr_case_10 _ bounded => cases bounded with
               | uN_case_0 _ bounds => norm_num at bounds ⊢; omega
-          · exact fun value member => resultsTyped_wf values value (List.mem_of_mem_take member)
-          · exact fun instruction member => codeStack_wf hc instruction (by simp [member])
+          · exact fun value member => results_typed_wf values value (List.mem_of_mem_take member)
+          · exact fun instruction member => code_stack_wf hc instruction (by simp [member])
         | FUNC fi fl body =>
           cases defaults : defaultLocals fl <;>
             simp [astep,call,hresolve,hfn,htype',hbound,hheight,hargtypes,hcode,defaults] at step
@@ -87,5 +87,5 @@ theorem HostPending.finish_typed {state : AState} {types : List valtype}
   obtain ⟨f,rest,frames,valid⟩ := pending.resume extension functions typed
   simpa only [finishHost,frames,pending.values] using valid
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine
 

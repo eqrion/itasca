@@ -6,20 +6,20 @@ machine theorem is derived from it and the compiler's syntactic certificate. -/
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem initializerBits_low (lo hi : U64) :
-    UScalar.cast .U64 (Code.initializerBits lo hi) = lo := by
+theorem initializer_bits_low (lo hi : U64) :
+    UScalar.cast .U64 (Compiler.initializerBits lo hi) = lo := by
   apply U64.bv_eq_imp_eq
-  simp only [Code.initializerBits, UScalar.cast_bv_eq]
+  simp only [Compiler.initializerBits, UScalar.cast_bv_eq]
   apply BitVec.eq_of_getLsbD_eq
   intro i h
   change i < 64 at h
   simp only [BitVec.getLsbD_setWidth, BitVec.getLsbD_or, BitVec.getLsbD_shiftLeft]
   simp [h, show i < 128 by omega, show ¬64 ≤ i by omega]
 
-theorem initializerBits_high (lo hi : U64) :
-    UScalar.cast .U64 (⟨(Code.initializerBits lo hi).bv >>> 64⟩ : U128) = hi := by
+theorem initializer_bits_high (lo hi : U64) :
+    UScalar.cast .U64 (⟨(Compiler.initializerBits lo hi).bv >>> 64⟩ : U128) = hi := by
   apply U64.bv_eq_imp_eq
-  simp only [Code.initializerBits, UScalar.cast_bv_eq]
+  simp only [Compiler.initializerBits, UScalar.cast_bv_eq]
   apply BitVec.eq_of_getLsbD_eq
   intro i h
   change i < 64 at h
@@ -56,13 +56,13 @@ inductive InitializerResolution {M : Type} (store : runtime.store.Store M)
 
 theorem InitializerResolution.width {M : Type} {store : runtime.store.Store M}
     {inst expr ty words} (resolved : InitializerResolution store inst expr ty words) :
-    (Code.initializerWidth ty).val = words.length := by
-  cases resolved <;> simp_all [Code.initializerWidth]
+    (Compiler.initializerWidth ty).val = words.length := by
+  cases resolved <;> simp_all [Compiler.initializerWidth]
 
 theorem InitializerResolution.read {M : Type} {store : runtime.store.Store M}
     {inst expr ty words} (resolved : InitializerResolution store inst expr ty words)
     (code : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
-    (compiled : Code.InitialInstruction code expr ty instruction) :
+    (compiled : Compiler.InitialInstruction code expr ty instruction) :
     InitialRead store inst code instruction words := by
   cases resolved <;> cases compiled
   all_goals try first
@@ -74,8 +74,8 @@ theorem InitializerResolution.read {M : Type} {store : runtime.store.Store M}
     | exact .global2 _ _ _ (by assumption) (by assumption)
     | contradiction
   rename_i lo hi pool embedded
-  simpa [initializerBits_low, initializerBits_high] using
-    (InitialRead.vector (store := store) (inst := inst) pool (Code.initializerBits lo hi) embedded)
+  simpa [initializer_bits_low, initializer_bits_high] using
+    (InitialRead.vector (store := store) (inst := inst) pool (Compiler.initializerBits lo hi) embedded)
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -89,7 +89,7 @@ theorem synthetic_resolved_initializer (law : Platform.AllocCorrect allocator)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code expr ty)
+    (compiled : Compiler.InitializerCode code expr ty)
     (resolved : InitializerResolution store inst expr ty words) :
     runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧

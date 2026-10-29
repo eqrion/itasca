@@ -17,7 +17,7 @@ Published jump-target bounds across ordinary and scope reader steps. The final r
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Every non-scope-boundary event retains valid jump-table targets. Tables
@@ -82,7 +82,7 @@ theorem compiler_non_scope_hook_target_bounds {A : Type} (ops : runtime.platform
       (congrArg CompilerTables.jumpTables (compiler_else_tables ops law before after state bt called))
       (compiler_else_code_mono ops law before after state bt called)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -90,7 +90,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual Wasm 2 openings retain targets independently of the selected signature. -/
@@ -130,7 +130,7 @@ theorem reader_table_target_bounds_wasm2 {A : Type} (ops : runtime.platform.Allo
   exact compiler_br_table_target_bounds ops law {before with budget,table_depths := buffer} after final.core fallback
     types (by simpa only [JumpTableBounds] using held) callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -138,7 +138,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 
 /-- Every accepted complete-profile Wasm 2 reader step retains bounded jump
@@ -180,6 +180,6 @@ theorem reader_jump_targets_wasm2 {data env localTypes index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index opcode before after blocked accepted
   exact compiler_non_scope_hook_target_bounds ops law before after out.core (.of_range action range ordinary) held callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

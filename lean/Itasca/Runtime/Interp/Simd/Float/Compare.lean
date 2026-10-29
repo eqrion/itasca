@@ -25,7 +25,7 @@ theorem float_comparison_masks_lanes (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVe
   apply List.map_congr_left
   intro j member
   simp only [Function.comp_apply,float_comparison_value,proj_uN_0,boolean_extend]
-  rw [comparisonBits_signExtend _ (by cases ty <;> decide)]
+  rw [comparison_bits_sign_extend _ (by cases ty <;> decide)]
   cases ty <;> rfl
 
 theorem float_compare_packed (ty : Fnn) (op : vrelop_Fnn_N) (x y result : U128)
@@ -38,8 +38,8 @@ theorem float_compare_packed (ty : Fnn) (op : vrelop_Fnn_N) (x y result : U128)
   have packed := pack_map_of_lanes (lanetype_Inn (floatCompareInteger ty))
     (128/lsize (lanetype_Fnn ty)) result.bv.toNat
     (fun j => (comparisonBits (lsize (lanetype_Fnn ty)) (floatLanePredicate ty op x.bv y.bv j)).toNat)
-    (by intro j valid; rw [sizeEq,←laneBits_toNat,lanes j valid])
-  rw [sizeEq,shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+    (by intro j valid; rw [sizeEq,←lane_bits_to_nat,lanes j valid])
+  rw [sizeEq,shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   rw [floatComparisonResult,float_comparison_masks_lanes]
   exact congrArg uN.mk_uN packed.symm
 

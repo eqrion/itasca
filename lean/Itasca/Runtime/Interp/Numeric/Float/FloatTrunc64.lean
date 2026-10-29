@@ -88,7 +88,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
       have powerValue : power.val = exponent-1023 := by rw [powerEq, exponentMask]
       split
       · have large : 64 ≤ exponent-1023 := by scalar_tac
-        exact overflow_convertMagnitude negative width signed saturating validWidth _
+        exact overflow_convert_magnitude negative width signed saturating validWidth _
           (rawTruncMagnitude_large 52 1023 exponent fraction width.val negative signed widthNat large fractionBound)
       · have small : exponent-1023 < 64 := by scalar_tac
         have magnitudeBound := rawTruncMagnitude_u64 52 1023 exponent fraction small fractionBound

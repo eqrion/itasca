@@ -24,13 +24,13 @@ theorem WordsAt.region {words : List U64} {base : Nat} {bits : List Nat}
 theorem ValuesAt.lookup {words : List U64} {base : Nat} {values : List val}
     (h : ValuesAt words base values) {index : Nat} {value : val}
     (lookup : values[index]? = some value) :
-    WordsAt words (base + Code.offset (values.map Code.valueType) index) (Code.encodeValue value) := by
-  have bound : Code.offset (values.map Code.valueType) index ≤ (Code.encodeValues values).length := by
-    rw [Code.encodeValues_length]
-    exact Code.offset_le _ _
-  have region := WordsAt.region h (Code.offset (values.map Code.valueType) index)
-    (Code.width (Code.valueType value)) bound
-  simpa only [Code.encodeValues_lookup lookup] using region
+    WordsAt words (base + Compiler.offset (values.map Compiler.valueType) index) (Compiler.encodeValue value) := by
+  have bound : Compiler.offset (values.map Compiler.valueType) index ≤ (Compiler.encodeValues values).length := by
+    rw [Compiler.encode_values_length]
+    exact Compiler.offset_le _ _
+  have region := WordsAt.region h (Compiler.offset (values.map Compiler.valueType) index)
+    (Compiler.width (Compiler.valueType value)) bound
+  simpa only [Compiler.encode_values_lookup lookup] using region
 
 theorem WordsAt.set_outside {words : List U64} {base : Nat} {bits : List Nat}
     (h : WordsAt words base bits) (position : Nat) (value : U64)

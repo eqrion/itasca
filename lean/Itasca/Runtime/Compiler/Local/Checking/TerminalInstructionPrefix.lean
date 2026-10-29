@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Ordinary append effects preserve all older checks when frame ownership is
@@ -95,4 +95,4 @@ theorem compiler_return_dead_open_instructions {A : Type} (ops : runtime.platfor
   dsimp only at effect
   exact held.append_with_frames growth (by rw [effect]) [] (by simpa using congrArg alloc.vec.Vec.val effect.code) (by simp)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -13,7 +13,7 @@ Checked instruction prefixes through else patching. OpenInstructionPrefix.append
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- ELSE appends a possible skip and patches an earlier guard. The two effects
@@ -31,7 +31,7 @@ theorem OpenInstructionPrefix.append_patch {before after : runtime.bytecode.Comp
       OpenInstructionCheck after next (before.code.length+index) instruction) :
     OpenInstructionPrefix after next := by
   intro index instruction found
-  rw [code,patchCode_get] at found
+  rw [code,patch_code_get] at found
   by_cases prior : index < before.code.val.length
   · split at found
     · rw [List.getElem?_append_left prior] at found
@@ -57,7 +57,7 @@ theorem OpenInstructionPrefix.append_patch {before after : runtime.bytecode.Comp
       omega
     simpa only [same] using checked
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -65,7 +65,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem pending_else {A : Type} {before after : runtime.compiler.FunctionCompiler A}
@@ -133,7 +133,7 @@ theorem ElseTransition.instruction_prefix {A : Type} {before after : runtime.com
           simp [transition.fixupsEq]
       | succ index => simp [fragment] at found
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -141,7 +141,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual ELSE preserves all stored instruction checks on live, terminated,
@@ -206,6 +206,6 @@ theorem compiler_else_open_instructions {A : Type} (ops : runtime.platform.Alloc
         exact ⟨frames,by simpa using afterFrames,original,rfl,by simpa using targetAt,by simpa using appended,by simpa using code⟩
     exact transition.instruction_prefix hasIf held growth
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

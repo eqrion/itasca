@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 inductive SliceBinary where
   | add | sub | eq | ltU
 
-def SliceBinary.operation : SliceBinary → Code.IntegerBinary
+def SliceBinary.operation : SliceBinary → Compiler.IntegerBinary
   | .add => .add | .sub => .sub | .eq => .eq | .ltU => .ltU
 
 end Itasca.Runtime.Interp

@@ -7,7 +7,7 @@ Compilation of an unreachable instruction.
 Main declarations: `callback_unreachable`. A direct consumer is `Compiler.Local.Checking.TerminalInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem callback_unreachable {A : Type} (ops : runtime.platform.Alloc A)
@@ -39,4 +39,4 @@ open Aeneas Aeneas.Std
     · simpa [exactState] using hframes
     · simpa [exactState] using hl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

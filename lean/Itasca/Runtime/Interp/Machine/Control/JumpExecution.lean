@@ -7,7 +7,7 @@ Execution of a forward bytecode jump.
 Main declarations: `step_forward_jump`. A direct consumer is `Interp.Machine.Frames.EpilogueExecution`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem step_forward_jump
@@ -16,8 +16,8 @@ theorem step_forward_jump
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (expected : List valtype)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype) (target : U32)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (expected : List valtype)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype) (target : U32)
     (last : index.val+1=exec.frames.length) (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
@@ -25,7 +25,7 @@ theorem step_forward_jump
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) {raw with pc:=target} f compiled C targets next output)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧
       out.2.1={exec with frames:=exec.frames.set index {raw with pc:=target}} ∧
@@ -48,5 +48,5 @@ theorem step_forward_jump
     · simpa only [exactState] using SlotPrefix.refl raw.base.val exec.slots.val
     · exact machine.typed
     · exact machine.core
-  · exact Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward point.code.current.entry_bound⟩
-end Itasca.Runtime.Interp.StructuredMachine
+  · exact Or.inl ⟨rfl,dispatch_measure_forward _ _ _ _ forward point.code.current.entry_bound⟩
+end Itasca.Runtime.Interp.Machine

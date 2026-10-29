@@ -20,7 +20,7 @@ Reader inversion and compiler emission for nop and drop, including exact popped 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_drop_wasm2 {data env locals index st}
@@ -54,7 +54,7 @@ theorem reader_drop_wasm2 {data env locals index st}
   · simpa [vals, base] using stack
   · exact encoded.declared _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -62,7 +62,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_nop_wasm2 {data env locals index st}
@@ -135,13 +135,13 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
   obtain ⟨value, values, callback, _, popped, post⟩ := reader_drop_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core byte run
   obtain ⟨old, new⟩ := post.values
-  have currentKnown := (concreteStack_append.mp (old ▸ known)).2
+  have currentKnown := (concrete_stack_append.mp (old ▸ known)).2
   rw [monomorphic] at popped
   obtain ⟨ty, valueType, segmentShape⟩ := popped_concrete_exact currentKnown popped
   have shape : st.core.vals.val = out.core.vals.val ++ [.Val ty] := by
     rw [old, new, segmentShape, List.append_assoc]
-  have afterKnown : ConcreteStack out.core.vals.val := (concreteStack_append.mp (shape ▸ known)).1
-  obtain ⟨types, concrete⟩ := (concreteStack_iff out.core.vals.val).mp afterKnown
+  have afterKnown : ConcreteStack out.core.vals.val := (concrete_stack_append.mp (shape ▸ known)).1
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff out.core.vals.val).mp afterKnown
   have beforeTypes : Sequence.stackTypes st.core.vals.val = types.map Translate.valueType ++ [Translate.valueType ty] := by
     simp [shape, concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
   have lowered := compiler_observe_empty ops law before out.core types _ layout concrete
@@ -156,6 +156,6 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
   rw [callback, WP.spec_ok] at lowered
   exact ⟨types.map Translate.valueType, ty, values, beforeTypes, post, ⟨lowered rfl, SourceStack.of_map types concrete rfl⟩, .drop _ _⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

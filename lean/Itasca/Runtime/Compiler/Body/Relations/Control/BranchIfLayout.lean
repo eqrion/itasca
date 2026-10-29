@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameSelect
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem CompilerLayout.condition {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
@@ -31,4 +31,4 @@ theorem SourceCodeBudget.branch_resume {A : Type} {compiler : runtime.compiler.F
   let pc := compiler.function.code.val.length + (if count = 0#u32 ∨ source = destination then 1 else 3)
   have bound : pc < 2^32 := by dsimp [pc]; split <;> omega
   exact ⟨UScalar.ofNatCore pc bound, rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

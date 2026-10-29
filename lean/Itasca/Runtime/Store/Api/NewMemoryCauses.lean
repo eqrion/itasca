@@ -32,7 +32,7 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
   obtain ⟨size,sizeRun,sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
   simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.mem_types,bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.mem_types.deref index ty
+  rw [Compiler.initializer_slice_index inst.module.module.env.mem_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,lift,sizeRun] at run
   have maxCast : (UScalar.cast .U64 core.num.Usize.MAX).val = Usize.max := by

@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalLoopBranch
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.branch_loop {jumpTables : List Aeneas.Std.U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
@@ -83,4 +83,4 @@ theorem StructuredCompilerPrefix.branch_if_loop {jumpTables : List Aeneas.Std.U3
     layout conditionSlot resumePosition
   simpa only [sourceTypes.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

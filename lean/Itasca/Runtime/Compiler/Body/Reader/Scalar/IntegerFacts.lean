@@ -11,8 +11,8 @@ All non-extension integer instructions use the canonical scalar reader and visit
 Main declarations: `integer_reader_facts`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedNumericAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace SourceMachine.Numeric
 
 /-- All non-extension integer instructions use the canonical scalar reader
 and visitor dispatch table, with exactly the descriptor's operand types. -/
@@ -55,4 +55,4 @@ theorem integer_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     cases operator <;>
       refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩ <;>
       simp only [global_simps] <;> decide
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

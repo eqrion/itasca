@@ -30,7 +30,7 @@ def FloatCoreTrap (trap : runtime.Trap) : Prop :=
 variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
   {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
   {store : runtime.store.Store M} {platform : P} {expected : List valtype}
-  {codeLength pc : Nat} {pending : Bool} {source : Abs.AState}
+  {codeLength pc : Nat} {pending : Bool} {source : SourceMachine.AState}
   {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
 
 end Itasca.Runtime.Interp

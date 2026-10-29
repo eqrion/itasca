@@ -12,7 +12,7 @@ Execution of the function-end epilogue.
 Main declarations: `step_function_end_execution`. A direct consumer is `Integration.Execution.Dispatch.HostSite`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem step_function_end_execution {M P F A : Type}
@@ -22,24 +22,24 @@ theorem step_function_end_execution {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := [],labels := []} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := [],labels := []}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := [],labels := []}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := [],labels := []}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ pc source, Execution view code store out.2.1 source expected pc false ∧
         ConcreteSim compiled.code.length raw.pc.val pc false false initial source ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds source) ∧ source.ambient = ambient ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound source) ⦄ := by
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds source) ∧ source.ambient = ambient ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound source) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
     rw [List.getLast?_eq_getElem?]
@@ -53,12 +53,12 @@ theorem step_function_end_execution {M P F A : Type}
     obtain ⟨success,sameStore,samePlatform,exactState,fresh,simulation⟩ := effect
     exact ⟨success,sameStore,samePlatform,target.val,_,fresh,simulation,(fun _ h => h),rfl,(fun _ h => h)⟩
   · obtain ⟨types,nextTyped,simulation⟩ := frame_end_source (Store.decodeStore view code store) ambient f rest machine.typed.typed
-    have codeTypes : f.vals.map Code.valueType = f.resultTypes := by
-      simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs] using types
-    have actualWidth : count.val = Code.slots (f.vals.map Code.valueType) := by rw [codeTypes]; exact width
+    have codeTypes : f.vals.map Compiler.valueType = f.resultTypes := by
+      simpa only [show Compiler.valueType = SourceMachine.valueType from funext value_type_eq_abs] using types
+    have actualWidth : count.val = Compiler.slots (f.vals.map Compiler.valueType) := by rw [codeTypes]; exact width
     have capacity := slots.capacity binding
     have bounds : raw.base.val+compiled.local_slots.val+count.val ≤ exec.slots.length := by
-      simpa only [List.map_append,Code.slots_append,localSlots,actualWidth,Nat.add_assoc] using capacity
+      simpa only [List.map_append,Compiler.slots_append,localSlots,actualWidth,Nat.add_assoc] using capacity
     have original : ValuesAt exec.slots.val (raw.base.val+compiled.local_slots.val) f.vals := by
       simpa only [localSlots] using slots.operands
     apply WP.spec_mono (step_epilogue_refines memory hooks floats allocator exec store platform index raw compiled.local_slots count inst compiled
@@ -70,5 +70,5 @@ theorem step_function_end_execution {M P F A : Type}
     obtain ⟨pc,fresh⟩ := Execution.return_complete view code ambient {f with code := [],labels := []} rest expected raw.pc.val false machine raw top
       compiled.local_slots.val count.val returned f.vals original codeTypes actualWidth bounds nextTyped result
     exact ⟨success,sameStore,samePlatform,pc,_,fresh,ConcreteSim.of_source _ _ _ _ _ simulation,
-      StructuredMachine.return_owned f.vals (fun _ member => member),by cases rest <;> rfl,(fun _ bounded => returnedState_codeBound bounded f.vals)⟩
-end Itasca.Runtime.Interp.StructuredMachine
+      Machine.return_owned f.vals (fun _ member => member),by cases rest <;> rfl,(fun _ bounded => returned_state_code_bound bounded f.vals)⟩
+end Itasca.Runtime.Interp.Machine

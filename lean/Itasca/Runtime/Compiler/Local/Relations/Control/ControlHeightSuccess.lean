@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappingLoops
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A normally returning addition determines its mathematical sum, without
@@ -47,7 +47,7 @@ theorem control_stack_height_success (values : Slice Itasca.code.StackType)
       subst flow
       have heightEq := control_add_success added
       have indexEq := control_add_success advanced
-      have increment := stackWords_take_succ values.val index.val inBounds
+      have increment := stack_words_take_succ values.val index.val inBounds
       refine ⟨⟨?_, ?_⟩, ?_⟩
       · dsimp only; scalar_tac
       · dsimp only
@@ -70,4 +70,4 @@ theorem control_stack_height_success (values : Slice Itasca.code.StackType)
       have h := body state hi flow call
       cases flow <;> exact h) (initial, 0#usize) (by simp [inv, stackWords]) out success
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

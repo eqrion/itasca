@@ -9,7 +9,7 @@ Main declarations: `TableCollecting`. A direct consumer is `Compiler.Body.Reader
 -/
 
 attribute [local step] Itasca.code.check_suffix.spec
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Visitor
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -48,7 +48,7 @@ structure TableCollecting {A} (before current : runtime.compiler.FunctionCompile
   frames : before.frames.val.length = state.core.ctrls.val.length
   shape : Control.Shape state.core
 
-private theorem tableCheck_total (st : code.BodyState) (env : module.Env)
+private theorem table_check_total (st : code.BodyState) (env : module.Env)
     (types : signature.ResultType) (arity : Option Usize) (shape : Control.Shape st.core) :
     tableCheck st env types arity ⦃ _ => True ⦄ := by
   unfold tableCheck
@@ -116,7 +116,7 @@ theorem compiler_table_rest_total {A} (ops : runtime.platform.Alloc A)
         | .cont next => next.2.2.2.2.val ≤ count.val ∧ index.val < next.2.2.2.2.val ∧
           TableCollecting before next.2.1 ⟨next.1⟩ ⦄ := by
   unfold tableRest
-  step with tableCheck_total state env types arity held.shape as ⟨status,_⟩
+  step with table_check_total state env types arity held.shape as ⟨status,_⟩
   cases status with
   | Err error => simp
   | Ok nextArity =>
@@ -245,4 +245,4 @@ theorem compiler_table_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
         omega
       · simpa [controls] using frameCount
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

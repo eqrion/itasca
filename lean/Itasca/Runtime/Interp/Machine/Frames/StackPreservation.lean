@@ -8,14 +8,14 @@ A checked ordinary mutation preserves the full caller chain through both source 
 Main declarations: `FrameStackRel.step_active` and `FrameStackRel.single_base`. A direct consumer is `Interp.Machine.Emission.Unreachable`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- A checked ordinary mutation preserves the full caller chain through both
 source store extension and exact concrete metadata/prefix preservation. -/
 theorem FrameStackRel.step_active {M : Type} {oldStore newStore : runtime.store.Store M}
     {oldSourceStore newSourceStore : _root_.store}
-    {before after : runtime.interp.Execution} {source updatedSource : Abs.AFrame} {rest : List Abs.AFrame}
+    {before after : runtime.interp.Execution} {source updatedSource : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel oldStore oldSourceStore before (source :: rest))
     (metadata : FrameStoreMetadata oldStore newStore) (extension : Extend_store oldSourceStore newSourceStore)
     (raw updated : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
@@ -44,7 +44,7 @@ theorem FrameStackRel.step_active {M : Type} {oldStore newStore : runtime.store.
       · exact preserve
 
 theorem FrameStackRel.single_base {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
-    {exec : runtime.interp.Execution} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {source : SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore exec [source])
     (raw : runtime.interp.Frame) (top : exec.frames.val.getLast? = some raw) : raw.base.val = 0 := by
   cases relation with
@@ -53,4 +53,4 @@ theorem FrameStackRel.single_base {M : Type} {store : runtime.store.Store M} {so
     subst actual
     exact saved.empty_inv.2
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

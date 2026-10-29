@@ -7,7 +7,7 @@ Structured reader prefixes for skipped source instructions.
 Main declarations: `ReaderPostWasm2.structured_skip`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectCallPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.structured_skip {jumpTables : List U32} {data env sourceLocals index st}
@@ -28,4 +28,4 @@ theorem ReaderPostWasm2.structured_skip {jumpTables : List U32} {data env source
   rw [accepted,WP.spec_ok] at effect
   have consumed : p.start.val < out.pos.val := by have position := p.pos; have span := post.span; omega
   exact ⟨invariant.skip instruction dead effect.2.2.2 ordinary effect.1 sources consumed (by rw [cursor]),effect.2.2.2⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

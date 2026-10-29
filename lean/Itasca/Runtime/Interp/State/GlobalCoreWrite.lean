@@ -54,16 +54,16 @@ open Aeneas Aeneas.Std SpecExt
 
 theorem core_global_get_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (index : U32)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object) :
-    Abs.Core.globalGet s f rest index.val after =
+    SourceMachine.Core.globalGet s f rest index.val after =
       .next {s with frames := {f with code := after, vals := f.vals ++ [Store.decodeWords object.ty.valtype object.lo object.hi]} :: rest} := by
-  simp only [Abs.Core.globalGet,moduleEq,Store.decodeInstance,List.getElem?_map,mapped,Option.map_some,
-    storeEq,Store.decodeStore,issued,Store.decodeGlobal,Abs.advance]
+  simp only [SourceMachine.Core.globalGet,moduleEq,Store.decodeInstance,List.getElem?_map,mapped,Option.map_some,
+    storeEq,Store.decodeStore,issued,Store.decodeGlobal,SourceMachine.advance]
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -72,21 +72,21 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem global_get_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (dst index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
-    (rest : List Abs.AFrame) (after : List instr)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame)
+    (rest : List SourceMachine.AFrame) (after : List instr)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (slots : FrameSlots exec raw f)
-    (position : dst.val = Code.slots ((f.locals ++ f.vals).map Code.valueType))
+    (position : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
     (capacity : raw.base.val + dst.val < exec.slots.length)
     (scalar : object.ty.valtype ≠ .V128)
     (small : object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32) :
     runtime.interp.execute_global_get memory exec store raw.instance raw.base dst index ⦃ out =>
       out.1 = .Ok () ∧ out.2.2 = store ∧
-      ∃ nextFrame, Abs.Core.globalGet s f rest index.val after = .next {s with frames := nextFrame :: rest} ∧
+      ∃ nextFrame, SourceMachine.Core.globalGet s f rest index.val after = .next {s with frames := nextFrame :: rest} ∧
         FrameSlots out.2.1 raw nextFrame ∧ {out.2.1 with slots := exec.slots} = exec ∧ SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ⦄ := by
   have abstract := core_global_get_value view code store inst address object s f rest after index storeEq moduleEq mapped issued
   have represented := ValuesAt.append_scalar slots object.ty.valtype object.lo object.hi scalar small
@@ -104,20 +104,20 @@ theorem global_get_core (view : M → Slice U8) (code : Store.CodeInterpretation
 theorem global_get2_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (dst index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
-    (rest : List Abs.AFrame) (after : List instr)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame)
+    (rest : List SourceMachine.AFrame) (after : List instr)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (slots : FrameSlots exec raw f)
-    (position : dst.val = Code.slots ((f.locals ++ f.vals).map Code.valueType))
+    (position : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
     (capacity : raw.base.val + dst.val + 2 ≤ exec.slots.length)
     (vector : object.ty.valtype = .V128) :
     runtime.interp.execute_global_get2 memory exec store raw.instance raw.base dst index ⦃ out =>
       out.1 = .Ok () ∧ out.2.2 = store ∧
-      ∃ nextFrame, Abs.Core.globalGet s f rest index.val after = .next {s with frames := nextFrame :: rest} ∧
+      ∃ nextFrame, SourceMachine.Core.globalGet s f rest index.val after = .next {s with frames := nextFrame :: rest} ∧
         FrameSlots out.2.1 raw nextFrame ∧ {out.2.1 with slots := exec.slots} = exec ∧ SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ⦄ := by
   have abstract := core_global_get_value view code store inst address object s f rest after index storeEq moduleEq mapped issued
   have represented := ValuesAt.append_vector slots object.lo object.hi (by simpa only [position] using capacity)
@@ -144,34 +144,34 @@ open Aeneas Aeneas.Std SpecExt
 
 theorem core_global_set_value {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (index : U32) (front : List val) (value : val)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object)
     (values : f.vals = front ++ [value]) (mutable : object.ty.mutability = .Var)
-    (typed : Abs.valueType value = sourceType object.ty.valtype) :
-    Abs.Core.globalSet s f rest index.val after =
+    (typed : SourceMachine.valueType value = sourceType object.ty.valtype) :
+    SourceMachine.Core.globalSet s f rest index.val after =
       .next {s with store := Spec.globalWrite s.store f.toFrame index.val value, frames := {f with code := after, vals := front} :: rest} := by
-  simp only [Abs.Core.globalSet,values,Abs.pop_append,moduleEq,Store.decodeInstance,List.getElem?_map,mapped,Option.map_some,
-    storeEq,Store.decodeStore,issued,Store.decodeGlobal,mutable,Store.decodeMut,typed,ite_true,Abs.advance]
+  simp only [SourceMachine.Core.globalSet,values,SourceMachine.pop_append,moduleEq,Store.decodeInstance,List.getElem?_map,mapped,Option.map_some,
+    storeEq,Store.decodeStore,issued,Store.decodeGlobal,mutable,Store.decodeMut,typed,ite_true,SourceMachine.advance]
 
 theorem global_top_words (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
-    (f : Abs.AFrame) (front : List val) (value : val) (src : U32)
+    (f : SourceMachine.AFrame) (front : List val) (value : val) (src : U32)
     (values : f.vals = front ++ [value]) (slots : FrameSlots exec raw f)
-    (position : src.val = Code.slots ((f.locals ++ front).map Code.valueType)) :
+    (position : src.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType)) :
     ValuesAt exec.slots.val raw.base.val (f.locals ++ front) ∧
-      WordsAt exec.slots.val (raw.base.val+src.val) (Code.encodeValue value) := by
+      WordsAt exec.slots.val (raw.base.val+src.val) (Compiler.encodeValue value) := by
   have all : WordsAt exec.slots.val raw.base.val
-      (Code.encodeValues (f.locals ++ front) ++ Code.encodeValue value) := by
+      (Compiler.encodeValues (f.locals ++ front) ++ Compiler.encodeValue value) := by
     have shape : f.locals ++ f.vals = (f.locals ++ front) ++ [value] := by simp [values,List.append_assoc]
     change ValuesAt exec.slots.val raw.base.val (f.locals ++ f.vals) at slots
     rw [shape] at slots
-    change WordsAt _ _ (Code.encodeValues ((f.locals ++ front) ++ [value])) at slots
-    rw [Code.encodeValues_append] at slots
-    simpa only [Code.encodeValues,List.flatMap_cons,List.flatMap_nil,List.append_nil] using slots
-  exact ⟨all.append_left,by simpa only [Code.encodeValues_length,position] using all.append_right⟩
+    change WordsAt _ _ (Compiler.encodeValues ((f.locals ++ front) ++ [value])) at slots
+    rw [Compiler.encode_values_append] at slots
+    simpa only [Compiler.encodeValues,List.flatMap_cons,List.flatMap_nil,List.append_nil] using slots
+  exact ⟨all.append_left,by simpa only [Compiler.encode_values_length,position] using all.append_right⟩
 
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
@@ -180,32 +180,32 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
-    (rest : List Abs.AFrame) (after : List instr) (front : List val) (value : val)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame)
+    (rest : List SourceMachine.AFrame) (after : List instr) (front : List val) (value : val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (slots : FrameSlots exec raw f) (values : f.vals = front ++ [value])
-    (position : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
+    (position : src.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType))
     (scalar : object.ty.valtype ≠ .V128) (mutable : object.ty.mutability = .Var)
-    (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Code.valueType value) :
+    (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Compiler.valueType value) :
     runtime.interp.execute_global_set memory exec store raw.instance raw.base src index ⦃ out =>
       out.1 = .Ok () ∧ out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
-      ∃ nextFrame, Abs.Core.globalSet s f rest index.val after =
+      ∃ nextFrame, SourceMachine.Core.globalSet s f rest index.val after =
           .next {s with store := Store.decodeStore view code out.2.2, frames := nextFrame :: rest} ∧
         FrameSlots out.2.1 raw nextFrame ⦄ := by
   obtain ⟨prefixWords,operand⟩ := global_top_words exec raw f front value src values slots position
-  have width : (Code.encodeValue value).length = 1 := by
-    rw [Code.encodeValue_length,←typed]
-    cases eq : object.ty.valtype <;> simp only [sourceType,Code.width]
+  have width : (Compiler.encodeValue value).length = 1 := by
+    rw [Compiler.encode_value_length,←typed]
+    cases eq : object.ty.valtype <;> simp only [sourceType,Compiler.width]
     exact False.elim (scalar eq)
   have capacity : raw.base.val+src.val < exec.slots.length := by
     have atZero := (operand 0 (by rw [width]; omega)).1
     simpa only [Nat.add_zero] using atZero
-  have numericType : Abs.valueType value = sourceType object.ty.valtype := by
-    rw [←valueType_eq_abs]
+  have numericType : SourceMachine.valueType value = sourceType object.ty.valtype := by
+    rw [←value_type_eq_abs]
     exact typed.symm
   have abstract := core_global_set_value view code store inst address object s f rest after index front value
     storeEq moduleEq mapped issued values mutable numericType
@@ -222,39 +222,39 @@ theorem global_set_core (view : M → Slice U8) (code : Store.CodeInterpretation
   intro out effect
   subst out
   refine ⟨rfl,rfl,⟨rfl,rfl,rfl,rfl⟩,{f with code := after, vals := front},?_,prefixWords⟩
-  change Abs.Core.globalSet s f rest index.val after = _
+  change SourceMachine.Core.globalSet s f rest index.val after = _
   simpa only [storeEq,source] using abstract
 
 theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (src index : U32) (inst : runtime.store.ModuleInst) (address : runtime.GlobalAddr)
-    (object : runtime.store.GlobalInst) (s : Abs.AState) (f : Abs.AFrame)
-    (rest : List Abs.AFrame) (after : List instr) (front : List val) (value : val)
+    (object : runtime.store.GlobalInst) (s : SourceMachine.AState) (f : SourceMachine.AFrame)
+    (rest : List SourceMachine.AFrame) (after : List instr) (front : List val) (value : val)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.globals.val[index.val]? = some address)
     (issued : store.globals.val[address.index.val]? = some object)
     (storeEq : s.store = Store.decodeStore view code store)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (slots : FrameSlots exec raw f) (values : f.vals = front ++ [value])
-    (position : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
+    (position : src.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType))
     (vector : object.ty.valtype = .V128) (mutable : object.ty.mutability = .Var)
-    (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Code.valueType value) :
+    (valueWf : wf_val value) (typed : sourceType object.ty.valtype = Compiler.valueType value) :
     runtime.interp.execute_global_set2 memory exec store raw.instance raw.base src index ⦃ out =>
       out.1 = .Ok () ∧ out.2.1 = exec ∧ FrameStoreMetadata store out.2.2 ∧
-      ∃ nextFrame, Abs.Core.globalSet s f rest index.val after =
+      ∃ nextFrame, SourceMachine.Core.globalSet s f rest index.val after =
           .next {s with store := Store.decodeStore view code out.2.2, frames := nextFrame :: rest} ∧
         FrameSlots out.2.1 raw nextFrame ⦄ := by
   obtain ⟨prefixWords,operand⟩ := global_top_words exec raw f front value src values slots position
-  have width : (Code.encodeValue value).length = 2 := by
-    rw [Code.encodeValue_length,←typed,vector]
+  have width : (Compiler.encodeValue value).length = 2 := by
+    rw [Compiler.encode_value_length,←typed,vector]
     rfl
   have capacity : raw.base.val+src.val+2 ≤ exec.slots.length := by
     have atOne := (operand 1 (by rw [width]; omega)).1
     change raw.base.val+src.val+1 < exec.slots.val.length at atOne
     change raw.base.val+src.val+2 ≤ exec.slots.val.length
     omega
-  have numericType : Abs.valueType value = sourceType object.ty.valtype := by
-    rw [←valueType_eq_abs]
+  have numericType : SourceMachine.valueType value = sourceType object.ty.valtype := by
+    rw [←value_type_eq_abs]
     exact typed.symm
   have abstract := core_global_set_value view code store inst address object s f rest after index front value
     storeEq moduleEq mapped issued values mutable numericType
@@ -268,7 +268,7 @@ theorem global_set2_core (view : M → Slice U8) (code : Store.CodeInterpretatio
   intro out effect
   subst out
   refine ⟨rfl,rfl,⟨rfl,rfl,rfl,rfl⟩,{f with code := after, vals := front},?_,prefixWords⟩
-  change Abs.Core.globalSet s f rest index.val after = _
+  change SourceMachine.Core.globalSet s f rest index.val after = _
   simpa only [storeEq,source] using abstract
 
 end Itasca.Runtime.Interp

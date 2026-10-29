@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.FrameTypingExtension
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- A host callback suspends a nonempty source stack with its pending result
@@ -35,7 +35,7 @@ theorem HostPending.resume {state : AState} {types : List valtype}
         .cons resumed tail,by simp [Forall],by simp,?_⟩
       intro frame member
       rcases List.mem_cons.mp member with rfl | member
-      · exact frameTyped_heights resumed
+      · exact frame_typed_heights resumed
       · exact pending.heights frame (by rw [frames]; simp [member])
 
 /-- Source typing discharges argument extraction and the host's suspended
@@ -55,7 +55,7 @@ theorem host_call_preparation (s : store) (ambient : frame) (f : AFrame)
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
       obtain ⟨front, ins, outs, hop, hstack, hafter, heights⟩ :=
-        codeStack_after_bounds (value_types_concrete f.vals) hc
+        code_stack_after_bounds (value_types_concrete f.vals) hc
       cases hop with
       | call _ _ inputs outputs hi ht _ _ =>
         simp only [labelContext, proj_uN_0] at hi ht
@@ -73,14 +73,14 @@ theorem host_call_preparation (s : store) (ambient : frame) (f : AFrame)
         have hheight : f.vals.length - ins.length = front.length := by omega
         have hbound : ins.length ≤ f.vals.length := by omega
         have hargs : ResultsTyped s ins (f.vals.drop front.length) := by
-          apply resultsTyped_drop (before := front)
+          apply results_typed_drop (before := front)
           simpa only [hstack] using values
         have hargtypes := results_type_of_typed hargs
         have hfront : (f.vals.take front.length).map valueType = front := by
           rw [List.map_take, hstack, List.take_left]
         have hcaller : FrameTyped s { f with vals := f.vals.take front.length, code := after } outs := by
           apply FrameTyped.mk (f := { f with vals := f.vals.take front.length, code := after }) C
-            bindings localTypes locals (resultsTyped_take front.length values) returns ?_ hw
+            bindings localTypes locals (results_typed_take front.length values) returns ?_ hw
           simpa only [hfront] using hafter
         have hcallerHeights : FrameHeights { f with vals := f.vals.take front.length, code := after } := by
           intro label hm
@@ -112,4 +112,4 @@ theorem host_call_preparation (s : store) (ambient : frame) (f : AFrame)
         | FUNC fi fl body =>
           cases defaults : defaultLocals fl <;>
             simp [astep,call,hresolve,hfn,htype',hbound,hheight,hargtypes,hcode,defaults] at step
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

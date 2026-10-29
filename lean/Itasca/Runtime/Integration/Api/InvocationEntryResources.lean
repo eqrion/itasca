@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Api.InvocationCanonicalResources
 import Itasca.Runtime.Interp.Relations.SourceCanonicalCapacity
 import Itasca.Runtime.Interp.Relations.SourceAllocationCauses
 import Itasca.Runtime.Interp.Invocation.MutableCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InvocationResourceCause.canonical {M P A : Type}
@@ -59,4 +59,4 @@ theorem CallCause.invocation_canonical {M P A : Type}
       · exact Or.inr ⟨prepared.frames,refused⟩
     | Objects => exact cause
   | _ => trivial
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

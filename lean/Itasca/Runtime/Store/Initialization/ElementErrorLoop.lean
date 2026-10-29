@@ -15,7 +15,7 @@ theorem element_staging_loop_errors {M P F A : Type}
     (allowed : ErrorAllowed ResourceError status)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)

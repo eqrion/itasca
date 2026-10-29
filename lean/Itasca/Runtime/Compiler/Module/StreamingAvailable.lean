@@ -14,7 +14,7 @@ section
 
 open Aeneas Aeneas.Std Itasca
 
-namespace Itasca.Runtime.Code.StreamAvailability
+namespace Itasca.Runtime.Compiler.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -68,7 +68,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (queue : List StreamBatch.Issued) (entries : List Code)
+    (queue : List StreamBatch.Issued) (entries : List ModuleBinary.Code)
     (hv : Queued moduleId queue func.val v) (hq : ValidQueue moduleId queue profile)
     (hp : pending.val.Perm (queue.map StreamBatch.Issued.batch_id))
     (hcount : func.val + entries.length = env.func_type_indices.val.length)
@@ -168,9 +168,9 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     · simpa using hrestcount.symm
   · simpa using hnextprogress
 
-end Itasca.Runtime.Code.StreamAvailability
+end Itasca.Runtime.Compiler.StreamAvailability
 
-namespace Itasca.Runtime.Code.StreamAvailability
+namespace Itasca.Runtime.Compiler.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -229,9 +229,9 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
     have cursor : func.val = env.func_type_indices.val.length := by simpa using hcount
     exact ⟨queue,by simpa only [cursor] using hv,hq,hp,hmax⟩
 
-end Itasca.Runtime.Code.StreamAvailability
+end Itasca.Runtime.Compiler.StreamAvailability
 
-namespace Itasca.Runtime.Code.StreamAvailability
+namespace Itasca.Runtime.Compiler.StreamAvailability
 
 variable {profile : ValidationProfile}
 
@@ -287,7 +287,7 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
-    (entries : List Code) (hcount : entries.length = env.func_type_indices.val.length)
+    (entries : List ModuleBinary.Code) (hcount : entries.length = env.func_type_indices.val.length)
     (htyped : ModuleCode.EntriesTyped (profile := profile) env 0 entries)
     (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) code start entries (Slice.len code))
     (v : V) (hv : Queued moduleId [] 0 v) :
@@ -311,7 +311,7 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     obtain ⟨queue, hv', hvalid, hids, hmax⟩ := hp
     exact ⟨pending, v', queue, hr, hv', hvalid, hids, hmax⟩
 
-end Itasca.Runtime.Code.StreamAvailability
+end Itasca.Runtime.Compiler.StreamAvailability
 
 end
 
@@ -319,7 +319,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -401,7 +401,7 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
     by decide,by decide,submitCall,rfl,tailCall,moduleBound,rfl,decodedCall,rfl,drainCall⟩,rfl,?_,afterQueued⟩
   rw [finalFrame]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -409,7 +409,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete streaming compiler phase accepts independently certified
@@ -464,6 +464,6 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
     ⟨regions.env,Slice.len regions.env,before,before,environmentCall,environmentBound,rfl,decodeCall,remaining⟩
   exact ⟨after,run,run.run storage,tailEq,delivered,retained⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

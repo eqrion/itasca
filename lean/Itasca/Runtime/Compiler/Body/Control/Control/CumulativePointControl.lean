@@ -76,7 +76,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderBoundaryWasm2.root_iff {data env locals index ft st parents current}
@@ -94,4 +94,4 @@ theorem ReaderBoundaryWasm2.root_iff {data env locals index ft st parents curren
     | root => rfl
     | push => simp at empty
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -15,8 +15,8 @@ import Itasca.Runtime.SourceMachine.Core
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StepSafety
-namespace Itasca.Runtime.Abs.Cumulative
-open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Cumulative
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
 
 /-- Executable source transitions combine the deterministic mutable core with
 the complete float result relation, preserving every permitted NaN result. -/
@@ -41,4 +41,4 @@ inductive Step : AState → AResult → Prop where
         f rest table type after = result) (executable : result ≠ .stuck) :
       Step ⟨s,ambient,{f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ result
 
-end Itasca.Runtime.Abs.Cumulative
+end Itasca.Runtime.SourceMachine.Cumulative

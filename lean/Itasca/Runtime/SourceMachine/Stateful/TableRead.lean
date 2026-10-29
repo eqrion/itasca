@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.TableAccess
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def tableGet (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (after : List instr) : AResult :=
@@ -21,7 +21,7 @@ def tableSize (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (afte
     | none => .stuck
     | some object => advance s {f with code := after, vals := f.vals ++ [integerVal .I32 object.REFS.length]} rest
 
-theorem tableGet_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem table_get_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .TABLE_GET (.mk_uN index) :: after} :: rest,[]⟩) :
     (∃ next, tableGet ⟨s,ambient,{f with code := .TABLE_GET (.mk_uN index) :: after} :: rest,[]⟩ f rest index after = .next next ∧
@@ -43,9 +43,9 @@ theorem tableGet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Lis
       cases tail
       obtain ⟨position,rfl,positionBound⟩ := integer_val_inv (ty := .I32) valueTyped
       have decoded : integer .I32 (integerVal .I32 position) = some position := integer_accepts .I32 position positionBound
-      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
       have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-      have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+      have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
       have indexBound : index < 2^32 := by cases instructionWf; rename_i valid; cases valid; norm_num at *; omega
       have tableEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN index) = object := by
         simp [fun_table,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
@@ -78,7 +78,7 @@ theorem tableGet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Lis
           (by simpa [vals,admininstr_val,integerVal,Segment.i32,numtype_Inn,admininstr_instr] using source)
         simpa only [split] using full
 
-theorem tableSize_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem table_size_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .TABLE_SIZE (.mk_uN index) :: after} :: rest,[]⟩) :
     ∃ next, tableSize ⟨s,ambient,{f with code := .TABLE_SIZE (.mk_uN index) :: after} :: rest,[]⟩ f rest index after = .next next ∧
@@ -100,9 +100,9 @@ theorem tableSize_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
       simpa only [split,List.append_nil] using freshFrame
     refine ⟨_,by simp only [tableSize,mapped,found,advance],
       ⟨active_frame_preservation typed.typed actualFrame rfl,typed.contents⟩,NextSim.single ?_⟩
-    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
     have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-    have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+    have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
     have indexBound : index < 2^32 := by cases instructionWf; rename_i valid; cases valid; norm_num at *; omega
     have tableEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN index) = object := by
       simp [fun_table,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
@@ -114,4 +114,4 @@ theorem tableSize_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
       (by simpa [vals,admininstr_val,integerVal,Segment.i32,numtype_Inn,admininstr_instr] using source)
     simpa only [List.append_nil] using full
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

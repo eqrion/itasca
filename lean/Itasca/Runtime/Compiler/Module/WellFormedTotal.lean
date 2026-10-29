@@ -10,7 +10,7 @@ Normal return of per-instruction validity checks and complete function well-form
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -38,7 +38,7 @@ set_option maxHeartbeats 4000000
   cases instruction <;> norm_num [runtime.bytecode.Instr.simd, WP.spec_ok]
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -46,7 +46,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -108,7 +108,7 @@ theorem instruction_valid_total (f : runtime.bytecode.CompiledFunction)
         | none =>
           simp only [bind_ok]
           step*
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -116,7 +116,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Jump-table validation terminates for arbitrary stored entries. -/
@@ -227,6 +227,6 @@ theorem well_formed_total (f : runtime.bytecode.CompiledFunction) :
     | (split <;> try simp only [bind_ok, WP.spec_ok])
     | step
     | scalar_tac
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

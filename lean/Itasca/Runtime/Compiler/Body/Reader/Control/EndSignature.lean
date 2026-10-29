@@ -7,7 +7,7 @@ Block signatures and the source-scope form at reader closure.
 Main declarations: `reader_block_signature_wasm2` and `SourceScopeMatchesWasm2.close_form`. A direct consumer is `Compiler.Body.Reader.Control.EndEnteredPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_block_signature_wasm2 (env : module.Env) (bt : signature.BlockType)
@@ -68,4 +68,4 @@ theorem SourceScopeMatchesWasm2.close_form {scope saved instruction}
   · exact .inr (.inl ⟨rfl, by rw [source]⟩)
   · exact .inr (.inr (.inl ⟨_, rfl, by rw [source], by simpa [Wasm2.Frames.Form.params, identity rfl, results] using params⟩))
   · exact .inr (.inr (.inr ⟨_, _, _, _, _, rfl, by rw [source]⟩))
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

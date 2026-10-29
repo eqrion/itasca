@@ -39,7 +39,7 @@ theorem forall_modify {T : Type} (p : T → Prop) (xs : List T) (index : Nat) (f
       · exact hx
       · exact ih n ht y hy
 
-theorem tableWrite_wf (s : store) (f : frame) (index position : Nat) (value : ref)
+theorem table_write_wf (s : store) (f : frame) (index position : Nat) (value : ref)
     (hs : wf_store s) : wf_store (tableWrite s f index position value) := by
   cases s with | MKstore funcs globals tables mems elems datas =>
   cases hs with | store_case_ _ _ _ _ _ _ hfn hg ht hm hd =>
@@ -60,7 +60,7 @@ theorem table_write_step (s : store) (f : frame) (index position : Nat) (value :
     (inside : position < (fun_table ⟨s,f⟩ (.mk_uN index)).REFS.length) :
     StepH ⟨⟨s,f⟩,[i32 position,admininstr_ref value,.TABLE_SET (.mk_uN index)]⟩ []
       ⟨⟨tableWrite s f index position value,f⟩,[]⟩ := by
-  have fresh := tableWrite_wf s f index position value hs
+  have fresh := table_write_wf s f index position value hs
   apply StepH.step
   apply Step.table_set_val
   · simp [proj_num__0]
@@ -109,7 +109,7 @@ def tableInit (s : store) (f : frame) (tableIndex elementIndex destination sourc
       (tableWrite s f tableIndex destination ((fun_elem ⟨s,f⟩ (.mk_uN elementIndex)).REFS[source]!))
       f tableIndex elementIndex (destination+1) (source+1) count
 
-theorem tableWrite_table_length (s : store) (f : frame) (index position : Nat) (value : ref)
+theorem table_write_table_length (s : store) (f : frame) (index position : Nat) (value : ref)
     (address : f.MODULE.TABLES[index]! < s.TABLES.length) :
     (fun_table ⟨tableWrite s f index position value,f⟩ (.mk_uN index)).REFS.length =
       (fun_table ⟨s,f⟩ (.mk_uN index)).REFS.length := by
@@ -129,18 +129,18 @@ theorem table_init_steps (s : store) (f : frame) (destination source count table
     StepsH ⟨⟨s,f⟩,operands destination source count ++ [.TABLE_INIT (.mk_uN tableIndex) (.mk_uN elementIndex)]⟩ []
       ⟨⟨tableInit s f tableIndex elementIndex destination source count,f⟩,[]⟩ := by
   induction count generalizing s destination source with
-  | zero => exact stepsH_single (table_init_zero s f destination source tableIndex elementIndex hs hf hd hi ht he inside)
+  | zero => exact steps_h_single (table_init_zero s f destination source tableIndex elementIndex hs hf hd hi ht he inside)
   | succ count ih =>
     have hd' : destination+1 < 2^32 := by omega
     have hi' : source+1 < 2^32 := by omega
     let value := (fun_elem ⟨s,f⟩ (.mk_uN elementIndex)).REFS[source]!
     let fresh := tableWrite s f tableIndex destination value
-    have hw := tableWrite_wf s f tableIndex destination value hs
-    have lengthEq := tableWrite_table_length s f tableIndex destination value address
+    have hw := table_write_wf s f tableIndex destination value hs
+    have lengthEq := table_write_table_length s f tableIndex destination value address
     have afterWf := (wf_config_parts (init_config_wf fresh f (destination+1) (source+1) count _ hw hf hd' hi'
       (by omega) (.admininstr_case_54 _ _ (index_wf _ ht) (index_wf _ he)))).2
     have first := table_init_expand s f destination source count tableIndex elementIndex hs hf hd' hi' hn ht he inside
-    have second := stepH_instrs (table_write_step s f tableIndex destination value hs hf hd ht mapped (by omega)) []
+    have second := step_h_instrs (table_write_step s f tableIndex destination value hs hf hd ht mapped (by omega)) []
       (operands (destination+1) (source+1) count ++ [.TABLE_INIT (.mk_uN tableIndex) (.mk_uN elementIndex)])
       (by simp [Forall]) afterWf
     have rest := ih fresh (destination+1) (source+1) hw hd' hi' (by omega)
@@ -149,7 +149,7 @@ theorem table_init_steps (s : store) (f : frame) (destination source count table
       (by rw [show (fun_table ⟨fresh,f⟩ (.mk_uN tableIndex)).REFS.length =
             (fun_table ⟨s,f⟩ (.mk_uN tableIndex)).REFS.length from lengthEq]
           simpa only [fresh,tableWrite,fun_elem,Nat.add_assoc,Nat.add_comm 1 count] using inside)
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans (steps_h_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,tableInit,value,fresh] using combined
 
 end Itasca.Runtime.Spec.Segment
@@ -163,7 +163,7 @@ section
 namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
-theorem tableInit_eq (s : store) (f : frame) (tableIndex elementIndex destination source count : Nat) :
+theorem table_init_eq (s : store) (f : frame) (tableIndex elementIndex destination source count : Nat) :
     tableInit s f tableIndex elementIndex destination source count =
       {s with TABLES := s.TABLES.modify f.MODULE.TABLES[tableIndex]! (fun table => {table with REFS := copyInto table.REFS (fun_elem ⟨s,f⟩ (.mk_uN elementIndex)).REFS destination source count})} := by
   induction count generalizing s destination source with

@@ -5,19 +5,19 @@ import Itasca.Runtime.Store.Invariant.FunctionTables
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
-theorem decodeGlobal_type_source (global : runtime.store.GlobalInst) :
+theorem decode_global_type_source (global : runtime.store.GlobalInst) :
     (decodeGlobal global).TYPE = Translate.globalType global.ty := by
   cases global.ty.valtype <;> cases global.ty.mutability <;> rfl
 
-theorem decodeElemType_source (ty : types.ElemType) : decodeElemType ty = Translate.referenceType ty := by
+theorem decode_elem_type_source (ty : types.ElemType) : decodeElemType ty = Translate.referenceType ty := by
   cases ty <;> rfl
 
 /-- Runtime import matching is exactly the generated limits subtyping rule. -/
 theorem limits_match_sub (size : Nat) (maximum : Option U32) (required : types.Limits)
     (bound : size ≤ U32.max) (matching : LimitsMatch size maximum required) :
     Limits_sub (decodeLimits size maximum) (EnvTranslation.limitsType required) := by
-  have actualWf := decodeLimits_wf size maximum bound
-  have sourceWf := decodeLimits_wf required.min.val required.max (by scalar_tac)
+  have actualWf := decode_limits_wf size maximum bound
+  have sourceWf := decode_limits_wf required.min.val required.max (by scalar_tac)
   change wf_limits (EnvTranslation.limitsType required) at sourceWf
   cases actual : maximum with
   | none =>
@@ -61,7 +61,7 @@ theorem imported_global_typed {M : Type} (view : M → Slice U8) (code : CodeInt
     (List.getElem?_eq_some_iff.mp read).1
     (by simp only [List.getElem!_eq_getElem?_getD, read, Option.getD_some]) wellformed
     (.externtype_case_1 _)
-  simpa only [decodeGlobal_type_source, typed] using result
+  simpa only [decode_global_type_source, typed] using result
 
 theorem imported_table_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (wellformed : wf_store (decodeStore view code store))
@@ -73,9 +73,9 @@ theorem imported_table_typed {M : Type} (view : M → Slice U8) (code : CodeInte
   have read : (decodeStore view code store).TABLES[address.index.val]? = some (decodeTable table) := by
     simp only [decodeStore, List.getElem?_map, found, Option.map_some]
   have actualWf : wf_tabletype (decodeTable table).TYPE :=
-    .tabletype_case_0 _ _ (decodeLimits_wf _ _ shaped.1)
+    .tabletype_case_0 _ _ (decode_limits_wf _ _ shaped.1)
   have sourceWf : wf_tabletype (EnvTranslation.tableType ty) :=
-    .tabletype_case_0 _ _ (decodeLimits_wf ty.limits.min.val ty.limits.max (by scalar_tac))
+    .tabletype_case_0 _ _ (decode_limits_wf ty.limits.min.val ty.limits.max (by scalar_tac))
   have base := Externaddr_ok.table (decodeStore view code store) address.index.val (decodeTable table)
     (List.getElem?_eq_some_iff.mp read).1
     (by simp only [List.getElem!_eq_getElem?_getD, read, Option.getD_some]) wellformed
@@ -85,7 +85,7 @@ theorem imported_table_typed {M : Type} (view : M → Slice U8) (code : CodeInte
   · have subtype := limits_match_sub table.elements.length table.maximum ty.limits shaped.1 matching
     have eq : (decodeTable table).TYPE = .mk_tabletype (decodeLimits table.elements.length table.maximum)
         (Translate.referenceType ty.elem) := by
-      simp only [decodeTable, elementType, decodeElemType_source]
+      simp only [decodeTable, elementType, decode_elem_type_source]
     rw [eq]
     exact .mk_Tabletype_sub _ _ _ subtype (by simpa only [eq] using actualWf) sourceWf
   · exact .externtype_case_2 _ actualWf
@@ -104,9 +104,9 @@ theorem imported_memory_typed {M : Type} (view : M → Slice U8) (code : CodeInt
   have read : (decodeStore view code store).MEMS[address.index.val]? = some (decodeMemory view memory) := by
     simp only [decodeStore, List.getElem?_map, found, Option.map_some]
   have actualWf : wf_memtype (decodeMemory view memory).TYPE :=
-    .memtype_case_0 _ (decodeLimits_wf _ _ bound)
+    .memtype_case_0 _ (decode_limits_wf _ _ bound)
   have sourceWf : wf_memtype (EnvTranslation.memType ty) :=
-    .memtype_case_0 _ (decodeLimits_wf ty.limits.min.val ty.limits.max (by scalar_tac))
+    .memtype_case_0 _ (decode_limits_wf ty.limits.min.val ty.limits.max (by scalar_tac))
   have base := Externaddr_ok.mem (decodeStore view code store) address.index.val (decodeMemory view memory)
     (List.getElem?_eq_some_iff.mp read).1
     (by simp only [List.getElem!_eq_getElem?_getD, read, Option.getD_some]) wellformed

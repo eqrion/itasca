@@ -8,7 +8,7 @@ Initial structured compiler state for body replay.
 Main declarations: `StructuredReaderCompilerStateWasm2.initial`. A direct consumer is `Compiler.Body.Relations.Table.PreparedTableInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.initial {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -26,4 +26,4 @@ theorem StructuredReaderCompilerStateWasm2.initial {jumpTables : List U32} {emit
     .initial (.TypeIndex index) 0#usize ft.params.val ft.results.val, ?_, .initial _, .initial _⟩
   exact ReaderReachability.initial _ _ _ _ rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

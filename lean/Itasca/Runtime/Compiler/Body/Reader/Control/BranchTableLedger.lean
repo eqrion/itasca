@@ -8,7 +8,7 @@ Auxiliary allocation accounting for br_table compilation.
 Main declarations: `compiler_br_table_auxiliary_growth` and `reader_table_ledger_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ControlLedger`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_br_table_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
@@ -42,4 +42,4 @@ theorem reader_table_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     compiler_read_br_table ops law before after st final data env _ accepted
   exact ⟨compiler_br_table_auxiliary_growth ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types callback,
     compiler_br_table_fixup_budget ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types budget callback⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

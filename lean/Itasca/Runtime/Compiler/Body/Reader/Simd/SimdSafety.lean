@@ -9,7 +9,7 @@ Normal return of SIMD subopcode and top-level reader dispatch.
 Main declarations: `compiler_reader_simd_sub_total` and `compiler_reader_simd_total`. A direct consumer is `Compiler.Body.Reader.Safety.OrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Simd
 
 theorem compiler_reader_simd_sub_total {A} (ops : runtime.platform.Alloc A)
@@ -110,4 +110,4 @@ theorem compiler_reader_simd_total {A} (ops : runtime.platform.Alloc A)
     obtain ⟨sub,next⟩ := pair
     exact compiler_reader_simd_sub_total ops law compiler {st with pos := next} data env ctx sub
       ready ⟨shape.ordered,shape.bounded⟩ capacity
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

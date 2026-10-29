@@ -14,7 +14,7 @@ Publication of entered scope maps. Block, loop and if effects establish the comm
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact frame and map appends from the enter callbacks establish ownership
@@ -38,7 +38,7 @@ theorem ControlMapPublication.enter_effect {A : Type}
   rw [origin,start]
   exact ⟨position,by omega,by omega⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -46,7 +46,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual BLOCK entry establishes the newly owned map bounds. -/
@@ -188,7 +188,7 @@ theorem compiler_enter_dead_map_publication {A : Type} (ops : runtime.platform.A
   rw [cursor]
   exact forward
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -196,7 +196,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source-reader geometry needed to open a frame. These are local stack,
@@ -264,6 +264,6 @@ theorem compiler_scope_entry_publication {A : Type} (ops : runtime.platform.Allo
       geometry.controls geometry.selected geometry.valuesFit geometry.heightFits geometry.sourceFits position
       geometry.mapsFit geometry.framesFit dormant maps forward after called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

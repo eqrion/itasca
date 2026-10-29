@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Float.Descriptor
 The core source-instruction grammar and its state predicates. Extended operation families preserve this explicit grammar boundary rather than treating core as a historical proof version.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Source heads executed by `Core.instruction`: the `astep` heads, plus constants,
 select and the global and memory accesses it resolves against the store. -/
@@ -24,4 +24,4 @@ inductive ScalarHead : instr → Prop where
   | core {source} : CoreHead source → ScalarHead source
   | float (op : Float.Instruction) : ScalarHead op.source
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

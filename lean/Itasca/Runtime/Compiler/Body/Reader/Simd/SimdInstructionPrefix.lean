@@ -9,7 +9,7 @@ The exhaustive actual SIMD event classifier supplies source widths and exact met
 Main declarations: `SimdReaderEvent.instruction_prefix`. A direct consumer is `Compiler.Body.Reader.Checking.NoncontrolCheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The exhaustive actual SIMD event classifier supplies source widths and
@@ -52,8 +52,8 @@ theorem SimdReaderEvent.instruction_prefix {jumpTables : List U32} {A : Type} {o
       ordinary.capacity (by change before.function.code.val.length ≤ after.function.code.val.length; rw [lowered.1.1,List.length_append,List.length_singleton]; omega)
     have layout := retained.layout
     rw [oldTypes] at layout
-    exact ⟨lowered.1.executableInstructionPrefix layout reachable (contextLocals.trans retained.localsEq.symm)
-      (.simd emission) emission.not_branchTable growth held ordinary.frames,
+    exact ⟨lowered.1.executable_instruction_prefix layout reachable (contextLocals.trans retained.localsEq.symm)
+      (.simd emission) emission.not_branch_table growth held ordinary.frames,
       exits.retained (congrArg alloc.vec.Vec.val ordinary.frames) ordinary.capacity⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

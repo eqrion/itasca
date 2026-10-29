@@ -8,7 +8,7 @@ The canonical reader and actual compiler callback jointly establish the indirect
 Main declarations: `reader_emit_indirect_call_wasm2`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectCallPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- The canonical reader and actual compiler callback jointly establish the
@@ -59,4 +59,4 @@ theorem reader_emit_indirect_call_wasm2 {data env locals typeIndex st}
     compiler_indirect_call_cursor ops law before after out.core index table callback,
     index,table,values,emitted,_,pairs,post,?_,beforeTypes ▸ emission⟩
   exact ⟨lowered,SourceStack.of_map (front ++ ft.results.val) concrete (by simp)⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

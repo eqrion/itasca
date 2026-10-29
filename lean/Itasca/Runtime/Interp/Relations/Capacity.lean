@@ -16,7 +16,7 @@ theorem WordsAt.end_le {words : List U64} {base : Nat} {bits : List Nat}
 
 /-- The allocated capacity is for the function actually selected by the frame. -/
 theorem FrameBinding.capacity {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (instanceLookup : store.instances.val[raw.instance.val]? = some inst)
@@ -29,7 +29,7 @@ theorem FrameBinding.capacity {M : Type} {store : runtime.store.Store M}
   exact sameCode ▸ capacity
 
 theorem FrameBinding.base_bound {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source) : raw.base.val ≤ exec.slots.val.length := by
   obtain ⟨_, _, compiled, _, _, _, _, _, _, _, _, _, _, _, capacity⟩ := binding
   change raw.base.val + compiled.slot_count.val ≤ exec.slots.val.length at capacity
@@ -37,10 +37,10 @@ theorem FrameBinding.base_bound {M : Type} {store : runtime.store.Store M}
 
 /-- Live-value capacity follows from representation and frame allocation. -/
 theorem FrameSlots.capacity {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (represented : FrameSlots exec raw source) (binding : FrameBinding store exec raw source) :
-    raw.base.val + Code.slots ((source.locals ++ source.vals).map Code.valueType) ≤ exec.slots.length := by
+    raw.base.val + Compiler.slots ((source.locals ++ source.vals).map Compiler.valueType) ≤ exec.slots.length := by
   have bound := represented.end_le binding.base_bound
-  simpa only [Code.encodeValues_length] using bound
+  simpa only [Compiler.encode_values_length] using bound
 
 end Itasca.Runtime.Interp

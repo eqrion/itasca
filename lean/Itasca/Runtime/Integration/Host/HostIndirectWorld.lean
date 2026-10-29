@@ -2,9 +2,9 @@ import Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Execution.World.RecordedStep
 import Itasca.Runtime.Integration.Execution.World.Reinterpretation
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
-open Itasca.Runtime.Interp.StructuredMachine
+open Itasca.Runtime.Interp.Machine
 theorem step_indirect_host_world_outcomes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -16,24 +16,24 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
     (valid : Inv code store)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [IndirectProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type : U32) (after : List instr)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type : U32) (after : List instr)
     (position : Nat) (sourceOperands : List val) (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
-    (positionSplit : f.vals=sourceOperands++[Abs.integerVal .I32 position])
-    (selectedSource : Abs.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.index.val)
+    (positionSplit : f.vals=sourceOperands++[SourceMachine.integerVal .I32 position])
+    (selectedSource : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.index.val)
     (functionAt : store.funcs.val[address.index.val]?=some function) (hostCode : function.code=.Host host)
     (owner : address.store=store.id)
     (last : frameIndex.val+1=exec.frames.length) (hf : exec.frames.val[frameIndex.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst) (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
@@ -78,7 +78,7 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
     simpa only [stepHostEvents,guard,before] using edge.world
   · obtain ⟨afterCode,agrees,freshInv,guard,signature,base,pc,front,args,split,pcNext,fetch,callActual,
         fresh,retained,extension,external,site,causes,effect⟩ := called
-    have same := Store.decodeStore_code_agrees view agrees
+    have same := Store.decode_store_code_agrees view agrees
     have labels : stepHostEvents exec store (status,afterExec,afterStore,afterPlatform)=
         hostCallEvents address (status,afterExec,afterStore,afterPlatform) := by
       simp only [stepHostEvents,guard]
@@ -93,7 +93,7 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
         obtain ⟨final,execEq,storeEq,platformEq,sourceEq,edge⟩ := eventful_host_return memory hooks floats allocator
           (before.change_code afterCode agrees) afterStore afterExec afterPlatform ambient
           {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest front
-          (args++[Abs.integerVal .I32 position]) (afterExec.host_results.val.map sourceValue) after finalPC
+          (args++[SourceMachine.integerVal .I32 position]) (afterExec.host_results.val.map sourceValue) after finalPC
           (by simp only [EventfulMachine.change_code,before,same])
           (by simpa only [List.append_assoc] using split) actual retained external
           (by simpa only [EventfulMachine.change_code,before,same] using extension) fresh returned resumed
@@ -118,4 +118,4 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
           have sourceError := host_frame_eventful_error kind trace.erase rfl
           simpa only [labels] using sourceError
       · exact ⟨rfl,frameIndex,raw,pc,address,signature,base,host,hf,pcNext,site,callActual,causes⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

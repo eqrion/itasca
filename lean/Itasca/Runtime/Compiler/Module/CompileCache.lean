@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CompileSemantic
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical accepted environment parsing establishes the exact imported and
@@ -28,4 +28,4 @@ theorem CompileWitness.cache {A : Type} {allocator : runtime.platform.Alloc A}
   rw [(w.initializers law).1]
   exact w.cache_input
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

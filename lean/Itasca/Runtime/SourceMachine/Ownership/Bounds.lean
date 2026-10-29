@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Results
-namespace Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Ownership
 
 /-- Source function and external references use distinct issued address spaces. -/
 structure Bounds where
@@ -24,9 +24,9 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
     (subset : ∀ value ∈ after, value ∈ before) : ValuesOwned bound after :=
   fun value member => bounded value (subset value member)
 
-@[simp] theorem valuesOwned_nil (bound : Bounds) : ValuesOwned bound [] := by simp [ValuesOwned]
+@[simp] theorem values_owned_nil (bound : Bounds) : ValuesOwned bound [] := by simp [ValuesOwned]
 
-@[simp] theorem valuesOwned_append {bound left right} :
+@[simp] theorem values_owned_append {bound left right} :
     ValuesOwned bound (left ++ right) ↔ ValuesOwned bound left ∧ ValuesOwned bound right := by
   simp only [ValuesOwned, List.mem_append]
   constructor
@@ -35,7 +35,7 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
     · exact hl v hv
     · exact hr v hv
 
-@[simp] theorem valuesOwned_cons {bound value rest} :
+@[simp] theorem values_owned_cons {bound value rest} :
     ValuesOwned bound (value :: rest) ↔ ValueOwned bound value ∧ ValuesOwned bound rest := by
   simp [ValuesOwned]
 
@@ -51,13 +51,13 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
   | nil => simp
   | cons head tail ih =>
     cases index with
-    | zero => simpa using valuesOwned_cons.mpr ⟨allowed, (valuesOwned_cons.mp bounded).2⟩
+    | zero => simpa using values_owned_cons.mpr ⟨allowed, (values_owned_cons.mp bounded).2⟩
     | succ index =>
-      simpa using valuesOwned_cons.mpr ⟨(valuesOwned_cons.mp bounded).1, ih (valuesOwned_cons.mp bounded).2 index⟩
+      simpa using values_owned_cons.mpr ⟨(values_owned_cons.mp bounded).1, ih (values_owned_cons.mp bounded).2 index⟩
 
  theorem ValuesOwned.pop {bound values rest value} (bounded : ValuesOwned bound values)
-    (popped : Abs.pop values = some (rest, value)) : ValuesOwned bound rest ∧ ValueOwned bound value := by
-  unfold Abs.pop at popped
+    (popped : SourceMachine.pop values = some (rest, value)) : ValuesOwned bound rest ∧ ValueOwned bound value := by
+  unfold SourceMachine.pop at popped
   split at popped
   · contradiction
   next last tail equal =>
@@ -66,11 +66,11 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
     cases popped
     simpa using bounded
 
- theorem defaultValue_ownership {bound ty value} (created : defaultValue ty = some value) :
+ theorem default_value_ownership {bound ty value} (created : defaultValue ty = some value) :
     ValueOwned bound value := by
   cases ty <;> simp [defaultValue] at created <;> subst value <;> trivial
 
- theorem defaultLocals_ownership {bound locals values} (created : defaultLocals locals = some values) :
+ theorem default_locals_ownership {bound locals values} (created : defaultLocals locals = some values) :
     ValuesOwned bound values := by
   induction locals generalizing values with
   | nil => simp [defaultLocals] at created; subst values; simp
@@ -85,7 +85,7 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
         | some rest =>
           simp [defaultLocals, first, tail] at created
           subst values
-          exact valuesOwned_cons.mpr ⟨defaultValue_ownership first, ih tail⟩
+          exact values_owned_cons.mpr ⟨default_value_ownership first, ih tail⟩
 
  theorem ownership_advance {bound s f rest next}
     (results : ValuesOwned bound s.results) (frame : FrameOwned bound f)
@@ -106,7 +106,7 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
     next original caller callers =>
       have callerBound := frames caller (by simp)
       apply ownership_advance (step := step) results
-      · exact ⟨callerBound.1, valuesOwned_append.mpr ⟨callerBound.2, frame.2.drop _⟩⟩
+      · exact ⟨callerBound.1, values_owned_append.mpr ⟨callerBound.2, frame.2.drop _⟩⟩
       · exact fun item member => frames item (by simp [member])
   · contradiction
 
@@ -120,7 +120,7 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
   next target found =>
     split at step
     · apply ownership_advance (step := step) results ?_ frames
-      exact ⟨frame.1, valuesOwned_append.mpr ⟨frame.2.take _, frame.2.drop _⟩⟩
+      exact ⟨frame.1, values_owned_append.mpr ⟨frame.2.take _, frame.2.drop _⟩⟩
     · contradiction
 
  theorem ownership_enter {bound s f rest next ty body after loop}
@@ -142,8 +142,8 @@ private theorem values_subset {bound before after} (bounded : ValuesOwned bound 
   cases step
   refine ⟨results, ?_⟩
   simp only [List.mem_cons, forall_eq_or_imp]
-  refine ⟨⟨valuesOwned_append.mpr ⟨frame.2.drop _, ?_⟩, valuesOwned_nil _⟩, ⟨frame.1, frame.2.take _⟩, frames⟩
-  apply defaultLocals_ownership
+  refine ⟨⟨values_owned_append.mpr ⟨frame.2.drop _, ?_⟩, values_owned_nil _⟩, ⟨frame.1, frame.2.take _⟩, frames⟩
+  apply default_locals_ownership
   assumption
 
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

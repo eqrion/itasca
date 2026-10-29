@@ -11,7 +11,7 @@ Direct and conditional branch reader layouts and source target correspondence, u
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_layout_wasm2 {data env locals index st}
@@ -28,7 +28,7 @@ theorem reader_br_layout_wasm2 {data env locals index st}
   have selected := reader_branch_info_selected st data env false depth view out p.opened.shape.aligned accepted
   obtain ⟨scope, types, scopeAt, resolved, branchTypes⟩ := same.label p.opened depth.val view selected
   obtain ⟨_, outer, spine, _, base, _, controls, _, values⟩ := p.opened
-  have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (values ▸ known)).2
+  have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (values ▸ known)).2
   obtain ⟨front, arguments⟩ := reader_br_arguments st out data env depth view types outer p.current.vals
     values (by simpa [Control.base, controls] using base)
     (by simpa [Control.polymorphic, controls] using monomorphic) segmentKnown resolved p.opened.shape.aligned accepted
@@ -36,7 +36,7 @@ theorem reader_br_layout_wasm2 {data env locals index st}
   refine ⟨scope, discarded, scopeAt, ?_⟩
   simpa only [values, wasm2_spine_values spine, List.flatMap_def] using whole
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -44,7 +44,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_if_layout_wasm2 {data env locals index st}
@@ -63,7 +63,7 @@ theorem reader_br_if_layout_wasm2 {data env locals index st}
   have selected := reader_branch_info_selected st data env true depth view out p.opened.shape.aligned accepted
   obtain ⟨scope, types, scopeAt, resolved, branchTypes⟩ := same.label p.opened depth.val view selected
   obtain ⟨_, outer, spine, _, base, _, controls, _, values⟩ := p.opened
-  have both := concreteStack_append.mp (values ▸ known)
+  have both := concrete_stack_append.mp (values ▸ known)
   obtain ⟨rest, input, output, front, arguments⟩ := reader_br_if_arguments st out data env depth view types outer p.current.vals
     values (by simpa [Control.base, controls] using base)
     (by simpa [Control.polymorphic, controls] using monomorphic) both.2 resolved p.opened.shape.aligned accepted
@@ -72,8 +72,8 @@ theorem reader_br_if_layout_wasm2 {data env locals index st}
   · simp [values, input, output, Sequence.stackTypes, List.append_assoc, Translate.valueType]
   · simpa only [output, wasm2_spine_values spine, List.flatMap_def] using whole
   · rw [output]
-    exact concreteStack_append.mpr ⟨both.1, (concreteStack_append.mp (input ▸ both.2)).1⟩
+    exact concrete_stack_append.mpr ⟨both.1, (concrete_stack_append.mp (input ▸ both.2)).1⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -9,7 +9,7 @@ Successful compiler environment capture, from signature and function slots throu
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent source signature width excludes the actual accumulator error. -/
@@ -97,7 +97,7 @@ theorem capture_func_slots_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [runtime.compiler.visitor_result,bind_ok,WP.spec_ok]
   exact ⟨trivial,slots,amount,by rw [sameBudget],appended,by simpa [alloc.vec.Vec.deref] using counted⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -105,7 +105,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 abbrev EnvironmentCapture (A : Type) :=
@@ -171,7 +171,7 @@ theorem environment_signatures_available {A : Type} (ops : runtime.platform.Allo
       exact WP.spec.ret ⟨current,rfl,same,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -179,7 +179,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual function-parameter capture loop accepts independently bounded source parameter
@@ -235,7 +235,7 @@ theorem environment_function_slots_available {A : Type} (ops : runtime.platform.
       exact WP.spec.ret ⟨current,rfl,same,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -243,7 +243,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Allocating the defined-function slots accepts under a reserve bound computed
@@ -295,7 +295,7 @@ theorem environment_function_vector_available {A : Type} (ops : runtime.platform
       exact WP.spec.ret ⟨rfl,rfl,by simpa [last] using count⟩
   · exact ⟨rfl,rfl,inside,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -303,7 +303,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent numerical eligibility of the compiler's environment phase. -/
@@ -368,6 +368,6 @@ theorem environment_ready_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
   exact ⟨trivial,by rw [sameBudget,secondBudget]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

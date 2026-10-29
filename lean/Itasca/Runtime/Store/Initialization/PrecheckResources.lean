@@ -48,7 +48,7 @@ theorem element_bounds_active_resource_causes (law : Platform.AllocCorrect alloc
     (active : segment.mode = .Active tableIndex offset)
     (mapping : inst.module.element_offsets.val[index.val]? = some (some function))
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code offset .I32)
+    (compiled : Compiler.InitializerCode code offset .I32)
     (resolved : Interp.InitializerResolution store inst offset .I32 words)
     (bindings : InitializerBindings store inst)
     (ht : inst.tables.val[tableIndex.val]? = some addr)
@@ -120,7 +120,7 @@ theorem data_bounds_active_resource_causes (law : Platform.AllocCorrect allocato
     (active : segment.mode = .Active memoryIndex offset)
     (mapping : inst.module.data_offsets.val[index.val]? = some (some function))
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code offset .I32)
+    (compiled : Compiler.InitializerCode code offset .I32)
     (resolved : Interp.InitializerResolution store inst offset .I32 words)
     (bindings : InitializerBindings store inst)
     (ht : inst.memories.val[memoryIndex.val]? = some addr)
@@ -199,7 +199,7 @@ def OffsetInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
       (∃ segment, inst.module.module.tail.data.val[index.val]? = some segment ∧
         segment.mode = .Active target offset ∧
         inst.module.data_offsets.val[index.val]? = some (some function))) ∧
-    inst.module.functions.val[function.val]? = some code ∧ Code.InitializerCode code offset .I32 ∧
+    inst.module.functions.val[function.val]? = some code ∧ Compiler.InitializerCode code offset .I32 ∧
     Interp.SyntheticPreparationCause allocator store code error
 
 /-- Refined Wasm1 checks retain exact resource requests or generated bounds witnesses. -/

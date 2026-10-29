@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.Simulation
 import Itasca.Runtime.SourceMachine.Sim.Trace
 import Itasca.Runtime.SourceMachine.Sim.Typed
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 theorem mutable_counted_simulation (before afterStore : store) (ambient : frame) (f : AFrame)
@@ -14,12 +14,12 @@ theorem mutable_counted_simulation (before afterStore : store) (ambient : frame)
       ⟨⟨afterStore,f.toFrame⟩,vals produced⟩) :
     StepsHN count (decode ⟨before,ambient,{f with code := instruction::after,vals := baseValues++consumed}::rest,[]⟩) []
       (decode ⟨afterStore,ambient,{f with code := after,vals := baseValues++produced}::rest,[]⟩) := by
-  have first := stepsHN_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have second := stepsHN_decodeLabels first f.labels baseValues hl hv
-  have third := stepsHN_frame second f.arity (activeFrame ambient rest) (activeFrame_wf ha hr)
-  have full := stepsHN_decodeFrames ambient rest third ha hr
+  have first := steps_hn_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have second := steps_hn_decode_labels first f.labels baseValues hl hv
+  have third := steps_hn_frame second f.arity (activeFrame ambient rest) (active_frame_wf ha hr)
+  have full := steps_hn_decode_frames ambient rest third ha hr
   simp only [decode,decodeFrames,vals,List.map_nil,List.nil_append,List.map_cons,AFrame.toFrame,AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights,decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights,decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext,frameContext,vals,List.append_assoc,AFrame.arity,AFrame.toFrame] using full
 
 /-- Every bulk operation reduces its redex at least once, including zero-length
@@ -33,7 +33,7 @@ theorem bulk_empty_simulation (before afterStore : store) (ambient : frame) (f :
       ⟨⟨afterStore,f.toFrame⟩,[]⟩) :
     NextSim ⟨before,ambient,{f with code := instruction::after,vals := baseValues++consumed}::rest,[]⟩
       ⟨afterStore,ambient,{f with code := after,vals := baseValues}::rest,[]⟩ := by
-  obtain ⟨count,trace⟩ := stepsH_count steps
+  obtain ⟨count,trace⟩ := steps_h_count steps
   have positive : 0 < count := by
     by_contra no
     have zero : count=0 := by omega
@@ -46,4 +46,4 @@ theorem bulk_empty_simulation (before afterStore : store) (ambient : frame) (f :
     ha hl hv hc hr heights trace
   apply NextSim.counted (n:=count) _ positive
   simpa only [List.append_nil] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

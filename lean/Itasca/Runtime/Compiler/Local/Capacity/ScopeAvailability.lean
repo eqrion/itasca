@@ -11,7 +11,7 @@ Availability of block, loop and if entry callbacks under source stack bounds. Th
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -90,7 +90,7 @@ theorem compiler_enter_if_available {A : Type} (ops : runtime.platform.Alloc A)
   intro out post
   exact ⟨post.1,(firstEffect.trans post.2).weaken (by intro counter; cases counter <;> simp)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -98,7 +98,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -167,7 +167,7 @@ theorem compiler_enter_loop_available {A : Type} (ops : runtime.platform.Alloc A
   intro out post
   exact ⟨post.1,(firstEffect.trans post.2).weaken (by intro counter; cases counter <;> simp)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -175,11 +175,11 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every raw observed stack entry occupies at most two compiler words. -/
-theorem stackWords_le_twice_length (values : List Itasca.code.StackType) :
+theorem stack_words_le_twice_length (values : List Itasca.code.StackType) :
     stackWords values ≤ 2*values.length := by
   induction values with
   | nil => simp [stackWords]
@@ -212,7 +212,7 @@ theorem compiler_enter_available {A : Type} (ops : runtime.platform.Alloc A)
         (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
   have heightFits : compiler.function.local_slots.val +
       stackWords (state.vals.val.take ctrl.value_stack_base.val) ≤ U32.max := by
-    have words := stackWords_le_twice_length (state.vals.val.take ctrl.value_stack_base.val)
+    have words := stack_words_le_twice_length (state.vals.val.take ctrl.value_stack_base.val)
     have lengthBound : (state.vals.val.take ctrl.value_stack_base.val).length ≤ state.vals.val.length := by
       simp only [List.length_take]; exact Nat.min_le_right _ _
     have room := scope.slots
@@ -234,6 +234,6 @@ theorem compiler_enter_available {A : Type} (ops : runtime.platform.Alloc A)
       intro out post
       exact ⟨post.1,post.2.weaken (by intro counter; cases counter <;> simp)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

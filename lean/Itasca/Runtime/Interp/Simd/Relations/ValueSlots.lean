@@ -4,13 +4,13 @@ import Itasca.Runtime.Interp.Relations.WordEncoding
 /-!
 Vector/scalar source values represented by runtime slots.
 
-Main declarations: `vectorBits_toNat` and `ValuesAt.simd_scalar_result`. A direct consumer is `Interp.Simd.Execution.ConstValues`.
+Main declarations: `vector_bits_to_nat` and `ValuesAt.simd_scalar_result`. A direct consumer is `Interp.Simd.Execution.ConstValues`.
 -/
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem vectorBits_toNat (words : List U64) (position : Nat) :
+theorem vector_bits_to_nat (words : List U64) (position : Nat) :
     (vectorBits words position).toNat =
       ((words[position]?).getD 0#u64).val + ((words[position+1]?).getD 0#u64).val * 2^64 := by
   let lo := (words[position]?).getD 0#u64
@@ -26,7 +26,7 @@ theorem vectorBits_toNat (words : List U64) (position : Nat) :
   omega
 
 theorem WordsAt.simd_vector {words : List U64} {position bits : Nat}
-    (represented : WordsAt words position (Code.encodeValue (.VCONST .V128 (.mk_uN bits)))) :
+    (represented : WordsAt words position (Compiler.encodeValue (.VCONST .V128 (.mk_uN bits)))) :
     (simdInput words position 2#u32).val = bits := by
   change WordsAt words position [bits%2^64,bits/2^64] at represented
   obtain ⟨loBound,loValue⟩ := represented 0 (by simp)
@@ -34,7 +34,7 @@ theorem WordsAt.simd_vector {words : List U64} {position bits : Nat}
   simp only [Nat.add_zero,List.getElem!_cons_zero] at loBound loValue
   simp only [List.getElem!_cons_succ,List.getElem!_cons_zero] at hiValue
   change (vectorBits words position).toNat = bits
-  rw [vectorBits_toNat]
+  rw [vector_bits_to_nat]
   have lo : ((words[position]?).getD 0#u64).val = bits%2^64 := by
     simpa only [List.getElem?_eq_getElem loBound,Option.getD_some,_root_.getElem!_pos words position loBound] using loValue
   have hi : ((words[position+1]?).getD 0#u64).val = bits/2^64 := by
@@ -44,8 +44,8 @@ theorem WordsAt.simd_vector {words : List U64} {position bits : Nat}
 
 theorem ValuesAt.simd_vector_result {words : List U64} {base : Nat} {front : List val}
     (represented : ValuesAt words base front) (value : U128)
-    (capacity : base + Code.slots (front.map Code.valueType) + 2 ≤ words.length) :
-    ValuesAt (simdResultSlots words (base+Code.slots (front.map Code.valueType)) 2#u32 value) base
+    (capacity : base + Compiler.slots (front.map Compiler.valueType) + 2 ≤ words.length) :
+    ValuesAt (simdResultSlots words (base+Compiler.slots (front.map Compiler.valueType)) 2#u32 value) base
       (front ++ [.VCONST .V128 (.mk_uN value.val)]) := by
   have written := represented.append_vector (UScalar.cast .U64 value)
     ⟨(value.bv >>> 64).setWidth 64⟩ capacity
@@ -76,8 +76,8 @@ theorem ValuesAt.simd_scalar_result {words : List U64} {base : Nat} {front : Lis
     (represented : ValuesAt words base front) (ty : Itasca.types.ValueType) (value : U128)
     (scalar : ty ≠ .V128)
     (small : ty = .I32 ∨ ty = .F32 → (UScalar.cast .U64 value).val < 2^32)
-    (capacity : base + Code.slots (front.map Code.valueType) < words.length) :
-    ValuesAt (simdResultSlots words (base+Code.slots (front.map Code.valueType)) 1#u32 value) base
+    (capacity : base + Compiler.slots (front.map Compiler.valueType) < words.length) :
+    ValuesAt (simdResultSlots words (base+Compiler.slots (front.map Compiler.valueType)) 1#u32 value) base
       (front ++ [Store.decodeWords ty (UScalar.cast .U64 value) 0#u64]) := by
   have written := represented.append_scalar ty (UScalar.cast .U64 value) 0#u64 scalar small capacity
   simpa only [simdResultSlots,show (1#u32).val > 0 from by decide,show (1#u32) ≠ 2#u32 from by decide,↓reduceIte] using written

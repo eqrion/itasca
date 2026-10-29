@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Int
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The abstract conditional selects the same block as the generated rule. -/
@@ -51,7 +51,7 @@ theorem br_if_simulation (s : store) (ambient : frame) (f : AFrame)
       { f with code := .BR_IF (.mk_uN index) :: after, vals := baseValues ++ [integerVal .I32 bits] } :: rest, []⟩) []
       (decode ⟨s, ambient,
       { f with code := if bits = 0 then after else .BR (.mk_uN index) :: after, vals := baseValues } :: rest, []⟩) := by
-  have hidx := integer_uN_wf .I32 index hi
+  have hidx := integer_u_n_wf .I32 index hi
   have hi' : wf_instr (.BR_IF (.mk_uN index)) := .instr_case_8 _ hidx
   have hbr : wf_instr (.BR (.mk_uN index)) := .instr_case_7 _ hidx
   let replacement : List instr := if bits = 0 then [] else [.BR (.mk_uN index)]
@@ -109,12 +109,12 @@ theorem block_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, vals args ++ [.BLOCK bt body]⟩ []
       ⟨⟨s, f.toFrame⟩, [.LABEL_ results.length [] (vals args ++ body.map admininstr_instr)]⟩ :=
     .step (.read _ _ _ read hsource htarget)
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeLabels, Label.arity, instrContext, vals, List.append_assoc, AFrame.arity,
     AFrame.toFrame, admininstr_instr, hlen] using h₃
 
@@ -147,12 +147,12 @@ theorem loop_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, vals args ++ [.LOOP bt body]⟩ []
       ⟨⟨s, f.toFrame⟩, [.LABEL_ params.length [.LOOP bt body] (vals args ++ body.map admininstr_instr)]⟩ :=
     .step (.read _ _ _ read hsource htarget)
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeLabels, Label.arity, instrContext, vals, List.append_assoc, AFrame.arity,
     AFrame.toFrame, admininstr_instr, hlen] using h₃
 
@@ -181,10 +181,10 @@ theorem label_exit_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [.LABEL_ label.arity label.cont (vals (f.vals.drop label.height))]⟩ []
       ⟨⟨s, f.toFrame⟩, vals (f.vals.drop label.height)⟩ :=
     .step (.pure _ _ _ (.label_vals _ _ _ hwrap) hsource htarget)
-  have h₁ := stepH_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
-  have h₂ := stepH_decodeLabels h₁ labels (f.vals.take label.height) htail hbefore
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
-  have hm := decodeLabels_move_values labels (f.vals.take label.height) (f.vals.drop label.height)
+  have h₁ := step_h_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
+  have h₂ := step_h_decode_labels h₁ labels (f.vals.take label.height) htail hbefore
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
+  have hm := decode_labels_move_values labels (f.vals.take label.height) (f.vals.drop label.height)
     (label.after.map admininstr_instr) (by
       intro l hl
       simpa only [List.length_take, Nat.min_eq_left hheight] using heights l hl)
@@ -193,4 +193,4 @@ theorem label_exit_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [hm]
   simpa [decodeLabels, instrContext, vals, AFrame.arity, AFrame.toFrame] using h₃
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

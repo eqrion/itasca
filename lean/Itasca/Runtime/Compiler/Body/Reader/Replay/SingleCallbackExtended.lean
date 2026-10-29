@@ -9,7 +9,7 @@ Single-callback replay through scalar and extended operations. SIMD replay remai
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Extract the actual accepted callback at the reader's returned state. The
@@ -25,7 +25,7 @@ theorem reader_single_callback_of_run {X V : Type} (visitor : code.OpVisitor V)
   obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
   exact ⟨event out arg,(supported arg).1,(supported arg).2,callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -33,7 +33,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -253,6 +253,6 @@ theorem reader_single_callback_extended {V : Type} (visitor : code.OpVisitor V)
     · rw [code.step_extended.base visitor st data env ctx opcode before hm prefixByte] at accepted
       exact reader_single_callback_base visitor st data env ctx opcode before after out accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

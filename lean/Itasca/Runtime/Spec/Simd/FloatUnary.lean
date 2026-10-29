@@ -86,7 +86,7 @@ theorem float_unary_lanes_wf (ty : Fnn) (op : vunop_Fnn_N) (bits : BitVec 128) :
 theorem float_unary_relation (ty : Fnn) (op : vunop_Fnn_N) (bits : BitVec 128) :
     fun_vunop_ (shapeOf (lanetype_Fnn ty)) (floatUnarySource ty op)
       (.mk_uN bits.toNat) (some (floatUnaryResults ty op bits)) := by
-  have shapeWf := shapeOf_wf (lanetype_Fnn ty)
+  have shapeWf := shape_of_wf (lanetype_Fnn ty)
   have lanesWf := float_unary_lanes_wf ty op bits
   cases ty <;> cases op
   · apply fun_vunop_.fun_vunop__case_12
@@ -132,7 +132,7 @@ open SpecExt.Builtins
 theorem lanes_roundtrip (ty : lanetype) (bits : BitVec 128) :
     inv_lanes_ (shapeOf ty) (lanes_ (shapeOf ty) (.mk_uN bits.toNat)) = .mk_uN bits.toNat := by
   change uN.mk_uN (packLanes ty (unpackLanes ty (128/lsize ty) bits.toNat)) = _
-  rw [pack_unpackLanes,shapeOf_covers,Nat.mod_eq_of_lt bits.isLt]
+  rw [pack_unpackLanes,shape_of_covers,Nat.mod_eq_of_lt bits.isLt]
 
 theorem float_unary_result_member (ty : Fnn) (op : vunop_Fnn_N) (x result : BitVec 128)
     (allowed : ∀ j, j < 128/lsize (lanetype_Fnn ty) →
@@ -163,7 +163,7 @@ theorem float_unary_step (ty : Fnn) (op : vunop_Fnn_N) (x result : BitVec 128)
   · simp
   · simpa only [Option.get!_some,List.contains_iff_mem] using chosen
   · exact const_wf x
-  · exact .admininstr_case_25 _ _ (shapeOf_wf _) (float_unary_source_wf ty op)
+  · exact .admininstr_case_25 _ _ (shape_of_wf _) (float_unary_source_wf ty op)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

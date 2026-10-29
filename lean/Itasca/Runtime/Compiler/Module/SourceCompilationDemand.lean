@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable
 import Itasca.Runtime.Compiler.Module.InitializerCompilationAvailable
 import Itasca.Runtime.Compiler.Module.CompileAssembly
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Conservative source-only instruction demand for all module initializers. -/
@@ -69,4 +69,4 @@ theorem SourceCompilationDemand.environment_at {A env tail profile limits bodyBy
     ready.signatureCapacity,ready.signatureReserve,ready.slotCapacity,ready.slotReserve,
     ready.functionCapacity,ready.functionReserve⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

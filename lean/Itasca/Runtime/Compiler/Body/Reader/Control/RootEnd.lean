@@ -6,7 +6,7 @@ Reader and validator steps at the function's outermost end.
 Main declarations: `reader_end_root_wasm2` and `step_end_root_wasm2`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_end_root_wasm2 {data env locals index st}
@@ -39,4 +39,4 @@ theorem step_end_root_wasm2 {data env locals index st}
   obtain ⟨pair,read,_⟩ := reader_body_success _ _ _ _ _ _ accepted
   exact reader_end_root_wasm2 p single read
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

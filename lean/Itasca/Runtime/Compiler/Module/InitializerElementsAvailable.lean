@@ -10,7 +10,7 @@ Availability of individual element initializers and their complete element-segme
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Element values accept from independent initializer typing, with separate
@@ -66,7 +66,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
     omega
   · simp [alloc.vec.Vec.length,mapped]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -74,7 +74,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The complete remaining element-value loop accepts from independent source
@@ -145,7 +145,7 @@ theorem initializer_element_values_available {A : Type} (ops : runtime.platform.
         by simpa [last] using scratchSize,by simpa [last] using used⟩
   · exact ⟨rfl,rfl,rfl,inside,rfl,rfl,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -153,7 +153,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- One complete element mapping is accepted from source typing and independently
@@ -254,7 +254,7 @@ theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A
       simp only [initializerSize] at expressionSize size
       omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -262,7 +262,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The complete element-mapping loop accepts from source typing and a demand
@@ -338,6 +338,6 @@ theorem initializer_elements_available {A : Type} (ops : runtime.platform.Alloc 
         by simpa [last,initializerElementCost] using used⟩
   · exact ⟨rfl,rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

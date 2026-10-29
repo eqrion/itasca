@@ -19,14 +19,14 @@ theorem shuffle_byte_source (bits x y : U128) (j : Nat)
     (shuffleByte 13#u32 bits x y j).toNat =
       proj_uN_0 ((Spec.Simd.byteWords x.bv ++ Spec.Simd.byteWords y.bv)[Spec.Simd.byteAt bits.bv j]!) := by
   change (selectedByte true x.bv y.bv (laneBits 8 j bits.bv).toNat).toNat = _
-  rw [laneBits_toNat]
+  rw [lane_bits_to_nat]
   change (selectedByte true x.bv y.bv (Spec.Simd.byteAt bits.bv j)).toNat = _
-  rw [Spec.Simd.byteWords_append_get _ _ _ bounded]
+  rw [Spec.Simd.byte_words_append_get _ _ _ bounded]
   by_cases first : Spec.Simd.byteAt bits.bv j < 16
   · simp only [selectedByte,if_pos first]
-    exact laneBits_toNat 8 _ x.bv
+    exact lane_bits_to_nat 8 _ x.bv
   · simp only [selectedByte,if_neg first,Bool.true_and,decide_eq_true_eq,if_pos bounded]
-    exact laneBits_toNat 8 _ y.bv
+    exact lane_bits_to_nat 8 _ y.bv
 
 theorem shuffle_packed (bits x y result : U128)
     (bounded : ∀ j, j < 16 → Spec.Simd.byteAt bits.bv j < 32)
@@ -40,9 +40,9 @@ theorem shuffle_packed (bits x y result : U128)
   have selected (j : Nat) (valid : j < 16) :
       result.val / 2^(lsize lanetype.I8*j) % 2^lsize lanetype.I8 = values j := by
     change result.bv.toNat / 2^(8*j) % 2^8 = _
-    rw [←laneBits_toNat,lanes j valid,shuffle_byte_source bits x y j (bounded j valid)]
+    rw [←lane_bits_to_nat,lanes j valid,shuffle_byte_source bits x y j (bounded j valid)]
     dsimp only [values]
-    rw [Spec.Simd.byteWords_get bits.bv j valid]
+    rw [Spec.Simd.byte_words_get bits.bv j valid]
     rfl
   have packed := SpecExt.Builtins.pack_map_of_lanes .I8 16 result.val values selected
   have valueBound : result.val < 2^(lsize lanetype.I8*16) := by
@@ -78,7 +78,7 @@ open Aeneas Aeneas.Std
   apply WP.spec_mono (shuffle_lanes 13#u32 bits x y)
   intro result lanes
   apply Spec.Simd.shuffle_step x.bv y.bv result.bv (Spec.Simd.byteWords bits.bv)
-    (Spec.Simd.byteWords_length _) _ (shuffle_packed bits x y result bounded lanes)
+    (Spec.Simd.byte_words_length _) _ (shuffle_packed bits x y result bounded lanes)
   intro index member
   obtain ⟨j,valid,rfl⟩ := List.mem_map.mp member
   exact bounded j (List.mem_range.mp valid)

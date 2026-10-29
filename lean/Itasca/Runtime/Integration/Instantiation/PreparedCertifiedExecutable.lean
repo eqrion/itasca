@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Integration.Execution.InstantiationSource
 import Itasca.Runtime.Store.Invariant.ExecutableInstantiationCode
 import Itasca.Runtime.Compiler.Module.CompileDataCount
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The actual preparation trace constructs source typing and retained compiler
@@ -20,21 +20,21 @@ theorem prepared_certified_executable {M P F A : Type}
     (accounted : SegmentAccounting before)
     {tables memories} (cache : ModuleEnv.Cache module.module.env tables memories)
     (valid : ModuleEnv.Valid module.module.env module.profile)
-    (initializers : Code.InitializerMappings module)
+    (initializers : Compiler.InitializerMappings module)
     (raw : ModuleBinary.Module)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     {profile bytes}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile)
-    (functions : Code.ExecutableModuleFunctions module (Code.sourceFunctions raw))
+    (functions : Compiler.ExecutableModuleFunctions module (Compiler.sourceFunctions raw))
     (dataCount : ∀ count, module.module.env.data_count = some count →
       count.val = module.module.tail.data.val.length)
     (bounds : SegmentBounds ready) :
     ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
-      CertifiedSupportedStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready ∧
+      CertifiedSupportedStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready ∧
       SegmentAccounting ready ∧
-      Abs.ModuleBindings (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready)
+      SourceMachine.ModuleBindings (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready)
         (decodeInstance ready inst) (ModuleElaboration.contextOf raw) := by
   obtain ⟨inst, found, source, shaped, segments, retained, counted, code⟩ :=
     trace.shape_data laws law old.shape accounted cache valid initializers
@@ -50,28 +50,28 @@ theorem prepared_certified_executable {M P F A : Type}
   subst mapInst
   have instMatched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw := by
     simpa only [source] using matched
-  have sourceSyntax : StoreSyntax (installCode oldCode before.instances.length (Code.sourceFunctions raw)) trace.dataStore := by
-    apply old.storeSyntax.staged (installCode_agrees before oldCode (Code.sourceFunctions raw)) retained
+  have sourceSyntax : StoreSyntax (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) trace.dataStore := by
+    apply old.storeSyntax.staged (install_code_agrees before oldCode (Compiler.sourceFunctions raw)) retained
     · simpa only [trace.committed] using Nat.le_of_eq count
     · intro actual lookup
       have equal : actual = inst := Option.some.inj (lookup.symm.trans found)
       subst actual
       exact instance_syntax_source oldCode before.instances.length inst raw elaborated typed instMatched
-  have readySyntax : StoreSyntax (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready :=
+  have readySyntax : StoreSyntax (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready :=
     sourceSyntax.instances_eq (by simp only [trace.committed])
   have readySegments : SegmentTypeBindings ready inst := by
     constructor
     · simpa only [trace.committed] using segments.tables
     · simpa only [trace.committed] using segments.elements
-  have bindings := module_bindings_source view (installCode oldCode before.instances.length (Code.sourceFunctions raw))
+  have bindings := module_bindings_source view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
     ready inst raw instMatched shaped readySyntax (shaped.instances inst (List.mem_of_getElem? readyFound)) bounds
     code.type_entries code.function_table (by simpa only [source] using globals) tableMap memoryMap readySegments
   refine ⟨inst, readyFound, source, ?_, ?_, bindings⟩
   · refine ⟨shaped, readySyntax, ?_, ?_, ?_, bounds⟩
     · exact code.core_typed oldCode raw old.shape old.storeSyntax old.typed
-        (decodeStore_wf view _ ready shaped readySyntax) readyFound elaborated typed instMatched bindings
+        (decode_store_wf view _ ready shaped readySyntax) readyFound elaborated typed instMatched bindings
     · exact code.source_executable oldCode raw old.shape old.supported readyFound elaborated instMatched encoded
-    · exact code.executable_compiled oldCode old.shape old.compiled readyFound (Code.sourceFunctions raw)
+    · exact code.executable_compiled oldCode old.shape old.compiled readyFound (Compiler.sourceFunctions raw)
         (by simpa only [source] using functions) (by simpa only [source] using dataCount) (by simpa only [source] using cache)
   · exact counted.preserve (by simp only [trace.committed]) (by simp only [trace.committed]) (by simp only [trace.committed])
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

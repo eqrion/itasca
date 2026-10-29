@@ -6,7 +6,7 @@ import Itasca.Support.TypeTranslation
 Validator stack widths and their slot-count interpretation. Compiler layout and source-demand proofs use this bridge without importing body construction.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def compilerStackWidth : Itasca.code.StackType → Nat
@@ -15,4 +15,4 @@ def compilerStackWidth : Itasca.code.StackType → Nat
 
 def stackWords (values : List Itasca.code.StackType) : Nat :=
   (values.map compilerStackWidth).sum
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

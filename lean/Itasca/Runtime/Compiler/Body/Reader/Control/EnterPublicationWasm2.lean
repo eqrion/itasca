@@ -12,7 +12,7 @@ Structured compiler scope-entry source map publication and their reader-step lif
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A reached structured prefix supplies entry PC and reserve bounds. Actual
@@ -57,7 +57,7 @@ theorem structured_scope_entry_publication {jumpTables : List U32}
     exact compiler_scope_entry_publication ops law before after state kind bt (makeGeometry pc)
       (.dead kind dead rfl) coordinates maps inside forward called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -65,7 +65,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual Wasm 2 BLOCK, LOOP and IF readers preserve both publication
@@ -125,6 +125,6 @@ theorem reader_enter_publication_wasm2 {jumpTables : List U32}
   · rcases initialForm with rfl | rfl | rfl <;> simp [Wasm2.Frames.Form.kind]
   · exact le_trans invariant.cursor (Nat.le_of_lt consumed)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

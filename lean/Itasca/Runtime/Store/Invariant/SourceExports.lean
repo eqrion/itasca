@@ -30,7 +30,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
       (inst.memories.val.map (fun address => address.index.val))
       (decodeName entry.name.val) (.mk_uN index.val) (by simpa [proj_uN_0] using mapped) (by simpa [proj_uN_0] using mapped) (.exportinst_case_ _ _ nameWf)
     simpa only [decodeInstance, ModuleElaboration.exportDecl, ModuleEnv.rawExport,
-      ModuleElaboration.exportIndex, decodeExport, desc, ← decodeName_source,
+      ModuleElaboration.exportIndex, decodeExport, desc, ← decode_name_source,
       List.getElem!_eq_getElem?_getD, List.getD, proj_uN_0,
       List.getElem?_eq_getElem mapped, Option.getD_some] using source
   | Global index =>
@@ -48,7 +48,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
       (inst.memories.val.map (fun address => address.index.val))
       (decodeName entry.name.val) (.mk_uN index.val) (by simpa [proj_uN_0] using mapped) (by simpa [proj_uN_0] using mapped) (.exportinst_case_ _ _ nameWf)
     simpa only [decodeInstance, ModuleElaboration.exportDecl, ModuleEnv.rawExport,
-      ModuleElaboration.exportIndex, decodeExport, desc, ← decodeName_source,
+      ModuleElaboration.exportIndex, decodeExport, desc, ← decode_name_source,
       List.getElem!_eq_getElem?_getD, List.getD, proj_uN_0,
       List.getElem?_eq_getElem mapped, Option.getD_some] using source
   | Table index =>
@@ -66,7 +66,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
       (inst.memories.val.map (fun address => address.index.val))
       (decodeName entry.name.val) (.mk_uN index.val) (by simpa [proj_uN_0] using mapped) (by simpa [proj_uN_0] using mapped) (.exportinst_case_ _ _ nameWf)
     simpa only [decodeInstance, ModuleElaboration.exportDecl, ModuleEnv.rawExport,
-      ModuleElaboration.exportIndex, decodeExport, desc, ← decodeName_source,
+      ModuleElaboration.exportIndex, decodeExport, desc, ← decode_name_source,
       List.getElem!_eq_getElem?_getD, List.getD, proj_uN_0,
       List.getElem?_eq_getElem mapped, Option.getD_some] using source
   | Memory index =>
@@ -84,7 +84,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
       (inst.memories.val.map (fun address => address.index.val))
       (decodeName entry.name.val) (.mk_uN index.val) (by simpa [proj_uN_0] using mapped) (by simpa [proj_uN_0] using mapped) (.exportinst_case_ _ _ nameWf)
     simpa only [decodeInstance, ModuleElaboration.exportDecl, ModuleEnv.rawExport,
-      ModuleElaboration.exportIndex, decodeExport, desc, ← decodeName_source,
+      ModuleElaboration.exportIndex, decodeExport, desc, ← decode_name_source,
       List.getElem!_eq_getElem?_getD, List.getD, proj_uN_0,
       List.getElem?_eq_getElem mapped, Option.getD_some] using source
 

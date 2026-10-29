@@ -51,7 +51,7 @@ theorem narrow_loop (x y initial : U128) (width i : U32) (signedFlag : Bool)
         simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
         rcases supported with h | h <;> rw [h] at * <;> omega
       step with lane (if index < half then x else y) wide laneIndex (by scalar_tac) (by scalar_tac) laneBound as ⟨a,aEq⟩
-      have aBits := lane_word_cast wide.val laneIndex.val (if index < half then x else y).bv a (by rw [laneBits_toNat]; exact aEq)
+      have aBits := lane_word_cast wide.val laneIndex.val (if index < half then x else y).bv a (by rw [lane_bits_to_nat]; exact aEq)
       step with signed a wide (by scalar_tac) (by scalar_tac) as ⟨sa,saEq⟩
       step as ⟨widened,widenedEq⟩
       step with saturate widened width signedFlag (by simp only [List.mem_cons,List.not_mem_nil,or_false] at supported ⊢; rcases supported with h | h; exact Or.inl h; exact Or.inr (Or.inl h)) as ⟨value,valueEq⟩
@@ -130,7 +130,7 @@ theorem narrow_packed (ty : NarrowWidth) (signed : Bool) (x y result : U128)
     (fun j => (narrowLane ty.width signed x.bv y.bv j).toNat)
     (by
       intro j valid
-      rw [←laneBits_toNat]
+      rw [←lane_bits_to_nat]
       change (laneBits ty.width j result.bv).toNat = _
       rw [lanes j valid])
   change packLanes (lanetype_Jnn ty.output) (List.map (fun j => laneOfBits (lanetype_Jnn ty.output)

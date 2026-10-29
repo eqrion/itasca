@@ -13,7 +13,7 @@ Allocator availability for forward and loop branches, composed into the branch c
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -185,7 +185,7 @@ theorem compiler_branch_forward_available {A : Type} (ops : runtime.platform.All
       lookup position forward (by intro empty; exact elided (Or.inl empty))
       (by intro same; exact elided (Or.inr same)) sourcePosition fixupsCapacity fixupsReserve
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -193,7 +193,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -341,7 +341,7 @@ theorem compiler_branch_loop_available {A : Type} (ops : runtime.platform.Alloc 
       lookup position kind (by intro empty; exact elided (Or.inl empty))
       (by intro same; exact elided (Or.inr same)) sourcePosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -349,7 +349,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Raw unconditional branching accepts for every label kind and depth. The
@@ -418,6 +418,6 @@ theorem compiler_on_br_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

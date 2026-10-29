@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas.Std
 
 /-- An ordinary source suffix may consume and produce values above every live
@@ -10,8 +10,8 @@ theorem FramePoint.continue {before afterStore raw f compiled C targets next out
     (front operands results : List val) (after : List instr)
     (values : f.vals=front++operands)
     (heights : ∀ label ∈ f.labels, label.height≤front.length)
-    (tail : Code.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
-      compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results.map Code.valueType) after (raw.pc.val+1) next output)
+    (tail : Compiler.StructuredCode.Point (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+      compiled.code.val compiled.jump_tables.val targets (front.map Compiler.valueType++results.map Compiler.valueType) after (raw.pc.val+1) next output)
     (pc : U32) (pcNext : pc.val=raw.pc.val+1) :
     FramePoint afterStore {raw with pc:=pc} {f with code:=after,vals:=front++results}
       compiled C targets next output := by
@@ -20,4 +20,4 @@ theorem FramePoint.continue {before afterStore raw f compiled C targets next out
     rw [values] at labels
     exact labels.replace_suffix heights
   · simpa only [List.map_append,pcNext] using tail
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

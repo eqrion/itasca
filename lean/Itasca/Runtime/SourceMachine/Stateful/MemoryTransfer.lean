@@ -13,7 +13,7 @@ Source memory copy and initialization, retaining their distinct segment/snapshot
 
 section
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def memoryCopy (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) : AResult :=
@@ -28,7 +28,7 @@ def memoryCopy (s : AState) (f : AFrame) (rest : List AFrame) (after : List inst
     | _,_,_,_ => .stuck
   | _,_ => .stuck
 
-theorem memoryCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem memory_copy_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .MEMORY_COPY::after}::rest,[]⟩) :
     (∃ next, memoryCopy ⟨s,ambient,{f with code := .MEMORY_COPY::after}::rest,[]⟩ f rest after = .next next ∧
@@ -56,19 +56,19 @@ theorem memoryCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
           simp only [numtype_Inn] at destinationDecoded countDecoded
           have valueDecoded := integer_accepts .I32 sourceOffset valueBound
           simp only [numtype_Inn] at valueDecoded
-          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
           have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
           have memoryEq : fun_mem ⟨s,f.toFrame⟩ (.mk_uN 0) = object := by
             simp [fun_mem,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
           by_cases inside : sourceOffset+count ≤ object.BYTES.length ∧ destination+count ≤ object.BYTES.length
-          · obtain ⟨extension,contents⟩ := memoryCopy_preserves s f.toFrame address destination sourceOffset count object
+          · obtain ⟨extension,contents⟩ := memory_copy_preserves s f.toFrame address destination sourceOffset count object
               typed.typed.store typed.contents mapped found inside
             have frameNext : FrameTyped s {f with code:=after,vals:=front} [] := by
               simpa only [List.append_nil] using continuation [] .nil
             have fresh := (active_frame_preservation typed.typed frameNext rfl).extend_same extension rfl
             apply Or.inl
-            refine ⟨_,by simp only [memoryCopy,split,popThree_append,mapped,destinationDecoded,valueDecoded,countDecoded,found,inside,and_true,ite_true,advance],
+            refine ⟨_,by simp only [memoryCopy,split,pop_three_append,mapped,destinationDecoded,valueDecoded,countDecoded,found,inside,and_true,ite_true,advance],
               ⟨fresh,contents⟩,extension,?_⟩
             have addressBound : f.module.MEMS[0]! < s.MEMS.length := by
               simp only [List.getElem!_eq_getElem?_getD,mapped,Option.getD_some]
@@ -83,14 +83,14 @@ theorem memoryCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
           · apply Or.inr
-            refine ⟨by simp only [memoryCopy,split,popThree_append,mapped,destinationDecoded,valueDecoded,countDecoded,found,inside,ite_false],?_⟩
+            refine ⟨by simp only [memoryCopy,split,pop_three_append,mapped,destinationDecoded,valueDecoded,countDecoded,found,inside,ite_false],?_⟩
             have source := Segment.memory_copy_trap s f.toFrame destination sourceOffset count typed.typed.store frameWf
               destinationBound valueBound countBound (by rw [memoryEq]; omega)
             have full := operand_trap_simulation s ambient f rest (.MEMORY_COPY) after front
               [integerVal .I32 destination,integerVal .I32 sourceOffset,integerVal .I32 count] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful
 
 end
 
@@ -98,7 +98,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def memoryInit (s : AState) (f : AFrame) (rest : List AFrame) (dataIndex : Nat) (after : List instr) : AResult :=
@@ -113,7 +113,7 @@ def memoryInit (s : AState) (f : AFrame) (rest : List AFrame) (dataIndex : Nat) 
     | _,_,_,_,_ => .stuck
   | _,_,_ => .stuck
 
-theorem memoryInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem memory_init_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (dataIndex : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .MEMORY_INIT (.mk_uN dataIndex)::after}::rest,[]⟩) :
     (∃ next, memoryInit ⟨s,ambient,{f with code := .MEMORY_INIT (.mk_uN dataIndex)::after}::rest,[]⟩ f rest dataIndex after = .next next ∧
@@ -146,22 +146,22 @@ theorem memoryInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
           simp only [numtype_Inn] at destinationDecoded countDecoded
           have valueDecoded := integer_accepts .I32 sourceOffset valueBound
           simp only [numtype_Inn] at valueDecoded
-          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
           have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
           have memoryEq : fun_mem ⟨s,f.toFrame⟩ (.mk_uN 0) = object := by
             simp [fun_mem,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
           have dataIndexBound : dataIndex<2^32 := by cases instructionWf; rename_i valid; cases valid; norm_num at *; omega
           have dataEq : fun_data ⟨s,f.toFrame⟩ (.mk_uN dataIndex) = data := by
             simp [fun_data,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,dataMapped,dataFound]
           by_cases inside : sourceOffset+count ≤ data.BYTES.length ∧ destination+count ≤ object.BYTES.length
-          · obtain ⟨extension,contents,functions⟩ := memoryInit_preserves s f.toFrame address dataIndex f.module.DATAS[dataIndex] destination sourceOffset count object data
+          · obtain ⟨extension,contents,functions⟩ := memory_init_preserves s f.toFrame address dataIndex f.module.DATAS[dataIndex] destination sourceOffset count object data
               typed.typed.store typed.contents mapped found dataMapped dataFound inside
             have frameNext : FrameTyped s {f with code:=after,vals:=front} [] := by
               simpa only [List.append_nil] using continuation [] .nil
             have fresh := (active_frame_preservation typed.typed frameNext rfl).extend_same extension functions
             apply Or.inl
-            refine ⟨_,by simp only [memoryInit,split,popThree_append,mapped,dataMapped,destinationDecoded,valueDecoded,countDecoded,found,dataFound,inside,and_true,ite_true,advance],
+            refine ⟨_,by simp only [memoryInit,split,pop_three_append,mapped,dataMapped,destinationDecoded,valueDecoded,countDecoded,found,dataFound,inside,and_true,ite_true,advance],
               ⟨fresh,contents⟩,extension,?_⟩
             have addressBound : f.module.MEMS[0]! < s.MEMS.length := by
               simp only [List.getElem!_eq_getElem?_getD,mapped,Option.getD_some]
@@ -175,13 +175,13 @@ theorem memoryInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
           · apply Or.inr
-            refine ⟨by simp only [memoryInit,split,popThree_append,mapped,dataMapped,destinationDecoded,valueDecoded,countDecoded,found,dataFound,inside,ite_false],?_⟩
+            refine ⟨by simp only [memoryInit,split,pop_three_append,mapped,dataMapped,destinationDecoded,valueDecoded,countDecoded,found,dataFound,inside,ite_false],?_⟩
             have source := Segment.memory_init_trap s f.toFrame destination sourceOffset count dataIndex typed.typed.store frameWf
               destinationBound valueBound countBound dataIndexBound (by rw [memoryEq,dataEq]; omega)
             have full := operand_trap_simulation s ambient f rest (.MEMORY_INIT (.mk_uN dataIndex)) after front
               [integerVal .I32 destination,integerVal .I32 sourceOffset,integerVal .I32 count] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful
 
 end

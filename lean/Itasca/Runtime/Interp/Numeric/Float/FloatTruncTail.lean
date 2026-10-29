@@ -40,7 +40,7 @@ def TruncOutcome (expected : Option iN) (result : core.result.Result U64 runtime
   | .Err (.Trap reason) => expected = none ∧ (reason = .IntegerOverflow ∨ reason = .InvalidConversionToInteger)
   | .Err _ => False
 
-@[step] theorem overflow_convertMagnitude (negative : Bool) (width : U32) (signed saturating : Bool)
+@[step] theorem overflow_convert_magnitude (negative : Bool) (width : U32) (signed saturating : Bool)
     (validWidth : width = 32#u32 ∨ width = 64#u32) (magnitude : Nat)
     (outside : ¬magnitudeWithin width.val negative signed magnitude) :
     runtime.interp.float.overflow negative width signed saturating ⦃ result =>
@@ -124,7 +124,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 4294967295 < magnitude.val
   · have outside : ¬magnitudeWithin 32 false false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude false 32#u32 false saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude false 32#u32 false saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 32 false false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     simpa using convertMagnitude_inside 32 magnitude.val false false saturating (by simp) inside
@@ -140,7 +140,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 2147483647 < magnitude.val
   · have outside : ¬magnitudeWithin 32 false true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude false 32#u32 true saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude false 32#u32 true saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 32 false true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     simpa using convertMagnitude_inside 32 magnitude.val false true saturating (by simp) inside
@@ -153,7 +153,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 18446744073709551615 < magnitude.val
   · have outside : ¬magnitudeWithin 64 false false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude false 64#u32 false saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude false 64#u32 false saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 64 false false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     simpa using convertMagnitude_inside 64 magnitude.val false false saturating (by simp) inside
@@ -169,7 +169,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 9223372036854775807 < magnitude.val
   · have outside : ¬magnitudeWithin 64 false true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude false 64#u32 true saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude false 64#u32 true saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 64 false true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     simpa using convertMagnitude_inside 64 magnitude.val false true saturating (by simp) inside
@@ -189,7 +189,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
     subst magnitude
     simp [TruncOutcome, convertMagnitude, saturate, encodeSigned]
   · have outside : ¬magnitudeWithin 32 true false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
-    have effect := overflow_convertMagnitude true 32#u32 false saturating (by simp) magnitude.val outside
+    have effect := overflow_convert_magnitude true 32#u32 false saturating (by simp) magnitude.val outside
     have notZero : magnitude ≠ 0#u64 := by scalar_tac
     by_cases larger : 4294967295 < magnitude.val <;> simpa [larger, notZero, UScalar.eq_equiv, zero] using effect
 
@@ -205,7 +205,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 2147483648 < magnitude.val
   · have outside : ¬magnitudeWithin 32 true true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude true 32#u32 true saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude true 32#u32 true saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 32 true true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     have encoding := negative_magnitude_bits32 magnitude (by omega)
@@ -224,7 +224,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
     subst magnitude
     simp [TruncOutcome, convertMagnitude, saturate, encodeSigned]
   · have outside : ¬magnitudeWithin 64 true false magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
-    have effect := overflow_convertMagnitude true 64#u32 false saturating (by simp) magnitude.val outside
+    have effect := overflow_convert_magnitude true 64#u32 false saturating (by simp) magnitude.val outside
     have notZero : magnitude ≠ 0#u64 := by scalar_tac
     by_cases larger : 18446744073709551615 < magnitude.val <;> simpa [larger, notZero, UScalar.eq_equiv, zero] using effect
 
@@ -240,7 +240,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   by_cases tooLarge : 9223372036854775808 < magnitude.val
   · have outside : ¬magnitudeWithin 64 true true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge]
-    exact overflow_convertMagnitude true 64#u32 true saturating (by simp) magnitude.val outside
+    exact overflow_convert_magnitude true 64#u32 true saturating (by simp) magnitude.val outside
   · have inside : magnitudeWithin 64 true true magnitude.val := by simp [magnitudeWithin, magnitudeLimit]; omega
     simp [tooLarge, TruncOutcome]
     have encoding := negative_magnitude_bits64 magnitude

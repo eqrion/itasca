@@ -7,13 +7,13 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual numeric lowering retains every existing jump-table target bound. -/
 theorem compiler_numeric_target_bounds {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Numeric.Instruction) (held : JumpTableBounds before)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction) (held : JumpTableBounds before)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state (integerOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (),after)) :
     JumpTableBounds after :=
   held.retained (after := after)
@@ -23,7 +23,7 @@ theorem compiler_numeric_target_bounds {A : Type} (ops : runtime.platform.Alloc 
 /-- Actual float lowering retains every existing jump-table target bound. -/
 theorem compiler_float_target_bounds {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Float.Instruction) (held : JumpTableBounds before)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Float.Instruction) (held : JumpTableBounds before)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state (floatOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (),after)) :
     JumpTableBounds after :=
   held.retained (after := after)
@@ -83,4 +83,4 @@ theorem compiler_end_target_bounds {A : Type} (ops : runtime.platform.Alloc A)
     (congrArg CompilerTables.jumpTables (compiler_end_tables ops law before after state kind bt called))
     (compiler_end_code_mono ops law before after state kind bt called)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -13,7 +13,7 @@ Structured compiler else exit slots and their reader-step lift. The source-prefi
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source THEN geometry provides the owned guard needed by actual ELSE in
@@ -67,7 +67,7 @@ theorem StructuredCompilerPrefix.else_exit_slots {A : Type}
     norm_num [limits.MAX_MODULE_BYTES] at sourceBound
     scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -75,7 +75,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
@@ -108,7 +108,7 @@ theorem reader_else_exit_slots_wasm2 {jumpTables : List U32} {data env sourceLoc
     simpa only [List.flatMap_def] using fronts.current
   have stack : before.reachable = true → Sequence.stackTypes st.core.vals.val = current.front ++ current.results := by
     intro live
-    have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ invariant.known live)).2
+    have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ invariant.known live)).2
     have mono := monomorphic live
     have realized := results
     rw [mono] at realized
@@ -124,6 +124,6 @@ theorem reader_else_exit_slots_wasm2 {jumpTables : List U32} {data env sourceLoc
     omega
   exact invariant.else_exit_slots ops law out.core _ condition form p.current.bt stack sourceBound held callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

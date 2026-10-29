@@ -7,8 +7,8 @@ Canonical integer operands occupy one word each. Unary operations reuse the same
 Main declarations: `numeric_operands` and `compiler_numeric_lowered`. A direct consumer is `Compiler.Local.Lowering.Integer.NumericInstructionPublication`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 /-- Canonical integer operands occupy one word each. Unary operations reuse
 the same source slot in both scalar operands. -/
@@ -58,4 +58,4 @@ theorem numeric_operands {A : Type} (ops : runtime.platform.Alloc A)
   step with finish_op ops law compiler state types (integerInstruction op left left right) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨left, right, leftPosition, rightPosition, by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

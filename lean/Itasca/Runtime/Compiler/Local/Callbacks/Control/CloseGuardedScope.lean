@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem close_guarded_scope_effect {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -91,4 +91,4 @@ open Aeneas Aeneas.Std
       scalar_tac
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

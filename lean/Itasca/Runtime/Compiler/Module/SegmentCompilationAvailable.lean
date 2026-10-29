@@ -11,7 +11,7 @@ Successful data/element segment compilation from bounded segment demand. Per-seg
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Data-segment bytecode emission accepts from source offset typing and a
@@ -93,7 +93,7 @@ theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc
     · exact congrArg (fun value => value.v128_pool) fields
     · exact congrArg (fun value => value.indirect) fields
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -101,7 +101,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The full source-ordered data bytecode loop accepts with five emitted
@@ -172,7 +172,7 @@ theorem initializer_emit_datas_available {A : Type} (ops : runtime.platform.Allo
         pairs,pool⟩
   · exact ⟨rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _,rfl,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -180,7 +180,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Element-segment bytecode emission accepts from source offset typing and a
@@ -288,7 +288,7 @@ theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Al
     · simp only [alloc.vec.Vec.length,appendedPairs,List.length_append,List.length_singleton]
       simp [firstPairs]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -296,7 +296,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The full source-ordered element bytecode loop accepts with five emitted
@@ -371,7 +371,7 @@ theorem initializer_emit_elements_available {A : Type} (ops : runtime.platform.A
         by simpa [last] using pairs,pool⟩
   · exact ⟨rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _,Nat.le_refl _,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -379,7 +379,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The exact extracted suffix after read-only initializer mappings. This is a
@@ -443,7 +443,7 @@ def segmentCompilation {A : Type} (ops : runtime.platform.Alloc A)
         residual
     .ok (r, module, budget4)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -451,7 +451,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def segmentCompilationDemand (module : runtime.compiler.ExecutableModule) : Nat :=
@@ -547,6 +547,6 @@ theorem segment_compilation_available {A : Type} (ops : runtime.platform.Alloc A
     unfold segmentCompilationDemand
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

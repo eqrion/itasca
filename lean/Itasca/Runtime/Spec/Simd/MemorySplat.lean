@@ -40,8 +40,8 @@ theorem splat_load_value (ty : Jnn) (s : store) (f : frame) (argument : memarg) 
   · exact input
   · exact const_wf result
   · exact Segment.index_wf 0 (by norm_num)
-  · exact shapeOf_wf _
-  · cases ty <;> exact laneOfBits_wf _ word.toNat word.isLt
+  · exact shape_of_wf _
+  · cases ty <;> exact lane_of_bits_wf _ word.toNat word.isLt
 
 theorem splat_load_trap (ty : Jnn) (s : store) (f : frame) (argument : memarg) (address : Nat)
     (storeWf : wf_store s) (frameWf : wf_frame f) (addressBound : address < 2^32)

@@ -8,7 +8,7 @@ Typed-select compilation through a structured reader state.
 Main declarations: `StructuredReaderCompilerStateWasm2.typed_select`. A direct consumer is `Compiler.Body.Control.Table.IndexedTablePointTypedSelect`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.typed_select {jumpTables : List U32} {A : Type}
@@ -53,4 +53,4 @@ theorem StructuredReaderCompilerStateWasm2.typed_select {jumpTables : List U32} 
       (compiler_core_cursor ops law before after out.core (.select true) callback)
       28#u16 0#u32 0#u32 0#u128 callback
     exact (state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -62,11 +62,11 @@ theorem data_drop_refines {M : Type} (view : M → Slice U8) (code : CodeInterpr
     StepH ⟨⟨decodeStore view code store,ambient⟩,[.DATA_DROP (.mk_uN index.val)]⟩ []
       ⟨⟨decodeStore view code {store with datas := store.datas.set address ⟨alloc.vec.Vec.new U8⟩},ambient⟩,[]⟩ := by
   rw [data_drop_decodes view code store inst ambient index address old moduleEq mapped found]
-  apply Spec.data_drop_step _ _ _ (decodeStore_wf view code store shape sourceSyntax) ambientWf (by scalar_tac)
+  apply Spec.data_drop_step _ _ _ (decode_store_wf view code store shape sourceSyntax) ambientWf (by scalar_tac)
   · have bound := (List.getElem?_eq_some_iff.mp mapped).1
     simpa [moduleEq, decodeInstance] using bound
   · rw [← data_drop_decodes view code store inst ambient index address old moduleEq mapped found]
-    exact decodeStore_wf view code _ (shape.data_drop address) (sourceSyntax.instances_eq rfl)
+    exact decode_store_wf view code _ (shape.data_drop address) (sourceSyntax.instances_eq rfl)
 
 theorem element_drop_refines {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
@@ -78,11 +78,11 @@ theorem element_drop_refines {M : Type} (view : M → Slice U8) (code : CodeInte
     StepH ⟨⟨decodeStore view code store,ambient⟩,[.ELEM_DROP (.mk_uN index.val)]⟩ []
       ⟨⟨decodeStore view code {store with elems := store.elems.set address {old with refs := alloc.vec.Vec.new U64}},ambient⟩,[]⟩ := by
   rw [element_drop_decodes view code store inst ambient index address old moduleEq mapped found]
-  apply Spec.element_drop_step _ _ _ (decodeStore_wf view code store shape sourceSyntax) ambientWf (by scalar_tac)
+  apply Spec.element_drop_step _ _ _ (decode_store_wf view code store shape sourceSyntax) ambientWf (by scalar_tac)
   · have bound := (List.getElem?_eq_some_iff.mp mapped).1
     simpa [moduleEq, decodeInstance] using bound
   · rw [← element_drop_decodes view code store inst ambient index address old moduleEq mapped found]
-    exact decodeStore_wf view code _ (shape.element_drop address old) (sourceSyntax.instances_eq rfl)
+    exact decode_store_wf view code _ (shape.element_drop address old) (sourceSyntax.instances_eq rfl)
 
 end Itasca.Runtime.Store
 

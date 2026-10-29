@@ -6,7 +6,7 @@ A physical pop never inserts an unknown operand, including an implicit polymorph
 Main declarations: `concrete_popped_remainder` and `pop_with_type_concrete`. A direct consumer is `Compiler.Local.Relations.Stacks.KnownNumericStack`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -16,7 +16,7 @@ theorem concrete_popped_remainder {poly before value after}
     (known : ConcreteStack before) (popped : StackSemantics.Popped poly before value after) :
     ConcreteStack after := by
   cases popped with
-  | explicit => exact (concreteStack_append.mp known).1
+  | explicit => exact (concrete_stack_append.mp known).1
   | implicit => simp [ConcreteStack]
 
 theorem concrete_typed_pop_result {poly before expected result after}
@@ -38,4 +38,4 @@ theorem concrete_typed_pop_result {poly before expected result after}
   rintro ⟨result, after⟩ ⟨controls, position, rest, afterValues, effect⟩
   exact ⟨controls, position, rest, afterValues, concrete_typed_pop_result known effect⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -44,5 +44,5 @@ theorem splat_load_source (ty : Jnn) (address value : U128) (offset index : U32)
     refine ⟨rfl,rfl,?_⟩
     apply Spec.Simd.splat_load_trap ty s f argument (UScalar.cast .U32 address).val
       storeWf frameWf (by scalar_tac) operationWf
-    simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memoryLaneBytes_val] using Nat.lt_of_not_ge fits
+    simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memory_lane_bytes_val] using Nat.lt_of_not_ge fits
 end Itasca.Runtime.Interp.Simd

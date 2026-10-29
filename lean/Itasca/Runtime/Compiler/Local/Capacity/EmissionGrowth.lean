@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_emit_code_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -184,4 +184,4 @@ theorem compiler_pc_code_result {A : Type} (ops : runtime.platform.Alloc A)
   rw [accepted, WP.spec_ok] at effect
   exact congrArg (fun f => f.code) effect.1
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

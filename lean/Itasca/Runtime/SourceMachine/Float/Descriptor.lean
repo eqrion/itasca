@@ -9,7 +9,7 @@ Scalar floating-point source instructions and their decoding. This cheap descrip
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 /-- Scalar float syntax, independent of compiler bytecode and native operations. -/
@@ -135,7 +135,7 @@ theorem Instruction.opcode_bound (op : Instruction) : op.opcode < 65536 := by
 
 
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -143,7 +143,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 
 def decodeInstruction : instr → Option Instruction
   | .UNOP .F32 (.mk_unop__1 .F32 op) => some (.unary .F32 op)
@@ -172,7 +172,7 @@ def decodeInstruction : instr → Option Instruction
   | .CVTOP .F32 .F64 (.mk_cvtop___3 .F64 .F32 .DEMOTE) => some .demote
   | _ => none
 
-@[simp] theorem decodeInstruction_source (op : Instruction) : decodeInstruction op.source = some op := by
+@[simp] theorem decode_instruction_source (op : Instruction) : decodeInstruction op.source = some op := by
   cases op with
   | unary ty op => cases ty <;> rfl
   | binary ty op => cases ty <;> rfl
@@ -186,8 +186,8 @@ def decodeInstruction : instr → Option Instruction
 theorem Instruction.source_injective : Function.Injective Instruction.source := by
   intro left right same
   have := congrArg decodeInstruction same
-  simpa only [decodeInstruction_source,Option.some.injEq] using this
+  simpa only [decode_instruction_source,Option.some.injEq] using this
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end

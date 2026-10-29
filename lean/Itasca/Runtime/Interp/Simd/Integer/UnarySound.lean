@@ -25,14 +25,14 @@ theorem signed_unary_packed (ty : Jnn) (kind : SignedUnaryKind) (x result : U128
   have laneValue (j : Nat) (valid : j < 128/lsize (lanetype_Jnn ty)) :
       result.bv.toNat / 2^(lsize (lanetype_Jnn ty)*j) % 2^lsize (lanetype_Jnn ty) =
         (signedUnaryBits kind (vectorLane (lanetype_Jnn ty) x.bv j)).toNat := by
-    rw [←laneBits_toNat,lanes j valid]
+    rw [←lane_bits_to_nat,lanes j valid]
     apply congrArg BitVec.toNat
     cases kind with
-    | absolute => exact unaryLane_abs _ _ (by cases ty <;> decide)
-    | negate => exact unaryLane_neg _ _ (by cases ty <;> decide)
+    | absolute => exact unary_lane_abs _ _ (by cases ty <;> decide)
+    | negate => exact unary_lane_neg _ _ (by cases ty <;> decide)
   have packed := pack_map_of_lanes (lanetype_Jnn ty) (128/lsize (lanetype_Jnn ty)) result.bv.toNat
     (fun j => (signedUnaryBits kind (vectorLane (lanetype_Jnn ty) x.bv j)).toNat) laneValue
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   change uN.mk_uN result.val = uN.mk_uN _
   apply congrArg uN.mk_uN
   refine packed.symm.trans ?_

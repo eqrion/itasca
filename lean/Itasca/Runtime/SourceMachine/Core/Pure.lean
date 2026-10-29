@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Sim.Instruction
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_slice (s : _root_.store) (ambient : frame) (f : AFrame)
@@ -39,8 +39,8 @@ theorem constant_progress (s : _root_.store) (ambient : frame) (f : AFrame) (res
   have frameTyped : FrameTyped s {f with code := .CONST ty value :: after} [] := by
     cases typed.typed.frames with | cons head _ => exact head
   refine ⟨next,rfl,⟨fresh,typed.contents⟩,Or.inl ⟨?_,?_⟩⟩
-  · exact decode_const s ambient f rest ty value after (by simpa only [FrameHeights] using frameTyped_heights frameTyped)
+  · exact decode_const s ambient f rest ty value after (by simpa only [FrameHeights] using frame_typed_heights frameTyped)
   · exact const_measure_decreases s ambient f rest ty value after
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core
 

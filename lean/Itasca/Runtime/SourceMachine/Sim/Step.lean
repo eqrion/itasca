@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Instruction
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem typed_label_end_simulation (s : store) (ambient : frame) (f : AFrame)
@@ -11,13 +11,13 @@ theorem typed_label_end_simulation (s : store) (ambient : frame) (f : AFrame)
   have frames := typed.frames
   cases frames with
   | cons hf hr =>
-    obtain ⟨hw, hl, hv, _⟩ := frameTyped_wf hf
+    obtain ⟨hw, hl, hv, _⟩ := frame_typed_wf hf
     have nested : ∀ outer ∈ labels, outer.height ≤ label.height := by
       cases hf with
-      | mk C _ _ _ _ _ code _ => exact (codeStack_labels_nested code).1
-    have heights := frameTyped_heights hf
+      | mk C _ _ _ _ _ code _ => exact (code_stack_labels_nested code).1
+    have heights := frame_typed_heights hf
     have result := label_exit_simulation s ambient f rest label labels typed.store typed.ambient hw hl hv
-      (framesTyped_wf hr) (heights label (by simp)) nested
+      (frames_typed_wf hr) (heights label (by simp)) nested
     simp only [astep] at step
     split at step
     · simp only [advance, AResult.next.injEq] at step
@@ -25,4 +25,4 @@ theorem typed_label_end_simulation (s : store) (ambient : frame) (f : AFrame)
       exact .single result
     · contradiction
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

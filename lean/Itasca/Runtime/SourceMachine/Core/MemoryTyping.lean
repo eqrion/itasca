@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Memory.Semantics
 import Itasca.Runtime.SourceMachine.Core.GlobalTyping
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem extern_mem_lookup {s : store} {address : Nat} {ty : memtype}
@@ -66,7 +66,7 @@ theorem memory_load_frame_continuation {s : store} {f : AFrame} {code : List ins
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨base,ins,outs,operation,stack,continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ [address])) hc
+      code_stack_after (value_types_concrete (front ++ [address])) hc
     obtain ⟨rfl,rfl,present⟩ := op.typing argument operation
     obtain ⟨memoryAddress,object,mapped,found⟩ := bindings.memory_lookup present
     simp only [List.map_append,List.map_cons,List.map_nil] at stack
@@ -76,7 +76,7 @@ theorem memory_load_frame_continuation {s : store} {f : AFrame} {code : List ins
       omega
     obtain ⟨baseEq,lastEq⟩ := List.append_inj stack length
     have prefixTyped : ResultsTyped s (front.map valueType) front := by
-      simpa using resultsTyped_take front.length values
+      simpa using results_typed_take front.length values
     have actualType := value_type_of_typed result
     refine ⟨memoryAddress,object,mapped,found,?_⟩
     apply FrameTyped.mk (f := {f with code := code, vals := front ++ [value]}) C
@@ -95,7 +95,7 @@ theorem memory_store_frame_continuation {s : store} {f : AFrame} {code : List in
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨base,ins,outs,operation,stack,continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ [address,value])) hc
+      code_stack_after (value_types_concrete (front ++ [address,value])) hc
     obtain ⟨rfl,rfl,present⟩ := op.typing argument operation
     obtain ⟨memoryAddress,object,mapped,found⟩ := bindings.memory_lookup present
     simp only [List.map_append,List.map_cons,List.map_nil] at stack
@@ -105,10 +105,10 @@ theorem memory_store_frame_continuation {s : store} {f : AFrame} {code : List in
       omega
     obtain ⟨baseEq,lastEq⟩ := List.append_inj stack length
     have prefixTyped : ResultsTyped s (front.map valueType) front := by
-      simpa using resultsTyped_take front.length values
+      simpa using results_typed_take front.length values
     refine ⟨memoryAddress,object,mapped,found,?_⟩
     apply FrameTyped.mk (f := {f with code := code, vals := front}) C
       bindings localTypes locals prefixTyped returns ?_ hw
     simpa only [List.append_nil,baseEq] using continuation
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

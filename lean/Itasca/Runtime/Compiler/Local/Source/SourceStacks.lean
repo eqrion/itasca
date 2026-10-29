@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -8,7 +8,7 @@ an invariant of actual steps, not a consequence of source typing alone. -/
 def ConcreteStack (values : List code.StackType) : Prop :=
   ∀ value ∈ values, value ≠ .Bot
 
-theorem concreteStack_iff (values : List code.StackType) :
+theorem concrete_stack_iff (values : List code.StackType) :
     ConcreteStack values ↔ ∃ types : List Itasca.types.ValueType, values = types.map code.StackType.Val := by
   induction values with
   | nil => simp [ConcreteStack]
@@ -29,7 +29,7 @@ theorem concreteStack_iff (values : List code.StackType) :
         rw [equality] at member
         simp at member
 
-theorem concreteStack_append {left right : List code.StackType} :
+theorem concrete_stack_append {left right : List code.StackType} :
     ConcreteStack (left ++ right) ↔ ConcreteStack left ∧ ConcreteStack right := by
   simp [ConcreteStack, or_imp, forall_and]
 
@@ -41,4 +41,4 @@ theorem wasm2_spine_values {env root parents C outer form inputs}
   | push parents C outer parent child ins spine header base resume notBody ih =>
     simp [List.flatMap_append, ih]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

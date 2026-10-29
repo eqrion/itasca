@@ -10,7 +10,7 @@ Floating-point operation emission from accepted reader steps.
 Main declarations: `reader_emit_float_wasm2`. A direct consumer is `Compiler.Body.Reader.Float.Compilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_float_wasm2 {data env locals index st}
@@ -18,7 +18,7 @@ theorem reader_emit_float_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Float.Instruction) (C : context)
+    (op : SourceMachine.Float.Instruction) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before) (baseOpcode : (floatOpcode op).val < 256)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
@@ -65,4 +65,4 @@ theorem reader_emit_float_wasm2 {data env locals index st}
   exact ScalarEmission.float front op left right
     (by simpa only [contextLocalsCode] using leftPosition) rightPosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

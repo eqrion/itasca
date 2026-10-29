@@ -17,7 +17,7 @@ def scalarOutput (ty : lanetype) (bits : Nat) : num_ :=
   | .F32 => .mk_num__1 .F32 (floatOfBits 32 bits)
   | .F64 => .mk_num__1 .F64 (floatOfBits 64 bits)
 
-theorem scalarOutput_wf (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
+theorem scalar_output_wf (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
     wf_num_ (unpack ty) (scalarOutput ty bits) := by
   cases ty with
   | I8 =>
@@ -35,9 +35,9 @@ theorem scalarOutput_wf (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty)
   | F32 => exact float_num_wf .F32 _ (floatOfBits_wf_32 _ bound)
   | F64 => exact float_num_wf .F64 _ (floatOfBits_wf_64 _ bound)
 
-theorem unpack_laneOfBits (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
+theorem unpack_lane_of_bits (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
     fun_unpacknum_ ty (laneOfBits ty bits) (some (scalarOutput ty bits)) := by
-  have wf := scalarOutput_wf ty bits bound
+  have wf := scalar_output_wf ty bits bound
   cases ty with
   | I32 => exact .fun_unpacknum__case_0 _ wf
   | I64 => exact .fun_unpacknum__case_1 _ wf
@@ -60,7 +60,7 @@ def extractSign (ty : lanetype) : Option sx :=
 
 theorem extract_wf (ty : lanetype) (index : Nat) (valid : index < 128/lsize ty) :
     wf_admininstr (.VEXTRACT_LANE (shapeOf ty) (extractSign ty) (.mk_uN index)) := by
-  apply wf_admininstr.admininstr_case_34 _ _ _ (shapeOf_wf ty) (index_wf ty index valid) (by decide)
+  apply wf_admininstr.admininstr_case_34 _ _ _ (shape_of_wf ty) (index_wf ty index valid) (by decide)
   cases ty <;> decide
 
 theorem extract_num_step (nt : numtype) (index : Nat) (v : BitVec 128)
@@ -69,7 +69,7 @@ theorem extract_num_step (nt : numtype) (index : Nat) (v : BitVec 128)
       .VEXTRACT_LANE (shapeOf (lanetype_numtype nt)) none (.mk_uN index)]
       [.CONST nt (scalarOutput (lanetype_numtype nt)
         (v.toNat/2^(lsize (lanetype_numtype nt)*index)%2^lsize (lanetype_numtype nt)))] := by
-  have wf := scalarOutput_wf (lanetype_numtype nt)
+  have wf := scalar_output_wf (lanetype_numtype nt)
     (v.toNat/2^(lsize (lanetype_numtype nt)*index)%2^lsize (lanetype_numtype nt))
     (Nat.mod_lt _ (by positivity))
   apply Step_pure.vextract_lane_num _ nt (128/lsize (lanetype_numtype nt)) (.mk_uN index) _
@@ -78,7 +78,7 @@ theorem extract_num_step (nt : numtype) (index : Nat) (v : BitVec 128)
   · simpa only [lanes_, proj_uN_0, unpackLanes_length] using valid
   · change fun_unpacknum_ _ (lanes_ (shapeOf (lanetype_numtype nt)) (.mk_uN v.toNat))[index]! _
     rw [lanes_get _ _ _ valid]
-    exact unpack_laneOfBits _ _ (Nat.mod_lt _ (by positivity))
+    exact unpack_lane_of_bits _ _ (Nat.mod_lt _ (by positivity))
   · simp
   · rfl
   · exact const_wf v
@@ -86,7 +86,7 @@ theorem extract_num_step (nt : numtype) (index : Nat) (v : BitVec 128)
     cases nt <;> exact result
   · apply wf_admininstr.admininstr_case_13
     cases nt <;> exact wf
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
 
 theorem extract_pack_step (pt : packtype) (index : Nat) (v : BitVec 128)
     (valid : index < 128/lsize (lanetype_packtype pt)) :
@@ -94,7 +94,7 @@ theorem extract_pack_step (pt : packtype) (index : Nat) (v : BitVec 128)
       .VEXTRACT_LANE (shapeOf (lanetype_packtype pt)) (some .U) (.mk_uN index)]
       [.CONST .I32 (scalarOutput (lanetype_packtype pt)
         (v.toNat/2^(lsize (lanetype_packtype pt)*index)%2^lsize (lanetype_packtype pt)))] := by
-  have wf := scalarOutput_wf (lanetype_packtype pt)
+  have wf := scalar_output_wf (lanetype_packtype pt)
     (v.toNat/2^(lsize (lanetype_packtype pt)*index)%2^lsize (lanetype_packtype pt))
     (Nat.mod_lt _ (by positivity))
   apply Step_pure.vextract_lane_pack _ pt (128/lsize (lanetype_packtype pt)) .U (.mk_uN index)
@@ -113,7 +113,7 @@ theorem extract_pack_step (pt : packtype) (index : Nat) (v : BitVec 128)
     cases pt <;> exact result
   · apply wf_admininstr.admininstr_case_13
     cases pt <;> exact wf
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
 
 theorem extract_step (ty : lanetype) (index : Nat) (v : BitVec 128)
     (valid : index < 128/lsize ty) :

@@ -19,7 +19,7 @@ structure InstanceSyntax (code : CodeInterpretation) (index : Nat)
 def StoreSyntax {M : Type} (code : CodeInterpretation) (s : runtime.store.Store M) : Prop :=
   ∀ index inst, s.instances.val[index]? = some inst → InstanceSyntax code index inst
 
-theorem decodeWords_wf (ty : Itasca.types.ValueType) (lo hi : U64) :
+theorem decode_words_wf (ty : Itasca.types.ValueType) (lo hi : U64) :
     wf_val (decodeWords ty lo hi) := by
   cases ty with
   | I32 =>
@@ -53,7 +53,7 @@ theorem decodeWords_wf (ty : Itasca.types.ValueType) (lo hi : U64) :
     simp only [decodeWords, decodeRef]
     split <;> constructor
 
-theorem decodeLimits_wf (length : Nat) (maximum : Option U32) (h : length ≤ U32.max) :
+theorem decode_limits_wf (length : Nat) (maximum : Option U32) (h : length ≤ U32.max) :
     wf_limits (decodeLimits length maximum) := by
   apply wf_limits.limits_case_0
   · apply wf_uN.uN_case_0
@@ -69,13 +69,13 @@ theorem decodeLimits_wf (length : Nat) (maximum : Option U32) (h : length ≤ U3
       change 0 ≤ bound.val ∧ bound.val ≤ 4294967295
       scalar_tac
 
-theorem decodeBytes_wf (bytes : List U8) : Forall wf_byte (decodeBytes bytes) := by
+theorem decode_bytes_wf (bytes : List U8) : Forall wf_byte (decodeBytes bytes) := by
   intro value hvalue
   obtain ⟨b, hb, rfl⟩ := List.mem_map.mp hvalue
   apply wf_byte.byte_case_0
   scalar_tac
 
-theorem decodeInstance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
+theorem decode_instance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
     (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (h : InstanceSyntax code index inst) :
     wf_moduleinst (decodeInstance s inst) := by
   constructor
@@ -84,7 +84,7 @@ theorem decodeInstance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
   unfold decodeExport
   exact .exportinst_case_ _ _ (h.exportNames raw hraw)
 
-theorem decodeFunction_wf {M : Type} (code : CodeInterpretation)
+theorem decode_function_wf {M : Type} (code : CodeInterpretation)
     (s : runtime.store.Store M) (hsyntax : StoreSyntax code s)
     (function : runtime.store.FuncInst) (hshape : FunctionShape s function) :
     wf_funcinst (decodeFunction code s function) := by
@@ -103,36 +103,36 @@ theorem decodeFunction_wf {M : Type} (code : CodeInterpretation)
     obtain ⟨inst, hinst, hfunction⟩ := h
     simp only [hinst]
     constructor
-    · exact decodeInstance_wf code instanceIndex.val s inst (hsyntax _ _ hinst)
+    · exact decode_instance_wf code instanceIndex.val s inst (hsyntax _ _ hinst)
     · exact (hsyntax _ _ hinst).functionCodes functionIndex.val hfunction
 
 /-- Structural representation bounds and source syntax establish SpecTec's
 syntactic store well-formedness. This theorem does not assert `Store_ok`. -/
-theorem decodeStore_wf {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
+theorem decode_store_wf {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (shape : Shape view s) (hsyntax : StoreSyntax code s) :
     wf_store (decodeStore view code s) := by
   constructor
   · intro function hfunction
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hfunction
-    exact decodeFunction_wf code s hsyntax raw (shape.functions raw hraw)
+    exact decode_function_wf code s hsyntax raw (shape.functions raw hraw)
   · intro global hglobal
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hglobal
-    exact .globalinst_case_ _ _ (decodeWords_wf raw.ty.valtype raw.lo raw.hi)
+    exact .globalinst_case_ _ _ (decode_words_wf raw.ty.valtype raw.lo raw.hi)
   · intro table htable
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp htable
     apply wf_tableinst.tableinst_case_
     apply wf_tabletype.tabletype_case_0
-    exact decodeLimits_wf _ _ (shape.tables raw hraw).1
+    exact decode_limits_wf _ _ (shape.tables raw hraw).1
   · intro memory hmemory
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hmemory
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
-      apply decodeLimits_wf
+      apply decode_limits_wf
       have h := (shape.memories raw hraw).2.1
       scalar_tac
-    · exact decodeBytes_wf _
+    · exact decode_bytes_wf _
   · intro data hdata
     obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hdata
-    exact .datainst_case_ _ (decodeBytes_wf _)
+    exact .datainst_case_ _ (decode_bytes_wf _)
 
 end Itasca.Runtime.Store

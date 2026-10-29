@@ -9,7 +9,7 @@ Fixed metadata and local layout obtained from actual construction and the succes
 Main declarations: `compiler_function_start_facts` and `function_body_coordinate_bound`. A direct consumer is `Compiler.Body.Relations.Entry.EntryCompilerInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Fixed metadata and local layout obtained from actual construction and the
@@ -67,4 +67,4 @@ theorem function_body_coordinate_bound {A : Type}
   have length := span.length
   change bodyEnd.val = bodyBegin.val + body.length at length
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

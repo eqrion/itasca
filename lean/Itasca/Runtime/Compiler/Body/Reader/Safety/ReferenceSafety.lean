@@ -9,7 +9,7 @@ Normal return of reference, typed-select and memory/table metadata reader operat
 Main declarations: `compiler_reader_typed_select_total` and `compiler_reader_memory_grow_total`. A direct consumer is `Compiler.Body.Reader.Safety.ScalarSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_typed_select_total {A} (ops : runtime.platform.Alloc A)
@@ -140,4 +140,4 @@ theorem compiler_reader_memory_grow_total {A} (ops : runtime.platform.Alloc A)
   · intro state value read
     exact compiler_stateful_total ops law compiler state .memoryGrow 0#u32 0#u32
       ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

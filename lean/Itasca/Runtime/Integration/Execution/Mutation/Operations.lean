@@ -27,13 +27,13 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.SourceSyntax
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}
     {code : CodeInterpretation} {store : runtime.store.Store M}
     (shaped : Shape view store) (sourceSyntaxBefore : StoreSyntax code store) (bounds : SegmentBounds store) :
     CumulativeStoreMutation view code store store :=
-  ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,shaped,bounds,Spec.extend_store_refl _ (decodeStore_wf view code store shaped sourceSyntaxBefore),⟨rfl,rfl⟩,rfl⟩
+  ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,shaped,bounds,Spec.extend_store_refl _ (decode_store_wf view code store shaped sourceSyntaxBefore),⟨rfl,rfl⟩,rfl⟩
 
 theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
@@ -51,28 +51,28 @@ theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     · simpa only [found] using lengthEq
     · simp only [found]
   have sourceSyntax : Store.StoreSyntax code after := sourceSyntaxBefore
-  have oldWf := Store.decodeStore_wf view code before shaped sourceSyntaxBefore
-  have newWf := Store.decodeStore_wf view code after shape sourceSyntax
+  have oldWf := Store.decode_store_wf view code before shaped sourceSyntaxBefore
+  have newWf := Store.decode_store_wf view code after shape sourceSyntax
   have oldMemoryWf : wf_meminst (Store.decodeMemory view object) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
-      apply Store.decodeLimits_wf
+      apply Store.decode_limits_wf
       have bound := (shaped.memories object (List.mem_of_getElem? issued)).2.1
       scalar_tac
-    · exact Store.decodeBytes_wf _
+    · exact Store.decode_bytes_wf _
   have newMemoryWf : wf_meminst (Store.decodeMemory view {object with buf := buffer}) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
-      apply Store.decodeLimits_wf
+      apply Store.decode_limits_wf
       have bound := (shaped.memories object (List.mem_of_getElem? issued)).2.1
       simp only [lengthEq]
       scalar_tac
-    · exact Store.decodeBytes_wf _
-  have objectExtension := Store.decodeMemory_extends view object {object with buf := buffer}
+    · exact Store.decode_bytes_wf _
+  have objectExtension := Store.decode_memory_extends view object {object with buf := buffer}
     rfl (Nat.le_of_eq lengthEq.symm) oldMemoryWf newMemoryWf
   have extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
     unfold after at newWf ⊢
-    rw [Store.decodeStore_memory_update view code before
+    rw [Store.decode_store_memory_update view code before
       (before.memories.set address.index {object with buf := buffer})] at newWf ⊢
     simp only [alloc.vec.Vec.set_val_eq,List.map_set] at newWf ⊢
     apply Spec.extend_store_set_mem _ _ _ oldWf
@@ -102,8 +102,8 @@ theorem segment_mutation_cumulative_of_shape {M : Type} {view : M → Slice U8}
     CumulativeStoreMutation view code before after := by
   have syntaxAfter := sourceSyntaxBefore.instances_eq metadata.space.instances
   have extension := metadata.extends code
-    (decodeStore_wf view code before shaped sourceSyntaxBefore)
-    (decodeStore_wf view code after shape syntaxAfter)
+    (decode_store_wf view code before shaped sourceSyntaxBefore)
+    (decode_store_wf view code after shape syntaxAfter)
   exact ⟨⟨metadata.space.identity,metadata.space.functions,metadata.space.signatures,metadata.space.instances⟩,
     by rw [metadata.space.frozen],shape,metadata.segment_bounds bounds,extension,
     ⟨metadata.space.elements,metadata.space.datas⟩,by rw [metadata.space.frozen]⟩
@@ -217,22 +217,22 @@ theorem global_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before) (value : val)
     (mutation : GlobalMutation before after value) (wellFormed : wf_val value)
-    (owned : Abs.Ownership.ValueOwned (ownershipBounds before) value) :
+    (owned : SourceMachine.Ownership.ValueOwned (ownershipBounds before) value) :
     CumulativeStoreMutation view code before after := by
   have shape := global_mutation_shape shaped mutation wellFormed owned
   obtain ⟨index,old,lo,hi,issued,mutable,typed,represented,high,rfl⟩ := mutation
   have sourceSyntax : StoreSyntax code {before with globals := before.globals.set index {old with lo,hi}} := sourceSyntaxBefore
-  have oldWf := decodeStore_wf view code before shaped sourceSyntaxBefore
-  have newWf := decodeStore_wf view code _ shape sourceSyntax
+  have oldWf := decode_store_wf view code before shaped sourceSyntaxBefore
+  have newWf := decode_store_wf view code _ shape sourceSyntax
   have objectExtension : Extend_globalinst (decodeGlobal old) (decodeGlobal {old with lo,hi}) := by
     unfold decodeGlobal
     rw [mutable]
     exact Spec.extend_global_mutable _ _ _
-      (.globalinst_case_ _ _ (decodeWords_wf _ _ _))
-      (.globalinst_case_ _ _ (decodeWords_wf _ _ _))
+      (.globalinst_case_ _ _ (decode_words_wf _ _ _))
+      (.globalinst_case_ _ _ (decode_words_wf _ _ _))
   have extension : Extend_store (decodeStore view code before)
       (decodeStore view code {before with globals := before.globals.set index {old with lo,hi}}) := by
-    rw [decodeStore_global_update view code before (before.globals.set index {old with lo,hi})] at newWf ⊢
+    rw [decode_store_global_update view code before (before.globals.set index {old with lo,hi})] at newWf ⊢
     simp only [alloc.vec.Vec.set_val_eq,List.map_set] at newWf ⊢
     apply Spec.extend_store_set_global _ _ _ oldWf
     · simpa only [decodeStore] using newWf
@@ -244,12 +244,12 @@ theorem global_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
   exact ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,shape,⟨bounds.elements,bounds.data⟩,extension,⟨rfl,rfl⟩,rfl⟩
 
 theorem core_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
-    (code : CodeInterpretation) (before after : runtime.store.Store M) (source : Abs.AState)
+    (code : CodeInterpretation) (before after : runtime.store.Store M) (source : SourceMachine.AState)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before)
-    (owned : Abs.Ownership.CoreOwned (ownershipBounds before) source)
+    (owned : SourceMachine.Ownership.CoreOwned (ownershipBounds before) source)
     (mutation : CoreStoreMutation view source before after) : CumulativeStoreMutation view code before after := by
   cases mutation with
   | unchanged => exact .refl_of_shape shaped sourceSyntaxBefore bounds
   | memory issued mutation => exact memory_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ _ issued mutation
   | global live wellFormed mutation => exact global_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ mutation wellFormed (live.owned owned)
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

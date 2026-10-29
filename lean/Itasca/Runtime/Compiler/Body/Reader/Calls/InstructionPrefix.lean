@@ -15,7 +15,7 @@ Direct and indirect call instruction-prefix certificates, preserving checked ins
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call reading bounds its source base and retains earlier instruction and exit-slot checks. -/
@@ -42,12 +42,12 @@ theorem reader_call_open_instructions_wasm2 {data env locals typeIndex st}
   rw [input,slots_append] at inputs
   have valid : runtime.bytecode.CompiledFunction.instruction_valid after.function (.Call index base) = .ok true :=
     (CoreInstructionBounds.call (by omega)).accepts
-  refine ⟨lowered.1.openInstructionPrefix tables held ?owners valid,
+  refine ⟨lowered.1.open_instruction_prefix tables held ?owners valid,
     exits.retained (congrArg alloc.vec.Vec.val stable.frames) stable.capacity⟩
   intro index owned
   simpa only [PendingInstructionSite,stable.frames] using owned
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -55,7 +55,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual indirect-call reading checks the captured table row and source operand region. -/
@@ -85,11 +85,11 @@ theorem reader_indirect_call_open_instructions_wasm2 {data env locals typeIndex 
     (compiler_indirect_call_auxiliary_tables ops law before after out.core otherIndex otherTable (.Ok ()) callback)
   have growth := instruction_check_extends_of_tables_append before.function after.function _ tables
     stable.capacity (by change before.function.code.val.length ≤ after.function.code.val.length; rw [lowered.1.1,List.length_append,List.length_singleton]; omega)
-  exact ⟨lowered.1.executableInstructionPrefix layout reachable contextLocals
+  exact ⟨lowered.1.executable_instruction_prefix layout reachable contextLocals
     (.indirect emission) (by intro depths fallback same; cases same) growth held stable.frames,
     exits.retained (congrArg alloc.vec.Vec.val stable.frames) stable.capacity⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -97,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual call reading preserves both invariants on live and unreachable paths. -/
@@ -164,6 +164,6 @@ theorem reader_indirect_call_checked_prefix_wasm2 {jumpTables : List U32} {data 
     change runtime.compiler.lower.FunctionCompiler.op ops before out.core 17#u16 target table 0#u128 = _ at callback
     exact compiler_dead_op_checked_prefix ops law before after out.core 17#u16 target table 0#u128 (Bool.eq_false_iff.mpr live) held exits callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

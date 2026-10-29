@@ -6,7 +6,7 @@ Increasing a label's permitted exits preserves literal code evidence. An already
 Main declarations: `LabelWiden` and `LabelsWiden`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Increasing a label's permitted exits preserves literal code evidence.
@@ -47,4 +47,4 @@ theorem LabelsWiden.normal {left right} (shape : LabelsWiden left right)
     subst label
     exact head.normalLive (live a rfl)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -5,14 +5,14 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 private theorem constant_compatible {M : Type} {store : runtime.store.Store M} {inst code dst expr ty instruction}
-    (constant : Code.ConstantInstruction code dst expr ty instruction) :
+    (constant : Compiler.ConstantInstruction code dst expr ty instruction) :
     SegmentBulkCompatible store inst code instruction := by
   cases constant <;> trivial
 
 private theorem element_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
-    (program : Code.ElementProgram code index segment instructions)
+    (program : Compiler.ElementProgram code index segment instructions)
     (found : inst.module.module.env.elements.val[index]? = some segment)
     (typed : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : SegmentTypeBindings store inst) :
@@ -39,7 +39,7 @@ private theorem element_compatible {M : Type} (store : runtime.store.Store M)
 private theorem data_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
-    (program : Code.DataProgram code index segment instructions) :
+    (program : Compiler.DataProgram code index segment instructions) :
     ∀ instruction ∈ instructions, SegmentBulkCompatible store inst code instruction := by
   cases program with
   | passive mode => simp
@@ -54,7 +54,7 @@ private theorem data_compatible {M : Type} (store : runtime.store.Store M)
 reference-type compatibility requirements of its table initialization steps. -/
 theorem segment_program_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (program : Code.SegmentProgram inst.module code) (bindings : SegmentTypeBindings store inst)
+    (program : Compiler.SegmentProgram inst.module code) (bindings : SegmentTypeBindings store inst)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid inst.module.module.env segment) :
     ∀ instruction ∈ code.code.val, SegmentBulkCompatible store inst code instruction := by

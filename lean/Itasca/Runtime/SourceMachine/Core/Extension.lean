@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.Correct
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
@@ -41,7 +41,7 @@ theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
   | global_set index =>
     cases index with
     | mk_uN index =>
-      obtain ⟨actual,actualEq,_,extension,_⟩ := globalSet_progress s ambient f rest index after typed
+      obtain ⟨actual,actualEq,_,extension,_⟩ := global_set_progress s ambient f rest index after typed
       change globalSet _ _ _ _ _ = .next next at equation
       rw [actualEq] at equation
       cases equation
@@ -65,4 +65,4 @@ theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
     · rw [actualEq] at equation
       contradiction
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

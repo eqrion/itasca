@@ -46,17 +46,17 @@ theorem bulk_memory_fill {M : Type} (ops : runtime.platform.MemoryBuffer M)
   simp only [runtime.interp.bulk.execute,lift,bind_ok]
   step as ⟨position,positionEq⟩
   have pos : position.val = base.val+operand.val := by simpa only [U32.cast_Usize_val_eq] using positionEq
-  rw [Code.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
+  rw [Compiler.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
   simp only [bind_ok,lift]
   step as ⟨position1,position1Eq⟩
   step as ⟨position2,position2Eq⟩
   have pos2 : position2.val = base.val+operand.val+1 := by simpa only [position1Eq,U32.cast_Usize_val_eq] using position2Eq
-  rw [Code.initializer_slice_index slots position2 value (by simpa only [pos2] using valueSlot)]
+  rw [Compiler.initializer_slice_index slots position2 value (by simpa only [pos2] using valueSlot)]
   simp only [bind_ok,lift]
   step as ⟨position3,position3Eq⟩
   step as ⟨position4,position4Eq⟩
   have pos4 : position4.val = base.val+operand.val+2 := by simpa only [position3Eq,U32.cast_Usize_val_eq] using position4Eq
-  rw [Code.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
+  rw [Compiler.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
   simp only [bind_ok,lift]
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual,actualEq⟩
   subst actual
@@ -170,7 +170,7 @@ theorem memory_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   have bytesEq : decodeBytes (view buffer).val =
       Spec.Segment.fillInto (decodeBytes (view memory.buf).val) destination (Spec.Segment.fillByte value.val) count := by
     unfold decodeBytes
-    rw [filled,←Spec.Segment.fillInto_eq_setSlice _ _ _ _ inside,Spec.Segment.fillInto_map,byteEq]
+    rw [filled,←Spec.Segment.fill_into_eq_set_slice _ _ _ _ inside,Spec.Segment.fill_into_map,byteEq]
   have lists := fill_map_set_modify (decodeMemory view)
     (fun m => {m with BYTES := Spec.Segment.fillInto m.BYTES destination (Spec.Segment.fillByte value.val) count})
     store.memories.val address.index.val memory {memory with buf := buffer} target
@@ -178,7 +178,7 @@ theorem memory_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   have addressBound : ambient.MODULE.MEMS[0]! < (decodeStore view code store).MEMS.length := by
     rw [memoryRead]
     simpa [decodeStore] using (List.getElem?_eq_some_iff.mp target).1
-  rw [Spec.Segment.memoryFill_eq _ _ _ _ _ addressBound
+  rw [Spec.Segment.memory_fill_eq _ _ _ _ _ addressBound
     (by simpa [memoryLookup,decodeMemory,decodeBytes] using memoryBound)
     (by simpa [memoryLookup,decodeMemory,decodeBytes] using inside),memoryRead]
   unfold decodeStore

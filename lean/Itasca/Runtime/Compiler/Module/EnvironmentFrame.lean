@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Stream.Scheduler
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -180,4 +180,4 @@ theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Allo
             obtain ⟨_, output⟩ := rest
             subst after
             exact frame1.trans frame0
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

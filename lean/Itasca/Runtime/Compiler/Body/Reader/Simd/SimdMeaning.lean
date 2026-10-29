@@ -7,7 +7,7 @@ Ordinary lane callbacks encode the checked lane index in the first scalar immedi
 Main declarations: `simd_lane_callback_meaning` and `SimdImmediateMeaning.not_constant`. A direct consumer is `Compiler.Body.Reader.Simd.Dispatch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Simd
 
 /-- Ordinary lane callbacks encode the checked lane index in the first scalar
@@ -53,7 +53,7 @@ theorem simd_memory_lane_callback_meaning (C : context) (sub : U32) (op : Memory
 theorem simd_shuffle_callback_meaning (C : context) (lo hi : U64) :
     SimdImmediateMeaning C 13#u32 (simdImmediate 13#u32 0#u32 (initializerBits lo hi))
       [.V128,.V128] (shuffle lo hi) [.V128] := by
-  exact .shuffle _ lo hi (initializerBits_val lo hi)
+  exact .shuffle _ lo hi (initializer_bits_val lo hi)
 
 theorem SimdImmediateMeaning.not_constant {C sub immediate input source output}
     (meaning : SimdImmediateMeaning C sub immediate input source output) : sub.val ≠ 12 := by
@@ -63,4 +63,4 @@ theorem SimdImmediateMeaning.not_constant {C sub immediate input source output}
   | lane sub immediate op meaning lane position => rw [equal] at meaning; cases meaning
   | memory sub immediate op meaning arg lane memory available offset position => rw [equal] at meaning; cases meaning
   | shuffle => contradiction
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

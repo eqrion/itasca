@@ -19,7 +19,7 @@ An actual successful constant reader and compiler callback extends the retained 
 Main declarations: `reader_emit_const32_wasm2` and `reader_emit_const64_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.ScalarInstructionPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful constant reader and compiler callback extends the
@@ -120,4 +120,4 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
   apply LinearEmission.const64
   exact layout.height
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

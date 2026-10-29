@@ -7,7 +7,7 @@ The exact source segment program passes every local instruction gate. Slot capac
 Main declarations: `ElementProgram.instruction_accepts` and `segment_program_well_formed`. A direct consumer is `Compiler.Module.SegmentCompilationAvailable`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem offset_vector_width {env expr}
@@ -158,4 +158,4 @@ theorem segment_program_well_formed {module function} (program : SegmentProgram 
   · simp [jumps]
   · simp [controls]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

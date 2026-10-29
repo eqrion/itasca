@@ -28,18 +28,18 @@ import Itasca.Runtime.Spec.Extend
 /-!
 Exclusion of unreachable from ordinary scalar emission.
 
-Main declarations: `scalarEmission_not_unreachable`. A direct consumer is `Interp.Machine.Progress.UnreachableExecution`.
+Main declarations: `scalar_emission_not_unreachable`. A direct consumer is `Interp.Machine.Progress.UnreachableExecution`.
 -/
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem scalarEmission_not_unreachable {C before after emitted}
-    (emission : Code.ScalarEmission C before .UNREACHABLE emitted after) : False := by
+theorem scalar_emission_not_unreachable {C before after emitted}
+    (emission : Compiler.ScalarEmission C before .UNREACHABLE emitted after) : False := by
   generalize equality : instr.UNREACHABLE = instruction at emission
   cases emission with
-  | linear pure => rw [← equality] at pure; exact linearEmission_not_unreachable pure
-  | float stack other => cases other <;> simp [Abs.Float.Instruction.source,Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
-  | _ => simp [Abs.Memory.Load.source,Abs.Memory.Store.source] at equality
+  | linear pure => rw [← equality] at pure; exact linear_emission_not_unreachable pure
+  | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
+  | _ => simp [SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
 
 end Itasca.Runtime.Interp

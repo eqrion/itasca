@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem IndirectCallEmission.context {pairs C D before instruction emitted after}
@@ -11,4 +11,4 @@ theorem IndirectCallEmission.context {pairs C D before instruction emitted after
     exact .call front params results typeIndex tableIndex entry index base bounds
       (by simpa only [types] using signature) (by simpa only [tables] using table) pair
       (by simpa only [locals] using basePosition) indexPosition
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

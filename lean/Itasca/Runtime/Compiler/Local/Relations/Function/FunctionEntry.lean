@@ -7,7 +7,7 @@ The successful function-start callback establishes the zero-operand layout, sour
 Main declarations: `compiler_function_start` and `compiler_new`. A direct consumer is `Compiler.Module.CompileEntry`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The successful function-start callback establishes the zero-operand layout,
@@ -114,4 +114,4 @@ source coordinates, and the root control frame used by all later callbacks. -/
   constructor
   · constructor <;> simp [compilerLocals, alloc.vec.Vec.new, slots]
   · simp [alloc.vec.Vec.new]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

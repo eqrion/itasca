@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.PreparedExecutableSafety
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedBodySafetyWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BodyTooLarge
 import Itasca.Runtime.Compiler.Module.CompileProfileTotal
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual prepared function bodies return normally for either supported
@@ -45,4 +45,4 @@ resource error on arbitrary bytes and arbitrary compiler limits. -/
   compile_with_total_of_profile_prepared_bodies ops law bytes profile limits
     (profile_prepared_bodies_total ops law profile)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

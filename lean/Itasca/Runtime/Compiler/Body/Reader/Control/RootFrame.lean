@@ -7,7 +7,7 @@ The root control frame retained by reader execution.
 Main declarations: `reader_root_frame_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ReachedReturnAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem paired_head_right {α β : Type} {R : α → β → Prop} {left right}
@@ -56,4 +56,4 @@ theorem reader_root_frame_wasm2 {data env sourceLocals index st}
   · simpa only [List.head?_eq_getElem?] using frameHead
   · rw [framed.results, matched.results, outputs]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

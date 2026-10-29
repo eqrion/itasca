@@ -2,16 +2,16 @@ import Itasca.Runtime.Integration.Host.HostRecordingSite
 import Itasca.Runtime.Interp.Machine.Frames.FunctionEnd
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem HostFrameSite.recording_normal {M : Type}
 
-    [∀compiled,StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀compiled,StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀compiled,StructuredMachine.RecordingHeads (emission compiled)]
+    [∀compiled,Machine.OrdinaryHeads (emission compiled)]
+    [∀compiled,Machine.IndirectProjection (emission compiled) compiled.indirect.val]
+    [∀compiled,Machine.RecordingHeads (emission compiled)]
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (site : HostFrameSite view code exec store expected ambient f rest)
     (ready : ReadySource f) (shaped : Store.Shape view store)
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
@@ -21,12 +21,12 @@ theorem HostFrameSite.recording_normal {M : Type}
   | nil =>
     have labels : f.labels=[] := by simpa only [ReadySource,source] using ready
     have same : {f with code:=[],labels:=[]}=f := by rw [←source,←labels]
-    rcases StructuredMachine.function_end site.program (by simpa only [same] using site.point) with jump | returned
+    rcases Machine.function_end site.program (by simpa only [same] using site.point) with jump | returned
     · obtain ⟨target,forward,fetch,tail⟩ := jump
-      rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+      rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
       simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
     · obtain ⟨count,fetch,locals,width,bound⟩ := returned
-      rw [hostStepAddress_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
+      rw [host_step_address_at _ _ _ _ _ _ _ site.last site.frameAt site.instanceAt site.compiledAt fetch] at selected
       simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
   | cons op after =>
     have same : {f with code:=op::after}=f := by rw [←source]
@@ -39,46 +39,46 @@ theorem HostFrameSite.recording_normal {M : Type}
     simpa only [same] using result
 
 theorem recording_frame_host_site {M : Type}
-    [∀compiled,StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀compiled,StructuredMachine.ErasedHeads (emission compiled)]
-    [∀compiled,StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀compiled,StructuredMachine.RecordingHeads (emission compiled)]
+    [∀compiled,Machine.OrdinaryHeads (emission compiled)]
+    [∀compiled,Machine.ErasedHeads (emission compiled)]
+    [∀compiled,Machine.IndirectProjection (emission compiled) compiled.indirect.val]
+    [∀compiled,Machine.RecordingHeads (emission compiled)]
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f) (moduleEq : f.module=Store.decodeInstance store inst)
     (pending : Bool)
-    (point : StructuredMachine.ControlPoint (Store.decodeStore view code store) raw f compiled C targets next output pending)
+    (point : Machine.ControlPoint (Store.decodeStore view code store) raw f compiled C targets next output pending)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec
+    (machine : Machine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val pending)
     (shaped : Store.Shape view store)
-    (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩)
+    (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩)
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
     StructuredHostSite view code exec store expected raw.pc.val pending
       ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ := by
   cases point with
   | jump target fetched continuation =>
-    rw [hostStepAddress_at _ _ _ _ _ _ _ last hf hi hc fetched] at selected
+    rw [host_step_address_at _ _ _ _ _ _ _ last hf hi hc fetched] at selected
     simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
   | ready point =>
     obtain ⟨count,g,labels,stop,types,chain,bound,represented,continuation,retained,metadata,done⟩ :=
-      StructuredMachine.normalize_execution view code store exec raw index compiled C targets next output ambient f rest
+      Machine.normalize_execution view code store exec raw index compiled C targets next output ambient f rest
         last hf program slots point expected machine
-    have nextProgram : FrameProgram store raw compiled (g.locals.map Code.valueType) g.resultTypes C.FUNCS := program.reposition raw.pc metadata
+    have nextProgram : FrameProgram store raw compiled (g.locals.map Compiler.valueType) g.resultTypes C.FUNCS := program.reposition raw.pc metadata
     rcases done with skip | ready
     · obtain ⟨target,forward,fetched,tail⟩ := skip
-      rw [hostStepAddress_at _ _ _ _ _ _ _ last hf hi hc fetched] at selected
+      rw [host_step_address_at _ _ _ _ _ _ _ last hf hi hc fetched] at selected
       simp [hostInstructionAddress,Bind.bind,Option.bind] at selected
     · have nextModule : g.module=Store.decodeInstance store inst := metadata.module.trans moduleEq
-      have nextOwned : Abs.Ownership.StateOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+      have nextOwned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
         refine ⟨owned.1,?_⟩
         intro item member
         rcases List.mem_cons.mp member with rfl | member
@@ -89,16 +89,16 @@ theorem recording_frame_host_site {M : Type}
       exact .normalize chain (site.recording_normal ready shaped address selected)
 
 theorem recording_host_site {M : Type}
-    [∀compiled,StructuredMachine.OrdinaryHeads (emission compiled)]
-    [∀compiled,StructuredMachine.ErasedHeads (emission compiled)]
-    [∀compiled,StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    [∀compiled,StructuredMachine.RecordingHeads (emission compiled)]
+    [∀compiled,Machine.OrdinaryHeads (emission compiled)]
+    [∀compiled,Machine.ErasedHeads (emission compiled)]
+    [∀compiled,Machine.IndirectProjection (emission compiled) compiled.indirect.val]
+    [∀compiled,Machine.RecordingHeads (emission compiled)]
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (source : Abs.AState) (expected : List valtype) (pc : Nat) (pending : Bool)
+    (source : SourceMachine.AState) (expected : List valtype) (pc : Nat) (pending : Bool)
     (decoded : source.store=Store.decodeStore view code store) (shaped : Store.Shape view store)
-    (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store) source)
-    (invariant : StructuredMachine.Execution view code store exec source expected pc pending)
+    (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store) source)
+    (invariant : Machine.Execution view code store exec source expected pc pending)
     (active : 0<exec.frames.length)
     (address : runtime.FuncAddr) (selected : hostStepAddress exec store=some address) :
     StructuredHostSite view code exec store expected pc pending source := by
@@ -129,4 +129,4 @@ theorem recording_host_site {M : Type}
     have result := recording_frame_host_site view code exec store index raw inst compiled C targets next output ambient f rest
       last hf hi hc program current.slots moduleEq pending point expected (by simpa only [position] using invariant) shaped owned address selected
     simpa only [position] using result
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

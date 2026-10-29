@@ -19,7 +19,7 @@ theorem JumpEffect.exact {before after : runtime.interp.Execution} {index : Usiz
   change after = { before with frames := after.frames } at exactState
   simpa only [frameEq] using exactState
 
-theorem dispatch_jumpIfZero_exact {M P F A : Type}
+theorem dispatch_jump_if_zero_exact {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -53,46 +53,46 @@ theorem dispatch_jumpIfZero_exact {M P F A : Type}
 
 /-- A guarded branch with an operand transfer first removes its condition.
 The false path skips the transfer/jump pair; the true path reaches BR. -/
-theorem dispatch_branchGuard_refines {M P F A : Type}
+theorem dispatch_branch_guard_refines {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (cond target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (front : List val)
     (lookup : exec.frames.val[index.val]? = some raw)
     (bound : value < 2 ^ 32)
-    (position : cond.val = Code.slots ((f.locals ++ front).map Code.valueType))
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [Abs.integerVal .I32 value] } :: rest, []⟩)
-    (slots : FrameSlots exec raw { f with vals := front ++ [Abs.integerVal .I32 value] }) :
+    (position : cond.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType))
+    (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [SourceMachine.integerVal .I32 value] } :: rest, []⟩)
+    (slots : FrameSlots exec raw { f with vals := front ++ [SourceMachine.integerVal .I32 value] }) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index
       raw.instance raw.function raw.base (.JumpIfZero cond target) ⦃ out => out.1 = .Ok () ∧
       out.2.1 = (if value = 0 then { exec with frames := exec.frames.set index { raw with pc := target } } else exec) ∧
       FrameSlots out.2.1 raw { f with code := if value = 0 then after else .BR (.mk_uN depth) :: after, vals := front } ∧
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      Abs.NextSim
-        ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [Abs.integerVal .I32 value] } :: rest, []⟩
+      SourceMachine.NextSim
+        ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [SourceMachine.integerVal .I32 value] } :: rest, []⟩
         ⟨s, ambient, { f with code := if value = 0 then after else .BR (.mk_uN depth) :: after, vals := front } :: rest, []⟩ ⦄ := by
-  have allValues : ValuesAt exec.slots.val raw.base.val ((f.locals ++ front) ++ [Abs.integerVal .I32 value]) := by
+  have allValues : ValuesAt exec.slots.val raw.base.val ((f.locals ++ front) ++ [SourceMachine.integerVal .I32 value]) := by
     simpa only [FrameSlots, List.append_assoc] using slots
   have input : WordsAt exec.slots.val (raw.base.val + cond.val) [value] := by
-    simpa only [position, ValuesAt, Code.encodeValues, List.flatMap_cons, List.flatMap_nil,
-      Abs.integerVal, Code.encodeValue, List.append_nil] using allValues.operands
-  have step : Abs.astep
-      ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [Abs.integerVal .I32 value] } :: rest, []⟩ = .next
+    simpa only [position, ValuesAt, Compiler.encodeValues, List.flatMap_cons, List.flatMap_nil,
+      SourceMachine.integerVal, Compiler.encodeValue, List.append_nil] using allValues.operands
+  have step : SourceMachine.astep
+      ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [SourceMachine.integerVal .I32 value] } :: rest, []⟩ = .next
       ⟨s, ambient, { f with code := if value = 0 then after else .BR (.mk_uN depth) :: after, vals := front } :: rest, []⟩ := by
     have hb : value < 4294967296 := bound
-    simp [Abs.astep, Abs.pop_append, Abs.integerVal, Abs.integer, numtype_Inn, hb, Abs.advance]
-  have simulation := Abs.instruction_simulation s ambient { f with vals := front ++ [Abs.integerVal .I32 value] } rest
+    simp [SourceMachine.astep, SourceMachine.pop_append, SourceMachine.integerVal, SourceMachine.integer, numtype_Inn, hb, SourceMachine.advance]
+  have simulation := SourceMachine.instruction_simulation s ambient { f with vals := front ++ [SourceMachine.integerVal .I32 value] } rest
     (.BR_IF (.mk_uN depth)) after _ (.br_if _) typed step
-  apply WP.spec_mono (dispatch_jumpIfZero_exact memory hooks floats allocator exec store platform index raw cond target value lookup bound input)
+  apply WP.spec_mono (dispatch_jump_if_zero_exact memory hooks floats allocator exec store platform index raw cond target value lookup bound input)
   intro out effect
   obtain ⟨success, exactState, sameStore, samePlatform⟩ := effect
   refine ⟨success, exactState, ?_, sameStore, samePlatform, simulation⟩
   rw [exactState]
   split <;> exact allValues.locals
 
-theorem dispatch_jumpIfNonZero_exact {M P F A : Type}
+theorem dispatch_jump_if_non_zero_exact {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)

@@ -4,15 +4,15 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 /-!
 The compiler and canonical validator use the same word width, even for a polymorphic operand that has no concrete source value.
 
-Main declarations: `stackWords_types` and `ReaderEnterPostWasm2.layout`. A direct consumer is `Compiler.Body.Callbacks.Calls.ScopeCallbackInputs`.
+Main declarations: `stack_words_types` and `ReaderEnterPostWasm2.layout`. A direct consumer is `Compiler.Body.Callbacks.Calls.ScopeCallbackInputs`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std Itasca
 
 /-- The compiler and canonical validator use the same word width, even for a
 polymorphic operand that has no concrete source value. -/
-theorem stackWords_types (values : List code.StackType) :
+theorem stack_words_types (values : List code.StackType) :
     stackWords values = slots (Sequence.stackTypes values) := by
   induction values with
   | nil => rfl
@@ -66,7 +66,7 @@ theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.Func
       simpa only [values, Sequence.stackTypes, List.map_append, List.map_map, Function.comp_def] using newTypes
     exact List.append_cancel_right same
   have words : stackWords (out.core.vals.val.take base.val) = slots front := by
-    rw [prefixEq, stackWords_types, prefixTypes]
+    rw [prefixEq, stack_words_types, prefixTypes]
   refine ⟨front, oldTypes, newTypes, newKnown, baseFits, words, ?_⟩
   have height := layout.height
   rw [oldTypes, slots_append] at height
@@ -74,4 +74,4 @@ theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.Func
   rw [words, layout.localSlots]
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

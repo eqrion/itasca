@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.HostTyping
 import Itasca.Runtime.SourceMachine.Indirect.Correct
-namespace Itasca.Runtime.Abs.Indirect
+namespace Itasca.Runtime.SourceMachine.Indirect
 open SpecExt Itasca.Runtime.Spec
 
 /-- A typed indirect host call retains the selected address, concrete argument
@@ -23,10 +23,10 @@ theorem host_preparation (s : store) (ambient : frame) (f : AFrame) (rest : List
   have frameTyped : FrameTyped s {f with code := .CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} [] := by
     cases typed.frames with | cons head _ => exact head
   obtain ⟨C,front,actualArgs,params,actualResults,position,bindings,tableSelected,typeSelected,values,bounded,arguments,frontWf,heights,caller,tableBound,typeBound⟩ := operands frameTyped
-  obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+  obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
   have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
   have tailTyped : FramesTyped s rest f.resultTypes := by cases typed.frames with | cons _ tail => exact tail
-  have restWf := framesTyped_wf tailTyped
+  have restWf := frames_typed_wf tailTyped
   have decoded : integer numtype.I32 (integerVal .I32 position) = some position := integer_accepts .I32 position bounded
   cases resolved : resolve s f table type position with
   | none => simp only [step,values,pop_append,decoded,resolved] at stepped; cases stepped
@@ -35,7 +35,7 @@ theorem host_preparation (s : store) (ambient : frame) (f : AFrame) (rest : List
     obtain ⟨reference,fn,lookup,signature⟩ := target
     have actualType : fn.TYPE = ⟨.mk_list params,.mk_list actualResults⟩ := signature.symm.trans (type_selected bindings typeSelected)
     have argTypes := results_type_of_typed arguments
-    have argLength := resultsTyped_length arguments
+    have argLength := results_typed_length arguments
     cases body : fn.CODE with
     | HOST identity =>
       have observed := stepped
@@ -62,4 +62,4 @@ theorem host_preparation (s : store) (ambient : frame) (f : AFrame) (rest : List
     | FUNC index locals source =>
       cases defaults : defaultLocals locals <;>
         simp [step,values,←List.append_assoc,pop_append,decoded,resolved,invoke,lookup,actualType,←argLength,argTypes,body,defaults] at stepped
-end Itasca.Runtime.Abs.Indirect
+end Itasca.Runtime.SourceMachine.Indirect

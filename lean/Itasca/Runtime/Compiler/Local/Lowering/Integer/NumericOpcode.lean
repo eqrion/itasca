@@ -8,8 +8,8 @@ Binary encodings of all scalar integer numeric instructions.
 Main declarations: `integerOpcode` and `integerInstruction`. A direct consumer is `Compiler.Local.Lowering.Integer.NumericEncoding`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 /-- Binary encodings of all scalar integer numeric instructions. -/
 def integerOpcode : Instruction → U16
@@ -150,7 +150,7 @@ def integerInstruction (op : Instruction) (dst a b : U32) : runtime.bytecode.Ins
   | .conversion .extendUnsigned => .I64ExtendI32U dst a b
   | .conversion .extendSigned => .I64ExtendI32S dst a b
 
-theorem integerOpcode_byte (op : Instruction) : (integerOpcode op).val ≤ 255 := by
+theorem integer_opcode_byte (op : Instruction) : (integerOpcode op).val ≤ 255 := by
   cases op with
   | binary ty operator => cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;> decide
   | compare ty operator => cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;> decide
@@ -158,7 +158,7 @@ theorem integerOpcode_byte (op : Instruction) : (integerOpcode op).val ≤ 255 :
   | eqz ty => cases ty <;> decide
   | conversion operator => cases operator <;> decide
 
-theorem integerInstruction_make (op : Instruction) (dst a b : U32) :
+theorem integer_instruction_make (op : Instruction) (dst a b : U32) :
     runtime.bytecode.Instr.make_scalar (integerOpcode op) dst a b =
       .ok (some (integerInstruction op dst a b)) := by
   cases op with
@@ -168,7 +168,7 @@ theorem integerInstruction_make (op : Instruction) (dst a b : U32) :
   | eqz ty => cases ty <;> rfl
   | conversion operator => cases operator <;> rfl
 
-theorem integerOpcode_binary (op : Instruction) :
+theorem integer_opcode_binary (op : Instruction) :
     runtime.compiler.lower.scalar_binary (integerOpcode op) = .ok (decide (op.arity = 2)) := by
   cases op with
   | binary ty operator => cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;> rfl
@@ -176,4 +176,4 @@ theorem integerOpcode_binary (op : Instruction) :
   | unary ty operator => cases ty <;> cases operator <;> rfl
   | eqz ty => cases ty <;> rfl
   | conversion operator => cases operator <;> rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

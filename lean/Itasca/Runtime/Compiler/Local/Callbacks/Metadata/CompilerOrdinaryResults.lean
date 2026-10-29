@@ -6,7 +6,7 @@ Ordinary postconditions of observe, emit, copy and finish operations.
 Main declarations: `compiler_observe_ordinary_post` and `compiler_finish_op_ordinary_result`. A direct consumer is `Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 theorem compiler_observe_ordinary_post {A : Type} (ops : runtime.platform.Alloc A)
@@ -154,4 +154,4 @@ theorem compiler_finish_op_ordinary_result {A : Type} (ops : runtime.platform.Al
     simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     exact (compiler_emit_ordinary_result ops before middle instruction (.Ok ()) emitted).trans
       (compiler_observe_ordinary_result ops law middle after state status rest)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

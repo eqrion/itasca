@@ -6,7 +6,7 @@ Ordinary compiler effects of unreachable and return callbacks.
 Main declarations: `compiler_unreachable_ordinary_result` and `compiler_return_ordinary_result`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -26,4 +26,4 @@ theorem compiler_return_ordinary_result {A : Type} (ops : runtime.platform.Alloc
     CompilerOrdinaryStable before after := by
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
   repeat' metadata_step accepted using ops, law
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

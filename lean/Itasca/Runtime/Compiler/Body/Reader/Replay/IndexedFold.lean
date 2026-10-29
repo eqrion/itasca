@@ -7,7 +7,7 @@ Folding a typed source run while retaining compiler jump-table certificates.
 Main declarations: `TypedRunWasm2.fold_indexed_tables`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedCompilerBodyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem TypedRunWasm2.fold_indexed_tables {A : Type}
     (ops : runtime.platform.Alloc A)
@@ -47,4 +47,4 @@ theorem TypedRunWasm2.fold_indexed_tables {A : Type}
     · exact done
     · exact ih nextPoint
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -51,7 +51,7 @@ theorem InternEffect.allocated {M : Type} {view : M → Slice U8} {store : runti
     · simpa only [ReferenceShape] using shape.elements
     · simp [appended, List.nodup_append, shape.canonicalTypes]
       intro existing member equal
-      have same := decodeFuncType_injective equal
+      have same := decode_func_type_injective equal
       subst existing
       exact fresh member
     · simp only [objectCount, alloc.vec.Vec.length, appended, List.length_append, List.length_singleton]

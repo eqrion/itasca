@@ -7,7 +7,7 @@ Actual direct-call metadata lookup and parameter/result stack transfer.
 Main declarations: `reader_call_info_effect` and `call_full_stack_types`. A direct consumer is `Compiler.Body.Reader.Calls.CallLowering`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call metadata lookup and parameter/result stack transfer. -/
@@ -61,10 +61,10 @@ theorem call_full_stack_types {before after outer segment rest : List code.Stack
     ∃ front : List types.ValueType,
       Sequence.stackTypes before = front.map Translate.valueType ++ params.map Translate.valueType ∧
       after = (front ++ results).map code.StackType.Val := by
-  have both := concreteStack_append.mp (old ▸ known)
+  have both := concrete_stack_append.mp (old ▸ known)
   have restKnown := concrete_stack_transfer both.2 transfer
-  obtain ⟨outerTypes, outerConcrete⟩ := (concreteStack_iff outer).mp both.1
-  obtain ⟨restTypes, restConcrete⟩ := (concreteStack_iff rest).mp restKnown
+  obtain ⟨outerTypes, outerConcrete⟩ := (concrete_stack_iff outer).mp both.1
+  obtain ⟨restTypes, restConcrete⟩ := (concrete_stack_iff rest).mp restKnown
   have segmentTypes := realized_concrete_types both.2 (transfer _ (Sequence.realizes_default false rest))
   refine ⟨outerTypes ++ restTypes, ?_, ?_⟩
   · have whole := congrArg (Sequence.stackTypes outer ++ ·) segmentTypes.symm
@@ -72,4 +72,4 @@ theorem call_full_stack_types {before after outer segment rest : List code.Stack
       Function.comp_def, List.append_assoc] using whole
   · simp [new, outerConcrete, restConcrete, List.append_assoc]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -5,7 +5,7 @@ import Itasca.Runtime.Equations
 Independent source frame demand and compiled-function capacity certificates. The compiler establishes these bounds and store capacity proofs retain them.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A source frame's word requirement: its parameter/local words plus the
@@ -30,4 +30,4 @@ def FunctionCapacity (profile : ValidationProfile) (env : module.Env)
     (typeIndex : U32) (source : funccode) (compiled : runtime.bytecode.CompiledFunction) : Prop :=
   ∃ words, SourceFrameCapacity profile env typeIndex source words ∧ compiled.slot_count.val ≤ words
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

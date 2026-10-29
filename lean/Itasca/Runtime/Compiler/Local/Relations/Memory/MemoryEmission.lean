@@ -11,14 +11,14 @@ Scalar memory lowering, operands and emitted instruction relations. Opcode descr
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
 
 noncomputable def memoryLoadLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Load) (offset : U32) :
+    (op : SourceMachine.Memory.Load) (offset : U32) :
     Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.FunctionCompiler A) := do
   let r ←
     runtime.compiler.FunctionCompiler.operand ops compiler
@@ -59,7 +59,7 @@ noncomputable def memoryLoadLowering {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem lower_memory_load_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Load) (offset alignment : U32) (reachable : compiler.reachable = true) :
+    (op : SourceMachine.Memory.Load) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryLoadOpcode op) offset alignment 0#u128 =
       memoryLoadLowering ops compiler state op offset := by
   cases op with
@@ -70,7 +70,7 @@ theorem lower_memory_load_dispatch {A : Type} (ops : runtime.platform.Alloc A)
 
 noncomputable def memoryStoreLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Store) (offset : U32) :
+    (op : SourceMachine.Memory.Store) (offset : U32) :
     Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.FunctionCompiler A) := do
   let r ←
     runtime.compiler.FunctionCompiler.operand ops compiler
@@ -114,7 +114,7 @@ noncomputable def memoryStoreLowering {A : Type} (ops : runtime.platform.Alloc A
 
 theorem lower_memory_store_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Store) (offset alignment : U32) (reachable : compiler.reachable = true) :
+    (op : SourceMachine.Memory.Store) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryStoreOpcode op) offset alignment 0#u128 =
       memoryStoreLowering ops compiler state op offset := by
   cases op with
@@ -125,18 +125,18 @@ theorem lower_memory_store_dispatch {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem lower_memory_load_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Load) (offset alignment address : U32) (reachable : compiler.reachable = true)
+    (op : SourceMachine.Memory.Load) (offset alignment address : U32) (reachable : compiler.reachable = true)
     (operand : runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok address)) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryLoadOpcode op) offset alignment 0#u128 =
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (memoryLoadInstruction op address address offset) := by
   rw [lower_memory_load_dispatch ops compiler state op offset alignment reachable]
   unfold memoryLoadLowering
   simp only [operand, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
-    memoryLoadInstruction_make, core.option.Option.ok_or]
+    memory_load_instruction_make, core.option.Option.ok_or]
 
 theorem lower_memory_store_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Memory.Store) (offset alignment address value : U32) (reachable : compiler.reachable = true)
+    (op : SourceMachine.Memory.Store) (offset alignment address value : U32) (reachable : compiler.reachable = true)
     (addressOperand : runtime.compiler.FunctionCompiler.operand ops compiler 2#usize = .ok (.Ok address))
     (valueOperand : runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok value)) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryStoreOpcode op) offset alignment 0#u128 =
@@ -144,8 +144,8 @@ theorem lower_memory_store_eq {A : Type} (ops : runtime.platform.Alloc A)
   rw [lower_memory_store_dispatch ops compiler state op offset alignment reachable]
   unfold memoryStoreLowering
   simp only [addressOperand, valueOperand, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
-    memoryStoreInstruction_make, core.option.Option.ok_or]
-end Itasca.Runtime.Code
+    memory_store_instruction_make, core.option.Option.ok_or]
+end Itasca.Runtime.Compiler
 
 end
 
@@ -153,7 +153,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A load consumes the final scalar address slot and overwrites that slot. -/
@@ -188,7 +188,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
 @[step] theorem compiler_memory_load_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (front : List valtype) (op : Abs.Memory.Load) (offset alignment : U32)
+    (front : List valtype) (op : SourceMachine.Memory.Load) (offset alignment : U32)
     (layout : CompilerLayout compiler (front ++ [.I32])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
     (typed : types.map Itasca.Translate.valueType = front ++ [valtype_numtype op.type])
@@ -208,7 +208,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
 @[step] theorem compiler_memory_store_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (front : List valtype) (op : Abs.Memory.Store) (offset alignment : U32)
+    (front : List valtype) (op : SourceMachine.Memory.Store) (offset alignment : U32)
     (layout : CompilerLayout compiler (front ++ [.I32,valtype_numtype op.type])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
     (typed : types.map Itasca.Translate.valueType = front)
@@ -224,7 +224,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
   step with finish_op ops law compiler state types (memoryStoreInstruction op address value offset) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out,lowered,success⟩
   exact ⟨address,value,addressPosition,valuePosition,by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -232,13 +232,13 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (front : List valtype) (op : Abs.Memory.Load) (offset alignment : U32)
+    (front : List valtype) (op : SourceMachine.Memory.Load) (offset alignment : U32)
     (C : context) (memory : memtype) (argument : memarg)
     (locals : C.LOCALS = compilerLocals compiler) (available : C.MEMS[0]? = some memory)
     (sourceOffset : argument.OFFSET = .mk_uN offset.val)
@@ -261,7 +261,7 @@ open Aeneas Aeneas.Std
 @[step] theorem compiler_memory_store_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (front : List valtype) (op : Abs.Memory.Store) (offset alignment : U32)
+    (front : List valtype) (op : SourceMachine.Memory.Store) (offset alignment : U32)
     (C : context) (memory : memtype) (argument : memarg)
     (locals : C.LOCALS = compilerLocals compiler) (available : C.MEMS[0]? = some memory)
     (sourceOffset : argument.OFFSET = .mk_uN offset.val)
@@ -281,6 +281,6 @@ open Aeneas Aeneas.Std
   obtain ⟨address,value,addressPosition,valuePosition,lowered⟩ := success accepted
   exact ⟨_,lowered,.store front op argument address value offset memory available sourceOffset
     (by simpa only [locals] using addressPosition) valuePosition⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

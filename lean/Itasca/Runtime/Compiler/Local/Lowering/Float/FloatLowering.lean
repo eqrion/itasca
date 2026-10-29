@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Float
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Float
 
 /-- The shared scalar lowering path, before resolving its source operands. -/
 noncomputable def floatLowering {A : Type} (ops : runtime.platform.Alloc A)
@@ -78,16 +78,16 @@ theorem lower_float_eq {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (floatInstruction op left left right) := by
   rw [lower_float_dispatch ops compiler state op reachable]
   unfold floatLowering
-  rw [floatOpcode_binary]
+  rw [float_opcode_binary]
   by_cases binary : op.arity = 2
   · simp only [floatDepth, binary, ↓reduceIte] at hleft
     simp only [binary, ↓reduceIte, decide_true, bind_ok,
-      hleft, hright, core.result.Result.Insts.CoreOpsTry.branch, floatInstruction_make,
+      hleft, hright, core.result.Result.Insts.CoreOpsTry.branch, float_instruction_make,
       core.option.Option.ok_or]
   · simp only [floatDepth, binary, ↓reduceIte] at hleft
     have same : left = right := by simpa only [Result.ok.injEq, core.result.Result.Ok.injEq] using hleft.symm.trans hright
     subst right
     simp only [binary, decide_false, Bool.false_eq_true, ↓reduceIte, bind_ok,
-      hleft, core.result.Result.Insts.CoreOpsTry.branch, floatInstruction_make,
+      hleft, core.result.Result.Insts.CoreOpsTry.branch, float_instruction_make,
       core.option.Option.ok_or]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

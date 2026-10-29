@@ -6,7 +6,7 @@ namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 def typeSlots (types : List Itasca.types.ValueType) : Nat :=
-  Code.slots (types.map sourceType)
+  Compiler.slots (types.map sourceType)
 
 @[step] theorem type_slots_effect (types : Slice Itasca.types.ValueType) :
     runtime.interp.type_slots types ⦃ result =>

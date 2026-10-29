@@ -9,7 +9,7 @@ Compiler environment preparation, including function-slot capture and the functi
 section
 
 /-! Exact scheduler capture of argument word counts across the full source function index space. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem capture_function_slots {A : Type} (ops : runtime.platform.Alloc A)
@@ -103,7 +103,7 @@ which includes imports, and preserve every previously captured type signature. -
       intro accepted
       simpa [same] using certified accepted
   · exact ⟨bound, fun accepted => ⟨rfl, prefixMatches accepted, rfl⟩⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -112,7 +112,7 @@ end
 section
 
 /-! Allocation-aware preparation of the defined-function result vector. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem prepare_functions_loop {A : Type} (ops : runtime.platform.Alloc A)
@@ -162,7 +162,7 @@ open Aeneas Aeneas.Std
       intro accepted
       simpa [same] using filled accepted
   · exact ⟨bound, initialized⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -172,7 +172,7 @@ section
 
 /-! The actual scheduler environment callback constructs source type/signature
 metadata and initializes every defined-function result slot. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_environment_ready_sequence {A : Type} (ops : runtime.platform.Alloc A)
@@ -225,6 +225,6 @@ open Aeneas Aeneas.Std
             refine ⟨?_, slotsExact, effect2 rfl⟩
             simpa only [sameSignatures] using sequence
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

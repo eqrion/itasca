@@ -6,7 +6,7 @@ A forward conditional branch keeps its false-edge resume distinct from the fixup
 Main declarations: `ConditionalHole`. A direct consumer is `Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A forward conditional branch keeps its false-edge resume distinct from
@@ -23,4 +23,4 @@ def ConditionalHole (code : List Bytecode) (sites : List Usize)
     ∃ site, site ∈ sites ∧ site.val = pc + 2 ∧
       code[pc + 2]? = some (.Jump core.num.U32.MAX) ∧ resume.val = pc + 3
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

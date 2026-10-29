@@ -18,7 +18,7 @@ Dormant block reader prefixes and profile transport, retaining omitted-code and 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_block_dead_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -59,7 +59,7 @@ theorem structured_callback_block_dead_prefix {jumpTables : List U32} {emit : Li
   exact invariant.open_dormant dead deadAfter child frame stable aligned codeEq framesEq
     (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl  rfl rfl sources consumed (by rw [cursor])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -67,7 +67,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_block_dead_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env localTypes index st}
@@ -126,6 +126,6 @@ theorem structured_reader_prefix_block_dead_wasm2 {jumpTables : List U32} {emit 
     rfl
   · exact post.scope_fronts_dormant (.inl rfl) fronts _ rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -13,7 +13,7 @@ Stateful reader steps under the indexed compiler-table invariant.
 Main declarations: `IndexedTableReaderCompilerPointWasm2.stateful_reader` and `IndexedTableReaderCompilerPointWasm2.stateful_bulk`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedCompilerBodyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
@@ -110,4 +110,4 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk {A : Type}
   rw [stateful_callback_lower ops before out.core op a b arguments] at callback
   exact ⟨op,a,b,arguments,callback,post⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

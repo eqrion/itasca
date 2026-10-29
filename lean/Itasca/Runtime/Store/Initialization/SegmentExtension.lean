@@ -25,7 +25,7 @@ private theorem table_extension (before after : runtime.store.TableInst)
     Extend_tableinst (decodeTable before) (decodeTable after) := by
   unfold decodeTable at old fresh ⊢
   rw [ty, maximum, length] at fresh ⊢
-  simp only [decodeLimits_option] at old fresh ⊢
+  simp only [decode_limits_option] at old fresh ⊢
   exact .mk_Extend_tableinst _ _ _ _ _ _ (Nat.le_refl _)
     (by simpa only [List.length_map] using length.ge) old fresh
 
@@ -35,7 +35,7 @@ private theorem memory_extension {M : Type} (view : M → Slice U8) (before afte
     Extend_meminst (decodeMemory view before) (decodeMemory view after) := by
   unfold decodeMemory at old fresh ⊢
   rw [maximum, length] at fresh ⊢
-  simp only [decodeLimits_option] at old fresh ⊢
+  simp only [decode_limits_option] at old fresh ⊢
   exact .mk_Extend_meminst _ _ _ _ _ (Nat.le_refl _)
     (by simpa only [decodeBytes, List.length_map] using length.ge) old fresh
 

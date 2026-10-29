@@ -12,7 +12,7 @@ Structured compiler scope-entry checked instruction prefixes and their reader-st
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-selected control signatures and live IF layouts establish actual
@@ -54,7 +54,7 @@ theorem structured_scope_entry_open_instructions {jumpTables : List U32}
     exact compiler_scope_entry_open_instructions ops law before after state kind bt (makeGeometry pc)
       (.dead kind dead rfl) held called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -62,7 +62,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual Wasm 2 BLOCK, LOOP and IF readers preserve instruction
@@ -111,6 +111,6 @@ theorem reader_enter_open_instructions_wasm2 {jumpTables : List U32}
     form.kind bt signature _ controls selected valuesFit ifLayout held called
   · rcases initialForm with rfl | rfl | rfl <;> simp [Wasm2.Frames.Form.kind]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

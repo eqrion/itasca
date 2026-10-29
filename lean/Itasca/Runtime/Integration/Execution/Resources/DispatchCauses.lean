@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.HostResult
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Actual ordinary failures retain their decoded store; actual host failures
@@ -14,4 +14,4 @@ def EventfulDispatchCause {M P F A : Type}
   (CumulativeFailure allocator hooks machine.exec machine.store machine.platform machine.source error ∧
     Store.decodeStore view code out.2.2.1=machine.source.store) ∨
   HostDispatchCause memory hooks floats allocator machine.exec machine.store machine.platform machine.source out error
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

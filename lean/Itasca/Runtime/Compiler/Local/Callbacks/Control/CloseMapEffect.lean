@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Only the root frame emits an epilogue when its map is closed. -/
@@ -85,7 +85,7 @@ theorem close_unguarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
     scalar_tac
   have exitSource : closed.source_end.val = compiler.function.body_start.val+state.pos.val := hcoordinate
   have codeLength : code.val.length = compiler.function.code.val.length := by
-    simpa only [patchCode_length] using congrArg List.length effect
+    simpa only [patch_code_length] using congrArg List.length effect
   cases kind : frame.kind
   case Body =>
     change WP.spec (Aeneas.Std.bind (.ok true) _) _
@@ -123,4 +123,4 @@ theorem close_unguarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
     · rw [hcontrols]
       exact mapEffect
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

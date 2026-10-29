@@ -3,7 +3,7 @@ import Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
 import Itasca.Runtime.Spec.MemoryInit
 import Itasca.Runtime.Spec.TableInit
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 theorem memory_byte_length_bound {s : store} (contents : StoreContentsTyped s) {object : meminst}
@@ -24,7 +24,7 @@ theorem element_refs_typed {s : store} {object : eleminst} {type : reftype} (typ
   cases typed with
   | mk_Eleminst_ok type refs refsOk bound wf => exact ⟨rfl,bound,refsOk⟩
 
-theorem memoryInit_preserves (s : store) (f : frame) (address dataIndex dataAddress destination source count : Nat)
+theorem memory_init_preserves (s : store) (f : frame) (address dataIndex dataAddress destination source count : Nat)
     (object : meminst) (data : datainst) (wf : wf_store s) (contents : StoreContentsTyped s)
     (mapped : f.MODULE.MEMS[0]? = some address) (found : s.MEMS[address]? = some object)
     (dataMapped : f.MODULE.DATAS[dataIndex]? = some dataAddress) (dataFound : s.DATAS[dataAddress]? = some data)
@@ -37,8 +37,8 @@ theorem memoryInit_preserves (s : store) (f : frame) (address dataIndex dataAddr
     have objectWf : wf_meminst object := by cases typed; assumption
     cases objectWf; assumption
   obtain ⟨dataBound,dataBytes⟩ := data_bytes_typed (contents.data data (List.mem_of_getElem? dataFound))
-  have copied := copyInto_forall wf_byte object.BYTES data.BYTES destination source count bytes dataBytes inside.1
-  have length := Segment.copyInto_length object.BYTES data.BYTES destination source count
+  have copied := copy_into_forall wf_byte object.BYTES data.BYTES destination source count bytes dataBytes inside.1
+  have length := Segment.copy_into_length object.BYTES data.BYTES destination source count
   obtain ⟨newTyped,objectExtension⟩ := memory_payload_typed typed _ length copied
   have result := memory_replacement_preserves s address object _ wf contents found objectExtension newTyped
   have memoryEq : fun_mem ⟨s,f⟩ (.mk_uN 0) = object := by simp [fun_mem,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
@@ -46,14 +46,14 @@ theorem memoryInit_preserves (s : store) (f : frame) (address dataIndex dataAddr
   have memoryBound := memory_byte_length_bound contents (List.mem_of_getElem? found)
   have addressBound : f.MODULE.MEMS[0]! < s.MEMS.length := by
     simpa only [List.getElem!_eq_getElem?_getD,mapped,Option.getD_some] using (List.getElem?_eq_some_iff.mp found).1
-  have final := Segment.memoryInit_eq s f dataIndex destination source count addressBound
+  have final := Segment.memory_init_eq s f dataIndex destination source count addressBound
     (by simpa only [memoryEq] using memoryBound) (by simpa only [dataEq] using dataBound.le)
     (by simpa only [memoryEq,dataEq] using inside)
   simp only [dataEq,List.getElem!_eq_getElem?_getD,mapped,Option.getD_some,List.modify_eq_set_getElem?,found,Option.map_some] at final
   rw [final]
   exact ⟨result.1,result.2,rfl⟩
 
-theorem tableInit_preserves (s : store) (f : frame) (tableIndex elementIndex tableAddress elementAddress destination source count : Nat)
+theorem table_init_preserves (s : store) (f : frame) (tableIndex elementIndex tableAddress elementAddress destination source count : Nat)
     (object : tableinst) (element : eleminst) (wf : wf_store s) (contents : StoreContentsTyped s)
     (mapped : f.MODULE.TABLES[tableIndex]? = some tableAddress) (found : s.TABLES[tableAddress]? = some object)
     (elementMapped : f.MODULE.ELEMS[elementIndex]? = some elementAddress) (elementFound : s.ELEMS[elementAddress]? = some element)
@@ -66,13 +66,13 @@ theorem tableInit_preserves (s : store) (f : frame) (tableIndex elementIndex tab
   have refs := table_references contents (List.mem_of_getElem? found)
   obtain ⟨_,elementBound,elementRefs⟩ := element_refs_typed (contents.elements element (List.mem_of_getElem? elementFound))
   rw [←sameType] at elementRefs
-  have copied := copyInto_forall _ object.REFS element.REFS destination source count refs elementRefs inside.1
-  have length := Segment.copyInto_length object.REFS element.REFS destination source count
+  have copied := copy_into_forall _ object.REFS element.REFS destination source count refs elementRefs inside.1
+  have length := Segment.copy_into_length object.REFS element.REFS destination source count
   obtain ⟨newTyped,objectExtension⟩ := table_payload_typed typed _ length copied
   have result := table_replacement_preserves s tableAddress object _ wf contents found objectExtension newTyped
   have elementEq : fun_elem ⟨s,f⟩ (.mk_uN elementIndex) = element := by simp [fun_elem,proj_uN_0,List.getElem!_eq_getElem?_getD,elementMapped,elementFound]
-  have final := Segment.tableInit_eq s f tableIndex elementIndex destination source count
+  have final := Segment.table_init_eq s f tableIndex elementIndex destination source count
   simp only [elementEq,List.getElem!_eq_getElem?_getD,mapped,Option.getD_some,List.modify_eq_set_getElem?,found,Option.map_some] at final
   rw [final]
   exact ⟨result.1,result.2,rfl⟩
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

@@ -7,7 +7,7 @@ Lengths and source frame depth of retained frame-stack relations.
 Main declarations: `SavedFrames.length` and `FrameStackRel.depth`. A direct consumer is `Integration.Execution.Resources.BoundaryCauses`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 @[simp] theorem SavedFrames.length {M : Type} {store : runtime.store.Store M}
@@ -30,9 +30,9 @@ theorem FrameStackRel.length {M : Type} {store : runtime.store.Store M}
 
 /-- The concrete counter is exactly the decoded configuration's FRAME_ depth. -/
 theorem FrameStackRel.depth {M : Type} {store : runtime.store.Store M}
-    {sourceStore exec} {source : Abs.AState}
+    {sourceStore exec} {source : SourceMachine.AState}
     (stack : FrameStackRel store sourceStore exec source.frames) :
-    exec.frames.length = Spec.frameDepth (Abs.decode source) := by
-  rw [Abs.decode_depth]
+    exec.frames.length = Spec.frameDepth (SourceMachine.decode source) := by
+  rw [SourceMachine.decode_depth]
   exact stack.length
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

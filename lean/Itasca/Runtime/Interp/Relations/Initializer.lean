@@ -38,7 +38,7 @@ def initialSlots (before words : List U64) : List U64 :=
   | [lo, hi] => (before.set 0 lo).set 1 hi
   | _ => before
 
-theorem initialSlots_length (before words : List U64) :
+theorem initial_slots_length (before words : List U64) :
     (initialSlots before words).length = before.length := by
   unfold initialSlots
   split <;> simp_all

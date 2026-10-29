@@ -3,17 +3,17 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.Fixups
 /-!
 Retargeting and branch-site patch algebra.
 
-Main declarations: `retarget_retarget` and `patchCode_new_branch`. A direct consumer is `Compiler.Local.Checking.OpenInstructionPatch`.
+Main declarations: `retarget_retarget` and `patch_code_new_branch`. A direct consumer is `Compiler.Local.Checking.OpenInstructionPatch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem retarget_retarget (instruction : Bytecode) (first second : U32) :
     retarget (retarget instruction first) second = retarget instruction second := by
   cases instruction <;> rfl
 
-theorem patchCode_get (code : List Bytecode) (sites : List Usize) (target : U32) (index : Nat) :
+theorem patch_code_get (code : List Bytecode) (sites : List Usize) (target : U32) (index : Nat) :
     (patchCode code sites target)[index]? =
       if ∃ site ∈ sites, site.val = index then (code[index]?).map (fun i => retarget i target)
       else code[index]? := by
@@ -36,21 +36,21 @@ theorem patchCode_get (code : List Bytecode) (sites : List Usize) (target : U32)
         simp [absent]
       · simp [equal]
 
-theorem patchCode_append_code (code suffix : List Bytecode) (sites : List Usize) (target : U32)
+theorem patch_code_append_code (code suffix : List Bytecode) (sites : List Usize) (target : U32)
     (inside : ∀ site, site ∈ sites → site.val < code.length) :
     patchCode (code ++ suffix) sites target = patchCode code sites target ++ suffix := by
   apply List.ext_getElem?
   intro index
-  rw [patchCode_get, List.getElem?_append, List.getElem?_append, patchCode_length]
+  rw [patch_code_get, List.getElem?_append, List.getElem?_append, patch_code_length]
   by_cases before : index < code.length
-  · simp [before, patchCode_get]
+  · simp [before, patch_code_get]
   · have absent : ¬ ∃ site ∈ sites, site.val = index := by
       rintro ⟨site, member, position⟩
       have := inside site member
       omega
     simp [before, absent]
 
-theorem patchCode_append_sites (code : List Bytecode) (left right : List Usize) (target : U32) :
+theorem patch_code_append_sites (code : List Bytecode) (left right : List Usize) (target : U32) :
     patchCode code (left ++ right) target = patchCode (patchCode code left target) right target := by
   induction left generalizing code with
   | nil => rfl
@@ -59,21 +59,21 @@ theorem patchCode_append_sites (code : List Bytecode) (left right : List Usize) 
 /-- Appending a newly emitted branch and its fixup resolves just that new
 branch after the already pending sites; preceding transfer or guard code stays
 literal. This is the forward-branch update of the resolved compiler emitted. -/
-theorem patchCode_new_branch (code emitted : List Bytecode) (sites : List Usize)
+theorem patch_code_new_branch (code emitted : List Bytecode) (sites : List Usize)
     (kind : BranchKind) (old target : U32) (site : Usize)
     (position : site.val = code.length + emitted.length)
     (inside : ∀ pc, pc ∈ sites → pc.val < code.length) :
     patchCode (code ++ emitted ++ [kind.instruction old]) (sites ++ [site]) target =
       patchCode code sites target ++ emitted ++ [kind.instruction target] := by
-  rw [patchCode_append_sites]
-  have prior := patchCode_append_code code (emitted ++ [kind.instruction old]) sites target inside
+  rw [patch_code_append_sites]
+  have prior := patch_code_append_code code (emitted ++ [kind.instruction old]) sites target inside
   rw [List.append_assoc, prior]
   have sitePosition : site.val = (patchCode code sites target ++ emitted).length := by
-    simp [position, patchCode_length]
+    simp [position, patch_code_length]
   simp only [patchCode, ← List.append_assoc]
   rw [sitePosition]
   simp only [List.getElem?_concat_length]
   have changed : retarget (kind.instruction old) target = kind.instruction target := by cases kind <;> rfl
   simp [changed]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

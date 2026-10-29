@@ -18,7 +18,7 @@ theorem step_returned_active {M P F A : Type}
     simp [UScalar.sub]
   rw [failed] at returned
   simp at returned
-theorem executionBody_stopped {M P F A : Type}
+theorem execution_body_stopped {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (state : ExecutionState M P) (stopped : ¬ActiveExecution state) :

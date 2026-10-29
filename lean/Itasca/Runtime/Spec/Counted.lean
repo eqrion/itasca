@@ -44,7 +44,7 @@ theorem StepsHN.zero {c c' : config} {events : List HostEvent}
   cases h
   exact ⟨rfl, rfl⟩
 
-theorem stepsH_count {c c' : config} {events : List HostEvent}
+theorem steps_h_count {c c' : config} {events : List HostEvent}
     (h : StepsH c events c') : ∃ n, StepsHN n c events c' := by
   induction h with
   | refl h => exact ⟨0, .refl h⟩

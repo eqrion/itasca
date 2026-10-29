@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Instructions with no emitted bytecode advance every possible structured
@@ -23,10 +23,10 @@ theorem LoweredEmpty.structured_universal_advance {jumpTables : List Aeneas.Std.
       ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
     obtain ⟨saved, prefixCode⟩ := invariant.prefixes label labels groups oldPlans oldShape parentShapes
     have fragment : Segment (resolvedCode before.function.code.val groups) before.function.code.val.length []
-        before.function.code.val.length := ⟨resolvedCode before.function.code.val groups, [], by simp, by simp [resolvedCode_length], by simp⟩
+        before.function.code.val.length := ⟨resolvedCode before.function.code.val groups, [], by simp, by simp [resolved_code_length], by simp⟩
     have advanced := prefixCode.append (StructuredPrefix.linear head notTable fragment)
     exact ⟨by simpa only [codeEq] using saved.advance_current instruction,
       by simpa only [codeEq, SourceScope.advance, SourceScope.input] using advanced⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

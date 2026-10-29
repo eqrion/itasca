@@ -49,8 +49,8 @@ extension.
 
 | Contract | Obligation |
 | --- | --- |
-| [`Code.ValidCompilationSource`](Code/Module/CompilationAvailable.lean) | The bytes independently encode a valid, elaborated, profile-restricted module within the binary and signature limits. |
-| [`Code.CompileEligible`](Code/Module/CompilationAvailable.lean) | Source-only size and demand bounds fit the configured limits and the allocation bound. |
+| [`Compiler.ValidCompilationSource`](Compiler/Module/CompilationAvailable.lean) | The bytes independently encode a valid, elaborated, profile-restricted module within the binary and signature limits. |
+| [`Compiler.CompileEligible`](Compiler/Module/CompilationAvailable.lean) | Source-only size and demand bounds fit the configured limits and the allocation bound. |
 
 ## Source resources
 
@@ -58,19 +58,19 @@ extension.
 
 | Contract | Obligation |
 | --- | --- |
-| [`SourceResourcesFit`](Theorems/Invocation/SourceResources.lean) | Every source run of the invocation, over all typed host replies, fits the value and frame limits. |
+| [`SourceResourcesFit`](Integration/Invocation/SourceDemand.lean) | Every source run of the invocation, over all typed host replies, fits the value and frame limits. |
 | [`Interp.SourceCanonicalFunctionCapacity`](Interp/Relations/SourceCanonicalCapacity.lean) | The canonical slot demand of a source function, used by `SourceResourcesFit`. |
 
 ## Store state
 
-The invariant `ExecutableInv` (in `Theorems/Api/`) is established by instantiation and preserved
+The invariant `ExecutableInv` (in `Integration/Api/`) is established by instantiation and preserved
 by every result; it is a certificate, not an embedder obligation.
 Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Store/Linking/LinkEffects.lean),
 [`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) and
 [`Store.ValueInStore`](Store/Invariant/ValueShape.lean).
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 
 /-- The callback contract carries its current ghost interpretation explicitly. A call may
@@ -113,4 +113,4 @@ def NoHostStackOverflow {M P : Type} (hooks : runtime.platform.Platform P M)
   ∀ code store,Inv code store → ∀ p identity args defaults nextPlatform after returned,
     hooks.call_host p store identity args defaults≠.ok (.Err .StackOverflow,nextPlatform,after,returned)
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

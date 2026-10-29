@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerIndirectTactic
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -40,4 +40,4 @@ macro "control_indirect_step " h:ident " using " ops:term ", " law:term : tactic
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | sources_split $h)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

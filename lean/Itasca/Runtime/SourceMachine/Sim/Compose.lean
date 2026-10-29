@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Typed
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open Itasca.Runtime.Spec
 
 /-- Fusing source administrative instructions preserves counted simulation.
@@ -15,4 +15,4 @@ theorem NextSim.trans {first middle last : AState}
     · exact Or.inr ⟨n, positive, by simpa only [same'] using steps⟩
     · exact Or.inr ⟨n + m, by omega, by simpa only [List.nil_append] using steps.trans steps'⟩
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

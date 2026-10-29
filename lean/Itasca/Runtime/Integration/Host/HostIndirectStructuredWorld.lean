@@ -1,9 +1,9 @@
 import Itasca.Runtime.Integration.Host.HostIndirectSelectedWorld
 import Itasca.Runtime.Interp.Relations.StepRecordingLookup
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
-open Itasca.Runtime.Interp.StructuredMachine
+open Itasca.Runtime.Interp.Machine
 theorem step_indirect_host_structured_world {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -15,24 +15,24 @@ theorem step_indirect_host_structured_world {M P F A : Type}
     (valid : Inv code store)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [IndirectProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type : U32) (after : List instr)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type : U32) (after : List instr)
     (position : Nat) (sourceOperands : List val) (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
-    (positionSplit : f.vals=sourceOperands++[Abs.integerVal .I32 position])
-    (selectedSource : Abs.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.index.val)
+    (positionSplit : f.vals=sourceOperands++[SourceMachine.integerVal .I32 position])
+    (selectedSource : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.index.val)
     (functionAt : store.funcs.val[address.index.val]?=some function) (hostCode : function.code=.Host host)
     (owner : address.store=store.id)
     (last : frameIndex.val+1=exec.frames.length) (hf : exec.frames.val[frameIndex.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst) (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
-    (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
+    (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
@@ -49,7 +49,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
          ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩) ∨
       (∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧
        hostStepAddress exec store=some address ∧ ∃ (signature : Itasca.types.FuncType) (base : Usize) (pc : U32) (front args : List val),
-        f.vals=(front++args)++[Abs.integerVal .I32 position] ∧ pc.val=raw.pc.val+1 ∧
+        f.vals=(front++args)++[SourceMachine.integerVal .I32 position] ∧ pc.val=raw.pc.val+1 ∧
         (∃ entry selector offset, compiled.code.val[raw.pc.val]?=some (.CallIndirect entry selector offset)) ∧
         runtime.interp.call memory hooks floats allocator
           {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base = .ok out ∧
@@ -63,13 +63,13 @@ theorem step_indirect_host_structured_world {M P F A : Type}
           {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform signature base error ∧ out.2.2.1=store ∧ hostCallEvents address out=[]) ∨
        ((out.1=.Ok () ∨ out.1=.Err (.Trap .Host) ∨ out.1=.Err (.Exhausted .CallStack)) ∧
         (∃n,2≤n ∧ Spec.StepsHN n
-          (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
+          (SourceMachine.decode ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
           (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
         (out.1=.Ok () → ∃finalPC,Execution view afterCode out.2.2.1 out.2.1
           ⟨Store.decodeStore view afterCode out.2.2.1,ambient,{f with code:=after,vals:=front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
-          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))))) := by
+          SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))))) := by
   have certified := certify code store valid
-  have frameTyped : Abs.FrameTyped (Store.decodeStore view code store)
+  have frameTyped : SourceMachine.FrameTyped (Store.decodeStore view code store)
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
     cases machine.typed.typed.frames with | cons head _ => exact head
   rcases indirect_values_head table.val type.val after point frameTyped with skip | actual
@@ -78,7 +78,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest expected C targets next output target last hf hi hc forward fetch slots tail machine program))
     intro out effect
     refine Or.inl ⟨?_,⟨target,fetch⟩,effect.1,effect.2.1,effect.2.2.1,target.val,effect.2.2.2.2.1,effect.2.2.2.2.2⟩
-    rw [hostStepAddress_at exec store frameIndex raw inst compiled (.Jump target) last hf hi hc fetch]
+    rw [host_step_address_at exec store frameIndex raw inst compiled (.Jump target) last hf hi hc fetch]
     rfl
   · obtain ⟨front,args,params,results,actualPosition,typeIndex,tableIndex,entry,selector,offset,bounds,typeEq,tableEq,values,bounded,arguments,argumentTypes,heights,caller,
       signature,tableType,pair,basePosition,indexPosition,fetch,tail⟩ := actual
@@ -87,11 +87,11 @@ theorem step_indirect_host_structured_world {M P F A : Type}
     subst typeIndex
     subst tableIndex
     have positionSame : actualPosition=position := by
-      have parts := congrArg Abs.pop (values.symm.trans positionSplit)
-      simp only [Abs.pop_append,Option.some.injEq,Prod.mk.injEq] at parts
-      simpa only [Abs.integerVal,val.CONST.injEq,num_.mk_num__0.injEq,uN.mk_uN.injEq,true_and] using parts.2
+      have parts := congrArg SourceMachine.pop (values.symm.trans positionSplit)
+      simp only [SourceMachine.pop_append,Option.some.injEq,Prod.mk.injEq] at parts
+      simpa only [SourceMachine.integerVal,val.CONST.injEq,num_.mk_num__0.injEq,uN.mk_uN.injEq,true_and] using parts.2
     subst actualPosition
-    have bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C := by
+    have bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C := by
       simpa only [moduleEq] using point.bindings
     obtain ⟨signatureIndex,rawSignature,tableAddress,object,signatureMapped,signatureFound,signatureEq,tableMapped,tableFound,funcref,typeLookup,tableLookup⟩ :=
       indirect_bindings_raw view code store inst f.toFrame C certified.shape (List.mem_of_getElem? hi) bindings moduleEq type table _ bounds signature tableType
@@ -137,12 +137,12 @@ theorem step_indirect_host_structured_world {M P F A : Type}
       let actualSignature := store.types.val[function.signature.val]
       have actualSignatureAt : store.types.val[function.signature.val]?=some actualSignature := List.getElem?_eq_getElem actualSignatureBound
       have decodedSignature : (Store.decodeFunction code store function).TYPE=Store.decodeFuncType actualSignature := by
-        rw [Store.decodeFunction_type code store function actualSignatureBound]
+        rw [Store.decode_function_type code store function actualSignatureBound]
       have signatureTypes : actualSignature.params.val.map sourceType=params ∧ actualSignature.results.val.map sourceType=results := by
         have sameSignature := decodedSignature.symm.trans (sameType.trans signatureEq)
         simpa only [Store.decodeFuncType,functype.mk_functype.injEq,list.mk_list.injEq] using sameSignature
-      have continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
-          compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++results) after pc.val next output := by
+      have continuation : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+          compiled.code.val compiled.jump_tables.val targets (front.map Compiler.valueType++results) after pc.val next output := by
         simpa only [pcEq] using tail.current
       rcases (call_indirect_host_structured_world memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
         frameIndex raw compiled C targets next output ambient f rest table.val type.val position after front args params results pc base
@@ -154,7 +154,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
         exact .div _ diverged
       rw [callActual,DivSpec.ok_iff]
       have guard : hostStepAddress exec store=some address := by
-        rw [hostStepAddress_at exec store frameIndex raw inst compiled (.CallIndirect entry selector offset) last hf hi hc fetch]
+        rw [host_step_address_at exec store frameIndex raw inst compiled (.CallIndirect entry selector offset) last hf hi hc fetch]
         have castEq := certified.shape.table_function_reference_cast object (List.mem_of_getElem? tableFound) funcref positionWord.val reference selected
         have signatureSame := (certified.shape.function_signature_eq_iff code function (List.mem_of_getElem? functionAt)
           signatureIndex rawSignature signatureFound).mpr sameType
@@ -162,10 +162,10 @@ theorem step_indirect_host_structured_world {M P F A : Type}
           rw [getElem!_pos exec.slots.val (raw.base.val+selector.val) selectorBound]
           exact List.getElem?_eq_getElem selectorBound
         rw [←addressEq]
-        exact hostInstructionAddress_indirect exec store raw inst compiled entry selector offset table type tableAddress object
+        exact host_instruction_address_indirect exec store raw inst compiled entry selector offset table type tableAddress object
           (exec.slots.val[raw.base.val+selector.val]!) reference address.index function signatureIndex host
           pair tableMapped tableFound wordAt (by simpa only [input] using selected) nonzero
           (castEq.trans word) functionAt signatureMapped signatureSame hostCode
       obtain ⟨afterCode,agrees,freshInv,rest⟩ := outcome
       exact Or.inr ⟨afterCode,agrees,freshInv,guard,actualSignature,base,pc,front,args,values,pcEq,⟨entry,selector,offset,fetch⟩,callActual,rest⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

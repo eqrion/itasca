@@ -134,7 +134,7 @@ theorem memory_allocation_success {M A : Type} (memory : runtime.platform.Memory
     start.val (before.memories.val.map (decodeMemory view)) (by omega) (.refl _ _) (.initial _ _ _ _)
   rw [run, WP.spec_ok] at checked
   obtain ⟨actual, actualInst, status, same, changed, instChanged, retained, objects, addresses, finalCount, ordered, contents⟩ := checked
-  obtain ⟨rfl, rfl, rfl⟩ := (typeParts_inj _ _ _ _ _ _).mp same
+  obtain ⟨rfl, rfl, rfl⟩ := (type_parts_inj _ _ _ _ _ _).mp same
   have fullCount := finalCount rfl
   have complete := ordered.complete (count := inst.module.module.env.mem_types.val.length - start.val)
     (by simp only [List.length_map]; change next.memories.length = inst.memories.length + _; omega)

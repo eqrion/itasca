@@ -19,16 +19,16 @@ theorem source_function_type_indices (indices : List U32) (entries : List Module
       have tail : indices.length = entries.length := by simpa only [List.length_cons, Nat.add_right_cancel_iff] using lengths
       exact .cons rfl (ih entries tail)
 
-@[simp] theorem source_function_code (source : func) : Code.functionCode source = funccode_func source := by
+@[simp] theorem source_function_code (source : func) : Compiler.functionCode source = funccode_func source := by
   cases source <;> rfl
 
 theorem installed_source_function (code : CodeInterpretation) (instanceIndex : Nat)
     (module : runtime.compiler.ExecutableModule) (raw : ModuleBinary.Module)
     (index : Nat) (source : func)
     (found : (List.zipWith CodeEntry.function raw.functions raw.codes)[index]? = some source) :
-    installCode code instanceIndex (Code.sourceFunctions raw) instanceIndex module index = funccode_func source := by
-  apply installCode_lookup
-  simp only [Code.sourceFunctions_eq, List.getElem?_map, found, Option.map_some, source_function_code]
+    installCode code instanceIndex (Compiler.sourceFunctions raw) instanceIndex module index = funccode_func source := by
+  apply install_code_lookup
+  simp only [Compiler.source_functions_eq, List.getElem?_map, found, Option.map_some, source_function_code]
 
 theorem canonical_function_payload_decode {M : Type} {before after : runtime.store.Store M}
     {seed : runtime.store.ModuleInst} {instanceIndex : Usize}
@@ -39,8 +39,8 @@ theorem canonical_function_payload_decode {M : Type} {before after : runtime.sto
     (code : CodeInterpretation) (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (types : inst.types = seed.types) :
-    after.funcs.val.map (decodeFunction (installCode code instanceIndex.val (Code.sourceFunctions raw)) store) =
-      before.funcs.val.map (decodeFunction (installCode code instanceIndex.val (Code.sourceFunctions raw)) store) ++
+    after.funcs.val.map (decodeFunction (installCode code instanceIndex.val (Compiler.sourceFunctions raw)) store) =
+      before.funcs.val.map (decodeFunction (installCode code instanceIndex.val (Compiler.sourceFunctions raw)) store) ++
       (List.zipWith CodeEntry.function raw.functions raw.codes).map
         (Spec.allocationFunction (decodeInstance store inst)) := by
   apply FunctionPayload.source_list _ ?_ _ store inst found types ?_ ?_

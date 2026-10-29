@@ -17,7 +17,7 @@ Successful checked-entry finishing from prepared source and publication bounds. 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Complete-profile source encoding and the actual unfinished body establish
@@ -70,7 +70,7 @@ theorem witness_header_publication {A : Type} (ops : runtime.platform.Alloc A)
   · refine ⟨returnStart,returnCount,?_⟩
     simpa only [show final.function.code.length-1 = target.val by change final.function.code.val.length-1 = target.val; omega] using last
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -78,7 +78,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual fresh entry setup establishes all initial publication invariants
@@ -117,7 +117,7 @@ theorem prepared_start_publication {A : Type} (ops : runtime.platform.Alloc A)
   change w.finish.val = w.bodyStart.val+w.body.length at length
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -125,7 +125,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent validity and source-only allocation/resource room establish
@@ -194,7 +194,7 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     rw [code.validate_body_with.wasm1_of_body _ _ _ _ _ _ result limits room.size body run, WP.spec_ok]
     exact post
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -202,7 +202,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Actual function-start and body compilation accept from independent source
@@ -271,7 +271,7 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
     cases counter <;> simp [ChargeCounter.used,localsUsed,controlsUsed]
   exact (startEffect.trans held.2.1).weaken (by intro counter; cases counter <;> simp [bodyResourceRate,preparedFunctionAllowance])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -279,7 +279,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- The actual entry parser, function-start callback, and complete body accept
@@ -319,7 +319,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
   subst result
   exact ⟨congrArg core.result.Result.Ok ending,ranges,instructions,w,ending,effect⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -327,7 +327,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent complete-profile source validity and numerical demand construct
@@ -376,6 +376,6 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
   rw [called,WP.spec_ok]
   exact ⟨rfl,ranges,header,closed,codeBound,compiler_finish_publication ops after closed header ranges instructions.indexed,effect⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

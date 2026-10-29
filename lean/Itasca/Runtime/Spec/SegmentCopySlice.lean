@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Spec.Segment
 
 /-- The sequential source writes copy the selected interval and preserve every
 position outside it. The source list is independent of the destination. -/
-theorem copyInto_effect {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
+theorem copy_into_effect {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
     (sourceBound : src + count ≤ source.length) (targetBound : dst + count ≤ before.length) :
     (∀ j, j < count → (copyInto before source dst src count)[dst + j]? = source[src + j]?) ∧
     (∀ j, j < dst ∨ dst + count ≤ j → (copyInto before source dst src count)[j]? = before[j]?) := by
@@ -31,13 +31,13 @@ theorem copyInto_effect {T : Type} [Inhabited T] (before source : List T) (dst s
 
 /-- Source byte-at-a-time initialization equals the slice replacement used by
 the extracted memory-buffer operation. -/
-theorem copyInto_eq_setSlice {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
+theorem copy_into_eq_set_slice {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
     (sourceBound : src + count ≤ source.length) (targetBound : dst + count ≤ before.length) :
     copyInto before source dst src count = before.setSlice! dst (source.slice src (src+count)) := by
   have sliceLength : (source.slice src (src+count)).length = count := by
     rw [List.slice_length]
     omega
-  obtain ⟨copied, outside⟩ := copyInto_effect before source dst src count sourceBound targetBound
+  obtain ⟨copied, outside⟩ := copy_into_effect before source dst src count sourceBound targetBound
   apply List.ext_getElem?
   intro index
   by_cases first : index < dst

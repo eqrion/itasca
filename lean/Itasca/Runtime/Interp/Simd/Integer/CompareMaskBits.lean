@@ -4,13 +4,13 @@ import Itasca.Runtime.Spec.Simd.CompareInteger
 /-!
 Sign extension of packed comparison masks.
 
-Main declarations: `comparisonBits_signExtend`. A direct consumer is `Interp.Simd.Float.Compare`.
+Main declarations: `comparison_bits_sign_extend`. A direct consumer is `Interp.Simd.Float.Compare`.
 -/
 
 namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
-theorem comparisonBits_signExtend (width : Nat) (bound : width ≤ 64) (answer : Bool) :
+theorem comparison_bits_sign_extend (width : Nat) (bound : width ≤ 64) (answer : Bool) :
     comparisonBits width answer = (BitVec.ofNat 1 (nat_of_bool answer)).signExtend width := by
   cases answer
   · simp [comparisonBits,nat_of_bool,BitVec.signExtend]

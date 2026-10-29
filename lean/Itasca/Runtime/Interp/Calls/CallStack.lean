@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 /-- Updating the active PC retains the frame's metadata and allocated region. -/
 theorem FrameBinding.advance {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source) (index : Usize) (pc : U32)
     (lookup : exec.frames.val[index.val]? = some raw) :
     FrameBinding store { exec with frames := exec.frames.set index { raw with pc := pc } }
@@ -19,7 +19,7 @@ theorem FrameBinding.advance {M : Type} {store : runtime.store.Store M}
 
 /-- Fetch changes only the last frame's PC. All older frame bindings survive. -/
 theorem FrameBinding.advance_older {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source) (index : Usize) (updated : runtime.interp.Frame)
     (last : index.val + 1 = exec.frames.length)
     (older : raw ∈ exec.frames.val.dropLast) :

@@ -12,7 +12,7 @@ Allocation availability for scope publication and entry without emitted code. Th
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -151,7 +151,7 @@ theorem scope_publication_available {A : Type} (ops : runtime.platform.Alloc A)
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -159,7 +159,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -215,6 +215,6 @@ theorem compiler_enter_without_emission_available {A : Type} (ops : runtime.plat
     exact scope_publication_available ops bound available compiler state demand _ signature height source
       ctrl.value_stack_base pc none
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

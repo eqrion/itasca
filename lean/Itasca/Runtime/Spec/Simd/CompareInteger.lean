@@ -81,7 +81,7 @@ def integerCompareSupported (ty : Jnn) (op : vrelop_Jnn_N) : Prop :=
 def integerCompareSource (ty : Jnn) (op : vrelop_Jnn_N) : vrelop_ :=
   .mk_vrelop__0 ty (128/lsize (lanetype_Jnn ty)) op
 
-theorem integerCompareSource_wf (ty : Jnn) (op : vrelop_Jnn_N)
+theorem integer_compare_source_wf (ty : Jnn) (op : vrelop_Jnn_N)
     (supported : integerCompareSupported ty op) :
     wf_vrelop_ (shapeOf (lanetype_Jnn ty)) (integerCompareSource ty op) := by
   apply wf_vrelop_.vrelop__case_0 _ _ _ _ ?_ rfl
@@ -219,7 +219,7 @@ theorem integer_comparison_relation (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec
   have relation := comparison_answers_relation ty op x y
   have maskWf := comparison_masks_wf ty op x y
   have answerWf := comparison_answers_wf ty op x y
-  have shapeWf := shapeOf_wf (lanetype_Jnn ty)
+  have shapeWf := shape_of_wf (lanetype_Jnn ty)
   cases ty <;> cases op
   all_goals first
     | apply fun_vrelop_.fun_vrelop__case_0 (var_1_lst := comparisonAnswers _ _ x y) (var_0_lst := comparisonAnswers _ _ x y) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat)) (lane_3_lst := comparisonMasks _ _ x y)
@@ -280,7 +280,7 @@ theorem integer_comparison_step (ty : Jnn) (op : vrelop_Jnn_N) (x y result : Bit
   · rfl
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_28 _ _ (shapeOf_wf _) (integerCompareSource_wf ty op supported)
+  · exact .admininstr_case_28 _ _ (shape_of_wf _) (integer_compare_source_wf ty op supported)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

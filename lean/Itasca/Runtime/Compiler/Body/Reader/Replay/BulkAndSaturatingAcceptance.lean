@@ -8,7 +8,7 @@ Accepted subopcode classification for saturating conversions and the ten bulk op
 Main declarations: `reader_bulk_accepted_subopcode` and `reader_misc_accepted`. A direct consumer is `Compiler.Body.Reader.Checking.NoncontrolCheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual bulk dispatcher accepts only its ten source subopcodes. -/
@@ -51,4 +51,4 @@ theorem reader_misc_accepted {V} (visitor : code.OpVisitor V)
     · exact ⟨sub,next,decoded,cumulative_misc_small sub (by scalar_tac)⟩
     · simp only [if_neg small] at run
       exact ⟨sub,next,decoded,.inr (reader_bulk_accepted_subopcode visitor _ _ data env sub before after run)⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

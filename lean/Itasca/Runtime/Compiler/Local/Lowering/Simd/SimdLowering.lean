@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -149,8 +149,8 @@ theorem compiler_simd_nonconstant_eq {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_pos lo,if_pos hi]
     rfl
 
-end Itasca.Runtime.Code
-namespace Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 
 def simdStores (sub : U32) : Bool :=
@@ -174,4 +174,4 @@ theorem simd_outputs_eq (sub : U32) :
     (if simdStores sub then Result.ok 0#usize else Result.ok 1#usize) =
       Result.ok (if simdStores sub then 0#usize else 1#usize) := by split <;> rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

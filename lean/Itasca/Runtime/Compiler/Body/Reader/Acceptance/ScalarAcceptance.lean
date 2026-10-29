@@ -8,7 +8,7 @@ The ordinary scalar readers whose source parsing and callback acceptance are ind
 Main declarations: `ScalarReaderKind` and `opcode`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundScalarAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- The ordinary scalar readers whose source parsing and callback acceptance
@@ -186,4 +186,4 @@ theorem available {A V : Type} (kind : ScalarReaderKind)
         demand reference
 
 end ScalarReaderKind
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

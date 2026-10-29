@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
-theorem decodeFuncType_source (ty : types.FuncType) : decodeFuncType ty = EnvTranslation.funcType ty := by
+theorem decode_func_type_source (ty : types.FuncType) : decodeFuncType ty = EnvTranslation.funcType ty := by
   have same : Interp.sourceType = Translate.valueType := by funext t; cases t <;> rfl
   simp only [decodeFuncType, EnvTranslation.funcType, same]
 
@@ -38,11 +38,11 @@ theorem module_bindings_env {M : Type} (view : M → Slice U8) (code : CodeInter
     (tables : TableBindings store inst.module.module.env.table_types.val inst.tables.val)
     (memories : MemoryBindings view store inst.module.module.env.mem_types.val inst.memories.val)
     (segments : SegmentTypeBindings store inst) :
-    Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst)
+    SourceMachine.ModuleBindings (decodeStore view code store) (decodeInstance store inst)
       (ModuleElaboration.moduleContext inst.module.module.env
         (EnvTranslation.elementTypes inst.module.module.env) inst.module.module.tail.data.length) := by
-  have decoded : decodeFuncType = EnvTranslation.funcType := funext decodeFuncType_source
-  have wellformed := decodeStore_wf view code store shape sourceSyntax
+  have decoded : decodeFuncType = EnvTranslation.funcType := funext decode_func_type_source
+  have wellformed := decode_store_wf view code store shape sourceSyntax
   have elementMap := segments.element_map instanceShape
   obtain ⟨_, _, _, _, _, _, dataCount, _, _, _, _, _, _, dataIssued⟩ := instanceShape
   constructor
@@ -71,7 +71,7 @@ theorem module_bindings_source {M : Type} (view : M → Slice U8) (code : CodeIn
     (tables : TableBindings store inst.module.module.env.table_types.val inst.tables.val)
     (memories : MemoryBindings view store inst.module.module.env.mem_types.val inst.memories.val)
     (segments : SegmentTypeBindings store inst) :
-    Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst) (ModuleElaboration.contextOf raw) := by
+    SourceMachine.ModuleBindings (decodeStore view code store) (decodeInstance store inst) (ModuleElaboration.contextOf raw) := by
   have contextEq : ModuleElaboration.contextOf raw =
       ModuleElaboration.moduleContext inst.module.module.env
         (EnvTranslation.elementTypes inst.module.module.env) inst.module.module.tail.data.length := by

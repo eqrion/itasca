@@ -6,7 +6,7 @@ current slice proves both integer constants through the actual extracted
 callbacks, including bit-preserving casts, emission, source coordinates, and
 post-callback operand layout. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def Lowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)
@@ -48,9 +48,9 @@ def Lowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)
     · simpa [hpreserve, hc] using hcode
     · simpa [hls, hlocals] using clayout.localSlots
     · simpa [hlo, hlocals] using clayout.localOffsets
-    · rw [hoff, concrete, observedOffsets_values, clayout.localSlots]
+    · rw [hoff, concrete, observed_offsets_values, clayout.localSlots]
       simp [stackOffsets, hlocals]
-    · rw [hh, concrete, observedHeight_values, clayout.localSlots, hlocals]
+    · rw [hh, concrete, observed_height_values, clayout.localSlots, hlocals]
     · simp [hl, compilerLocals, hc]
     · simpa [hc] using hr
     · simpa [hc] using hmono
@@ -151,4 +151,4 @@ set_option maxRecDepth 4096 in
     (UScalar.cast .U128 (IScalar.hcast .U64 value)) layout reachable concrete
     codeFits sourceFits coordinateFits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

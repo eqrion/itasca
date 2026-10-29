@@ -16,7 +16,7 @@ def FunctionCapacity {M : Type} (code : CodeInterpretation) (store : runtime.sto
     ∃ inst compiled typeIndex,
       store.instances.val[instanceIndex.val]? = some inst ∧
       inst.module.functions.val[functionIndex.val]? = some compiled ∧
-      Code.FunctionCapacity inst.module.profile inst.module.module.env typeIndex
+      Compiler.FunctionCapacity inst.module.profile inst.module.module.env typeIndex
         (code instanceIndex.val inst.module functionIndex.val) compiled ∧
       TypeEntries store inst.module.module.env.types.val inst.types.val ∧
       Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map decodeFuncType) ∧

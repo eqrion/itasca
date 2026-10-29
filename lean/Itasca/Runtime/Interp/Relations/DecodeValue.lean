@@ -14,9 +14,9 @@ theorem cast_usize_exact (n : U64) (h : n.val ≤ Usize.max) :
 
 theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
     (hfloat : ty = .F32 → lo.val < 2^32) :
-    Code.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
+    Compiler.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
       some (decodeWords ty lo hi, []) := by
-  cases ty <;> simp only [Interp.sourceType, Interp.pairWords, Code.decodeOne, decodeWords,
+  cases ty <;> simp only [Interp.sourceType, Interp.pairWords, Compiler.decodeOne, decodeWords,
     decodeRef, decodeElemType, refVal]
   all_goals simp
   case F32 =>
@@ -74,13 +74,13 @@ theorem decode_value_boundary (ty : Itasca.types.ValueType) (lo hi : U64) (store
 represented by its exact typed word pair. -/
 theorem decode_value_represents (ty : Itasca.types.ValueType) (lo hi : U64) (store : Usize)
     (value : val) (wellFormed : wf_val value)
-    (typed : sourceType ty = Code.valueType value)
-    (represented : pairWords ty (lo, hi) = Code.encodeValue value)
+    (typed : sourceType ty = Compiler.valueType value)
+    (represented : pairWords ty (lo, hi) = Compiler.encodeValue value)
     (floatBound : ty = .F32 → lo.val < 2^32)
     (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → lo.val ≤ Usize.max) :
     runtime.value.decode ty lo hi store ⦃ result =>
       rawType result = ty ∧ sourceValue result = value ⦄ := by
-  have roundtrip := Code.decode_encode value wellFormed []
+  have roundtrip := Compiler.decode_encode value wellFormed []
   simp only [List.append_nil] at roundtrip
   rw [← typed, ← represented, decode_words_code ty lo hi floatBound] at roundtrip
   have decoded : decodeWords ty lo hi = value := congrArg Prod.fst (Option.some.inj roundtrip)

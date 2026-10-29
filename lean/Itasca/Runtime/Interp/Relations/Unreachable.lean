@@ -23,27 +23,27 @@ theorem step_unreachable_refines {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
     (fetched : compiled.code.val[raw.pc.val]? = some .Unreachable)
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .UNREACHABLE :: after } :: rest, []⟩) :
+    (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .UNREACHABLE :: after } :: rest, []⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Err (.Trap .Unreachable) ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       (∃ pc : U32, pc.val = raw.pc.val + 1 ∧
         out.2.1 = { exec with frames := exec.frames.set index { raw with pc := pc } }) ∧
       ∃ n, 0 < n ∧ Spec.StepsHN n
-        (Abs.decode ⟨s, ambient, { f with code := .UNREACHABLE :: after } :: rest, []⟩) []
+        (SourceMachine.decode ⟨s, ambient, { f with code := .UNREACHABLE :: after } :: rest, []⟩) []
         ⟨⟨s, ambient⟩, [.TRAP]⟩ ⦄ := by
-  have frameTyped : Abs.FrameTyped s { f with code := .UNREACHABLE :: after } [] := by
+  have frameTyped : SourceMachine.FrameTyped s { f with code := .UNREACHABLE :: after } [] := by
     cases typed.frames with | cons h _ => exact h
-  obtain ⟨wf, labels, values, code⟩ := Abs.frameTyped_wf frameTyped
-  have remaining : Forall Abs.FrameWf rest := by
-    cases typed.frames with | cons _ h => exact Abs.framesTyped_wf h
-  have simulation := Abs.unreachable_simulation s ambient f rest after typed.store typed.ambient wf labels values
+  obtain ⟨wf, labels, values, code⟩ := SourceMachine.frame_typed_wf frameTyped
+  have remaining : Forall SourceMachine.FrameWf rest := by
+    cases typed.frames with | cons _ h => exact SourceMachine.frames_typed_wf h
+  have simulation := SourceMachine.unreachable_simulation s ambient f rest after typed.store typed.ambient wf labels values
     (fun i hi => code i (by simp [hi])) remaining
   apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
     .Unreachable last hf hi hc fetched pcBound

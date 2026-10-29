@@ -45,17 +45,17 @@ theorem bulk_table_fill {M : Type} (memory : runtime.platform.MemoryBuffer M)
   simp only [runtime.interp.bulk.execute,lift,bind_ok]
   step as ⟨position,positionEq⟩
   have pos : position.val = base.val+operand.val := by simpa only [U32.cast_Usize_val_eq] using positionEq
-  rw [Code.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
+  rw [Compiler.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
   simp only [bind_ok,lift]
   step as ⟨position1,position1Eq⟩
   step as ⟨position2,position2Eq⟩
   have pos2 : position2.val = base.val+operand.val+1 := by simpa only [position1Eq,U32.cast_Usize_val_eq] using position2Eq
-  rw [Code.initializer_slice_index slots position2 value (by simpa only [pos2] using valueSlot)]
+  rw [Compiler.initializer_slice_index slots position2 value (by simpa only [pos2] using valueSlot)]
   simp only [bind_ok,lift]
   step as ⟨position3,position3Eq⟩
   step as ⟨position4,position4Eq⟩
   have pos4 : position4.val = base.val+operand.val+2 := by simpa only [position3Eq,U32.cast_Usize_val_eq] using position4Eq
-  rw [Code.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
+  rw [Compiler.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
   simp only [bind_ok,lift]
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual,actualEq⟩
   subst actual
@@ -91,7 +91,7 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-theorem fillTableWords_front (before : List U64) (start count : Nat) (value : U64) :
+theorem fill_table_words_front (before : List U64) (start count : Nat) (value : U64) :
     fillTableWords before start value (count+1) =
       fillTableWords (before.set start value) (start+1) value count := by
   induction count with
@@ -100,11 +100,11 @@ theorem fillTableWords_front (before : List U64) (start count : Nat) (value : U6
     rw [fillTableWords,ih,fillTableWords]
     simp only [Nat.add_assoc,Nat.add_comm 1 count]
 
-theorem fillTableWords_eq (before : List U64) (start count : Nat) (value : U64) :
+theorem fill_table_words_eq (before : List U64) (start count : Nat) (value : U64) :
     fillTableWords before start value count = Spec.Segment.fillInto before start value count := by
   induction count generalizing before start with
   | zero => rfl
-  | succ count ih => rw [fillTableWords_front,Spec.Segment.fillInto,ih]
+  | succ count ih => rw [fill_table_words_front,Spec.Segment.fillInto,ih]
 end Itasca.Runtime.Store
 
 end
@@ -116,7 +116,7 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
-theorem fillTableWords_member (before : List U64) (start count : Nat) (value word : U64)
+theorem fill_table_words_member (before : List U64) (start count : Nat) (value word : U64)
     (member : word ∈ fillTableWords before start value count) : word ∈ before ∨ word = value := by
   induction count with
   | zero => exact Or.inl member
@@ -137,10 +137,10 @@ theorem TableFillEffect.mutation {M : Type} (store : runtime.store.Store M)
   split at effect
   · obtain ⟨words,rfl,filled⟩ := effect
     refine ⟨⟨rfl,rfl,rfl,rfl⟩,Or.inl ⟨rfl,words,rfl,?_,?_⟩⟩
-    · simpa only [alloc.vec.Vec.length] using (congrArg List.length filled).trans (fillTableWords_length _ _ _ _)
+    · simpa only [alloc.vec.Vec.length] using (congrArg List.length filled).trans (fill_table_words_length _ _ _ _)
     · intro word member
       rw [filled] at member
-      exact fillTableWords_member _ _ _ _ _ member
+      exact fill_table_words_member _ _ _ _ _ member
   · rw [effect]
     exact ⟨⟨rfl,rfl,rfl,rfl⟩,Or.inr ⟨rfl,rfl⟩⟩
 end Itasca.Runtime.Store
@@ -183,15 +183,15 @@ theorem table_fill_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   have tableRead : ambient.MODULE.TABLES[tableIndex.val]! = address.index.val := by
     simp [moduleEq,decodeInstance,List.getElem!_eq_getElem?_getD,mapped]
   have lengthEq : words.length = table.elements.length := by
-    simpa only [alloc.vec.Vec.length] using (congrArg List.length filled).trans (fillTableWords_length _ _ _ _)
+    simpa only [alloc.vec.Vec.length] using (congrArg List.length filled).trans (fill_table_words_length _ _ _ _)
   have refsEq : words.val.map (decodeRef table.ty) =
       Spec.Segment.fillInto (table.elements.val.map (decodeRef table.ty)) destination (decodeRef table.ty value) count := by
-    rw [filled,fillTableWords_eq,Spec.Segment.fillInto_map]
+    rw [filled,fill_table_words_eq,Spec.Segment.fill_into_map]
   have lists := fill_map_set_modify decodeTable
     (fun t => {t with REFS := Spec.Segment.fillInto t.REFS destination (decodeRef table.ty value) count})
     store.tables.val address.index.val table {table with elements := words} target
     (by simp only [decodeTable,lengthEq,refsEq])
-  rw [Spec.Segment.tableFill_eq,tableRead]
+  rw [Spec.Segment.table_fill_eq,tableRead]
   unfold decodeStore
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl

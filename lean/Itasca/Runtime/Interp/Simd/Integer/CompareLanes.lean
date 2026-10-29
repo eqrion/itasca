@@ -18,7 +18,7 @@ theorem integer_compare_loop (op : vrelop_Jnn_N) (x y : U128) (width : U32)
   apply comparison_loop x y 0#u128 width (UScalar.cast .U32 (integerCompareIndex op)) 0#u32 false
     positive widthBound (fun j => Spec.Simd.integerLaneCompare op (laneBits width.val j x.bv) (laneBits width.val j y.bv))
   · intro j valid a b aEq bEq
-    simp only [Bool.false_eq_true,if_false,integerCompareIndex_roundtrip]
+    simp only [Bool.false_eq_true,if_false,integer_compare_index_roundtrip]
     have aBound : a.val < 2^width.val := by rw [aEq]; exact BitVec.isLt _
     have bBound : b.val < 2^width.val := by rw [bEq]; exact BitVec.isLt _
     have aBits : a.bv.setWidth width.val = laneBits width.val j x.bv := by

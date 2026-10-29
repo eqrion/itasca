@@ -24,13 +24,13 @@ theorem replace_step (ty : lanetype) (index : Nat) (before result : BitVec 128) 
       .VREPLACE_LANE (shapeOf ty) (.mk_uN index)] [.VCONST .V128 (.mk_uN result.toNat)] := by
   apply Step_pure.vreplace_lane _ ty (scalarInput ty input) (128/lsize ty) (.mk_uN index) _
     (some (laneOfBits ty (input.setWidth (lsize ty)).toNat))
-  · exact pack_scalarInput ty input
+  · exact pack_scalar_input ty input
   · simp
   · simpa only [List.modify_eq_set, proj_uN_0, Option.get!, shapeOf] using packed
   · exact const_wf before
-  · exact .admininstr_case_13 _ _ (scalarInput_wf ty input)
-  · exact .admininstr_case_35 _ _ (shapeOf_wf ty) (index_wf ty index valid)
+  · exact .admininstr_case_13 _ _ (scalar_input_wf ty input)
+  · exact .admininstr_case_35 _ _ (shape_of_wf ty) (index_wf ty index valid)
   · exact const_wf result
-  · exact shapeOf_wf ty
+  · exact shape_of_wf ty
 
 end Itasca.Runtime.Spec.Simd

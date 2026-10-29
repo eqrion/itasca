@@ -10,7 +10,7 @@ Emission of saturating conversion instructions.
 Main declarations: `reader_emit_saturating_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_saturating_wasm2 {data env locals index st}
@@ -18,7 +18,7 @@ theorem reader_emit_saturating_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Float.Instruction) (C : context)
+    (op : SourceMachine.Float.Instruction) (C : context)
     (contextLocalsCode : C.LOCALS = compilerLocals before) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
@@ -60,4 +60,4 @@ theorem reader_emit_saturating_wasm2 {data env locals index st}
   exact ScalarEmission.float front op left right
     (by simpa only [contextLocalsCode] using leftPosition) rightPosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

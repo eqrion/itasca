@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.Simulation
 import Itasca.Runtime.Spec.MemorySize
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def memorySize (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) : AResult :=
@@ -20,7 +20,7 @@ theorem memory_pages_aligned {s : store} (contents : StoreContentsTyped s) {obje
     rw [length]
     simp [Ki]
 
-theorem memorySize_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem memory_size_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .MEMORY_SIZE :: after} :: rest,[]⟩) :
     ∃ next, memorySize ⟨s,ambient,{f with code := .MEMORY_SIZE :: after} :: rest,[]⟩ f rest after = .next next ∧
@@ -41,9 +41,9 @@ theorem memorySize_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
       simpa only [split,List.append_nil] using freshFrame
     refine ⟨_,by simp only [memorySize,mapped,found,advance],
       ⟨active_frame_preservation typed.typed actualFrame rfl,typed.contents⟩,NextSim.single ?_⟩
-    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
     have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-    have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+    have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
     have memoryEq : fun_mem ⟨s,f.toFrame⟩ (.mk_uN 0) = object := by
       simp [fun_mem,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
     have aligned := memory_pages_aligned typed.contents (List.mem_of_getElem? found)
@@ -56,4 +56,4 @@ theorem memorySize_progress (s : store) (ambient : frame) (f : AFrame) (rest : L
       (by simpa [vals,admininstr_val,integerVal,Segment.i32,numtype_Inn,admininstr_instr] using source)
     simpa only [List.append_nil] using full
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

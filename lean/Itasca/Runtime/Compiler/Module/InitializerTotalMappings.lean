@@ -8,7 +8,7 @@ Normal return of element initializer values and the initializer mapping loops.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 
@@ -138,7 +138,7 @@ set_option maxHeartbeats 1800000
         step with initializer_push_total ops law b2 middle.element_offsets none
           (by unfold initializerSize at room; dsimp at room; omega) as ⟨status, b3, offsets, offsetsBound⟩
         exact ⟨same, by unfold initializerSize at *; dsimp at *; omega⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -146,7 +146,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 
@@ -273,6 +273,6 @@ theorem initializer_element_cost_step (elements : List Itasca.module.Element)
     · simp only [WP.spec_ok]
       exact ⟨same, by omega⟩
   · exact ⟨rfl, Nat.le_refl _⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

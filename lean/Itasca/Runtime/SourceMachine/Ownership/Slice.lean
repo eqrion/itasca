@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Numeric
 import Itasca.Runtime.SourceMachine.Preservation
-namespace Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec
 
 theorem instruction_ownership (bound : Bounds) (s : store) (ambient : frame) (f : AFrame)
@@ -34,14 +34,14 @@ theorem instruction_ownership (bound : Bounds) (s : store) (ambient : frame) (f 
           | apply ValuesOwned.set localsBound; aesop (add safe forward ValuesOwned.pop)
         · first
           | solve | aesop (add safe forward ValuesOwned.pop)
-          | apply valuesOwned_append.mpr; constructor
+          | apply values_owned_append.mpr; constructor
             · aesop (add safe forward ValuesOwned.pop)
-            · apply valuesOwned_cons.mpr; constructor
+            · apply values_owned_cons.mpr; constructor
               · first
                 | trivial
                 | solve | aesop (add safe forward ValuesOwned.pop)
                 | apply localsBound; apply List.mem_of_getElem?; assumption
-              · exact valuesOwned_nil _
+              · exact values_owned_nil _
   | _ =>
     have localsBound := frame.1
     have valuesOwned := frame.2
@@ -55,13 +55,13 @@ theorem instruction_ownership (bound : Bounds) (s : store) (ambient : frame) (f 
         | apply ValuesOwned.set localsBound; aesop (add safe forward ValuesOwned.pop)
       · first
         | solve | aesop (add safe forward ValuesOwned.pop)
-        | apply valuesOwned_append.mpr; constructor
+        | apply values_owned_append.mpr; constructor
           · aesop (add safe forward ValuesOwned.pop)
-          · apply valuesOwned_cons.mpr; constructor
+          · apply values_owned_cons.mpr; constructor
             · first
               | trivial
               | solve | aesop (add safe forward ValuesOwned.pop)
               | apply localsBound; apply List.mem_of_getElem?; assumption
-            · exact valuesOwned_nil _
+            · exact values_owned_nil _
 
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

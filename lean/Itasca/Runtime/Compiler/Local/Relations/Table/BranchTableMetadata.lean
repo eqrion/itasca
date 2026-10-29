@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- BR_TABLE may append dispatch targets and update frame fixups, while all
@@ -71,4 +71,4 @@ theorem compiler_br_table_fixed {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨finalStable,?_,?_,?_,?_⟩ <;> rw [show after = _ from observation]
   exact (show TableFixed before lowered from ⟨⟨loweredFixed.stable.metadata,loweredFixed.stable.capacity⟩,
     loweredFixed.controls,loweredFixed.indirect,loweredFixed.simd,loweredFixed.constants⟩).trans finalFixed
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

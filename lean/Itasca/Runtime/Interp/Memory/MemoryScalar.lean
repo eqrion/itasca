@@ -18,7 +18,7 @@ def scalarStoreBytes (bytes : List U8) (start : Nat) (value : U64) (index : Nat)
   | 0 => bytes
   | count + 1 => scalarStoreBytes (bytes.set (start + index) (scalarStoreByte value index)) start value (index + 1) count
 
-theorem scalarStoreBytes_length (bytes : List U8) (start : Nat) (value : U64) (index count : Nat) :
+theorem scalar_store_bytes_length (bytes : List U8) (start : Nat) (value : U64) (index count : Nat) :
     (scalarStoreBytes bytes start value index count).length = bytes.length := by
   induction count generalizing bytes index with
   | zero => rfl
@@ -148,11 +148,11 @@ def scalarLoadedWord (opcode : U16) (word : U64) : U64 :=
   | 52#uscalar => IScalar.hcast .U64 (IScalar.cast .I64 (UScalar.hcast .I32 word))
   | _ => word
 
-theorem scalarLoadWidth_bound (opcode : U16) : (scalarLoadWidth opcode).val ≤ 8 := by
+theorem scalar_load_width_bound (opcode : U16) : (scalarLoadWidth opcode).val ≤ 8 := by
   unfold scalarLoadWidth
   split <;> decide
 
-theorem scalarStoreWidth_bound (opcode : U16) : (scalarStoreWidth opcode).val ≤ 8 := by
+theorem scalar_store_width_bound (opcode : U16) : (scalarStoreWidth opcode).val ≤ 8 := by
   unfold scalarStoreWidth
   split <;> decide
 
@@ -217,7 +217,7 @@ specified bounds trap; the extracted computation itself never fails. -/
   · simp only [MemoryAddressEffect, Slice.len_val, fits, if_true] at effect
     obtain ⟨start,rfl,startEq⟩ := effect
     step with memory_load_loop_effect bytes (scalarLoadWidth opcode) start 0#u64 0#usize
-      (scalarLoadWidth_bound opcode) (by omega) (by simp) as ⟨word,wordEq⟩
+      (scalar_load_width_bound opcode) (by omega) (by simp) as ⟨word,wordEq⟩
     simpa [ScalarLoadEffect,fits,wordEq,startEq]
   · simp only [MemoryAddressEffect, Slice.len_val, fits, if_false] at effect
     rw [effect]
@@ -232,7 +232,7 @@ specified bounds trap; the extracted computation itself never fails. -/
   · simp only [MemoryAddressEffect, Slice.len_val, fits, if_true] at effect
     obtain ⟨start,rfl,startEq⟩ := effect
     step with memory_store_loop_effect value bytes (scalarStoreWidth opcode) start 0#usize
-      (scalarStoreWidth_bound opcode) (by omega) (by simp) as ⟨after,afterEq⟩
+      (scalar_store_width_bound opcode) (by omega) (by simp) as ⟨after,afterEq⟩
     simpa [ScalarStoreEffect,fits,afterEq,startEq]
   · simp only [MemoryAddressEffect, Slice.len_val, fits, if_false] at effect
     rw [effect]

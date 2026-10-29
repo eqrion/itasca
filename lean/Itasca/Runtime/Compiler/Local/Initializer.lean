@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 certificate records emitted instructions and embedded vector bits; source
 constant-expression typing and runtime reference resolution are separate facts. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def initializerWidth : Itasca.types.ValueType → U32
@@ -54,4 +54,4 @@ theorem ConstantInstruction.change_code {before after : runtime.bytecode.Compile
     (pool : after.v128_pool = before.v128_pool) : ConstantInstruction after dst expr ty instruction := by
   cases h <;> constructor <;> simp_all [pool]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

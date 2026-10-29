@@ -4,16 +4,16 @@ import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
 import Itasca.Runtime.Compiler.Local.Coordinates.NumericSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Publication.LoweringMapPublication
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Sign-extension and saturating numeric events select exact descriptors. -/
 theorem extended_numeric_hook_publication_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState) (hook : ExtendedNumericHook) :
-    (∃ op : Abs.Numeric.Instruction,
+    (∃ op : SourceMachine.Numeric.Instruction,
       invoke (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) compiler (.op state (.extendedNumeric hook)) =
         runtime.compiler.lower.FunctionCompiler.op ops compiler state (integerOpcode op) 0#u32 0#u32 0#u128) ∨
-    (∃ op : Abs.Float.Instruction,
+    (∃ op : SourceMachine.Float.Instruction,
       invoke (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) compiler (.op state (.extendedNumeric hook)) =
         runtime.compiler.lower.FunctionCompiler.op ops compiler state (floatOpcode op) 0#u32 0#u32 0#u128) := by
   cases hook
@@ -48,4 +48,4 @@ theorem compiler_extended_numeric_hook_publication {A : Type} (ops : runtime.pla
     exact ⟨compiler_float_dispatch_source_coordinates ops law before after state op coordinates inside forward called,
       compiler_float_map_publication ops law before after state op called maps forward⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- END of an explicit ELSE obtains both arm relations from retained uniform
@@ -37,7 +37,7 @@ theorem StructuredCompletedPrefix.close_else_dead {jumpTables : List Aeneas.Std.
     StructuredUniversalElse (jumpTables := jumpTables) emit after types functions returns locals parents
       (parent.advance (.IFELSE bt yes child.source)) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   have advance : ∀ parentLabel labels groups,
       FramePlans after.function.code.val.length locals after.frames.val (parentLabel :: labels) groups →
       ScopeLabel (parent.advance (.IFELSE bt yes child.source)) parentLabel →
@@ -100,7 +100,7 @@ theorem StructuredCompletedPrefix.close_else_dead {jumpTables : List Aeneas.Std.
       simp only [label, noBranches, yesDead] at yesCode' body'
       have skip' : IfSkip (resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups)) yesExit noEntry target false := by simpa only [label, yesDead] using skip
       simpa [SourceScope.arguments, SourceScope.input, form] using
-        StructuredDeadPrefix.ifElse_skip signature conditionSlot guardFound yesCode' skip' body'
+        StructuredDeadPrefix.if_else_skip signature conditionSlot guardFound yesCode' skip' body'
     have restored := parentSaved.resume_dead parentEntered childEntered closed
     have resolve : resolvedCode after.function.code.val groups =
         resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups) := by
@@ -125,5 +125,5 @@ theorem StructuredCompletedPrefix.close_else_dead {jumpTables : List Aeneas.Std.
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

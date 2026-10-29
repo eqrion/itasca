@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalBranch
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedConditionalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current stack}
@@ -41,7 +41,7 @@ theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.St
       ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
     have allShapes : List.Forall₂ ScopeLabel (current :: parents.reverse) (top :: labels) :=
       .cons oldShape parentShapes
-    have selected := scopeLabels_lookup allShapes scopeAt labelAt
+    have selected := scope_labels_lookup allShapes scopeAt labelAt
     have layout : BranchLayout locals stack label dst src count := by
       refine ⟨discarded, ?_, ?_, ?_, ?_⟩
       · simpa only [selected.front, selected.branchTypes] using stackEq
@@ -50,9 +50,9 @@ theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.St
       · simpa only [selected.branchTypes] using width
     have prior := invariant.resolved oldPlans oldShape parentShapes
     have saved := (invariant.prefixes top labels _ oldPlans oldShape parentShapes).1
-    have resolved := resolvedCode_new_br_if before.function.code.val earlier suffix
+    have resolved := resolved_code_new_br_if before.function.code.val earlier suffix
       ⟨frame.fixups.val, label.target⟩ dst src count old condition resume site sitePosition prior.inside
-    have terminal := prior.code.resolved_branchIf (old := old) prior.inside sitePosition resumePosition labelAt live rfl layout conditionSlot
+    have terminal := prior.code.resolved_branch_if (old := old) prior.inside sitePosition resumePosition labelAt live rfl layout conditionSlot
     rw [grouped, appended]
     refine ⟨?_, ?_⟩
     · rw [codeEq, resolved]
@@ -60,4 +60,4 @@ theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.St
     · by_cases elided : count = 0#u32 ∨ src = dst
       all_goals simpa [codeEq, SourceScope.advance, SourceScope.input, branchIfInstructions, elided, resumePosition] using terminal
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

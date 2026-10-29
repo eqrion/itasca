@@ -11,7 +11,7 @@ A dormant source prefix after the end callback.
 Main declarations: `structured_callback_end_dormant_prefix`. A direct consumer is `Compiler.Body.Reader.Control.EndDormantWasm2Prefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_end_dormant_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -49,4 +49,4 @@ theorem structured_callback_end_dormant_prefix {jumpTables : List U32} {emit : L
   have cursor := compiler_end_cursor ops law before after state kind bt accepted
   exact ⟨deadAfter, invariant.close_dormant unentered deadAfter stable maps frame target instruction framesEq
     targetAt codeEq  sources consumed (by rw [cursor])⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -53,9 +53,9 @@ theorem bulk_table_init {M : Type} (memory : runtime.platform.MemoryBuffer M)
   step with Interp.vec_index_given code.indirect (UScalar.cast .Usize entry) (element, tableId)
     (by simpa using descriptor) as ⟨a, b, aEq, bEq⟩
   subst a b
-  have read0 := Code.initializer_slice_index slots 0#usize destination destinationSlot
-  have read1 := Code.initializer_slice_index slots 1#usize source sourceSlot
-  have read2 := Code.initializer_slice_index slots 2#usize count countSlot
+  have read0 := Compiler.initializer_slice_index slots 0#usize destination destinationSlot
+  have read1 := Compiler.initializer_slice_index slots 1#usize source sourceSlot
+  have read2 := Compiler.initializer_slice_index slots 2#usize count countSlot
   simp only [bulk_zero_cast, bulk_zero_add, bind_ok, read0, read1, read2]
   step with Interp.vec_index_given inst.tables (UScalar.cast .Usize tableId) tableAddress
     (by simpa using tableMapped) as ⟨actual, actualEq⟩

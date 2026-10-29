@@ -6,7 +6,7 @@ Code and reachability effects of observation and unreachable callbacks.
 Main declarations: `ObserveFrame.code` and `callback_unreachable_dead`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem ObserveFrame.code {A : Type} {a b : runtime.compiler.FunctionCompiler A}
@@ -45,4 +45,4 @@ validator state, preserving code, labels, immutable metadata and deadness. -/
   unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
   simp only [dead, Bool.false_eq_true, ite_false]
   exact compiler_observe_frame ops law compiler state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

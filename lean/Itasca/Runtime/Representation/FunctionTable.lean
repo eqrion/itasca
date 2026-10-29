@@ -39,7 +39,7 @@ theorem FunctionTable.resolve {M : Type} {store : runtime.store.Store M}
   exact ⟨inst.funcs.val[index], function, rawType, List.getElem?_eq_getElem addressBound,
     owned, found, typed, decoded.trans actualType⟩
 
-private theorem decodeFunction_type {M : Type} (code : Store.CodeInterpretation)
+private theorem decode_function_type {M : Type} (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
     (lookup : store.types.val[function.signature.val]? = some signature) :
     (Store.decodeFunction code store function).TYPE = Store.decodeFuncType signature := by
@@ -64,7 +64,7 @@ theorem FunctionTable.source {M : Type} {store : runtime.store.Store M}
   | @cons address ty addresses types matching tail ih =>
     apply List.Forall₂.cons _ ih
     obtain ⟨_, function, signature, found, typed, decoded⟩ := matching
-    refine ⟨Store.decodeFunction code store function, ?_, (decodeFunction_type code store function signature typed).trans decoded⟩
+    refine ⟨Store.decodeFunction code store function, ?_, (decode_function_type code store function signature typed).trans decoded⟩
     simp only [Store.decodeStore, List.getElem?_map, found, Option.map_some]
 
 end Itasca.Runtime.Interp

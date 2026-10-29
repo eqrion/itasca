@@ -6,11 +6,11 @@ open Aeneas Aeneas.Std SpecExt
 
 theorem table_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (index : Nat) (type : tabletype)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.TABLES[index]?=some type) :
     ∃ address object, inst.tables.val[index]?=some address ∧ store.tables.val[address.index.val]?=some object ∧
-      Store.decodeElemType object.ty=Abs.Stateful.tableElementType type := by
-  obtain ⟨sourceAddress,sourceObject,mapped,found,objectType⟩ := Abs.Stateful.table_lookup bindings selected
+      Store.decodeElemType object.ty=SourceMachine.Stateful.tableElementType type := by
+  obtain ⟨sourceAddress,sourceObject,mapped,found,objectType⟩ := SourceMachine.Stateful.table_lookup bindings selected
   simp only [Store.decodeInstance,List.getElem?_map] at mapped
   obtain ⟨address,rawMapped,addressEq⟩ := Option.map_eq_some_iff.mp mapped
   simp only [Store.decodeStore,List.getElem?_map] at found
@@ -21,7 +21,7 @@ theorem table_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeI
 
 theorem memory_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (type : memtype)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.MEMS[0]?=some type) :
     ∃ address object, inst.memories.val[0]?=some address ∧ store.memories.val[address.index.val]?=some object := by
   obtain ⟨sourceAddress,sourceObject,mapped,found⟩ := bindings.memory_lookup (List.getElem?_eq_some_iff.mp selected).1
@@ -33,7 +33,7 @@ theorem memory_binding_raw {M : Type} (view : M → Slice U8) (code : Store.Code
 
 theorem function_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context) (index : Nat) (type : functype)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (selected : C.FUNCS[index]?=some type) :
     ∃ address, inst.funcs.val[index]?=some address ∧ address.index.val<store.funcs.length := by
   have right := (List.getElem?_eq_some_iff.mp selected).1

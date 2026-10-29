@@ -12,7 +12,7 @@ Stateful reader acceptance and its callback-action lift. StatefulReaderPost.avai
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -20,7 +20,7 @@ set_option maxRecDepth 4096
 stateful signature and live operands. Dead paths only observe the source stack.
 This covers references, table operations, and memory/bulk metadata callbacks. -/
 theorem StatefulReaderPost.available {data env locals index st} {p : Wasm2.Pending data env .Wasm2 locals index st}
-    {out : code.OpIterState} {op : Abs.Stateful.Instruction} (post : StatefulReaderPost p out op)
+    {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
     (C : context) (matched : EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C)
@@ -51,7 +51,7 @@ theorem StatefulReaderPost.available {data env locals index st} {p : Wasm2.Pendi
     rw [held.2]
     exact ⟨held.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -59,11 +59,11 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Named source event for each actual stateful visitor hook. -/
-def statefulAction (op : Abs.Stateful.Instruction) (a b : U32) : Action :=
+def statefulAction (op : SourceMachine.Stateful.Instruction) (a b : U32) : Action :=
   match op with
   | .refNull .FUNCREF => .ref_null .FuncRef
   | .refNull .EXTERNREF => .ref_null .ExternRef
@@ -85,7 +85,7 @@ def statefulAction (op : Abs.Stateful.Instruction) (a b : U32) : Action :=
   | .dataDrop _ => .data_drop a
 
 theorem stateful_callback_invoke {V : Type} (visitor : code.OpVisitor V) (before : V)
-    (state : code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32) :
+    (state : code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32) :
     statefulCallback visitor before state op a b = invoke visitor before (.op state (statefulAction op a b)) := by
   cases op <;> try rfl
   rename_i ty
@@ -94,7 +94,7 @@ theorem stateful_callback_invoke {V : Type} (visitor : code.OpVisitor V) (before
 /-- Source-reader typing and bounded lowering establish acceptance of the
 actual stateful hook, with the checked compiler argument order. -/
 theorem StatefulReaderPost.callback_available {data env locals index st} {p : Wasm2.Pending data env .Wasm2 locals index st}
-    {out : code.OpIterState} {op : Abs.Stateful.Instruction} (post : StatefulReaderPost p out op)
+    {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
     (C : context) (matched : EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C)
@@ -109,6 +109,6 @@ theorem StatefulReaderPost.callback_available {data env locals index st} {p : Wa
   rw [stateful_callback_lower ops compiler out op a b arguments]
   exact post.available ops bound allocation compiler demand C matched known monomorphic wholeLayout pairs a b
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 set_option maxRecDepth 4096 in
@@ -157,4 +157,4 @@ theorem compiler_local_variable_available {A : Type} (ops : runtime.platform.All
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

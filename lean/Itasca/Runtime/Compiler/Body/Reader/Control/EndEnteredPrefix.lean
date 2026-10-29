@@ -18,7 +18,7 @@ Structured endentered reader prefixes and their complete-profile transport. Thes
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_end_block_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -151,7 +151,7 @@ theorem structured_callback_end_else_prefix {jumpTables : List U32} {emit : List
     simpa [scopeExitLive, frameKind] using reachable
   exact invariant.close_else entered stack stable maps frame target sourceType condition noEntry yes yesExit yesNormal
     framesEq targetAt codeEq form signature exit layout sourceTypes sources consumed (by rw [cursor])
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -159,7 +159,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
@@ -207,7 +207,7 @@ theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit
       simpa only [List.flatMap_def] using fronts.current
     have stack : before.reachable = true → Sequence.stackTypes st.core.vals.val = current.front ++ current.results := by
       intro live
-      have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ invariant.known live)).2
+      have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ invariant.known live)).2
       have mono := reach.current live
       have realized := results
       rw [mono] at realized
@@ -280,6 +280,6 @@ theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit
     exact ⟨outer, parent, savedOuter, savedParent, instruction, sourceSplit, savedSplit, closed,
       certified, nextSame, reach'.close after.reachable instruction (fun _ => entered), fronts'.pop instruction,
       reader_end_boundary_wasm2 p savedSplit encoded opened afterState, afterState⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

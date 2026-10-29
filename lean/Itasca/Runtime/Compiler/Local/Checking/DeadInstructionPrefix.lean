@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every dead ordinary lowerer observes without changing code or frames.
@@ -17,4 +17,4 @@ theorem compiler_dead_op_checked_prefix {A : Type} (ops : runtime.platform.Alloc
   rw [if_neg (by simp [dead])] at called
   exact ⟨checked,compiler_observe_exit_slots ops law before after state exits called⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

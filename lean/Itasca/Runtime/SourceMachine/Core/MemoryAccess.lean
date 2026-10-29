@@ -11,7 +11,7 @@ Scalar source memory load/store safety and simulation under typed, bounded opera
 
 section
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 /-- A typed scalar load either produces the value prescribed by the generated
@@ -38,11 +38,11 @@ theorem load_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : 
     obtain ⟨bits,rfl,bitsBound⟩ := integer_val_inv (ty := .I32) addressTyped
     have decoded : integer .I32 (integerVal .I32 bits) = some bits := by
       simpa only [numtype_Inn] using integer_accepts .I32 bits bitsBound
-    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+    obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
     have operationWf := wf_admininstr_instr (codeWf (op.source argument) (by simp))
     have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
     have restWf : Forall FrameWf rest := by
-      cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+      cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
     have objectTyped := typed.contents.memories object (List.mem_of_getElem? found)
     have bytesWf : Forall wf_byte object.BYTES := by
       cases objectTyped with
@@ -84,7 +84,7 @@ theorem load_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : 
           (by simpa [vals,admininstr_val,integerVal,Spec.Segment.i32,numtype_Inn] using source)
         simpa only [split] using full
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core
 
 end
 
@@ -92,7 +92,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 theorem numeric_value_inv {s : _root_.store} {value : val} {ty : numtype}
@@ -137,11 +137,11 @@ theorem store_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest :
       obtain ⟨number,rfl,numberWf⟩ := numeric_value_inv valueTyped
       have decoded : integer .I32 (integerVal .I32 bits) = some bits := by
         simpa only [numtype_Inn] using integer_accepts .I32 bits bitsBound
-      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
       have operationWf := wf_admininstr_instr (codeWf (op.source argument) (by simp))
       have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
       have restWf : Forall FrameWf rest := by
-        cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+        cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
       have memoryEq : fun_mem ⟨s,f.toFrame⟩ (.mk_uN 0) = object := by
         simp [fun_mem,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
       have source := op.source_step s f.toFrame argument bits number typed.typed.store frameWf bitsBound operationWf numberWf
@@ -152,7 +152,7 @@ theorem store_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest :
       by_cases inside : bits + proj_uN_0 argument.OFFSET + op.bytes ≤ object.BYTES.length
       · obtain ⟨_,_,_,_,continuation⟩ := memory_store_frame_continuation op argument
           (by simpa only [split] using frameTyped)
-        have extension := memoryPayloadWrite_extends s f.toFrame memoryAddress
+        have extension := memory_payload_write_extends s f.toFrame memoryAddress
           (bits+proj_uN_0 argument.OFFSET) object (op.payload number) typed.typed.store typed.contents mapped found (op.payload_wf number)
         have contents := typed.contents.memory_write typed.typed.store f.toFrame memoryAddress
           (bits+proj_uN_0 argument.OFFSET) object (op.payload number) mapped found (op.payload_wf number)
@@ -177,6 +177,6 @@ theorem store_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest :
             (by simpa [vals,admininstr_val,integerVal,Spec.Segment.i32,numtype_Inn] using source)
           simpa only [split] using full
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core
 
 end

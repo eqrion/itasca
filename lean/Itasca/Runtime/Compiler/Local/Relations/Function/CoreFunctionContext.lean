@@ -6,7 +6,7 @@ At module publication the complete data namespace comes from the parsed tail. Co
 Main declarations: `moduleFunctionContext`. A direct consumer is `Integration.Instantiation.InstantiateExecutableEventfulOrigin`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Emission depends exactly on the local/global/memory namespaces used by
@@ -43,4 +43,4 @@ def moduleFunctionContext (module : runtime.compiler.ExecutableModule)
   {sourceFunctionContext module.module.env locals results with
     DATAS := List.replicate module.module.tail.data.length datatype.OK}
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

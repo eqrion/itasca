@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Measure
 Source-code bounds for frames, continuations and machine states. Execution and resource arguments retain these bounds through control and store transitions.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Code sizes include nested bodies. Saved branch continuations are bounded
 as the exact sequence resumed by a branch. Values, locals, and call depth do
@@ -45,7 +45,7 @@ theorem advance_bound {bound : Nat} {s : store} {ambient : frame} {f f' : AFrame
   rw [← step]
   exact bound_replace_frame h hf
 
-theorem returnFrame_bound {bound : Nat} {s : store} {ambient : frame} {f : AFrame}
+theorem return_frame_bound {bound : Nat} {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {next : AState} (h : CodeBound bound ⟨s, ambient, f :: rest, []⟩)
     (step : returnFrame ⟨s, ambient, f :: rest, []⟩ f rest = .next next) : CodeBound bound next := by
   simp only [returnFrame] at step
@@ -157,7 +157,7 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
     all_goals exact advance_bound bounded step ⟨ha, hl⟩
   | br index => cases index with | mk_uN i => exact branch_bound bounded step
   | call index => cases index with | mk_uN i => exact call_bound bounded ha step
-  | ret => exact returnFrame_bound bounded step
+  | ret => exact return_frame_bound bounded step
   | block bt body =>
     simp only [astep, enterLabel, Bool.false_eq_true, ite_false] at step
     repeat' first | split at step | contradiction
@@ -201,4 +201,4 @@ theorem instruction_bound (bound : Nat) (s : store) (ambient : frame) (f : AFram
         simp at hh ⊢
         omega
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Host.HostReadyWorld
 import Itasca.Runtime.Interp.Relations.EventfulNormalize
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- All normalized direct and indirect host sites return normally. Successful
@@ -22,9 +22,9 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
         Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
     (retains : ∀ host, HostRetention hooks store host)
-    {expected : List valtype} {pc : Nat} {pending : Bool} {source : Abs.AState}
+    {expected : List valtype} {pc : Nat} {pending : Bool} {source : SourceMachine.AState}
     (site : StructuredHostSite view code exec store expected pc pending source)
-    (typed : Abs.ATyped source) :
+    (typed : SourceMachine.ATyped source) :
     DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       WorldSourceStepResult (view:=view)
         memory hooks floats allocator Inv code expected exec store platform source pc pending out := by
@@ -37,4 +37,4 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
     apply DivSpec.mono (ih (chain.sound s ambient rest typed).1)
     intro out result
     exact result.prepend_normalization chain typed
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

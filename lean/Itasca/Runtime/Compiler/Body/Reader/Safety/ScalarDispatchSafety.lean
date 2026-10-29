@@ -9,7 +9,7 @@ The raw numeric dispatcher returns normally even for unrecognized bytes.
 Main declarations: `compiler_reader_numeric_dispatch_total` and `compiler_reader_memory_dispatch_total`. A direct consumer is `Compiler.Body.Reader.Safety.ScalarSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
@@ -35,7 +35,7 @@ theorem compiler_reader_numeric_dispatch_total {A} (ops : runtime.platform.Alloc
   by_cases upper : opcode.val < 192
   · rcases numeric_byte_partition opcode lower upper with integer | float
     · obtain ⟨op,eq⟩ := integer_opcode_of_mem integer
-      have small := integerOpcode_byte op
+      have small := integer_opcode_byte op
       have base : (integerOpcode op).val < 192 := by
         have := congrArg UScalar.val eq
         scalar_tac
@@ -56,8 +56,8 @@ theorem compiler_reader_numeric_dispatch_total {A} (ops : runtime.platform.Alloc
 
 private theorem memory_byte_partition (opcode : U8) (lower : 40 ≤ opcode.val)
     (upper : opcode.val ≤ 62) :
-    (∃ op : Abs.Memory.Load, UScalar.cast .U8 (memoryLoadOpcode op) = opcode) ∨
-    (∃ op : Abs.Memory.Store, UScalar.cast .U8 (memoryStoreOpcode op) = opcode) := by
+    (∃ op : SourceMachine.Memory.Load, UScalar.cast .U8 (memoryLoadOpcode op) = opcode) ∨
+    (∃ op : SourceMachine.Memory.Store, UScalar.cast .U8 (memoryStoreOpcode op) = opcode) := by
   interval_cases h : opcode.val
   · exact Or.inl ⟨.full .I32, (UScalar.eq_equiv _ _).mpr h.symm⟩
   · exact Or.inl ⟨.full .I64, (UScalar.eq_equiv _ _).mpr h.symm⟩
@@ -96,4 +96,4 @@ theorem compiler_reader_memory_dispatch_total {A} (ops : runtime.platform.Alloc 
   rcases memory_byte_partition opcode lower upper with ⟨op,rfl⟩ | ⟨op,rfl⟩
   · exact compiler_reader_memory_load_total ops law compiler st data env ctx ready shape capacity op
   · exact compiler_reader_memory_store_total ops law compiler st data env ctx ready shape capacity op
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

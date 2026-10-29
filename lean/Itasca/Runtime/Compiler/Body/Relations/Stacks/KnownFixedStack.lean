@@ -5,15 +5,15 @@ import Itasca.Wasm2.FixedOperands
 /-!
 Fixed signatures preserve concrete operands even when the control frame is polymorphic; this follows from actual pop/push behavior.
 
-Main declarations: `readFixed_known` and `fixed_effect_types`. A direct consumer is `Compiler.Body.Reader.Replay.MetadataTypes`.
+Main declarations: `read_fixed_known` and `fixed_effect_types`. A direct consumer is `Compiler.Body.Reader.Replay.MetadataTypes`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 /-- Fixed signatures preserve concrete operands even when the control frame is
 polymorphic; this follows from actual pop/push behavior. -/
-theorem readFixed_known (st out : code.OpIterState) (outer segment : List code.StackType)
+theorem read_fixed_known (st out : code.OpIterState) (outer segment : List code.StackType)
     (inputs : List types.ValueType) (output : Option types.ValueType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (size : st.vals.val.length < Usize.max) (known : ConcreteStack st.vals.val)
@@ -30,7 +30,7 @@ theorem readFixed_known (st out : code.OpIterState) (outer segment : List code.S
       simp only [Wasm2.Simd.readFixed,pushed,bind_ok,Result.ok.injEq,Prod.mk.injEq,true_and] at accepted
       subst out
       rw [afterValues]
-      exact concreteStack_append.mpr ⟨known,by simp [ConcreteStack]⟩
+      exact concrete_stack_append.mpr ⟨known,by simp [ConcreteStack]⟩
   | cons type inputs ih =>
     unfold Wasm2.Simd.readFixed at accepted
     obtain ⟨⟨result,middle⟩,popped,rest⟩ := bind_ok_inv _ _ _ accepted
@@ -57,4 +57,4 @@ theorem fixed_effect_types {before after : List code.StackType} {inputs output}
   obtain ⟨front,afterTypes,realized⟩ := effect _ (Sequence.realizes_default false after)
   exact ⟨front,(realized_concrete_types known realized).symm,afterTypes⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -6,7 +6,7 @@ Terminal source instructions whose bytecode has no pending label fixup.
 Main declarations: `TerminalEmission` and `UniversalTerminal`. A direct consumer is `Compiler.Local.Control.Control.UniversalBranch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Terminal source instructions whose bytecode has no pending label fixup. -/
@@ -32,4 +32,4 @@ structure UniversalTerminal {A : Type} (compiler : runtime.compiler.FunctionComp
     DeadCodePrefix types functions returns locals (resolvedCode compiler.function.code.val groups)
       (label :: labels) current.input current.source current.bodyPc compiler.function.code.val.length
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

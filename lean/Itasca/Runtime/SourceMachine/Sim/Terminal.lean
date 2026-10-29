@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Step
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Scalar integer traps arise from an explicit unreachable instruction or a numeric operation. -/
@@ -15,4 +15,4 @@ theorem instruction_trap_eq (s : store) (ambient : frame) (f : AFrame)
     simp only [astep, advance, integerBinary, branch, enterLabel, call, returnFrame] at step
     repeat' first | contradiction | split at step
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

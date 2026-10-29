@@ -32,11 +32,11 @@ theorem q15_loop (x y initial : U128) (i : U32)
       have less : index.val < 8 := by scalar_tac
       step with lane x 16#u32 index (by decide) (by decide) (by scalar_tac) as ⟨a,aEq⟩
       have aBits : a.bv.setWidth 16 = laneBits 16 index.val x.bv :=
-        lane_word_cast 16 _ _ a (by rw [laneBits_toNat]; exact aEq)
+        lane_word_cast 16 _ _ a (by rw [lane_bits_to_nat]; exact aEq)
       step with signed a 16#u32 (by decide) (by decide) as ⟨sa,saEq⟩
       step with lane y 16#u32 index (by decide) (by decide) (by scalar_tac) as ⟨b,bEq⟩
       have bBits : b.bv.setWidth 16 = laneBits 16 index.val y.bv :=
-        lane_word_cast 16 _ _ b (by rw [laneBits_toNat]; exact bEq)
+        lane_word_cast 16 _ _ b (by rw [lane_bits_to_nat]; exact bEq)
       step with signed b 16#u32 (by decide) (by decide) as ⟨sb,sbEq⟩
       have aBound : -32768 ≤ sa.val ∧ sa.val < 32768 := by
         rw [saEq]; exact ⟨BitVec.le_toInt _,BitVec.toInt_lt⟩
@@ -93,8 +93,8 @@ theorem q15_packed (x y result : U128)
   have packed := pack_map_of_lanes .I16 (128/lsize .I16) result.bv.toNat
     (fun j => (q15Bits (laneBits (lsize .I16) j x.bv)
       (laneBits (lsize .I16) j y.bv)).toNat)
-    (by intro j valid; rw [←laneBits_toNat,lanes j valid]; rfl)
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+    (by intro j valid; rw [←lane_bits_to_nat,lanes j valid]; rfl)
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold q15Result q15Words Map
   rw [List.map_map]
   have same (bits : Nat) : laneOfBits .I16 bits = .mk_lane__0 .I16 (.mk_uN bits) := by rfl

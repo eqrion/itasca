@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Progress
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Dropping an actual top value preserves the generated continuation type. -/
@@ -12,7 +12,7 @@ theorem drop_frame_preservation {s : store} {f : AFrame} {code : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [value])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [value])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, List.append_cancel_right_eq] at hstack
     have hlen : (baseValues.map valueType).length = front.length := by
@@ -20,7 +20,7 @@ theorem drop_frame_preservation {s : store} {f : AFrame} {code : List instr}
       simpa using hh
     have hbase : baseValues.map valueType = front := (List.append_inj hstack hlen).1
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues }) C
       bindings localTypes locals hvalues returns ?_ hw
     simpa only [List.append_nil, hbase] using hafter
@@ -33,7 +33,7 @@ theorem local_get_frame_preservation {s : store} {f : AFrame} {code : List instr
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete f.vals) hc
+      code_stack_after (value_types_concrete f.vals) hc
     cases hop with
     | local_get _ _ ty hi ht _ _ =>
       have hi' : index < f.locals.length := by simpa [labelContext, proj_uN_0, localTypes] using hi
@@ -62,12 +62,12 @@ theorem integer_binop_frame_preservation {s : store} {f : AFrame} {code : List i
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [integerVal ty a, integerVal ty b])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [integerVal ty a, integerVal ty b])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
       List.append_cancel_right_eq] at hstack
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     have hresult := integer_val_typed hs ty result hr
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues ++ [integerVal ty result] }) C
       bindings localTypes locals ?_ returns ?_ hw
@@ -86,12 +86,12 @@ theorem integer_testop_frame_preservation {s : store} {f : AFrame} {code : List 
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [integerVal ty bits])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
       List.append_cancel_right_eq] at hstack
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     have hresult := integer_val_typed hs .I32 result hr
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues ++ [integerVal .I32 result] }) C
       bindings localTypes locals ?_ returns ?_ hw
@@ -110,12 +110,12 @@ theorem integer_relop_frame_preservation {s : store} {f : AFrame} {code : List i
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [integerVal ty a, integerVal ty b])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [integerVal ty a, integerVal ty b])) hc
     cases hop
     simp only [List.map_append, List.map_cons, List.map_nil, integerVal, valueType,
       List.append_cancel_right_eq] at hstack
     have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-      simpa using resultsTyped_take baseValues.length values
+      simpa using results_typed_take baseValues.length values
     have hresult := integer_val_typed hs .I32 result hr
     apply FrameTyped.mk (f := { f with code := code, vals := baseValues ++ [integerVal .I32 result] }) C
       bindings localTypes locals ?_ returns ?_ hw
@@ -125,7 +125,7 @@ theorem integer_relop_frame_preservation {s : store} {f : AFrame} {code : List i
         integerVal, valueType, numtype_Inn, valtype_numtype, hstack] using hafter
 
 /-- Updating one local preserves the entire pointwise value typing relation. -/
-theorem resultsTyped_set {s : store} {types : List valtype} {values : List val}
+theorem results_typed_set {s : store} {types : List valtype} {values : List val}
     (h : ResultsTyped s types values) (index : Nat) (hi : index < types.length)
     (value : val) (hv : Val_ok s value types[index]) :
     ResultsTyped s types (values.set index value) := by
@@ -148,14 +148,14 @@ theorem local_write_invariants {s : store} {f : AFrame} {C : context}
     C.LOCALS = (f.locals.set index value).map valueType ∧
       ResultsTyped s C.LOCALS (f.locals.set index value) ∧
       wf_frame ({ f with locals := f.locals.set index value }).toFrame := by
-  have hlocals := resultsTyped_set locals index hi value hv
+  have hlocals := results_typed_set locals index hi value hv
   have htypes := results_type_of_typed hlocals
   refine ⟨htypes.symm, hlocals, ?_⟩
   cases hw with
   | frame_case_ _ _ _ hm =>
-    exact .frame_case_ _ _ (resultsTyped_wf hlocals) hm
+    exact .frame_case_ _ _ (results_typed_wf hlocals) hm
 
-theorem resultsTyped_self_mem {s : store} {values : List val}
+theorem results_typed_self_mem {s : store} {values : List val}
     (h : ResultsTyped s (values.map valueType) values) {value : val}
     (hm : value ∈ values) : Val_ok s value (valueType value) := by
   induction values with
@@ -175,7 +175,7 @@ theorem local_set_frame_preservation {s : store} {f : AFrame} {code : List instr
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [value])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [value])) hc
     cases hop with
     | local_set _ _ ty hi ht _ _ =>
       have hit : index < C.LOCALS.length := by simpa [labelContext, proj_uN_0] using hi
@@ -187,10 +187,10 @@ theorem local_set_frame_preservation {s : store} {f : AFrame} {code : List instr
       simp only [List.cons.injEq, and_true] at hvalue
       have hv : Val_ok s value C.LOCALS[index] := by
         rw [ht, ← hvalue]
-        exact resultsTyped_self_mem values (by simp)
+        exact results_typed_self_mem values (by simp)
       obtain ⟨types', locals', hw'⟩ := local_write_invariants localTypes locals hit hv hw
       have hvalues : ResultsTyped s (baseValues.map valueType) baseValues := by
-        simpa using resultsTyped_take baseValues.length values
+        simpa using results_typed_take baseValues.length values
       apply FrameTyped.mk (f := { f with code := code, locals := f.locals.set index value, vals := baseValues }) C
         bindings types' locals' hvalues returns ?_ hw'
       simpa only [List.append_nil, hbase] using hafter
@@ -203,7 +203,7 @@ theorem local_tee_frame_preservation {s : store} {f : AFrame} {code : List instr
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨front, ins, outs, hop, hstack, hafter⟩ :=
-      codeStack_after (value_types_concrete (baseValues ++ [value])) hc
+      code_stack_after (value_types_concrete (baseValues ++ [value])) hc
     cases hop with
     | local_tee _ _ ty hi ht _ _ =>
       have hit : index < C.LOCALS.length := by simpa [labelContext, proj_uN_0] using hi
@@ -215,14 +215,14 @@ theorem local_tee_frame_preservation {s : store} {f : AFrame} {code : List instr
         simpa only [List.cons.injEq, and_true] using hh
       have hv : Val_ok s value C.LOCALS[index] := by
         rw [ht, ← hvalue]
-        exact resultsTyped_self_mem values (by simp)
+        exact results_typed_self_mem values (by simp)
       obtain ⟨types', locals', hw'⟩ := local_write_invariants localTypes locals hit hv hw
       apply FrameTyped.mk (f := { f with code := code, locals := f.locals.set index value, vals := baseValues ++ [value] }) C
         bindings types' locals' values returns ?_ hw'
       simpa only [List.append_nil, hstack] using hafter
 
 /-- Completing an empty label exposes its already-typed continuation. -/
-theorem codeStack_label_exit {C : context} {label : Label} {labels : List Label}
+theorem code_stack_label_exit {C : context} {label : Label} {labels : List Label}
     {stack results : List valtype}
     (concrete : Forall (fun ty => ty ≠ valtype.BOT) stack)
     (h : CodeStackTyped C (label :: labels) stack [] results) :
@@ -241,7 +241,7 @@ theorem label_exit_frame_preservation {s : store} {f : AFrame}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     exact .mk C bindings localTypes locals values returns
-      (by simpa only [List.append_nil] using codeStack_label_exit (value_types_concrete f.vals) hc) hw
+      (by simpa only [List.append_nil] using code_stack_label_exit (value_types_concrete f.vals) hc) hw
 
 /-- A suspended caller is typed with precisely the result values that a callee
 may append on return. -/
@@ -268,7 +268,7 @@ theorem active_frame_preservation {s : store} {ambient : frame} {f f' : AFrame}
   cases frames with
   | cons hf hr =>
     exact ⟨hs, functions, ha, .cons hf' (by simpa only [ht] using hr), values,
-      (fun _ => active (by simp)), replace_frame_heights heights (frameTyped_heights hf')⟩
+      (fun _ => active (by simp)), replace_frame_heights heights (frame_typed_heights hf')⟩
 
 /-- Returning typed values either finishes execution or resumes the typed
 caller. This lemma makes the caller's pending-result invariant explicit. -/
@@ -283,16 +283,16 @@ theorem return_values_preservation {s : store} {ambient : frame} {f : AFrame}
   cases frames with
   | cons hf hr =>
     cases rest with
-    | nil => exact ⟨hs, functions, ha, .nil [], resultsTyped_wf hv, by simp, by simp [Forall]⟩
+    | nil => exact ⟨hs, functions, ha, .nil [], results_typed_wf hv, by simp, by simp [Forall]⟩
     | cons caller callers =>
       cases hr with
       | cons hc hrest =>
         exact ⟨hs, functions, ha, .cons (resume_frame_preservation hc hv) hrest,
           by simp [Forall], by simp,
           replace_frame_heights (f := caller) (fun frame hm => heights frame (by simp [hm]))
-            (frameTyped_heights (resume_frame_preservation hc hv))⟩
+            (frame_typed_heights (resume_frame_preservation hc hv))⟩
 
-theorem resultsTyped_drop {s : store} {before after : List valtype} {values : List val}
+theorem results_typed_drop {s : store} {before after : List valtype} {values : List val}
     (h : ResultsTyped s (before ++ after) values) :
     ResultsTyped s after (values.drop before.length) := by
   simpa only [ResultsTyped, List.drop_left] using List.forall₂_drop before.length h
@@ -305,7 +305,7 @@ theorem return_suffix_typed {s : store} {f : AFrame} {code : List instr}
   cases h with
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
-    obtain ⟨front, ins, outs, hop, hstack⟩ := codeStack_head (value_types_concrete f.vals) hc
+    obtain ⟨front, ins, outs, hop, hstack⟩ := code_stack_head (value_types_concrete f.vals) hc
     cases hop with
     | «return» _ discarded results outputs hr _ _ =>
       have heq : results = f.resultTypes := by
@@ -317,7 +317,7 @@ theorem return_suffix_typed {s : store} {f : AFrame} {code : List instr}
         simp only [List.length_append]
         omega
       rw [hoff]
-      apply resultsTyped_drop
+      apply results_typed_drop
       simpa only [hstack, List.append_assoc] using values
 
 /-- Falling off the outer frame's code has exactly the declared result vector. -/
@@ -331,4 +331,4 @@ theorem frame_end_typed {s : store} {f : AFrame}
     change f.vals.map valueType = f.resultTypes at heq
     simpa only [heq] using values
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

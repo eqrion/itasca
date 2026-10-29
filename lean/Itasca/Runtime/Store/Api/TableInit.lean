@@ -37,16 +37,16 @@ theorem table_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   have elementRead : fun_elem ⟨decodeStore view code store,ambient⟩ (.mk_uN elementIndex.val) = decodeElement segment := by
     simp [fun_elem,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,elementMapped,resolved]
   have lengthEq : words.length = table.elements.length := by
-    simpa only [alloc.vec.Vec.length] using (congrArg List.length copied).trans (copySegment_length _ _ _ _ _)
+    simpa only [alloc.vec.Vec.length] using (congrArg List.length copied).trans (copy_segment_length _ _ _ _ _)
   have refsEq : words.val.map (decodeRef table.ty) =
       Spec.Segment.copyInto (table.elements.val.map (decodeRef table.ty))
         (segment.refs.val.map (decodeRef segment.ty)) destination source count := by
-    rw [copied,copySegment_eq_copyInto,copyInto_map _ _ _ _ _ _ inside,sameType]
+    rw [copied,copy_segment_eq_copy_into,copy_into_map _ _ _ _ _ _ inside,sameType]
   have lists := Itasca.Runtime.Representation.map_set_modify decodeTable
     (fun t => {t with REFS := Spec.Segment.copyInto t.REFS (decodeElement segment).REFS destination source count})
     store.tables.val tableAddress.index.val table {table with elements := words} target
     (by simp only [decodeTable,decodeElement,lengthEq,refsEq])
-  rw [Spec.Segment.tableInit_eq,tableRead,elementRead]
+  rw [Spec.Segment.table_init_eq,tableRead,elementRead]
   unfold decodeStore
   simp only [alloc.vec.Vec.set_val_eq,lists]
   rfl
@@ -77,7 +77,7 @@ theorem TableInitializationEffect.refines {M : Type} (view : M → Slice U8) (co
     simp [fun_table,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,tableMapped,target]
   have elementRead : fun_elem ⟨decodeStore view code store,ambient⟩ (.mk_uN elementIndex.val) = decodeElement segment := by
     simp [fun_elem,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,elementMapped,resolved]
-  have wf := decodeStore_wf view code store shape sourceSyntax
+  have wf := decode_store_wf view code store shape sourceSyntax
   unfold TableInitializationEffect at effect
   split at effect
   · rename_i inside
@@ -100,7 +100,7 @@ theorem TableInitializationEffect.refines {M : Type} (view : M → Slice U8) (co
     · simpa [tableRead,elementRead,decodeTable,decodeElement] using And.intro inside.2 inside.1
   · rename_i outside
     rw [effect]
-    apply Spec.stepsH_single
+    apply Spec.steps_h_single
     apply Spec.Segment.table_init_trap _ _ _ _ _ _ _ wf ambientWf dstBound srcBound countBound
       (by scalar_tac) (by scalar_tac)
     simp only [tableRead,elementRead,decodeTable,decodeElement,List.length_map]

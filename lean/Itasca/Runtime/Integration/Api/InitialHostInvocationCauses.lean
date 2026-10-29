@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
 import Itasca.Runtime.Interp.Invocation.PrefixCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Exact initial-host invocation causes. Setup retains the initial store;
@@ -103,4 +103,4 @@ theorem InitialHostInvocationCause.host_overflow {M P F A : Type}
   · simp only [HostCallCauses,failed] at cause
     obtain ⟨next,arguments,defaults,returned,actual⟩ := cause
     exact ⟨next,arguments,defaults,called.2.2.2,returned,by simpa only [same] using actual⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

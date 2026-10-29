@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Emission.EmissionSources
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlHeightSuccess
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 /-- Exact successful emission needs no separate vector-capacity or coordinate premise. -/
 theorem compiler_emit_success {A : Type} (ops : runtime.platform.Alloc A)
@@ -61,4 +61,4 @@ theorem compiler_copy_success {A : Type} (ops : runtime.platform.Alloc A)
     have h1 : count.val ≠ 1 := by intro eq; apply notOne; apply UScalar.eq_of_val_eq; exact eq
     have h2 : count.val ≠ 2 := by intro eq; apply notTwo; apply UScalar.eq_of_val_eq; exact eq
     simpa [transferInstruction, h1, h2] using compiler_emit_success ops law before after (.CopyN dst src count) accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

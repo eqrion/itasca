@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Simd.Signature
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt
 
 /-- The source stack signatures of SIMD memory operations. Width, alignment and
@@ -16,9 +16,9 @@ theorem MemorySignature.principal {source inputs outputs C signature}
     signature = .mk_functype (.mk_list inputs) (.mk_list outputs) := by
   cases shape <;> cases typed <;> rfl
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- SIMD source syntax, independent of opcode decoding and extracted execution.
 The generated typing separately constrains shapes, immediates and memory use. -/
@@ -27,4 +27,4 @@ inductive SimdInstr : instr → Prop where
   | constant value : SimdInstr (.VCONST .V128 value)
   | memory {source inputs outputs} (signature : Simd.MemorySignature source inputs outputs) : SimdInstr source
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

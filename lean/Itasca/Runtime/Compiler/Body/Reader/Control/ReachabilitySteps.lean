@@ -10,7 +10,7 @@ Reader scope initialization and reachability preservation through advance, else 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
@@ -23,7 +23,7 @@ theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
   · rfl
   · rfl
   · rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -31,7 +31,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderReachabilityWasm2.advance {reachable parents current savedParents savedCurrent}
@@ -58,6 +58,6 @@ theorem ReaderReachabilityWasm2.close {reachable parents parent child savedParen
       (resumedSource savedParent savedCurrent instruction) :=
   invariant.pop nextReachable instruction _ rfl entered
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Each streamed branch-table label, including the default label, accepts
@@ -29,4 +29,4 @@ theorem compiler_branch_label_available {A : Type} (ops : runtime.platform.Alloc
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)
     (by simp [ChargeCounter.used] at usedEq ⊢; omega)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

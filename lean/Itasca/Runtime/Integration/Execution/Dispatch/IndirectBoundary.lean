@@ -27,18 +27,18 @@ import Itasca.Runtime.Interp.Calls.IndirectCallSlots
 import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
-def SourceIndirectHostBoundary {M : Type} (store : runtime.store.Store M) (source : Abs.AState) : Prop :=
-  ∃ (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr) (front : List val)
+def SourceIndirectHostBoundary {M : Type} (store : runtime.store.Store M) (source : SourceMachine.AState) : Prop :=
+  ∃ (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type position : Nat) (after : List instr) (front : List val)
     (address : Usize) (function : runtime.store.FuncInst) (host : U64),
     source.frames={f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest ∧
-    f.vals=front++[Abs.integerVal .I32 position] ∧ position<2^32 ∧
-    Abs.Indirect.resolve source.store f table type position=some address.val ∧
+    f.vals=front++[SourceMachine.integerVal .I32 position] ∧ position<2^32 ∧
+    SourceMachine.Indirect.resolve source.store f table type position=some address.val ∧
     store.funcs.val[address.val]?=some function ∧ function.code=.Host host
 
 def IndirectTrap (trap : runtime.Trap) : Prop :=
   trap=.TableOutOfBounds ∨ trap=.UninitializedElement ∨ trap=.IndirectCallTypeMismatch
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

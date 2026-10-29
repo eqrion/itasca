@@ -99,14 +99,14 @@ their previous interpretation even when their compiled modules coincide. -/
 def installCode (before : CodeInterpretation) (fresh : Nat) (source : List funccode) : CodeInterpretation :=
   fun index module function => if index = fresh then source.getD function default else before index module function
 
-theorem installCode_agrees {M : Type} (store : runtime.store.Store M)
+theorem install_code_agrees {M : Type} (store : runtime.store.Store M)
     (before : CodeInterpretation) (source : List funccode) :
     CodeAgreesOn store before (installCode before store.instances.length source) := by
   intro index inst found function
   have bound := (List.getElem?_eq_some_iff.mp found).1
   simp only [installCode, if_neg (Nat.ne_of_lt bound)]
 
-theorem installCode_lookup (before : CodeInterpretation) (fresh : Nat)
+theorem install_code_lookup (before : CodeInterpretation) (fresh : Nat)
     (source : List funccode) (module : runtime.compiler.ExecutableModule)
     (index : Nat) (function : funccode) (found : source[index]? = some function) :
     installCode before fresh source fresh module index = function := by

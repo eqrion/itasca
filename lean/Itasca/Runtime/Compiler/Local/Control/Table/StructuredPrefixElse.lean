@@ -1,8 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixControl
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
-theorem StructuredDeadPrefix.ifElse_skip {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels front params results yes no bt pc yesExit noEntry exit cond}
+theorem StructuredDeadPrefix.if_else_skip {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels front params results yes no bt pc yesExit noEntry exit cond}
     (signature : BlockSignature types bt params results)
     (condition : cond.val = slots locals + slots (front ++ params))
     (guard : code[pc]? = some (.JumpIfZero cond noEntry))
@@ -30,5 +30,5 @@ theorem StructuredDeadPrefix.ifElse_skip {jumpTables : List Aeneas.Std.U32} {emi
   · apply noCode.relabel
     exact .cons ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ (LabelsShape.refl _)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

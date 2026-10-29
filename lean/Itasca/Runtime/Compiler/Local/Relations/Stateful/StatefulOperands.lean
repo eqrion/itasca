@@ -7,7 +7,7 @@ Actual compiler operand reads and coordinates follow from the source signature a
 Main declarations: `stateful_operands`. A direct consumer is `Compiler.Local.Relations.Stateful.StatefulLowered`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem first_suffix_operand {A : Type} (ops : runtime.platform.Alloc A)
@@ -47,8 +47,8 @@ private theorem next_suffix_operand {A : Type} (ops : runtime.platform.Alloc A)
 signature and full stack layout, including reference values. -/
 theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (C : context)
-    (front input output : List valtype) (op : Abs.Stateful.Instruction)
-    (signature : Abs.Stateful.Signature C op input output)
+    (front input output : List valtype) (op : SourceMachine.Stateful.Instruction)
+    (signature : SourceMachine.Stateful.Signature C op input output)
     (layout : CompilerLayout compiler (front ++ input)) :
     ∃ first second : U32, StatefulReads ops compiler op first second ∧
       first.val = slots (compilerLocals compiler) + slots front ∧
@@ -61,7 +61,7 @@ theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨compiler.height,compiler.height,⟨?_,?_⟩,?_,?_⟩
     · simp [StatefulReads,zero]
     · intro table same
-      have impossible := congrArg Abs.Stateful.Instruction.arity same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
       change op.arity = 2 at impossible
       omega
     · simpa [empty] using layout.height
@@ -70,7 +70,7 @@ theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨first,first,⟨?_,?_⟩,position,?_⟩
     · simpa [one,statefulDepth] using read
     · intro table same
-      have impossible := congrArg Abs.Stateful.Instruction.arity same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
       change op.arity = 2 at impossible
       omega
     · omega
@@ -87,9 +87,9 @@ theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
     refine ⟨first,second,⟨?_,?_⟩,position,?_⟩
     · simpa [three,statefulDepth] using read
     · intro table same
-      have impossible := congrArg Abs.Stateful.Instruction.arity same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
       change op.arity = 2 at impossible
       omega
     · intro _; omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

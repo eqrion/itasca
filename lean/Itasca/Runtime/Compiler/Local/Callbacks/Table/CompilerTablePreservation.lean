@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -179,4 +179,4 @@ theorem compiler_fixups_after_if_tables {A : Type} (ops : runtime.platform.Alloc
   compiler_fixups_tables ops before sites target index status output accepted
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

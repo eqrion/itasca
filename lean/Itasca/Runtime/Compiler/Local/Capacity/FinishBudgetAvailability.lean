@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.ObserveBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual emission/observation callback tail consumes exactly one
@@ -34,7 +34,7 @@ allowance of one instruction; the dead path observes without charging it. -/
 theorem compiler_numeric_available_effect {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : CallbackDemand compiler state bound) (front : List valtype) (op : Abs.Numeric.Instruction)
+    (demand : CallbackDemand compiler state bound) (front : List valtype) (op : SourceMachine.Numeric.Instruction)
     (layout : compiler.reachable = true →
       CompilerLayout compiler (front ++ List.replicate op.arity (integerType op.input))) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (integerOpcode op) 0#u32 0#u32 0#u128
@@ -61,7 +61,7 @@ effect; floating-point execution behavior is not involved. -/
 theorem compiler_float_available_effect {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : CallbackDemand compiler state bound) (front : List valtype) (op : Abs.Float.Instruction)
+    (demand : CallbackDemand compiler state bound) (front : List valtype) (op : SourceMachine.Float.Instruction)
     (layout : compiler.reachable = true →
       CompilerLayout compiler (front ++ List.replicate op.arity (valtype_numtype op.input))) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (floatOpcode op) 0#u32 0#u32 0#u128
@@ -100,4 +100,4 @@ theorem finish_op_available_effect {A : Type} (ops : runtime.platform.Alloc A)
     (by simp [ChargeCounter.used]; omega) (by simpa [ChargeCounter.used] using
       (show used.val ≤ compiler.budget.instructions.val+1 by omega))⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

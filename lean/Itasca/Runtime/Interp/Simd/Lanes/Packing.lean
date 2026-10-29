@@ -4,17 +4,17 @@ import SpecExt.Builtins.LaneView
 /-!
 Relating packed lane bits to source vectors.
 
-Main declarations: `laneBits_toNat` and `splat_packed`. A direct consumer is `Interp.Simd.Float.Binary`.
+Main declarations: `lane_bits_to_nat` and `splat_packed`. A direct consumer is `Interp.Simd.Float.Binary`.
 -/
 
 namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
-theorem laneBits_toNat (width index : Nat) (v : BitVec 128) :
+theorem lane_bits_to_nat (width index : Nat) (v : BitVec 128) :
     (laneBits width index v).toNat = v.toNat / 2^(width*index) % 2^width := by
   simp only [laneBits, BitVec.toNat_setWidth, BitVec.toNat_ushiftRight, Nat.shiftRight_eq_div_pow]
 
-theorem packLanes_of_laneBits (ty : lanetype) (v : BitVec 128) (x : BitVec 64)
+theorem pack_lanes_of_lane_bits (ty : lanetype) (v : BitVec 128) (x : BitVec 64)
     (lanes : ∀ j, j < 128/lsize ty → laneBits (lsize ty) j v = x.setWidth (lsize ty)) :
     SpecExt.Builtins.packLanes ty
       (List.replicate (128/lsize ty) (SpecExt.Builtins.laneOfBits ty (x.setWidth (lsize ty)).toNat)) =
@@ -22,7 +22,7 @@ theorem packLanes_of_laneBits (ty : lanetype) (v : BitVec 128) (x : BitVec 64)
   have eq := SpecExt.Builtins.pack_replicate_of_lanes ty (128/lsize ty) v.toNat
     (x.setWidth (lsize ty)).toNat (by
       intro j bound
-      rw [←laneBits_toNat]
+      rw [←lane_bits_to_nat]
       exact congrArg BitVec.toNat (lanes j bound))
   have covers : lsize ty * (128/lsize ty) = 128 := by cases ty <;> decide
   rw [covers, Nat.mod_eq_of_lt (BitVec.toNat_lt_twoPow_of_le (by rfl))] at eq
@@ -37,7 +37,7 @@ theorem splat_packed (ty : lanetype) (x : U64) (width : U32)
     (by rw [widthEq]; cases ty <;> decide))
   intro result lanes
   rw [widthEq] at lanes
-  have eq := packLanes_of_laneBits ty result.bv x.bv lanes
+  have eq := pack_lanes_of_lane_bits ty result.bv x.bv lanes
   exact congrArg uN.mk_uN eq.symm
 
 end Itasca.Runtime.Interp.Simd

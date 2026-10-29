@@ -8,7 +8,7 @@ The emitted call-tag shape needed for exact event recording.
 Main declarations: `callTag` and `RecordingEmissionShape`. A direct consumer is `Interp.Relations.StepRecordingInversion`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def callTag : Bytecode → Nat
@@ -37,7 +37,7 @@ theorem RecordingEmissionShape.singleton (source : instr) (instruction : Bytecod
     rw [equality] at silent
     cases silent
 
-theorem integerInstruction_callTag (op : Abs.Numeric.Instruction) (dst a b : U32) :
+theorem integer_instruction_call_tag (op : SourceMachine.Numeric.Instruction) (dst a b : U32) :
     callTag (integerInstruction op dst a b)=0 := by
   cases op with
   | binary ty operator => cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;> rfl
@@ -46,7 +46,7 @@ theorem integerInstruction_callTag (op : Abs.Numeric.Instruction) (dst a b : U32
   | eqz ty => cases ty <;> rfl
   | conversion operator => cases operator <;> rfl
 
-theorem floatInstruction_callTag (op : Abs.Float.Instruction) (dst a b : U32) :
+theorem float_instruction_call_tag (op : SourceMachine.Float.Instruction) (dst a b : U32) :
     callTag (floatInstruction op dst a b)=0 := by
   cases op with
   | unary ty operator => cases ty <;> cases operator <;> rfl
@@ -66,7 +66,7 @@ theorem LinearEmission.recording_shape {locals before source emitted after}
   | binary stack ty op a b left right =>
     apply RecordingEmissionShape.singleton
     cases ty <;> cases op <;> rfl
-  | numeric stack op a b left right => exact .singleton _ _ (integerInstruction_callTag ..)
+  | numeric stack op a b left right => exact .singleton _ _ (integer_instruction_call_tag ..)
   | localGet | localSet | localTee =>
     apply RecordingEmissionShape.singleton
     simp only [move]
@@ -77,7 +77,7 @@ theorem ScalarEmission.recording_shape {C before source emitted after}
     (head : ScalarEmission C before source emitted after) : RecordingEmissionShape source emitted := by
   cases head with
   | linear head => exact head.recording_shape
-  | float => exact .singleton _ _ (floatInstruction_callTag ..)
+  | float => exact .singleton _ _ (float_instruction_call_tag ..)
   | select =>
     apply RecordingEmissionShape.singleton
     unfold selectInstruction
@@ -139,4 +139,4 @@ theorem ExecutableEmission.recording_shape {tables C before source emitted after
   cases head with
   | scalar h | stateful h | indirect h | simd h | typedSelect h => exact h.recording_shape
   | branchTable => exact .singleton _ _ rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

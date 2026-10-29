@@ -10,7 +10,7 @@ Accepted scalar-memory instructions and decoded opcode facts, used by safety, em
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual memory reader selected by the independently defined binary row. -/
@@ -69,7 +69,7 @@ theorem reader_memory_wasm2 {data env locals index st}
   · exact p.append_result C outer spine header base {st with core := out} (operation.op arg)
       p.current.ctrl.polymorphic_base rest wf (.plain encoded1) finalTyped controlEq newBlocks stack (fun h => nomatch h) (encoded1.declared _)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -77,7 +77,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 def memoryRawType : numtype → types.ValueType
@@ -86,22 +86,22 @@ def memoryRawType : numtype → types.ValueType
 def memoryNatural : numtype → U32
   | .I32 | .F32 => 2#u32 | .I64 | .F64 => 3#u32
 
-def memoryPackedNatural {ty} : Abs.Memory.PackedWidth ty → U32
+def memoryPackedNatural {ty} : SourceMachine.Memory.PackedWidth ty → U32
   | .byte => 0#u32 | .half => 1#u32 | .word => 2#u32
 
-def memoryLoadMeaning : Abs.Memory.Load → MemoryMeaning.Operation
+def memoryLoadMeaning : SourceMachine.Memory.Load → MemoryMeaning.Operation
   | .full ty => MemoryMeaning.fullLoad (memoryRawType ty) ty (memoryNatural ty)
   | .packed ty width sign => MemoryMeaning.packedLoad (memoryRawType (numtype_Inn ty)) ty width.bits sign (memoryPackedNatural width)
 
-def memoryStoreMeaning : Abs.Memory.Store → MemoryMeaning.Operation
+def memoryStoreMeaning : SourceMachine.Memory.Store → MemoryMeaning.Operation
   | .full ty => MemoryMeaning.fullStore (memoryRawType ty) ty (memoryNatural ty)
   | .packed ty width => MemoryMeaning.packedStore (memoryRawType (numtype_Inn ty)) ty width.bits (memoryPackedNatural width)
 
-@[simp] theorem memoryRawType_translate (ty : numtype) : Translate.valueType (memoryRawType ty) = valtype_numtype ty := by cases ty <;> rfl
+@[simp] theorem memory_raw_type_translate (ty : numtype) : Translate.valueType (memoryRawType ty) = valtype_numtype ty := by cases ty <;> rfl
 
  theorem memory_load_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Memory.Load) (arg : code.MemArg) :
+    (op : SourceMachine.Memory.Load) (arg : code.MemArg) :
     MemoryMeaning.opcodeMeaning (UScalar.cast .U8 (memoryLoadOpcode op)) = some (memoryLoadMeaning op) ∧
     (memoryLoadMeaning op).store = false ∧
     (memoryLoadMeaning op).ty = memoryRawType op.type ∧
@@ -119,7 +119,7 @@ def memoryStoreMeaning : Abs.Memory.Store → MemoryMeaning.Operation
 
  theorem memory_store_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Memory.Store) (arg : code.MemArg) :
+    (op : SourceMachine.Memory.Store) (arg : code.MemArg) :
     MemoryMeaning.opcodeMeaning (UScalar.cast .U8 (memoryStoreOpcode op)) = some (memoryStoreMeaning op) ∧
     (memoryStoreMeaning op).store = true ∧
     (memoryStoreMeaning op).ty = memoryRawType op.type ∧
@@ -134,6 +134,6 @@ def memoryStoreMeaning : Abs.Memory.Store → MemoryMeaning.Operation
   | full ty => cases ty <;> refine ⟨rfl,rfl,rfl,rfl,rfl,by decide,by decide,rfl,?_⟩ <;> simp only [global_simps] <;> decide
   | packed ty width => cases ty <;> cases width <;>
       refine ⟨rfl,rfl,rfl,rfl,rfl,by decide,by decide,rfl,?_⟩ <;> simp only [global_simps] <;> decide
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

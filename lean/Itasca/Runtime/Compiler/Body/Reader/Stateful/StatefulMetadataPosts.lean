@@ -10,7 +10,7 @@ Stateful reader postconditions for reference, memory/table and segment operation
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_memory_fill_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
@@ -171,7 +171,7 @@ theorem reader_table_copy_wasm2 {data env locals index st} (p : Pending data env
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -179,7 +179,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
@@ -411,7 +411,7 @@ theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env 
   · intro a _
     simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -419,7 +419,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem memory_size_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
@@ -500,7 +500,7 @@ theorem reader_memory_grow_wasm2 {data env locals index st}
   · intro _ _
     simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -508,7 +508,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_table_get_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
@@ -520,7 +520,7 @@ theorem reader_table_get_post_wasm2 {data env locals index st} (p : Pending data
   apply (reader_table_get_wasm2 p hbyte hsize value out accepted).stateful_post (.tableGet value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_set_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 38#u8)
@@ -531,7 +531,7 @@ theorem reader_table_set_post_wasm2 {data env locals index st} (p : Pending data
   apply (reader_table_set_wasm2 p hbyte hsize value out accepted).stateful_post (.tableSet value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_ref_null_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
@@ -542,7 +542,7 @@ theorem reader_ref_null_post_wasm2 {data env locals index st} (p : Pending data 
   apply (reader_ref_null_wasm2 p hbyte hsize value out accepted).stateful_post (.refNull (Translate.referenceType value)) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_grow_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -554,7 +554,7 @@ theorem reader_table_grow_post_wasm2 {data env locals index st} (p : Pending dat
   apply (reader_table_grow_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.tableGrow value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_size_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -566,7 +566,7 @@ theorem reader_table_size_post_wasm2 {data env locals index st} (p : Pending dat
   apply (reader_table_size_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.tableSize value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_fill_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -578,7 +578,7 @@ theorem reader_table_fill_post_wasm2 {data env locals index st} (p : Pending dat
   apply (reader_table_fill_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.tableFill value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_data_drop_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -590,7 +590,7 @@ theorem reader_data_drop_post_wasm2 {data env locals index st} (p : Pending data
   apply (reader_data_drop_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.dataDrop value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_elem_drop_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -602,7 +602,7 @@ theorem reader_elem_drop_post_wasm2 {data env locals index st} (p : Pending data
   apply (reader_elem_drop_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.elemDrop value.1.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_memory_fill_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -614,7 +614,7 @@ theorem reader_memory_fill_post_wasm2 {data env locals index st} (p : Pending da
   apply (reader_memory_fill_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post .memoryFill ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_memory_copy_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -626,7 +626,7 @@ theorem reader_memory_copy_post_wasm2 {data env locals index st} (p : Pending da
   apply (reader_memory_copy_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post .memoryCopy ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_memory_init_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -638,7 +638,7 @@ theorem reader_memory_init_post_wasm2 {data env locals index st} (p : Pending da
   apply (reader_memory_init_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.memoryInit value.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_init_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -650,7 +650,7 @@ theorem reader_table_init_post_wasm2 {data env locals index st} (p : Pending dat
   apply (reader_table_init_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.tableInit value.2.val value.1.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_table_copy_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -662,7 +662,7 @@ theorem reader_table_copy_post_wasm2 {data env locals index st} (p : Pending dat
   apply (reader_table_copy_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.tableCopy value.1.val value.2.val) ?_ hsize
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_memory_size_post_wasm2 {data env locals index st}
     (p : Pending data env .Wasm2 locals index st)
@@ -673,7 +673,7 @@ theorem reader_memory_size_post_wasm2 {data env locals index st}
   apply (reader_memory_size_wasm2 p byte size out accepted).stateful_post .memorySize ?_ size
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
 theorem reader_memory_grow_post_wasm2 {data env locals index st}
     (p : Pending data env .Wasm2 locals index st)
@@ -684,8 +684,8 @@ theorem reader_memory_grow_post_wasm2 {data env locals index st}
   apply (reader_memory_grow_wasm2 p byte size out accepted).stateful_post .memoryGrow ?_ size
   intro a equality
   try dsimp only [id] at equality
-  simp only [Abs.Stateful.Instruction.source,equality]
+  simp only [SourceMachine.Stateful.Instruction.source,equality]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

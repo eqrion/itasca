@@ -8,7 +8,7 @@ Emitted-code monotonicity of compiler primitives.
 Main declarations: `compiler_emit_code_mono` and `compiler_fixups_after_if_code_mono`. A direct consumer is `Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneTactic`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_emit_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -148,4 +148,4 @@ theorem compiler_fixups_after_if_code_mono {A : Type} (ops : runtime.platform.Al
     before.function.code.val.length ≤ (snapshotCompiler output).function.code.val.length := by
   rw [compiler_fixups_after_if_code_length ops before sites target index status output accepted]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

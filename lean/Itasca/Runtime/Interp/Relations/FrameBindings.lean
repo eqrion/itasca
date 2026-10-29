@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- The module bound to the active source frame is the decoded instance found
 by the concrete frame's instance index. -/
 theorem FrameBinding.module_lookup {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst) :
     source.module = Store.decodeInstance store inst := by
@@ -17,7 +17,7 @@ theorem FrameBinding.module_lookup {M : Type} {store : runtime.store.Store M}
 /-- Raw direct-call lookup and source CALL lookup use the identical retained
 instance function map. -/
 theorem FrameBinding.resolve_call {M : Type} {store : runtime.store.Store M}
-    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source) (inst : runtime.store.ModuleInst)
     (lookup : store.instances.val[raw.instance.val]? = some inst)
     (index : Nat) (address : runtime.FuncAddr)

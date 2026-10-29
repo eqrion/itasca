@@ -11,7 +11,7 @@ SIMD execution from a prepared frame point.
 Main declarations: `frame_point_step`. A direct consumer is `Interp.Machine.Simd.Execution`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.Machine.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -23,31 +23,31 @@ theorem frame_point_step {M P F A : Type}
     (memoryLaws : Platform.MemoryLaws memory view) (floatLaws : Platform.FloatOpsCorrect floats)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (raw : runtime.interp.Frame) (index : Usize) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
-    (next : Nat) (output : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
+    (next : Nat) (output : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (source : instr) (after : List instr)
     (last : index.val+1=exec.frames.length) (hf : exec.frames.val[index.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst)
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (allocated : raw.base.val+compiled.slot_count.val≤exec.slots.length)
-    (typed : Abs.CoreTyped ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩)
+    (typed : SourceMachine.CoreTyped ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
-    (allowed : Abs.SimdInstr source)
+    (allowed : SourceMachine.SimdInstr source)
     (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
-      Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result) :
+      Compiler.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result) :
     (∃ target : U32, raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
       FramePoint (Store.decodeStore view interpretation store) {raw with pc:=target}
         {f with code:=source::after} compiled C targets next output) ∨
     (runtime.interp.step memory hooks floats allocator exec store platform ⦃ FrameOutcome view interpretation
       store exec platform raw index compiled C targets next output ambient {f with code:=source::after} rest ⦄) := by
-  rcases framePoint_head source after allowed project point with jump | ⟨instruction,result,head,fetch,tail⟩
+  rcases frame_point_head source after allowed project point with jump | ⟨instruction,result,head,fetch,tail⟩
   · exact Or.inl jump
   · apply Or.inr
-    generalize stackEq : f.vals.map Code.valueType=stack at head
+    generalize stackEq : f.vals.map Compiler.valueType=stack at head
     cases head with
     | instruction front inputs outputs source opcode operand entry imm instruction meaning immediate made position =>
       cases meaning with
@@ -85,4 +85,4 @@ theorem frame_point_step {M P F A : Type}
       rintro out ⟨ok,platformEq,mutation,metadata,pc,g,pcNext,effect⟩
       exact ⟨platformEq,mutation,metadata,pc,pcNext,Or.inl ⟨ok,g,effect⟩⟩
 
-end Itasca.Runtime.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.Machine.Simd

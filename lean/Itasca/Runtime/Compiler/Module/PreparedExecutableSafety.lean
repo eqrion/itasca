@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Table.PreparedTableInitial
 import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Module.CompileProfileTotal
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual entry setup supplies every static and allocation ledger field needed
@@ -43,4 +43,4 @@ theorem prepared_executable_safety_wasm2 {A} (ops : runtime.platform.Alloc A)
   refine ⟨rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,?_⟩
   simp only [EnvTranslation.context,w.context_results]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

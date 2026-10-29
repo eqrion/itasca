@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.ScalarEmissionAcceptance
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source layouts at the two ends of actual lowering bound both operand
@@ -16,7 +16,7 @@ theorem Lowered.source_capacities {A : Type} {before after : runtime.compiler.Fu
 
 /-- Actual ordinary lowering derives every new instruction check from its
 source emission record and preserves the open prefix's earlier checks. -/
-theorem Lowered.floatCoreInstructionPrefix {A : Type}
+theorem Lowered.float_core_instruction_prefix {A : Type}
     {before after : runtime.compiler.FunctionCompiler A} {instruction input output source C}
     (lowered : Lowered before after instruction output) (layout : CompilerLayout before input)
     (live : before.reachable = true) (locals : C.LOCALS = compilerLocals before)
@@ -26,8 +26,8 @@ theorem Lowered.floatCoreInstructionPrefix {A : Type}
     CompilerInstructionPrefix after := by
   obtain ⟨inputs,outputs⟩ := lowered.source_capacities layout live
   have valid := emission.instructions_accept after.function (by simpa only [locals] using inputs) (by simpa only [locals] using outputs)
-  apply lowered.openInstructionPrefix tables held (valid := valid instruction (by simp))
+  apply lowered.open_instruction_prefix tables held (valid := valid instruction (by simp))
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

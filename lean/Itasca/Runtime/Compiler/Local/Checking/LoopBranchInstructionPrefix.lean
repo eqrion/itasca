@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.ForwardBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual loop branching checks its overlap-safe transfer and retained backward
@@ -42,7 +42,7 @@ theorem compiler_branch_loop_instruction_effect {A : Type} (ops : runtime.platfo
   refine ⟨growth,_,code,?_,?_⟩
   · intro index owned
     simpa only [PendingInstructionSite,frames] using owned
-  · exact branchInstructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
+  · exact branch_instructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
       frame.height source frame.params frame.start_pc order (sourceFits.trans growth.slots) (.inl (target.trans growth.code))
 
 /-- Apply the concrete append effect to the current checked prefix. -/
@@ -64,4 +64,4 @@ theorem compiler_branch_loop_open_instructions {A : Type} (ops : runtime.platfor
     CompilerInstructionPrefix after :=
   (compiler_branch_loop_instruction_effect ops law before after frame index depth source skip lookup position loop sourcePosition order sourceFits target codeFits offsetsFit coordinateFits called).apply held
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

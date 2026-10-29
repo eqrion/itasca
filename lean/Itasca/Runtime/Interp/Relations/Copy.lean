@@ -10,7 +10,7 @@ def copyWords (words : List U64) (dst src : Nat) : Nat → List U64
   | 0 => words
   | n + 1 => copyWords (words.set dst words[src]!) (dst + 1) (src + 1) n
 
-theorem copyWords_length (words : List U64) (dst src n : Nat) :
+theorem copy_words_length (words : List U64) (dst src n : Nat) :
     (copyWords words dst src n).length = words.length := by
   induction n generalizing words dst src with
   | zero => rfl

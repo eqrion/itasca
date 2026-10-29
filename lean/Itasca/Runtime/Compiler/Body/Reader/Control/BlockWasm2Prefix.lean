@@ -9,7 +9,7 @@ An accepted canonical BLOCK reader constructs the complete live child compiler p
 Main declarations: `structured_reader_prefix_block_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.EnterCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- An accepted canonical BLOCK reader constructs the complete live child
@@ -70,4 +70,4 @@ theorem structured_reader_prefix_block_wasm2 {jumpTables : List U32} {emit : Lis
     rfl
   · exact post.scope_fronts (.inl rfl) fronts _ (by simpa [SourceScope.enterBlock] using newTypes)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

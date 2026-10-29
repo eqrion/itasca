@@ -12,10 +12,10 @@ Else-transition frame geometry, resolved guard prefixes and branch-site retentio
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-theorem resolvedCode_guard_set (code : List Bytecode) (groups : List FixupTarget)
+theorem resolved_code_guard_set (code : List Bytecode) (groups : List FixupTarget)
     (guard : Usize) (condition old target : U32)
     (found : code[guard.val]? = some (.JumpIfZero condition old)) :
     resolvedCode (code.set guard.val (.JumpIfZero condition target)) groups =
@@ -24,7 +24,7 @@ theorem resolvedCode_guard_set (code : List Bytecode) (groups : List FixupTarget
 
 /-- The actual ELSE update resolves its guard and appends one forward skip.
 The resolved view of the completed then body is preserved as an exact prefix. -/
-theorem resolvedCode_else_live (code : List Bytecode) (groups : List FixupTarget)
+theorem resolved_code_else_live (code : List Bytecode) (groups : List FixupTarget)
     (fixups : List Usize) (guard site : Usize) (condition old noEntry exit : U32)
     (found : code[guard.val]? = some (.JumpIfZero condition old))
     (position : site.val = code.length)
@@ -37,12 +37,12 @@ theorem resolvedCode_else_live (code : List Bytecode) (groups : List FixupTarget
   have inside' : FixupsInside ([] ++ ⟨fixups, exit⟩ :: groups)
       (code.set guard.val (.JumpIfZero condition noEntry)).length := by
     simpa using inside
-  have eq := resolvedCode_new_branch (code.set guard.val (.JumpIfZero condition noEntry)) [] [] groups
+  have eq := resolved_code_new_branch (code.set guard.val (.JumpIfZero condition noEntry)) [] [] groups
     ⟨fixups, exit⟩ .jump core.num.U32.MAX site (by simpa using position) inside'
   simpa only [List.append_nil, List.nil_append, BranchKind.instruction,
-    resolvedCode_guard_set code (⟨fixups, exit⟩ :: groups) guard condition old noEntry found] using eq
+    resolved_code_guard_set code (⟨fixups, exit⟩ :: groups) guard condition old noEntry found] using eq
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -50,7 +50,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem FrameSites.set_guard {code frame} (valid : FrameSites code frame)
@@ -84,7 +84,7 @@ theorem FrameSites.else_dead {code frame} (valid : FrameSites code frame)
   have patched := valid.set_guard guard condition old noEntry found
   exact ⟨patched.branches, by simp⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -92,7 +92,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A future ELSE plan determines the preceding THEN plan. The completed
@@ -119,7 +119,7 @@ theorem FrameFuture.before_else {afterLength beforeLength locals frame label fix
   · simp [kind]
   · intro _; exact guardBound
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -127,7 +127,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Exact physical ELSE update, including the optional skip selected by the
@@ -193,12 +193,12 @@ theorem ElseTransition.resolved {A : Type} {before after : runtime.compiler.Func
   cases normal with
   | true =>
     rw [change.codeEq, change.fixupsEq]
-    simpa using resolvedCode_else_live _ _ _ _ _ _ _ _ _ change.guardCode change.sitePosition inside
+    simpa using resolved_code_else_live _ _ _ _ _ _ _ _ _ change.guardCode change.sitePosition inside
   | false =>
     simp only [Bool.false_eq_true, ↓reduceIte, List.append_nil] at *
     rw [change.codeEq, change.fixupsEq]
-    simpa using resolvedCode_guard_set _ (⟨frame.fixups.val, exit⟩ :: groups) _ _ _ noEntry change.guardCode
+    simpa using resolved_code_guard_set _ (⟨frame.fixups.val, exit⟩ :: groups) _ _ _ noEntry change.guardCode
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

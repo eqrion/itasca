@@ -11,7 +11,7 @@ Exit-slot bounds for br_table targets, the target loop and the compiler callback
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Each actual table arm records an exit only for its source-bounded result
@@ -61,7 +61,7 @@ theorem compiler_lower_table_exit_slots {A : Type} (ops : runtime.platform.Alloc
     (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     FrameExitSlotBounds after := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
-  have growth := emission.instructionCheckExtends
+  have growth := emission.instruction_check_extends
   obtain ⟨budget,code,sources,frame,appended,_⟩ := emission
   subst emitted
   apply run.exit_slots law _ heightFits (held.retained rfl le_rfl)
@@ -71,7 +71,7 @@ theorem compiler_lower_table_exit_slots {A : Type} (ops : runtime.platform.Alloc
   change before.function.code.length ≤ code.length
   exact growth.code
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -79,7 +79,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Collecting a table label preserves instruction checks and pending owners. -/
@@ -132,6 +132,6 @@ theorem compiler_br_table_callback_exit_slots {A : Type} (ops : runtime.platform
       exact compiler_observe_exit_slots ops law {labeled with table_depths := cleared}
         after state (checked.retained rfl le_rfl) observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

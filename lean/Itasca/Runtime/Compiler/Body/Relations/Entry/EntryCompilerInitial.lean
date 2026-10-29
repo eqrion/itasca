@@ -13,7 +13,7 @@ The fixed data needed by the body fold is derived from the accepted entry and sc
 Main declarations: `CompilerEntryFacts`. A direct consumer is `Compiler.Body.Relations.Entry.ExecutableEntryCompilerFinish`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Lookup in the canonical source table selects an actual captured compiler
@@ -90,4 +90,4 @@ theorem TypedRunWasm2.body_size {V : Type} {visitor : code.OpVisitor V}
   | done typed _ _ => exact typed.bounds.size
   | step typed _ _ _ _ _ => exact typed.bounds.size
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

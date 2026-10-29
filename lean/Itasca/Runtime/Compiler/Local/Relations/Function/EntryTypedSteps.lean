@@ -6,7 +6,7 @@ An accepted body of either profile has the Wasm 2.0 typed instruction run from i
 Main declarations: `witness_typed_steps` and `batch_typed_steps`. A direct consumer is `Compiler.Module.CompileEntry`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -51,4 +51,4 @@ theorem batch_typed_steps {V : Type} (visitor : code.OpVisitor V)
   · obtain ⟨_, position, entry⟩ := stream.CodeBatch.validate_next.accepted visitor batch index finish before after next
     exact ⟨finish, position, entry_typed_steps visitor batch.code batch.validated_end batch.env index finish
       before after bounds batch.profile entry⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

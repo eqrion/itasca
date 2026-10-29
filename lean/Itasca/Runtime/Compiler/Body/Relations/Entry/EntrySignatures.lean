@@ -7,7 +7,7 @@ Concrete block selection agrees with the canonical resolved parameter and result
 Main declarations: `SignatureAt.resolved` and `SignatureSequence.select`. A direct consumer is `Compiler.Body.Relations.Calls.IndirectCalls`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std Itasca
 
 /-- Concrete block selection agrees with the canonical resolved parameter and
@@ -60,4 +60,4 @@ theorem SignatureSequence.select {signatures : Slice runtime.compiler.Signature}
   obtain ⟨signature, selected⟩ := selected
   exact ⟨signature, selected, selected.resolved sequence.table inputs outputs⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

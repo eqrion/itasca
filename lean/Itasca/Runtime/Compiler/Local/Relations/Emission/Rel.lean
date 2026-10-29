@@ -7,7 +7,7 @@ relation records slot operands and concrete emitted instructions; it does not
 assume compiler correctness. Structured control and module compilation extend
 this relation separately. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 abbrev Bytecode := runtime.bytecode.Instr
 
@@ -77,7 +77,7 @@ inductive LinearEmission (locals : List valtype) :
       (left : a.val = slots locals + slots stack) (right : b.val = a.val + 1) :
       LinearEmission locals (stack ++ [integerType ty, integerType ty])
         (op.source ty) [op.target ty a b] (stack ++ [op.output ty])
-  | numeric (stack) (op : Abs.Numeric.Instruction) (a b : U32)
+  | numeric (stack) (op : SourceMachine.Numeric.Instruction) (a b : U32)
       (left : a.val = slots locals + slots stack)
       (right : b.val = a.val + (op.arity - 1)) :
       LinearEmission locals (stack ++ List.replicate op.arity (integerType op.input))
@@ -107,4 +107,4 @@ inductive LinearEmission (locals : List valtype) :
       LinearEmission locals (stack ++ [ty]) (.LOCAL_TEE (.mk_uN index.val))
         [move ty localSlot stackSlot] (stack ++ [ty])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -38,7 +38,7 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
       runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared after p (.Ok ())
         ⦃ (_,words,_,_,_,afterStore,_,status) => FrameStorePrefix store afterStore ∧
           (status=.Ok () → ∃values,
-            signature.results.val.map sourceType=values.map Code.valueType ∧
+            signature.results.val.map sourceType=values.map Compiler.valueType ∧
             (∀value∈values,wf_val value) ∧ (∀value∈values,ResultIndexFits value) ∧
             ValuesAt words.val 0 values) ⦄div)
     (diverges : runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results=.div) :
@@ -62,7 +62,7 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
       have normal : WP.spec
           (runtime.interp.invoke_with_loop1 memory hooks floats allocator prepared after p (.Ok ()))
           (fun (_,words,_,_,_,afterStore,_,status)=> FrameStorePrefix store afterStore ∧
-            (status=.Ok () → ∃values,signature.results.val.map sourceType=values.map Code.valueType ∧
+            (status=.Ok () → ∃values,signature.results.val.map sourceType=values.map Compiler.valueType ∧
               (∀value∈values,wf_val value) ∧ (∀value∈values,ResultIndexFits value) ∧ ValuesAt words.val 0 values)) := by
         apply total_of_nondivergent safe
         intro divergent

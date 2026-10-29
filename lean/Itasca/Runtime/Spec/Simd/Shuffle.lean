@@ -11,8 +11,8 @@ open SpecExt.Builtins
 
 def byteShape : ishape := .mk_ishape (shapeOf .I8)
 
-theorem byteShape_wf : wf_ishape byteShape :=
-  .ishape_case_0 .I8 _ (shapeOf_wf .I8) rfl
+theorem byte_shape_wf : wf_ishape byteShape :=
+  .ishape_case_0 .I8 _ (shape_of_wf .I8) rfl
 
 theorem shuffle_step (x y result : BitVec 128) (indices : List laneidx)
     (lengthEq : indices.length = 16)
@@ -29,12 +29,12 @@ theorem shuffle_step (x y result : BitVec 128) (indices : List laneidx)
   have wordsWf : Forall (fun word => wf_lane_ .I8 (.mk_lane__0 .I8 word)) (byteWords x ++ byteWords y) := by
     intro word member
     rcases List.mem_append.mp member with left | right
-    · exact byteWords_wf x word left
-    · exact byteWords_wf y word right
+    · exact byte_words_wf x word left
+    · exact byte_words_wf y word right
   apply Step_pure.vshuffle (.mk_uN x.toNat) (.mk_uN y.toNat) .I8 16 indices
     (.mk_uN result.toNat) (byteWords x ++ byteWords y) 0
   · change (byteWords x ++ byteWords y).map (lane_.mk_lane__0 .I8) = _
-    rw [List.map_append,byteWords_lanes,byteWords_lanes]
+    rw [List.map_append,byte_words_lanes,byte_words_lanes]
     rfl
   · intro k member
     simpa using indexBound k (List.mem_range.mp member)
@@ -43,7 +43,7 @@ theorem shuffle_step (x y result : BitVec 128) (indices : List laneidx)
   · exact packed
   · exact const_wf x
   · exact const_wf y
-  · apply wf_admininstr.admininstr_case_32 _ _ byteShape_wf
+  · apply wf_admininstr.admininstr_case_32 _ _ byte_shape_wf
     · intro index member
       have bound := bounded index member
       cases index with
@@ -52,7 +52,7 @@ theorem shuffle_step (x y result : BitVec 128) (indices : List laneidx)
     · exact ⟨rfl,lengthEq⟩
   · exact const_wf result
   · exact wordsWf
-  · exact shapeOf_wf .I8
+  · exact shape_of_wf .I8
   · intro k member
     apply wordsWf
     have bound : proj_uN_0 indices[k]! < (byteWords x ++ byteWords y).length := by

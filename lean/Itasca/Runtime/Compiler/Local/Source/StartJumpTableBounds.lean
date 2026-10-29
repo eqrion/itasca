@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 import Itasca.Runtime.Compiler.Local.Source.JumpTableBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual construction and function-start leave the jump table empty, so no
@@ -38,4 +38,4 @@ theorem compiler_start_jump_table_bounds {A : Type} (ops : runtime.platform.Allo
   rw [jumpTables,initialEmpty] at member
   cases member
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -164,8 +164,8 @@ theorem float_resize_vector_relation (kind : FloatResize) (x result : BitVec 128
     · exact List.length_pos_of_mem member
     · simpa only [List.contains_iff_mem,FloatResize.output,lanetype_Fnn,shapeOf,lsize,size,valtype_numtype,Option.get!_some] using member
     · exact wf
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
   · apply fun_vcvtop__.fun_vcvtop___case_1 .F32 4 .F64 2 (floatResizeSource .promote)
       (.mk_uN x.toNat) (.mk_uN result.toNat) .LOW inputs products choices (some (some .LOW))
     · exact lengths
@@ -180,8 +180,8 @@ theorem float_resize_vector_relation (kind : FloatResize) (x result : BitVec 128
     · exact List.length_pos_of_mem member
     · simpa only [List.contains_iff_mem,FloatResize.output,lanetype_Fnn,shapeOf,lsize,size,valtype_numtype,Option.get!_some] using member
     · exact wf
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
 
 theorem float_resize_step (kind : FloatResize) (x result : BitVec 128)
     (allowed : ∀ j, j < 2 →
@@ -198,8 +198,8 @@ theorem float_resize_step (kind : FloatResize) (x result : BitVec 128)
   · rfl
   · exact const_wf x
   · apply wf_admininstr.admininstr_case_39
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact float_resize_source_wf kind
   · exact const_wf result
 

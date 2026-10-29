@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Demand.ObservationDemand
 import Itasca.Runtime.Platform.ReturnedLoop
 import Itasca.Wasm2.Trace.ControlRefinement
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca VisitorTrace
 set_option maxRecDepth 4096
 
@@ -90,4 +90,4 @@ theorem source_callback_demand (before middle final : List Observation)
   rw [retained,appended,List.append_assoc]
   rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

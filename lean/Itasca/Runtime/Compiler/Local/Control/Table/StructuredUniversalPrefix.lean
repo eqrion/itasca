@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixZipper
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixEmission
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredParentPrefixes.advance_current {jumpTables : List U32} {emission types functions returns locals code parents labels current}
     (saved : StructuredParentPrefixes (jumpTables := jumpTables) emission types functions returns locals code parents labels current)
@@ -68,8 +68,8 @@ theorem Lowered.structured_universal_advance {jumpTables : List U32} {A : Type} 
     have old := invariant.resolved oldPlans oldShape parentShapes
     have next := lowered.structured_resolved_advance old head ordinary
     have saved := (invariant.prefixes label labels groups oldPlans oldShape parentShapes).1
-    have resolved := resolvedCode_append_code before.function.code.val [emitted] groups old.inside
+    have resolved := resolved_code_append_code before.function.code.val [emitted] groups old.inside
     refine ⟨?_, next.code⟩
     simpa only [codeEq, resolved] using (saved.extend [emitted]).advance_current instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

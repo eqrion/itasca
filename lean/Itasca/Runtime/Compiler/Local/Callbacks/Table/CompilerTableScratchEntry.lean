@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -20,7 +20,7 @@ elab "table_entry_metadata_effect " h:ident " using " ops:term ", " law:term : t
   let ty ← inferType hyp
   let some (_, lhs, _) := ty.eq? | throwError "not an equation"
   if lhs.getAppFn.constName? = some ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start_loop then
-    let theoremName := mkIdent `Itasca.Runtime.Code.compiler_locals_table_entry_metadata
+    let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_locals_table_entry_metadata
     evalTactic (← `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ $h))
   else
     throwError "not local declaration loop"
@@ -137,4 +137,4 @@ theorem compiler_function_start_table_boundary {A : Type} (ops : runtime.platfor
   simp only [CompilerTableEntryMetadata, Prod.mk.injEq] at fields
   exact boundary.preserved fields.1 fields.2.1 (by rw [fields.2.2])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

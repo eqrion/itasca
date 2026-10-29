@@ -15,24 +15,24 @@ open Aeneas Aeneas.Std
  theorem execute_load_footprint {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (instanceIndex base : Usize)
-    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (front : List val) (bits : Nat)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
-    (values : ValuesAt exec.slots.val base.val (front ++ [Abs.integerVal .I32 bits]))
-    (addressSlot : address.val = Code.slots (front.map Code.valueType))
+    (values : ValuesAt exec.slots.val base.val (front ++ [SourceMachine.integerVal .I32 bits]))
+    (addressSlot : address.val = Compiler.slots (front.map Compiler.valueType))
     (bitsBound : bits < 2^32) :
     runtime.interp.execute_load memory exec store instanceIndex base (loadOpcode op) address address offset ⦃ out =>
       out.1 = .Ok () → ∃ word, base.val+address.val < exec.slots.length ∧
         SlotsEffect exec out.2 (exec.slots.val.set (base.val+address.val) word) ⦄ := by
-  have words : WordsAt exec.slots.val base.val (Code.encodeValues front ++ [bits]) := by
-    simpa only [ValuesAt,Code.encodeValues_append,Code.encodeValues,Code.encodeValue,Abs.integerVal,
+  have words : WordsAt exec.slots.val base.val (Compiler.encodeValues front ++ [bits]) := by
+    simpa only [ValuesAt,Compiler.encode_values_append,Compiler.encodeValues,Compiler.encodeValue,SourceMachine.integerVal,
       numtype_Inn,List.flatMap_append,List.flatMap_cons,List.flatMap_nil,List.append_nil] using values
   have tail := words.append_right
   obtain ⟨bound,wordEq⟩ := tail 0 (by simp)
-  have addressPosition : address.val = (Code.encodeValues front).length := by simpa only [Code.encodeValues_length] using addressSlot
+  have addressPosition : address.val = (Compiler.encodeValues front).length := by simpa only [Compiler.encode_values_length] using addressSlot
   have atBound : base.val + address.val < exec.slots.length := by simpa only [Nat.add_zero,←addressPosition] using bound
   let word := exec.slots.val[base.val+address.val]
   have input : exec.slots.val[base.val+address.val]? = some word := List.getElem?_eq_getElem atBound
@@ -65,34 +65,34 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (values : f.vals = front ++ [Abs.integerVal .I32 bits])
+    (values : f.vals = front ++ [SourceMachine.integerVal .I32 bits])
     (slots : FrameSlots exec raw f)
-    (addressSlot : address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType))
+    (addressSlot : address.val = Compiler.slots (f.locals.map Compiler.valueType) + Compiler.slots (front.map Compiler.valueType))
     (bitsBound : bits < 2^32) (offsetEq : proj_uN_0 argument.OFFSET = offset.val)
     (compiled : runtime.bytecode.CompiledFunction)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (fetched : compiled.code.val[raw.pc.val]? = some (Code.memoryLoadInstruction op address address offset))
+    (fetched : compiled.code.val[raw.pc.val]? = some (Compiler.memoryLoadInstruction op address address offset))
     (pcBound : raw.pc.val < U32.max) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () → ∃ word, raw.base.val+address.val < exec.slots.length ∧
         out.2.1.slots.val = exec.slots.val.set (raw.base.val+address.val) word ⦄ := by
   apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
-    (Code.memoryLoadInstruction op address address offset) last frameFound found codeFound fetched pcBound
+    (Compiler.memoryLoadInstruction op address address offset) last frameFound found codeFound fetched pcBound
   intro pc pcNext
-  have actualValues : ValuesAt exec.slots.val raw.base.val ((f.locals++front) ++ [Abs.integerVal .I32 bits]) := by
+  have actualValues : ValuesAt exec.slots.val raw.base.val ((f.locals++front) ++ [SourceMachine.integerVal .I32 bits]) := by
     simpa only [FrameSlots,values,List.append_assoc] using slots
-  have actualAddress : address.val = Code.slots ((f.locals++front).map Code.valueType) := by
-    simpa only [List.map_append,Code.slots_append] using addressSlot
+  have actualAddress : address.val = Compiler.slots ((f.locals++front).map Compiler.valueType) := by
+    simpa only [List.map_append,Compiler.slots_append] using addressSlot
   have handler := execute_load_footprint memory view laws {exec with frames := exec.frames.set index {raw with pc := pc}} store raw.instance raw.base op address offset inst memoryAddress object (f.locals++front) bits found mapped issued actualValues actualAddress bitsBound
   apply WP.spec_mono (dispatch_load memory hooks floats allocator _ store platform index raw.instance raw.function raw.base op address address offset handler)
   intro out effect success

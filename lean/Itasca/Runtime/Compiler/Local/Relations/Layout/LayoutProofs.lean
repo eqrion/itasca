@@ -10,7 +10,7 @@ Compiler value widths and observed operand layouts.
 Main declarations: `compiler_width` and `observe_value`. A direct consumer is `Compiler.Local.Relations.Function.CoreFunction`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_width (ty : Itasca.types.ValueType) :
@@ -72,4 +72,4 @@ open Aeneas Aeneas.Std
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

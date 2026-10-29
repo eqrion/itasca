@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Module.CompileStreamSource
 import Itasca.Runtime.Compiler.Module.InitializerSourceTotal
 import Itasca.Runtime.Compiler.Module.CompilerLargeEnvironment
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -63,4 +63,4 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
           rw [lowered]
           cases result <;> cases choice : finalBudget.error <;> simp [choice]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

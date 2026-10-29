@@ -8,7 +8,7 @@ Both complete source profiles produce the same indexed function evidence; source
 Main declarations: `witness_compile_executable`. A direct consumer is `Compiler.Body.Relations.Entry.EntryBodyExecutable`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Both complete source profiles produce the same indexed function evidence;
@@ -40,4 +40,4 @@ theorem witness_compile_executable {A : Type} (ops : runtime.platform.Alloc A)
     facts.functionSlots matched rfl facts.signatures facts.bodyBound
   exact executable_witness_compiler_finish ops w facts body compiled finalBudget finished
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -22,7 +22,7 @@ Executable-function certificates through entry compilation, scheduler submission
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler's actual entry construction, issued batch validation, and
@@ -52,7 +52,7 @@ theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platfor
     (w.end_fits reachable bounded origin entry) w.created encoded
     w.final.function w.final.budget w.finished
   simpa only [w.metadata.1] using certificate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -60,7 +60,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileWitness.defined_executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
     {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
@@ -71,7 +71,7 @@ theorem CompileWitness.defined_executable_functions {A : Type} {allocator : runt
     (w.function_order law)
   obtain ⟨source, _, prefixCode, initializers⟩ := w.initializers law
   exact ⟨initialCode.extend source prefixCode, initializers⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -79,7 +79,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.initial_executable_functions {A : Type} {ops : runtime.platform.Alloc A}
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
@@ -91,7 +91,7 @@ theorem CompileSourceCertificate.initial_executable_functions {A : Type} {ops : 
     (by simp [initialScheduler, alloc.vec.Vec.new])
   rw [prepared.2.2.1]
   apply PartialExecutableModuleFunctions.empty
-  rw [sourceFunctions_length (by rw [c.functions, c.codeCount]), c.functions]
+  rw [source_functions_length (by rw [c.functions, c.codeCount]), c.functions]
 
 /-- Once actual submission has filled the canonical ledger, the remaining
 driver phases, collection and initializer lowering establish module coverage.
@@ -106,7 +106,7 @@ theorem CompileSourceCertificate.executable_functions_of_submission {A : Type} {
   have final : PartialExecutableModuleFunctions w.env (sourceFunctions c.raw) w.scheduler.functions.val := by
     simpa only [functions] using ledger
   exact w.defined_executable_functions law (final.complete w.functions.val (w.function_order law))
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -114,7 +114,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileEntries.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
@@ -167,7 +167,7 @@ theorem compiler_poll_executable_functions {A : Type} (allocator : runtime.platf
     PartialExecutableModuleFunctions env sources after.functions.val ∧ schedulerStatic after = schedulerStatic before := by
   rw [(compiler_poll_accepted allocator before after batch accepted).2]
   exact ⟨initial, rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -175,7 +175,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful scheduler entry is paired with the original module's exact
@@ -234,9 +234,9 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
     simpa only [w.metadata.1] using found
   have certificate := w.compile_executable law reachable bounded origin signatureTable functionTable entry body
   refine ⟨entry.typeIdx, sourceFunctionCode entry.typeIdx rawEntry, typeFound,
-    sourceFunctions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
+    source_functions_lookup (by simpa only [declarations] using typeFound) rawFound, ?_⟩
   simpa only [sourceFunctionCode, ModuleBinary.Code.declared, ModuleLocals.declared, groups, List.map_map, Function.comp_def] using certificate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -244,7 +244,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Captured module tables and the exact source-indexed certificate ledger
@@ -341,7 +341,7 @@ theorem compiler_submit_source_executable_functions {A S : Type} (ops : runtime.
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_executable_functions ops current next worker ready.functions accepted
     exact ready.transport same functions
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -351,7 +351,7 @@ section
 
 /-! Source-ordered executable certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.platform.Alloc A}
     {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
@@ -392,6 +392,6 @@ theorem compile_executable_functions {A : Type} (ops : runtime.platform.Alloc A)
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates.1, certificates.2, (w.initializers law).2.1⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

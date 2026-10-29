@@ -15,7 +15,7 @@ section
 
 /-! Public evolving-world divergence reflection and normal-return recovery.
 Lookup evidence is shared with terminal correspondence; source productivity remains separate. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Actual public invocation divergence has a coherent infinite labeled source execution, or the
@@ -62,7 +62,7 @@ theorem invoke_executable_world_infinite_source {M P F A : Type}
       exact Or.inr ⟨[],code,store,_,_,StepsH.refl initialWf,diverged⟩
   · rw [invoke_wrong_store memory hooks floats allocator exec store platform address args results owner] at divergent
     simp at divergent
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end
 
@@ -72,7 +72,7 @@ section
 
 /-! The behavior of a public invocation: every returned result is a recorded source outcome with
 classified resource causes, and divergence is an infinite source run or a diverging callback. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A returned result carries the exact event log of `recordedInvokeWith`, the source outcome for
@@ -136,7 +136,7 @@ theorem InvocationBehaves.returns {M P F A : Type}
   | ret post => exact .ret post
   | div => exact ((diverged rfl).elim finite callbacksReturn).elim
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end
 
@@ -147,7 +147,7 @@ section
 /-! Public invocation reports only traps when every source run fits the store limits, the
 allocator grants every request, interrupts continue and callbacks report no stack
 overflow. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 private theorem decoded_function {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
@@ -159,7 +159,7 @@ private theorem decoded_function {M : Type} {view : M → Slice U8} {code : Stor
       (Store.decodeFunction code store function).TYPE=Store.decodeFuncType signature := by
   have bound : function.signature.val<store.types.val.length := (List.getElem?_eq_some_iff.mp hs).1
   refine ⟨by simp only [Store.decodeStore,List.getElem?_map,hf,Option.map_some],?_⟩
-  rw [Store.decodeFunction_type code store function bound]
+  rw [Store.decode_function_type code store function bound]
   simp only [(List.getElem?_eq_some_iff.mp hs).2]
 
 private theorem source_cause_excluded {M P F A : Type}
@@ -241,7 +241,7 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     rw [call,WP.dspec_ok]
     exact ⟨afterCode,agrees,⟨fresh,same.trans held.2⟩,extension,typed⟩
   apply WP.dspec_mono (Platform.Recording.erase_dspec _ _ _
-    (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])
+    (recorded_invoke_with_erase memory hooks floats allocator exec store platform address args results [])
     (invoke_executable_world_recorded_resources_with memory hooks floats allocator view laws Inv (fun _ _ held=>held.1) (fun _ _ _ held mutation=>⟨held.1.update mutation,by simpa only [mutation.limits] using held.2⟩)
       resourceLaws code exec store platform ⟨valid,rfl⟩
       address args results issued argumentIssued _ invoked))
@@ -269,6 +269,6 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
       | Objects => exact (excluded (Or.inr (Or.inr (Or.inr (Or.inr rfl))))).elim
     | _ => exact executed.elim
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end

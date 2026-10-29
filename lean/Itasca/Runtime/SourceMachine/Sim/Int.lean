@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Spec.Integer
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem integer_add_relation (ty : Inn) (a b : Nat) :
@@ -12,7 +12,7 @@ theorem integer_add_relation (ty : Inn) (a b : Nat) :
   have hbnd : (a + b) % 2 ^ integerWidth ty < 2 ^ integerWidth ty :=
     Nat.mod_lt _ (by positivity)
   have hn := integer_num_wf ty _ hbnd
-  have hu := integer_uN_wf ty _ hbnd
+  have hu := integer_u_n_wf ty _ hbnd
   cases ty with
   | I32 => exact .fun_binop__case_0 _ _ _ (.fun_iadd__case_0 _ _ _ hu) hn
   | I64 => exact .fun_binop__case_1 _ _ _ (.fun_iadd__case_0 _ _ _ hu) hn
@@ -25,7 +25,7 @@ theorem integer_sub_relation (ty : Inn) (a b : Nat) (hb : b < 2 ^ integerWidth t
   change b < 2 ^ width at hb
   have hbnd : (a + 2 ^ width - b) % 2 ^ width < 2 ^ width := Nat.mod_lt _ (by positivity)
   have hn := integer_num_wf ty _ hbnd
-  have hu := integer_uN_wf ty _ hbnd
+  have hu := integer_u_n_wf ty _ hbnd
   have subcast : ((2 ^ width + a : Nat) : Int) - (b : Int) = ((a + 2 ^ width - b : Nat) : Int) := by
     have hle : b ≤ a + 2 ^ width := by omega
     rw [Int.ofNat_sub hle]
@@ -55,7 +55,7 @@ theorem integer_eqz_relation (ty : Inn) (bits : Nat) :
       (.mk_num__0 ty (.mk_uN bits))
       (some (.mk_num__0 .I32 (.mk_uN (if bits = 0 then 1 else 0)))) := by
   have hn := integer_num_wf .I32 _ (boolean_i32_bound (bits = 0))
-  have hu := integer_uN_wf .I32 _ (boolean_i32_bound (bits = 0))
+  have hu := integer_u_n_wf .I32 _ (boolean_i32_bound (bits = 0))
   have hbool : nat_of_bool (bits == 0) = (if bits = 0 then 1 else 0) := by
     cases bits <;> rfl
   have hi : fun_ieqz_ (integerWidth ty) (.mk_uN bits)
@@ -106,4 +106,4 @@ theorem integer_relop_pure (ty : Inn) (op : relop_Inn) (a b result : Nat)
   · exact wf_admininstr_instr (.instr_case_17 _ _ (.relop__case_0 _ _ _ rfl))
   · exact wf_admininstr_val (integer_val_wf .I32 result hr)
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

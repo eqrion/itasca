@@ -1,13 +1,13 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
 theorem compiler_stateful_auxiliary_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (status, after)) :
     compilerAuxiliaryTables after.function = compilerAuxiliaryTables before.function := by
@@ -35,4 +35,4 @@ theorem compiler_indirect_call_auxiliary_tables {A : Type} (ops : runtime.platfo
     have tables := compiler_observe_tables ops law before after state status accepted
     simpa only [CompilerTables.ofFunction, CompilerTables.mk.injEq, compilerAuxiliaryTables] using
       congrArg (fun t : CompilerTables => (t.simd,t.constants,t.jumpTables)) tables
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

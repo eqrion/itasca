@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -14,4 +14,4 @@ theorem compiler_simd_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
 
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

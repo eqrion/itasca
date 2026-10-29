@@ -22,7 +22,7 @@ theorem comparison_masks_lanes (ty : Jnn) (op : vrelop_Jnn_N) (x y : BitVec 128)
   apply List.map_congr_left
   intro j member
   simp only [Function.comp_apply,proj_uN_0,boolean_extend]
-  rw [comparisonBits_signExtend _ (by cases ty <;> decide)]
+  rw [comparison_bits_sign_extend _ (by cases ty <;> decide)]
   cases ty <;> rfl
 
 theorem integer_compare_packed (ty : Jnn) (op : vrelop_Jnn_N) (x y result : U128)
@@ -34,7 +34,7 @@ theorem integer_compare_packed (ty : Jnn) (op : vrelop_Jnn_N) (x y result : U128
   have packed := pack_map_of_lanes (lanetype_Jnn ty) (128/lsize (lanetype_Jnn ty)) result.bv.toNat
     (fun j => (comparisonBits (lsize (lanetype_Jnn ty)) (integerLaneCompare op
       (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv))).toNat)
-    (by intro j valid; rw [←laneBits_toNat,lanes j valid])
+    (by intro j valid; rw [←lane_bits_to_nat,lanes j valid])
   have covers : lsize (lanetype_Jnn ty)*(128/lsize (lanetype_Jnn ty)) = 128 := by cases ty <;> decide
   rw [covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   rw [integerComparisonResult,comparison_masks_lanes]
@@ -59,7 +59,7 @@ open Aeneas Aeneas.Std
         [.VCONST .V128 (.mk_uN result.val)] ⦄ := by
   apply WP.spec_mono (integer_compare_lanes ty op x y supported)
   intro result lanes
-  rw [integerCompareWidth_val] at lanes
+  rw [integer_compare_width_val] at lanes
   exact Spec.Simd.integer_comparison_step ty op x.bv y.bv result.bv supported
     (integer_compare_packed ty op x y result lanes)
 

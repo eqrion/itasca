@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectPairPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.indirect_call {A : Type}
@@ -53,4 +53,4 @@ theorem IndexedTableReaderCompilerPointWasm2.indirect_call {A : Type}
       (fun _ _ _ _ head => (embedding ((CompilerTables.ofFunction after.function).append future)).indirect (head)) state.compiled state.reach.current matched contextLocals signaturesBefore sourceBound bodyBound byte accepted
   exact (state.advance next advance inbounds reader (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]) compiled
     (fun live => state.reach.current (reachable ▸ live))).point
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

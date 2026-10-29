@@ -2,11 +2,11 @@ import Itasca.Runtime.Compiler.Local.Publication.BranchMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Emitted code extends the target range without changing map owners or source bounds. -/
-theorem Emitted.controlMaps {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+theorem Emitted.control_maps {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {instruction : runtime.bytecode.Instr} (emitted : Emitted before after instruction)
     (held : ControlMapPublication before) : ControlMapPublication after := by
   have stable := emitted.ordinary_stable
@@ -41,7 +41,7 @@ theorem compiler_table_branch_map_publication {A : Type} (ops : runtime.platform
     (held.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) branch
 
 /-- Every branch in a finite table-lowering run retains map bounds. -/
-theorem TableBranchRun.controlMaps {A : Type} {ops : runtime.platform.Alloc A}
+theorem TableBranchRun.control_maps {A : Type} {ops : runtime.platform.Alloc A}
     (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
     {index : Nat} (run : TableBranchRun ops before index after) :
     ControlMapPublication before →
@@ -64,9 +64,9 @@ theorem compiler_lower_table_map_publication {A : Type} (ops : runtime.platform.
     (called : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
     ControlMapPublication after ∧ after.next_source = before.next_source := by
   obtain ⟨start,len,selector,emitted,_,_,_,emission,run⟩ := compiler_lower_table_success ops law before after called
-  have coordinates := emission.controlMaps held
+  have coordinates := emission.control_maps held
   obtain ⟨budget,code,sources,frame,_,_⟩ := emission
-  obtain ⟨final,cursor⟩ := run.controlMaps law coordinates
+  obtain ⟨final,cursor⟩ := run.control_maps law coordinates
   exact ⟨final,by simpa only [frame] using cursor⟩
 
 /-- The actual full branch-table callback preserves all map publication bounds. -/
@@ -110,4 +110,4 @@ theorem compiler_br_table_map_publication {A : Type} (ops : runtime.platform.All
       exact compiler_observe_map_publication ops law {labeled with table_depths := cleared} after state
         (coordinates.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

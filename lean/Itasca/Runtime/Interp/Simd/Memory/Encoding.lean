@@ -4,7 +4,7 @@ import SpecExt.Builtins.EncodingLemmas
 /-!
 Byte decoding and source values of vector loads.
 
-Main declarations: `vectorLoadByte_value` and `vectorLoadBytes_source`. A direct consumer is `Interp.Simd.Memory.LoadSource`.
+Main declarations: `vector_load_byte_value` and `vector_load_bytes_source`. A direct consumer is `Interp.Simd.Memory.LoadSource`.
 -/
 
 namespace Itasca.Runtime.Interp.Simd
@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 private theorem power_byte (index : Nat) : 2^(index * 8) = 256^index := by
   rw [Nat.mul_comm, Nat.pow_mul]
 
-theorem vectorLoadByte_value (value : U128) (byte : U8) (index : Nat)
+theorem vector_load_byte_value (value : U128) (byte : U8) (index : Nat)
     (small : index < 16) (lowerBound : value.val < 256^index) :
     (vectorLoadByte value byte index).val = value.val + byte.val * 256^index := by
   have byteBound : byte.val < 256 := by scalar_tac
@@ -26,7 +26,7 @@ theorem vectorLoadByte_value (value : U128) (byte : U8) (index : Nat)
   simpa only [power_byte, Nat.mul_comm, Nat.add_comm, Nat.or_comm] using separated.symm
 /-- The byte loop is the specification's little-endian natural-number decoder,
 with an explicit already-filled low prefix. -/
-theorem vectorLoadBytes_value (bytes : List U8) (start : Nat) (value : U128) (index count : Nat)
+theorem vector_load_bytes_value (bytes : List U8) (start : Nat) (value : U128) (index count : Nat)
     (small : index + count ≤ 16) (inside : start + index + count ≤ bytes.length)
     (lowerBound : value.val < 256^index) :
     (vectorLoadBytes bytes start value index count).val = value.val + 256^index *
@@ -36,7 +36,7 @@ theorem vectorLoadBytes_value (bytes : List U8) (start : Nat) (value : U128) (in
   | succ count ih =>
     have atIndex : start + index < bytes.length := by omega
     have byteBound : bytes[start + index]!.val < 256 := by scalar_tac
-    have nextValue := vectorLoadByte_value value bytes[start + index]! index (by omega) lowerBound
+    have nextValue := vector_load_byte_value value bytes[start + index]! index (by omega) lowerBound
     have nextBound : (vectorLoadByte value bytes[start + index]! index).val < 256^(index+1) := by
       rw [nextValue,Nat.pow_succ]
       have positive : 0 < 256^index := by positivity
@@ -49,10 +49,10 @@ theorem vectorLoadBytes_value (bytes : List U8) (start : Nat) (value : U128) (in
     rw [positions]
     ring
 
-theorem vectorLoadBytes_source (bytes : List U8) (start count : Nat)
+theorem vector_load_bytes_source (bytes : List U8) (start count : Nat)
     (small : count ≤ 16) (inside : start + count ≤ bytes.length) :
     (vectorLoadBytes bytes start 0#u128 0 count).val =
       SpecExt.Builtins.integerOfBytes (Store.decodeBytes ((bytes.drop start).take count)) := by
-  simpa using vectorLoadBytes_value bytes start 0#u128 0 count (by simpa using small)
+  simpa using vector_load_bytes_value bytes start 0#u128 0 count (by simpa using small)
     (by simpa using inside) (by simp)
 end Itasca.Runtime.Interp.Simd

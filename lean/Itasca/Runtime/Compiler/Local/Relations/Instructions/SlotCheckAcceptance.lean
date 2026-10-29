@@ -6,7 +6,7 @@ Exact arithmetic acceptance of the concrete slot-range check. The upper bound is
 Main declarations: `slots_fit_accepts`. A direct consumer is `Compiler.Local.Relations.Instructions.CoreInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact arithmetic acceptance of the concrete slot-range check. The upper
@@ -24,4 +24,4 @@ theorem slots_fit_accepts (function : runtime.bytecode.CompiledFunction) (start 
   obtain ⟨result,called,rfl⟩ := WP.spec_imp_exists accepted
   exact called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -8,7 +8,7 @@ Signature transport across source contexts.
 Main declarations: `Signature.context`. A direct consumer is `Integration.Execution.Dispatch.Host`.
 -/
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 
 theorem Signature.context {C D op input output}
     (functions : D.FUNCS = C.FUNCS) (tables : D.TABLES = C.TABLES)
@@ -38,4 +38,4 @@ theorem Signature.context {C D op input output}
   | memoryInit index type found dataFound =>
     exact .memoryInit index type (by simpa only [memories] using found) (datas index dataFound)
   | dataDrop index found => exact .dataDrop index (datas index found)
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

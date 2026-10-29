@@ -6,7 +6,7 @@ The pending reader boundary between source scopes and compiler state.
 Main declarations: `ReaderBoundaryWasm2` and `ReaderBoundaryWasm2.pending`. A direct consumer is `Compiler.Body.Reader.Control.BoundaryInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 structure ReaderBoundaryWasm2 (data : Slice U8) (env : module.Env)
@@ -44,4 +44,4 @@ theorem ReaderPostWasm2.boundary {data env locals index st out instruction poly 
     rw [trace, Wasm2.tokensDeclared_append, Wasm2.tokensDeclared_singleton]
     exact ⟨p.declared, declared⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

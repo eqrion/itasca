@@ -18,7 +18,7 @@ Floating-point operation compilation through live and dormant structured reader 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_float_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -29,7 +29,7 @@ theorem structured_reader_prefix_dead_float_wasm2 {jumpTables : List U32} {data 
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
-    (op : Abs.Float.Instruction) (standard : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (standard : (floatOpcode op).val < 256)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
@@ -52,7 +52,7 @@ theorem structured_reader_prefix_dead_float_wasm2 {jumpTables : List U32} {data 
   rw [hookEq] at callback
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (floatOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -60,7 +60,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_float_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -72,7 +72,7 @@ theorem structured_reader_prefix_float_wasm2 {jumpTables : List U32} {data env s
     (contextCodeLocals : C.LOCALS = locals)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
@@ -93,11 +93,11 @@ theorem structured_reader_prefix_float_wasm2 {jumpTables : List U32} {data env s
     reader_emit_float_wasm2 p ops law before after out ctx contextLocals op C (contextCodeLocals.trans retained.localsEq.symm) baseOpcode (invariant.known reachable) monomorphic retained.layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift emission)
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -105,7 +105,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.float_base {jumpTables : List U32} {A : Type}
@@ -116,7 +116,7 @@ theorem StructuredReaderCompilerStateWasm2.float_base {jumpTables : List U32} {A
     (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial before types functions returns locals data env ctx.locals index ft st
       parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (out : code.BodyState) (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (floatOpcode op)))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -136,6 +136,6 @@ theorem StructuredReaderCompilerStateWasm2.float_base {jumpTables : List U32} {A
       state.compiled reach op baseOpcode byte accepted
     exact ⟨values, state.advance next advance inbounds post (float_source_declared op _) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

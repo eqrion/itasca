@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.WellFormedTotal
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Finishing a compiler returns normally for arbitrary internal records and
@@ -17,4 +17,4 @@ validation results. Invalid frames or bytecode are rejected by the actual gate. 
     · step with well_formed_total compiler.function as ⟨checked⟩
       cases checked <;> simp
     · simp
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

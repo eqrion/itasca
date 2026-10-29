@@ -61,7 +61,7 @@ theorem FrameStorePrefix.instance_lookup {M : Type} {before after : runtime.stor
     (found : before.instances.val[index]? = some inst) : after.instances.val[index]? = some inst :=
   retained_lookup retained.instances found
 
-theorem FrameStorePrefix.decodeInstance {M : Type} {before after : runtime.store.Store M}
+theorem FrameStorePrefix.decode_instance {M : Type} {before after : runtime.store.Store M}
     (retained : FrameStorePrefix before after) (inst : runtime.store.ModuleInst)
     (typeBounds : ∀ index ∈ inst.types.val, index.val < before.types.length) :
     Store.decodeInstance after inst = Store.decodeInstance before inst := by
@@ -87,7 +87,7 @@ theorem FrameBinding.store_prefix {M : Type} {before after : runtime.store.Store
   obtain ⟨inst,fn,compiled,signature,owner,member,found,functionAt,wasm,code,typed,moduleEq,results,locals,capacity⟩ := binding
   exact ⟨inst,fn,compiled,signature,owner.trans retained.identity.symm,member,retained.instance_lookup found,
     retained.function_lookup functionAt,wasm,code,retained.type_lookup typed,
-    moduleEq.trans (retained.decodeInstance inst (bounds inst (List.mem_of_getElem? found))).symm,
+    moduleEq.trans (retained.decode_instance inst (bounds inst (List.mem_of_getElem? found))).symm,
     results,locals,capacity⟩
 
 theorem FrameProgram.store_prefix {M : Type} {before after : runtime.store.Store M}

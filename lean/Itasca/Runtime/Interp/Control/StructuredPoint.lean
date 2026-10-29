@@ -6,21 +6,21 @@ namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
 /-- Function identity and local layout survive ordinary instruction steps. -/
-structure FrameMetadata (before after : Abs.AFrame) : Prop where
+structure FrameMetadata (before after : SourceMachine.AFrame) : Prop where
   address : after.fa = before.fa
   module : after.module = before.module
   results : after.resultTypes = before.resultTypes
-  locals : after.locals.map Code.valueType = before.locals.map Code.valueType
+  locals : after.locals.map Compiler.valueType = before.locals.map Compiler.valueType
 
-theorem valueType_eq_abs (value : val) : Code.valueType value = Abs.valueType value := by
+theorem value_type_eq_abs (value : val) : Compiler.valueType value = SourceMachine.valueType value := by
   cases value with
   | REF_NULL rt => cases rt <;> rfl
   | _ => rfl
 
 /-- Each compiler label records the actual saved operand prefix and source
 continuation of its abstract-machine counterpart. -/
-structure LabelMatch (values : List val) (label : Abs.Label) (target : Code.LabelTarget) : Prop where
-  front : target.front = (values.take label.height).map Code.valueType
+structure LabelMatch (values : List val) (label : SourceMachine.Label) (target : Compiler.LabelTarget) : Prop where
+  front : target.front = (values.take label.height).map Compiler.valueType
   height : target.front.length = label.height
   branchTypes : target.branchTypes = label.branchTypes
   resultTypes : target.resultTypes = label.resultTypes
@@ -28,13 +28,13 @@ structure LabelMatch (values : List val) (label : Abs.Label) (target : Code.Labe
   after : target.after = label.after
 
 /-- Labels use the same innermost-first indexing on both sides. -/
-structure LabelsMatch (values : List val) (labels : List Abs.Label) (targets : List Code.LabelTarget) : Prop where
+structure LabelsMatch (values : List val) (labels : List SourceMachine.Label) (targets : List Compiler.LabelTarget) : Prop where
   length : labels.length = targets.length
-  atIndex : ∀ (depth : Nat) (label : Abs.Label), labels[depth]? = some label →
+  atIndex : ∀ (depth : Nat) (label : SourceMachine.Label), labels[depth]? = some label →
     ∃ target, targets[depth]? = some target ∧ LabelMatch values label target
 
-theorem LabelsMatch.staticLookup {values labels targets}
-    (h : LabelsMatch values labels targets) (depth : Nat) (target : Code.LabelTarget)
+theorem LabelsMatch.static_lookup {values labels targets}
+    (h : LabelsMatch values labels targets) (depth : Nat) (target : Compiler.LabelTarget)
     (lookup : targets[depth]? = some target) :
     ∃ label, labels[depth]? = some label ∧ LabelMatch values label target := by
   have bound : depth < labels.length := by
@@ -48,18 +48,18 @@ theorem LabelsMatch.staticLookup {values labels targets}
 
 /-- Static branch stack decomposition determines concrete value intervals and
 all transfer slots; no dynamic result correspondence is inserted as a premise. -/
-theorem LabelsMatch.branchLayout {values labels targets} (locals : List val)
-    (h : LabelsMatch values labels targets) (depth : Nat) (target : Code.LabelTarget)
+theorem LabelsMatch.branch_layout {values labels targets} (locals : List val)
+    (h : LabelsMatch values labels targets) (depth : Nat) (target : Compiler.LabelTarget)
     (lookup : targets[depth]? = some target) (dst src count : U32)
-    (layout : Code.BranchLayout (locals.map Code.valueType) (values.map Code.valueType) target dst src count) :
+    (layout : Compiler.BranchLayout (locals.map Compiler.valueType) (values.map Compiler.valueType) target dst src count) :
     ∃ label front discarded results,
       labels[depth]? = some label ∧ LabelMatch values label target ∧
       values = front ++ discarded ++ results ∧ label.height = front.length ∧
-      label.arity = results.length ∧ results.map Abs.valueType = label.branchTypes ∧
-      dst.val = Code.slots ((locals ++ front).map Code.valueType) ∧
-      src.val = Code.slots ((locals ++ front ++ discarded).map Code.valueType) ∧
-      count.val = Code.slots (results.map Code.valueType) := by
-  obtain ⟨label, found, matching⟩ := h.staticLookup depth target lookup
+      label.arity = results.length ∧ results.map SourceMachine.valueType = label.branchTypes ∧
+      dst.val = Compiler.slots ((locals ++ front).map Compiler.valueType) ∧
+      src.val = Compiler.slots ((locals ++ front ++ discarded).map Compiler.valueType) ∧
+      count.val = Compiler.slots (results.map Compiler.valueType) := by
+  obtain ⟨label, found, matching⟩ := h.static_lookup depth target lookup
   obtain ⟨discardedTypes, stackTypes, destination, source, size⟩ := layout
   obtain ⟨initial, results, valuesSplit, initialTypes, resultTypes⟩ := List.map_eq_append_iff.mp stackTypes
   obtain ⟨front, discarded, initialSplit, frontTypes, discardedType⟩ := List.map_eq_append_iff.mp initialTypes
@@ -68,13 +68,13 @@ theorem LabelsMatch.branchLayout {values labels targets} (locals : List val)
     simpa only [List.length_map, matching.height] using equal
   have resultLength : results.length = label.arity := by
     have equal := congrArg List.length resultTypes
-    simpa only [List.length_map, matching.branchTypes, Abs.Label.arity] using equal
-  have types : results.map Abs.valueType = label.branchTypes := by
-    simpa only [show Code.valueType = Abs.valueType from funext valueType_eq_abs, matching.branchTypes] using resultTypes
+    simpa only [List.length_map, matching.branchTypes, SourceMachine.Label.arity] using equal
+  have types : results.map SourceMachine.valueType = label.branchTypes := by
+    simpa only [show Compiler.valueType = SourceMachine.valueType from funext value_type_eq_abs, matching.branchTypes] using resultTypes
   refine ⟨label, front, discarded, results, found, matching, ?_, frontLength.symm, resultLength.symm, types, ?_, ?_, ?_⟩
   · simpa only [initialSplit] using valuesSplit
-  · simpa only [List.map_append, Code.slots_append, frontTypes] using destination
-  · simpa only [List.map_append, Code.slots_append, frontTypes, discardedType, Nat.add_assoc] using source
+  · simpa only [List.map_append, Compiler.slots_append, frontTypes] using destination
+  · simpa only [List.map_append, Compiler.slots_append, frontTypes, discardedType, Nat.add_assoc] using source
   · simpa only [resultTypes] using size
 
 theorem LabelsMatch.drop {values labels targets} (h : LabelsMatch values labels targets) (count : Nat) :
@@ -89,7 +89,7 @@ theorem LabelsMatch.drop {values labels targets} (h : LabelsMatch values labels 
 theorem LabelMatch.reprefix {before after : List val} {label target}
     (h : LabelMatch before label target)
     (same : before.take label.height = after.take label.height) : LabelMatch after label target :=
-  { h with front := h.front.trans (congrArg (List.map Code.valueType) same) }
+  { h with front := h.front.trans (congrArg (List.map Compiler.valueType) same) }
 
 theorem LabelsMatch.reprefix {before after : List val} {labels targets}
     (h : LabelsMatch before labels targets)

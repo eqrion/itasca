@@ -6,7 +6,7 @@ import Itasca.Runtime.Integration.Invocation.Behaves
 Guarantees of `runtime.interp.invoke_with` on an issued Wasm or host function handle, in an
 evolving world where host callbacks may publish fresh code.
 
-The store starts in the public invariant `Theorems.ExecutableInv` for a ghost code interpretation
+The store starts in the public invariant `Integration.ExecutableInv` for a ghost code interpretation
 `code`, and `fun_invoke` gives the source invocation configuration. The platform and host laws are
 the bundles `Platform.Laws` and `HostLaws` of [Contracts](../Runtime/Contracts.lean).
 
@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std SpecExt
 
 namespace Itasca.Runtime
 
-open Theorems Interp
+open Integration Interp
 
 /-- Issued public function handles may denote either Wasm or host functions. Every returned result
 carries the exact event log of the transparent recorder `recordedInvokeWith`, and the source run

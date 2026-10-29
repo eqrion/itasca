@@ -41,7 +41,7 @@ theorem preparation_allocated_maps {M A : Type} (memory : runtime.platform.Memor
     simp [TypeEntries, maps.types]
   have typeChecked  := type_allocated_loop memory allocator law view before before seed seed 0#usize
     (by simp) rfl rfl (.refl _) objectBound shape.allocated emptyTypes
-  have typePost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have typePost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ typeChecked typed typeInst (.Ok ()) typeRun
   obtain ⟨typeStore, typeMap, typePrefix, typeBound, typeAllocated, typeEntries⟩ := typePost
   have typeStore_funcs := congrArg runtime.store.Store.funcs typeStore
@@ -71,7 +71,7 @@ theorem preparation_allocated_maps {M A : Type} (memory : runtime.platform.Memor
     simpa only [typeSource] using typeEntries rfl
   have functionChecked  := prepare_function_allocated memory allocator law view typed typeInst instanceIndex typeCache
     typeBound typeAllocated mappedTypes typeTable
-  have functionPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have functionPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ functionChecked functions funcInst (.Ok ()) functionRun
   obtain ⟨functionStore, functionMap, functionPrefix, functionBound, functionAllocated, functionTable, staged⟩ := functionPost
   have functionIssued := function_table_issued (functionTable rfl)
@@ -104,7 +104,7 @@ theorem preparation_allocated_maps {M A : Type} (memory : runtime.platform.Memor
     simpa only [functionMap_tables, typeMap_tables, functionId] using maps.tables_owned
   have tableChecked  := table_allocated_loop memory allocator law view functions functions funcInst funcInst funcInst.tables.len
     tableStartBound rfl rfl (.refl _) functionBound functionAllocated tableIssued tableOwners (by simp) importedTyped
-  have tablePost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have tablePost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ tableChecked tabled tableInst (.Ok ()) tableRun
   obtain ⟨tableStore, tableMap, tablePrefix, tableBound, tableAllocated, tableAddresses, finalTableOwners, tableCount, tableTypes⟩ := tablePost
   have tableStore_funcs := congrArg runtime.store.Store.funcs tableStore
@@ -128,7 +128,7 @@ theorem preparation_allocated_maps {M A : Type} (memory : runtime.platform.Memor
     simpa only [tableMap_memories, functionMap_memories, typeMap_memories, tableId] using maps.memories_owned
   have memoryChecked  := memory_allocated_loop memory allocator law view laws tabled tabled tableInst tableInst tableInst.memories.len
     memoryStartBound rfl rfl (.refl _) tableBound tableAllocated memoryIssued memoryOwners (by simp)
-  have memoryPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have memoryPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ memoryChecked after inst (.Ok ()) memoryRun
   obtain ⟨memoryStore, memoryMap, memoryPrefix, memoryBound, memoryAllocated, memoryAddresses, finalMemoryOwners, memoryCount⟩ := memoryPost
   have tableSource : tableInst.module = funcInst.module := by

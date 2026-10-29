@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Sim.Trap
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- A direct host call resolves its module index and then returns atomically.
@@ -20,17 +20,17 @@ theorem host_return_simulation (s s' : store) (ambient : frame) (f : AFrame)
       (decode ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after,vals := baseValues ++ args} :: rest,[]⟩)
       events
       (decode ⟨s',ambient,{f with code := after,vals := baseValues ++ results} :: rest,[]⟩) := by
-  have first := stepH_active ambient rest f.arity
-    (stepH_decodeLabels
-      (stepH_instrs (call_resolve s f.toFrame index address hs hf resolve hi32)
+  have first := step_h_active ambient rest f.arity
+    (step_h_decode_labels
+      (step_h_instrs (call_resolve s f.toFrame index address hs hf resolve hi32)
         args (after.map admininstr_instr) hargs (wf_instrs hc)) f.labels baseValues hl hv) ha hr
-  have second := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs host [] (after.map admininstr_instr)
+  have second := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs host [] (after.map admininstr_instr)
       (forall_nil _) (wf_instrs hc)) f.labels baseValues hl hv) ha hr
   simp only [vals,List.map_nil,List.nil_append,List.append_assoc] at first second
-  have both := StepsHN.cons first (StepsHN.cons second (StepsHN.refl (stepH_wf second).2))
+  have both := StepsHN.cons first (StepsHN.cons second (StepsHN.refl (step_h_wf second).2))
   simp only [decode,decodeFrames,vals,List.map_nil,List.nil_append,List.map_cons,AFrame.toFrame,AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights,decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights,decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext,vals,List.append_assoc,AFrame.arity,AFrame.toFrame,admininstr_instr] using both
 
 /-- Host traps retain callback store effects while the source semantics unwinds
@@ -49,12 +49,12 @@ theorem host_trap_simulation (s s' : store) (ambient : frame) (f : AFrame)
     ∃ n, 2 ≤ n ∧ StepsHN n
       (decode ⟨s,ambient,{f with code := .CALL (.mk_uN index) :: after,vals := baseValues ++ args} :: rest,[]⟩)
       events ⟨⟨s',ambient⟩,[.TRAP]⟩ := by
-  have first := stepH_active ambient rest f.arity
-    (stepH_decodeLabels
-      (stepH_instrs (call_resolve s f.toFrame index address hs hf resolve hi32)
+  have first := step_h_active ambient rest f.arity
+    (step_h_decode_labels
+      (step_h_instrs (call_resolve s f.toFrame index address hs hf resolve hi32)
         args (after.map admininstr_instr) hargs (wf_instrs hc)) f.labels baseValues hl hv) ha hr
-  have second := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs host [] (after.map admininstr_instr)
+  have second := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs host [] (after.map admininstr_instr)
       (forall_nil _) (wf_instrs hc)) f.labels baseValues hl hv) ha hr
   have frames : Forall FrameWf ({f with vals := baseValues,code := after} :: rest) := by
     intro frame member
@@ -67,6 +67,6 @@ theorem host_trap_simulation (s s' : store) (ambient : frame) (f : AFrame)
   have both := StepsHN.cons first (StepsHN.cons second tail')
   refine ⟨n+2,by omega,?_⟩
   simp only [decode,decodeFrames,vals,List.map_nil,List.nil_append,List.map_cons,AFrame.toFrame,AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeFrames,instrContext,vals,List.append_assoc,AFrame.arity,AFrame.toFrame,admininstr_instr,Nat.add_assoc] using both
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

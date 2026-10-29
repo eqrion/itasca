@@ -13,7 +13,7 @@ Memory callback acceptance and successful replay from reached source prefixes an
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -25,7 +25,7 @@ theorem compiler_reader_memory_load_available {A V : Type} (ops : runtime.platfo
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
-    (op : Abs.Memory.Load)
+    (op : SourceMachine.Memory.Load)
     (layout : compiler.reachable = true → CompilerLayout compiler (front ++ [.I32]))
     (reference : code.step source st data env ctx (UScalar.cast .U8 (memoryLoadOpcode op)) before =
       .ok (.Ok (),final,after)) :
@@ -55,7 +55,7 @@ theorem compiler_reader_memory_store_available {A V : Type} (ops : runtime.platf
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
-    (op : Abs.Memory.Store)
+    (op : SourceMachine.Memory.Store)
     (layout : compiler.reachable = true → CompilerLayout compiler (front ++ [.I32,valtype_numtype op.type]))
     (reference : code.step source st data env ctx (UScalar.cast .U8 (memoryStoreOpcode op)) before =
       .ok (.Ok (),final,after)) :
@@ -77,7 +77,7 @@ theorem compiler_reader_memory_store_available {A V : Type} (ops : runtime.platf
   rw [(memory_store_reader_facts ops compiler final op arg).2.2.2.2.1]
   exact compiler_memory_store_available ops bound available compiler final demand front op arg.offset arg.align layout
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -85,7 +85,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -96,7 +96,7 @@ theorem reached_reader_memory_load_available_wasm2 {data env locals index st}
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (demand : CallbackDemand compiler out bound) (op : Abs.Memory.Load)
+    (demand : CallbackDemand compiler out bound) (op : SourceMachine.Memory.Load)
     (capacity : st.core.vals.val.length < Usize.max)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -114,7 +114,7 @@ theorem reached_reader_memory_load_available_wasm2 {data env locals index st}
       (memoryLoadMeaning op) capacity byte facts.1 reference
     simp only [memoryReader,facts.2.1,Bool.false_eq_true,↓reduceIte,facts.2.2.1] at read
     obtain ⟨C,outer,spine,header,base,typed,controls,blocks,values⟩ := p.opened
-    have currentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (values ▸ known live)).2
+    have currentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (values ▸ known live)).2
     have poly : Control.polymorphic st.core = false := by
       simpa [Control.polymorphic,controls] using monomorphic live
     have baseEq : (Control.base st.core).val = outer.length := by simpa [Control.base,controls] using base
@@ -135,7 +135,7 @@ theorem reached_reader_memory_store_available_wasm2 {data env locals index st}
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
-    (demand : CallbackDemand compiler out bound) (op : Abs.Memory.Store)
+    (demand : CallbackDemand compiler out bound) (op : SourceMachine.Memory.Store)
     (capacity : st.core.vals.val.length < Usize.max)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -153,14 +153,14 @@ theorem reached_reader_memory_store_available_wasm2 {data env locals index st}
       (memoryStoreMeaning op) capacity byte facts.1 reference
     simp only [memoryReader,facts.2.1,↓reduceIte,facts.2.2.1] at read
     obtain ⟨C,outer,spine,header,base,typed,controls,blocks,values⟩ := p.opened
-    have currentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (values ▸ known live)).2
+    have currentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (values ▸ known live)).2
     have poly : Control.polymorphic st.core = false := by
       simpa [Control.polymorphic,controls] using monomorphic live
     have baseEq : (Control.base st.core).val = outer.length := by simpa [Control.base,controls] using base
     obtain ⟨rest,shape,stack,_,_⟩ := reader_memory_store_stack st.core out data env _ _ arg outer p.current.vals
       values baseEq poly currentKnown read
     obtain ⟨front,_,oldTypes,_⟩ := memory_store_stack_types (known live) values shape stack
-    simp only [memoryRawType_translate] at oldTypes
+    simp only [memory_raw_type_translate] at oldTypes
     have layout := wholeLayout live
     rw [oldTypes] at layout
     exact compiler_reader_memory_store_available ops bound available source before after compiler st.core out
@@ -176,7 +176,7 @@ theorem reached_profile_memory_load_available_wasm2 {data env locals index st}
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Memory.Load)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Load)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
@@ -206,7 +206,7 @@ theorem reached_profile_memory_store_available_wasm2 {data env locals index st}
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Memory.Store)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Store)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
@@ -228,6 +228,6 @@ theorem reached_profile_memory_store_available_wasm2 {data env locals index st}
     (reached_reader_memory_store_available_wasm2 p ops bound available source before after compiler out.core demand
       op capacity known monomorphic wholeLayout byte raw)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

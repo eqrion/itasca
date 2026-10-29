@@ -9,7 +9,7 @@ Reference-reader inversion and stateful postconditions for ref.func and ref.is_n
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_ref_func_wasm2 {data env locals index st}
@@ -96,7 +96,7 @@ theorem reader_ref_is_null_wasm2 {data env locals index st}
       p.current.ctrl.polymorphic_base values .instr_case_42 encoded newTyped newControls newBlocks newValues
       (fun h => nomatch h) (by simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -104,7 +104,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 private theorem fixed_effect_concrete {before after inputs output}
@@ -112,7 +112,7 @@ private theorem fixed_effect_concrete {before after inputs output}
     ConcreteStack after := by
   obtain ⟨front,afterTypes,beforeRealized⟩ := effect _ (Sequence.realizes_default false after)
   have beforeConcrete := concrete_realization known beforeRealized
-  apply stackTypes_concrete
+  apply stack_types_concrete
   rw [afterTypes]
   intro member
   rcases List.mem_append.mp member with member | member
@@ -133,7 +133,7 @@ theorem reader_ref_is_null_post_wasm2 {data env locals index st}
   refine ⟨values,post,?_⟩
   intro C matched known monomorphic
   obtain ⟨sourceC,outer,spine,header,base,typed,ctrls,blocks,stack⟩ := p.opened
-  obtain ⟨outerKnown,currentKnown⟩ := concreteStack_append.mp (stack ▸ known)
+  obtain ⟨outerKnown,currentKnown⟩ := concrete_stack_append.mp (stack ▸ known)
   rw [monomorphic] at effect
   obtain ⟨front,beforeTypes,afterTypes⟩ := fixed_effect_types currentKnown effect
   have afterKnown := fixed_effect_concrete currentKnown effect
@@ -144,7 +144,7 @@ theorem reader_ref_is_null_post_wasm2 {data env locals index st}
   · simpa [Simd.inputTypes,Simd.outputTypes,List.reverse_cons,List.reverse_nil,List.nil_append,
       List.map_cons,List.map_nil,reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using
-      Abs.Stateful.Signature.refIsNull (C := C) (Translate.referenceType rt)
+      SourceMachine.Stateful.Signature.refIsNull (C := C) (Translate.referenceType rt)
   · simp only [stack,Sequence.stackTypes,List.map_append]
     change Sequence.stackTypes outer ++ Sequence.stackTypes p.current.vals = _
     rw [beforeTypes,List.append_assoc]
@@ -154,7 +154,7 @@ theorem reader_ref_is_null_post_wasm2 {data env locals index st}
     rw [afterTypes,List.append_assoc]
     rfl
   · simp only [stack',outerEq,Frames.Saved.advance]
-    exact concreteStack_append.mpr ⟨outerKnown,afterKnown⟩
+    exact concrete_stack_append.mpr ⟨outerKnown,afterKnown⟩
 
 theorem reader_ref_func_post_wasm2 {data env locals index st}
     (p : Pending data env .Wasm2 locals index st) (idx : U32) (out : code.OpIterState)
@@ -166,12 +166,12 @@ theorem reader_ref_func_post_wasm2 {data env locals index st}
   refine ⟨_,post,?_⟩
   intro C matched known _
   refine ⟨Sequence.stackTypes st.core.vals.val,[],[valtype.FUNCREF],?_,by simp,?_,?_⟩
-  · apply Abs.Stateful.Signature.refFunc idx.val (EnvTranslation.funcType env.func_types.val[idx.val])
+  · apply SourceMachine.Stateful.Signature.refFunc idx.val (EnvTranslation.funcType env.func_types.val[idx.val])
     simp [matched.funcs,List.getElem?_eq_getElem bound]
   · simp [values,Sequence.stackTypes,Translate.valueType]
   · rw [values]
-    exact concreteStack_append.mpr ⟨known,by simp [ConcreteStack]⟩
+    exact concrete_stack_append.mpr ⟨known,by simp [ConcreteStack]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

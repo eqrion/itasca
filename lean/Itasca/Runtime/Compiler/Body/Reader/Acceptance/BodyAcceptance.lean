@@ -39,7 +39,7 @@ theorem bodyRun.accepted_lift_on {A V W : Type}
       invoke source before (.op final.core (action value)) = .ok (.Ok (),after) →
       invoke target compiler (.op final.core (action value)) ⦃ result => result.1 = .Ok () ∧ post result.2 ⦄) :
     bodyRun read target action compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = final ∧ post result.2.2 ⦄ := by
-  obtain ⟨value,readCalled,sourceCalled⟩ := Itasca.Runtime.Code.reader_body_success _ _ _ _ _ _ reference
+  obtain ⟨value,readCalled,sourceCalled⟩ := Itasca.Runtime.Compiler.reader_body_success _ _ _ _ _ _ reference
   obtain ⟨⟨reply,after⟩,called,accepted,held⟩ := WP.spec_imp_exists (accepts value readCalled sourceCalled)
   dsimp only at accepted held
   subst reply

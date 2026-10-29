@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Closing a block fills its inner source-continuation metadata from the
@@ -64,7 +64,7 @@ theorem StructuredDeadPrefix.loop {jumpTables : List U32} {emit types functions 
   apply bodyCode.relabel
   exact .cons ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ (LabelsShape.refl _)
 
-theorem StructuredPrefix.ifElse {jumpTables : List U32} {emit types functions returns locals code labels front params results yes no bt pc yesExit noEntry exit cond yesNormal yesBranch noNormal noBranch}
+theorem StructuredPrefix.if_else {jumpTables : List U32} {emit types functions returns locals code labels front params results yes no bt pc yesExit noEntry exit cond yesNormal yesBranch noNormal noBranch}
     (signature : BlockSignature types bt params results)
     (condition : cond.val = slots locals + slots (front ++ params))
     (guard : code[pc]? = some (.JumpIfZero cond noEntry))
@@ -93,5 +93,5 @@ theorem StructuredPrefix.ifElse {jumpTables : List U32} {emit types functions re
   · apply noCode.relabel
     exact .cons ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ (LabelsShape.refl _)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

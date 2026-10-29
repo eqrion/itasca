@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.GrowthTyping
 import Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 /-- Refusal is permitted independently of the pure successful-growth rule. -/
@@ -20,7 +20,7 @@ def memoryGrow (choice : Option meminst) (s : AState) (f : AFrame) (rest : List 
     | _,_ => .stuck
   | _,_ => .stuck
 
-theorem memoryGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem memory_grow_choices (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .MEMORY_GROW::after}::rest,[]⟩) :
     ∃ front delta address object,
@@ -41,9 +41,9 @@ theorem memoryGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Li
       have decoded : integer .I32 (integerVal .I32 delta) = some delta := integer_accepts .I32 delta deltaBound
       refine ⟨front,delta,address,object,split,mapped,found,?_⟩
       intro choice allowed
-      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+      obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
       have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-      have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+      have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
       cases allowed with
       | refused =>
         have resultTyped := integer_val_typed typed.typed.store .I32 (2^32-1) (by decide)
@@ -79,4 +79,4 @@ theorem memoryGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Li
           [integerVal .I32 delta] [integerVal .I32 (object.BYTES.length/65536)] typed.typed.ambient labelsWf frontWf tailWf restWf heights
           (by simpa [AFrame.toFrame,vals,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
         simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

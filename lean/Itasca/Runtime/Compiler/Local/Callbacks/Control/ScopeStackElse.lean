@@ -10,7 +10,7 @@ Guard extension and the source-scope frame stack at else entry. ScopeFrameStack.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 theorem ScopeFrameShape.guard_distinct {locals scope frame}
     (shape : ScopeFrameShape locals scope frame) (guard : Usize)
@@ -39,7 +39,7 @@ theorem FrameScope.set_guard_append {A : Type} {locals} {before after : runtime.
   · rw [code]
     exact (shape.entryCode.extend suffix).set_guard guard condition old target
       (fetch_extend found suffix) (shape.toScopeFrameShape.guard_distinct guard distinct)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -47,7 +47,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem ScopeFrameStack.parts {A : Type} {locals parents current}
@@ -61,7 +61,7 @@ theorem ScopeFrameStack.parts {A : Type} {locals parents current}
   rcases equal with ⟨rfl, rfl⟩
   exact ⟨paired, shape⟩
 
-theorem scopeFrames_imp_member {α β : Type} {R S : α → β → Prop} {left right}
+theorem scope_frames_imp_member {α β : Type} {R S : α → β → Prop} {left right}
     (paired : List.Forall₂ R left right)
     (change : ∀ a b, b ∈ right → R a b → S a b) : List.Forall₂ S left right := by
   induction paired with
@@ -84,7 +84,7 @@ theorem ScopeFrameStack.begin_else {A : Type} {locals parents current}
   obtain ⟨paired, shape⟩ := stack.parts prior frame change.beforeFrames
   have distinct := stack.distinct_guard prior frame change.beforeFrames guard guardEq
   have retained : List.Forall₂ (FrameScope locals after) parents prior := by
-    apply scopeFrames_imp_member paired
+    apply scope_frames_imp_member paired
     intro scope other member original
     exact original.set_guard_append _ guard condition old noEntry change.guardCode
       (distinct other member) change.codeEq maps
@@ -95,6 +95,6 @@ theorem ScopeFrameStack.begin_else {A : Type} {locals parents current}
   have bounded := shape.entryBound
   rw [change.noPosition]
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

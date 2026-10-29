@@ -9,7 +9,7 @@ Independently accepted local.get reading supplies the declared type and live ope
 Main declarations: `compiler_reader_local_get_available` and `compiler_reader_local_tee_available`. A direct consumer is `Compiler.Body.Reader.Acceptance.ScalarAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -74,7 +74,7 @@ theorem compiler_reader_local_set_available {A V : Type}
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change runtime.compiler.lower.FunctionCompiler.op ops compiler out 33#u16 index 0#u32 0#u128 ⦃ _ ⦄
     by_cases live : compiler.reachable = true
-    · have currentKnown : ConcreteStack segment := (concreteStack_append.mp (values ▸ known live)).2
+    · have currentKnown : ConcreteStack segment := (concrete_stack_append.mp (values ▸ known live)).2
       obtain ⟨ty,found,shape⟩ := reader_local_set_effect st out data ctx index outer segment values base
         (monomorphic live) currentKnown read
       have typed : Sequence.stackTypes st.vals.val = Sequence.stackTypes out.vals.val ++ [Translate.valueType ty] := by
@@ -119,7 +119,7 @@ theorem compiler_reader_local_tee_available {A V : Type}
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change runtime.compiler.lower.FunctionCompiler.op ops compiler out 34#u16 index 0#u32 0#u128 ⦃ _ ⦄
     by_cases live : compiler.reachable = true
-    · have currentKnown : ConcreteStack segment := (concreteStack_append.mp (values ▸ known live)).2
+    · have currentKnown : ConcreteStack segment := (concrete_stack_append.mp (values ▸ known live)).2
       obtain ⟨ty,found,rest,shape,_⟩ := reader_local_tee_effect st out data ctx index capacity outer segment values base
         (monomorphic live) currentKnown read
       have typed : Sequence.stackTypes st.vals.val = Sequence.stackTypes rest ++ [Translate.valueType ty] := by
@@ -138,4 +138,4 @@ theorem compiler_reader_local_tee_available {A V : Type}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) read callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

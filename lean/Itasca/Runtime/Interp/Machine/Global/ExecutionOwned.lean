@@ -14,39 +14,39 @@ import Itasca.Runtime.Spec.Extend
 /-!
 Global get/set execution with retained ownership.
 
-Main declarations: `step_globalGet_core_execution_owned_uniform` and `step_globalSet_core_execution_owned`. A direct consumer is `Integration.Execution.Dispatch.Host`.
+Main declarations: `step_global_get_core_execution_owned_uniform` and `step_global_set_core_execution_owned`. A direct consumer is `Integration.Execution.Dispatch.Host`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Global
+namespace Itasca.Runtime.Interp.Machine.Global
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem step_globalGet_core_execution_owned_uniform (platform : P) (frameIndex : Usize)
+theorem step_global_get_core_execution_owned_uniform (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (index : Nat)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (index : Nat)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (moduleEq : f.module = Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ pc : U32, ∃ g : Abs.AFrame,
+      ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
         UniformConcreteSim raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ [] ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
     rw [List.getLast?_eq_getElem?]
@@ -55,10 +55,10 @@ theorem step_globalGet_core_execution_owned_uniform (platform : P) (frameIndex :
     exact frameFound
   have binding := (machine.stack.top raw top).binding
   have pcBound : raw.pc.val < U32.max := by
-    rcases corePoint_globalGet_head index after point.code with ⟨target,forward,fetch,tail⟩ | ⟨mutability,ty,idx,dst,indexEq,lookup,position,fetch,tail⟩
+    rcases core_point_global_get_head index after point.code with ⟨target,forward,fetch,tail⟩ | ⟨mutability,ty,idx,dst,indexEq,lookup,position,fetch,tail⟩
     · exact program.fetched_bound _ fetch
     · exact program.fetched_bound _ fetch
-  rcases coreFramePoint_globalGet_step_owned memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots binding last frameFound codeFound program.checked pcBound small point machine.typed with jump | operation
+  rcases core_frame_point_global_get_step_owned memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots binding last frameFound codeFound program.checked pcBound small point machine.typed with jump | operation
   · obtain ⟨target,forward,fetch,tail⟩ := jump
     apply WP.spec_mono (step_forward_jump_flat memory hooks floats allocator exec store platform frameIndex raw inst compiled
       (Store.decodeStore view code store) ambient {f with code := .GLOBAL_GET (.mk_uN index) :: after} rest C targets next output target last frameFound found codeFound pcBound forward fetch slots tail machine.typed)
@@ -72,72 +72,72 @@ theorem step_globalGet_core_execution_owned_uniform (platform : P) (frameIndex :
     intro out effect
     obtain ⟨success,storeSame,platformSame,g,pc,pcNext,unchanged,typed,source,represented,retained,⟨values,shape⟩,prefixEffect,sourceStep⟩ := effect
     have metadata : FrameMetadata {f with code := .GLOBAL_GET (.mk_uN index) :: after} g := by rw [shape]; exact ⟨rfl,rfl,rfl,rfl⟩
-    have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
-      exact StructuredMachine.core_step_supported machine.typed machine.core sourceStep
-    refine ⟨success,storeSame,platformSame,pc,g,?_,?_,UniformConcreteSim.single source,StructuredMachine.owned_transition machine.typed machine.core (Or.inr sourceStep),StructuredMachine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
+    have covered : SourceMachine.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+      exact Machine.core_step_supported machine.typed machine.core sourceStep
+    refine ⟨success,storeSame,platformSame,pc,g,?_,?_,UniformConcreteSim.single source,Machine.owned_transition machine.typed machine.core (Or.inr sourceStep),Machine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
     · exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false (.refl store)
         (extend_store_refl _ machine.typed.typed.store) raw frameIndex pc last frameFound program (.ready retained)
         represented metadata unchanged prefixEffect typed covered
-    · exact Or.inr ⟨1,by omega,by simpa using StepsHN.cons source (StepsHN.refl (stepH_wf source).2)⟩
+    · exact Or.inr ⟨1,by omega,by simpa using StepsHN.cons source (StepsHN.refl (step_h_wf source).2)⟩
 
-theorem step_globalGet_core_execution_owned (platform : P) (frameIndex : Usize)
+theorem step_global_get_core_execution_owned (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (index : Nat)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (index : Nat)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (moduleEq : f.module = Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_GET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ pc : U32, ∃ g : Abs.AFrame,
+      ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
-  apply WP.spec_mono (step_globalGet_core_execution_owned_uniform memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program small point expected machine)
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩) ⦄ := by
+  apply WP.spec_mono (step_global_get_core_execution_owned_uniform memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program small point expected machine)
   rintro out ⟨success,same,platform,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,same,platform,pc,g,machine,simulation,ownership,bounded⟩
 
-theorem step_globalSet_core_execution_owned_uniform (platform : P) (frameIndex : Usize)
+theorem step_global_set_core_execution_owned_uniform (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (index : Nat)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (index : Nat)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (moduleEq : f.module = Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.2 = platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store initial.store (Store.decodeStore view code out.2.2.1) ∧
-      ∃ pc : U32, ∃ g : Abs.AFrame,
+      ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ ∧
         UniformConcreteSim raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ [] ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
   dsimp only
   have pcBound : raw.pc.val < U32.max := by
-    rcases corePoint_globalSet_head index after point.code with ⟨target,forward,fetch,tail⟩ | operation
+    rcases core_point_global_set_head index after point.code with ⟨target,forward,fetch,tail⟩ | operation
     · exact program.fetched_bound _ fetch
     · obtain ⟨ty,idx,src,front,indexEq,lookup,values,position,fetch,tail⟩ := operation
       exact program.fetched_bound _ fetch
-  rcases coreFramePoint_globalSet_step_owned memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound pcBound point machine.typed with jump | operation
+  rcases core_frame_point_global_set_step_owned memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound pcBound point machine.typed with jump | operation
   · obtain ⟨target,forward,fetch,tail⟩ := jump
     apply WP.spec_mono (step_forward_jump_flat memory hooks floats allocator exec store platform frameIndex raw inst compiled
       (Store.decodeStore view code store) ambient {f with code := .GLOBAL_SET (.mk_uN index) :: after} rest C targets next output target last frameFound found codeFound pcBound forward fetch slots tail machine.typed)
@@ -152,38 +152,38 @@ theorem step_globalSet_core_execution_owned_uniform (platform : P) (frameIndex :
     intro out effect
     obtain ⟨success,platformSame,stores,g,pc,pcNext,unchanged,typed,extension,source,represented,retained,⟨values,shape⟩,sourceStep⟩ := effect
     have metadata : FrameMetadata {f with code := .GLOBAL_SET (.mk_uN index) :: after} g := by rw [shape]; exact ⟨rfl,rfl,rfl,rfl⟩
-    have covered : Abs.SupportedState ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ := by
-      exact StructuredMachine.core_step_supported machine.typed machine.core sourceStep
-    refine ⟨success,platformSame,stores,extension,pc,g,?_,?_,UniformConcreteSim.single source,StructuredMachine.owned_transition machine.typed machine.core (Or.inr sourceStep),StructuredMachine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
+    have covered : SourceMachine.SupportedState ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ := by
+      exact Machine.core_step_supported machine.typed machine.core sourceStep
+    refine ⟨success,platformSame,stores,extension,pc,g,?_,?_,UniformConcreteSim.single source,Machine.owned_transition machine.typed machine.core (Or.inr sourceStep),Machine.bound_transition machine.typed machine.core (Or.inr sourceStep)⟩
     · exact machine.ordinary view code ambient _ _ rest expected raw.pc.val false stores extension
         raw frameIndex pc last frameFound program (.ready retained)
         represented metadata (by rw [unchanged]) (by rw [unchanged]; exact .refl _ _) typed covered
-    · exact Or.inr ⟨1,by omega,by simpa using StepsHN.cons source (StepsHN.refl (stepH_wf source).2)⟩
-theorem step_globalSet_core_execution_owned (platform : P) (frameIndex : Usize)
+    · exact Or.inr ⟨1,by omega,by simpa using StepsHN.cons source (StepsHN.refl (step_h_wf source).2)⟩
+theorem step_global_set_core_execution_owned (platform : P) (frameIndex : Usize)
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (index : Nat)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (index : Nat)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (moduleEq : f.module = Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
     (last : frameIndex.val+1 = exec.frames.length) (frameFound : exec.frames.val[frameIndex.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := .GLOBAL_SET (.mk_uN index) :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.2 = platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store initial.store (Store.decodeStore view code out.2.2.1) ∧
-      ∃ pc : U32, ∃ g : Abs.AFrame,
+      ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code out.2.2.1 out.2.1 ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩ ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
-  apply WP.spec_mono (step_globalSet_core_execution_owned_uniform memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program point expected machine)
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Store.decodeStore view code out.2.2.1,ambient,g::rest,[]⟩) ⦄ := by
+  apply WP.spec_mono (step_global_set_core_execution_owned_uniform memory hooks floats allocator platform frameIndex view code exec store raw inst compiled ambient f rest after index C targets next output found moduleEq slots last frameFound codeFound program point expected machine)
   rintro out ⟨success,platform,metadata,extension,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,platform,metadata,extension,pc,g,machine,simulation,ownership,bounded⟩
 
-end Itasca.Runtime.Interp.StructuredMachine.Global
+end Itasca.Runtime.Interp.Machine.Global

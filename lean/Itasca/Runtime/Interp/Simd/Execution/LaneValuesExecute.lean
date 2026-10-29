@@ -17,16 +17,16 @@ private theorem lane_inputs_numeric (op : LaneOperation) (ty : valtype) (member 
   cases ty <;> cases op <;> simp_all [LaneOperation.inputs,LaneOperation.replace,LaneOperation.scalar,valtype_numtype]
 
 private theorem lane_source_shape (opcode : U32) (op : LaneOperation) (meaning : laneMeaning opcode.val = some op) :
-    runtime.bytecode.simd_shape opcode = .ok (some (Code.simdSourceShape op.inputs op.outputs)) := by
-  exact (Code.SimdImmediateMeaning.lane (C := default) opcode ⟨0#u32,0#u32,0#u128⟩ op meaning 0#u8 rfl).shape
+    runtime.bytecode.simd_shape opcode = .ok (some (Compiler.simdSourceShape op.inputs op.outputs)) := by
+  exact (Compiler.SimdImmediateMeaning.lane (C := default) opcode ⟨0#u32,0#u32,0#u128⟩ op meaning 0#u8 rfl).shape
 
 theorem ValuesAt.simd_lane_result {words : List U64} {base : Nat} {front : List val}
     (represented : ValuesAt words base front) (op : LaneOperation) (value : U128)
     (bound : Simd.LaneResultBound op value)
-    (capacity : base + Code.slots (front.map Code.valueType) +
-      (Code.simdSourceWidth op.outputs[0]?).val ≤ words.length) :
-    ValuesAt (simdResultSlots words (base+Code.slots (front.map Code.valueType))
-      (Code.simdSourceWidth op.outputs[0]?) value) base (front ++ [Simd.laneResult op value.bv]) := by
+    (capacity : base + Compiler.slots (front.map Compiler.valueType) +
+      (Compiler.simdSourceWidth op.outputs[0]?).val ≤ words.length) :
+    ValuesAt (simdResultSlots words (base+Compiler.slots (front.map Compiler.valueType))
+      (Compiler.simdSourceWidth op.outputs[0]?) value) base (front ++ [Simd.laneResult op value.bv]) := by
   let ty := if op.replace then valtype.V128 else valtype_numtype op.scalar
   have outputs : op.outputs = [ty] := by cases op <;> rfl
   have numeric : ty ≠ .FUNCREF ∧ ty ≠ .EXTERNREF ∧ ty ≠ .BOT := by cases op <;> decide
@@ -48,25 +48,25 @@ theorem execute_simd_lane_values {M F : Type}
     (immediate : code.simd.val[entry.val]? = some imm)
     (meaning : laneMeaning opcode.val = some op) (valid : imm.lane.val < op.count)
     (memories : ∀ ma, inst.memories.val[0]? = some ma → ∃ object, store.memories.val[ma.index.val]? = some object)
-    (position : operand.val = Code.slots (front.map Code.valueType))
+    (position : operand.val = Compiler.slots (front.map Compiler.valueType))
     (represented : ValuesAt exec.slots.val base.val (front ++ values))
-    (wellFormed : Forall wf_val values) (typed : values.map Code.valueType = op.inputs)
-    (space : base.val + operand.val + (Code.simdSourceWidth op.inputs[0]?).val +
-      (Code.simdSourceWidth op.inputs[1]?).val ≤ Usize.max)
-    (lastSpace : Code.simdSourceWidth op.inputs[2]? = 2#u32 → base.val + operand.val +
-      (Code.simdSourceWidth op.inputs[0]?).val + (Code.simdSourceWidth op.inputs[1]?).val < Usize.max)
-    (capacity : base.val + operand.val + (Code.simdSourceWidth op.outputs[0]?).val ≤ exec.slots.length) :
+    (wellFormed : Forall wf_val values) (typed : values.map Compiler.valueType = op.inputs)
+    (space : base.val + operand.val + (Compiler.simdSourceWidth op.inputs[0]?).val +
+      (Compiler.simdSourceWidth op.inputs[1]?).val ≤ Usize.max)
+    (lastSpace : Compiler.simdSourceWidth op.inputs[2]? = 2#u32 → base.val + operand.val +
+      (Compiler.simdSourceWidth op.inputs[0]?).val + (Compiler.simdSourceWidth op.inputs[1]?).val < Usize.max)
+    (capacity : base.val + operand.val + (Compiler.simdSourceWidth op.outputs[0]?).val ≤ exec.slots.length) :
     runtime.interp.execute_simd memory floats exec store instIndex function base opcode operand operand entry
       ⦃ out => SimdStoreMutation view store out.2.2 ∧ ∃ value, Step_pure (values.map admininstr_val ++ [admininstr_instr (op.instruction (.mk_uN imm.lane.val))])
           [admininstr_val (Simd.laneResult op value.bv)] ∧
         out.1 = .Ok () ∧ Store.decodeStore view interpretation out.2.2 = Store.decodeStore view interpretation store ∧
         FrameStoreMetadata store out.2.2 ∧
         SlotsEffect exec out.2.1 (simdResultSlots exec.slots.val (base.val+operand.val)
-          (Code.simdSourceWidth op.outputs[0]?) value) ∧
+          (Compiler.simdSourceWidth op.outputs[0]?) value) ∧
         ValuesAt out.2.1.slots.val base.val (front ++ [Simd.laneResult op value.bv]) ⦄ := by
-  have numeric : ∀ value ∈ values, Code.valueType value ≠ .FUNCREF ∧ Code.valueType value ≠ .EXTERNREF := by
+  have numeric : ∀ value ∈ values, Compiler.valueType value ≠ .FUNCREF ∧ Compiler.valueType value ≠ .EXTERNREF := by
     intro value member
-    have m : Code.valueType value ∈ op.inputs := by rw [←typed]; exact List.mem_map_of_mem member
+    have m : Compiler.valueType value ∈ op.inputs := by rw [←typed]; exact List.mem_map_of_mem member
     exact lane_inputs_numeric op _ m
   have arity : values.length ≤ 3 := by
     have length := congrArg List.length typed
@@ -78,8 +78,8 @@ theorem execute_simd_lane_values {M F : Type}
   rw [typed,←position] at inputs
   apply WP.spec_mono (execute_simd_source_mutation_bounded memory floats interpretation view memoryLaws exec store instIndex function base
     opcode operand operand entry inst code imm
-    (Code.simdSourceWidth op.inputs[0]?) (Code.simdSourceWidth op.inputs[1]?)
-    (Code.simdSourceWidth op.inputs[2]?) (Code.simdSourceWidth op.outputs[0]?)
+    (Compiler.simdSourceWidth op.inputs[0]?) (Compiler.simdSourceWidth op.inputs[1]?)
+    (Compiler.simdSourceWidth op.inputs[2]?) (Compiler.simdSourceWidth op.outputs[0]?)
     (fun value => Step_pure (values.map admininstr_val ++ [admininstr_instr (op.instruction (.mk_uN imm.lane.val))])
       [admininstr_val (Simd.laneResult op value.bv)] ∧ Simd.LaneResultBound op value)
     found compiled immediate (lane_source_shape opcode op meaning) memories space lastSpace capacity ?_)
@@ -89,10 +89,10 @@ theorem execute_simd_lane_values {M F : Type}
     exact represented.locals.simd_lane_result op value bounded (by simpa only [position] using capacity)
   · intro bytes
     apply WP.spec_mono (Simd.lane_entry_sound floats opcode op meaning imm.offset imm.lane imm.bits
-      (simdInput exec.slots.val (base.val+operand.val) (Code.simdSourceWidth op.inputs[0]?))
-      (simdInput exec.slots.val (base.val+operand.val+(Code.simdSourceWidth op.inputs[0]?).val) (Code.simdSourceWidth op.inputs[1]?))
-      (simdInput exec.slots.val (base.val+operand.val+(Code.simdSourceWidth op.inputs[0]?).val+
-        (Code.simdSourceWidth op.inputs[1]?).val) (Code.simdSourceWidth op.inputs[2]?)) bytes valid)
+      (simdInput exec.slots.val (base.val+operand.val) (Compiler.simdSourceWidth op.inputs[0]?))
+      (simdInput exec.slots.val (base.val+operand.val+(Compiler.simdSourceWidth op.inputs[0]?).val) (Compiler.simdSourceWidth op.inputs[1]?))
+      (simdInput exec.slots.val (base.val+operand.val+(Compiler.simdSourceWidth op.inputs[0]?).val+
+        (Compiler.simdSourceWidth op.inputs[1]?).val) (Compiler.simdSourceWidth op.inputs[2]?)) bytes valid)
     rintro result ⟨value,returned,source,bounded⟩
     refine ⟨value,returned,?_,bounded⟩
     unfold Simd.LaneSourceEffect at source

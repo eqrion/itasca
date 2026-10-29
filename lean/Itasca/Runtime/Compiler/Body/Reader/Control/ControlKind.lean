@@ -7,7 +7,7 @@ Checked metadata-producing profile readers, excluding the streamed table reader,
 Main declarations: `ControlReaderKind` and `opcode`. A direct consumer is `Compiler.Body.Reader.Control.ControlCheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Checked metadata-producing profile readers, excluding the streamed table
@@ -130,4 +130,4 @@ theorem records {data env locals index st} (kind : ControlReaderKind)
   · exact Wasm2.CallbackTrace.step_call_indirect pending visitor observe recorded ctx byte
 
 end ControlReaderKind
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

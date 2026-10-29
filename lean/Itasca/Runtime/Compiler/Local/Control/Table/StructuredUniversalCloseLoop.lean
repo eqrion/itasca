@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- LOOP END resumes its parent only from the normal body continuation. Loop
@@ -63,7 +63,7 @@ theorem StructuredUniversalPrefix.close_loop {jumpTables : List Aeneas.Std.U32} 
       simpa using List.Forall₂.cons oldParentShape parentShapes
     obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
     simp only [resolvedCode, patchCode] at saved current
-    have bodyCode := current.finish (by simp [resolvedCode_length]) (by simp [NormalLive, label])
+    have bodyCode := current.finish (by simp [resolved_code_length]) (by simp [NormalLive, label])
     obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
     have closed : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
         (parentLabel :: labels) child.arguments [.LOOP bt child.source] child.entry target.val
@@ -73,7 +73,7 @@ theorem StructuredUniversalPrefix.close_loop {jumpTables : List Aeneas.Std.U32} 
           (frame.start_pc.val + 1) target.val (child.front ++ child.results) := by
         simpa only [SourceScope.input, position, body] using bodyCode
       simpa [SourceScope.arguments, SourceScope.input, form, entry] using
-        StructuredPrefix.loop signature (resolvedCode_loop_head _ groups _ head) bodyCode'
+        StructuredPrefix.loop signature (resolved_code_loop_head _ groups _ head) bodyCode'
     have restored := parentSaved.resume parentEntered childEntered closed
     refine ⟨?_, ?_⟩
     · rw [codeEq]
@@ -134,7 +134,7 @@ theorem StructuredUniversalTerminal.close_loop {jumpTables : List Aeneas.Std.U32
       simpa using List.Forall₂.cons oldParentShape parentShapes
     obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
     simp only [resolvedCode, patchCode] at saved current
-    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolvedCode_length, position])
+    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolved_code_length, position])
     obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
     have closed : StructuredDeadPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
         (parentLabel :: labels) child.arguments [.LOOP bt child.source] child.entry target.val := by
@@ -143,12 +143,12 @@ theorem StructuredUniversalTerminal.close_loop {jumpTables : List Aeneas.Std.U32
           (frame.start_pc.val + 1) target.val (child.front ++ child.results) := by
         simpa only [SourceScope.input, position, body] using bodyCode
       simpa [SourceScope.arguments, SourceScope.input, form, entry] using
-        StructuredDeadPrefix.loop signature (resolvedCode_loop_head _ groups _ head) bodyCode'
+        StructuredDeadPrefix.loop signature (resolved_code_loop_head _ groups _ head) bodyCode'
     have restored := parentSaved.resume_dead parentEntered childEntered closed
     refine ⟨?_, ?_⟩
     · rw [codeEq]
       exact outerSaved.advance_current (.LOOP bt child.source)
     · simpa only [codeEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

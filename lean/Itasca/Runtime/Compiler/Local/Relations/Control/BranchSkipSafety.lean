@@ -12,7 +12,7 @@ Safety of skipped forward and loop branches, combining the distinct branch encod
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
@@ -190,7 +190,7 @@ set_option maxRecDepth 4096 in
         · simp [core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -198,7 +198,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
@@ -350,7 +350,7 @@ set_option maxRecDepth 4096 in
           have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
           simpa only [← kind, ← atIndex] using List.set_getElem_self inBounds
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -358,7 +358,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -448,6 +448,6 @@ private theorem branch_skip_underflow_total {A} (ops : runtime.platform.Alloc A)
           simp
     · exact branch_skip_underflow_total ops compiler frame index depth skip lookup position
         (by cases kindEq : frame.kind <;> simp_all)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

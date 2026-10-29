@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Sim.Control
 import Itasca.Runtime.SourceMachine.Sim.Typing
 import Itasca.Runtime.Spec.Counted
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Branching to the innermost label discards its intermediate operands and
@@ -22,7 +22,7 @@ theorem br_zero_simulation (s : store) (ambient : frame) (f : AFrame)
       { f with code := label.cont ++ label.after, vals := saved ++ args, labels := labels } :: rest, []⟩) := by
   have hlabel := hl label (by simp)
   have htail : LabelsWf labels := fun l hm => hl l (by simp [hm])
-  have hbr : wf_admininstr (.BR (.mk_uN 0)) := .admininstr_case_7 _ (integer_uN_wf .I32 0 (by decide))
+  have hbr : wf_admininstr (.BR (.mk_uN 0)) := .admininstr_case_7 _ (integer_u_n_wf .I32 0 (by decide))
   let redex := ((vals discarded ++ vals args) ++ [.BR (.mk_uN 0)]) ++ after.map admininstr_instr
   have hredex : Forall wf_admininstr redex :=
     forall_append (forall_append (forall_append (wf_vals hd) (wf_vals hargs))
@@ -35,12 +35,12 @@ theorem br_zero_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [.LABEL_ label.arity label.cont redex]⟩ []
       ⟨⟨s, f.toFrame⟩, vals args ++ label.cont.map admininstr_instr⟩ :=
     .step (.pure _ _ _ (.br_zero _ _ _ _ _ hwrap arity) hsource htarget)
-  have h₁ := stepH_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
-  have h₂ := stepH_decodeLabels h₁ labels saved htail hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
+  have h₂ := step_h_decode_labels h₁ labels saved htail hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     List.map_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeLabels, height, Label.arity, redex, instrContext, vals, List.map_append,
     List.append_assoc, AFrame.toFrame, AFrame.arity, admininstr_instr] using h₃
 
@@ -60,8 +60,8 @@ theorem br_succ_simulation (s : store) (ambient : frame) (f : AFrame)
       { f with code := .BR (.mk_uN depth) :: label.after, vals := saved ++ operands, labels := labels } :: rest, []⟩) := by
   have hlabel := hl label (by simp)
   have htail : LabelsWf labels := fun l hm => hl l (by simp [hm])
-  have hbr : wf_admininstr (.BR (.mk_uN (depth + 1))) := .admininstr_case_7 _ (integer_uN_wf .I32 _ hdepth)
-  have hbr' : wf_admininstr (.BR (.mk_uN depth)) := .admininstr_case_7 _ (integer_uN_wf .I32 _ (by simp only [integerWidth]; omega))
+  have hbr : wf_admininstr (.BR (.mk_uN (depth + 1))) := .admininstr_case_7 _ (integer_u_n_wf .I32 _ hdepth)
+  have hbr' : wf_admininstr (.BR (.mk_uN depth)) := .admininstr_case_7 _ (integer_u_n_wf .I32 _ (by simp only [integerWidth]; omega))
   let redex := (vals operands ++ [.BR (.mk_uN (depth + 1))]) ++ after.map admininstr_instr
   have hredex : Forall wf_admininstr redex :=
     forall_append (forall_append (wf_vals hargs)
@@ -75,12 +75,12 @@ theorem br_succ_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [.LABEL_ label.arity label.cont redex]⟩ []
       ⟨⟨s, f.toFrame⟩, vals operands ++ [.BR (.mk_uN depth)]⟩ :=
     .step (.pure _ _ _ (.br_succ _ _ _ (.mk_uN depth) _ hwrap hbr') hsource htarget)
-  have h₁ := stepH_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
-  have h₂ := stepH_decodeLabels h₁ labels saved htail hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
+  have h₂ := step_h_decode_labels h₁ labels saved htail hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     List.map_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeLabels, height, Label.arity, redex, instrContext, vals, List.map_append,
     List.append_assoc, AFrame.toFrame, AFrame.arity, admininstr_instr] using h₃
 
@@ -89,7 +89,7 @@ def LabelsNested : List Label → Prop
   | [] => True
   | label :: labels => (∀ outer ∈ labels, outer.height ≤ label.height) ∧ LabelsNested labels
 
-theorem codeStack_labels_nested {C : context} {labels : List Label}
+theorem code_stack_labels_nested {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results) : LabelsNested labels := by
   induction h with
@@ -143,7 +143,7 @@ theorem branch_simulation (s : store) (ambient : frame) (f : AFrame)
           (decode ⟨s, ambient, { f with code := label.cont ++ label.after, labels := labels, vals := saved ++ args } :: rest, []⟩) := by
         simpa only [saved, discarded, args, ← hsplit] using hstep
       simpa only [List.nil_append, List.drop_succ_cons, List.drop_zero, saved, args] using
-        StepsHN.cons hstep' (StepsHN.refl (stepH_wf hstep').2)
+        StepsHN.cons hstep' (StepsHN.refl (step_h_wf hstep').2)
   | succ depth ih =>
     cases labels with
     | nil => simp at lookup
@@ -177,7 +177,7 @@ theorem typed_branch_simulation (s : store) (ambient : frame) (f : AFrame)
     cases hf with
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
-      obtain ⟨front, ins, outs, hop, hstack, heights⟩ := codeStack_head_bounds (value_types_concrete f.vals) hc
+      obtain ⟨front, ins, outs, hop, hstack, heights⟩ := code_stack_head_bounds (value_types_concrete f.vals) hc
       cases hop with
       | br _ _ discarded types outputs hi ht hC hinst =>
         have hi' : depth < f.labels.length := by simpa [labelContext, proj_uN_0] using hi
@@ -198,13 +198,13 @@ theorem typed_branch_simulation (s : store) (ambient : frame) (f : AFrame)
             cases hu with
             | uN_case_0 _ bounds => norm_num at bounds ⊢; omega
         have result := branch_simulation s ambient f rest f.labels after depth target
-          typed.store typed.ambient hw (codeStack_labels_wf hc) (resultsTyped_wf values)
-          (fun i hm => codeStack_wf hc i (by simp [hm])) (framesTyped_wf hr)
-          (codeStack_labels_nested hc) lookup bound hdepth
+          typed.store typed.ambient hw (code_stack_labels_wf hc) (results_typed_wf values)
+          (fun i hm => code_stack_wf hc i (by simp [hm])) (frames_typed_wf hr)
+          (code_stack_labels_nested hc) lookup bound hdepth
         simp only [astep, branch, lookup] at step
         split at step
         · simp only [advance, AResult.next.injEq] at step
           exact step ▸ result
         · contradiction
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

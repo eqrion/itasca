@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceBudget
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- One control map is allocated for function entry and at most one for each
@@ -47,4 +47,4 @@ theorem SourceControlBudget.capacities {A : Type} {compiler : runtime.compiler.F
   have wordBound : U32.max ≤ Usize.max := by scalar_tac
   norm_num [limits.MAX_MODULE_BYTES, U32.max_eq] at sourceBound wordBound
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

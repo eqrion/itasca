@@ -63,7 +63,7 @@ theorem dot_loop (x y initial : U128) (i : U32)
       step as ⟨even,evenEq⟩
       step with lane x 16#u32 even (by decide) (by decide) (by scalar_tac) as ⟨a0,a0Eq⟩
       have a0Bits : a0.bv.setWidth 16 = laneBits 16 even.val x.bv :=
-        lane_word_cast 16 _ _ a0 (by rw [laneBits_toNat]; exact a0Eq)
+        lane_word_cast 16 _ _ a0 (by rw [lane_bits_to_nat]; exact a0Eq)
       step with signed a0 16#u32 (by decide) (by decide) as ⟨sa0,sa0Eq⟩
       have a0Bound : -32768 ≤ sa0.val ∧ sa0.val < 32768 := by
         rw [sa0Eq]; exact ⟨BitVec.le_toInt _,BitVec.toInt_lt⟩
@@ -71,7 +71,7 @@ theorem dot_loop (x y initial : U128) (i : U32)
       rw [a0Bits] at sa0Eq
       step with lane y 16#u32 even (by decide) (by decide) (by scalar_tac) as ⟨b0,b0Eq⟩
       have b0Bits : b0.bv.setWidth 16 = laneBits 16 even.val y.bv :=
-        lane_word_cast 16 _ _ b0 (by rw [laneBits_toNat]; exact b0Eq)
+        lane_word_cast 16 _ _ b0 (by rw [lane_bits_to_nat]; exact b0Eq)
       step with signed b0 16#u32 (by decide) (by decide) as ⟨sb0,sb0Eq⟩
       have b0Bound : -32768 ≤ sb0.val ∧ sb0.val < 32768 := by
         rw [sb0Eq]; exact ⟨BitVec.le_toInt _,BitVec.toInt_lt⟩
@@ -81,7 +81,7 @@ theorem dot_loop (x y initial : U128) (i : U32)
       step as ⟨odd,oddEq⟩
       step with lane x 16#u32 odd (by decide) (by decide) (by scalar_tac) as ⟨a1,a1Eq⟩
       have a1Bits : a1.bv.setWidth 16 = laneBits 16 odd.val x.bv :=
-        lane_word_cast 16 _ _ a1 (by rw [laneBits_toNat]; exact a1Eq)
+        lane_word_cast 16 _ _ a1 (by rw [lane_bits_to_nat]; exact a1Eq)
       step with signed a1 16#u32 (by decide) (by decide) as ⟨sa1,sa1Eq⟩
       have a1Bound : -32768 ≤ sa1.val ∧ sa1.val < 32768 := by
         rw [sa1Eq]; exact ⟨BitVec.le_toInt _,BitVec.toInt_lt⟩
@@ -90,7 +90,7 @@ theorem dot_loop (x y initial : U128) (i : U32)
       step as ⟨oddY,oddYEq⟩
       step with lane y 16#u32 oddY (by decide) (by decide) (by scalar_tac) as ⟨b1,b1Eq⟩
       have b1Bits : b1.bv.setWidth 16 = laneBits 16 oddY.val y.bv :=
-        lane_word_cast 16 _ _ b1 (by rw [laneBits_toNat]; exact b1Eq)
+        lane_word_cast 16 _ _ b1 (by rw [lane_bits_to_nat]; exact b1Eq)
       step with signed b1 16#u32 (by decide) (by decide) as ⟨sb1,sb1Eq⟩
       have b1Bound : -32768 ≤ sb1.val ∧ sb1.val < 32768 := by
         rw [sb1Eq]; exact ⟨BitVec.le_toInt _,BitVec.toInt_lt⟩
@@ -142,8 +142,8 @@ theorem dot_packed (x y result : U128)
     uN.mk_uN result.val = dotResult x.bv y.bv := by
   have packed := pack_map_of_lanes .I32 (128/lsize .I32) result.bv.toNat
     (fun j => (dotBits x.bv y.bv j).toNat)
-    (by intro j valid; rw [←laneBits_toNat]; change (laneBits 32 j result.bv).toNat = _; rw [lanes j valid])
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+    (by intro j valid; rw [←lane_bits_to_nat]; change (laneBits 32 j result.bv).toNat = _; rw [lanes j valid])
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold dotResult dotWords Map
   rw [List.map_map]
   have same (bits : Nat) : laneOfBits .I32 bits = .mk_lane__0 .I32 (.mk_uN bits) := by rfl

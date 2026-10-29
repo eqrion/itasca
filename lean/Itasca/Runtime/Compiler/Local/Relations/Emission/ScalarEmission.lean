@@ -10,7 +10,7 @@ Scalar instructions, including those resolved against the module's globals and m
 Main declarations: `ScalarEmission`. A direct consumer is `Compiler.Local.Relations.Calls.IndirectCallEmission`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Scalar instructions, including those resolved against the module's globals and
@@ -45,23 +45,23 @@ inductive ScalarEmission (C : context) :
       (slot : src.val = slots C.LOCALS + slots stack) :
       ScalarEmission C (stack ++ [ty]) (.GLOBAL_SET (.mk_uN index.val))
         [globalSetInstruction (decide (width ty = 2)) src index] stack
-  | load (stack) (op : Abs.Memory.Load) (argument : memarg) (address offset : U32)
+  | load (stack) (op : SourceMachine.Memory.Load) (argument : memarg) (address offset : U32)
       (memory : memtype) (available : C.MEMS[0]? = some memory)
       (sourceOffset : argument.OFFSET = .mk_uN offset.val)
       (slot : address.val = slots C.LOCALS + slots stack) :
       ScalarEmission C (stack ++ [.I32]) (op.source argument)
         [memoryLoadInstruction op address address offset] (stack ++ [valtype_numtype op.type])
-  | store (stack) (op : Abs.Memory.Store) (argument : memarg) (address value offset : U32)
+  | store (stack) (op : SourceMachine.Memory.Store) (argument : memarg) (address value offset : U32)
       (memory : memtype) (available : C.MEMS[0]? = some memory)
       (sourceOffset : argument.OFFSET = .mk_uN offset.val)
       (addressSlot : address.val = slots C.LOCALS + slots stack)
       (valueSlot : value.val = address.val + 1) :
       ScalarEmission C (stack ++ [.I32, valtype_numtype op.type]) (op.source argument)
         [memoryStoreInstruction op address value offset] stack
-  | float (stack : List valtype) (op : Abs.Float.Instruction) (left right : U32)
+  | float (stack : List valtype) (op : SourceMachine.Float.Instruction) (left right : U32)
       (leftSlot : left.val = slots C.LOCALS + slots stack)
       (rightSlot : right.val = left.val + (op.arity - 1)) :
       ScalarEmission C (stack ++ List.replicate op.arity (valtype_numtype op.input))
         op.source [floatInstruction op left left right] (stack ++ [valtype_numtype op.output])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

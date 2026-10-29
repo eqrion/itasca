@@ -78,7 +78,7 @@ theorem add_global_resource_cause {M P F A : Type}
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
     (hmapping : inst.module.global_initializers.val[index.val]? = some function)
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code global.init global.gtype.valtype)
+    (compiled : Compiler.InitializerCode code global.init global.gtype.valtype)
     (resolved : Interp.InitializerResolution store inst global.init global.gtype.valtype words)
     (bindings : InitializerBindings store inst)
     (bound : objectCount store ≤ Usize.max)
@@ -98,11 +98,11 @@ theorem add_global_resource_cause {M P F A : Type}
   rw [evalRun] at errors
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
-  simp only [Code.initializer_vec_index store.instances instIndex inst hi,
+  simp only [Compiler.initializer_vec_index store.instances instIndex inst hi,
     runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
+  rw [Compiler.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
-    Code.initializer_vec_index inst.module.global_initializers index function hmapping,
+    Compiler.initializer_vec_index inst.module.global_initializers index function hmapping,
     evalRun] at run
   cases value with
   | Err rejected =>
@@ -157,7 +157,7 @@ def GlobalStagingCause {M P F A : Type} (memory : runtime.platform.MemoryBuffer 
     inst.module.module.env.globals.val[index.val]? = some global ∧
     inst.module.global_initializers.val[index.val]? = some function ∧
     inst.module.functions.val[function.val]? = some code ∧
-    Code.InitializerCode code global.init global.gtype.valtype ∧
+    Compiler.InitializerCode code global.init global.gtype.valtype ∧
     runtime.store.instantiate.Store.add_instance_global memory hooks floats allocator current host instIndex index = .ok (.Err error,current,host) ∧
     (Interp.SyntheticPreparationCause allocator current code error ∨ GlobalAllocationCause allocator current error)
 
@@ -169,7 +169,7 @@ theorem global_staging_resource_loop {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ global ∈ inst.module.module.env.globals.val,
       Itasca.ModuleConstants.Valid inst.module.module.env global.init global.gtype.valtype)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)

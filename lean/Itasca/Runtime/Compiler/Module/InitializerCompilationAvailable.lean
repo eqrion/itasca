@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Module.InitializerDataAvailable
 import Itasca.Runtime.Compiler.Module.InitializerTotal
 import Itasca.Module.Env.Basic
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent constant-expression judgments for every source initializer. -/
@@ -126,4 +126,4 @@ theorem initializer_compilation_available {A : Type} (ops : runtime.platform.All
     unfold initializerMappingCost
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -5,7 +5,7 @@ import Itasca.Support.TypeTranslation
 extracted compiler state. Prefix-code, open-label, and fixup preservation are
 separate obligations; this file does not assert the final compilation theorem. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- The compiler keeps locals in source order, including function parameters. -/
@@ -59,4 +59,4 @@ theorem CompilerLayout.live_slots_fit {A : Type}
   rw [← h.height]
   exact h.capacity live
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

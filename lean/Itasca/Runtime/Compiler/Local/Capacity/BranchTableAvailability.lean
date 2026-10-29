@@ -16,7 +16,7 @@ Availability of br_table compilation, from one target through the target loop an
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A bounded internal lowering step consumes its numeric allowance without
@@ -41,7 +41,7 @@ theorem CallbackCapacity.after_growth {A : Type} {before after : runtime.compile
   · rw [localsSame]
     exact slots
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -49,7 +49,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- One actual branch-table stub publishes a dispatch target and accepts its
@@ -93,7 +93,7 @@ theorem compiler_table_branch_available {A : Type} (ops : runtime.platform.Alloc
   exact compiler_unconditional_branch_available ops law bound available staged state stagedCapacity frame frameIndex depth 1#u32
     frameAt position widthFits fixupsCapacity fixupsReserve
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -101,7 +101,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent branch widths for the retained table labels. Only labels
@@ -148,7 +148,7 @@ theorem TableWidthsFit.advance {A : Type} {before after : runtime.compiler.Funct
   rw [height,widths]
   exact fits depth memberBefore index old oldLookup beforePosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -156,7 +156,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -258,7 +258,7 @@ theorem compiler_table_loop_available {A : Type} (ops : runtime.platform.Alloc A
   · refine ⟨Nat.le_refl _,inside,rfl,rfl,safe,widths,capacity,?_⟩
     simpa using CompilationBudgetEffect.refl compiler.budget
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -266,7 +266,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -334,7 +334,7 @@ theorem compiler_lower_table_available {A : Type} (ops : runtime.platform.Alloc 
   simp only [WP.spec_ok,true_and]
   exact (emitEffect.trans effect).weaken (by intro counter; cases counter <;> simp [next] <;> omega)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -342,7 +342,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -428,6 +428,6 @@ theorem compiler_on_br_table_available {A : Type} (ops : runtime.platform.Alloc 
     rw [post.2]
     exact ⟨post.1,labelEffect.weaken (by intro counter; cases counter <;> simp)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -8,7 +8,7 @@ Source and local-layout metadata fixed after the function-start callback. Instru
 Main declarations: `compilerMetadata` and `CompilerStable`. A direct consumer is `Compiler.Local.Callbacks.Metadata.CompilerOrdinaryMetadata`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca.ResultFacts
 
@@ -63,4 +63,4 @@ theorem compiler_observe_stable {A : Type} (ops : runtime.platform.Alloc A)
     · exact Nat.le_max_left _ _
     · exact Nat.le_refl _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

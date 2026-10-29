@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackProduction
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableDead
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual successful table callbacks restore the raw compiler boundary before
@@ -30,4 +30,4 @@ theorem compiler_br_table_boundary {A : Type} (ops : runtime.platform.Alloc A)
   · have dead : before.reachable=false := by cases same : before.reachable <;> simp_all
     obtain ⟨_,code,tables,_,cleared,afterDead,_,_⟩ := compiler_br_table_dead_effect ops law before after state fallback types dead accepted
     exact ⟨⟨cleared,by simpa only [code,tables] using dominance⟩,afterDead⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

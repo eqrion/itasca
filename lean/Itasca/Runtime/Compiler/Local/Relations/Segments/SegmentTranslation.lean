@@ -7,7 +7,7 @@ Source instructions represented by the straight-line segment bytecode.
 Main declarations: `segmentInstructionSource` and `segmentSource`. A direct consumer is `Compiler.Local.Relations.Segments.SegmentFlowSource`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std SpecExt
 
 /-- Source instructions represented by the straight-line segment bytecode. -/
@@ -42,7 +42,7 @@ inductive SegmentFlow : Nat → List runtime.bytecode.Instr → Prop where
   | elementDrop (element : U32) (rest : List runtime.bytecode.Instr) (next : SegmentFlow 0 rest) :
       SegmentFlow 0 (.ElemDrop element :: rest)
 
-theorem segmentSource_wf (code : runtime.bytecode.CompiledFunction) (instructions : List runtime.bytecode.Instr) :
+theorem segment_source_wf (code : runtime.bytecode.CompiledFunction) (instructions : List runtime.bytecode.Instr) :
     Forall wf_admininstr (segmentSource code instructions) := by
   intro instruction member
   obtain ⟨raw, _, member⟩ := List.mem_flatMap.mp member
@@ -56,4 +56,4 @@ theorem segmentSource_wf (code : runtime.bytecode.CompiledFunction) (instruction
   · exact .admininstr_case_67 _ (Spec.Segment.index_wf _ (by scalar_tac))
   · exact .admininstr_case_55 _ (Spec.Segment.index_wf _ (by scalar_tac))
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

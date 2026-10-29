@@ -140,9 +140,9 @@ theorem add_element_errors {M P F A : Type}
     (run : runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index = .ok out) :
     ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
-  simp only [Code.initializer_vec_index store.instances instIndex inst found,
+  simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
     runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.elements.deref index segment
+  rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len
   simp only [bind_ok, reserveRun] at run

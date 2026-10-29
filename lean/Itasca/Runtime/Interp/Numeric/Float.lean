@@ -50,7 +50,7 @@ theorem quiet32_sound (bits : U32) (allowed : List fN)
   rw [hr]
   simp only [WP.spec_ok]
   rw [heq]
-  exact floatOutcome_canonicalize 32 (floatOfBits 32 bits.val) allowed h hc
+  exact float_outcome_canonicalize 32 (floatOfBits 32 bits.val) allowed h hc
 
 @[step] theorem quiet64_bits (bits : U64) :
     runtime.interp.float.quiet64 bits ⦃ result =>
@@ -93,7 +93,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   rw [hr]
   simp only [WP.spec_ok]
   rw [heq]
-  exact floatOutcome_canonicalize 64 (floatOfBits 64 bits.val) allowed h hc
+  exact float_outcome_canonicalize 64 (floatOfBits 64 bits.val) allowed h hc
 
 @[step] theorem binary32_add_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U32) :

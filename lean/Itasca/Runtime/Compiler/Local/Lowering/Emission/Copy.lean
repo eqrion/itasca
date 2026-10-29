@@ -7,7 +7,7 @@ The compiler's copy helper elides an empty or identity transfer.
 Main declarations: `compiler_copy_elided` and `compiler_copy`. A direct consumer is `Compiler.Local.Lowering.Control.LoweringForwardBranch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The compiler's copy helper elides an empty or identity transfer. -/
@@ -51,4 +51,4 @@ theorem compiler_copy_elided {A : Type} (ops : runtime.platform.Alloc A)
       exact eq
     simpa [transferInstruction, h1, h2] using
       compiler_emit ops law compiler (.CopyN dst src count) codeFits sourceFits coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

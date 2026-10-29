@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadE
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseElse
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing an explicit ELSE joins the saved then arm and completed else
@@ -69,9 +69,9 @@ theorem StructuredCompilerPrefix.close_else {jumpTables : List Aeneas.Std.U32} {
         exact ⟨StructuredPrefixMode.terminal (current := parent.advance (.IFELSE bt yes child.source)) (by simp [exit, normal, marked]) (by exact parentEntered) next, arms⟩
   have frames := (invariant.frames.close_branches frame target framesEq branches codeEq (by rw [maps])).advance (.IFELSE bt yes child.source)
   have clean : DormantFrames after.frames.val := (framesEq ▸ invariant.dormant).pop
-  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patchCode_length]
+  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patch_code_length]
   refine ⟨invariant.metadata.trans stable, frames, invariant.entryChain.pop.advance _, clean,
     invariant.conditions.pop.advance _, (fun _ => sourceTypes.concrete), result.1, result.2, sources.aligned invariant.sources,
     invariant.codeBudget.advance (by omega) consumed,
     (invariant.controlBudget.transport maps (by simp [framesEq])).advance (Nat.le_of_lt consumed), cursor⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

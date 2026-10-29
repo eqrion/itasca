@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Module.CompileDriverFrame
 
 /-! Shared scheduler configuration and code-coordinate transport for source
 certificates. Function, slice and capacity proofs retain their distinct folds. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Configuration facts used by each source-ordered compiler body fold. -/
@@ -31,4 +31,4 @@ theorem CompileSourceCertificate.code_length {A : Type} {ops : runtime.platform.
     (c : CompileSourceCertificate w) : c.run.remaining.codeLength = Slice.len c.code := by
   apply UScalar.eq_of_val_eq
   exact c.coherent.code_len_eq _ c.run.remaining.length_call
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

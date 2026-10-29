@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An ELSE scope retains its completed then arm, resolved guard, and literal
@@ -41,4 +41,4 @@ def UniversalElse {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     ElseFrames types functions returns locals (resolvedCode compiler.function.code.val groups)
       (current :: parents.reverse) (label :: labels)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

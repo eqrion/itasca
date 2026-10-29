@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -45,4 +45,4 @@ theorem simd_valid_bounds (compiled : runtime.bytecode.CompiledFunction)
       have outputs := slots_fit_true compiled dst wr fitOut
       simp only [ite_true,lift,bind_ok,Result.ok.injEq,decide_eq_true_eq] at checked
       exact ⟨by omega,outputs,by simpa using checked⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

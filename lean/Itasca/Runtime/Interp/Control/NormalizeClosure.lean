@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Relations.SourceClosure
 namespace Itasca.Runtime.Interp
 
 /-- A source position that requires bytecode execution or function return. -/
-def ReadySource (f : Abs.AFrame) : Prop :=
+def ReadySource (f : SourceMachine.AFrame) : Prop :=
   match f.code with
   | [] => f.labels = []
   | .NOP :: _ | .DROP :: _ | .BLOCK _ _ :: _ => False
@@ -25,7 +25,7 @@ theorem FrameMetadata.trans {before middle after}
 theorem ErasedStep.closure {before after} (step : ErasedStep before after) : SourceClosure before after := by
   cases step with
   | nop f after => exact .tail _ _ _ _ _ (fun _ h => h)
-  | drop f after front value => exact .tail { f with vals := front ++ [value] } .DROP after f.locals front (fun bound h => ⟨h.1, (Abs.valuesBound_append.mp h.2).1⟩)
+  | drop f after front value => exact .tail { f with vals := front ++ [value] } .DROP after f.locals front (fun bound h => ⟨h.1, (SourceMachine.values_bound_append.mp h.2).1⟩)
   | block f bt body after front params results signature shape => exact .block _ _ _ _ _ _
   | label f label labels => exact .label _ _ _
 

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceEntryChain
 import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem paired_lookup {α β : Type} {R : α → β → Prop} {left right}
@@ -89,4 +89,4 @@ theorem branch_source_coordinate {A : Type} {compiler : runtime.compiler.Functio
   refine ⟨source, rfl, ?_⟩
   change slots locals + slots (target ++ discarded) + slots arguments = compiler.height.val
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -41,7 +41,7 @@ def splatWidth (ty : lanetype) : U32 :=
   | .I32 | .F32 => 32#u32
   | .I64 | .F64 => 64#u32
 
-theorem splatWidth_val (ty : lanetype) : (splatWidth ty).val = lsize ty := by
+theorem splat_width_val (ty : lanetype) : (splatWidth ty).val = lsize ty := by
   cases ty <;> rfl
 
 theorem splat_lanes_eq (ty : lanetype) (a : U128) :
@@ -82,7 +82,7 @@ theorem splat_lanes_eq (ty : lanetype) (a : U128) :
       (fun p => (runtime.interp.simd.splat p.1 p.2)) = _)
     rw [bind_ok]
 
-theorem splatInput_source (ty : lanetype) (a : U128) :
+theorem splat_input_source (ty : lanetype) (a : U128) :
     Spec.Simd.scalarInput ty (splatInput ty a).bv =
       Spec.Simd.scalarInput ty (UScalar.cast .U64 a).bv := by
   have low32 : ((UScalar.cast .U64 (UScalar.cast .U32 a)).bv).setWidth 32 =
@@ -101,9 +101,9 @@ theorem splatInput_source (ty : lanetype) (a : U128) :
       Step_pure [.CONST (unpack ty) (Spec.Simd.scalarInput ty (UScalar.cast .U64 a).bv),
         .VSPLAT (Spec.Simd.shapeOf ty)] [.VCONST .V128 (.mk_uN result.val)] ⦄ := by
   rw [splat_lanes_eq]
-  apply WP.spec_mono (splat_sound ty (splatInput ty a) (splatWidth ty) (splatWidth_val ty))
+  apply WP.spec_mono (splat_sound ty (splatInput ty a) (splatWidth ty) (splat_width_val ty))
   intro result source
-  rw [splatInput_source] at source
+  rw [splat_input_source] at source
   exact source
 
 theorem splat_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)

@@ -14,7 +14,7 @@ Checked instruction prefixes through br_table lowering. Target-dispatch effects 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Budget, scratch labels, reachability, and operand observations do not
@@ -28,7 +28,7 @@ theorem CompilerInstructionPrefix.retained {A : Type} {before after : runtime.co
     simp only [PendingInstructionSite,frames]
   simpa only [CompilerInstructionPrefix,function,owners] using held
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -36,7 +36,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An emitted dispatch word can be deferred at its exact new position while
@@ -45,7 +45,7 @@ theorem Emitted.defer_new_instruction {A : Type} {before after : runtime.compile
     {instruction : runtime.bytecode.Instr} (emitted : Emitted before after instruction)
     (held : CompilerInstructionPrefix before) :
     CompilerInstructionPrefixExcept after before.function.code.length := by
-  have growth := emitted.instructionCheckExtends
+  have growth := emitted.instruction_check_extends
   have frames : after.frames = before.frames := by
     obtain ⟨budget,code,sources,rfl,_,_⟩ := emitted
     rfl
@@ -86,7 +86,7 @@ theorem instruction_append_effect_jump_table {A : Type} (before : runtime.compil
   rw [appended,List.length_append,List.length_singleton]
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -94,7 +94,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- One actual table arm appends a checked transfer and an owned or backward
@@ -138,7 +138,7 @@ theorem compiler_table_branch_instruction_effect {A : Type} (ops : runtime.platf
       found position loop sourcePosition (by omega) (by simpa only [staged] using (show source.val+frame.results.val ≤ before.function.slot_count.val by omega))
       (safe.fixups.lookup found (by omega)) codeFits offsetsFit safe.coordinate branch
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -146,7 +146,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The finite table builder preserves all stored checks except the dispatch
@@ -174,7 +174,7 @@ theorem TableBranchRun.instruction_prefix_except {A : Type} {ops : runtime.platf
       exact heightFits.trans capacity
     · exact effect.apply_except omitted held
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -182,7 +182,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual dispatch and all target stubs establish the complete instruction
@@ -216,7 +216,7 @@ theorem compiler_lower_table_open_instructions {A : Type} (ops : runtime.platfor
     simp only [slots_append,slots, width] at height
     omega
   have deferred := emission.defer_new_instruction held
-  have growth := emission.instructionCheckExtends
+  have growth := emission.instruction_check_extends
   obtain ⟨targets,built⟩ := run.built law
   simp only [List.drop_zero] at built
   obtain ⟨budget,code,sources,frame,appended,sourceAppend⟩ := emission
@@ -257,7 +257,7 @@ theorem compiler_lower_table_open_instructions {A : Type} (ops : runtime.platfor
     change start.val+len.val ≤ before.function.jump_tables.val.length+before.table_depths.val.length
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -265,7 +265,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Collecting a table label preserves instruction checks and pending owners. -/
@@ -318,6 +318,6 @@ theorem compiler_br_table_callback_open_instructions {A : Type} (ops : runtime.p
       exact compiler_observe_open_instructions ops law {labeled with table_depths := cleared}
         after state (checked.retained rfl rfl) observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

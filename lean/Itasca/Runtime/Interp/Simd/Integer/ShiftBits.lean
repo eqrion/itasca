@@ -4,17 +4,17 @@ import Itasca.Runtime.Interp.Simd.Lanes.Packing
 /-!
 Bit-width and signed-value facts for lane shifts.
 
-Main declarations: `shiftRight_widen` and `signed_bits`. A direct consumer is `Interp.Simd.Integer.Shift`.
+Main declarations: `shift_right_widen` and `signed_bits`. A direct consumer is `Interp.Simd.Integer.Shift`.
 -/
 
 namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std
 
-theorem shiftRight_widen (width : Nat) (bits : BitVec width) (shift : Nat) (bound : width ≤ 64) :
+theorem shift_right_widen (width : Nat) (bits : BitVec width) (shift : Nat) (bound : width ≤ 64) :
     ((bits.setWidth 64) >>> shift).setWidth width = bits >>> shift := by
   rw [←BitVec.setWidth_ushiftRight bound,BitVec.setWidth_setWidth_of_le _ bound,BitVec.setWidth_eq]
 
-theorem shiftRight_signed_widen (width : Nat) (bits : BitVec width) (shift : Nat)
+theorem shift_right_signed_widen (width : Nat) (bits : BitVec width) (shift : Nat)
     (positive : 0 < width) (bound : width ≤ 64) :
     ((bits.signExtend 64).sshiftRight shift).setWidth width = bits.sshiftRight shift := by
   by_cases full : width=64
@@ -43,7 +43,7 @@ theorem shiftRight_signed_widen (width : Nat) (bits : BitVec width) (shift : Nat
   apply WP.spec_mono (lane v width index positive widthBound positionBound)
   intro result value
   apply BitVec.eq_of_toNat_eq
-  rw [BitVec.toNat_setWidth,laneBits_toNat]
+  rw [BitVec.toNat_setWidth,lane_bits_to_nat]
   change result.val = _
   rw [value]
   exact (Nat.mod_eq_of_lt (by

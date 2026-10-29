@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual construction and function-start establish the initial map invariant. -/
@@ -38,4 +38,4 @@ theorem compiler_start_map_publication {A : Type} (ops : runtime.platform.Alloc 
   · rfl
   · rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

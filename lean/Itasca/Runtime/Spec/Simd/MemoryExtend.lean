@@ -77,7 +77,7 @@ theorem extend_load_value (ty : WidenWidth) (signed : Bool) (s : store) (f : fra
   · exact input
   · exact const_wf result
   · exact Segment.index_wf 0 (by norm_num)
-  · cases ty <;> exact shapeOf_wf _
+  · cases ty <;> exact shape_of_wf _
   · intro word member
     obtain ⟨j,_,rfl⟩ := List.mem_map.mp member
     have ex := extend_bits_source (ty.width*2) signed (laneWord (lanetype_Jnn ty.input) loaded j) (by cases ty <;> decide)

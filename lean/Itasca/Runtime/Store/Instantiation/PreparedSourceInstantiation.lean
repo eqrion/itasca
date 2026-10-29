@@ -113,7 +113,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
+    (valid : Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -182,7 +182,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
   rw [trace.globalRun] at ordered
   simp only [WP.spec_ok] at ordered
   obtain ⟨orderedStore, orderedStatus, orderedEqual, _, _, _, _, orderedInst, orderedFound, _, addressOrder, _⟩ := ordered
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp orderedEqual
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp orderedEqual
   have result := global_source_staging_loop memory hooks floats allocator law before published platform
     before.instances.len 0#usize trace.inst (.Ok ()) (preparedPrefix.trans publishedPrefix) (by simp) found
     (by simpa only [source] using compiled) globalValid publishedBindings publishedImports publishedSegments
@@ -196,7 +196,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
   simp only [WP.spec_ok] at result
   obtain ⟨after, status, equal, staged, objectBound, accounting, metadata, next, nextFound, nextSource,
     bindings, imports, segments, elements, datas, elementMap, dataMap, sourceContext, values⟩ := result
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp equal
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp equal
   have sameInstance : orderedInst = next := Option.some.inj (orderedFound.symm.trans nextFound)
   subst orderedInst
   obtain ⟨produced, stored, evaluated⟩ := values rfl
@@ -246,7 +246,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
+    (valid : Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -269,7 +269,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
     globalPrefix, globalBound, globalAccounting, globalElements, globalData, emptyElements, emptyData, globalAddresses,
     globals, globalsStored, globalValues⟩ := trace.global_source_context laws law shape accounted cache valid compiled
       code initialModule functionMap globalMap storeWf frameWf
-  have elementCompiled : Code.InitializerMappings globalInst.module := by simpa only [globalSource] using compiled
+  have elementCompiled : Compiler.InitializerMappings globalInst.module := by simpa only [globalSource] using compiled
   have elementValid : ∀ segment ∈ globalInst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid globalInst.module.module.env segment := by
     simpa only [globalSource] using valid.elements
@@ -288,7 +288,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   obtain ⟨elementStore, elementStatus, parts, elementPrefix, elementBound, elementAccounting, elementMetadata,
     elementInst, elementFound, elementSource, elementBindings, elementImports, elementSegments,
     elementData, elementDataMap, elementGlobals, elementGlobalMap, elementContext, elementsPost⟩ := elementsChecked
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp parts
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp parts
   obtain ⟨elements, elementsStored, elementValues⟩ := elementsPost rfl
   have elementOrder := element_order_loop memory hooks floats allocator law before trace.globalStore platform
     before.instances.len 0#usize globalInst (.Ok ()) globalPrefix (by simp) globalFound elementCompiled elementValid
@@ -297,7 +297,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   rw [trace.elementRun] at elementOrder
   simp only [WP.spec_ok] at elementOrder
   obtain ⟨elementStore, elementStatus, parts, _, _, _, _, actualInst, actualFound, _, ordered, _⟩ := elementOrder
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp parts
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp parts
   have same : actualInst = elementInst := Option.some.inj (actualFound.symm.trans elementFound)
   subst actualInst
   have elementCount : trace.elementStore.elems.length = before.elems.length + globalInst.module.module.env.elements.val.length := by
@@ -320,7 +320,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   simp only [WP.spec_ok] at dataChecked
   obtain ⟨dataStore, dataStatus, parts, _, _, _, dataMetadata, ⟨next, nextFound, nextSource, _, _, _,
     dataElements, dataElementMap, dataGlobals, dataGlobalMap⟩, dataValues⟩ := dataChecked
-  obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp parts
+  obtain ⟨rfl, rfl⟩ := (store_state_parts_inj _ _ _ _).mp parts
   have dataOrder := data_order_loop memory allocator law before trace.elementStore before.instances.len 0#usize elementInst (.Ok ())
     elementPrefix (by simp) elementFound elementBindings elementImports elementSegments elementBound (by simp)
     dataCapacity dataMapCapacity before.datas.length []
@@ -328,7 +328,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
   rw [trace.dataRun] at dataOrder
   simp only [WP.spec_ok] at dataOrder
   obtain ⟨dataStore, dataStatus, parts, _, _, _, _, actualInst, actualFound, _, dataOrdered, _⟩ := dataOrder
-  obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp parts
+  obtain ⟨rfl, rfl⟩ := (store_state_parts_inj _ _ _ _).mp parts
   have same : actualInst = next := Option.some.inj (actualFound.symm.trans nextFound)
   subst actualInst
   have dataCount : trace.dataStore.datas.length = before.datas.length + elementInst.module.module.tail.data.val.length := by
@@ -375,7 +375,7 @@ theorem PreparedRun.allocation_content {M P F A : Type}
     (cache : ModuleEnv.Cache module.module.env raw.tables raw.memories)
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     (lengths : raw.functions.length = raw.codes.length)
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
+    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -384,7 +384,7 @@ theorem PreparedRun.allocation_content {M P F A : Type}
       ready.instances.val[before.instances.len.val]? = some next ∧ next.module = module ∧
       GlobalSourceValues (decodeStore view code before) initialModule module.module.env.globals.val globals ∧
       ElementSourceSegments (decodeStore view code before) initialModule module.module.env.elements.val elements ∧
-      decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready =
+      decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready =
         Spec.allocationStore (decodeStore view code before) (decodeInstance ready next)
           (List.zipWith CodeEntry.function raw.functions raw.codes) (globals.map decodeGlobal)
           (raw.tables.map EnvTranslation.tableType) (raw.memories.map EnvTranslation.memType)
@@ -425,19 +425,19 @@ theorem PreparedRun.allocation_content {M P F A : Type}
     (by simpa only [typeSource] using indices) rawPayload code ready next found
     (metadata.typeMap.trans preparedTypeMap)
   have oldFunctions : before.funcs.val.map
-      (decodeFunction (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready) =
+      (decodeFunction (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) =
       before.funcs.val.map (decodeFunction code before) := by
     apply List.map_congr_left
     intro function present
-    have retainedFunction := decodeFunction_prefix
-      (installCode code before.instances.len.val (Code.sourceFunctions raw)) before trace.dataStore retained view shape function present
-    have agrees := decodeFunction_code_agrees (installCode_agrees before code (Code.sourceFunctions raw)) function
-    have charge : decodeFunction (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready function =
-        decodeFunction (installCode code before.instances.len.val (Code.sourceFunctions raw)) trace.dataStore function := by
+    have retainedFunction := decode_function_prefix
+      (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before trace.dataStore retained view shape function present
+    have agrees := decode_function_code_agrees (install_code_agrees before code (Compiler.sourceFunctions raw)) function
+    have charge : decodeFunction (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready function =
+        decodeFunction (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) trace.dataStore function := by
       simp only [trace.committed, decodeFunction, decodeInstance]
     exact charge.trans (retainedFunction.trans agrees)
   have functionsStored : ready.funcs.val.map
-      (decodeFunction (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready) =
+      (decodeFunction (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) =
       before.funcs.val.map (decodeFunction code before) ++
       (List.zipWith CodeEntry.function raw.functions raw.codes).map (Spec.allocationFunction (decodeInstance ready next)) := by
     simpa only [metadata.functions, preparedFunctions, typedFunctions, oldFunctions] using allocatedFunctions
@@ -446,7 +446,7 @@ theorem PreparedRun.allocation_content {M P F A : Type}
   · unfold decodeStore Spec.allocationStore
     simp only [functionsStored, globalsStored, elementsStored, List.map_append,
       metadata.tables, metadata.memories, tablesStored, memoriesStored, List.map_map, Function.comp_def, datasStored]
-  · simpa only [decodeInstance, source, sourceTypes, funext decodeFuncType_source] using types
+  · simpa only [decodeInstance, source, sourceTypes, funext decode_func_type_source] using types
   · simpa only [metadata.functionMap, preparedFunctionMap, indices] using functionAddresses
   · simpa only [globalValues.length_eq] using globalAddresses
   · simpa only [metadata.tableMap] using tableAddresses
@@ -471,7 +471,7 @@ def allocationInitial {M : Type} (raw : ModuleBinary.Module) (before : runtime.s
     seed.funcs.val.map (fun address => address.index.val) ++ List.range' before.funcs.length raw.functions.length,
     seed.globals.val.map (fun address => address.index.val), [], [], [], [], []⟩
 
-theorem allocationInitial_wf {M : Type} (raw : ModuleBinary.Module) (before : runtime.store.Store M)
+theorem allocation_initial_wf {M : Type} (raw : ModuleBinary.Module) (before : runtime.store.Store M)
     (seed : runtime.store.ModuleInst) : wf_moduleinst (allocationInitial raw before seed) := by
   constructor
   simp [Forall]
@@ -508,7 +508,7 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
+    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (oldSyntax : StoreSyntax code before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external) :
     ∃ next globals elements,
@@ -520,13 +520,13 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
       fun_allocmodule (decodeStore view code before) (ModuleElaboration.moduleOf raw)
         (imports.val.map decodeExternal) ((globals.map decodeGlobal).map globalinst.VALUE)
         ((elements.map decodeElement).map eleminst.REFS)
-        (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready,
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready,
           decodeInstance ready next) := by
-  have storeWf := decodeStore_wf view code before shape oldSyntax
+  have storeWf := decode_store_wf view code before shape oldSyntax
   have frameWf : wf_frame ⟨[], allocationInitial raw before trace.seed⟩ := by
     constructor
     · simp [Forall]
-    · exact allocationInitial_wf raw before trace.seed
+    · exact allocation_initial_wf raw before trace.seed
   obtain ⟨_, _, _, _, _, _, functionAddresses⟩ := trace.toPreparedRun.function_payload law shape cache
   obtain ⟨_, _, functionMap, _, _⟩ := trace.toPreparedRun.preparation_metadata laws law shape cache
   have indices : module.module.env.func_type_indices.val = raw.functions :=
@@ -540,7 +540,7 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
   obtain ⟨actual, actualFound, _, readyShape, _, _, _, _⟩ := trace.toPreparedRun.shape_data laws law shape accounted cache valid compiled
   have sourceSyntax := instance_syntax_source code before.instances.len.val next raw elaborated typed
     (by simpa only [source] using matched)
-  have instWf := decodeInstance_wf _ _ ready next sourceSyntax
+  have instWf := decode_instance_wf _ _ ready next sourceSyntax
   have importsMapped := trace.external_maps laws shape cache handles
   obtain ⟨importFunctions, importGlobals, importTables, importMemories⟩ := importsMapped.source imports.val trace.seed
   have exports := exports_source_raw ready next (readyShape.instances next (List.mem_of_getElem? found))
@@ -563,11 +563,11 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
   have globalsWf : Forall wf_globalinst (globals.map decodeGlobal) := by
     intro value member
     obtain ⟨original, present, rfl⟩ := List.mem_map.mp member
-    exact .globalinst_case_ _ _ (decodeWords_wf _ _ _)
+    exact .globalinst_case_ _ _ (decode_words_wf _ _ _)
   have datasWf : Forall wf_datainst (module.module.tail.data.val.map sourceDataPayload) := by
     intro value member
     obtain ⟨original, present, rfl⟩ := List.mem_map.mp member
-    exact .datainst_case_ _ (decodeBytes_wf original.init.val)
+    exact .datainst_case_ _ (decode_bytes_wf original.init.val)
   have rawGlobals : raw.globals = module.module.env.globals.val := congrArg ModuleBinary.Module.globals matched.1
   have rawElements : raw.elements = module.module.env.elements.val.map ModuleEnv.rawElement := congrArg ModuleBinary.Module.elements matched.1
   have rawDatas : raw.data = module.module.tail.data.val.map ModuleData.raw := congrArg ModuleBinary.Module.data matched.1
@@ -633,12 +633,12 @@ theorem LinkedPreparedRun.source_instantiation {M P F A : Type}
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     {R bytes profile} (encoded : ModuleBinary.ModuleEncodingWith R raw bytes profile)
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Code.InitializerMappings module)
+    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (oldSyntax : StoreSyntax code before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external) :
     ∃ next, ready.instances.val[before.instances.len.val]? = some next ∧ next.module = module ∧
       fun_instantiate (decodeStore view code before) (ModuleElaboration.moduleOf raw) (imports.val.map decodeExternal)
-        ⟨⟨decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready,
+        ⟨⟨decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready,
           ⟨[], decodeInstance ready next⟩⟩,
           (Spec.Segment.elementPrograms (raw.elements.map ModuleElaboration.element)).flatten.map admininstr_instr ++
           ((Spec.Segment.dataPrograms (raw.data.map ModuleData.translate)).flatten.map admininstr_instr ++
@@ -649,12 +649,12 @@ theorem LinkedPreparedRun.source_instantiation {M P F A : Type}
   have rawGlobals : raw.globals = module.module.env.globals.val := congrArg ModuleBinary.Module.globals matched.1
   have rawElements : raw.elements = module.module.env.elements.val.map ModuleEnv.rawElement := congrArg ModuleBinary.Module.elements matched.1
   refine ⟨next, found, source, ?_⟩
-  apply Code.source_instantiate encoded elaborated typed (decodeStore view code before)
-    (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready)
+  apply Compiler.source_instantiate encoded elaborated typed (decodeStore view code before)
+    (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready)
     (imports.val.map decodeExternal) (decodeInstance ready next) (allocationInitial raw before trace.seed)
     (trace.seed.funcs.val.map fun address => address.index.val) (trace.seed.globals.val.map fun address => address.index.val)
     ((globals.map decodeGlobal).map globalinst.VALUE) ((elements.map decodeElement).map eleminst.REFS)
-    importFunctions importGlobals ?_ ?_ ?_ allocated (decodeStore_wf view code before shape oldSyntax)
+    importFunctions importGlobals ?_ ?_ ?_ allocated (decode_store_wf view code before shape oldSyntax)
   · simp only [allocationInitial, decodeStore, List.length_map, List.length_zipWith, elaborated.code_count,
       Nat.min_self, List.range'_eq_map_range]
   · simpa only [rawGlobals] using globalValues.raw_evaluations

@@ -7,7 +7,7 @@ Normal return of index-pair insertion.
 Main declarations: `compiler_pair_total`. A direct consumer is `Compiler.Local.Relations.Calls.CallSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_pair_total {A} (ops : runtime.platform.Alloc A)
@@ -29,4 +29,4 @@ open Aeneas Aeneas.Std
     cases answer <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, WP.spec_ok]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

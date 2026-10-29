@@ -1,12 +1,12 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.HostSite
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 theorem HostFrameSite.binding {M : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (site : HostFrameSite view code exec store expected ambient f rest) :
     FrameBinding store exec site.raw f := by
   have indexEq : site.index.val=exec.frames.length-1 := by have := site.last; omega
@@ -17,10 +17,10 @@ theorem HostFrameSite.binding {M : Type}
 
 def HostFrameSite.eventful {M P : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {store : runtime.store.Store M} {expected : List valtype} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (site : HostFrameSite view code exec store expected ambient f rest)
     (certified : CertifiedSupportedStore view code store) (platform : P) :
     EventfulMachine M P view code expected :=
   ⟨store,exec,platform,⟨Store.decodeStore view code store,ambient,f::rest,[]⟩,site.raw.pc.val,false,
     site.machine,certified,site.owned,certified.shape.stateful_heap_owned code⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

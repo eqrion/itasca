@@ -42,17 +42,17 @@ theorem bulk_memory_copy {M : Type} (ops : runtime.platform.MemoryBuffer M)
   simp only [runtime.interp.bulk.execute,lift,bind_ok]
   step as ⟨position,positionEq⟩
   have pos : position.val = base.val+operand.val := by simpa only [U32.cast_Usize_val_eq] using positionEq
-  rw [Code.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
+  rw [Compiler.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
   simp only [bind_ok,lift]
   step as ⟨position1,position1Eq⟩
   step as ⟨position2,position2Eq⟩
   have pos2 : position2.val = base.val+operand.val+1 := by simpa only [position1Eq,U32.cast_Usize_val_eq] using position2Eq
-  rw [Code.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
+  rw [Compiler.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
   simp only [bind_ok,lift]
   step as ⟨position3,position3Eq⟩
   step as ⟨position4,position4Eq⟩
   have pos4 : position4.val = base.val+operand.val+2 := by simpa only [position3Eq,U32.cast_Usize_val_eq] using position4Eq
-  rw [Code.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
+  rw [Compiler.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
   simp only [bind_ok,lift]
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual,actualEq⟩
   subst actual
@@ -108,7 +108,7 @@ theorem bulk_memory_copy {M : Type} (ops : runtime.platform.MemoryBuffer M)
         simp only [List.slice_zero_j,castExpanded]
         rw [rightValues]
         have payloadLength : ((view memory.buf).val.drop src.start.val |>.take (bulkWord count).val).length = (bulkWord count).val := by simp only [List.length_take,List.length_drop]; omega
-        rw [Spec.Segment.setSlice_split_left _ _ _ _ (by omega) (by omega)]
+        rw [Spec.Segment.set_slice_split_left _ _ _ _ (by omega) (by omega)]
         simp only [List.slice,srcStart,srcEnd,dstStart,Nat.add_sub_cancel_left,castExpanded]
       · split
         · rename_i rightCase
@@ -134,7 +134,7 @@ theorem bulk_memory_copy {M : Type} (ops : runtime.platform.MemoryBuffer M)
             omega
           rw [sliceSame]
           have payloadLength : ((view memory.buf).val.slice src.start.val src.end.val).length = (bulkWord count).val := by rw [List.slice_length]; omega
-          rw [Spec.Segment.setSlice_split_right _ _ _ (by omega)]
+          rw [Spec.Segment.set_slice_split_right _ _ _ (by omega)]
           simp only [srcStart,srcEnd,dstStart]
         · split
           · rename_i forward
@@ -222,10 +222,10 @@ theorem memory_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
     simpa only [Slice.length,List.length_setSlice!] using congrArg List.length copied
   have bytesEq : decodeBytes (view buffer).val =
       (decodeBytes (view memory.buf).val).setSlice! destination ((decodeBytes (view memory.buf).val).slice source (source+count)) := by
-    rw [←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ (by simpa [decodeBytes] using inside.1) (by simpa [decodeBytes] using inside.2)]
+    rw [←Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ (by simpa [decodeBytes] using inside.1) (by simpa [decodeBytes] using inside.2)]
     unfold decodeBytes
-    rw [copied,←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ inside.1 inside.2]
-    exact copyInto_map _ _ _ _ _ _ inside.1
+    rw [copied,←Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ inside.1 inside.2]
+    exact copy_into_map _ _ _ _ _ _ inside.1
   unfold Spec.Segment.memoryCopy
   rw [memoryRead,memoryLookup]
   unfold decodeStore

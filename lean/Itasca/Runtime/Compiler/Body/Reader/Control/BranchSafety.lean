@@ -9,7 +9,7 @@ Normal return of branch reader callbacks.
 Main declarations: `compiler_branch_reader_total`. A direct consumer is `Compiler.Body.Reader.Control.ControlSafetyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -46,4 +46,4 @@ theorem compiler_branch_reader_total {A} (ops : runtime.platform.Alloc A)
     | true =>
       exact compiler_br_if_callback_total ops law compiler out.core depth view depthFits fixups
         pcBound codeFits sourceFits coordinate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

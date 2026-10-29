@@ -1,6 +1,6 @@
 import Itasca.Stream.SchedulerComplete
 
-namespace Itasca.Runtime.Code.StreamAvailability
+namespace Itasca.Runtime.Compiler.StreamAvailability
 open Aeneas Aeneas.Std Itasca
 
 /-- Local acceptance contract at a fixed validated environment and source
@@ -93,4 +93,4 @@ theorem drain_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
         core.result.Result.Insts.CoreOpsTry.branch,Itasca.stream.retire_all_code_batches,
         Itasca.stream.retire_all_code_batches_loop] using continued
 
-end Itasca.Runtime.Code.StreamAvailability
+end Itasca.Runtime.Compiler.StreamAvailability

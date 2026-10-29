@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Module.CompilerQueueAvailable
 import Itasca.Runtime.Compiler.Local.Relations.Function.Environment
 import Itasca.Runtime.Compiler.Module.EnvironmentFrame
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Fresh environment capture constructs the compiler queue, empty publication
@@ -41,4 +41,4 @@ theorem compiler_environment_compilation_available {A : Type} (ops : runtime.pla
   · rw [fields.1,emptyQueue]
     exact .nil
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

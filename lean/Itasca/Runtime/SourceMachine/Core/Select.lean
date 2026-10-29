@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Core.Typing
 import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Runtime.SourceMachine.Sim.Typed
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 def select (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) : AResult :=
@@ -25,7 +25,7 @@ theorem select_frame_preservation {s : store} {f : AFrame} {after : List instr}
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨base,ins,outs,operation,stack,continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ [left,right,integerVal .I32 bits])) hc
+      code_stack_after (value_types_concrete (front ++ [left,right,integerVal .I32 bits])) hc
     cases operation with
     | select_impl _ ty type numeric vector sub allowed contextWf instructionWf =>
       simp only [List.map_append,List.map_cons,List.map_nil] at stack
@@ -39,11 +39,11 @@ theorem select_frame_preservation {s : store} {f : AFrame} {after : List instr}
       have rightType : valueType right = ty := types.2.1
       have selectedTyped : Val_ok s (if bits = 0 then right else left) ty := by
         split
-        · simpa only [rightType] using resultsTyped_self_mem (value := right) values (by simp)
-        · simpa only [leftType] using resultsTyped_self_mem (value := left) values (by simp)
+        · simpa only [rightType] using results_typed_self_mem (value := right) values (by simp)
+        · simpa only [leftType] using results_typed_self_mem (value := left) values (by simp)
       have selectedType := value_type_of_typed selectedTyped
       have prefixTyped : ResultsTyped s (front.map valueType) front := by
-        simpa using resultsTyped_take front.length values
+        simpa using results_typed_take front.length values
       apply FrameTyped.mk (f := {f with code := after, vals := front ++ [if bits = 0 then right else left]}) C
         bindings localTypes locals ?_ returns ?_ hw
       · simpa only [ResultsTyped,List.map_append,List.map_cons,List.map_nil,selectedType] using
@@ -113,13 +113,13 @@ theorem select_progress (s : store) (ambient : frame) (f : AFrame) (rest : List 
             simpa only [numtype_Inn] using integer_accepts .I32 bits bitsBound
           simp only [select,shape,pop_append,decoded,matching,
             ite_true,advance,next]
-        · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+        · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
           have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
           have restWf : Forall FrameWf rest := by
-            cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+            cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
           have source := select_simulation s ambient f rest after front left right bits
             typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
             (val_ok_wf leftTyped) (val_ok_wf rightTyped) bitsBound
           simpa only [split,next] using source
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.SignatureWords
 import Itasca.Runtime.Integration.Api.InvocationBoundary
 import Itasca.Runtime.Interp.Relations.SourceIndirectResources
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Allocator refusal sizes for the public argument/result buffers. -/
@@ -19,14 +19,14 @@ def CanonicalInvocationResourceCause {A M P : Type} (allocator : runtime.platfor
   | .Exhausted .Values =>
     valueLimit<signatureWords signature ∨
     (∃ words, SourceCanonicalFunctionCapacity store address words ∧ valueLimit<words) ∨
-    ∃ source callee base words, StepsH initial [] (Abs.decode source) ∧
+    ∃ source callee base words, StepsH initial [] (SourceMachine.decode source) ∧
       SourceInvocationSite source callee base ∧ SourceCanonicalFunctionCapacity source.store callee words ∧
       valueLimit<base+words
   | .Exhausted .Allocation => SignatureAllocation allocator signature ∨
     (∃ words, SourceCanonicalFunctionCapacity store address words ∧
       ((∃ (slots : alloc.vec.Vec U64) (n : Usize), n.val≤words ∧ allocator.reserve slots n=.ok (false,slots)) ∨
         ∃ frames : alloc.vec.Vec runtime.interp.Frame, allocator.reserve frames 1#usize=.ok (false,frames))) ∨
-    ∃ source, StepsH initial [] (Abs.decode source) ∧ SourceInvocationAllocation allocator source
+    ∃ source, StepsH initial [] (SourceMachine.decode source) ∧ SourceInvocationAllocation allocator source
   | .Exhausted .Objects => False
   | error => InvocationBoundaryCause hooks initial frameLimit error
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

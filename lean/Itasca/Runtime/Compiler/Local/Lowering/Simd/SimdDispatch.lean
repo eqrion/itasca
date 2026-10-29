@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowered
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 set_option maxHeartbeats 4000000
@@ -24,4 +24,4 @@ theorem lower_simd_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_pos reachable]
     rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

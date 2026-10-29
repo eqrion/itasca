@@ -6,7 +6,7 @@ Ordinary opcodes in an unreachable suffix only observe the validator. In particu
 Main declarations: `compiler_dead_op_frame` and `compiler_dead_op_fields`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Ordinary opcodes in an unreachable suffix only observe the validator.
@@ -32,4 +32,4 @@ theorem compiler_dead_op_fields {A : Type} (ops : runtime.platform.Alloc A)
   intro out frame
   rw [frame]
   exact ⟨rfl, rfl, rfl, dead⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

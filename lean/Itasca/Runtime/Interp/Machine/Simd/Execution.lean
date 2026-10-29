@@ -7,7 +7,7 @@ All supported SIMD instructions execute inside the generic compiled stack. The o
 Main declarations: `step_execution_forward` and `step_execution`. A direct consumer is `Integration.Execution.Dispatch.Simd`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Simd
+namespace Itasca.Runtime.Interp.Machine.Simd
 open Aeneas Aeneas.Std
 
 /-- All supported SIMD instructions execute inside the generic compiled stack.
@@ -20,37 +20,37 @@ theorem step_execution_forward {M P F A : Type}
     (memoryLaws : Platform.MemoryLaws memory view) (floatLaws : Platform.FloatOpsCorrect floats)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (raw : runtime.interp.Frame) (index : Usize) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
-    (next : Nat) (output : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
+    (next : Nat) (output : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (source : instr) (after : List instr) (expected : List valtype)
     (last : index.val+1=exec.frames.length) (hf : exec.frames.val[index.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst)
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
-    (simd : Abs.SimdInstr source)
+    (simd : SourceMachine.SimdInstr source)
     (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
-      Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
+      Compiler.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
     (machine : Execution view interpretation store exec
       ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ SimdStoreMutation view store out.2.2.1 ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store (Store.decodeStore view interpretation store) (Store.decodeStore view interpretation out.2.2.1) ∧
-      ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : Abs.AFrame), raw.pc.val < pc.val ∧
+      ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : SourceMachine.AFrame), raw.pc.val < pc.val ∧
         Execution view interpretation out.2.2.1 out.2.1
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial →
-          Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial →
-          Abs.CodeBound bound ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩)) ∨
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial →
+          SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial →
+          SourceMachine.CodeBound bound ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩)) ∨
       (out.1=.Err (.Trap .MemoryOutOfBounds) ∧
         Store.decodeStore view interpretation out.2.2.1=Store.decodeStore view interpretation store ∧
-        ∃ n, 0<n ∧ Spec.StepsHN n (Abs.decode initial) []
+        ∃ n, 0<n ∧ Spec.StepsHN n (SourceMachine.decode initial) []
           ⟨⟨Store.decodeStore view interpretation out.2.2.1,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast?=some raw := by
@@ -96,37 +96,37 @@ theorem step_execution {M P F A : Type}
     (memoryLaws : Platform.MemoryLaws memory view) (floatLaws : Platform.FloatOpsCorrect floats)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (raw : runtime.interp.Frame) (index : Usize) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
-    (next : Nat) (output : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
+    (next : Nat) (output : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (source : instr) (after : List instr) (expected : List valtype)
     (last : index.val+1=exec.frames.length) (hf : exec.frames.val[index.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst)
     (hc : inst.module.functions.val[raw.function.val]?=some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view interpretation store) raw
       {f with code:=source::after} compiled C targets next output)
-    (simd : Abs.SimdInstr source)
+    (simd : SourceMachine.SimdInstr source)
     (project : ∀ before emitted result, Interp.emission compiled C before source emitted result →
-      Code.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
+      Compiler.SimdEmission compiled.simd.val compiled.v128_pool.val C before source emitted result)
     (machine : Execution view interpretation store exec
       ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view interpretation store,ambient,{f with code:=source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ SimdStoreMutation view store out.2.2.1 ∧ FrameStoreMetadata store out.2.2.1 ∧
       Extend_store (Store.decodeStore view interpretation store) (Store.decodeStore view interpretation out.2.2.1) ∧
-      ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : Abs.AFrame),
+      ((out.1=.Ok () ∧ ∃ (pc : U32) (updated : SourceMachine.AFrame),
         Execution view interpretation out.2.2.1 out.2.1
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial
           ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩ ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial →
-          Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial →
-          Abs.CodeBound bound ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩)) ∨
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial →
+          SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial →
+          SourceMachine.CodeBound bound ⟨Store.decodeStore view interpretation out.2.2.1,ambient,updated::rest,[]⟩)) ∨
       (out.1=.Err (.Trap .MemoryOutOfBounds) ∧
         Store.decodeStore view interpretation out.2.2.1=Store.decodeStore view interpretation store ∧
-        ∃ n, 0<n ∧ Spec.StepsHN n (Abs.decode initial) []
+        ∃ n, 0<n ∧ Spec.StepsHN n (SourceMachine.decode initial) []
           ⟨⟨Store.decodeStore view interpretation out.2.2.1,ambient⟩,[.TRAP]⟩)) ⦄ := by
   apply WP.spec_mono (step_execution_forward memory hooks floats allocator view interpretation memoryLaws floatLaws exec store platform raw index inst compiled C targets next output ambient f rest source after expected last hf hi hc program slots point simd project machine)
   rintro out ⟨platformEq,mutation,metadata,extension,normal | failed⟩
@@ -134,4 +134,4 @@ theorem step_execution {M P F A : Type}
     exact ⟨platformEq,mutation,metadata,extension,Or.inl ⟨ok,pc,g,fresh⟩⟩
   · exact ⟨platformEq,mutation,metadata,extension,Or.inr failed⟩
 
-end Itasca.Runtime.Interp.StructuredMachine.Simd
+end Itasca.Runtime.Interp.Machine.Simd

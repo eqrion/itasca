@@ -16,19 +16,19 @@ open Aeneas Aeneas.Std
 
 /-- An indirect source call retains the selected callee and the shared
 argument position, including storage suspended in all source callers. -/
-def SourceIndirectCallSite (initial : Abs.AState) (address : funcaddr) (base : Nat) : Prop :=
-  ∃ (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr)
+def SourceIndirectCallSite (initial : SourceMachine.AState) (address : funcaddr) (base : Nat) : Prop :=
+  ∃ (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (callee : funcinst) (params results : List valtype) (count : Nat),
-    Spec.StepsHN count (Abs.decode initial) [] (Abs.decode ⟨initial.store,initial.ambient,
+    Spec.StepsHN count (SourceMachine.decode initial) [] (SourceMachine.decode ⟨initial.store,initial.ambient,
       {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩) ∧
-    f.vals=(front++args)++[Abs.integerVal .I32 position] ∧ position<2^32 ∧
-    Abs.Indirect.resolve initial.store f table type position=some address ∧
+    f.vals=(front++args)++[SourceMachine.integerVal .I32 position] ∧ position<2^32 ∧
+    SourceMachine.Indirect.resolve initial.store f table type position=some address ∧
     initial.store.FUNCS[address]?=some callee ∧
-    callee.TYPE=⟨.mk_list params,.mk_list results⟩ ∧ args.map Code.valueType=params ∧
-    base=suspendedSourceWords rest+Code.slots ((f.locals++front).map Code.valueType)
+    callee.TYPE=⟨.mk_list params,.mk_list results⟩ ∧ args.map Compiler.valueType=params ∧
+    base=suspendedSourceWords rest+Compiler.slots ((f.locals++front).map Compiler.valueType)
 
-theorem SourceIndirectCallSite.prepend {before middle : Abs.AState} {address base count}
-    (steps : Spec.StepsHN count (Abs.decode before) [] (Abs.decode middle))
+theorem SourceIndirectCallSite.prepend {before middle : SourceMachine.AState} {address base count}
+    (steps : Spec.StepsHN count (SourceMachine.decode before) [] (SourceMachine.decode middle))
     (sameStore : middle.store=before.store) (sameAmbient : middle.ambient=before.ambient)
     (site : SourceIndirectCallSite middle address base) : SourceIndirectCallSite before address base := by
   obtain ⟨f,rest,table,type,position,after,front,args,callee,params,results,tailCount,
@@ -44,7 +44,7 @@ theorem SourceIndirectCallCause.source_site {A M P : Type} {allocator : runtime.
     {hooks : runtime.platform.Platform P M} {interpretation : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
     {index : Usize} {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction}
-    {source : Abs.AState} {error : runtime.ExecError}
+    {source : SourceMachine.AState} {error : runtime.ExecError}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (cause : SourceIndirectCallCause allocator hooks interpretation exec store platform index raw compiled source error) :
@@ -76,11 +76,11 @@ open Aeneas Aeneas.Std
 
 /-- A selected call may be direct or table-resolved; either witness is purely
 source-level and fixes the shared argument base. -/
-def SourceInvocationSite (source : Abs.AState) (address : funcaddr) (base : Nat) : Prop :=
+def SourceInvocationSite (source : SourceMachine.AState) (address : funcaddr) (base : Nat) : Prop :=
   SourceCallSite source address base ∨ SourceIndirectCallSite source address base
 
 def SourceInvocationAllocation {A : Type} (allocator : runtime.platform.Alloc A)
-    (source : Abs.AState) : Prop :=
+    (source : SourceMachine.AState) : Prop :=
   ∃ address base words, SourceInvocationSite source address base ∧
     SourceCanonicalFunctionCapacity source.store address words ∧
     ((∃ (slots : alloc.vec.Vec U64) (n : Usize), n.val ≤ base+words ∧
@@ -90,7 +90,7 @@ def SourceInvocationAllocation {A : Type} (allocator : runtime.platform.Alloc A)
 theorem SourceIndirectCallCause.source_values {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {interpretation : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
-    {index : Usize} {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction} {source : Abs.AState}
+    {index : Usize} {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)
@@ -108,7 +108,7 @@ theorem SourceIndirectCallCause.source_values {A M P : Type} {allocator : runtim
 theorem SourceIndirectCallCause.source_allocation {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {interpretation : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
-    {index : Usize} {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction} {source : Abs.AState}
+    {index : Usize} {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)
@@ -126,7 +126,7 @@ theorem SourceDirectCallCause.source_values_canonical {A M P : Type} {allocator 
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {index : Usize}
     {raw : runtime.interp.Frame} {inst : runtime.store.ModuleInst}
-    {compiled : runtime.bytecode.CompiledFunction} {source : Abs.AState}
+    {compiled : runtime.bytecode.CompiledFunction} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store = Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)
@@ -146,7 +146,7 @@ theorem SourceDirectCallCause.source_allocation_canonical {A M P : Type} {alloca
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {index : Usize}
     {raw : runtime.interp.Frame} {inst : runtime.store.ModuleInst}
-    {compiled : runtime.bytecode.CompiledFunction} {source : Abs.AState}
+    {compiled : runtime.bytecode.CompiledFunction} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store = Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)

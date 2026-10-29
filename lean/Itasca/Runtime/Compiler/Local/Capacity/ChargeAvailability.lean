@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 inductive ChargeCounter where
@@ -42,4 +42,4 @@ theorem charge_counter_available {A : Type} (ops : runtime.platform.Alloc A)
     · step as ⟨used,advanced⟩
       exact ⟨used,rfl,advanced⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

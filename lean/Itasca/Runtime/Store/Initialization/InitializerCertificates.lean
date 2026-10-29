@@ -26,14 +26,14 @@ private theorem related_lookup {T U : Type} {relation : T → U → Prop}
 
 theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (index : Usize) (global : Itasca.module.Global)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.globals.val[index.val]? = some global)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env global.init global.gtype.valtype)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst) :
     ∃ function code words,
       inst.module.global_initializers.val[index.val]? = some function ∧
       inst.module.functions.val[function.val]? = some code ∧
-      Code.InitializerCode code global.init global.gtype.valtype ∧
+      Compiler.InitializerCode code global.init global.gtype.valtype ∧
       Interp.InitializerResolution store inst global.init global.gtype.valtype words := by
   obtain ⟨function, mapped, code, read, certificate⟩ := related_lookup compiled.globals found
   obtain ⟨words, resolved⟩ := initializer_resolves store inst global.init global.gtype.valtype valid bindings imports
@@ -41,7 +41,7 @@ theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M
 
 theorem element_initializer_certificates {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst) :
@@ -70,7 +70,7 @@ structure InitializerSegmentBindings {M : Type} (store : runtime.store.Store M)
 
 theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -82,7 +82,7 @@ theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
   | Active tableIndex expr =>
     simp only [ElementPrecheckReady, mode]
     obtain ⟨offset, mapped, certificate⟩ := related_lookup compiled.elementOffsets found
-    simp only [Code.OffsetInitializer, Code.sourceElementOffset, mode] at certificate
+    simp only [Compiler.OffsetInitializer, Compiler.sourceElementOffset, mode] at certificate
     cases offset with
     | none => contradiction
     | some function =>
@@ -101,7 +101,7 @@ theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
 
 theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Data)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.tail.data.val[index.val]? = some segment)
     (valid : Itasca.ModuleData.Valid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
@@ -112,7 +112,7 @@ theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
   | Active memoryIndex expr =>
     simp only [DataPrecheckReady, mode]
     obtain ⟨offset, mapped, certificate⟩ := related_lookup compiled.dataOffsets found
-    simp only [Code.OffsetInitializer, Code.sourceDataOffset, mode] at certificate
+    simp only [Compiler.OffsetInitializer, Compiler.sourceDataOffset, mode] at certificate
     cases offset with
     | none => contradiction
     | some function =>

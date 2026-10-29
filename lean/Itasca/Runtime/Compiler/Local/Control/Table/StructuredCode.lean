@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- Structured compiler evidence parameterized only by its syntactic emitted-head relation. -/
 inductive StructuredCode (emission : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -115,4 +115,4 @@ theorem StructuredCode.map_emission {first second types functions returns locals
   | return_ source size fetched remaining scope => exact .return_ source size fetched remaining scope
   | branchTable gate table bounds => exact .branchTable (map _ _ _ _ gate) table bounds
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

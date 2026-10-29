@@ -4,8 +4,8 @@ import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.SourceMachine.Stateful.Ownership
 
-namespace Itasca.Runtime.Abs.TypedSelect
-open SpecExt Itasca.Runtime.Spec Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.TypedSelect
+open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
 
 /-- Explicit select uses the deterministic value choice, with the type
 annotation retained in its source configuration. -/
@@ -51,9 +51,9 @@ theorem Step.next_owned {bounds before next} (step : Step before next)
     simp only [Core.select] at equation
     repeat' first | split at equation | contradiction
     all_goals
-      apply stateful_owned_advance (step := equation) owned.heap (valuesOwned_nil _) ?_ remaining
+      apply stateful_owned_advance (step := equation) owned.heap (values_owned_nil _) ?_ remaining
       refine ⟨frame.1,?_⟩
       have values := frame.2
       aesop (add safe forward ValuesOwned.pop)
 
-end Itasca.Runtime.Abs.TypedSelect
+end Itasca.Runtime.SourceMachine.TypedSelect

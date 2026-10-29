@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Execution.Mutation.Certificate
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.SupportedState
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- Common static store certificate indexed by source syntax and concrete
@@ -12,18 +12,18 @@ structure CertifiedSupportedStore
   shape : Store.Shape view store
   storeSyntax : Store.StoreSyntax code store
   typed : Interp.CoreFunctionsTyped view code store
-  supported : Abs.FunctionsSupported (Store.decodeStore view code store)
-  compiled : Interp.StructuredMachine.CompiledFunctions code store
+  supported : SourceMachine.FunctionsSupported (Store.decodeStore view code store)
+  compiled : Interp.Machine.CompiledFunctions code store
   segmentBounds : Store.SegmentBounds store
 
 theorem CertifiedSupportedStore.functions_typed {M view code store}
     (certified : @CertifiedSupportedStore M view code store) :
-    Abs.FunctionsTyped (Store.decodeStore view code store) := certified.typed.functions_typed
+    SourceMachine.FunctionsTyped (Store.decodeStore view code store) := certified.typed.functions_typed
 
 theorem CertifiedSupportedStore.contents_typed {M view code store}
     (certified : @CertifiedSupportedStore M view code store) :
-    Abs.StoreContentsTyped (Store.decodeStore view code store) :=
-  Store.decodeStore_contents_typed view code store certified.shape certified.storeSyntax certified.segmentBounds
+    SourceMachine.StoreContentsTyped (Store.decodeStore view code store) :=
+  Store.decode_store_contents_typed view code store certified.shape certified.storeSyntax certified.segmentBounds
 
 /-- Exact checked mutation footprints preserve the common static certificate,
 including operations that drop segments or grow mutable objects. -/
@@ -42,8 +42,8 @@ theorem CertifiedSupportedStore.update {M view code before after}
   refine ⟨mutation.shape,syntaxAfter,
     Store.core_functions_typed_metadata mutation.metadata.functions mutation.metadata.types mutation.metadata.instances
       mutation.extension certified.typed,certified.supported.same decodedFunctions,?_,mutation.segmentBounds⟩
-  simpa only [Interp.StructuredMachine.CompiledFunctions,Interp.StructuredMachine.FunctionCompiled,Interp.FunctionTable,
+  simpa only [Interp.Machine.CompiledFunctions,Interp.Machine.FunctionCompiled,Interp.FunctionTable,
     Store.decodeInstance,mutation.metadata.identity,mutation.metadata.functions,mutation.metadata.types,
     mutation.metadata.instances] using certified.compiled
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

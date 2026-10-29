@@ -9,7 +9,7 @@ The postcondition of a br_table reader step.
 Main declarations: `reader_table_post_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableIndexed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -41,4 +41,4 @@ theorem reader_table_post_wasm2 {V : Type} (visitor : code.OpVisitor V)
   · simpa only [finalBlocks] using blocks
   · simpa only [List.append_nil] using finalValues
   · exact sourceAt.declared _
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

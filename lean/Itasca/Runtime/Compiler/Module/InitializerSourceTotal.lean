@@ -11,7 +11,7 @@ Independent source bounds and normal return of source initializer lowering.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 private theorem leb_nonempty {bytes value} (h : Itasca.Leb128.Encoding bytes value) :
@@ -151,7 +151,7 @@ theorem initializer_source_headroom {R raw bytes profile env tail}
   dsimp only [initializerMappingCost, initializerElementCost]
   constructor <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -159,7 +159,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 /-- The actual fresh compiler-driver input has enough space for initializer
@@ -180,6 +180,6 @@ theorem initializer_lower_source_total {A : Type} (ops : runtime.platform.Alloc 
   · simpa only [uninitializedModule, functionCount] using mapSpace
   · exact segmentSpace
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

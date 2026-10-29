@@ -22,17 +22,17 @@ theorem bulk_memory_init_at {M : Type} (ops : runtime.platform.MemoryBuffer M)
   simp only [runtime.interp.bulk.execute,lift,bind_ok]
   step as ⟨position,positionEq⟩
   have pos : position.val = base.val+operand.val := by simpa only [U32.cast_Usize_val_eq] using positionEq
-  rw [Code.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
+  rw [Compiler.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
   simp only [bind_ok,lift]
   step as ⟨position1,position1Eq⟩
   step as ⟨position2,position2Eq⟩
   have pos2 : position2.val = base.val+operand.val+1 := by simpa only [position1Eq,U32.cast_Usize_val_eq] using position2Eq
-  rw [Code.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
+  rw [Compiler.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
   simp only [bind_ok,lift]
   step as ⟨position3,position3Eq⟩
   step as ⟨position4,position4Eq⟩
   have pos4 : position4.val = base.val+operand.val+2 := by simpa only [position3Eq,U32.cast_Usize_val_eq] using position4Eq
-  rw [Code.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
+  rw [Compiler.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
   simp only [bind_ok,lift]
   step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual, actualEq⟩
   subst actual

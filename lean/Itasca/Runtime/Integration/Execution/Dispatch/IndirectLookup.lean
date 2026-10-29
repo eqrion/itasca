@@ -10,7 +10,7 @@ index and its checked store lookup. -/
 theorem signature_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context)
     (shape : Store.Shape view store) (present : inst ∈ store.instances.val)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (index : Nat) (type : functype) (selected : C.TYPES[index]? = some type) :
     ∃ signature rawType, inst.types.val[index]? = some signature ∧
       store.types.val[signature.val]? = some rawType ∧ Store.decodeFuncType rawType = type := by
@@ -40,7 +40,7 @@ objects, with exact source lookup equations. -/
 theorem indirect_bindings_raw {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame) (C : context)
     (shape : Store.Shape view store) (present : inst ∈ store.instances.val)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C)
     (moduleEq : ambient.MODULE = Store.decodeInstance store inst)
     (typeIndex tableIndex : U32) (type : functype) (limits : limits)
     (typeSelected : C.TYPES[typeIndex.val]? = some type)
@@ -57,7 +57,7 @@ theorem indirect_bindings_raw {M : Type} (view : M → Slice U8) (code : Store.C
   obtain ⟨address,object,tableMapped,tableFound,elementType⟩ :=
     Stateful.table_binding_raw view code store inst C tableIndex.val _ bindings tableSelected
   have rawFuncref : object.ty = .FuncRef := by
-    cases h : object.ty <;> simp [h,Store.decodeElemType,Abs.Stateful.tableElementType] at elementType ⊢
+    cases h : object.ty <;> simp [h,Store.decodeElemType,SourceMachine.Stateful.tableElementType] at elementType ⊢
   exact ⟨signature,rawType,address,object,typeMapped,typeFound,typeEq,tableMapped,tableFound,rawFuncref,
     (signature_lookup_decodes view code store inst ambient typeIndex signature rawType moduleEq typeMapped typeFound).trans typeEq,
     table_lookup_decodes view code store inst ambient tableIndex address object moduleEq tableMapped tableFound⟩

@@ -13,7 +13,7 @@ Public host invocation outcomes while retaining the evolving source-code interpr
 Main declarations: `invoke_host_world_outcomes`. A direct consumer is `Integration.Invocation.Behaves`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem invoke_host_world_outcomes {M P F A : Type}
@@ -48,7 +48,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
       (out.1 = .Ok () →
         ResultsTyped (Store.decodeStore view afterCode out.2.2.1) (signature.results.val.map sourceType)
           (out.2.2.2.2.val.map sourceValue) ∧
-        Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
+        SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
         StepH ⟨⟨Store.decodeStore view code store,ambient⟩, vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
           [.call address.index.val (args.val.map sourceValue) (some (out.2.2.2.2.val.map sourceValue))]
           ⟨⟨Store.decodeStore view afterCode out.2.2.1,ambient⟩, vals (out.2.2.2.2.val.map sourceValue)⟩ ∧
@@ -64,7 +64,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     invariant afterCode after ∧ Store.CodeAgreesOn store code afterCode ∧
     Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
     ResultsTyped (Store.decodeStore view afterCode after) (signature.results.val.map sourceType) values ∧
-    Abs.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
+    SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
     StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue) ++ [.CALL_ADDR address.index.val]⟩
       [.call address.index.val (args.val.map sourceValue) (some values)]
       ⟨⟨Store.decodeStore view afterCode after,ambient⟩,vals values⟩
@@ -88,18 +88,18 @@ theorem invoke_host_world_outcomes {M P F A : Type}
   · intro after values kept satisfied refused
     obtain ⟨afterCode,fresh,agrees,extension,typed,ownership,source⟩ := satisfied
     exact ⟨afterCode,fresh,agrees,extension,[.call address.index.val (args.val.map sourceValue) (some values)], vals values,
-      Spec.stepsH_single source⟩
+      Spec.steps_h_single source⟩
   · intro prepared p executionId empty represented
     rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code invariant shape
         prepared store p valid address 0#usize ambient ambientWf function identity signature functionAt host signatureAt
-        (args.val.map sourceValue) (by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed arguments).symm) arguments
-        (Spec.resultsTyped_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
+        (args.val.map sourceValue) (by simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed arguments).symm) arguments
+        (Spec.results_typed_wf arguments) (fun value member => Store.owned_result_fits store value (argsOwned value member))
         represented sourceWf callback retains).imp_exists with
       ⟨called,actual,afterCode,agrees,fresh,kept,extension,count,effect,causes⟩ | ⟨actual,diverged⟩
     swap
     · rw [actual]
       exact .div _ diverged
-    have sameDecode := Store.decodeStore_code_agrees view agrees
+    have sameDecode := Store.decode_store_code_agrees view agrees
     rw [actual,DivSpec.ok_iff]
     refine ⟨⟨kept,count⟩,?_,?_⟩
     · intro success
@@ -128,7 +128,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         · rw [rejected] at good
           cases good.1
         · obtain ⟨failure,source,footprint⟩ := bad
-          have trace := Spec.stepsH_single source
+          have trace := Spec.steps_h_single source
           rw [sameDecode] at trace
           rcases failure with trapped | exhausted
           · have eq : error=.Trap .Host := by simpa only [rejected,core.result.Result.Err.injEq] using trapped
@@ -145,7 +145,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     apply loop.spec_decr_nat (fun _ => 0) (fun state => state = (entered,after,p,.Ok ()))
     · rintro state rfl
       simp only [runtime.interp.invoke_with_loop1.body,stopped,ite_false,WP.spec_ok]
-      exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm),Spec.resultsTyped_wf typed,
+      exact ⟨kept.1,kept,fun _ => ⟨values,(by simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed typed).symm),Spec.results_typed_wf typed,
         fun value member => Store.owned_result_fits after value (ownedResults value member),represented,afterCode,fresh,agrees,extension,typed,ownedResults,source⟩,
         fun error impossible => by cases impossible⟩
     · rfl
@@ -170,4 +170,4 @@ theorem invoke_host_world_outcomes {M P F A : Type}
         have equal : error=reported := by simpa only [core.result.Result.Err.injEq] using failed
         subst reported
         exact ⟨events,source⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

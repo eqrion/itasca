@@ -14,7 +14,7 @@ Successful replay of simple scalar instructions from available callbacks and a r
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -162,7 +162,7 @@ theorem compiler_reader_select_available {A V : Type} (ops : runtime.platform.Al
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select]
   exact compiler_select_available ops bound available compiler final demand front ty false layout
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -170,7 +170,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -196,7 +196,7 @@ theorem reached_reader_global_set_available {A V : Type}
   · have raw := reference
     rw [code.step_global_set.dispatch] at raw
     obtain ⟨index,read,_⟩ := reader_run_success _ _ _ _ _ raw
-    have currentKnown := (concreteStack_append.mp (values ▸ known live)).2
+    have currentKnown := (concrete_stack_append.mp (values ▸ known live)).2
     obtain ⟨ty,_,_,shape⟩ := reader_global_set_effect st out data env index outer segment values base
       (monomorphic live) currentKnown read
     have typed : Sequence.stackTypes st.vals.val = Sequence.stackTypes out.vals.val ++ [Translate.valueType ty.valtype] := by
@@ -243,6 +243,6 @@ theorem reached_reader_select_available {A V : Type}
   · exact compiler_reader_select_available ops bound available source before after compiler st out data env ctx
       demand [] .I32 (fun impossible => False.elim (live impossible)) reference
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

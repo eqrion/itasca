@@ -11,7 +11,7 @@ An actual ELSE in an omitted IF changes only its retained source arm and physica
 Main declarations: `structured_callback_else_dormant_prefix`. A direct consumer is `Compiler.Body.Reader.Control.ElseDormantWasm2Prefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual ELSE in an omitted IF changes only its retained source arm and
@@ -52,4 +52,4 @@ theorem structured_callback_else_dormant_prefix {jumpTables : List U32} {emit : 
   have cursor := compiler_else_cursor ops law before after state bt accepted
   exact ⟨noEntry, positionEq, invariant.begin_else_dormant unentered deadAfter stable maps prior frame
     framesEq afterFrames codeEq sourceType condition noEntry form positionEq  sources consumed (by rw [cursor])⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

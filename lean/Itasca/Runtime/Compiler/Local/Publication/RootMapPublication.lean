@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual final END callback establishes every control-map range checked
@@ -38,11 +38,11 @@ theorem compiler_root_map_publication {A : Type} (ops : runtime.platform.Alloc A
   have growth : before.function.code.length < after.function.code.length := by
     change before.function.code.val.length < after.function.code.val.length
     rw [code]
-    simp only [List.length_append,patchCode_length,closeMapEpilogue,root,List.length_singleton]
+    simp only [List.length_append,patch_code_length,closeMapEpilogue,root,List.length_singleton]
     omega
   have owners : activeControlMaps before = [frame.map.val] := by
     simp [activeControlMaps,frames,empty]
   exact held.close_last_publish (compiler_end_stable_result ops law before after state .Block .Empty (.Ok ()) called)
     frame.map.val entry closed found controls owners bounded growth
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

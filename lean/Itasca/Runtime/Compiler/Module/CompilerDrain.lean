@@ -8,7 +8,7 @@ Compiler worker provenance and drain preservation. SchedulerTracks records issue
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -93,7 +93,7 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked.queue rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -101,7 +101,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -147,6 +147,6 @@ theorem compiler_drain_frame {A : Type} (allocator : runtime.platform.Alloc A)
         have afterEq := ih rest.val.length smaller middle rest tail' rfl
         have middleEq := (compiler_poll_accepted allocator before middle batch polled).2
         rw [afterEq, middleEq]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

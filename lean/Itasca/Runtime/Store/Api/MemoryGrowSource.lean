@@ -30,13 +30,13 @@ theorem decode_memory_growth {M : Type} (view : M → Slice U8)
   have oldWf : wf_meminst (decodeMemory view old) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
-      exact decodeLimits_wf _ _ (by have bound := shape.2.1; scalar_tac)
-    · exact decodeBytes_wf _
+      exact decode_limits_wf _ _ (by have bound := shape.2.1; scalar_tac)
+    · exact decode_bytes_wf _
   have freshWf : wf_meminst (decodeMemory view {old with buf := buffer}) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
-      exact decodeLimits_wf _ _ (by change (view buffer).length / 65536 ≤ U32.max; rw [pages]; scalar_tac)
-    · exact decodeBytes_wf _
+      exact decode_limits_wf _ _ (by change (view buffer).length / 65536 ≤ U32.max; rw [pages]; scalar_tac)
+    · exact decode_bytes_wf _
   have bound : Forall (fun x => (((view old.buf).length / 65536 + delta.val : Nat) : Rat) ≤ (proj_uN_0 x : Rat))
       (Option.toList (old.maximum.map (fun x => uN.mk_uN x.val))) := by
     cases hm : old.maximum with
@@ -57,7 +57,7 @@ theorem decode_memory_growth {M : Type} (view : M → Slice U8)
       {TYPE := .PAGE (.mk_limits (.mk_uN (rat_to_nat (((view old.buf).length / 65536 + delta.val : Nat) : Rat)))
         (old.maximum.map (fun x => .mk_uN x.val))),
        BYTES := decodeBytes (view old.buf).val ++ List.replicate (delta.val * (64 * Ki)) (.mk_byte 0)} := by
-    simp only [decodeMemory,decodeLimits_option,natValue,pages]
+    simp only [decodeMemory,decode_limits_option,natValue,pages]
     simp [OMap,Function.comp_def,decodeBytes,values,List.map_append,List.map_replicate,Ki]
   apply fun_growmemory.fun_growmemory_case_0 _ _ _ (.mk_uN ((view old.buf).length / 65536))
     (old.maximum.map (fun x => .mk_uN x.val)) (decodeBytes (view old.buf).val)

@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.Typing
 import Itasca.Runtime.SourceMachine.Preservation
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The canonical global typing rule and actual module binding identify a
@@ -15,7 +15,7 @@ theorem global_get_frame_typed {s : store} {f : AFrame} {code : List instr}
   cases h with
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
-    obtain ⟨front,ins,outs,hop,hstack,hafter⟩ := codeStack_after (value_types_concrete f.vals) hc
+    obtain ⟨front,ins,outs,hop,hstack,hafter⟩ := code_stack_after (value_types_concrete f.vals) hc
     cases hop with
     | global_get _ _ ty mutable hi ht _ _ =>
       have bound : index < C.GLOBALS.length := by simpa [labelContext,proj_uN_0] using hi
@@ -45,7 +45,7 @@ theorem global_set_frame_continuation {s : store} {f : AFrame} {code : List inst
   | mk C bindings localTypes locals values returns hc hw =>
     simp only [List.append_nil] at hc
     obtain ⟨base,ins,outs,hop,hstack,hafter⟩ :=
-      codeStack_after (value_types_concrete (front ++ [value])) hc
+      code_stack_after (value_types_concrete (front ++ [value])) hc
     cases hop with
     | global_set _ _ ty hi ht _ _ =>
       have bound : index < C.GLOBALS.length := by simpa [labelContext,proj_uN_0] using hi
@@ -61,13 +61,13 @@ theorem global_set_frame_continuation {s : store} {f : AFrame} {code : List inst
       obtain ⟨baseEq,lastEq⟩ := List.append_inj hstack sameLength
       have valueTypeEq : valueType value = ty := by simpa using lastEq
       have valueTyped : Val_ok s value ty := by
-        have self := resultsTyped_self_mem (value := value) values (by simp)
+        have self := results_typed_self_mem (value := value) values (by simp)
         simpa only [valueTypeEq] using self
       refine ⟨address,object,ty,mapped,found,typed,valueTyped,?_⟩
       have prefixTyped : ResultsTyped s (front.map valueType) front := by
-        simpa using resultsTyped_take front.length values
+        simpa using results_typed_take front.length values
       apply FrameTyped.mk (f := {f with code := code, vals := front}) C
         bindings localTypes locals prefixTyped returns ?_ hw
       simpa only [List.append_nil,baseEq] using hafter
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

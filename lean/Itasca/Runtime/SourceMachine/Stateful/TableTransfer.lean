@@ -13,7 +13,7 @@ Source table copy and initialization, retaining reference and segment bounds in 
 
 section
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def tableCopy (s : AState) (f : AFrame) (rest : List AFrame) (index sourceIndex : Nat) (after : List instr) : AResult :=
@@ -28,7 +28,7 @@ def tableCopy (s : AState) (f : AFrame) (rest : List AFrame) (index sourceIndex 
     | _,_,_,_,_ => .stuck
   | _,_,_ => .stuck
 
-theorem tableCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem table_copy_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index sourceIndex : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .TABLE_COPY (.mk_uN index) (.mk_uN sourceIndex)::after}::rest,[]⟩) :
     (∃ next, tableCopy ⟨s,ambient,{f with code := .TABLE_COPY (.mk_uN index) (.mk_uN sourceIndex)::after}::rest,[]⟩ f rest index sourceIndex after = .next next ∧
@@ -63,9 +63,9 @@ theorem tableCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
           have countDecoded := integer_accepts .I32 count countBound
           simp only [numtype_Inn] at destinationDecoded countDecoded
           have sourceDecoded : integer .I32 (integerVal .I32 sourceOffset) = some sourceOffset := integer_accepts .I32 sourceOffset sourceOffsetBound
-          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
           have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
           have indexBound : index<2^32 := by cases instructionWf; rename_i valid _; cases valid; norm_num at *; omega
           have sourceIndexBound : sourceIndex<2^32 := by cases instructionWf; rename_i _ valid; cases valid; norm_num at *; omega
           have tableEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN index) = object := by
@@ -73,13 +73,13 @@ theorem tableCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
           have sourceEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN sourceIndex) = sourceObject := by
             simp [fun_table,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,sourceMapped,sourceFound]
           by_cases inside : sourceOffset+count ≤ sourceObject.REFS.length ∧ destination+count ≤ object.REFS.length
-          · obtain ⟨extension,contents⟩ := tableCopy_preserves s f.toFrame index sourceIndex address sourceAddress destination sourceOffset count object sourceObject
+          · obtain ⟨extension,contents⟩ := table_copy_preserves s f.toFrame index sourceIndex address sourceAddress destination sourceOffset count object sourceObject
               typed.typed.store typed.contents mapped sourceMapped found sourceFound sameType inside
             have frameNext : FrameTyped s {f with code:=after,vals:=front} [] := by
               simpa only [List.append_nil] using continuation [] .nil
             have fresh := (active_frame_preservation typed.typed frameNext rfl).extend_same extension rfl
             apply Or.inl
-            refine ⟨_,by simp only [tableCopy,split,popThree_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,and_true,ite_true,advance],
+            refine ⟨_,by simp only [tableCopy,split,pop_three_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,and_true,ite_true,advance],
               ⟨fresh,contents⟩,extension,?_⟩
             have addressBound : f.module.TABLES[index]! < s.TABLES.length := by
               simp only [List.getElem!_eq_getElem?_getD,mapped,Option.getD_some]
@@ -96,14 +96,14 @@ theorem tableCopy_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
           · apply Or.inr
-            refine ⟨by simp only [tableCopy,split,popThree_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,ite_false],?_⟩
+            refine ⟨by simp only [tableCopy,split,pop_three_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,ite_false],?_⟩
             have source := Segment.table_copy_trap s f.toFrame destination sourceOffset count index sourceIndex typed.typed.store frameWf
               destinationBound sourceOffsetBound countBound indexBound sourceIndexBound (by rw [tableEq,sourceEq]; omega)
             have full := operand_trap_simulation s ambient f rest (.TABLE_COPY (.mk_uN index) (.mk_uN sourceIndex)) after front
               [integerVal .I32 destination,integerVal .I32 sourceOffset,integerVal .I32 count] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful
 
 end
 
@@ -111,7 +111,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def tableInit (s : AState) (f : AFrame) (rest : List AFrame) (index sourceIndex : Nat) (after : List instr) : AResult :=
@@ -126,7 +126,7 @@ def tableInit (s : AState) (f : AFrame) (rest : List AFrame) (index sourceIndex 
     | _,_,_,_,_ => .stuck
   | _,_,_ => .stuck
 
-theorem tableInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem table_init_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index sourceIndex : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .TABLE_INIT (.mk_uN index) (.mk_uN sourceIndex)::after}::rest,[]⟩) :
     (∃ next, tableInit ⟨s,ambient,{f with code := .TABLE_INIT (.mk_uN index) (.mk_uN sourceIndex)::after}::rest,[]⟩ f rest index sourceIndex after = .next next ∧
@@ -166,9 +166,9 @@ theorem tableInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
           have countDecoded := integer_accepts .I32 count countBound
           simp only [numtype_Inn] at destinationDecoded countDecoded
           have sourceDecoded : integer .I32 (integerVal .I32 sourceOffset) = some sourceOffset := integer_accepts .I32 sourceOffset sourceOffsetBound
-          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+          obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
           have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+          have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
           have indexBound : index<2^32 := by cases instructionWf; rename_i valid _; cases valid; norm_num at *; omega
           have sourceIndexBound : sourceIndex<2^32 := by cases instructionWf; rename_i _ valid; cases valid; norm_num at *; omega
           have tableEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN index) = object := by
@@ -176,13 +176,13 @@ theorem tableInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
           have sourceEq : fun_elem ⟨s,f.toFrame⟩ (.mk_uN sourceIndex) = sourceObject := by
             simp [fun_elem,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,sourceMapped,sourceFound]
           by_cases inside : sourceOffset+count ≤ sourceObject.REFS.length ∧ destination+count ≤ object.REFS.length
-          · obtain ⟨extension,contents,functions⟩ := tableInit_preserves s f.toFrame index sourceIndex address f.module.ELEMS[sourceIndex] destination sourceOffset count object sourceObject
+          · obtain ⟨extension,contents,functions⟩ := table_init_preserves s f.toFrame index sourceIndex address f.module.ELEMS[sourceIndex] destination sourceOffset count object sourceObject
               typed.typed.store typed.contents mapped found sourceMapped sourceFound sameType inside
             have frameNext : FrameTyped s {f with code:=after,vals:=front} [] := by
               simpa only [List.append_nil] using continuation [] .nil
             have fresh := (active_frame_preservation typed.typed frameNext rfl).extend_same extension functions
             apply Or.inl
-            refine ⟨_,by simp only [tableInit,split,popThree_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,and_true,ite_true,advance],
+            refine ⟨_,by simp only [tableInit,split,pop_three_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,and_true,ite_true,advance],
               ⟨fresh,contents⟩,extension,?_⟩
             have addressBound : f.module.TABLES[index]! < s.TABLES.length := by
               simp only [List.getElem!_eq_getElem?_getD,mapped,Option.getD_some]
@@ -197,13 +197,13 @@ theorem tableInit_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
           · apply Or.inr
-            refine ⟨by simp only [tableInit,split,popThree_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,ite_false],?_⟩
+            refine ⟨by simp only [tableInit,split,pop_three_append,mapped,sourceMapped,destinationDecoded,sourceDecoded,countDecoded,found,sourceFound,inside,ite_false],?_⟩
             have source := Segment.table_init_trap s f.toFrame destination sourceOffset count index sourceIndex typed.typed.store frameWf
               destinationBound sourceOffsetBound countBound indexBound sourceIndexBound (by rw [tableEq,sourceEq]; omega)
             have full := operand_trap_simulation s ambient f rest (.TABLE_INIT (.mk_uN index) (.mk_uN sourceIndex)) after front
               [integerVal .I32 destination,integerVal .I32 sourceOffset,integerVal .I32 count] typed.typed.store typed.typed.ambient frameWf labelsWf frontWf tailWf restWf heights
               (by simpa [vals,Segment.operands,integerVal,admininstr_val,numtype_Inn,admininstr_instr,Segment.i32] using source)
             simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful
 
 end

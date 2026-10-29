@@ -7,12 +7,12 @@ Normal return of plain and complete stateful compiler callbacks.
 Main declarations: `compiler_stateful_plain_total` and `compiler_stateful_total`. A direct consumer is `Compiler.Body.Reader.Safety.BulkSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_stateful_plain_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (plain : statefulUsesPair op = false)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
@@ -46,7 +46,7 @@ open Aeneas Aeneas.Std
     exact compiler_observe_stack ops law compiler state
 @[step] theorem compiler_stateful_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (pairFits : compiler.function.indirect.val.length < Usize.max)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
@@ -80,4 +80,4 @@ open Aeneas Aeneas.Std
       rw [if_neg live]
       exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

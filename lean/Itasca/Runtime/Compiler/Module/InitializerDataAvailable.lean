@@ -8,7 +8,7 @@ Successful data initializer compilation from independently bounded source offset
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Active offsets compile from independent constant-expression typing;
@@ -70,7 +70,7 @@ theorem initializer_data_offset_available {A : Type} (ops : runtime.platform.All
     · simp only [initializerSize,mapped,List.length_append,List.length_singleton]
       omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -78,7 +78,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every remaining independently typed data offset is accepted by the actual
@@ -142,6 +142,6 @@ theorem initializer_data_offsets_available {A : Type} (ops : runtime.platform.Al
       exact ⟨trivial,same,by simpa [last] using size,by simpa [last] using used,limits⟩
   · exact ⟨rfl,rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

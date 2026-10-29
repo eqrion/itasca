@@ -7,7 +7,7 @@ Successful dispatch exposes the actual successful reader and hook, without requi
 Main declarations: `reader_run_success`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedReferenceDemand`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful dispatch exposes the actual successful reader and hook, without
@@ -40,4 +40,4 @@ theorem reader_run_success {A V : Type}
       obtain ⟨rfl, rfl⟩ := tail
       exact ⟨value, readEq, callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

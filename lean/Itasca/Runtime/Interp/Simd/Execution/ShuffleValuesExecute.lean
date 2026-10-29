@@ -25,9 +25,9 @@ theorem execute_simd_shuffle_values {M F : Type}
     (combined : imm.bits.val = low.val + high.val*2^64)
     (valid : ∀ lane ∈ shuffleIndices low high, proj_uN_0 lane < 32)
     (memories : ∀ ma, inst.memories.val[0]? = some ma → ∃ object, store.memories.val[ma.index.val]? = some object)
-    (position : operand.val = Code.slots (front.map Code.valueType))
+    (position : operand.val = Compiler.slots (front.map Compiler.valueType))
     (represented : ValuesAt exec.slots.val base.val (front ++ values))
-    (wellFormed : Forall wf_val values) (typed : values.map Code.valueType = [.V128,.V128])
+    (wellFormed : Forall wf_val values) (typed : values.map Compiler.valueType = [.V128,.V128])
     (space : base.val + operand.val + 4 ≤ Usize.max)
     (capacity : base.val + operand.val + 2 ≤ exec.slots.length) :
     runtime.interp.execute_simd memory floats exec store instIndex function base 13#u32 operand operand entry
@@ -37,9 +37,9 @@ theorem execute_simd_shuffle_values {M F : Type}
         FrameStoreMetadata store out.2.2 ∧
         SlotsEffect exec out.2.1 (simdResultSlots exec.slots.val (base.val+operand.val) 2#u32 value) ∧
         ValuesAt out.2.1.slots.val base.val (front ++ [Spec.Simd.valueOfBits .V128 value.bv]) ⦄ := by
-  have numeric : ∀ value ∈ values, Code.valueType value ≠ .FUNCREF ∧ Code.valueType value ≠ .EXTERNREF := by
+  have numeric : ∀ value ∈ values, Compiler.valueType value ≠ .FUNCREF ∧ Compiler.valueType value ≠ .EXTERNREF := by
     intro value member
-    have m : Code.valueType value ∈ [.V128,.V128] := by rw [←typed]; exact List.mem_map_of_mem member
+    have m : Compiler.valueType value ∈ [.V128,.V128] := by rw [←typed]; exact List.mem_map_of_mem member
     simp only [List.mem_cons,List.not_mem_nil,or_false,or_self] at m
     rw [m]
     decide
@@ -54,7 +54,7 @@ theorem execute_simd_shuffle_values {M F : Type}
     (simdInput exec.slots.val (base.val+operand.val) 2#u32).bv
     (simdInput exec.slots.val (base.val+operand.val+2) 2#u32).bv
     (simdInput exec.slots.val (base.val+operand.val+2+2) 0#u32).bv = values at inputs
-  have shape := (Code.SimdImmediateMeaning.shuffle (C := default) imm low high combined).shape
+  have shape := (Compiler.SimdImmediateMeaning.shuffle (C := default) imm low high combined).shape
   apply WP.spec_mono (execute_simd_source_mutation_bounded memory floats interpretation view memoryLaws exec store instIndex function base
     13#u32 operand operand entry inst code imm 2#u32 2#u32 0#u32 2#u32
     (fun value => Step_pure (values.map admininstr_val ++ [admininstr_instr (shuffle low high)])
@@ -64,7 +64,7 @@ theorem execute_simd_shuffle_values {M F : Type}
     refine ⟨mutation,value,source,ok,decoded,metadata,slots,?_⟩
     rw [slots.1,position]
     exact represented.locals.simd_numeric_result .V128 value (by decide)
-      (by intro impossible; rcases impossible with h | h <;> cases h) (by change base.val + Code.slots (front.map Code.valueType) + 2 ≤ exec.slots.length; simpa only [position] using capacity)
+      (by intro impossible; rcases impossible with h | h <;> cases h) (by change base.val + Compiler.slots (front.map Compiler.valueType) + 2 ≤ exec.slots.length; simpa only [position] using capacity)
   · intro bytes
     apply WP.spec_mono (Simd.shuffle_entry_sound floats imm.offset imm.lane imm.bits
       (simdInput exec.slots.val (base.val+operand.val) 2#u32)

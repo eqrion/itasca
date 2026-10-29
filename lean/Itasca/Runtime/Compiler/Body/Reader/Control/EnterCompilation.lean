@@ -16,7 +16,7 @@ Structured block, loop and if reader compilation, preserving each control entry 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.enter_block {jumpTables : List U32} {A : Type}
@@ -67,7 +67,7 @@ theorem StructuredReaderCompilerStateWasm2.enter_block {jumpTables : List U32} {
         apply state.compiled.known
         simpa only [SourceScope.enterBlock, reach] using entered
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -75,7 +75,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.enter_if {jumpTables : List U32} {A : Type}
@@ -126,7 +126,7 @@ theorem StructuredReaderCompilerStateWasm2.enter_if {jumpTables : List U32} {A :
         apply state.compiled.known
         simpa only [SourceScope.enterIf, reach] using entered
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -134,7 +134,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.enter_loop {jumpTables : List U32} {A : Type}
@@ -185,6 +185,6 @@ theorem StructuredReaderCompilerStateWasm2.enter_loop {jumpTables : List U32} {A
         apply state.compiled.known
         simpa only [SourceScope.enterLoop, reach] using entered
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

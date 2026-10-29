@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Every legacy pure abstract transition retains its source store exactly,
 including control transfer, defined calls, and function returns. -/
@@ -16,4 +16,4 @@ theorem astep_store {s next : AState} (step : astep s = .next next) : next.store
       cases step
       rfl
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

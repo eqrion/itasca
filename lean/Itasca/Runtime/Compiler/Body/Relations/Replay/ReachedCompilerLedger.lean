@@ -8,7 +8,7 @@ The numerical callback ledger at a complete source-instruction boundary.
 Main declarations: `ReachedCompilerLedger`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The numerical callback ledger at a complete source-instruction boundary. -/
@@ -41,4 +41,4 @@ theorem ReachedCompilerLedger.reader_wasm2 {A} (ops : runtime.platform.Alloc A)
   · have fresh := reader_ordinary_ledger_wasm2 p ops law before after out ctx _ control rfl accepted
     exact held.advance observed fresh.auxiliary (fresh.fixups held.fixups)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

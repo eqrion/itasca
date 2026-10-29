@@ -69,9 +69,9 @@ set_option maxRecDepth 4096
   rintro result ⟨value, exactResult, bits⟩
   refine ⟨value, exactResult, ?_⟩
   have packed := (congrArg (fun (v : BitVec 128) => uN.mk_uN v.toNat) bits).trans
-    (packLanes_write ty index.val a.bv (splatInput ty b).bv valid)
+    (pack_lanes_write ty index.val a.bv (splatInput ty b).bv valid)
   have source := Spec.Simd.replace_step ty index.val a.bv value.bv (splatInput ty b).bv valid packed
-  rw [splatInput_source] at source
+  rw [splat_input_source] at source
   exact source
 
 theorem replace_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)

@@ -13,11 +13,11 @@ Main declarations: `ErasedStep.core_sound`. A direct consumer is `Interp.Machine
 
 namespace Itasca.Runtime.Interp
 
-theorem ErasedStep.core_sound {before after : Abs.AFrame} (step : ErasedStep before after)
-    (s : store) (ambient : frame) (rest : List Abs.AFrame)
-    (typed : Abs.CoreTyped ⟨s,ambient,before::rest,[]⟩) :
-    Abs.CoreTyped ⟨s,ambient,after::rest,[]⟩ ∧
-    Abs.NextSim ⟨s,ambient,before::rest,[]⟩ ⟨s,ambient,after::rest,[]⟩ := by
+theorem ErasedStep.core_sound {before after : SourceMachine.AFrame} (step : ErasedStep before after)
+    (s : store) (ambient : frame) (rest : List SourceMachine.AFrame)
+    (typed : SourceMachine.CoreTyped ⟨s,ambient,before::rest,[]⟩) :
+    SourceMachine.CoreTyped ⟨s,ambient,after::rest,[]⟩ ∧
+    SourceMachine.NextSim ⟨s,ambient,before::rest,[]⟩ ⟨s,ambient,after::rest,[]⟩ := by
   obtain ⟨afterTyped,simulation⟩ := step.sound s ambient rest typed.typed
   exact ⟨⟨afterTyped,typed.contents⟩,simulation⟩
 

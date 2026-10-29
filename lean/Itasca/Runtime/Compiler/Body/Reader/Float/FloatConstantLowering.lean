@@ -9,7 +9,7 @@ Compiler callbacks for floating-point constants.
 Main declarations: `callback_float32_eq` and `callback_float64`. A direct consumer is `Compiler.Body.Reader.Float.ConstantPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -73,4 +73,4 @@ theorem callback_float64_eq {A : Type} (ops : runtime.platform.Alloc A)
     (UScalar.cast .U128 value) layout reachable concrete
     codeFits sourceFits coordinateFits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

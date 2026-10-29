@@ -45,7 +45,7 @@ def floatCompareSource (ty : Fnn) (op : vrelop_Fnn_N) : vrelop_ :=
 
 def floatCompareInteger (ty : Fnn) : Inn := match ty with | .F32 => .I32 | .F64 => .I64
 
-theorem floatCompareSource_wf (ty : Fnn) (op : vrelop_Fnn_N) :
+theorem float_compare_source_wf (ty : Fnn) (op : vrelop_Fnn_N) :
     wf_vrelop_ (shapeOf (lanetype_Fnn ty)) (floatCompareSource ty op) := by
   cases ty <;> cases op <;> constructor <;> constructor <;>
     simp_all [lsizenn,lsize,size,psize,lanetype_Fnn,valtype_numtype]
@@ -142,8 +142,8 @@ theorem float_comparison_relation (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 1
   have nonY := float_lanes_nonempty ty y
   have maskWf := float_comparison_masks_wf ty op x y
   have answerWf := float_comparison_answers_wf ty op x y
-  have shapeWf := shapeOf_wf (lanetype_Fnn ty)
-  have resultShapeWf := shapeOf_wf (lanetype_Inn (floatCompareInteger ty))
+  have shapeWf := shape_of_wf (lanetype_Fnn ty)
+  have resultShapeWf := shape_of_wf (lanetype_Inn (floatCompareInteger ty))
   cases ty <;> cases op
   · apply fun_vrelop_.fun_vrelop__case_24 (v_Inn := .I32) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat)) (lane_3_lst := floatComparisonMasks .F32 .EQ x y)
     all_goals first | rfl | exact nonX | exact nonY | exact maskWf | exact answerWf | exact shapeWf | exact resultShapeWf | exact lenXY | decide
@@ -192,7 +192,7 @@ theorem float_comparison_step (ty : Fnn) (op : vrelop_Fnn_N) (x y result : BitVe
   · rfl
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_28 _ _ (shapeOf_wf _) (floatCompareSource_wf ty op)
+  · exact .admininstr_case_28 _ _ (shape_of_wf _) (float_compare_source_wf ty op)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

@@ -8,30 +8,30 @@ open Aeneas Aeneas.Std
 
 theorem written_outside (words : List U64) (position index : Nat)
     (ty : Itasca.types.ValueType) (lo hi : U64)
-    (outside : index < position ∨ position + Code.width (sourceType ty) ≤ index) :
+    (outside : index < position ∨ position + Compiler.width (sourceType ty) ≤ index) :
     (written words position ty lo hi)[index]? = words[index]? := by
-  have hp : index ≠ position := by have := Code.width_positive (sourceType ty); omega
+  have hp : index ≠ position := by have := Compiler.width_positive (sourceType ty); omega
   unfold written
   split
   · rename_i hv
-    have hh : index ≠ position + 1 := by simp only [hv, Code.width] at outside; omega
+    have hh : index ≠ position + 1 := by simp only [hv, Compiler.width] at outside; omega
     simp [hp, hh]
   · simp [hp]
 
 theorem written_represents (words : List U64) (position : Nat)
     (ty : Itasca.types.ValueType) (lo hi : U64)
-    (bound : position + Code.width (sourceType ty) ≤ words.length) :
+    (bound : position + Compiler.width (sourceType ty) ≤ words.length) :
     WordsAt (written words position ty lo hi) position (pairWords ty (lo, hi)) := by
   intro index hindex
   by_cases hv : sourceType ty = .V128
   · simp only [pairWords, hv, ↓reduceIte, List.length_cons, List.length_nil] at hindex
-    have hhigh : position + 1 < words.length := by simp only [hv, Code.width] at bound; omega
+    have hhigh : position + 1 < words.length := by simp only [hv, Compiler.width] at bound; omega
     have hz : position < words.length := by omega
     have hj : index = 0 ∨ index = 1 := by omega
     rcases hj with rfl | rfl
     · exact ⟨by rw [written_length]; omega, by simp [pairWords, hv, written_low words position ty lo hi hz]⟩
     · exact ⟨by rw [written_length]; omega, by simp [pairWords, hv, written_high words position ty lo hi hv hhigh]⟩
-  · have hw : Code.width (sourceType ty) = 1 := by cases ty <;> simp_all [sourceType, Code.width]
+  · have hw : Compiler.width (sourceType ty) = 1 := by cases ty <;> simp_all [sourceType, Compiler.width]
     have hz : position < words.length := by omega
     simp only [pairWords, hv, ↓reduceIte, List.length_cons, List.length_nil] at hindex
     have hj : index = 0 := by omega
@@ -42,11 +42,11 @@ theorem written_represents (words : List U64) (position : Nat)
 region and preserves every word outside that region. -/
 @[step] theorem encode_slot_represents (slots : Slice U64) (position : Usize)
     (value : runtime.Value) (store : Usize) (owned : ValueOwnedFits store value)
-    (bound : position.val + Code.width (sourceType (rawType value)) ≤ slots.length) :
+    (bound : position.val + Compiler.width (sourceType (rawType value)) ≤ slots.length) :
     runtime.interp.encode_slot slots position (rawType value) value ⦃ after =>
       after.length = slots.length ∧
-      WordsAt after.val position.val (Code.encodeValue (sourceValue value)) ∧
-      ∀ index, index < position.val ∨ position.val + Code.width (sourceType (rawType value)) ≤ index →
+      WordsAt after.val position.val (Compiler.encodeValue (sourceValue value)) ∧
+      ∀ index, index < position.val ∨ position.val + Compiler.width (sourceType (rawType value)) ≤ index →
         after.val[index]? = slots.val[index]? ⦄ := by
   obtain ⟨⟨lo, hi⟩, he, hwords⟩ := WP.spec_imp_exists (encode_value_spec value store owned)
   step with encode_slot_spec slots position (rawType value) value lo hi he bound as ⟨after, ha⟩
@@ -61,25 +61,25 @@ region and preserves every word outside that region. -/
 
 
 def argumentWords (args : List runtime.Value) (count : Nat) : List Nat :=
-  Code.encodeValues ((args.take count).map sourceValue)
+  Compiler.encodeValues ((args.take count).map sourceValue)
 
-theorem argumentWords_step {args : List runtime.Value} {index : Nat} {value : runtime.Value}
+theorem argument_words_step {args : List runtime.Value} {index : Nat} {value : runtime.Value}
     (lookup : args[index]? = some value) :
-    argumentWords args (index + 1) = argumentWords args index ++ Code.encodeValue (sourceValue value) := by
-  simp [argumentWords, List.take_add_one, lookup, Code.encodeValues_append, Code.encodeValues]
+    argumentWords args (index + 1) = argumentWords args index ++ Compiler.encodeValue (sourceValue value) := by
+  simp [argumentWords, List.take_add_one, lookup, Compiler.encode_values_append, Compiler.encodeValues]
 
-theorem argumentWords_bound (args : List runtime.Value) (count : Nat) :
-    (argumentWords args count).length ≤ (Code.encodeValues (args.map sourceValue)).length := by
-  rw [argumentWords, Code.encodeValues_length, Code.encodeValues_length]
+theorem argument_words_bound (args : List runtime.Value) (count : Nat) :
+    (argumentWords args count).length ≤ (Compiler.encodeValues (args.map sourceValue)).length := by
+  rw [argumentWords, Compiler.encode_values_length, Compiler.encode_values_length]
   simp only [List.map_map, List.map_take]
-  exact Code.offset_le _ _
+  exact Compiler.offset_le _ _
 
 @[step] theorem marshal_arguments_loop (words : alloc.vec.Vec U64)
     (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
     (index slot : Usize) (store : Usize)
     (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
-    (bound : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length)
+    (bound : (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length)
     (indexBound : index.val ≤ args.length)
     (position : slot.val = (argumentWords args.val index.val).length)
     (initialWords : WordsAt words.val 0 (argumentWords args.val index.val)) :
@@ -102,10 +102,10 @@ theorem argumentWords_bound (args : List runtime.Value) (count : Nat) :
       step as ⟨value, hvalue⟩
       have hlookup : args.val[i.val]? = some value := by simp [List.getElem?_eq_getElem hib, hvalue]
       have htype : ty = rawType value := by simpa [typed, ← hvalue] using hty
-      have hnextWords := argumentWords_step hlookup
-      have hcapacity : offset.val + Code.width (sourceType (rawType value)) ≤ current.length := by
-        have hb := argumentWords_bound args.val (i.val + 1)
-        rw [hnextWords, List.length_append, Code.encodeValue_length, sourceValue_type] at hb
+      have hnextWords := argument_words_step hlookup
+      have hcapacity : offset.val + Compiler.width (sourceType (rawType value)) ≤ current.length := by
+        have hb := argument_words_bound args.val (i.val + 1)
+        rw [hnextWords, List.length_append, Compiler.encode_value_length, source_value_type] at hb
         omega
       have hv : ValueOwnedFits store value := owned value (by rw [hvalue]; exact List.getElem_mem hib)
       rw [htype]
@@ -116,7 +116,7 @@ theorem argumentWords_bound (args : List runtime.Value) (count : Nat) :
       step as ⟨next, hnext⟩
       refine ⟨?_, by scalar_tac, ?_, ?_, by scalar_tac⟩
       · simpa [alloc.vec.Vec.val] using hafterLen.trans hlen
-      · rw [hnext, hnextWords, List.length_append, Code.encodeValue_length, sourceValue_type]
+      · rw [hnext, hnextWords, List.length_append, Compiler.encode_value_length, source_value_type]
         scalar_tac
       · rw [hnext, hnextWords]
         apply WordsAt.append
@@ -137,14 +137,14 @@ of every accepted argument, starting at slot zero. -/
     (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
     (store : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
-    (bound : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
+    (bound : (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
     runtime.interp.invoke_with_loop0 words args types 0#usize 0#usize ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val 0 (args.val.map sourceValue) ⦄ := by
   apply marshal_arguments_loop words args types 0#usize 0#usize store typed owned bound
   · simp
-  · simp [argumentWords, Code.encodeValues]
+  · simp [argumentWords, Compiler.encodeValues]
   · intro j hj
-    simp [argumentWords, Code.encodeValues] at hj
+    simp [argumentWords, Compiler.encodeValues] at hj
 
 end Itasca.Runtime.Interp
 

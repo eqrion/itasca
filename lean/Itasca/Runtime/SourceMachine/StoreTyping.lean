@@ -3,7 +3,7 @@ import Itasca.Runtime.Spec.Typing.HostTyping
 
 /-! Bridges from the source machine's component certificates to the generated
 instance/store judgments. Export conditions are explicit source metadata. -/
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- The external namespace used by the generated module-instance judgment. -/
 def moduleAddresses (m : moduleinst) : List externaddr :=
@@ -166,4 +166,4 @@ theorem StoreContentsTyped.store_ok {s : store} (contents : StoreContentsTyped s
     cases contents.tables table rawMember <;> assumption
   · exact storeWf
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

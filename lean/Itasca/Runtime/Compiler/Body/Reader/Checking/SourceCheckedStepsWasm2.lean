@@ -11,7 +11,7 @@ Checked body-reader steps from the reached-source certificate through the typed 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-paid executable and publication evidence, with all instruction checks retained. -/
@@ -83,7 +83,7 @@ theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A)
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,after),called,rfl,rfl,⟨held,checks.1,checks.2,finalInstructions⟩,forward⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -91,7 +91,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Complete-profile Wasm 2 body steps retain executable, resource,
@@ -123,6 +123,6 @@ theorem source_checked_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (la
     point ledger budget layout localsMatch metadata matched contextLocals signatures room.coordinate nonempty next advance inbounds
     (fun counter => bodyResourceRate counter*(out.core.pos.val-st.core.pos.val)) (by intro counter; rfl) acceptance coordinates maps targets initialLocals initialCapacity instructions exits extent
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

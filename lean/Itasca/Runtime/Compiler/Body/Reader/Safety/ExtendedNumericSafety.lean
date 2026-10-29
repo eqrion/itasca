@@ -7,14 +7,14 @@ Sign-extension readers and callbacks return normally from every reached boundary
 Main declarations: `compiler_reader_sign_total` and `compiler_reader_sign_dispatch_total`. A direct consumer is `Compiler.Body.Reader.Safety.OrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem sign_callback {A} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
     code.visit_sign_extension (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       compiler state (UScalar.cast .U8 (integerOpcode op)) =
       runtime.compiler.lower.FunctionCompiler.op ops compiler state (integerOpcode op) 0#u32 0#u32 0#u128 := by
@@ -29,7 +29,7 @@ theorem compiler_reader_sign_total {A} (ops : runtime.platform.Alloc A)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
     code.step_extended (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
@@ -45,7 +45,7 @@ theorem compiler_reader_sign_total {A} (ops : runtime.platform.Alloc A)
 
 private theorem sign_byte_descriptor (opcode : U8) (lower : 192 ≤ opcode.val)
     (upper : opcode.val ≤ 196) :
-    ∃ op : Abs.Numeric.Instruction, 192 ≤ (integerOpcode op).val ∧
+    ∃ op : SourceMachine.Numeric.Instruction, 192 ≤ (integerOpcode op).val ∧
       UScalar.cast .U8 (integerOpcode op) = opcode := by
   interval_cases h : opcode.val
   · exact ⟨.unary .I32 .extend8,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
@@ -65,4 +65,4 @@ theorem compiler_reader_sign_dispatch_total {A} (ops : runtime.platform.Alloc A)
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
   obtain ⟨op,extension,rfl⟩ := sign_byte_descriptor opcode lower upper
   exact compiler_reader_sign_total ops law compiler st data env ctx ready shape capacity op extension
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

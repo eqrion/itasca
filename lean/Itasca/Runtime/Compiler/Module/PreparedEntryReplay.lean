@@ -1,7 +1,7 @@
 import Itasca.Module.Code.ReachedEntry
 import Itasca.Module.Code.LocalsComplete
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -69,4 +69,4 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
   rw [bodyEq,body]
   simp
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

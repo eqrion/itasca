@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Typing
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Source heads executed by `astep`, which never changes the store. -/
 inductive PureHead : instr → Prop where
@@ -21,4 +21,4 @@ inductive PureHead : instr → Prop where
   | call (index : funcidx) : PureHead (.CALL index)
   | ret : PureHead .RETURN
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

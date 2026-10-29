@@ -18,7 +18,7 @@ Live/dormant saturating-conversion prefixes and their structured compiler-state 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_saturating_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -29,7 +29,7 @@ theorem structured_reader_prefix_dead_saturating_wasm2 {jumpTables : List U32} {
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
@@ -44,7 +44,7 @@ theorem structured_reader_prefix_dead_saturating_wasm2 {jumpTables : List U32} {
     reader_float_saturating_wasm2 p ops before after out ctx op extension subopcode next subopcodeEq decoded byte accepted
   exact ⟨values, post, post.structured_dead_op ops law invariant dead (floatOpcode op) 0#u32 0#u32 0#u128 callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -52,7 +52,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_saturating_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -64,7 +64,7 @@ theorem structured_reader_prefix_saturating_wasm2 {jumpTables : List U32} {data 
     (contextCodeLocals : C.LOCALS = locals)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
@@ -88,11 +88,11 @@ theorem structured_reader_prefix_saturating_wasm2 {jumpTables : List U32} {data 
     reader_emit_saturating_wasm2 p ops law before after out ctx contextLocals op C (contextCodeLocals.trans retained.localsEq.symm) extension subopcode next subopcodeEq decoded (invariant.known reachable) monomorphic retained.layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift emission)
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -100,7 +100,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.float_saturating {jumpTables : List U32} {A : Type}
@@ -111,7 +111,7 @@ theorem StructuredReaderCompilerStateWasm2.float_saturating {jumpTables : List U
     (state : StructuredReaderCompilerStateWasm2 jumpTables emit initial before types functions returns locals data env ctx.locals index ft st
       parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (out : code.BodyState) (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (endPosition : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Leb128.Decoded data next subopcode endPosition)
@@ -135,6 +135,6 @@ theorem StructuredReaderCompilerStateWasm2.float_saturating {jumpTables : List U
       state.compiled reach op extension subopcode endPosition subopcodeEq decoded byte accepted
     exact ⟨values, state.advance next advance inbounds post (float_source_declared op _) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

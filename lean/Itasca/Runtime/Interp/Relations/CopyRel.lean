@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 /-- Forward copies read the original source when moving downward or into a
 disjoint higher region. Both cases occur in locals, branches and calls. -/
-theorem copyWords_safe (words : List U64) (dst src n : Nat)
+theorem copy_words_safe (words : List U64) (dst src n : Nat)
     (order : dst ≤ src ∨ src + n ≤ dst)
     (source : src + n ≤ words.length) (destination : dst + n ≤ words.length) :
     (∀ j, j < n → (copyWords words dst src n)[dst + j]? = words[src + j]?) ∧
@@ -65,11 +65,11 @@ theorem WordsAt.copy {words : List U64} {src : Nat} {bits : List Nat}
       have last := (h bits.length (by simp)).1
       simp only [List.length_cons] at *
       omega
-    have effect := copyWords_safe words dst src (bit :: bits).length order source destination
+    have effect := copy_words_safe words dst src (bit :: bits).length order source destination
     intro j hj
     obtain ⟨sourceBound, value⟩ := h j hj
     have bound : dst + j < (copyWords words dst src (bit :: bits).length).length := by
-      rw [copyWords_length]
+      rw [copy_words_length]
       omega
     have same := effect.1 j hj
     rw [List.getElem?_eq_getElem bound, List.getElem?_eq_getElem sourceBound] at same
@@ -84,9 +84,9 @@ theorem WordsAt.copy_preserves {words : List U64} {base : Nat} {bits : List Nat}
     (source : src + n ≤ words.length) (destination : dst + n ≤ words.length)
     (outside : ∀ j, j < bits.length → base + j < dst ∨ dst + n ≤ base + j) :
     WordsAt (copyWords words dst src n) base bits := by
-  apply h.congr_region (copyWords_length words dst src n)
+  apply h.congr_region (copy_words_length words dst src n)
   intro j hj
-  exact (copyWords_safe words dst src n order source destination).2 _ (outside j hj)
+  exact (copy_words_safe words dst src n order source destination).2 _ (outside j hj)
 
 /-- Adjacent represented regions compose into one live region. -/
 theorem WordsAt.append {words : List U64} {base : Nat} {left right : List Nat}

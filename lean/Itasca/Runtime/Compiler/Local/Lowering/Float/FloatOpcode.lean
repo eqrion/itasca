@@ -1,12 +1,12 @@
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.Equations
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def floatOpcode (op : Abs.Float.Instruction) : U16 :=
+def floatOpcode (op : SourceMachine.Float.Instruction) : U16 :=
   UScalar.ofNat op.opcode (by have := op.opcode_bound; change op.opcode ≤ 65535; omega)
 
-def floatInstruction (op : Abs.Float.Instruction) (dst a b : U32) : runtime.bytecode.Instr :=
+def floatInstruction (op : SourceMachine.Float.Instruction) (dst a b : U32) : runtime.bytecode.Instr :=
   match op with
   | .unary .F32 .ABS => .F32Abs dst a b
   | .unary .F32 .NEG => .F32Neg dst a b
@@ -79,7 +79,7 @@ def floatInstruction (op : Abs.Float.Instruction) (dst a b : U32) : runtime.byte
   | .promote => .F64PromoteF32 dst a b
   | .demote => .F32DemoteF64 dst a b
 
-theorem floatInstruction_make (op : Abs.Float.Instruction) (dst a b : U32) :
+theorem float_instruction_make (op : SourceMachine.Float.Instruction) (dst a b : U32) :
     runtime.bytecode.Instr.make_scalar (floatOpcode op) dst a b =
       .ok (some (floatInstruction op dst a b)) := by
   cases op with
@@ -92,7 +92,7 @@ theorem floatInstruction_make (op : Abs.Float.Instruction) (dst a b : U32) :
   | reinterpretInt source => cases source <;> rfl
   | promote | demote => rfl
 
-theorem floatOpcode_binary (op : Abs.Float.Instruction) :
+theorem float_opcode_binary (op : SourceMachine.Float.Instruction) :
     runtime.compiler.lower.scalar_binary (floatOpcode op) = .ok (decide (op.arity = 2)) := by
   cases op with
   | unary ty operator => cases ty <;> cases operator <;> rfl
@@ -103,4 +103,4 @@ theorem floatOpcode_binary (op : Abs.Float.Instruction) :
   | reinterpretFloat source => cases source <;> rfl
   | reinterpretInt source => cases source <;> rfl
   | promote | demote => rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

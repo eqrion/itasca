@@ -39,15 +39,15 @@ theorem all_true_step (ty : Jnn) (bits : BitVec 128) (answer : Bool)
   have inputWf : Forall (fun lane => wf_lane_ (lanetype_Jnn ty) lane) inputs := by
     intro lane member
     obtain ⟨j,_,rfl⟩ := List.mem_map.mp member
-    have wf := laneOfBits_wf (lanetype_Jnn ty) (vectorLane (lanetype_Jnn ty) bits j).toNat
+    have wf := lane_of_bits_wf (lanetype_Jnn ty) (vectorLane (lanetype_Jnn ty) bits j).toNat
       (BitVec.toNat_lt_twoPow_of_le (by rfl))
     cases ty <;> exact wf
   have sourceWf : wf_admininstr (allTrueSource ty) :=
-    .admininstr_case_27 _ _ (shapeOf_wf _) (.vtestop__case_0 _ _ _ _ rfl)
+    .admininstr_case_27 _ _ (shape_of_wf _) (.vtestop__case_0 _ _ _ _ rfl)
   cases answer with
   | true =>
     apply Step_pure.vtestop_true _ _ _ inputs inputEq projected _ inputWf
-      (const_wf bits) sourceWf (.admininstr_case_13 _ _ (unsigned_num_wf .I32 1 (by decide))) (shapeOf_wf _)
+      (const_wf bits) sourceWf (.admininstr_case_13 _ _ (unsigned_num_wf .I32 1 (by decide))) (shape_of_wf _)
     intro lane member
     obtain ⟨j,valid,rfl⟩ := List.mem_map.mp member
     exact truth.mp rfl j (List.mem_range.mp valid)

@@ -16,7 +16,7 @@ Sign-extension and saturating reader replay from source-only bounds. Numeric pos
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A source numeric effect and exact reader post supply the live operand
@@ -28,7 +28,7 @@ theorem ReaderPostWasm2.numeric_available {data env locals index st out instruct
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
-    (op : Abs.Numeric.Instruction)
+    (op : SourceMachine.Numeric.Instruction)
     (inputs : input.map Translate.valueType = List.replicate op.arity (integerType op.input))
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -56,7 +56,7 @@ theorem ReaderPostWasm2.float_available {data env locals index st out instructio
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
-    (op : Abs.Float.Instruction)
+    (op : SourceMachine.Float.Instruction)
     (inputs : input.map Translate.valueType = List.replicate op.arity (valtype_numtype op.input))
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -75,7 +75,7 @@ theorem ReaderPostWasm2.float_available {data env locals index st out instructio
   · exact compiler_float_available_effect ops bound available compiler out demand [] op
       (fun impossible => False.elim (live impossible))
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -83,7 +83,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -94,7 +94,7 @@ theorem reached_profile_sign_available_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (demand : CallbackDemand compiler out.core bound)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -141,7 +141,7 @@ theorem reached_profile_saturating_available_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize) (subopcodeEq : subopcode.val = (floatOpcode op).val-256)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (demand : CallbackDemand compiler out.core bound)
@@ -185,7 +185,7 @@ theorem reached_profile_saturating_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) converted callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -193,7 +193,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent source sign validation and source-byte room construct
@@ -209,7 +209,7 @@ theorem IndexedTableReaderCompilerPointWasm2.sign_available_from_source {A : Typ
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
@@ -259,7 +259,7 @@ theorem IndexedTableReaderCompilerPointWasm2.saturating_available_from_source {A
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (prefixEnd : Usize) (subopcodeEq : subopcode.val = (floatOpcode op).val-256)
     (decoded : Leb128.Decoded data next subopcode prefixEnd)
     (byte : data.val[st.core.pos.val] = 252#u8)
@@ -300,6 +300,6 @@ theorem IndexedTableReaderCompilerPointWasm2.saturating_available_from_source {A
     ⟨sourceLocals,ft.results⟩ op extension subopcode prefixEnd subopcodeEq decoded demand state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) byte canonical
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

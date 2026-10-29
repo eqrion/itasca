@@ -3,13 +3,13 @@ import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneSc
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneStateful
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual numeric lowering preserves all control-map bounds. -/
 theorem compiler_numeric_map_publication {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Numeric.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state (integerOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (), after))
     (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val) :
     ControlMapPublication after := by
@@ -21,7 +21,7 @@ theorem compiler_numeric_map_publication {A : Type} (ops : runtime.platform.Allo
 /-- Actual float lowering preserves all control-map bounds. -/
 theorem compiler_float_map_publication {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Float.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Float.Instruction)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state (floatOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (), after))
     (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val) :
     ControlMapPublication after := by
@@ -42,4 +42,4 @@ theorem compiler_core_map_publication {A : Type} (ops : runtime.platform.Alloc A
   rw [compiler_core_cursor ops law before after state op called]
   exact forward
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

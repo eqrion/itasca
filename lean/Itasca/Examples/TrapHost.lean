@@ -10,7 +10,7 @@ memory and the source program remain parameters.
 -/
 
 namespace Itasca.Runtime.Examples
-open Aeneas Aeneas.Std SpecExt Theorems
+open Aeneas Aeneas.Std SpecExt Integration
 
 /-- Every callback traps and returns the store unchanged. -/
 def trapHost {M : Type} (memory : runtime.platform.MemoryBuffer M) : runtime.platform.Platform Unit M where

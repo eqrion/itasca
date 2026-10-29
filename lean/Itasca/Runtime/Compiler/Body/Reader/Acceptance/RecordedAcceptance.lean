@@ -7,7 +7,7 @@ Equal successful recorder transitions name the same source event. This uses the 
 Main declarations: `recorder_invocation_unique` and `recorded_reader_available`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Equal successful recorder transitions name the same source event. This
@@ -40,4 +40,4 @@ theorem recorded_reader_available {R W : Type}
   rw [same]
   exact acceptance
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

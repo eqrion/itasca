@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateTactic
 import Itasca.Runtime.Compiler.Local.Coordinates.OrdinarySourceCoordinates
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -37,4 +37,4 @@ theorem compiler_simd_op_source_coordinates {A : Type} (ops : runtime.platform.A
   · exact compiler_dead_source_coordinates ops law before after state opcode a b bits
       (by cases h : before.reachable <;> simp_all) held forward called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -18,7 +18,7 @@ All control-reader forms preserve instruction and exit-slot checking at an actua
 Main declarations: `StructuredReaderCompilerStateWasm2.control_checked_prefix`. A direct consumer is `Compiler.Body.Reader.Checking.CheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -128,4 +128,4 @@ theorem StructuredReaderCompilerStateWasm2.control_checked_prefix
         reader_nested_end_exit_slots_wasm2 p ops law initial before after out ctx types functions _ locals parents current
           state.compiled nonRoot maps exits bodyExtent byte accepted⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

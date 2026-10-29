@@ -30,7 +30,7 @@ theorem preparation_function_payload {M A : Type} (memory : runtime.platform.Mem
     simp [TypeEntries, maps.types]
   have typeChecked := type_staging_loop memory allocator law before before seed seed 0#usize
     (by simp) rfl rfl (.refl _) objectBound emptyTypes
-  have typePost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have typePost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ typeChecked typed typeInst (.Ok ()) typeRun
   obtain ⟨typeStore, typeMap, typePrefix, typeBound, typeEntries⟩ := typePost
   have typeStore_funcs := congrArg runtime.store.Store.funcs typeStore
@@ -78,14 +78,14 @@ theorem preparation_function_payload {M A : Type} (memory : runtime.platform.Mem
   have payloadChecked := function_payload_loop memory allocator law typed typed typeInst typeInst instanceIndex 0#usize
     (by simp) rfl rfl (.refl _) typeBound preparedIndices typedIssued (by simp) functionCapacity
     (.initial typed typeInst instanceIndex)
-  have payloadPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have payloadPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ payloadChecked functions funcInst (.Ok ()) functionRun
   obtain ⟨_, _, _, _, _, completed⟩ := payloadPost
   obtain ⟨count, payload⟩ := completed rfl
   have orderChecked := function_order_loop memory allocator law typed typed typeInst typeInst instanceIndex 0#usize
     (by simp) rfl rfl (.refl _) typeBound preparedIndices typedIssued (by simp) functionCapacity
     typed.funcs.length (typeInst.funcs.val.map fun a => a.index.val) (.refl _ _)
-  have orderPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have orderPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ orderChecked functions funcInst (.Ok ()) functionRun
   obtain ⟨_, _, _, _, ordered, _, _⟩ := orderPost
   obtain ⟨storeCount, addressValues⟩ := ordered.complete (by simpa only [List.length_map] using count)

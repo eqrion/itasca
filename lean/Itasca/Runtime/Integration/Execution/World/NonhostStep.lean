@@ -4,7 +4,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Host
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Interp.Relations.StepRecording
 import Itasca.Runtime.Integration.Host.HostRecordingBoundary
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem world_step_or_host
@@ -40,7 +40,7 @@ theorem world_step_or_host
       | Ok value =>
         cases value
         obtain ⟨pc,pending,source,invariant,simulation,ownership,ambient,bounded⟩ := outcome
-        have owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source := by
+        have owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) source := by
           rw [mutation.ownership_bounds]
           exact ownership _ machine.owned
         let next : EventfulMachine M P view code expected :=
@@ -55,4 +55,4 @@ theorem world_step_or_host
         simp only [stepHostEvents,selected]
         rw [decoded]
         exact cause.eventful_error machine.invariant.typed.typed
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

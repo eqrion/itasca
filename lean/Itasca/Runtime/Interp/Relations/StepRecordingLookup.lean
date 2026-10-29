@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Relations.StepRecording
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
-theorem hostStepAddress_at {M : Type} (exec : runtime.interp.Execution)
+theorem host_step_address_at {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (last : index.val+1=exec.frames.length) (frameAt : exec.frames.val[index.val]?=some raw)
@@ -13,7 +13,7 @@ theorem hostStepAddress_at {M : Type} (exec : runtime.interp.Execution)
   have indexEq : exec.frames.length-1=index.val := by omega
   simp [hostStepAddress,indexEq,frameAt,instanceAt,compiledAt,fetched,Bind.bind,Option.bind]
 
-theorem hostInstructionAddress_direct {M : Type} (exec : runtime.interp.Execution)
+theorem host_instruction_address_direct {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (index offset : U32)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
@@ -22,7 +22,7 @@ theorem hostInstructionAddress_direct {M : Type} (exec : runtime.interp.Executio
     hostInstructionAddress exec store raw inst compiled (.Call index offset)=some address := by
   simp [hostInstructionAddress,addressAt,Bind.bind,Option.bind,functionAt,hostCode]
 
-theorem hostInstructionAddress_indirect {M : Type} (exec : runtime.interp.Execution)
+theorem host_instruction_address_indirect {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (entry selector offset table type : U32)
     (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst) (word reference : U64)

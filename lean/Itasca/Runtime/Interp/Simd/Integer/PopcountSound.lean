@@ -22,12 +22,12 @@ theorem popcount_packed (x result : U128)
   have laneValue (j : Nat) (valid : j < 128/lsize .I8) :
       result.bv.toNat / 2^(lsize .I8*j) % 2^lsize .I8 =
         (BitVec.ofNat 8 (population (integerBits 8 (vectorLane .I8 x.bv j).toNat))).toNat := by
-    rw [←laneBits_toNat,lanes j valid]
+    rw [←lane_bits_to_nat,lanes j valid]
     apply congrArg BitVec.toNat
-    exact unaryLane_population _
+    exact unary_lane_population _
   have packed := pack_map_of_lanes .I8 (128/lsize .I8) result.bv.toNat
     (fun j => (BitVec.ofNat 8 (population (integerBits 8 (vectorLane .I8 x.bv j).toNat))).toNat) laneValue
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   change uN.mk_uN result.val = uN.mk_uN _
   apply congrArg uN.mk_uN
   refine packed.symm.trans ?_

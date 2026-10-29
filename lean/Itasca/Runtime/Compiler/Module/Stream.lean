@@ -1,7 +1,7 @@
 import Itasca.Runtime.Equations
 import Itasca.Stream.Source
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open runtime.compiler
 
@@ -134,4 +134,4 @@ theorem source_callbacks_total (source : CompileSource) (h : SourceBounds source
   · obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (source_tail_spec source h)
     exact ⟨r, hr⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

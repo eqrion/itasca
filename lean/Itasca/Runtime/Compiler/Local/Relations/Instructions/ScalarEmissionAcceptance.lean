@@ -8,7 +8,7 @@ Complete scalar memory, global, select, literal and float emission checking from
 Main declarations: `ScalarEmission.instructions_accept`. A direct consumer is `Compiler.Local.Relations.Instructions.StatefulInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem global_get_instruction_accepts (function : runtime.bytecode.CompiledFunction)
@@ -39,7 +39,7 @@ private theorem select_instruction_accepts (function : runtime.bytecode.Compiled
     | exact (CoreInstructionBounds.select2 first second test).accepts
 
 private theorem memory_load_instruction_accepts (function : runtime.bytecode.CompiledFunction)
-    (op : Abs.Memory.Load) (dst address offset : U32)
+    (op : SourceMachine.Memory.Load) (dst address offset : U32)
     (destination : dst.val+1 ≤ function.slot_count.val) (source : address.val+1 ≤ function.slot_count.val) :
     runtime.bytecode.CompiledFunction.instruction_valid function (memoryLoadInstruction op dst address offset) = .ok true := by
   cases op with
@@ -48,7 +48,7 @@ private theorem memory_load_instruction_accepts (function : runtime.bytecode.Com
       exact load_instruction_accepts function _ _ dst address offset rfl rfl destination source
 
 private theorem memory_store_instruction_accepts (function : runtime.bytecode.CompiledFunction)
-    (op : Abs.Memory.Store) (address value offset : U32)
+    (op : SourceMachine.Memory.Store) (address value offset : U32)
     (first : address.val+1 ≤ function.slot_count.val) (second : value.val+1 ≤ function.slot_count.val) :
     runtime.bytecode.CompiledFunction.instruction_valid function (memoryStoreInstruction op address value offset) = .ok true := by
   cases op with
@@ -122,4 +122,4 @@ theorem ScalarEmission.instructions_accept {C before source emitted after}
     simp only [slots_append,slots,one,show width .I32 = 1 from rfl] at inputs
     apply memory_store_instruction_accepts function op address value offset <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem top_is_v128_total (values : Slice Itasca.code.StackType) :
@@ -76,4 +76,4 @@ set_option maxRecDepth 4096 in
     rw [if_neg live]
     exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.PendingInstructionClose
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Patching the last frame and appending a checked epilogue discharges every
@@ -19,7 +19,7 @@ theorem compiler_instruction_root_publish {A : Type} {before after : runtime.com
     CheckedInstructionPrefix after.function := by
   have strict : before.function.code.length < after.function.code.length := by
     change before.function.code.val.length < after.function.code.val.length
-    rw [code,List.length_append,patchCode_length]
+    rw [code,List.length_append,patch_code_length]
     omega
   intro instruction member
   rw [code] at member
@@ -27,7 +27,7 @@ theorem compiler_instruction_root_publish {A : Type} {before after : runtime.com
   · obtain ⟨index,bound,found⟩ := List.getElem_of_mem old
     have fetched : (patchCode before.function.code.val (frameInstructionSites frame) target)[index]? = some instruction := by
       simp [List.getElem?_eq_getElem bound,found]
-    rw [patchCode_get] at fetched
+    rw [patch_code_get] at fetched
     split at fetched
     · cases original : before.function.code.val[index]? with
       | none => simp [original] at fetched
@@ -48,4 +48,4 @@ theorem compiler_instruction_root_publish {A : Type} {before after : runtime.com
       exact checked.publish growth strict
   · exact fresh instruction new
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -40,10 +40,10 @@ theorem lane_load_source (ty : Jnn) (address value : U128) (offset index : U32) 
       storeWf frameWf (by scalar_tac) operationWf
     · rw [memoryEq,offsetEq]
       exact vector_lane_load_bytes _ _ _ fits
-    · have packed := packLanes_write (lanetype_Jnn ty) index.val value.bv
+    · have packed := pack_lanes_write (lanetype_Jnn ty) index.val value.bv
         (UScalar.cast .U64 (vectorLoadBytes bytes.val ((UScalar.cast .U32 address).val+offset.val) 0#u128 0
-          (memoryLaneBytes ty).val)).bv (by simpa only [shiftWidth_val] using valid)
-      rw [shiftWidth_val] at bits
+          (memoryLaneBytes ty).val)).bv (by simpa only [shift_width_val] using valid)
+      rw [shift_width_val] at bits
       rw [bits]
       cases ty <;> exact packed
   · rw [if_neg fits] at effect
@@ -51,5 +51,5 @@ theorem lane_load_source (ty : Jnn) (address value : U128) (offset index : U32) 
     refine ⟨rfl,rfl,?_⟩
     apply Spec.Simd.lane_load_trap ty s f argument (UScalar.cast .U32 address).val index.val value.bv
       storeWf frameWf (by scalar_tac) operationWf
-    simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memoryLaneBytes_val] using Nat.lt_of_not_ge fits
+    simpa only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memory_lane_bytes_val] using Nat.lt_of_not_ge fits
 end Itasca.Runtime.Interp.Simd

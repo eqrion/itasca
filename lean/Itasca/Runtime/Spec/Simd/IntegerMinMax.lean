@@ -165,7 +165,7 @@ theorem integer_minmax_vector_relation (ty : Jnn) (kind : IntegerMinMax) (x y : 
   have nonY := integer_lanes_nonempty ty y
   have relation := minmax_words_relation ty kind x y
   have maskWf := minmax_words_wf ty kind x y
-  have shapeWf := shapeOf_wf (lanetype_Jnn ty)
+  have shapeWf := shape_of_wf (lanetype_Jnn ty)
   cases ty <;> cases kind
   all_goals first
     | apply fun_vbinop_.fun_vbinop__case_8 (var_1_lst := minmaxWords _ _ x y) (var_0_lst := minmaxWords _ _ x y) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat))
@@ -211,7 +211,7 @@ theorem integer_minmax_step (ty : Jnn) (kind : IntegerMinMax) (x y result : BitV
   · simp
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_minmax_source_wf ty kind supported)
+  · exact .admininstr_case_26 _ _ (shape_of_wf _) (integer_minmax_source_wf ty kind supported)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

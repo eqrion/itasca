@@ -3,9 +3,9 @@ import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Execution.World.RecordedStep
 import Itasca.Runtime.Integration.Execution.World.Reinterpretation
 import Itasca.Runtime.Interp.Relations.StepRecordingLookup
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
-open Itasca.Runtime.Interp.StructuredMachine
+open Itasca.Runtime.Interp.Machine
 theorem step_host_call_world_outcomes {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -18,8 +18,8 @@ theorem step_host_call_world_outcomes {M P F A : Type}
     (valid : Inv code store)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
     (caller : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (index offset : U32) (after : List instr)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (index offset : U32) (after : List instr)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
     (expected : List valtype)
     (last : frameIndex.val+1=exec.frames.length)
@@ -31,12 +31,12 @@ theorem step_host_call_world_outcomes {M P F A : Type}
     (functionAt : store.funcs.val[address.index.val]?=some function)
     (hostCode : function.code=.Host host)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
@@ -55,8 +55,8 @@ theorem step_host_call_world_outcomes {M P F A : Type}
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL (.mk_uN index.val)::after}::rest,[]⟩,
       raw.pc.val,false,machine,certify code store valid,owned⟩
   have guard : hostStepAddress exec store=some address := by
-    rw [hostStepAddress_at exec store frameIndex raw caller compiled (.Call index offset) last hf hi hc fetched]
-    exact hostInstructionAddress_direct exec store raw caller compiled index offset address function host addressAt functionAt hostCode
+    rw [host_step_address_at exec store frameIndex raw caller compiled (.Call index offset) last hf hi hc fetched]
+    exact host_instruction_address_direct exec store raw caller compiled index offset address function host addressAt functionAt hostCode
   rcases (step_host_call_structured_world_provenance memory hooks floats allocator allocation interrupts
       view code Inv certify exec store platform valid frameIndex raw caller compiled C targets next output ambient f rest
       index offset after address function host expected last hf hi hc fetched addressAt functionAt hostCode binding slots
@@ -69,7 +69,7 @@ theorem step_host_call_world_outcomes {M P F A : Type}
     exact .div _ diverged
   dsimp only
   rw [actual,DivSpec.ok_iff]
-  have same := Store.decodeStore_code_agrees view agrees
+  have same := Store.decode_store_code_agrees view agrees
   have labels : stepHostEvents exec store (status,afterExec,afterStore,afterPlatform)=
       hostCallEvents address (status,afterExec,afterStore,afterPlatform) := by
     simp only [stepHostEvents,guard]
@@ -108,4 +108,4 @@ theorem step_host_call_world_outcomes {M P F A : Type}
         have sourceError := host_frame_eventful_error kind trace.erase rfl
         simpa only [labels] using sourceError
     · exact ⟨rfl,frameIndex,raw,pc,address,signature,base,host,hf,pcNext,site,callActual,causes⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

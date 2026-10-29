@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- Completed source-to-bytecode evidence, before the compiler's final
 well-formedness check packages the executable function. -/
@@ -11,4 +11,4 @@ def StructuredCompiledBody (jumpTables : List U32) (emit : List valtype → inst
     (∃ src count, src.val = slots locals ∧ final.function.code.val[target.val]? = some (.Return src count)) ∧
     final.function.code.val.length = target.val + 1 ∧ final.function.code.val.length ≤ U32.max
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -6,7 +6,7 @@ Transport of stateful emission across compiler index-pair tables.
 Main declarations: `StatefulEmission.map_pairs`. A direct consumer is `Compiler.Body.Control.Control.CumulativePointControl`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem StatefulEmission.map_pairs {beforePairs afterPairs C before instruction emitted after}
@@ -19,4 +19,4 @@ theorem StatefulEmission.map_pairs {beforePairs afterPairs C before instruction 
     cases op <;> simp only [StatefulPair] at pair ⊢ <;> try trivial
     all_goals exact preserve _ _ pair
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

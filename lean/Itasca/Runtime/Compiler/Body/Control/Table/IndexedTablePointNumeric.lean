@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.float_base {A : Type}
@@ -16,7 +16,7 @@ theorem IndexedTableReaderCompilerPointWasm2.float_base {A : Type}
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st)
     (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
+    (out : code.BodyState) (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (floatOpcode op)))
@@ -43,7 +43,7 @@ theorem IndexedTableReaderCompilerPointWasm2.float_saturating {A : Type}
     (point : IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st)
     (contextLocals : C.LOCALS = locals)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (out : code.BodyState) (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (endPosition : Usize) (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Leb128.Decoded data next subopcode endPosition)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -64,4 +64,4 @@ theorem IndexedTableReaderCompilerPointWasm2.float_saturating {A : Type}
     subopcode endPosition subopcodeEq decoded sourceBound bodyBound byte accepted
   exact changed.point
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

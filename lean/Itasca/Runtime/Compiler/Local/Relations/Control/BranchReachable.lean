@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Relations.Layout.ObservationLayout
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -117,10 +117,10 @@ elab "reachable_effect " h:ident " using " ops:term ", " law:term : tactic => wi
     | ``runtime.compiler.FunctionCompiler.copy =>
       `(tactic| have effect := compiler_copy_reachable $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_reachable
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_pc_reachable
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_reachable
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_patch_reachable
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -209,4 +209,4 @@ theorem callback_branch_if_layout {A : Type} (ops : runtime.platform.Alloc A)
       simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
       exact compiler_observe_layout_success ops law middle after state known locals rest
   · exact compiler_observe_layout_success ops law before after state known locals accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

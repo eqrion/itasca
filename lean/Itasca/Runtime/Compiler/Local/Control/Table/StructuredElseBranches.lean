@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A forward branch strengthens only its selected future exit and appends
@@ -29,7 +29,7 @@ theorem StructuredUniversalElse.branch_forward {jumpTables : List Aeneas.Std.U32
   have oldShape : ScopeLabel current top :=
     ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
   have prior := invariant top labels _ oldPlans oldShape parentShapes
-  have resolved := resolvedCode_new_br before.function.code.val earlier suffix
+  have resolved := resolved_code_new_br before.function.code.val earlier suffix
     ⟨frame.fixups.val, label.target⟩ dst src count old site sitePosition (oldPlans.inside sites)
   rw [grouped, appended, codeEq, resolved]
   exact (prior.extend (branchInstructions dst src count label.target)).advance (.BR (.mk_uN depth))
@@ -58,9 +58,9 @@ theorem StructuredUniversalElse.branch_if_forward {jumpTables : List Aeneas.Std.
   have oldShape : ScopeLabel current top :=
     ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
   have prior := invariant top labels _ oldPlans oldShape parentShapes
-  have resolved := resolvedCode_new_br_if before.function.code.val earlier suffix
+  have resolved := resolved_code_new_br_if before.function.code.val earlier suffix
     ⟨frame.fixups.val, label.target⟩ dst src count old condition resume site sitePosition (oldPlans.inside sites)
   rw [grouped, appended, codeEq, resolved]
   exact (prior.extend (branchIfInstructions dst src count label.target condition resume)).advance (.BR_IF (.mk_uN depth))
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

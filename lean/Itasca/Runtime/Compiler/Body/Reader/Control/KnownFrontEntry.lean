@@ -7,7 +7,7 @@ Known operand fronts when entering a reader scope.
 Main declarations: `ReaderEnterPostWasm2.known_fronts`. A direct consumer is `Compiler.Body.Reader.Control.EnterCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderEnterPostWasm2.known_fronts {data env locals index st out form bt ins outs remaining base}
@@ -25,8 +25,8 @@ theorem ReaderEnterPostWasm2.known_fronts {data env locals index st out form bt 
   obtain ⟨C, outer, spine, header, position, typed, controls, blocks, old⟩ := id p.opened
   have old' : st.core.vals.val = (p.parents.map Wasm2.Frames.Saved.vals).flatten ++ p.current.vals := by
     simpa only [wasm2_spine_values spine, List.flatMap_def] using old
-  have knownParts := concreteStack_append.mp (old' ▸ known entered)
+  have knownParts := concrete_stack_append.mp (old' ▸ known entered)
   have transfer := post.popped
   rw [live entered] at transfer
-  exact concreteStack_append.mpr ⟨knownParts.1, concrete_stack_transfer knownParts.2 transfer⟩
-end Itasca.Runtime.Code
+  exact concrete_stack_append.mpr ⟨knownParts.1, concrete_stack_transfer knownParts.2 transfer⟩
+end Itasca.Runtime.Compiler

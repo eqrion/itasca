@@ -15,7 +15,7 @@ Source opcode coverage composes every noncontrol Wasm 2 reader family, including
 Main declarations: `reader_noncontrol_checked_prefix_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.CheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -103,4 +103,4 @@ theorem reader_noncontrol_checked_prefix_wasm2 {jumpTables : List U32} {data env
     exact False.elim (rejected.rejects (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st out data env ctx index opcode before after accepted)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

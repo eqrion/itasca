@@ -19,8 +19,8 @@ theorem EventfulConcreteSim.trans
 /-- Normalize erased source control before a dispatch while retaining exactly
 that dispatch's events, including a host call reached through nested blocks. -/
 theorem EventfulConcreteSim.prepend_normalization {count before middle}
-    (chain : ErasedSteps count before middle) (s : store) (ambient : frame) (rest : List Abs.AFrame)
-    (typed : Abs.ATyped ⟨s,ambient,before::rest,[]⟩)
+    (chain : ErasedSteps count before middle) (s : store) (ambient : frame) (rest : List SourceMachine.AFrame)
+    (typed : SourceMachine.ATyped ⟨s,ambient,before::rest,[]⟩)
     {codeLength pc target pending after events}
     (simulation : EventfulConcreteSim codeLength pc target false pending
       ⟨s,ambient,middle::rest,[]⟩ after events) :

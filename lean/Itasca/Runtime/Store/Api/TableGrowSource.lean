@@ -19,11 +19,11 @@ theorem decode_table_growth (old : runtime.store.TableInst) (elements : alloc.ve
   have oldWf : wf_tableinst (decodeTable old) := by
     apply wf_tableinst.tableinst_case_
     apply wf_tabletype.tabletype_case_0
-    exact decodeLimits_wf _ _ (by omega)
+    exact decode_limits_wf _ _ (by omega)
   have freshWf : wf_tableinst (decodeTable {old with elements}) := by
     apply wf_tableinst.tableinst_case_
     apply wf_tabletype.tabletype_case_0
-    exact decodeLimits_wf _ _ (by simpa only [lengthEq] using capacity)
+    exact decode_limits_wf _ _ (by simpa only [lengthEq] using capacity)
   have bound : Forall (fun x => old.elements.length + delta.val ≤ proj_uN_0 x)
       (Option.toList (old.maximum.map (fun x => uN.mk_uN x.val))) := by
     cases hm : old.maximum with
@@ -37,7 +37,7 @@ theorem decode_table_growth (old : runtime.store.TableInst) (elements : alloc.ve
       {TYPE := .mk_tabletype (.mk_limits (.mk_uN (old.elements.length+delta.val))
         (old.maximum.map (fun x => .mk_uN x.val))) (decodeElemType old.ty),
        REFS := old.elements.val.map (decodeRef old.ty) ++ List.replicate delta.val (decodeRef old.ty value)} := by
-    simp only [decodeTable,decodeLimits_option]
+    simp only [decodeTable,decode_limits_option]
     simp [OMap,Function.comp_def,values,List.map_append,List.map_replicate,alloc.vec.Vec.length]
   apply fun_growtable.fun_growtable_case_0 _ _ _ _ (.mk_uN old.elements.length)
     (old.maximum.map (fun x => .mk_uN x.val)) (decodeElemType old.ty)

@@ -8,7 +8,7 @@ Else-entry compilation through a structured reader state.
 Main declarations: `StructuredReaderCompilerStateWasm2.begin_else` and `StructuredReaderCompilerStateWasm2.else_`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.begin_else {jumpTables : List U32} {A : Type}
@@ -63,4 +63,4 @@ theorem StructuredReaderCompilerStateWasm2.else_ {jumpTables : List U32} {A : Ty
   obtain ⟨condition, noEntry, nextState⟩ := state.begin_else ops law initialLocals next advance inbounds out byte accepted
   exact nextState.point
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

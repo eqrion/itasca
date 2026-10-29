@@ -14,14 +14,14 @@ def fullLoadResult (bytes : List byte) (start : Nat) : List admininstr :=
   if start + 16 ≤ bytes.length then [.VCONST .V128 (inv_vbytes_ .V128 ((bytes.drop start).take 16))]
   else [.TRAP]
 
-theorem vectorBytes_roundtrip (bytes : List byte) (valid : Forall wf_byte bytes)
+theorem vector_bytes_roundtrip (bytes : List byte) (valid : Forall wf_byte bytes)
     (sized : bytes.length = 16) : vbytes_ .V128 (inv_vbytes_ .V128 bytes) = bytes := by
-  have roundtrip := integerBytes_ofBytes bytes valid
+  have roundtrip := integer_bytes_of_bytes bytes valid
   simpa [vbytes_,inv_vbytes_,ibytes_,inv_ibytes_,vsize,proj_uN_0,sized] using roundtrip
 
-theorem vectorBytes_wf (bytes : List byte) (valid : Forall wf_byte bytes)
+theorem vector_bytes_wf (bytes : List byte) (valid : Forall wf_byte bytes)
     (sized : bytes.length = 16) : wf_admininstr (.VCONST .V128 (inv_vbytes_ .V128 bytes)) := by
-  have bounded := integerOfBytes_bound bytes valid
+  have bounded := integer_of_bytes_bound bytes valid
   apply wf_admininstr.admininstr_case_20 _ _ (by decide)
   apply unsigned_wf_of_lt
   rw [sized] at bounded
@@ -55,7 +55,7 @@ theorem full_load_step (s : store) (f : frame) (argument : memarg) (address : Na
       simp only [List.length_take,List.length_drop]
       dsimp only [bytes,start]
       omega
-    have valueWf := vectorBytes_wf _ payloadWf payloadLength
+    have valueWf := vector_bytes_wf _ payloadWf payloadLength
     have output := wf_config_make storeWf frameWf (show Forall wf_admininstr
       [.VCONST .V128 (inv_vbytes_ .V128 ((bytes.drop start).take 16))] from by
       simpa [Forall] using valueWf)
@@ -65,7 +65,7 @@ theorem full_load_step (s : store) (f : frame) (argument : memarg) (address : Na
     · simp [proj_num__0]
     · decide
     · simpa only [byteCount,proj_num__0,proj_uN_0,Option.get!_some,bytes,start] using
-        vectorBytes_roundtrip _ payloadWf payloadLength
+        vector_bytes_roundtrip _ payloadWf payloadLength
     · exact input
     · exact valueWf
     · exact Segment.index_wf 0 (by norm_num)

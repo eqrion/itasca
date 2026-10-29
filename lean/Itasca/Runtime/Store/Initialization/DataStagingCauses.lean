@@ -62,9 +62,9 @@ theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     (run : runtime.store.instantiate.Store.add_instance_data memory allocator store instanceIndex index = .ok (.Err error,after)) :
     after = store ∧ DataAllocationCause allocator store data error := by
   unfold runtime.store.instantiate.Store.add_instance_data at run
-  simp only [Code.initializer_vec_index store.instances instanceIndex inst found,
+  simp only [Compiler.initializer_vec_index store.instances instanceIndex inst found,
     runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok,
-    Code.initializer_vec_index inst.module.module.tail.data index data selected] at run
+    Compiler.initializer_vec_index inst.module.module.tail.data index data selected] at run
   obtain ⟨copied,copiedRun,effect⟩ := WP.spec_imp_exists (copy_bytes_resource_causes allocator law data.init.deref)
   rw [copiedRun,bind_ok] at run
   rcases effect with ⟨failed,refused⟩ | ⟨bytes,copied,contents⟩

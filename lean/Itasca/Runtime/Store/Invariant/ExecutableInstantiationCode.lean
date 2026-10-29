@@ -27,10 +27,10 @@ actual canonical type/function maps. -/
 theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     (before after : runtime.store.Store M) (oldCode : CodeInterpretation)
     (shape : Shape view before) (retained : StagedPrefix before after)
-    (oldCompiled : Interp.StructuredMachine.CompiledFunctions oldCode before)
+    (oldCompiled : Interp.Machine.CompiledFunctions oldCode before)
     (inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
-    (certificate : Code.ExecutableModuleFunctions inst.module sources)
+    (certificate : Compiler.ExecutableModuleFunctions inst.module sources)
     (dataCount : ∀ count, inst.module.module.env.data_count = some count →
       count.val = inst.module.module.tail.data.val.length)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
@@ -38,10 +38,10 @@ theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     (table : Interp.FunctionTable after inst (inst.module.module.env.func_types.val.map decodeFuncType))
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
-    Interp.StructuredMachine.CompiledFunctions (installCode oldCode before.instances.len.val sources) after := by
+    Interp.Machine.CompiledFunctions (installCode oldCode before.instances.len.val sources) after := by
   intro function present
   rcases staged function present with old | ⟨index, bound, encoded, signatureFound⟩
-  · exact supported_function_compiled_prefix shape retained (installCode_agrees before oldCode sources) (oldCompiled function old)
+  · exact supported_function_compiled_prefix shape retained (install_code_agrees before oldCode sources) (oldCompiled function old)
   · intro instanceIndex functionIndex defined
     obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FuncCode.Wasm.inj (defined.symm.trans encoded)
     subst instanceIndex
@@ -67,8 +67,8 @@ theorem executable_compiled_functions_publish {M : Type} {view : M → Slice U8}
     have signatureEq : signature = definedTypes[index.val] := Option.some.inj (typeFound.symm.trans actualType)
     subst signature
     refine ⟨inst, compiled, definedTypes[index.val], declared, body, epilogue,
-      found, compiledFound, signatureFound, ?_, table, type_entries_decoded entries, Code.ExecutableFunctionCode.complete_module functionCode dataCount⟩
-    · rw [installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
+      found, compiledFound, signatureFound, ?_, table, type_entries_decoded entries, Compiler.ExecutableFunctionCode.complete_module functionCode dataCount⟩
+    · rw [install_code_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
       simpa only [typeIndexEq] using sourceEq
 
 end Itasca.Runtime.Store
@@ -87,13 +87,13 @@ field involved in code interpretation or function lookup. -/
 theorem InstantiationCode.executable_compiled {M : Type} {view : M → Slice U8}
     {before ready : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (code : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
-    (shape : Shape view before) (oldCompiled : Interp.StructuredMachine.CompiledFunctions oldCode before)
+    (shape : Shape view before) (oldCompiled : Interp.Machine.CompiledFunctions oldCode before)
     (found : ready.instances.val[before.instances.len.val]? = some inst)
-    (sources : List funccode) (certificate : Code.ExecutableModuleFunctions inst.module sources)
+    (sources : List funccode) (certificate : Compiler.ExecutableModuleFunctions inst.module sources)
     (dataCount : ∀ count, inst.module.module.env.data_count = some count →
       count.val = inst.module.module.tail.data.val.length)
     {tables memories} (cache : Cache inst.module.module.env tables memories) :
-    Interp.StructuredMachine.CompiledFunctions (installCode oldCode before.instances.len.val sources) ready := by
+    Interp.Machine.CompiledFunctions (installCode oldCode before.instances.len.val sources) ready := by
   obtain ⟨staged, count, rfl, retained, entries, table, signatures⟩ := code
   have compiled := executable_compiled_functions_publish before staged oldCode shape retained oldCompiled inst sources
     found certificate dataCount cache entries table signatures

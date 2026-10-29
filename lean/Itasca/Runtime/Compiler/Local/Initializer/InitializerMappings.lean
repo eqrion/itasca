@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
 import Itasca.Module.Const.Syntax
 
 /-! Exact retained initializer indices from the actual compiler helpers. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Invert an ordinary result of an extracted monadic bind. -/
@@ -203,4 +203,4 @@ theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc 
   obtain ⟨_, pushedValues⟩ := budget_push_success ops law budget b1 module.data_offsets indices none pushed
   exact ⟨rfl, pushedValues⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

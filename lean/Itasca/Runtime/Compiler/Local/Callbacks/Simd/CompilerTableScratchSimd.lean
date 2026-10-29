@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratch
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -25,4 +25,4 @@ theorem compiler_lower_simd_depths {A : Type} (ops : runtime.platform.Alloc A)
   · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
     rw [if_neg reachable] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

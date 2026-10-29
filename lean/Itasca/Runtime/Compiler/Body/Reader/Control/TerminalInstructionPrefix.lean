@@ -22,7 +22,7 @@ Actual source RETURN checks its full result suffix and retains recorded exits.
 Main declarations: `reader_return_open_instructions_wasm2` and `reader_unreachable_open_instructions_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.ScalarInstructionPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source RETURN checks its full result suffix and retains recorded exits. -/
@@ -109,4 +109,4 @@ theorem reader_unreachable_open_instructions_wasm2 {jumpTables : List U32} {data
   exact ⟨compiler_unreachable_open_instructions ops law before after out.core codeFits sourceFits coordinateFits held callback,
     (compiler_unreachable_ordinary_result ops law before after out.core (.Ok ()) callback).exit_slots exits⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

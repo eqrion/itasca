@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem StructuredPrefix.emit {jumpTables : List U32} {emission types functions returns locals code labels initial source start stack instruction emitted output}
@@ -41,12 +41,12 @@ theorem Lowered.structured_resolved_advance {jumpTables : List U32} {A : Type} {
     have old := invariant.inside group member site atSite
     simp only [lowered.1, List.length_append, List.length_singleton]
     omega
-  · have resolved := resolvedCode_append_code before.function.code.val [emitted] groups invariant.inside
+  · have resolved := resolved_code_append_code before.function.code.val [emitted] groups invariant.inside
     have sourceCode : StructuredPrefix (jumpTables := jumpTables) emission types functions returns locals (resolvedCode before.function.code.val groups)
         labels initial source start (resolvedCode before.function.code.val groups).length stack := by
-      simpa only [resolvedCode_length] using invariant.code
+      simpa only [resolved_code_length] using invariant.code
     have advanced := sourceCode.emit head ordinary
-    simpa only [lowered.1, resolved, List.length_append, resolvedCode_length] using advanced
+    simpa only [lowered.1, resolved, List.length_append, resolved_code_length] using advanced
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

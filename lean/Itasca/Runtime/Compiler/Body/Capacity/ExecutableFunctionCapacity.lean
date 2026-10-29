@@ -19,7 +19,7 @@ Executable function capacity from reader-step accounting through the typed body 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful reader step in a fully encoded body retains the exact local
@@ -89,12 +89,12 @@ theorem TypedRunWasm2.executable_capacity_bound {A : Type}
       localEq.trans capacity.1, ?_⟩
     have observed := trace.head_width
     have stepBound := capacity.2
-    rw [observedHeight_stackWords] at stepBound
+    rw [observed_height_stack_words] at stepBound
     rw [capacity.1] at upper
     change after.function.slot_count.val ≤ max before.function.slot_count.val
       (before.function.local_slots.val + max (stackWords st.core.vals.val) (maximumStackWords samples))
     omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -102,7 +102,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual body validation bounds the compiled frame storage by source locals
@@ -154,7 +154,7 @@ theorem witness_compile_executable_capacity {A : Type} (ops : runtime.platform.A
           maximumStackWords samples := by
   have facts := (witness_compiler_start ops law w signatureTable functionTable endFits created).1
   exact witness_compiler_executable_capacity ops law w facts encoded compiled finalBudget finished
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -162,7 +162,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -190,6 +190,6 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
   · simp only [List.map_map]
   · simpa only [List.map_append] using bound
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

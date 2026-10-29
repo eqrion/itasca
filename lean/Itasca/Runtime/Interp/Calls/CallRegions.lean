@@ -16,17 +16,17 @@ theorem WordsAt.zero_preserves {words : List U64} {base : Nat} {bits : List Nat}
     (h : WordsAt words base bits) (start count : Nat) (bound : start + count ≤ words.length)
     (outside : base + bits.length ≤ start ∨ start + count ≤ base) :
     WordsAt (zeroWords words start count) base bits := by
-  apply h.congr_region (zeroWords_length _ _ _)
+  apply h.congr_region (zero_words_length _ _ _)
   intro j hj
-  exact (zeroWords_effect words start count bound).2 _ (by omega)
+  exact (zero_words_effect words start count bound).2 _ (by omega)
 
-theorem zeroWords_represents (words : List U64) (start count : Nat)
+theorem zero_words_represents (words : List U64) (start count : Nat)
     (bound : start + count ≤ words.length) :
     WordsAt (zeroWords words start count) start (List.replicate count 0) := by
   intro j hj
   have hj' : j < count := by simpa only [List.length_replicate] using hj
-  have word := (zeroWords_effect words start count bound).1 j hj'
-  have valid : start + j < (zeroWords words start count).length := by rw [zeroWords_length]; omega
+  have word := (zero_words_effect words start count bound).1 j hj'
+  have valid : start + j < (zeroWords words start count).length := by rw [zero_words_length]; omega
   refine ⟨valid, ?_⟩
   rw [List.getElem?_eq_getElem valid] at word
   rw [_root_.getElem!_pos (zeroWords words start count) (start + j) valid, Option.some.inj word]
@@ -39,29 +39,29 @@ theorem CallEntryEffect.callee_values
     {code : runtime.bytecode.CompiledFunction} {args defaults : List val} {localTypes : List valtype}
     (effect : CallEntryEffect before after instanceIndex functionIndex base code)
     (arguments : ValuesAt before.slots.val base.val args)
-    (parameters : code.param_slots.val = Code.slots (args.map Code.valueType))
-    (locals : code.local_slots.val = code.param_slots.val + Code.slots localTypes)
+    (parameters : code.param_slots.val = Compiler.slots (args.map Compiler.valueType))
+    (locals : code.local_slots.val = code.param_slots.val + Compiler.slots localTypes)
     (capacity : code.local_slots.val ≤ code.slot_count.val)
-    (default : Abs.defaultLocals (localTypes.map local.LOCAL) = some defaults) :
+    (default : SourceMachine.defaultLocals (localTypes.map local.LOCAL) = some defaults) :
     ValuesAt after.slots.val base.val (args ++ defaults) := by
   obtain ⟨_, slots, _⟩ := effect
-  have bound : base.val + code.param_slots.val + Code.slots localTypes ≤
+  have bound : base.val + code.param_slots.val + Compiler.slots localTypes ≤
       (before.slots.val ++ List.replicate (base.val + code.slot_count.val - before.slots.length) 0#u64).length := by
     simp only [List.length_append, List.length_replicate]
-    change base.val + code.param_slots.val + Code.slots localTypes ≤
+    change base.val + code.param_slots.val + Compiler.slots localTypes ≤
       before.slots.length + (base.val + code.slot_count.val - before.slots.length)
     omega
-  have initialized := zeroWords_represents
+  have initialized := zero_words_represents
     (before.slots.val ++ List.replicate (base.val + code.slot_count.val - before.slots.length) 0#u64)
-    (base.val + code.param_slots.val) (Code.slots localTypes) bound
+    (base.val + code.param_slots.val) (Compiler.slots localTypes) bound
   have saved := (WordsAt.extend arguments
     (List.replicate (base.val + code.slot_count.val - before.slots.length) 0#u64)).zero_preserves
-    (base.val + code.param_slots.val) (Code.slots localTypes) bound
-    (Or.inl (by rw [Code.encodeValues_length, parameters]))
-  have full := WordsAt.append saved (by simpa only [Code.encodeValues_length, parameters] using initialized)
-  simp only [ValuesAt, Code.encodeValues_append, encode_defaultLocals localTypes defaults default]
+    (base.val + code.param_slots.val) (Compiler.slots localTypes) bound
+    (Or.inl (by rw [Compiler.encode_values_length, parameters]))
+  have full := WordsAt.append saved (by simpa only [Compiler.encode_values_length, parameters] using initialized)
+  simp only [ValuesAt, Compiler.encode_values_append, encode_default_locals localTypes defaults default]
   rw [slots]
-  have count : code.local_slots.val - code.param_slots.val = Code.slots localTypes := by omega
+  have count : code.local_slots.val - code.param_slots.val = Compiler.slots localTypes := by omega
   simpa only [count] using full
 
 /-- Calling a defined function leaves every suspended caller word below the

@@ -2,7 +2,7 @@ import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Execution.World.State
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Interp.Relations.StepRecording
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Cross-world simulation with the independent raw callsite recording. -/
@@ -34,7 +34,7 @@ def WorldStepResult {M P F A : Type}
       FrameStorePrefix before.machine.store out.2.2.1 ∧
       Store.CodeAgreesOn before.machine.store before.code afterCode ∧
       Extend_store (Store.decodeStore view before.code before.machine.store) (Store.decodeStore view afterCode out.2.2.1) ∧
-      EventfulInvocationError (Abs.decode before.machine.source)
+      EventfulInvocationError (SourceMachine.decode before.machine.source)
         (stepHostEvents before.machine.exec before.machine.store out)
         (Store.decodeStore view afterCode out.2.2.1) before.machine.source.ambient error ∧
       EventfulDispatchCause memory hooks floats allocator before.machine out error
@@ -73,4 +73,4 @@ theorem EventfulWorld.history_ambient {M P F A : Type}
   induction history with
   | refl state => rfl
   | cons edge tail ih => exact ih.trans edge.ambient
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.CompileSourceCertificate
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual successful streaming phase supplies source encoding and exact
@@ -57,4 +57,4 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
   simp only [readyEq,tailReady] at finalTail
   have sameTail : tail = run.remaining.tail := Option.some.inj finalTail
   exact ⟨raw,encoded,by simpa only [sameTail] using matched,functions,moduleBound⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

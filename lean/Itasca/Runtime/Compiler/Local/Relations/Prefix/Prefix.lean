@@ -7,7 +7,7 @@ A builder invariant for a still-open source prefix. Its hole is another syntacti
 Main declarations: `CodePrefix` and `DeadCodePrefix`. A direct consumer is `Compiler.Local.Relations.Control.ResolvedBranchPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A builder invariant for a still-open source prefix. Its hole is another
@@ -33,4 +33,4 @@ def DeadCodePrefix (types functions : List functype) (returns locals : List valt
   ∀ suffix tail next final, cursor ≤ next → next ≤ (code ++ suffix).length →
     CodeRel types functions returns locals (code ++ suffix) labels before (source ++ tail) pc next final
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -6,7 +6,7 @@ A future plan after recording a forward branch yields the corresponding plan bef
 Main declarations: `FramePlans.before_mark`. A direct consumer is `Compiler.Body.Control.Control.CumulativePointControl`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A future plan after recording a forward branch yields the corresponding
@@ -73,4 +73,4 @@ theorem FramePlans.before_mark {length locals updated labels groups}
         · simpa only [List.append_assoc] using FramePlans.push previous last label guardTarget future
         · simp only [grouped, List.append_assoc]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

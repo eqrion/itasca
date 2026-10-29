@@ -5,17 +5,17 @@ import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
 
 /-! Source-level resource demand of an invocation, and how it rules out every resource cause
 of a public invocation error. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp
 
 /-- Source storage demand at a selected point, including defined and host
 callees and suspended callers. No native success or trace appears here. -/
-structure SourceWorldResources (valueLimit frameLimit : Nat) (source : Abs.AState) : Prop where
-  frames : frameDepth (Abs.decode source)<frameLimit
+structure SourceWorldResources (valueLimit frameLimit : Nat) (source : SourceMachine.AState) : Prop where
+  frames : frameDepth (SourceMachine.decode source)<frameLimit
   defined : ∀ address base words,SourceInvocationSite source address base →
     SourceCanonicalFunctionCapacity source.store address words → base+words≤valueLimit
   host : ∀ address identity base params results,SourceInvocationSite source address base →
-    HostFunction source.store address identity params results → base+max (Code.slots params) (Code.slots results)≤valueLimit
+    HostFunction source.store address identity params results → base+max (Compiler.slots params) (Compiler.slots results)≤valueLimit
 
 theorem EventfulSourceResourceCause.excludes_boundary {M P A : Type} {hooks : runtime.platform.Platform P M}
     {allocator : runtime.platform.Alloc A} {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
@@ -67,7 +67,7 @@ structure SourceResourcesFit (store : _root_.store) (address : funcaddr) (initia
   signature : ∀ function,store.FUNCS[address]?=some function → signatureWords function.TYPE≤valueLimit
   entry : ∀ words,SourceCanonicalFunctionCapacity store address words → words≤valueLimit
   frames : ∀ events final,StepsH initial events final → frameDepth final<frameLimit
-  reachable : ∀ events source,StepsH initial events (Abs.decode source) →
+  reachable : ∀ events source,StepsH initial events (SourceMachine.decode source) →
     SourceWorldResources valueLimit frameLimit source
 
 theorem CanonicalInvocationResourceCause.excludes_boundary {A M P : Type}
@@ -105,4 +105,4 @@ theorem CanonicalInvocationResourceCause.excludes_boundary {A M P : Type}
     · exact reserve_ne_refusal_of_universal_bound available frames 1#usize refused
   · exact cause
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

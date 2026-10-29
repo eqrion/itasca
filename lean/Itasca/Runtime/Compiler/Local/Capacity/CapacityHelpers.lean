@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -238,4 +238,4 @@ def CapacityStep {A : Type} (before after : runtime.compiler.FunctionCompiler A)
   after.function.local_slots = before.function.local_slots ∧
     after.function.slot_count.val ≤ max before.function.slot_count.val
       (observedHeight before.function.local_slots.val state.vals.val)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

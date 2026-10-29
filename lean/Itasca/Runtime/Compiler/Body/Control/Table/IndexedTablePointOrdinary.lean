@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.OrdinaryCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.ordinary {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -32,4 +32,4 @@ theorem IndexedTableReaderCompilerPointWasm2.ordinary {A : Type}
     intro input instruction code output h
     exact (includeCumulative ((CompilerTables.ofFunction before.function).append future)).scalar (.linear (by simpa only [contextLocals] using h))
   exact old.ordinary ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode ordinary byte accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

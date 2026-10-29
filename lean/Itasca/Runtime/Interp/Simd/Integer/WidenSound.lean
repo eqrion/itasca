@@ -19,7 +19,7 @@ theorem widen_packed (ty : WidenWidth) (multiply high signed : Bool) (x y result
   have packed := pack_map_of_lanes (lanetype_Jnn ty.output) ty.count result.bv.toNat
     (fun j => (widenBits multiply signed (laneBits ty.width (j+if high then ty.count else 0) x.bv)
       (laneBits ty.width (j+if high then ty.count else 0) y.bv)).toNat)
-    (by intro j valid;rw [←laneBits_toNat];cases ty <;> exact congrArg BitVec.toNat (lanes j valid))
+    (by intro j valid;rw [←lane_bits_to_nat];cases ty <;> exact congrArg BitVec.toNat (lanes j valid))
   have covers : lsize (lanetype_Jnn ty.output)*ty.count = 128 := by cases ty <;> decide
   rw [covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold widenResult widenWords Map

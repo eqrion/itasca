@@ -6,7 +6,7 @@ Changing a label's retained source continuation does not change its instruction 
 Main declarations: `LabelShape` and `LabelsShape`. A direct consumer is `Compiler.Local.Relations.Prefix.LabelWiden`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Changing a label's retained source continuation does not change its
@@ -53,4 +53,4 @@ theorem LabelsShape.normal {left right} (shape : LabelsShape left right)
     rw [← head.normalLive]
     exact live a rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

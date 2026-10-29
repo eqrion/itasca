@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryLayout
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntrySignatures
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std Itasca
 
 /-- The canonical Wasm 2 reader and captured type table supply the physical
@@ -28,4 +28,4 @@ theorem ReaderEnterPostWasm2.callback_inputs {A : Type} {compiler : runtime.comp
   obtain ⟨signature, selected, matched⟩ := signatures.select post.inputs post.outputs
   exact ⟨front, signature, before, after, concrete, selected, matched, (post.front initial).1, fits, words, height⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

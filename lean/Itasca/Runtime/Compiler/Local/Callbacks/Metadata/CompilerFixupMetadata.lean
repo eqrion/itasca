@@ -6,7 +6,7 @@ Compiler snapshots and metadata effects of branch fixups.
 Main declarations: `CompilerSnapshot` and `snapshotCompiler`. A direct consumer is `Compiler.Local.Callbacks.CodeGrowth.PatchGrowth`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 abbrev CompilerSnapshot (A : Type) :=
@@ -73,4 +73,4 @@ theorem compiler_fixups_after_if_ordinary_result {A : Type} (ops : runtime.platf
       ops before sites target index status = .ok output) :
     CompilerOrdinaryStable before (snapshotCompiler output) :=
   compiler_fixups_ordinary_result ops before sites target index status output accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

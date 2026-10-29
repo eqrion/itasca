@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneSt
 import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- SIMD dispatch retains map bounds in live and dead code. -/
@@ -23,4 +23,4 @@ theorem compiler_lower_simd_map_publication {A : Type} (ops : runtime.platform.A
   rw [cursor]
   exact forward
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

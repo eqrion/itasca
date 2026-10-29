@@ -10,7 +10,7 @@ Compilation-entry bounds and its retained certificate, used by the module schedu
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -124,7 +124,7 @@ theorem CompileEntryWitness.typed {A : Type} {allocator : runtime.platform.Alloc
   obtain ⟨finish, index, entry, typed⟩ := batch_typed_steps _ w.dispatched finalBatch w.entry.index
     w.initial w.final (by simpa only [w.metadata.1] using bounds) w.validated
   exact ⟨finish, by simpa only [w.metadata.2.2.1, w.metadata.2.2.2.1] using index, entry, typed⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -132,7 +132,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The driver's issued byte cap and the scanned code origin bound all
@@ -170,6 +170,6 @@ theorem CompileEntryWitness.end_fits {A : Type} {ops : runtime.platform.Alloc A}
   have bound := w.coordinate_bound reachable bounded origin
   have span := entry.body_bytes.bound
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

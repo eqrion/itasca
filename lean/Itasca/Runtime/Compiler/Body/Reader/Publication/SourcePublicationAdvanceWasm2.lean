@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Checking.JumpTargets
 
 import Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationRanges
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Reached Wasm 2 executable and resource evidence with both publication invariants. -/
@@ -89,4 +89,4 @@ theorem source_publication_reader_advance_wasm2 {A} (ops : runtime.platform.Allo
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,after),called,rfl,rfl,⟨held,publication.1,publication.2,targetBounds,finalMaps⟩,forward⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

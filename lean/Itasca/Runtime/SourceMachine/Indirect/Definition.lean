@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.IndirectCallSource
 import Itasca.Runtime.SourceMachine.Sim.Call
-namespace Itasca.Runtime.Abs.Indirect
+namespace Itasca.Runtime.SourceMachine.Indirect
 open SpecExt Itasca.Runtime.Spec
 
 def resolve (s : store) (f : AFrame) (table type position : Nat) : Option Nat :=
@@ -92,4 +92,4 @@ def step (s : AState) (f : AFrame) (rest : List AFrame) (table type : Nat) (afte
       | none => .trap
       | some address => invoke s {f with vals:=front} rest address after
 
-end Itasca.Runtime.Abs.Indirect
+end Itasca.Runtime.SourceMachine.Indirect

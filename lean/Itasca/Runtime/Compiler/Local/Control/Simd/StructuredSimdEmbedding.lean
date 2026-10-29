@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Syntactic inclusion of independently decoded SIMD emissions into a larger
@@ -9,4 +9,4 @@ class SimdEmbedding (immediates : List runtime.bytecode.SimdImmediate) (constant
   lift : ∀ {input source code output}, SimdEmission immediates constants C input source code output →
     emit input source code output
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

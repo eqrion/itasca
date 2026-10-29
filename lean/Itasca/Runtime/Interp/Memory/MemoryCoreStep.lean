@@ -5,30 +5,30 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
  theorem execute_load_core_simulation_exact {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (values : f.vals = front ++ [Abs.integerVal .I32 bits])
+    (values : f.vals = front ++ [SourceMachine.integerVal .I32 bits])
     (slots : FrameSlots exec raw f)
-    (addressSlot : address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType))
+    (addressSlot : address.val = Compiler.slots (f.locals.map Compiler.valueType) + Compiler.slots (front.map Compiler.valueType))
     (bitsBound : bits < 2^32) (offsetEq : proj_uN_0 argument.OFFSET = offset.val)
-    (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
+    (typed : SourceMachine.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     runtime.interp.execute_load memory exec store raw.instance raw.base (loadOpcode op) address address offset ⦃ out =>
       (∃ nextFrame, out.1 = .Ok () ∧
-        Abs.Core.load initial f rest after op argument = .next {initial with frames := nextFrame :: rest} ∧
-        Abs.CoreTyped {initial with frames := nextFrame :: rest} ∧
-        StepH (Abs.decode initial) [] (Abs.decode {initial with frames := nextFrame :: rest}) ∧
+        SourceMachine.Core.load initial f rest after op argument = .next {initial with frames := nextFrame :: rest} ∧
+        SourceMachine.CoreTyped {initial with frames := nextFrame :: rest} ∧
+        StepH (SourceMachine.decode initial) [] (SourceMachine.decode {initial with frames := nextFrame :: rest}) ∧
         FrameSlots out.2 raw nextFrame ∧ {out.2 with slots := exec.slots} = exec) ∨
       (out = (.Err (.Trap .MemoryOutOfBounds),exec) ∧ ∃ n, 0 < n ∧
-        StepsHN n (Abs.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩) ⦄ := by
+        StepsHN n (SourceMachine.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩) ⦄ := by
   dsimp only
-  have source := Abs.Core.load_progress (Store.decodeStore view code store) ambient f rest after op argument typed
+  have source := SourceMachine.Core.load_progress (Store.decodeStore view code store) ambient f rest after op argument typed
   apply WP.spec_mono (execute_load_core memory view laws code exec store raw op address offset inst memoryAddress object
     ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after front bits argument found mapped issued rfl moduleEq values slots addressSlot bitsBound offsetEq)
   intro out effect
@@ -48,38 +48,38 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Load) (address offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (values : f.vals = front ++ [Abs.integerVal .I32 bits])
+    (values : f.vals = front ++ [SourceMachine.integerVal .I32 bits])
     (slots : FrameSlots exec raw f)
-    (addressSlot : address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType))
+    (addressSlot : address.val = Compiler.slots (f.locals.map Compiler.valueType) + Compiler.slots (front.map Compiler.valueType))
     (bitsBound : bits < 2^32) (offsetEq : proj_uN_0 argument.OFFSET = offset.val)
     (compiled : runtime.bytecode.CompiledFunction)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (fetched : compiled.code.val[raw.pc.val]? = some (Code.memoryLoadInstruction op address address offset))
+    (fetched : compiled.code.val[raw.pc.val]? = some (Compiler.memoryLoadInstruction op address address offset))
     (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
+    (typed : SourceMachine.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       (      (∃ nextFrame, out.1 = .Ok () ∧
-        Abs.Core.load initial f rest after op argument = .next {initial with frames := nextFrame :: rest} ∧
-        Abs.CoreTyped {initial with frames := nextFrame :: rest} ∧
-        StepH (Abs.decode initial) [] (Abs.decode {initial with frames := nextFrame :: rest}) ∧
+        SourceMachine.Core.load initial f rest after op argument = .next {initial with frames := nextFrame :: rest} ∧
+        SourceMachine.CoreTyped {initial with frames := nextFrame :: rest} ∧
+        StepH (SourceMachine.decode initial) [] (SourceMachine.decode {initial with frames := nextFrame :: rest}) ∧
         FrameSlots out.2.1 raw nextFrame ∧ (∃ pc : U32, pc.val = raw.pc.val+1 ∧ {out.2.1 with slots := exec.slots} = {exec with frames := exec.frames.set index {raw with pc := pc}})) ∨
       (out.1 = .Err (.Trap .MemoryOutOfBounds) ∧ (∃ pc : U32, pc.val = raw.pc.val+1 ∧ out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}}) ∧ ∃ n, 0 < n ∧
-        StepsHN n (Abs.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+        StepsHN n (SourceMachine.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
   apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
-    (Code.memoryLoadInstruction op address address offset) last frameFound found codeFound fetched pcBound
+    (Compiler.memoryLoadInstruction op address address offset) last frameFound found codeFound fetched pcBound
   intro pc pcNext
   have handler := execute_load_core_simulation_exact memory view laws code {exec with frames := exec.frames.set index {raw with pc := pc}} store raw op address offset inst memoryAddress object ambient f rest after front bits argument found mapped issued moduleEq values slots addressSlot bitsBound offsetEq typed
   apply WP.spec_mono (dispatch_load memory hooks floats allocator _ store platform index raw.instance raw.function raw.base op address address offset handler)
@@ -91,34 +91,34 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
  theorem execute_store_core_simulation_exact {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Store) (address value offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Store) (address value offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (number : num_) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (values : f.vals = front ++ [Abs.integerVal .I32 bits,.CONST op.type number])
+    (values : f.vals = front ++ [SourceMachine.integerVal .I32 bits,.CONST op.type number])
     (slots : FrameSlots exec raw f)
-    (addressSlot : address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType))
+    (addressSlot : address.val = Compiler.slots (f.locals.map Compiler.valueType) + Compiler.slots (front.map Compiler.valueType))
     (valueSlot : value.val = address.val+1)
     (bitsBound : bits < 2^32) (numberWf : wf_num_ op.type number)
     (offsetEq : proj_uN_0 argument.OFFSET = offset.val)
-    (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
+    (typed : SourceMachine.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     runtime.interp.execute_store memory exec store raw.instance raw.base (storeOpcode op) address value offset ⦃ out =>
       MemoryMutation view store out.2 memoryAddress object ∧
       ((out.1 = .Ok () ∧
-        Abs.Core.store initial f rest after op argument = .next {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest} ∧
-        Abs.CoreTyped {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest} ∧
+        SourceMachine.Core.store initial f rest after op argument = .next {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest} ∧
+        SourceMachine.CoreTyped {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest} ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2) ∧
-        StepH (Abs.decode initial) [] (Abs.decode {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest}) ∧
+        StepH (SourceMachine.decode initial) [] (SourceMachine.decode {initial with store := Store.decodeStore view code out.2, frames := {f with code := after,vals := front} :: rest}) ∧
         FrameSlots exec raw {f with code := after,vals := front}) ∨
       (out.1 = .Err (.Trap .MemoryOutOfBounds) ∧ Store.decodeStore view code out.2 = Store.decodeStore view code store ∧
-        ∃ n, 0 < n ∧ StepsHN n (Abs.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+        ∃ n, 0 < n ∧ StepsHN n (SourceMachine.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
-  have source := Abs.Core.store_progress (Store.decodeStore view code store) ambient f rest after op argument typed
+  have source := SourceMachine.Core.store_progress (Store.decodeStore view code store) ambient f rest after op argument typed
   apply WP.spec_mono (execute_store_core_values memory view laws code exec store raw op address value offset inst memoryAddress object
     ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after front bits number argument found mapped issued rfl moduleEq values slots addressSlot valueSlot bitsBound numberWf offsetEq)
   intro out effect
@@ -139,17 +139,17 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
     (allocator : runtime.platform.Alloc A) (platform : P) (index : Usize)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (raw : runtime.interp.Frame)
-    (op : Abs.Memory.Store) (address value offset : U32) (inst : runtime.store.ModuleInst)
+    (op : SourceMachine.Memory.Store) (address value offset : U32) (inst : runtime.store.ModuleInst)
     (memoryAddress : runtime.MemoryAddr) (object : runtime.store.MemInst M)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front : List val) (bits : Nat) (number : num_) (argument : memarg)
     (found : store.instances.val[raw.instance.val]? = some inst)
     (mapped : inst.memories.val[0]? = some memoryAddress)
     (issued : store.memories.val[memoryAddress.index.val]? = some object)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (values : f.vals = front ++ [Abs.integerVal .I32 bits,.CONST op.type number])
+    (values : f.vals = front ++ [SourceMachine.integerVal .I32 bits,.CONST op.type number])
     (slots : FrameSlots exec raw f)
-    (addressSlot : address.val = Code.slots (f.locals.map Code.valueType) + Code.slots (front.map Code.valueType))
+    (addressSlot : address.val = Compiler.slots (f.locals.map Compiler.valueType) + Compiler.slots (front.map Compiler.valueType))
     (valueSlot : value.val = address.val+1)
     (bitsBound : bits < 2^32) (numberWf : wf_num_ op.type number)
     (offsetEq : proj_uN_0 argument.OFFSET = offset.val)
@@ -157,24 +157,24 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
-    (fetched : compiled.code.val[raw.pc.val]? = some (Code.memoryStoreInstruction op address value offset))
+    (fetched : compiled.code.val[raw.pc.val]? = some (Compiler.memoryStoreInstruction op address value offset))
     (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
+    (typed : SourceMachine.CoreTyped ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2 = platform ∧ (∃ pc : U32, pc.val = raw.pc.val+1 ∧ out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}}) ∧
       (      MemoryMutation view store out.2.2.1 memoryAddress object ∧
       ((out.1 = .Ok () ∧
-        Abs.Core.store initial f rest after op argument = .next {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest} ∧
-        Abs.CoreTyped {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest} ∧
+        SourceMachine.Core.store initial f rest after op argument = .next {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest} ∧
+        SourceMachine.CoreTyped {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest} ∧
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.2.1) ∧
-        StepH (Abs.decode initial) [] (Abs.decode {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest}) ∧
+        StepH (SourceMachine.decode initial) [] (SourceMachine.decode {initial with store := Store.decodeStore view code out.2.2.1, frames := {f with code := after,vals := front} :: rest}) ∧
         FrameSlots exec raw {f with code := after,vals := front}) ∨
       (out.1 = .Err (.Trap .MemoryOutOfBounds) ∧ Store.decodeStore view code out.2.2.1 = Store.decodeStore view code store ∧
-        ∃ n, 0 < n ∧ StepsHN n (Abs.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩))) ⦄ := by
+        ∃ n, 0 < n ∧ StepsHN n (SourceMachine.decode initial) [] ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩))) ⦄ := by
   dsimp only
   apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
-    (Code.memoryStoreInstruction op address value offset) last frameFound found codeFound fetched pcBound
+    (Compiler.memoryStoreInstruction op address value offset) last frameFound found codeFound fetched pcBound
   intro pc pcNext
   have handler := execute_store_core_simulation_exact memory view laws code {exec with frames := exec.frames.set index {raw with pc := pc}} store raw op address value offset inst memoryAddress object ambient f rest after front bits number argument found mapped issued moduleEq values slots addressSlot valueSlot bitsBound numberWf offsetEq typed
   apply WP.spec_mono (dispatch_store memory hooks floats allocator _ store platform index raw.instance raw.function raw.base op address value offset handler)

@@ -9,7 +9,7 @@ An unentered source subtree emits no executable body. Its enclosing terminal pre
 Main declarations: `UniversalDormant`. A direct consumer is `Compiler.Local.Control.Table.StructuredUniversalDormant`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An unentered source subtree emits no executable body. Its enclosing
@@ -26,4 +26,4 @@ structure UniversalDormant {A : Type} (compiler : runtime.compiler.FunctionCompi
     ParentPrefixes types functions returns locals (resolvedCode compiler.function.code.val groups)
       parents labels current
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

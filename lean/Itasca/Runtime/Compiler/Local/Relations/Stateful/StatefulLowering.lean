@@ -7,24 +7,24 @@ Depth, pair-table use and dispatch equations for stateful lowering.
 Main declarations: `StatefulReads` and `lower_stateful_eq`. A direct consumer is `Compiler.Local.Relations.Stateful.StatefulEffects`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
 
-def statefulDepth (op : Abs.Stateful.Instruction) : Usize :=
+def statefulDepth (op : SourceMachine.Stateful.Instruction) : Usize :=
   match op.arity with
   | 0 => 0#usize
   | 1 => 1#usize
   | 2 => 2#usize
   | _ => 3#usize
 
-def statefulUsesPair : Abs.Stateful.Instruction → Bool
+def statefulUsesPair : SourceMachine.Stateful.Instruction → Bool
   | .tableCopy .. | .tableInit .. => true
   | _ => false
 
 def StatefulReads {A : Type} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A) (op : Abs.Stateful.Instruction)
+    (compiler : runtime.compiler.FunctionCompiler A) (op : SourceMachine.Stateful.Instruction)
     (first second : U32) : Prop :=
   (if op.arity = 0 then first = compiler.height else
     runtime.compiler.FunctionCompiler.operand ops compiler (statefulDepth op) = .ok (.Ok first)) ∧
@@ -33,7 +33,7 @@ def StatefulReads {A : Type} (ops : runtime.platform.Alloc A)
 
 noncomputable def statefulLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Stateful.Instruction) (a b : U32) :
+    (op : SourceMachine.Stateful.Instruction) (a b : U32) :
     Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.FunctionCompiler A) := do
   match op with
   | .refNull _ =>
@@ -274,7 +274,7 @@ noncomputable def statefulLowering {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem lower_stateful_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Stateful.Instruction) (a b : U32) (reachable : compiler.reachable = true) :
+    (op : SourceMachine.Stateful.Instruction) (a b : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (statefulOpcode op) a b 0#u128 =
       statefulLowering ops compiler state op a b := by
   cases op <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
@@ -282,7 +282,7 @@ theorem lower_stateful_dispatch {A : Type} (ops : runtime.platform.Alloc A)
 /-- Actual non-pair dispatch, with operand reads exposed for layout proofs. -/
 theorem lower_stateful_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Stateful.Instruction) (first second a b entry : U32)
+    (op : SourceMachine.Stateful.Instruction) (first second a b entry : U32)
     (reachable : compiler.reachable = true) (single : statefulUsesPair op = false)
     (reads : StatefulReads ops compiler op first second) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (statefulOpcode op) a b 0#u128 =
@@ -291,7 +291,7 @@ theorem lower_stateful_eq {A : Type} (ops : runtime.platform.Alloc A)
   rw [lower_stateful_dispatch ops compiler state op a b reachable]
   obtain ⟨firstRead, secondRead⟩ := reads
   cases op <;> simp only [statefulUsesPair, Bool.true_eq_false] at single
-  all_goals simp [Abs.Stateful.Instruction.arity, statefulDepth] at firstRead
+  all_goals simp [SourceMachine.Stateful.Instruction.arity, statefulDepth] at firstRead
   all_goals simp only [statefulLowering, statefulInstruction]
   all_goals first
     | subst first; rfl
@@ -302,7 +302,7 @@ theorem lower_stateful_eq {A : Type} (ops : runtime.platform.Alloc A)
 before reading the three scalar operands. -/
 theorem lower_stateful_pair_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler paired : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (op : Abs.Stateful.Instruction) (first second a b entry : U32)
+    (op : SourceMachine.Stateful.Instruction) (first second a b entry : U32)
     (reachable : compiler.reachable = true) (pairOpcode : statefulUsesPair op = true)
     (pair : runtime.compiler.FunctionCompiler.pair ops compiler a b = .ok (.Ok entry, paired))
     (read : runtime.compiler.FunctionCompiler.operand ops paired 3#usize = .ok (.Ok first)) :
@@ -314,4 +314,4 @@ theorem lower_stateful_pair_eq {A : Type} (ops : runtime.platform.Alloc A)
   all_goals simp only [statefulLowering, statefulInstruction, pair, read, bind_ok, uncurry_apply_pair,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

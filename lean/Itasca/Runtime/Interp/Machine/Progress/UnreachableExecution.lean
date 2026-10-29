@@ -8,21 +8,21 @@ import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 /-!
 Unreachable execution with retained ownership.
 
-Main declarations: `coreCodeRel_unreachable_inv` and `step_unreachable_core_execution_owned`. A direct consumer is `Integration.Execution.Dispatch.Host`.
+Main declarations: `core_code_rel_unreachable_inv` and `step_unreachable_core_execution_owned`. A direct consumer is `Integration.Execution.Dispatch.Host`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Unreachable
+namespace Itasca.Runtime.Interp.Machine.Unreachable
 variable {jumpTables : List Aeneas.Std.U32}
 variable {compiled : runtime.bytecode.CompiledFunction}
 open Aeneas Aeneas.Std
 
-theorem coreCodeRel_unreachable_inv {C returns locals code labels stack pc next output after}
-    (relation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) pc next output) :
+theorem core_code_rel_unreachable_inv {C returns locals code labels stack pc next output after}
+    (relation : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) pc next output) :
     (∃ target, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) target.val next output) ∨
+      Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS returns locals code jumpTables labels stack (.UNREACHABLE :: after) target.val next output) ∨
     code[pc]? = some .Unreachable := by
   cases relation with
-  | linear head ordinary fragment rest => exact False.elim (scalarEmission_not_unreachable (FloatHeads.project (.core (.pure .unreachable)) head))
+  | linear head ordinary fragment rest => exact False.elim (scalar_emission_not_unreachable (FloatHeads.project (.core (.pure .unreachable)) head))
   | skip forward instruction rest => exact Or.inl ⟨_, forward, instruction, rest⟩
   | unreachable instruction remaining scope => exact Or.inr instruction
 
@@ -35,8 +35,8 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -47,18 +47,18 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .UNREACHABLE::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .UNREACHABLE::after}::rest,[]⟩
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .UNREACHABLE::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ pc : U32, out.2.1 = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
         ((out.1 = .Ok () ∧ Execution view code store out.2.1 initial expected pc.val false ∧
           ConcreteSim compiled.code.length raw.pc.val pc.val false false initial initial ∧
-          (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds initial)) ∨
-         (out.1 = .Err (.Trap .Unreachable) ∧ ∃ n, 0 < n ∧ Spec.StepsHN n (Abs.decode initial) []
+          (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds initial)) ∨
+         (out.1 = .Err (.Trap .Unreachable) ∧ ∃ n, 0 < n ∧ Spec.StepsHN n (SourceMachine.decode initial) []
            ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
-  rcases coreCodeRel_unreachable_inv point.code.current with skip | fetched
+  rcases core_code_rel_unreachable_inv point.code.current with skip | fetched
   · obtain ⟨target,forward,fetched,continuation⟩ := skip
     have pcBound : raw.pc.val < U32.max := by
       have bound := (List.getElem?_eq_some_iff.mp fetched).1
@@ -76,7 +76,7 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
       raw index target last frameFound program (.ready targetPoint) represented ⟨rfl,rfl,rfl,rfl⟩
       (by rw [exactState]) (by rw [exactState]; exact SlotPrefix.refl _ _) machine.typed machine.core
     exact ⟨sameStore,samePlatform,target,exactState,Or.inl ⟨success,fresh,
-      Or.inl ⟨rfl,dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩,fun _ h => h⟩⟩
+      Or.inl ⟨rfl,dispatch_measure_forward _ _ _ _ forward continuation.entry_bound⟩,fun _ h => h⟩⟩
   · have pcBound : raw.pc.val < U32.max := by
       have bound := (List.getElem?_eq_some_iff.mp fetched).1
       have cap := program.fetchBound
@@ -86,4 +86,4 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     intro out effect
     obtain ⟨trapped,sameStore,samePlatform,⟨pc,pcNext,exactState⟩,simulation⟩ := effect
     exact ⟨sameStore,samePlatform,pc,exactState,Or.inr ⟨trapped,simulation⟩⟩
-end Itasca.Runtime.Interp.StructuredMachine.Unreachable
+end Itasca.Runtime.Interp.Machine.Unreachable

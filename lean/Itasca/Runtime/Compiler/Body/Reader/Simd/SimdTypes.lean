@@ -8,7 +8,7 @@ Successful live SIMD operand checks expose exact complete source stacks; the phy
 Main declarations: `reader_simd_fixed_types`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful live SIMD operand checks expose exact complete source stacks;
@@ -27,13 +27,13 @@ theorem reader_simd_fixed_types {data env locals index st out source values posi
   obtain ⟨_,outer,_,_,base,_,ctrls,_,stack⟩ := p.opened
   have physicalBase : (Control.base {st.core with pos := position}).val = outer.length := by
     simp [Control.base,ctrls,base]
-  have afterKnown := readFixed_known {st.core with pos := position} out outer p.current.vals
+  have afterKnown := read_fixed_known {st.core with pos := position} out outer p.current.vals
     inputs output stack physicalBase capacity known read
   obtain ⟨old,new⟩ := post.values
-  have currentKnown := (concreteStack_append.mp (old ▸ known)).2
+  have currentKnown := (concrete_stack_append.mp (old ▸ known)).2
   rw [monomorphic] at effect
   obtain ⟨front,beforeTypes,afterTypes⟩ := fixed_effect_types currentKnown effect
-  obtain ⟨types,concrete⟩ := (concreteStack_iff out.vals.val).mp afterKnown
+  obtain ⟨types,concrete⟩ := (concrete_stack_iff out.vals.val).mp afterKnown
   refine ⟨Sequence.stackTypes (p.parents.flatMap Wasm2.Frames.Saved.vals) ++ front,
     types,?_,concrete,?_⟩
   · conv_lhs => rw [old]
@@ -48,4 +48,4 @@ theorem reader_simd_fixed_types {data env locals index st out source values posi
       rw [afterTypes,List.append_assoc]
     simpa only [concrete,Sequence.stackTypes,List.map_map,Function.comp_def] using decoded
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

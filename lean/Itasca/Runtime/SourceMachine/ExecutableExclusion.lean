@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.BinaryInstr
 import Itasca.Runtime.SourceMachine.Simd.Exclusion
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- The two source heads added after the scalar/stateful/SIMD union. -/
 def executableExtensionTag : instr → Bool
@@ -32,4 +32,4 @@ theorem SimdInstr.executable_extension_tag {source} (allowed : SimdInstr source)
   have tag := allowed.source_tag
   cases source <;> simp_all [executableExtensionTag,simdSourceTag]
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

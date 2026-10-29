@@ -117,7 +117,7 @@ def decodeStore {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
 
 /-- Replacing the concrete memory vector changes only the decoded memory
 component; function and module decoding do not depend on its opaque buffers. -/
-theorem decodeStore_memory_update {M : Type} (view : M → Slice U8)
+theorem decode_store_memory_update {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (s : runtime.store.Store M)
     (memories : alloc.vec.Vec (runtime.store.MemInst M)) :
     decodeStore view code {s with memories := memories} =

@@ -56,7 +56,7 @@ Actual accepted ordinary dispatch preserves the retained compiler/source point. 
 Main declarations: `StructuredReaderCompilerStateWasm2.ordinary_base` and `StructuredReaderCompilerPointWasm2.ordinary`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- Actual accepted ordinary dispatch preserves the retained compiler/source
 point. All opcode-specific stack and callback facts are derived internally. -/
@@ -172,4 +172,4 @@ theorem StructuredReaderCompilerPointWasm2.ordinary {jumpTables : List U32} {A :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point
   exact state.ordinary ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode ordinary byte accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

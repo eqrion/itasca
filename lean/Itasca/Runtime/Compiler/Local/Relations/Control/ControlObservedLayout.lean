@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservation
 import Itasca.Runtime.Compiler.Local.Relations.Layout.ObservationLayout
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 
@@ -33,4 +33,4 @@ theorem compiler_else_layout_success {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨middle, observed⟩ := compiler_else_observation ops before after state bt accepted
   exact compiler_observe_layout_success ops law middle after state known locals observed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

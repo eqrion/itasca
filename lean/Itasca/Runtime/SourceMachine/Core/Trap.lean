@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.Simulation
 import Itasca.Runtime.SourceMachine.Sim.Trap
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- An instruction-local bounds or arithmetic trap unwinds all labels and
@@ -18,8 +18,8 @@ theorem operand_trap_simulation (s : store) (ambient : frame) (f : AFrame)
     ∃ n, 0 < n ∧ StepsHN n
       (decode ⟨s,ambient,{f with code := instruction :: after, vals := front ++ consumed} :: rest,[]⟩) []
       ⟨⟨s,ambient⟩,[.TRAP]⟩ := by
-  have lifted := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
+  have lifted := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
       f.labels front hl hv) ha hr
   have framesWf : Forall FrameWf ({f with code := after, vals := front} :: rest) := by
     intro frame member
@@ -30,7 +30,7 @@ theorem operand_trap_simulation (s : store) (ambient : frame) (f : AFrame)
   refine ⟨n+1,by omega,?_⟩
   have combined := StepsHN.cons lifted tail
   simp only [decode,decodeFrames,vals,List.map_nil,List.nil_append,List.map_cons,AFrame.toFrame,AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeFrames,frameContext,instrContext,vals,List.append_assoc,AFrame.toFrame,AFrame.arity] using combined
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

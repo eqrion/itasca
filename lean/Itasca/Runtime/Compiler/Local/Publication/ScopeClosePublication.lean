@@ -13,7 +13,7 @@ Publication of closed scope maps, from guarded/unguarded map effects to the scop
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 /-- Exact control-map vector update for a scope with a pending conditional branch. -/
 theorem close_guarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
@@ -105,7 +105,7 @@ theorem close_guarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
   · rw [hpcword]
     scalar_tac
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -113,7 +113,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact scope-close effects establish the invariant for the remaining
@@ -140,7 +140,7 @@ theorem ControlMapPublication.close_effect {A : Type}
   · simp [activeControlMaps,frames]
   · simp [activeControlMaps,remaining]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -148,7 +148,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An actual unguarded END retains control-map publication bounds. -/
@@ -212,7 +212,7 @@ theorem compiler_guarded_map_publication {A : Type} (ops : runtime.platform.Allo
   rw [cursor]
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -220,7 +220,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Closing geometry comes from the current physical scope and its branch
@@ -278,6 +278,6 @@ theorem compiler_scope_close_publication {A : Type} (ops : runtime.platform.Allo
       maps geometry.frames guard condition old nonBody hasIf guardCode geometry.position geometry.branches mapFits coordinateFits
       progress endBound canonical
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

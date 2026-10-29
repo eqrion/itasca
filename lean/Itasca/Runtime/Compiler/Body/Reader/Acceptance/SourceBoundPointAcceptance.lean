@@ -12,7 +12,7 @@ Integer, float and scalar-memory replay from source bounds at an indexed point. 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -27,7 +27,7 @@ theorem IndexedTableReaderCompilerPointWasm2.numeric_available {A V : Type}
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
     (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
@@ -53,7 +53,7 @@ theorem IndexedTableReaderCompilerPointWasm2.float_available {A V : Type}
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (floatOpcode op))
     (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
@@ -79,7 +79,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_load_available {A V : Type}
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Memory.Load)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Load)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryLoadOpcode op))
     (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
@@ -105,7 +105,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available {A V : Type}
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (demand : CallbackDemand compiler out.core bound) (op : Abs.Memory.Store)
+    (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Store)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryStoreOpcode op))
     (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
@@ -120,7 +120,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available {A V : Type}
     contextLocals demand op state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) byte reference
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -128,7 +128,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -146,7 +146,7 @@ theorem IndexedTableReaderCompilerPointWasm2.numeric_available_from_source {A : 
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
@@ -187,7 +187,7 @@ theorem IndexedTableReaderCompilerPointWasm2.float_available_from_source {A : Ty
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (floatOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
@@ -228,7 +228,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_load_available_from_source {
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Memory.Load)
+    (op : SourceMachine.Memory.Load)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryLoadOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
@@ -269,7 +269,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available_from_source 
     (budget : SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val)
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
-    (op : Abs.Memory.Store)
+    (op : SourceMachine.Memory.Store)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryStoreOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
@@ -296,6 +296,6 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available_from_source 
   exact point.memory_store_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op byte reference
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

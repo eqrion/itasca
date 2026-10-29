@@ -7,7 +7,7 @@ References, memory metadata, and bulk operations satisfy the local checker from 
 Main declarations: `StatefulEmission.instructions_accept` and `IndirectCallEmission.instructions_accept`. A direct consumer is `Compiler.Body.Relations.Checking.ExecutableInstructionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -17,7 +17,7 @@ private theorem width_reference (ty : reftype) : width (valtype_reftype ty) = 1 
 
 macro "stateful_capacity " inputs:ident outputs:ident second:ident pair:ident : tactic => `(tactic|
   (simp only [slots_append,slots,width_reference,show width .I32 = 1 from rfl,show width .FUNCREF = 1 from rfl,
-     Abs.Stateful.Instruction.arity,StatefulPair] at $inputs $outputs $second $pair
+     SourceMachine.Stateful.Instruction.arity,StatefulPair] at $inputs $outputs $second $pair
    try have secondPosition := $second (by decide)
    first | exact (List.getElem?_eq_some_iff.mp $pair).1 | omega))
 
@@ -76,4 +76,4 @@ theorem IndirectCallEmission.instructions_accept {pairs C before source emitted 
     · omega
     · exact row
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

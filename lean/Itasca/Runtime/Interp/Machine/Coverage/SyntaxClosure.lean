@@ -7,21 +7,21 @@ A step keeps the frame's code and labels within the binary instruction grammar.
 Main declarations: `SyntaxClosure`. A direct consumer is `Interp.Machine.Control.BranchIfOwned`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 /-- A step keeps the frame's code and labels within the binary instruction grammar. -/
-def SyntaxClosure (before after : Abs.AFrame) : Prop :=
-  Abs.FrameSupported before → Abs.FrameSupported after
+def SyntaxClosure (before after : SourceMachine.AFrame) : Prop :=
+  SourceMachine.FrameSupported before → SourceMachine.FrameSupported after
 
-theorem SyntaxClosure.refl (f : Abs.AFrame) : SyntaxClosure f f := fun h => h
+theorem SyntaxClosure.refl (f : SourceMachine.AFrame) : SyntaxClosure f f := fun h => h
 
-theorem SyntaxClosure.tail (f : Abs.AFrame) (op : instr) (after : List instr)
+theorem SyntaxClosure.tail (f : SourceMachine.AFrame) (op : instr) (after : List instr)
     (locals values : List val) :
     SyntaxClosure { f with code := op :: after } { f with code := after, locals := locals, vals := values } := by
   rintro ⟨code, labels⟩
   exact ⟨fun i hi => code i (List.mem_cons_of_mem _ hi), labels⟩
 
-theorem SyntaxClosure.replace (f : Abs.AFrame) (op next : instr) (after : List instr)
-    (locals values : List val) (nextAllowed : Abs.BinaryInstr next) :
+theorem SyntaxClosure.replace (f : SourceMachine.AFrame) (op next : instr) (after : List instr)
+    (locals values : List val) (nextAllowed : SourceMachine.BinaryInstr next) :
     SyntaxClosure { f with code := op :: after } { f with code := next :: after, locals := locals, vals := values } := by
   rintro ⟨code, labels⟩
   refine ⟨?_, labels⟩
@@ -30,7 +30,7 @@ theorem SyntaxClosure.replace (f : Abs.AFrame) (op next : instr) (after : List i
   · exact nextAllowed
   · exact code i (List.mem_cons_of_mem _ member)
 
-theorem SyntaxClosure.branch (f : Abs.AFrame) (depth : Nat) (label : Abs.Label)
+theorem SyntaxClosure.branch (f : SourceMachine.AFrame) (depth : Nat) (label : SourceMachine.Label)
     (lookup : f.labels[depth]? = some label) (values : List val) :
     SyntaxClosure f { f with code := label.cont ++ label.after, labels := f.labels.drop (depth + 1), vals := values } := by
   rintro ⟨code, labels⟩
@@ -43,4 +43,4 @@ theorem SyntaxClosure.branch (f : Abs.AFrame) (depth : Nat) (label : Abs.Label)
   · intro next member
     exact labels next (List.mem_of_mem_drop member)
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

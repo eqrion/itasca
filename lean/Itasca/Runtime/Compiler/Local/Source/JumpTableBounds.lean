@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every stored jump-table target is inside the currently emitted code. -/
@@ -18,7 +18,7 @@ theorem JumpTableBounds.retained {A : Type} {before after : runtime.compiler.Fun
   exact (held target member).trans_le code
 
 /-- Successful emission retains side-table targets while extending code. -/
-theorem Emitted.jumpTableBounds {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+theorem Emitted.jump_table_bounds {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {instruction : runtime.bytecode.Instr} (emitted : Emitted before after instruction)
     (held : JumpTableBounds before) : JumpTableBounds after := by
   obtain ⟨budget,code,sources,rfl,appended,_⟩ := emitted
@@ -38,4 +38,4 @@ theorem compiler_observe_jump_table_bounds {A : Type} (ops : runtime.platform.Al
   apply held.retained (after := after) (congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called))
     (compiler_observe_code_mono ops law before after state (.Ok ()) called)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

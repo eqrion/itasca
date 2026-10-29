@@ -110,7 +110,7 @@ theorem float_resize_loop {F : Type} (floats : runtime.platform.FloatOps F)
         cases kind <;> simp only [FloatResize.input,floatCompareWidth] <;> scalar_tac
       step with lane x (floatCompareWidth kind.input) index inputPositive inputBound readRange as ⟨a,aEq⟩
       have aBits : a.val = (laneBits (floatCompareWidth kind.input).val index.val x.bv).toNat := by
-        rw [laneBits_toNat]; exact aEq
+        rw [lane_bits_to_nat]; exact aEq
       step with wordLaw index.val less a aBits as ⟨value,allowed⟩
       step with put_lanes current (floatCompareWidth kind.output) index value outputPositive outputBound
         (lane_range _ _ (by omega)) as ⟨updated,same,other⟩
@@ -159,8 +159,8 @@ theorem float_resize_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps 
               (laneBits (lsize (lanetype_Fnn kind.input)) j x.bv).toNat)) ∧
         (∀ j, 2 ≤ j → j < 128/lsize (lanetype_Fnn kind.output) → laneBits (lsize (lanetype_Fnn kind.output)) j value.bv = 0) ⦄ := by
   rw [float_resize_dispatch_eq]
-  have inputEq := floatCompareWidth_val kind.input
-  have outputEq := floatCompareWidth_val kind.output
+  have inputEq := float_compare_width_val kind.input
+  have outputEq := float_compare_width_val kind.output
   have spec := float_resize_loop floats kind x 0#u128 0#u32
     (fun j bits => floatOfBits (floatCompareWidth kind.output).val bits.toNat ∈
       floatResizeChoices kind (floatOfBits (lsize (lanetype_Fnn kind.input))

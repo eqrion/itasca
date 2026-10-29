@@ -127,11 +127,11 @@ theorem scalar_i64_mul_eq {F : Type} (ops : runtime.platform.FloatOps F)
 theorem integer_mul_relation (ty : Inn) (a b : Nat) :
     fun_binop_ (numtype_Inn ty) (.mk_binop__0 ty .MUL)
       (.mk_num__0 ty (.mk_uN a)) (.mk_num__0 ty (.mk_uN b))
-      (some [.mk_num__0 ty (.mk_uN ((a * b) % 2 ^ Abs.integerWidth ty))]) := by
-  have hb : (a * b) % 2 ^ Abs.integerWidth ty < 2 ^ Abs.integerWidth ty :=
+      (some [.mk_num__0 ty (.mk_uN ((a * b) % 2 ^ SourceMachine.integerWidth ty))]) := by
+  have hb : (a * b) % 2 ^ SourceMachine.integerWidth ty < 2 ^ SourceMachine.integerWidth ty :=
     Nat.mod_lt _ (by positivity)
-  have hn := Abs.integer_num_wf ty _ hb
-  have hu := Abs.integer_uN_wf ty _ hb
+  have hn := SourceMachine.integer_num_wf ty _ hb
+  have hu := SourceMachine.integer_u_n_wf ty _ hb
   cases ty with
   | I32 => exact .fun_binop__case_4 _ _ _ (.fun_imul__case_0 _ _ _ hu) hn
   | I64 => exact .fun_binop__case_5 _ _ _ (.fun_imul__case_0 _ _ _ hu) hn
@@ -150,7 +150,7 @@ theorem scalar_i32_add_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  simpa [numtype_Inn, Abs.integerWidth, Nat.add_mod] using Abs.integer_add_relation .I32 (a.val % 4294967296) (b.val % 4294967296)
+  simpa [numtype_Inn, SourceMachine.integerWidth, Nat.add_mod] using SourceMachine.integer_add_relation .I32 (a.val % 4294967296) (b.val % 4294967296)
 
 /-- The extracted scalar handler implements the generated i64.add relation. -/
 theorem scalar_i64_add_sound {F : Type} (ops : runtime.platform.FloatOps F)
@@ -166,7 +166,7 @@ theorem scalar_i64_add_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  simpa [numtype_Inn, Abs.integerWidth] using Abs.integer_add_relation .I64 (a.val) (b.val)
+  simpa [numtype_Inn, SourceMachine.integerWidth] using SourceMachine.integer_add_relation .I64 (a.val) (b.val)
 
 /-- The extracted scalar handler implements the generated i32.sub relation. -/
 theorem scalar_i32_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
@@ -182,8 +182,8 @@ theorem scalar_i32_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  have hb : b.val % 4294967296 < 2 ^ Abs.integerWidth .I32 := by change b.val % 4294967296 < 4294967296; omega
-  exact Abs.integer_sub_relation .I32 (a.val % 4294967296) (b.val % 4294967296) hb
+  have hb : b.val % 4294967296 < 2 ^ SourceMachine.integerWidth .I32 := by change b.val % 4294967296 < 4294967296; omega
+  exact SourceMachine.integer_sub_relation .I32 (a.val % 4294967296) (b.val % 4294967296) hb
 
 /-- The extracted scalar handler implements the generated i64.sub relation. -/
 theorem scalar_i64_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
@@ -199,8 +199,8 @@ theorem scalar_i64_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  have hb : b.val < 2 ^ Abs.integerWidth .I64 := by change b.val < 18446744073709551616; scalar_tac
-  exact Abs.integer_sub_relation .I64 (a.val) (b.val) hb
+  have hb : b.val < 2 ^ SourceMachine.integerWidth .I64 := by change b.val < 18446744073709551616; scalar_tac
+  exact SourceMachine.integer_sub_relation .I64 (a.val) (b.val) hb
 
 /-- The extracted scalar handler implements the generated i32.mul relation. -/
 theorem scalar_i32_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
@@ -216,7 +216,7 @@ theorem scalar_i32_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  simpa [numtype_Inn, Abs.integerWidth, Nat.mul_mod] using integer_mul_relation .I32 (a.val % 4294967296) (b.val % 4294967296)
+  simpa [numtype_Inn, SourceMachine.integerWidth, Nat.mul_mod] using integer_mul_relation .I32 (a.val % 4294967296) (b.val % 4294967296)
 
 /-- The extracted scalar handler implements the generated i64.mul relation. -/
 theorem scalar_i64_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
@@ -232,7 +232,7 @@ theorem scalar_i64_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
   simp only [WP.spec_ok]
   refine ⟨value, rfl, ?_⟩
   rw [hv]
-  simpa [numtype_Inn, Abs.integerWidth] using integer_mul_relation .I64 (a.val) (b.val)
+  simpa [numtype_Inn, SourceMachine.integerWidth] using integer_mul_relation .I64 (a.val) (b.val)
 
 theorem scalar_i32_eqz_eq {F : Type} (ops : runtime.platform.FloatOps F)
     (a b : U64) : runtime.interp.int.scalar ops 69#u16 a b =

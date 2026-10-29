@@ -11,8 +11,8 @@ Main declarations: `move_prefix`. A direct consumer is `Interp.Machine.Local.Exe
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem move_prefix (ty : valtype) (dst src : U32) : PrefixInstruction (Code.move ty dst src) := by
-  unfold Code.move
+theorem move_prefix (ty : valtype) (dst src : U32) : PrefixInstruction (Compiler.move ty dst src) := by
+  unfold Compiler.move
   split
   · exact .copy2 ..
   · exact .copy ..

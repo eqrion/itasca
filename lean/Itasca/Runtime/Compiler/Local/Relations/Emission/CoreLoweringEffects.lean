@@ -12,7 +12,7 @@ Discriminates actual scalar mutable callbacks and their binary immediates.
 Main declarations: `CoreOperation` and `CoreOperation.opcode`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -22,8 +22,8 @@ inductive CoreOperation where
   | select (typed : Bool)
   | globalGet (index : U32)
   | globalSet (index : U32)
-  | load (operation : Abs.Memory.Load) (offset alignment : U32)
-  | store (operation : Abs.Memory.Store) (offset alignment : U32)
+  | load (operation : SourceMachine.Memory.Load) (offset alignment : U32)
+  | store (operation : SourceMachine.Memory.Store) (offset alignment : U32)
 
 def CoreOperation.opcode : CoreOperation → U16
   | .select typed => if typed then 28#u16 else 27#u16
@@ -124,4 +124,4 @@ theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_neg reach] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

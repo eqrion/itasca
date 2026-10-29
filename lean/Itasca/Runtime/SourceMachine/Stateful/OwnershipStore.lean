@@ -5,7 +5,7 @@ import Itasca.Runtime.SourceMachine.Stateful.CopyStore
 import Itasca.Runtime.SourceMachine.Stateful.InitStore
 import Itasca.Runtime.SourceMachine.Stateful.MemoryGrow
 import Itasca.Runtime.SourceMachine.Stateful.TableGrow
-namespace Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec Stateful
 
 def ReferencesOwned (bounds : Bounds) (values : List ref) : Prop :=
@@ -99,7 +99,7 @@ theorem StatefulHeapOwned.table_init {bounds s} (owned : StatefulHeapOwned bound
     (mapped : f.MODULE.ELEMS[elementIndex]? = some address) (found : s.ELEMS[address]? = some object)
     (inside : source+count ≤ object.REFS.length) :
     StatefulHeapOwned bounds (Segment.tableInit s f index elementIndex destination source count) := by
-  rw [Segment.tableInit_eq]
+  rw [Segment.table_init_eq]
   refine ⟨owned.globals,?_,owned.elements,owned.functions⟩
   apply Segment.forall_modify _ _ _ _ owned.tables
   intro table before
@@ -107,7 +107,7 @@ theorem StatefulHeapOwned.table_init {bounds s} (owned : StatefulHeapOwned bound
     simp [fun_elem,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
   dsimp only
   rw [exactSource]
-  exact copyInto_forall _ _ _ _ _ _ before (owned.elements object (List.mem_of_getElem? found)) inside
+  exact copy_into_forall _ _ _ _ _ _ before (owned.elements object (List.mem_of_getElem? found)) inside
 
 theorem StatefulHeapOwned.table_copy {bounds s} (owned : StatefulHeapOwned bounds s)
     (f : frame) (index sourceIndex address sourceAddress destination source count : Nat)
@@ -117,9 +117,9 @@ theorem StatefulHeapOwned.table_copy {bounds s} (owned : StatefulHeapOwned bound
     (inside : source+count ≤ sourceObject.REFS.length ∧ destination+count ≤ object.REFS.length) :
     StatefulHeapOwned bounds (Segment.tableCopy s f index sourceIndex destination source count) := by
   simp only [Segment.tableCopy,List.getElem!_eq_getElem?_getD,mapped,sourceMapped,found,sourceFound,Option.getD_some]
-  rw [←Segment.copyInto_eq_setSlice object.REFS sourceObject.REFS destination source count inside.1 inside.2]
+  rw [←Segment.copy_into_eq_set_slice object.REFS sourceObject.REFS destination source count inside.1 inside.2]
   apply owned.table_set
-  exact copyInto_forall _ _ _ _ _ _ (owned.tables object (List.mem_of_getElem? found))
+  exact copy_into_forall _ _ _ _ _ _ (owned.tables object (List.mem_of_getElem? found))
     (owned.tables sourceObject (List.mem_of_getElem? sourceFound)) inside.1
 
 theorem StatefulHeapOwned.memory_init {bounds s} (owned : StatefulHeapOwned bounds s)
@@ -140,4 +140,4 @@ theorem StatefulHeapOwned.data_drop {bounds s} (owned : StatefulHeapOwned bounds
     (f : frame) (index : Nat) : StatefulHeapOwned bounds (droppedDataStore s f index) :=
   owned.metadata rfl rfl rfl rfl
 
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

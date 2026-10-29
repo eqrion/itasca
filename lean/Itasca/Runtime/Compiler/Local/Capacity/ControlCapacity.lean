@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -48,4 +48,4 @@ theorem compiler_else_capacity {A : Type} (ops : runtime.platform.Alloc A)
   all_goals repeat' capacity_step accepted using ops, law
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

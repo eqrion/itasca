@@ -8,7 +8,7 @@ Emission certificates for select and global operations.
 Main declarations: `compiler_select_emission` and `compiler_global_set_emission`. A direct consumer is `Compiler.Body.Reader.Global.GlobalEmissions`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_select_emission {A : Type} (ops : runtime.platform.Alloc A)
@@ -80,4 +80,4 @@ open Aeneas Aeneas.Std
   intro out result success
   obtain ⟨source, position, lowered⟩ := result success
   exact ⟨_, lowered, .globalSet front ty index source globalType (by simpa only [locals] using position)⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

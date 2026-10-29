@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterLoop
 /-! The actual IF callback emits its condition guard and records its fixup
 coordinate separately from the body entry, using the live compiler slot layout. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem enter_if {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -141,4 +141,4 @@ open Aeneas Aeneas.Std
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_if] using
     enter_if ops law compiler state ctrl prior bt signature pc stack layout codeFits offsetsFit
       controls selected valuesFit heightFits sourceFits position mapsFit framesFit reachable
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -12,7 +12,7 @@ A resolved defined indirect call reuses the actual call installer while saving t
 Main declarations: `call_indirect_selected`. A direct consumer is `Integration.Execution.Dispatch.IndirectExecution`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- A resolved defined indirect call reuses the actual call installer while
@@ -25,27 +25,27 @@ theorem call_indirect_selected
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (compiled : runtime.bytecode.CompiledFunction)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type position : Nat) (after : List instr)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (params results : List valtype) (pc : U32) (base : Usize)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store)
+    (compiledFunctions : Machine.CompiledFunctions code store)
     (functionTyping : CoreFunctionsTyped view code store)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (defined : function.code = .Wasm instanceIndex functionIndex)
-    (selected : Abs.Indirect.resolve (Store.decodeStore view code store) f table type position = some address.index.val)
+    (selected : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table type position = some address.index.val)
     (signature : (Store.decodeFunction code store function).TYPE = ⟨.mk_list params,.mk_list results⟩)
     (last : frameIndex.val+1=exec.frames.length) (hf : exec.frames.val[frameIndex.val]?=some raw)
     (pcNext : pc.val=raw.pc.val+1)
-    (split : f.vals=(front++args)++[Abs.integerVal .I32 position]) (bounded : position<2^32)
-    (argumentTypes : args.map Code.valueType=params)
-    (basePosition : base.val=raw.base.val+Code.slots ((f.locals++front).map Code.valueType))
+    (split : f.vals=(front++args)++[SourceMachine.integerVal .I32 position]) (bounded : position<2^32)
+    (argumentTypes : args.map Compiler.valueType=params)
+    (basePosition : base.val=raw.base.val+Compiler.slots ((f.locals++front).map Compiler.valueType))
     (heights : ∀ label∈f.labels,label.height≤front.length)
     (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)
-    (tail : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
-      (front.map Code.valueType++results) after pc.val next output)
+    (tail : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      (front.map Compiler.valueType++results) after pc.val next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ expected raw.pc.val false) :
     runtime.interp.call memory hooks floats allocator
@@ -70,44 +70,44 @@ theorem call_indirect_selected
     simp only [defined,instanceAt,Option.map_some,Option.getD_some]
   have signatureTypes : actualSignature.params.val.map sourceType=params ∧ actualSignature.results.val.map sourceType=results := by
     simpa only [Store.decodeFuncType,functype.mk_functype.injEq,list.mk_list.injEq] using decodedType.symm.trans signature
-  have argumentTypes' : args.map Code.valueType=actualSignature.params.val.map sourceType := argumentTypes.trans signatureTypes.1.symm
-  obtain ⟨defaults,default,defaultTyped⟩ := Abs.defaultLocals_typed machine.typed.typed.store declared (StructuredMachine.declared_types_not_bottom certificate)
+  have argumentTypes' : args.map Compiler.valueType=actualSignature.params.val.map sourceType := argumentTypes.trans signatureTypes.1.symm
+  obtain ⟨defaults,default,defaultTyped⟩ := SourceMachine.default_locals_typed machine.typed.typed.store declared (Machine.declared_types_not_bottom certificate)
   have exactStep := indirect_call_next (Store.decodeStore view code store) ambient f rest after table type position address.index.val
     (Store.decodeInstance store inst) (actualSignature.params.val.map sourceType) (actualSignature.results.val.map sourceType)
     declared (.mk_uN calleeCode.type_index.val) body front args defaults selected bounded sourceAt argumentTypes' default
-  have sourceStep : Abs.Indirect.step
+  have sourceStep : SourceMachine.Indirect.step
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩ f rest table type after =
       .next ⟨Store.decodeStore view code store,ambient,callCallee address.index.val (Store.decodeInstance store inst)
         (actualSignature.results.val.map sourceType) args defaults body::{f with code:=after,vals:=front}::rest,[]⟩ := by
     simpa only [← split] using exactStep
-  have transition : Abs.Cumulative.Step _ _ := .indirect sourceStep (by intro impossible;cases impossible)
+  have transition : SourceMachine.Cumulative.Step _ _ := .indirect sourceStep (by intro impossible;cases impossible)
   have nextTyped := transition.next_typed_supported machine.typed machine.core
   have nextCovered := transition.next_covered_supported machine.typed machine.core
   have arguments : ValuesAt exec.slots.val base.val args := by
     have words : WordsAt exec.slots.val raw.base.val
-        (Code.encodeValues (f.locals++front) ++ (Code.encodeValues args ++ Code.encodeValues [Abs.integerVal .I32 position])) := by
-      simpa only [FrameSlots,ValuesAt,split,Code.encodeValues_append,List.append_assoc] using slots
+        (Compiler.encodeValues (f.locals++front) ++ (Compiler.encodeValues args ++ Compiler.encodeValues [SourceMachine.integerVal .I32 position])) := by
+      simpa only [FrameSlots,ValuesAt,split,Compiler.encode_values_append,List.append_assoc] using slots
     have taken := words.append_right.append_left
-    simpa only [ValuesAt,Code.encodeValues_length,basePosition] using taken
+    simpa only [ValuesAt,Compiler.encode_values_length,basePosition] using taken
   have identity : exec.store=store.id := by
     obtain ⟨_,_,_,_,identity,_⟩ := binding
     exact identity
-  have tail' : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
-      (front.map Code.valueType++actualSignature.results.val.map sourceType) after pc.val next output := by
+  have tail' : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      (front.map Compiler.valueType++actualSignature.results.val.map sourceType) after pc.val next output := by
     simpa only [signatureTypes.2] using tail
   obtain ⟨raws,frames,saved⟩ := machine.stack.prepare_call raw frameIndex pc last hf binding slots program point
-    front (args++[Abs.integerVal .I32 position]) after (actualSignature.results.val.map sourceType) base.val
+    front (args++[SourceMachine.integerVal .I32 position]) after (actualSignature.results.val.map sourceType) base.val
     (by simpa only [List.append_assoc] using split) basePosition heights tail'
-  obtain ⟨out,returned,result⟩ := WP.spec_imp_exists (StructuredMachine.call_wasm_stack memory hooks floats allocator allocation interrupts
+  obtain ⟨out,returned,result⟩ := WP.spec_imp_exists (Machine.call_wasm_stack memory hooks floats allocator allocation interrupts
     {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base function actualSignature instanceIndex functionIndex
     inst calleeCode epilogue (Store.decodeStore view code store)
-    (Code.moduleFunctionContext inst.module (actualSignature.params.val.map sourceType++declared) (actualSignature.results.val.map sourceType))
+    (Compiler.moduleFunctionContext inst.module (actualSignature.params.val.map sourceType++declared) (actualSignature.results.val.map sourceType))
     calleeBindings declared body args defaults certificate functionAt signatureAt defined instanceAt calleeAt tableFunctions identity
     arguments argumentTypes' default raws ({f with code:=after,vals:=front}::rest) frames saved)
   have causes := call_wasm_causes memory hooks floats allocator allocation interrupts
     {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base function instanceIndex functionIndex inst calleeCode
     functionAt defined instanceAt calleeAt
-    (by rw [certificate.2.parameterSlots,certificate.2.localSlots,Code.slots_append];omega) certificate.2.capacity
+    (by rw [certificate.2.parameterSlots,certificate.2.localSlots,Compiler.slots_append];omega) certificate.2.capacity
   rw [returned] at causes
   simp only [WP.spec_ok] at causes
   rw [returned]
@@ -117,8 +117,8 @@ theorem call_indirect_selected
   obtain ⟨stack,top,ready⟩ := result.2 success
   refine ⟨0,false,_,?_,ConcreteSim.of_source _ _ _ _ _ (transition.next_simulation_supported machine.typed machine.core),
     fun _ h => transition.next_owned_supported machine.typed machine.core h,rfl,fun _ h => transition.next_bound_supported machine.typed machine.core h⟩
-  refine ⟨rfl,nextTyped,nextCovered,Abs.Indirect.step_result machine.result sourceStep,stack,?_⟩
+  refine ⟨rfl,nextTyped,nextCovered,SourceMachine.Indirect.step_result machine.result sourceStep,stack,?_⟩
   obtain ⟨head,code,C,targets,next,output,found,program,point⟩ := ready
   have same : head.pc.val=0 := by rw [top] at found;cases found;rfl
   exact ⟨head,code,C,targets,next,output,found,same,program,.ready point⟩
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

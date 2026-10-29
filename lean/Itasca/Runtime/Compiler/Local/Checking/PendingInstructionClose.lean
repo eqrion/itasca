@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionPatch
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact pending sites owned by one physical frame. IF guards are patched
@@ -39,4 +39,4 @@ theorem compiler_instruction_prefix_close {A : Type} {before after : runtime.com
   held.patch growth (frameInstructionSites frame) target code inside
     (pending_instruction_pop frame rest beforeFrames afterFrames)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

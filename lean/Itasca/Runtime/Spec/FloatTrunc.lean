@@ -2,7 +2,7 @@ import Itasca.Runtime.Spec.FloatConvert
 namespace Itasca.Runtime.Spec
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
-theorem encodeSigned_num_wf (target : Inn) (value : Int) :
+theorem encode_signed_num_wf (target : Inn) (value : Int) :
     wf_num_ (numtype_Inn target) (.mk_num__0 target (encodeSigned (sizenn (numtype_Inn target)) value)) := by
   have bound := (BitVec.ofInt (sizenn (numtype_Inn target)) value).isLt
   apply unsigned_num_wf
@@ -13,7 +13,7 @@ theorem saturate_num_wf (target : Inn) (sign : sx) (value : Int) :
   cases sign with
   | S =>
     unfold saturate
-    exact encodeSigned_num_wf target _
+    exact encode_signed_num_wf target _
   | U =>
     unfold saturate
     apply unsigned_num_wf
@@ -29,7 +29,7 @@ theorem float_trunc_results_wf (source : Nat) (target : Inn) (sign : sx) (value 
   unfold trunc__
   split
   · simp [Forall]
-  · split <;> simp [Forall, encodeSigned_num_wf]
+  · split <;> simp [Forall, encode_signed_num_wf]
 
 theorem float_trunc_sat_results_wf (source : Nat) (target : Inn) (sign : sx) (value : fN) :
     Forall (fun result => wf_num_ (numtype_Inn target) (.mk_num__0 target result))

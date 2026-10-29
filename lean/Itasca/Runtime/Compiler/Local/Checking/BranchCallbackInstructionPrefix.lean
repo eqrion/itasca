@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.NumericInstructionPrefix
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Lift a source-derived raw branch preservation proof through actual br and
@@ -69,4 +69,4 @@ theorem compiler_dead_op_open_instructions {A : Type} (ops : runtime.platform.Al
   rw [if_neg (by simp [dead])] at called
   exact compiler_observe_open_instructions ops law before after state held called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem StructuredPrefix.emit_call {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels initial source start front params results}
@@ -27,12 +27,12 @@ theorem Lowered.structured_resolved_call {jumpTables : List Aeneas.Std.U32} {A :
     have old := invariant.inside group member site atSite
     simp only [lowered.1, List.length_append, List.length_singleton]
     omega
-  · have resolved := resolvedCode_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups invariant.inside
+  · have resolved := resolved_code_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups invariant.inside
     have prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
         labels initial source start (resolvedCode before.function.code.val groups).length (front ++ params) := by
-      simpa only [resolvedCode_length] using invariant.code
+      simpa only [resolved_code_length] using invariant.code
     have advanced := prior.emit_call index base signature arguments
-    simpa only [lowered.1, resolved, List.length_append, resolvedCode_length] using advanced
+    simpa only [lowered.1, resolved, List.length_append, resolved_code_length] using advanced
 
 /-- A direct-call callback advances every pending source/control prefix using
 only the source signature and actual argument-base coordinate. -/
@@ -60,10 +60,10 @@ theorem Lowered.structured_universal_call {jumpTables : List Aeneas.Std.U32} {A 
     have old := invariant.resolved oldPlans oldShape parentShapes
     have next := lowered.structured_resolved_call old signature arguments
     have saved := (invariant.prefixes label labels groups oldPlans oldShape parentShapes).1
-    have resolved := resolvedCode_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups old.inside
+    have resolved := resolved_code_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups old.inside
     refine ⟨?_, next.code⟩
     simpa only [codeEq, resolved] using
       (saved.extend [runtime.bytecode.Instr.Call index base]).advance_current (.CALL (.mk_uN index.val))
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

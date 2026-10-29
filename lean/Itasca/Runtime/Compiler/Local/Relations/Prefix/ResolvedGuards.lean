@@ -3,41 +3,41 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
 /-!
 Resolution schedules can be divided at a selected IF guard.
 
-Main declarations: `resolvedCode_append_groups` and `FramePlans.away_guard`. A direct consumer is `Compiler.Module.CompileSlice`.
+Main declarations: `resolved_code_append_groups` and `FramePlans.away_guard`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Resolution schedules can be divided at a selected IF guard. -/
-theorem resolvedCode_append_groups (code : List Bytecode) (left right : List FixupTarget) :
+theorem resolved_code_append_groups (code : List Bytecode) (left right : List FixupTarget) :
     resolvedCode code (left ++ right) = resolvedCode (resolvedCode code left) right := by
   induction left generalizing code with
   | nil => rfl
   | cons group rest ih => exact ih _
 
 /-- Groups which do not name an instruction leave its exact operands intact. -/
-theorem resolvedCode_away (code : List Bytecode) (groups : List FixupTarget) (index : Nat)
+theorem resolved_code_away (code : List Bytecode) (groups : List FixupTarget) (index : Nat)
     (away : ∀ group ∈ groups, ∀ site ∈ group.sites, site.val ≠ index) :
     (resolvedCode code groups)[index]? = code[index]? := by
   induction groups generalizing code with
   | nil => rfl
   | cons group rest ih =>
-    rw [resolvedCode, ih _ (fun g member => away g (List.mem_cons_of_mem _ member)), patchCode_get]
+    rw [resolvedCode, ih _ (fun g member => away g (List.mem_cons_of_mem _ member)), patch_code_get]
     have absent : ¬ ∃ site ∈ group.sites, site.val = index := by
       rintro ⟨site, member, equal⟩
       exact away group (by simp) site member equal
     simp [absent]
 
-theorem resolvedCode_guard (code : List Bytecode) (before after : List FixupTarget)
+theorem resolved_code_guard (code : List Bytecode) (before after : List FixupTarget)
     (guard : Usize) (condition old target : U32)
     (found : code[guard.val]? = some (.JumpIfZero condition old))
     (away : ∀ group ∈ before ++ after, ∀ site ∈ group.sites, site.val ≠ guard.val) :
     (resolvedCode code (before ++ ⟨[guard], target⟩ :: after))[guard.val]? =
       some (.JumpIfZero condition target) := by
-  rw [resolvedCode_append_groups, resolvedCode]
-  rw [resolvedCode_away _ _ _ (fun group member => away group (List.mem_append_right _ member))]
-  rw [patchCode_get, resolvedCode_away _ _ _ (fun group member => away group (List.mem_append_left _ member))]
+  rw [resolved_code_append_groups, resolvedCode]
+  rw [resolved_code_away _ _ _ (fun group member => away group (List.mem_append_right _ member))]
+  rw [patch_code_get, resolved_code_away _ _ _ (fun group member => away group (List.mem_append_left _ member))]
   simp [found, retarget]
 
 /-- A schedule contains only frame guards and forward-branch sites. Thus a
@@ -72,4 +72,4 @@ theorem FramePlans.away_guard {length locals frames labels groups code}
       · exact current.branches.not_guard found site atSite
     · exact rest group remaining site atSite
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Core.Simulation
 import Itasca.Runtime.SourceMachine.Sim.Typing
 import Itasca.Runtime.SourceMachine.Sim.Typed
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 /-- Resolve the owning instance's global address before reading its value. -/
@@ -33,7 +33,7 @@ def globalSet (s : AState) (f : AFrame) (rest : List AFrame) (index : Nat) (afte
 
 /-- Typed global reads are executable, preserve full source typing, and take
 one generated source reduction under every active/suspended context. -/
-theorem globalGet_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem global_get_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after} :: rest,[]⟩) :
     ∃ next, globalGet ⟨s,ambient,{f with code := .GLOBAL_GET (.mk_uN index) :: after} :: rest,[]⟩
@@ -46,21 +46,21 @@ theorem globalGet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
   have fresh : ATyped next := active_frame_preservation typed.typed continuation rfl
   refine ⟨next,?_,⟨fresh,typed.contents⟩,?_⟩
   · simp only [globalGet,mapped,found,advance,next]
-  · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+  · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
     have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
     have restWf : Forall FrameWf rest := by
-      cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+      cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
     have indexWf := codeWf (.GLOBAL_GET (.mk_uN index)) (by simp)
     have bound : index < 2^32 := by
       cases indexWf with | instr_case_46 _ valid =>
       cases valid with | uN_case_0 _ valid => norm_num at valid ⊢; omega
     exact global_get_simulation s ambient f rest after index address object
       typed.typed.store typed.typed.ambient frameWf labelsWf valuesWf tailWf restWf
-      (by simpa only [FrameHeights] using frameTyped_heights frameTyped) bound mapped found
+      (by simpa only [FrameHeights] using frame_typed_heights frameTyped) bound mapped found
 
 /-- Typed writes make one source transition, preserve all store payload typing,
 and leave every saved frame valid in the extended store. -/
-theorem globalSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem global_set_progress (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after} :: rest,[]⟩) :
     ∃ next, globalSet ⟨s,ambient,{f with code := .GLOBAL_SET (.mk_uN index) :: after} :: rest,[]⟩
@@ -79,7 +79,7 @@ theorem globalSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
         {f with code := .GLOBAL_SET (.mk_uN index) :: after, vals := front ++ [value]} [] := by
       simpa only [split] using frameTyped
     obtain ⟨address,object,ty,mapped,found,mutable,valueOk,continuation⟩ := global_set_frame_continuation decomposed
-    have extension := globalWrite_extends s f.toFrame index address object value ty
+    have extension := global_write_extends s f.toFrame index address object value ty
       typed.typed.store typed.contents mapped found mutable valueOk
     have contents := typed.contents.global_write typed.typed.store f.toFrame index address object value ty
       mapped found mutable valueOk
@@ -90,10 +90,10 @@ theorem globalSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
     refine ⟨next,?_,⟨fresh,contents⟩,extension,?_⟩
     · simp only [globalSet,split,pop_append,mapped,found,mutable,value_type_of_typed valueOk,
         ite_true,advance,next]
-    · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+    · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
       have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
       have restWf : Forall FrameWf rest := by
-        cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+        cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
       have indexWf := codeWf (.GLOBAL_SET (.mk_uN index)) (by simp)
       have bound : index < 2^32 := by
         cases indexWf with | instr_case_47 _ valid =>
@@ -103,4 +103,4 @@ theorem globalSet_progress (s : store) (ambient : frame) (f : AFrame) (rest : Li
         tailWf restWf heights bound (List.getElem?_eq_some_iff.mp mapped).1
       simpa only [split,next] using source
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

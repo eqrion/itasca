@@ -80,7 +80,7 @@ theorem synthetic_resolved_initializer_errors (law : Platform.AllocCorrect alloc
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code expr ty)
+    (compiled : Compiler.InitializerCode code expr ty)
     (resolved : InitializerResolution store inst expr ty words) :
     runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
       ⦃ out => out.2.1 = store ∧ out.2.2 = platform ∧

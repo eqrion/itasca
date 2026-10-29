@@ -14,7 +14,7 @@ The compiler instruction-prefix certificate, its monotone checks and append oper
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -89,7 +89,7 @@ theorem instruction_valid_monotone (before after : runtime.bytecode.CompiledFunc
     obtain ⟨opcode,dst,input,entry⟩ := view
     exact simd_instruction_monotone before after instruction opcode dst input entry projected growth.slots growth.simd accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -97,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every instruction in this concrete code vector passes its local checker.
@@ -121,7 +121,7 @@ theorem InstructionCheckExtends.trans {first middle last : runtime.bytecode.Comp
     left.simd.trans right.simd,left.constants.trans right.constants,left.targets.trans right.targets⟩
 
 /-- Actual emission extends all checker capacities, without changing tables. -/
-theorem Emitted.instructionCheckExtends {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+theorem Emitted.instruction_check_extends {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {instruction : runtime.bytecode.Instr} (emitted : Emitted before after instruction) :
     InstructionCheckExtends before.function after.function := by
   obtain ⟨budget,code,sources,rfl,appended,_⟩ := emitted
@@ -130,7 +130,7 @@ theorem Emitted.instructionCheckExtends {A : Type} {before after : runtime.compi
   rw [appended,List.length_append,List.length_singleton]
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -138,7 +138,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Earlier bytecode may contain forward branches whose owner has not closed.
@@ -190,7 +190,7 @@ retain their own check. Semantic reachability alone does not imply this fact. -/
 def OpenInstructionPrefix (function : runtime.bytecode.CompiledFunction) (pending : Nat → Prop) : Prop :=
   ∀ index instruction, function.code.val[index]? = some instruction → OpenInstructionCheck function pending index instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -198,7 +198,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- New ordinary emissions preserve every stored instruction check, including
@@ -221,7 +221,7 @@ theorem OpenInstructionPrefix.append {before after : runtime.bytecode.CompiledFu
 
 /-- Literal lowering preserves checker capacities when its captured tables are
 unchanged. This is independent of its execution simulation. -/
-theorem Lowered.instructionCheckExtends {A : Type}
+theorem Lowered.instruction_check_extends {A : Type}
     {before after : runtime.compiler.FunctionCompiler A} {instruction stack}
     (lowered : Lowered before after instruction stack)
     (tables : CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function) :
@@ -261,16 +261,16 @@ theorem InstructionCheckExtends.of_tables_equal (before after : runtime.bytecode
 
 /-- A lowered instruction with source-derived operands extends the open check
 invariant without assuming validity of the completed function. -/
-theorem Lowered.openInstructionPrefix {A : Type}
+theorem Lowered.open_instruction_prefix {A : Type}
     {before after : runtime.compiler.FunctionCompiler A} {instruction stack} {pending next : Nat → Prop}
     (lowered : Lowered before after instruction stack)
     (tables : CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function)
     (held : OpenInstructionPrefix before.function pending) (owners : ∀ index, pending index → next index)
     (valid : runtime.bytecode.CompiledFunction.instruction_valid after.function instruction = .ok true) :
     OpenInstructionPrefix after.function next :=
-  held.append (lowered.instructionCheckExtends tables) owners [instruction] lowered.1 (by simpa using valid)
+  held.append (lowered.instruction_check_extends tables) owners [instruction] lowered.1 (by simpa using valid)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -278,7 +278,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A pending branch site has a physical owner that will patch its target.
@@ -317,6 +317,6 @@ theorem compiler_start_instruction_prefix {A : Type} (ops : runtime.platform.All
   rw [code,emptyCode] at found
   simp at found
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

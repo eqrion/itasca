@@ -9,13 +9,13 @@ Emitted-code monotonicity of numeric and core scalar callbacks.
 Main declarations: `compiler_numeric_code_mono` and `compiler_core_code_mono`. A direct consumer is `Compiler.Local.Coordinates.LoweringTargetBounds`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
 theorem compiler_numeric_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Numeric.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (integerOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
   by_cases reach : before.reachable = true
@@ -28,7 +28,7 @@ theorem compiler_numeric_code_mono {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem compiler_float_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Float.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Float.Instruction)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (floatOpcode op) 0#u32 0#u32 0#u128 = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
   by_cases reach : before.reachable = true
@@ -54,4 +54,4 @@ theorem compiler_core_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     rw [if_neg reach] at accepted
     exact compiler_observe_code_mono ops law before after state (.Ok ()) accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

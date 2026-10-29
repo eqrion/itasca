@@ -7,8 +7,8 @@ The shared scalar lowering path, before resolving its source operands.
 Main declarations: `numericLowering` and `integerDepth`. A direct consumer is `Compiler.Local.Lowering.Integer.NumericEffects`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 /-- The shared scalar lowering path, before resolving its source operands. -/
 noncomputable def numericLowering {A : Type} (ops : runtime.platform.Alloc A)
@@ -90,16 +90,16 @@ theorem lower_numeric_eq {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (integerInstruction op left left right) := by
   rw [lower_numeric_dispatch ops compiler state op reachable]
   unfold numericLowering
-  rw [integerOpcode_binary]
+  rw [integer_opcode_binary]
   by_cases binary : op.arity = 2
   · simp only [integerDepth, binary, ↓reduceIte] at hleft
     simp only [binary, ↓reduceIte, decide_true, bind_ok,
-      hleft, hright, core.result.Result.Insts.CoreOpsTry.branch, integerInstruction_make,
+      hleft, hright, core.result.Result.Insts.CoreOpsTry.branch, integer_instruction_make,
       core.option.Option.ok_or]
   · simp only [integerDepth, binary, ↓reduceIte] at hleft
     have same : left = right := by simpa only [Result.ok.injEq, core.result.Result.Ok.injEq] using hleft.symm.trans hright
     subst right
     simp only [binary, decide_false, Bool.false_eq_true, ↓reduceIte, bind_ok,
-      hleft, core.result.Result.Insts.CoreOpsTry.branch, integerInstruction_make,
+      hleft, core.result.Result.Insts.CoreOpsTry.branch, integer_instruction_make,
       core.option.Option.ok_or]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

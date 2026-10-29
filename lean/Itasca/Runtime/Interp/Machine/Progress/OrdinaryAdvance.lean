@@ -12,8 +12,8 @@ Progress of ordinary instructions under uniform simulation.
 Main declarations: `step_numeric_total_advance_uniform` and `step_ordinary_advance`. A direct consumer is `Integration.Execution.Dispatch.Host`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std SourceMachine.Numeric
 theorem step_numeric_total_advance_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
@@ -21,19 +21,19 @@ theorem step_numeric_total_advance_uniform {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : Instruction) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : Instruction) (after : List instr)
     (total : ∀ a b, op.apply a b ≠ none)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       UniformAdvance view code store out.2.1 expected compiled.code.length raw.pc.val false initial ⦄ := by
@@ -59,18 +59,18 @@ theorem step_ordinary_advance_uniform {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : OrdinaryOpcode) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : OrdinaryOpcode) (after : List instr)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       UniformAdvance view code store out.2.1 expected compiled.code.length raw.pc.val false initial ⦄ := by
@@ -92,27 +92,27 @@ theorem step_ordinary_advance_uniform {M P F A : Type}
     cases operation with
     | add =>
       exact step_numeric_total_advance_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
-        ambient f rest (.binary ty .ADD) after (by intro a b; simp [Instruction.apply,Abs.Numeric.binary]) last hf hi hc program slots point expected machine
+        ambient f rest (.binary ty .ADD) after (by intro a b; simp [Instruction.apply,SourceMachine.Numeric.binary]) last hf hi hc program slots point expected machine
     | sub =>
       exact step_numeric_total_advance_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
-        ambient f rest (.binary ty .SUB) after (by intro a b; simp [Instruction.apply,Abs.Numeric.binary]) last hf hi hc program slots point expected machine
+        ambient f rest (.binary ty .SUB) after (by intro a b; simp [Instruction.apply,SourceMachine.Numeric.binary]) last hf hi hc program slots point expected machine
     | eq =>
       exact step_numeric_total_advance_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
-        ambient f rest (.compare ty .EQ) after (by intro a b; simp [Instruction.apply,Abs.Numeric.binary]) last hf hi hc program slots point expected machine
+        ambient f rest (.compare ty .EQ) after (by intro a b; simp [Instruction.apply,SourceMachine.Numeric.binary]) last hf hi hc program slots point expected machine
     | ltU =>
       exact step_numeric_total_advance_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
-        ambient f rest (.compare ty (.LT .U)) after (by intro a b; simp [Instruction.apply,Abs.Numeric.binary]) last hf hi hc program slots point expected machine
+        ambient f rest (.compare ty (.LT .U)) after (by intro a b; simp [Instruction.apply,SourceMachine.Numeric.binary]) last hf hi hc program slots point expected machine
   | eqz ty =>
     exact step_numeric_total_advance_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output
       ambient f rest (.eqz ty) after (by intro a b; simp [Instruction.apply]) last hf hi hc program slots point expected machine
   | localGet localIndex =>
-    apply WP.spec_mono (step_localGet_execution_owned_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest after localIndex
+    apply WP.spec_mono (step_local_get_execution_owned_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest after localIndex
       C targets next output hi slots last hf hc program point expected machine)
     intro out effect
     obtain ⟨success,sameStore,samePlatform,pc,g,pending,fresh,simulation,uniform,ownership,bounded⟩ := effect
     exact ⟨success,sameStore,samePlatform,⟨pc.val,pending,_,fresh,simulation,uniform,ownership,rfl,bounded⟩⟩
   | localWrite localIndex keep =>
-    apply WP.spec_mono (step_localWrite_execution_owned_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest after localIndex keep
+    apply WP.spec_mono (step_local_write_execution_owned_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest after localIndex keep
       C targets next output hi slots last hf hc program point expected machine)
     intro out effect
     obtain ⟨success,sameStore,samePlatform,pc,g,pending,fresh,simulation,uniform,ownership,bounded⟩ := effect
@@ -124,7 +124,7 @@ theorem step_ordinary_advance_uniform {M P F A : Type}
     obtain ⟨success,sameStore,samePlatform,pc,g,pending,fresh,simulation,uniform,ownership,bounded⟩ := effect
     exact ⟨success,sameStore,samePlatform,⟨pc.val,pending,_,fresh,simulation,uniform,ownership,rfl,bounded⟩⟩
   | branchIf depth =>
-    apply WP.spec_mono (step_branchIf_execution_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest depth after
+    apply WP.spec_mono (step_branch_if_execution_uniform memory hooks floats allocator platform index view code exec store raw inst compiled ambient f rest depth after
       C targets next output hi slots last hf hc program point expected machine)
     intro out effect
     obtain ⟨success,sameStore,samePlatform,pc,g,pending,fresh,simulation,uniform,ownership,bounded⟩ := effect
@@ -142,18 +142,18 @@ theorem step_ordinary_advance {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : OrdinaryOpcode) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : OrdinaryOpcode) (after : List instr)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       Advance view code store out.2.1 expected compiled.code.length raw.pc.val false initial ⦄ := by
@@ -161,4 +161,4 @@ theorem step_ordinary_advance {M P F A : Type}
   rintro out ⟨success,same,platform,advance⟩
   exact ⟨success,same,platform,advance.forget⟩
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

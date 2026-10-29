@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -28,4 +28,4 @@ theorem compiler_lower_simd_preserved_tables {A : Type} (ops : runtime.platform.
     rw [if_neg reachable] at accepted
     have tables := compiler_observe_tables ops law before after state (.Ok ()) accepted
     exact ⟨congrArg CompilerTables.indirect tables,congrArg CompilerTables.jumpTables tables⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

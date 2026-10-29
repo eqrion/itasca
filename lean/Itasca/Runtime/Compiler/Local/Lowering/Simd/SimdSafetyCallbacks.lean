@@ -14,7 +14,7 @@ section
 
 /-! SIMD lowering returns normally from raw compiler stacks, including rejected
 operand and allocation outcomes. Successful lowering records the validator stack. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -129,7 +129,7 @@ Successful callbacks retain the raw polymorphic stack observation. -/
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -138,7 +138,7 @@ end
 section
 
 /-! Normal return of every SIMD compiler callback from the actual visitor. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_on_simd_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -233,6 +233,6 @@ open Aeneas Aeneas.Std
   exact compiler_simd_total ops law compiler state _ _ _ _ (by decide) (by decide)
     codeFits sourceFits coordinateFits poolFits tableFits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

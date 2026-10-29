@@ -6,7 +6,7 @@ NOP and DROP update the validator-derived stack layout without emitting code.
 Main declarations: `LoweredEmpty`. A direct consumer is `Compiler.Body.Source.TypedLowering`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- NOP and DROP update the validator-derived stack layout without emitting code. -/
@@ -39,4 +39,4 @@ theorem lower_empty_eq {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
   cases drop <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> split <;> rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.SourceMachine.Core.Pure
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
@@ -11,8 +11,8 @@ theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
   have hf : FrameTyped s { f with code := op.source :: after } [] := by
     cases typed.frames with | cons h _ => exact h
   have hr : Forall FrameWf rest := by
-    cases typed.frames with | cons _ h => exact framesTyped_wf h
-  obtain ⟨hw, hl, hv, hc⟩ := frameTyped_wf hf
+    cases typed.frames with | cons _ h => exact frames_typed_wf h
+  obtain ⟨hw, hl, hv, hc⟩ := frame_typed_wf hf
   obtain ⟨front, a, b, values, hfront, heights⟩ := op.typed_operands_bounds hf
   have same : { f with code := op.source :: after } =
       { f with code := op.source :: after, vals := front ++ op.operands a b } := by
@@ -47,4 +47,4 @@ theorem core_step_positive (s : store) (ambient : frame) (f : AFrame)
   simp only [Core.step] at step
   rw [Core.instruction_slice s ambient {f with code := op.source::after} rest op.source after (.numeric op) hf] at step
   exact astep_positive s ambient f rest after op next typed step
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

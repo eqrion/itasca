@@ -6,7 +6,7 @@ import Itasca.Profile.BodySpec
 Independent validated source stacks and their maximum slot demand. Function-capacity certificates and compiler folds share this source-only bound.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A source-only successful validation trace, recording every operand stack.
@@ -31,4 +31,4 @@ unreachable source positions. Scalars/references use one word and vectors two. -
 def maximumStackWords (samples : List (List code.StackType)) : Nat :=
   samples.foldr (fun stack bound => max (stackWords stack) bound) 0
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

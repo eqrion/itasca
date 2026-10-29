@@ -13,7 +13,7 @@ Global get/set reader inversion and compiler emission, with source global types 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 theorem reader_global_get_wasm2 {data env locals index st}
     (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
@@ -62,7 +62,7 @@ theorem reader_global_set_wasm2 {data env locals index st}
     (fun idx _ encoded => .globalSet idx encoded) out idx post
   exact ⟨idx, values, callback, read, source⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -70,7 +70,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
@@ -152,12 +152,12 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
   obtain ⟨index, values, callback, read, post⟩ := reader_global_set_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core byte run
   obtain ⟨_, outer, _, _, base, _, controls, _, vals⟩ := p.opened
-  have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ known)).2
+  have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ known)).2
   obtain ⟨ty, found, mutable, shape⟩ := reader_global_set_effect st.core out.core data env index
     outer p.current.vals vals (by simpa [Control.base, controls] using base)
     (by simpa [Control.polymorphic, controls] using monomorphic) segmentKnown read
-  have afterKnown : ConcreteStack out.core.vals.val := (concreteStack_append.mp (shape ▸ known)).1
-  obtain ⟨types, concrete⟩ := (concreteStack_iff out.core.vals.val).mp afterKnown
+  have afterKnown : ConcreteStack out.core.vals.val := (concrete_stack_append.mp (shape ▸ known)).1
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff out.core.vals.val).mp afterKnown
   have beforeTypes : Sequence.stackTypes st.core.vals.val = types.map Translate.valueType ++ [Translate.valueType ty.valtype] := by
     simp [shape, concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
   have globalFound : C.GLOBALS[index.val]? = some (.mk_globaltype (some .MUT) (Translate.valueType ty.valtype)) := by
@@ -176,6 +176,6 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
   exact ⟨index, ty, values, types.map Translate.valueType, found, mutable, beforeTypes, post,
     emitted, ⟨lower, SourceStack.of_map types concrete rfl⟩, emission⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

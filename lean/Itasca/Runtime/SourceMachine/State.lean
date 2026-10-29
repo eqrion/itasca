@@ -4,7 +4,7 @@ import SpecExt.Host
 The first frame and first label are innermost. Operand values retain Wasm's
 bottom-to-top order. Addresses are specification addresses, never Rust handles. -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 structure Label where
   branchTypes : List valtype
@@ -40,4 +40,4 @@ def AFrame.arity (f : AFrame) : Nat := f.resultTypes.length
 
 def AFrame.toFrame (f : AFrame) : frame := ⟨f.locals, f.module⟩
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

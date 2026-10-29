@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.ElseCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- ELSE records the completed THEN arm's result interval, retaining previous
@@ -78,4 +78,4 @@ theorem compiler_else_exit_slots {A : Type} (ops : runtime.platform.Alloc A)
         exact ⟨frames,by simpa using afterFrames,original,rfl,by simpa using targetAt,by simpa using appended,by simpa using code⟩
     exact transition.exit_slots held capacity normal
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

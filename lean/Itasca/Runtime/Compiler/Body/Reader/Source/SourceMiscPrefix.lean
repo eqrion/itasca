@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Wasm2.Bulk.Dispatch
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent accepted bulk dispatch excludes every unsupported subopcode. -/
@@ -36,4 +36,4 @@ theorem source_misc_prefix {V : Type} (source : code.OpVisitor V)
     · simp only [small,↓reduceIte] at raw
       exact .inr (source_bulk_supported source _ out.core data env sub before after raw)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Scratch-buffer and side-table bounds at complete source-instruction
@@ -21,4 +21,4 @@ theorem CompilerTableBoundary.preserved {A : Type} {before after : runtime.compi
   ⟨by simpa only [depths] using boundary.depths,
     by simpa only [targets] using boundary.targets.trans code⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

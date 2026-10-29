@@ -7,7 +7,7 @@ Direct-call execution in the structured machine.
 Main declarations: `step_call_execution`. A direct consumer is `Integration.Execution.Dispatch.Host`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem step_call_execution {M P F A : Type}
@@ -17,20 +17,20 @@ theorem step_call_execution {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (caller : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] (C : context) (targets : List Code.LabelTarget)
-    (next : Nat) (output : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] (C : context) (targets : List Compiler.LabelTarget)
+    (next : Nat) (output : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (index : U32) (after : List instr)
     (compiledFunctions : CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
     (last : frameIndex.val+1 = exec.frames.length) (hf : exec.frames.val[frameIndex.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some caller)
     (hc : caller.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩
     (∃ address function host offset, compiled.code.val[raw.pc.val]? = some (.Call index offset) ∧
       caller.funcs.val[index.val]? = some address ∧ store.funcs.val[address.index.val]? = some function ∧ function.code = .Host host) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -38,8 +38,8 @@ theorem step_call_execution {M P F A : Type}
       (out.1 = .Ok () → ∃ pc source,
         Execution view code store out.2.1 source expected pc false ∧
         ConcreteSim compiled.code.length raw.pc.val pc false false initial source ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds source) ∧ source.ambient = ambient ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound source)) ∧
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds source) ∧ source.ambient = ambient ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound source)) ∧
       (∀ error, out.1 = .Err error → SourceDirectCallCause allocator hooks exec store platform frameIndex raw caller compiled initial error) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast? = some raw := by
@@ -71,4 +71,4 @@ theorem step_call_execution {M P F A : Type}
         exact Option.some.inj eq
     subst current
     exact ⟨pc.val,_,⟨rfl,⟨typed,machine.typed.contents⟩,covered,result expected machine.result,stack,cursor⟩,simulation,ownedHere,rfl,bounded⟩
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

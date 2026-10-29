@@ -7,7 +7,7 @@ Exact successful decoder and fixed-stack effect, with the original source zipper
 Main declarations: `MetadataReaderPost`. A direct consumer is `Compiler.Body.Reader.Stateful.StatefulMetadataPosts`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Exact successful decoder and fixed-stack effect, with the original source zipper. -/
@@ -90,4 +90,4 @@ theorem reader_metadata_wasm2 {data env locals index st}
             p.current.ctrl.polymorphic_base values (wellFormed a) sourceEncoding finalTyped
             controlEq newBlocks afterValues (fun h => nomatch h) (declared a ⟨middle,read⟩)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

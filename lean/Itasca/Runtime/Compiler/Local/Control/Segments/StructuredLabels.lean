@@ -6,7 +6,7 @@ Extending an aligned structured label sequence.
 Main declarations: `ExitAligned.cons`. A direct consumer is `Compiler.Local.Control.Table.StructuredCodeLabels`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem ExitAligned.cons (label : LabelTarget) (labels : List LabelTarget) :
@@ -16,4 +16,4 @@ theorem ExitAligned.cons (label : LabelTarget) (labels : List LabelTarget) :
   subst found
   rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

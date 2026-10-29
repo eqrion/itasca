@@ -7,13 +7,13 @@ Fetch advances the caller PC and removes argument values from its saved live pre
 Main declarations: `FrameStackRel.prepare_call`. A direct consumer is `Interp.Machine.Calls.HostCallStack`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- Fetch advances the caller PC and removes argument values from its saved
 live prefix, preparing the complete suspended chain for a defined call. -/
 theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s : _root_.store}
-    {exec : runtime.interp.Execution} {source : Abs.AFrame} {rest : List Abs.AFrame}
+    {exec : runtime.interp.Execution} {source : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store s exec (source :: rest))
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
     (last : index.val + 1 = exec.frames.length)
@@ -21,14 +21,14 @@ theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s
     (binding : FrameBinding store exec raw source)
     (slots : FrameSlots exec raw source)
     {compiled C targets next output}
-    (program : FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS)
     (point : FramePoint s raw source compiled C targets next output)
     (front args : List val) (after : List instr) (returns : List valtype) (base : Nat)
     (split : source.vals = front ++ args)
-    (destination : base = raw.base.val + Code.slots ((source.locals ++ front).map Code.valueType))
+    (destination : base = raw.base.val + Compiler.slots ((source.locals ++ front).map Compiler.valueType))
     (heights : ∀ label ∈ source.labels, label.height ≤ front.length)
-    (continuation : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
-      (front.map Code.valueType ++ returns) after pc.val next output) :
+    (continuation : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      (front.map Compiler.valueType ++ returns) after pc.val next output) :
     ∃ raws,
       (exec.frames.set index { raw with pc := pc }).val = raws.reverse ∧
       SavedFrames store s { exec with frames := exec.frames.set index { raw with pc := pc } }
@@ -54,4 +54,4 @@ theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s
         · intro position bits represented _
           exact represented
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CompileEntries
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -72,4 +72,4 @@ theorem compiler_submit_total_on {A : Type} (ops : runtime.platform.Alloc A)
     cases result <;> simp [visitor_result,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

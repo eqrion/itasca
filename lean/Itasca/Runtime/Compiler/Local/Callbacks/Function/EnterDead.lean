@@ -6,7 +6,7 @@ Compiler scope entry when the source is unreachable.
 Main declarations: `enter_dead`. A direct consumer is `Compiler.Local.Callbacks.Calls.ScopeCallbackEnter`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
@@ -100,4 +100,4 @@ set_option maxRecDepth 4096 in
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

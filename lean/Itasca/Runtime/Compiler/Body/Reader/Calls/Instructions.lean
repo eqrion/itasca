@@ -11,7 +11,7 @@ Accepted direct and indirect call reader steps and their decoded instruction fac
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- The actual control-reader dispatcher reveals its decoded callback argument. -/
@@ -74,7 +74,7 @@ theorem reader_call_wasm2 {data env locals index st}
   · exact stack
   · exact encoded.declared _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -82,7 +82,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- Accepted indirect calls retain both canonical source indices and advance
@@ -130,6 +130,6 @@ theorem reader_indirect_call_wasm2 {data env locals index st}
   · simpa [sameBlocks] using blocks
   · exact stack
   · simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

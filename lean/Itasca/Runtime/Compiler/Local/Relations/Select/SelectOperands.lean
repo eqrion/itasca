@@ -7,7 +7,7 @@ Operand correspondence and lowering for untyped select.
 Main declarations: `select_operands` and `compiler_select_lowered`. A direct consumer is `Compiler.Local.Relations.Operations.CoreBasicEmissions`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
@@ -72,4 +72,4 @@ theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
     (selectInstruction (decide (width ty = 2)) left right condition) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨left, right, condition, lp, rp, cp, by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

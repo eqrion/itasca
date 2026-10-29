@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormant
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Reachability selects a retained executable prefix, a terminal prefix, or
@@ -84,4 +84,4 @@ theorem StructuredCompilerPrefix.ordinary {jumpTables : List Aeneas.Std.U32} {A 
       (by rw [ordinary.frames])).advance (Nat.le_of_lt consumed), cursor⟩
   simpa only [lowered.2.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

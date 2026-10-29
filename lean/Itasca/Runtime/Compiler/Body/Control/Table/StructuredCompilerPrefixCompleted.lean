@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCompletedPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An entered source arm ends either with its exact result stack or with the
@@ -22,4 +22,4 @@ theorem StructuredCompilerPrefix.completed {jumpTables : List Aeneas.Std.U32} {A
     have impossible := retained.unentered
     simp [entered] at impossible
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

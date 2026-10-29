@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Interp.Host.HostPreparationCauses
 import Itasca.Runtime.Spec.Counted
 import Itasca.Runtime.Integration.Host.HostCallContext
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Source outcomes for errors after checked invocation entry. Resource and
@@ -20,11 +20,11 @@ theorem EventfulInvocationError.prepend {initial middle : config} {events rest :
     (prefixSteps : StepsH initial events middle) :
     EventfulInvocationError initial (events++rest) store ambient error := by
   cases error <;> simp only [EventfulInvocationError] at outcome ⊢
-  · exact Spec.stepsH_trans prefixSteps outcome
+  · exact Spec.steps_h_trans prefixSteps outcome
   · obtain ⟨body,steps⟩ := outcome
-    exact ⟨body,Spec.stepsH_trans prefixSteps steps⟩
+    exact ⟨body,Spec.steps_h_trans prefixSteps steps⟩
   · obtain ⟨body,steps⟩ := outcome
-    exact ⟨body,Spec.stepsH_trans prefixSteps steps⟩
+    exact ⟨body,Spec.steps_h_trans prefixSteps steps⟩
 
 theorem EventfulInvocationError.reachable {initial : config} {events : List HostEvent}
     {store : _root_.store} {ambient : frame} {error : runtime.ExecError}
@@ -37,10 +37,10 @@ theorem EventfulInvocationError.reachable {initial : config} {events : List Host
 
 theorem CumulativeFailure.eventful_error {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : Abs.AState} {error : runtime.ExecError}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {error : runtime.ExecError}
     (failure : CumulativeFailure allocator hooks exec store platform source error)
-    (typed : Abs.ATyped source) :
-    EventfulInvocationError (Abs.decode source) [] source.store source.ambient error := by
+    (typed : SourceMachine.ATyped source) :
+    EventfulInvocationError (SourceMachine.decode source) [] source.store source.ambient error := by
   have kind := failure.kind
   cases error with
   | Trap trap => exact (failure.trap).2.choose_spec.2.erase
@@ -54,10 +54,10 @@ theorem CumulativeFailure.eventful_error {M P A : Type} {allocator : runtime.pla
 theorem HostPreparationCause.eventful_error {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {signature : Itasca.types.FuncType} {base : Usize}
-    {source : Abs.AState} {error : runtime.ExecError}
+    {source : SourceMachine.AState} {error : runtime.ExecError}
     (cause : HostPreparationCause allocator hooks exec store platform signature base error)
-    (typed : Abs.ATyped source) :
-    EventfulInvocationError (Abs.decode source) [] source.store source.ambient error := by
+    (typed : SourceMachine.ATyped source) :
+    EventfulInvocationError (SourceMachine.decode source) [] source.store source.ambient error := by
   have kind := cause.error
   cases error <;> first
     | exact ⟨_,StepsH.refl typed.decode_wf⟩
@@ -65,7 +65,7 @@ theorem HostPreparationCause.eventful_error {M P A : Type} {allocator : runtime.
 /-- A callback trap or stack-overflow reply has a real labeled source endpoint;
 its committed store effects survive even when the concrete API reports exhaustion. -/
 theorem host_frame_eventful_error {M P : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
-    {initial : config} {events : List HostEvent} {ambient : frame} {f : Abs.AFrame} {rest : List Abs.AFrame}
+    {initial : config} {events : List HostEvent} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     {after : List instr} {front : List val}
     {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
     (kind : out.1=.Ok () ∨ out.1=.Err (.Trap .Host) ∨ out.1=.Err (.Exhausted .CallStack))
@@ -83,4 +83,4 @@ theorem host_frame_eventful_error {M P : Type} {view : M → Slice U8} {code : S
     refine ⟨[.TRAP],?_⟩
     simpa only [hostCallFrameResult,failed] using steps
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

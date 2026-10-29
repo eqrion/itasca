@@ -10,7 +10,7 @@ A rejected body needs no retained suffix; an accepted open boundary retains both
 Main declarations: `ReachedBodyWasm2`. A direct consumer is `Compiler.Module.CompileTotal`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A rejected body needs no retained suffix; an accepted open boundary retains
@@ -88,4 +88,4 @@ theorem compiler_body_wasm2_total {A} (ops : runtime.platform.Alloc A) (law : Pl
     subst result
     obtain ⟨rfl,_⟩ := held
     exact .inr ⟨point,ledger⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Compiler.Module.WellFormedTotal
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1500000
 
@@ -126,4 +126,4 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     unfold initializerSize at *
     dsimp at *
     omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -9,7 +9,7 @@ Composition of bulk stateful reader cases.
 Main declarations: `reader_stateful_bulk_wasm2`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
@@ -90,4 +90,4 @@ theorem reader_stateful_bulk_wasm2 {data env locals index st}
     refine ⟨(.tableFill value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_table_fill_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

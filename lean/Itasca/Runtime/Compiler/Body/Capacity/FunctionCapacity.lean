@@ -2,7 +2,7 @@ import Itasca.Runtime.Representation.FunctionCapacity
 import Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-indexed frame bounds retained for the defined function prefix. -/
@@ -29,4 +29,4 @@ theorem ModuleCapacities.extend {before after : runtime.compiler.ExecutableModul
   have same := (List.getElem?_eq_some_iff.mp foundCode).2
   have retained := congrArg (fun list => list[index]?) preserved
   simpa [List.getElem?_take, bound, same] using retained
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

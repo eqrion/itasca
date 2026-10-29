@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Partial correctness for actual loops with a decreasing successful body.
@@ -183,4 +183,4 @@ theorem initializer_global_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

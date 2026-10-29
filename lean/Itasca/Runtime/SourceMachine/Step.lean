@@ -5,7 +5,7 @@ import Itasca.Runtime.SourceMachine.Numeric.Decode
 instruction families return `stuck` until their transition cases are added;
 no total-Wasm progress claim is made by this definition. -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 inductive AResult where
   | next (state : AState)
@@ -279,4 +279,4 @@ def astep (s : AState) : AResult :=
         | some op => Numeric.transition s f rest after op
         | none => .stuck
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

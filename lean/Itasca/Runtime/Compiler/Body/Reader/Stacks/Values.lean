@@ -7,7 +7,7 @@ Concrete operand values and their types after reader execution.
 Main declarations: `ReaderPostWasm2.values` and `numeric_full_stack_types`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.values {data env locals index st out instruction poly values}
@@ -27,10 +27,10 @@ theorem numeric_full_stack_types {before after outer segment result : List code.
     ∃ (front : List valtype) (types : List Itasca.types.ValueType), Sequence.stackTypes before = front ++ inputs.map Translate.valueType ∧
       after = types.map code.StackType.Val ∧
       types.map Translate.valueType = front ++ [Translate.valueType output] := by
-  have both : ConcreteStack outer ∧ ConcreteStack segment := concreteStack_append.mp (old ▸ known)
+  have both : ConcreteStack outer ∧ ConcreteStack segment := concrete_stack_append.mp (old ▸ known)
   obtain ⟨front, oldTypes, newTypes, resultKnown⟩ := numeric_effect_types both.2 effect
-  have afterKnown : ConcreteStack after := new ▸ concreteStack_append.mpr ⟨both.1, resultKnown⟩
-  obtain ⟨types, concrete⟩ := (concreteStack_iff after).mp afterKnown
+  have afterKnown : ConcreteStack after := new ▸ concrete_stack_append.mpr ⟨both.1, resultKnown⟩
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff after).mp afterKnown
   refine ⟨Sequence.stackTypes outer ++ front, types, ?_, concrete, ?_⟩
   · simp only [old, Sequence.stackTypes, List.map_append] at oldTypes ⊢
     simpa only [List.append_assoc, Sequence.stackTypes] using congrArg (Sequence.stackTypes outer ++ ·) oldTypes
@@ -41,4 +41,4 @@ theorem numeric_full_stack_types {before after outer segment result : List code.
     simp only [new, Sequence.stackTypes, List.map_append] at newTypes ⊢
     simpa only [List.append_assoc, Sequence.stackTypes] using congrArg (Sequence.stackTypes outer ++ ·) newTypes
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

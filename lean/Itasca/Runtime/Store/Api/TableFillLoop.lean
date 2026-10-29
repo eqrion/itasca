@@ -7,7 +7,7 @@ def fillTableWords (before : List U64) (start : Nat) (value : U64) : Nat → Lis
   | 0 => before
   | n+1 => (fillTableWords before start value n).set (start+n) value
 
-theorem fillTableWords_length (before : List U64) (start count : Nat) (value : U64) :
+theorem fill_table_words_length (before : List U64) (start count : Nat) (value : U64) :
     (fillTableWords before start value count).length = before.length := by
   induction count with
   | zero => rfl
@@ -32,7 +32,7 @@ theorem table_fill_loop (tables : alloc.vec.Vec runtime.store.TableInst)
   · rintro ⟨current,index⟩ ⟨lower,upper,words,wordValues,currentEq⟩
     dsimp only at lower upper wordValues currentEq ⊢
     have wordLength : words.length = table.elements.length := by
-      simpa only [alloc.vec.Vec.length] using (congrArg List.length wordValues).trans (fillTableWords_length _ _ _ _)
+      simpa only [alloc.vec.Vec.length] using (congrArg List.length wordValues).trans (fill_table_words_length _ _ _ _)
     have currentFound : current.val[tableIndex.val]? = some {table with elements := words} := by
       rw [currentEq]
       simp [alloc.vec.Vec.set_val_eq,tableBound]

@@ -16,7 +16,7 @@ def widenOpcode (ty : WidenWidth) (multiply high signed : Bool) : U32 :=
   ⟨BitVec.ofNat 32 ((match ty with | .i8 => 128 | .i16 => 160 | .i32 => 192) +
     (if multiply then 28 else 7) + (if signed then 0 else 2) + (if high then 1 else 0))⟩
 
-theorem widenWidth_val (ty : WidenWidth) : (widenWidth ty).val = ty.width := by cases ty <;> rfl
+theorem widen_width_val (ty : WidenWidth) : (widenWidth ty).val = ty.width := by cases ty <;> rfl
 
 theorem widen_dispatch_eq (ty : WidenWidth) (multiply high signed : Bool) (x y : U128) :
     runtime.interp.simd.widen_lanes (widenOpcode ty multiply high signed) x y =
@@ -33,7 +33,7 @@ theorem widen_dispatch_eq (ty : WidenWidth) (multiply high signed : Bool) (x y :
         (laneBits ty.width (j+if high then ty.count else 0) x.bv)
         (laneBits ty.width (j+if high then ty.count else 0) y.bv) ⦄ := by
   rw [widen_dispatch_eq]
-  have widthEq := widenWidth_val ty
+  have widthEq := widen_width_val ty
   have loopLaw := widen_loop (widenWidth ty) 0#u32 multiply high signed x (if multiply then y else 0#u128) 0#u128
     (by cases ty <;> decide) (by cases ty <;> decide)
     (fun j bits => bits = widenBits multiply signed

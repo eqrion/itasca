@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerPatchMetadata
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -63,4 +63,4 @@ theorem callback_branch_if_controls_result {A : Type} (ops : runtime.platform.Al
       have observed := compiler_observe_ordinary_result ops law middle after state status rest
       exact observed.controls.trans kept
   · exact (compiler_observe_ordinary_result ops law before after state status accepted).controls
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

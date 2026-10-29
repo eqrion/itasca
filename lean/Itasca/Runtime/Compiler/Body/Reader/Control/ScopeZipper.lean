@@ -6,7 +6,7 @@ Compiler source scopes and the canonical validator zipper retain the same source
 Main declarations: `ReaderScopeZipperWasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseExitSlots`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem matched_at {α β : Type} {R : α → β → Prop} {left right}
@@ -101,6 +101,6 @@ theorem ReaderScopeZipperWasm2.label {parents current savedParents savedCurrent 
   | none => simp [resolved] at label
   | some types =>
     simp only [resolved, Option.map_some, Option.some.injEq, list.mk_list.injEq] at label
-    exact ⟨scope, types, scopeFound, rfl, matchScope.branchTypes.trans label.symm⟩
+    exact ⟨scope, types, scopeFound, rfl, matchScope.branch_types.trans label.symm⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

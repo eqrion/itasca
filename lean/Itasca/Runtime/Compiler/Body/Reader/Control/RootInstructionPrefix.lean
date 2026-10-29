@@ -13,7 +13,7 @@ Structured compiler root closure checked instructions and their reader-step lift
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source root geometry, the preceding live stack, and branch exits discharge every
@@ -96,7 +96,7 @@ theorem structured_root_checked_instructions {jumpTables : List U32}
   rw [frames]
   exact restEmpty
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -104,7 +104,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual root END checks every stored instruction from its typed preceding stack and retained exits. -/
@@ -164,6 +164,6 @@ theorem StructuredReaderCompilerStateWasm2.root_checked_instructions {jumpTables
     initialLayout initialLocals initialCapacity ((Nat.le_of_lt inbounds).trans sourceBound)
     out.core savedCurrent.ctrl.kind savedCurrent.bt stack exits maps held consumed endBound callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

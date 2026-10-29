@@ -28,7 +28,7 @@ def executionBody (state : ExecutionState M P) :
     state.1 state.2.1 state.2.2.1 state.2.2.2
 
 /-- A running iteration invokes exactly one instruction step. -/
-theorem executionBody_active (state : ExecutionState M P) (active : ActiveExecution state) :
+theorem execution_body_active (state : ExecutionState M P) (active : ActiveExecution state) :
     executionBody memory hooks floats allocator state = (do
       let (status, exec, store, platform) ← runtime.interp.step memory hooks floats allocator
         state.1 state.2.1 state.2.2.1

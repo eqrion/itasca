@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
 Operand addresses come from the compiler's live layout; the proof then follows
 the extracted opcode classifier, constructor, emitter, and post-stack observer. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem binary_operands {A : Type} (ops : runtime.platform.Alloc A)
@@ -26,4 +26,4 @@ theorem binary_operands {A : Type} (ops : runtime.platform.Alloc A)
       Nat.add_assoc] using hh
   exact ⟨left, right, hr, hr', leftPos, rightPos⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

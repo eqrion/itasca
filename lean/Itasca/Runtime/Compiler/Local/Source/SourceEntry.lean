@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_new_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -9,4 +9,4 @@ open Aeneas Aeneas.Std
     runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart ⦃ out =>
       SourceAligned out ⦄ := by
   simp [runtime.compiler.FunctionCompiler.new, WP.spec_ok, SourceAligned]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

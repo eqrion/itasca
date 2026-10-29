@@ -9,7 +9,7 @@ Main declarations: `reader_saturating_wasm2` and `reader_float_saturating_wasm2`
 
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_saturating_wasm2 {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
@@ -59,7 +59,7 @@ theorem reader_saturating_wasm2 {data env locals index st}
 
 theorem float_saturating_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val) :
+    (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val) :
     ∃ (subopcode : U32) (operation : Numeric.Operation) (hook : ExtendedNumericHook),
       subopcode.val = (floatOpcode op).val - 256 ∧ subopcode.val < 8 ∧
       Wasm2.NumericExtensions.saturatingMeaning subopcode = some operation ∧
@@ -71,16 +71,16 @@ theorem float_saturating_reader_facts {A : Type} (ops : runtime.platform.Alloc A
         runtime.compiler.lower.FunctionCompiler.op ops compiler state (floatOpcode op) 0#u32 0#u32 0#u128 := by
   change 256 ≤ op.opcode at extension
   cases op with
-  | unary ty operator => cases ty <;> cases operator <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | binary ty operator => cases ty <;> cases operator <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | compare ty operator => cases ty <;> cases operator <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | convert source target sign => cases source <;> cases target <;> cases sign <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | reinterpretFloat source => cases source <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | reinterpretInt source => cases source <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
-  | promote | demote => skip <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
+  | unary ty operator => cases ty <;> cases operator <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | binary ty operator => cases ty <;> cases operator <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | compare ty operator => cases ty <;> cases operator <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | convert source target sign => cases source <;> cases target <;> cases sign <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | reinterpretFloat source => cases source <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | reinterpretInt source => cases source <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
+  | promote | demote => skip <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
   | truncate source target sign saturating =>
     cases saturating with
-    | false => cases source <;> cases target <;> cases sign <;> norm_num [Abs.Float.Instruction.opcode,Abs.Float.signIndex, Abs.Float.unaryIndex, Abs.Float.binaryIndex, Abs.Float.compareIndex] at extension
+    | false => cases source <;> cases target <;> cases sign <;> norm_num [SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex, SourceMachine.Float.unaryIndex, SourceMachine.Float.binaryIndex, SourceMachine.Float.compareIndex] at extension
     | true =>
       cases source with
       | F32 =>
@@ -110,7 +110,7 @@ theorem reader_float_saturating_wasm2 {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
-    (ctx : code.Context) (op : Abs.Float.Instruction)
+    (ctx : code.Context) (op : SourceMachine.Float.Instruction)
     (extension : 256 ≤ (floatOpcode op).val)
     (subopcode : U32) (next : Usize)
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
@@ -145,4 +145,4 @@ theorem reader_float_saturating_wasm2 {data env locals index st}
   rw [dispatch,hookEq] at callback
   exact ⟨operation,instruction,inputs,output,callback,read,converted,controls,position,values,numeric,instruction ▸ post⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

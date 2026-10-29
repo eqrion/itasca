@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.World.State
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Reusing a fixed-world successor after reinterpreting only unissued keys
@@ -14,5 +14,5 @@ theorem EventfulTransition.world_reinterpret {M P F A : Type}
     (edge : EventfulTransition memory hooks floats allocator (before.change_code newCode agrees) events after) :
     EventfulWorldTransition memory hooks floats allocator ⟨oldCode,before⟩ events ⟨newCode,after⟩ := by
   refine ⟨edge.actual,edge.simulation,?_,edge.metadata,edge.ambient,agrees⟩
-  simpa only [EventfulMachine.change_code,Store.decodeStore_code_agrees view agrees] using edge.extension
-end Itasca.Runtime.Theorems
+  simpa only [EventfulMachine.change_code,Store.decode_store_code_agrees view agrees] using edge.extension
+end Itasca.Runtime.Integration

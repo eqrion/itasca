@@ -7,7 +7,7 @@ Actual successful initializer lowering supplies both the read-only maps and the 
 Main declarations: `initializer_lower_segments`. A direct consumer is `Compiler.Module.CompileSemantic`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual successful initializer lowering supplies both the read-only maps and
@@ -168,4 +168,4 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
                       (by simp [seedEq, initializerSeed])
                     exact program.change_module rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

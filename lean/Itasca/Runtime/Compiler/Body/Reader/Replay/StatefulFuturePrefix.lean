@@ -8,12 +8,12 @@ A fixed future metadata table can be used on both sides of one actual stateful c
 Main declarations: `StatefulReaderPost.future_prefix_generic`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedStateful`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- A fixed future metadata table can be used on both sides of one actual
 stateful callback. Its current entries are retained by list append. -/
 theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : Abs.Stateful.Instruction}
+    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (C : context) (future : List (U32 × U32))
@@ -46,7 +46,7 @@ theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data e
         retained.layout reachable codeFits sourceFits coordinateFits
     have consumed : p.start.val < out.pos.val := by have position := p.pos; have span := reader.span; omega
     refine ⟨values,reader,invariant.ordinary reachable ordinary lowered (OrdinaryEmbedding.stateful (pairs := after.function.indirect.val ++ future) ((emission.map_pairs ?_)))
-      sources consumed (by rw [cursor]) emission.not_branchTable,lowered.1.2.2.2.1⟩
+      sources consumed (by rw [cursor]) emission.not_branch_table,lowered.1.2.2.2.1⟩
     intro index pair found
     have bound := (List.getElem?_eq_some_iff.mp found).1
     simpa only [List.getElem?_append,if_pos bound] using found
@@ -59,4 +59,4 @@ theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data e
       (statefulOpcode op) a b 0#u128 callback
     exact ⟨values,reader,compiled,deadAfter.trans dead.symm⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

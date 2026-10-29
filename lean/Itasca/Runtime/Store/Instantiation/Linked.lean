@@ -27,7 +27,7 @@ theorem instantiate_inner_linked_decomposition {M P F A : Type}
     {tables memories} (cache : Cache module.module.env tables memories)
     (valid : Valid module.module.env module.profile)
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
-    (compiled : Code.InitializerMappings module)
+    (compiled : Compiler.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (outcome : Result (core.result.Result runtime.Instantiated runtime.ExecError × runtime.store.Store M × P × Bool))
     (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false = outcome) :
@@ -77,7 +77,7 @@ theorem instantiate_compiled_linked_bounded_decomposition {M P F A : Type}
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
       runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law

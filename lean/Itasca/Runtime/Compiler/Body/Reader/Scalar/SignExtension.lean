@@ -12,7 +12,7 @@ Main declarations: `reader_sign_wasm2` and `reader_integer_sign_wasm2`. A direct
 -/
 
 set_option maxHeartbeats 1000000
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Exact sign-extension reading advances the supplied source zipper and
@@ -64,7 +64,7 @@ theorem reader_sign_wasm2 {data env locals index st}
 hook, and invoke the ordinary integer lowering entry with their exact opcode. -/
 theorem integer_sign_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
     ∃ (operation : Numeric.Operation) (hook : ExtendedNumericHook),
       Wasm2.NumericExtensions.signMeaning (UScalar.cast .U8 (integerOpcode op)) = some operation ∧
       operation.instruction = op.source ∧
@@ -104,7 +104,7 @@ theorem reader_integer_sign_wasm2 {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
-    (ctx : code.Context) (op : Abs.Numeric.Instruction)
+    (ctx : code.Context) (op : SourceMachine.Numeric.Instruction)
     (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -137,4 +137,4 @@ theorem reader_integer_sign_wasm2 {data env locals index st}
   exact ⟨operation, instruction, inputs, output, callback, read, converted, controls, position,
     values, numeric, instruction ▸ post⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

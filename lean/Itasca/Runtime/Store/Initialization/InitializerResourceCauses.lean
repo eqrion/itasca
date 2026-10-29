@@ -12,7 +12,7 @@ theorem eval_const_resource_causes (law : Platform.AllocCorrect allocator)
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code expr ty)
+    (compiled : Compiler.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (referenceBound : ty = .FuncRef ∨ ty = .ExternRef → ((words[0]?).getD 0#u64).val ≤ Usize.max) :
     runtime.interp.eval_const memory hooks floats allocator store platform instIndex function ty

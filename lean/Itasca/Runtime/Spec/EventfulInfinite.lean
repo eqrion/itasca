@@ -14,7 +14,7 @@ theorem InfiniteSourceWithEvents.prepend {initial next : config} {events : List 
     (infinite : InfiniteSourceWithEvents next) (steps : StepsH initial events next) :
     InfiniteSourceWithEvents initial := by
   obtain ⟨states,trace,first,edges⟩ := infinite
-  obtain ⟨prefixCount,prefixSteps⟩ := stepsH_count steps
+  obtain ⟨prefixCount,prefixSteps⟩ := steps_h_count steps
   refine ⟨(fun n => match n with | 0 => initial | n+1 => states (n+1)),
     (fun n => match n with | 0 => events ++ trace 0 | n+1 => trace (n+1)),rfl,?_⟩
   intro n

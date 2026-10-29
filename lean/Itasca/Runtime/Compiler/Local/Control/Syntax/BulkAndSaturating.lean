@@ -10,11 +10,11 @@ The extended-opcode classification for saturating conversions and the ten bulk o
 Main declarations: `CumulativeMiscOpcode`. A direct consumer is `Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 def CumulativeMiscOpcode (subopcode : U32) : Prop :=
-  (∃ op : Abs.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
+  (∃ op : SourceMachine.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
     subopcode.val = (floatOpcode op).val - 256) ∨
   subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17]
 
@@ -32,7 +32,7 @@ theorem misc_cumulative_immediate {token bytes}
   | bulk subopcode prefixEncoding h =>
     refine ⟨subopcode,_,_,rfl,prefixEncoding,Or.inr ?_⟩
     cases h <;> simp
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std
@@ -42,7 +42,7 @@ theorem At.cumulative_misc {data start token finish}
     (next : Usize) (advance : next.val = start.val + 1) (inbounds : start.val < data.length)
     (byte : data.val[start.val]'inbounds = 252#u8) :
     ∃ subopcode endPosition, Leb128.Decoded data next subopcode endPosition ∧
-      Itasca.Runtime.Code.CumulativeMiscOpcode subopcode := by
+      Itasca.Runtime.Compiler.CumulativeMiscOpcode subopcode := by
   obtain ⟨bytes,⟨opcode,immediate,rfl,grammar⟩,span⟩ := encoded
   have first := congrArg List.head? span.suffix
   have equal : opcode = 252#u8 := by
@@ -50,7 +50,7 @@ theorem At.cumulative_misc {data start token finish}
       simpa only [List.drop_eq_getElem_cons inbounds,List.cons_append,List.head?_cons,Option.some.injEq] using first
     exact equal.symm.trans byte
   subst opcode
-  obtain ⟨subopcode,prefixBytes,suffix,rfl,leb,allowed⟩ := Itasca.Runtime.Code.misc_cumulative_immediate grammar
+  obtain ⟨subopcode,prefixBytes,suffix,rfl,leb,allowed⟩ := Itasca.Runtime.Compiler.misc_cumulative_immediate grammar
   have split : Wasm1.BytesAt data start ([252#u8] ++ (prefixBytes ++ suffix)) finish := span
   obtain ⟨middle,head,tail⟩ := split.split
   have middleEq : middle = next := by

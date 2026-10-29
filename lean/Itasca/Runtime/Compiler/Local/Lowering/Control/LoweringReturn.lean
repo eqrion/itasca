@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 /-! Actual RETURN callback emission and terminal structured source certificate. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem callback_return {A : Type} (ops : runtime.platform.Alloc A)
@@ -47,4 +47,4 @@ open Aeneas Aeneas.Std
       · simpa [exactState] using hframes
       · simp [compilerLocals, hl, exactState]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

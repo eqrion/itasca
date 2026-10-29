@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.SegmentSource
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
 private theorem vector_length_bound {α : Type} {R : α → List U8 → Prop} {values bytes}
@@ -89,4 +89,4 @@ theorem compile_segment_payload_bounds {A : Type} (allocator : runtime.platform.
     (∀ element ∈ module.module.env.elements.val, element.init.length < 2^32) ∧
     (∀ segment ∈ module.module.tail.data.val, segment.init.length < 2^32) := by
   exact validated_segment_payload_bounds (compile_source_validated allocator law bytes profile limits module accepted).1
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -15,20 +15,20 @@ Normalization of a structured source point and its execution relation. Closure o
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 
 theorem normalization_choice (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (typed : Abs.CoreTyped ⟨s, ambient, f :: rest, []⟩)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (s : store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (typed : SourceMachine.CoreTyped ⟨s, ambient, f :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint s raw f compiled C targets next output) :
     ForwardSkip s raw f compiled C targets next output ∨
       NormalizedPoint s exec raw compiled C f ∨ ReadySource f := by
   by_cases ready : ReadySource f
   · exact Or.inr (Or.inr ready)
-  have frameTyped : Abs.FrameTyped s f [] := by cases typed.typed.frames with | cons h _ => exact h
+  have frameTyped : SourceMachine.FrameTyped s f [] := by cases typed.typed.frames with | cons h _ => exact h
   cases code : f.code with
   | nil =>
     cases hlabels : f.labels with
@@ -58,16 +58,16 @@ theorem normalization_choice (exec : runtime.interp.Execution) (raw : runtime.in
 bytecode-bearing source position after a bounded finite number of reductions. -/
 theorem normalize (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
-    (typed : Abs.CoreTyped ⟨s, ambient, f :: rest, []⟩)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (s : store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (typed : SourceMachine.CoreTyped ⟨s, ambient, f :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint s raw f compiled C targets next output) :
     ∃ count g targets' next' output', ErasedSteps count f g ∧
       count + normalizationMeasure g ≤ normalizationMeasure f ∧
       FrameSlots exec raw g ∧
       FramePoint s raw g compiled C targets' next' output' ∧
-      Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
+      SourceMachine.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧ FrameMetadata f g ∧
       (ForwardSkip s raw g compiled C targets' next' output' ∨ ReadySource g) := by
   induction measure : normalizationMeasure f using Nat.strong_induction_on
       generalizing f targets next output with
@@ -85,7 +85,7 @@ theorem normalize (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     · exact ⟨0, f, targets, next, output, .nil f, by omega, slots, point, typed,
         ⟨rfl, rfl, rfl, rfl⟩, Or.inr ready⟩
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine
 
 end
 
@@ -93,17 +93,17 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 
 theorem normalize_execution {M : Type}
  (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (index : Usize) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (lookup : exec.frames.val[index.val]? = some raw)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw f compiled C targets next output)
     (expected : List valtype)
@@ -125,7 +125,7 @@ theorem normalize_execution {M : Type}
   refine ⟨count,g,targets',next',output',chain,bound,represented,retained,?_,metadata,ready⟩
   exact machine.ordinary view code ambient f g rest expected raw.pc.val false (.refl store)
     (extend_store_refl _ machine.typed.typed.store) raw index raw.pc last lookup program (.ready retained)
-    represented metadata (by simpa only [same]) (.refl _ _) typed (StructuredMachine.erased_steps_supported chain machine.core)
-end Itasca.Runtime.Interp.StructuredMachine
+    represented metadata (by simpa only [same]) (.refl _ _) typed (Machine.erased_steps_supported chain machine.core)
+end Itasca.Runtime.Interp.Machine
 
 end

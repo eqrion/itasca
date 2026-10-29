@@ -25,7 +25,7 @@ theorem function_capacities_publish {M : Type}
     (oldCapacities : FunctionCapacities oldCode before)
     (inst : runtime.store.ModuleInst) (sources : List funccode)
     (found : after.instances.val[before.instances.len.val]? = some inst)
-    (certificate : Code.ModuleCapacities inst.module sources)
+    (certificate : Compiler.ModuleCapacities inst.module sources)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (entries : TypeEntries after inst.module.module.env.types.val inst.types.val)
     (table : Interp.FunctionTable after inst (inst.module.module.env.func_types.val.map decodeFuncType))
@@ -34,7 +34,7 @@ theorem function_capacities_publish {M : Type}
     FunctionCapacities (installCode oldCode before.instances.len.val sources) after := by
   intro function present
   rcases staged function present with old | ⟨index, bound, encoded, signatureFound⟩
-  · exact (oldCapacities function old).staged retained (installCode_agrees before oldCode sources)
+  · exact (oldCapacities function old).staged retained (install_code_agrees before oldCode sources)
   · intro instanceIndex functionIndex defined
     obtain ⟨sameInstance, sameFunction⟩ := runtime.store.FuncCode.Wasm.inj (defined.symm.trans encoded)
     subst instanceIndex
@@ -58,7 +58,7 @@ theorem function_capacities_publish {M : Type}
       rw [List.getElem?_eq_getElem typeBound, resolvedType]
     refine ⟨inst, compiled, typeIndex, found, compiledFound, ?_, entries, table,
       definedTypes[index.val], actualType, signatureFound⟩
-    rw [installCode_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
+    rw [install_code_lookup oldCode before.instances.len.val sources inst.module index.val source sourceFound]
     exact capacity
 
 theorem InstantiationCode.capacities {M : Type}
@@ -66,7 +66,7 @@ theorem InstantiationCode.capacities {M : Type}
     (metadata : InstantiationCode before ready inst) (oldCode : CodeInterpretation)
     (oldCapacities : FunctionCapacities oldCode before)
     (found : ready.instances.val[before.instances.len.val]? = some inst)
-    (sources : List funccode) (certificate : Code.ModuleCapacities inst.module sources)
+    (sources : List funccode) (certificate : Compiler.ModuleCapacities inst.module sources)
     {tables memories} (cache : Cache inst.module.module.env tables memories) :
     FunctionCapacities (installCode oldCode before.instances.len.val sources) ready := by
   obtain ⟨staged, count, rfl, retained, entries, table, signatures⟩ := metadata

@@ -7,7 +7,7 @@ Unentered frames cannot acquire live exits or forward-branch fixups.
 Main declarations: `DormantFrame` and `DormantFrames`. A direct consumer is `Compiler.Local.Relations.Table.BranchTableScopeFrames`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Unentered frames cannot acquire live exits or forward-branch fixups. -/
@@ -61,4 +61,4 @@ theorem ScopeFrameStack.dormant_initial {A : Type} {locals current}
     (live : current.entered = true) : DormantFrames compiler.frames.val := by
   intro frame member
   exact DormantFrame.entered (stack.frame_entered (.root current live) live frame member)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

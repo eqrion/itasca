@@ -29,7 +29,7 @@ A complete-profile reader step supplies an indexed advance or closing witness. O
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful step advances the retained canonical prefix or closes the
@@ -103,7 +103,7 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closing_of_opcode {A : T
     exact .inr (point.simd ops law C contextLocals matched.mems (fun tables => (inferInstance : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C))) next advance inbounds out sourceBound bodyBound simd accepted)
   · rw [typedSelect] at accepted
     exact .inr (point.typed_select ops law C (by intro tables input instruction code output h; exact .typedSelect h) contextLocals next advance inbounds out sourceBound bodyBound typedSelect accepted)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -111,7 +111,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.advance_or_closing {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -138,6 +138,6 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closing {A : Type}
   apply point.advance_or_closing_of_opcode ops law C initialLocals localsMatch metadata matched contextLocals
     signatures bodyBound next advance inbounds out _ accepted
   exact reader_accepted_opcode_wasm2 _ _ out data env ctx index _ before middle accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

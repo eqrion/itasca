@@ -5,7 +5,7 @@ import SpecExt.Builtins.Float.Decoding
 Slot words are naturals here; the concrete relation separately bounds them by
 2^64. Reference addresses are store indices, with zero reserved for null. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open SpecExt.Builtins
 
 def valueType : val → valtype
@@ -36,7 +36,7 @@ def decodeOne (ty : valtype) (words : List Nat) : Option (val × List Nat) :=
       some ((if lo = 0 then .REF_NULL .EXTERNREF else .REF_HOST_ADDR (lo - 1)), rest)
   | _, _ => none
 
-theorem encodeValue_length (value : val) :
+theorem encode_value_length (value : val) :
     (encodeValue value).length = width (valueType value) := by
   cases value with
   | CONST ty value => cases value <;> cases ty <;> rfl
@@ -45,12 +45,12 @@ theorem encodeValue_length (value : val) :
   | REF_FUNC_ADDR address => rfl
   | REF_HOST_ADDR address => rfl
 
-theorem encodeValues_length (values : List val) :
+theorem encode_values_length (values : List val) :
     (encodeValues values).length = slots (values.map valueType) := by
   induction values with
   | nil => rfl
   | cons value values ih =>
-    simp only [encodeValues, List.flatMap_cons, List.length_append, encodeValue_length,
+    simp only [encodeValues, List.flatMap_cons, List.length_append, encode_value_length,
       List.map_cons, slots] at *
     rw [ih]
 
@@ -124,21 +124,21 @@ theorem decode_encode (value : val) (h : wf_val value) (rest : List Nat) :
   | val_case_3 address => exact decode_function_ref address rest
   | val_case_4 address => exact decode_external_ref address rest
 
-theorem encodeValues_append (xs ys : List val) :
+theorem encode_values_append (xs ys : List val) :
     encodeValues (xs ++ ys) = encodeValues xs ++ encodeValues ys := by
   exact List.flatMap_append
 
 /-- The slot prefix ending at a value boundary encodes exactly that prefix of
 values, even when it contains two-slot vectors. -/
-theorem encodeValues_take (values : List val) (count : Nat) :
+theorem encode_values_take (values : List val) (count : Nat) :
     (encodeValues values).take (offset (values.map valueType) count) =
       encodeValues (values.take count) := by
-  have hs := encodeValues_append (values.take count) (values.drop count)
+  have hs := encode_values_append (values.take count) (values.drop count)
   rw [List.take_append_drop] at hs
   rw [hs]
   have hl : offset (values.map valueType) count = (encodeValues (values.take count)).length := by
-    rw [encodeValues_length]
+    rw [encode_values_length]
     simp only [offset, List.map_take]
   rw [hl, List.take_left]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

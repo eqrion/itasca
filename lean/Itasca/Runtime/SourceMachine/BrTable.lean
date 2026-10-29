@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Sim.Compose
 import Itasca.Runtime.SourceMachine.ControlSafety
 
-namespace Itasca.Runtime.Abs.BrTable
+namespace Itasca.Runtime.SourceMachine.BrTable
 open SpecExt Itasca.Runtime.Spec
 
 /-- The final label is used whenever the unsigned selector is out of range. -/
@@ -77,7 +77,7 @@ theorem frame_preservation {s : store} {f : AFrame} {after : List instr}
   | mk C bindings localTypes locals values returns code frameWf =>
     simp only [List.append_nil] at code
     obtain ⟨front,ins,outs,head,stack,tail,heights⟩ :=
-      codeStack_after_bounds (value_types_concrete (frontValues ++ [integerVal .I32 bits])) code
+      code_stack_after_bounds (value_types_concrete (frontValues ++ [integerVal .I32 bits])) code
     cases head with
     | br_table _ _ _ discarded branchTypes outputs targetBounds targetTypes defaultBound defaultTypes contextWf instructionWf =>
       have base : frontValues.map valueType = front ++ (discarded ++ branchTypes) := by
@@ -112,10 +112,10 @@ theorem frame_preservation {s : store} {f : AFrame} {after : List instr}
       have head' := Instr_ok.br (labelContext C f.labels) (select labels fallback bits)
         discarded branchTypes outs selectedBound selectedTypes contextWf selectedWf
       have retained : ResultsTyped s (frontValues.map valueType) frontValues := by
-        simpa using resultsTyped_take frontValues.length values
+        simpa using results_typed_take frontValues.length values
       apply FrameTyped.mk (f := {f with code := .BR (select labels fallback bits) :: after, vals := frontValues})
         C bindings localTypes locals retained returns ?_ frameWf
-      simpa only [List.append_nil,base] using codeStack_prepend head' selectedWf heights tail
+      simpa only [List.append_nil,base] using code_stack_prepend head' selectedWf heights tail
 
 theorem correct (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (front : List val) (bits : Nat) (labels : List labelidx) (fallback : labelidx)
@@ -127,8 +127,8 @@ theorem correct (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
   have frameTyped : FrameTyped s {f with code := .BR_TABLE labels fallback :: after, vals := front ++ [integerVal .I32 bits]} [] := by
     cases typed.frames with | cons head _ => exact head
   have restWf : Forall FrameWf rest := by
-    cases typed.frames with | cons _ tail => exact framesTyped_wf tail
-  obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+    cases typed.frames with | cons _ tail => exact frames_typed_wf tail
+  obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
   have afterWf : Forall wf_instr after := fun i member => codeWf i (List.mem_cons_of_mem _ member)
   have opWf := codeWf (.BR_TABLE labels fallback) (List.mem_cons_self ..)
   have frontWf : Forall wf_val front := fun v member => valuesWf v (List.mem_append_left _ member)
@@ -153,8 +153,8 @@ theorem operands {s : store} {f : AFrame} {after : List instr}
   obtain ⟨C,first,operands,ins,outs,bindings,locals,head,split,operandTypes⟩ := frame_typed_operands typed
   cases head with
   | br_table =>
-    obtain ⟨discarded,remaining,rfl,_,remainingTyped⟩ := resultsTyped_split operandTypes
-    obtain ⟨arguments,selector,rfl,_,selectorTyped⟩ := resultsTyped_split remainingTyped
+    obtain ⟨discarded,remaining,rfl,_,remainingTyped⟩ := results_typed_split operandTypes
+    obtain ⟨arguments,selector,rfl,_,selectorTyped⟩ := results_typed_split remainingTyped
     cases selectorTyped with
     | cons value empty =>
       cases empty
@@ -162,4 +162,4 @@ theorem operands {s : store} {f : AFrame} {after : List instr}
       refine ⟨first ++ discarded ++ arguments,bits,?_,bound⟩
       simpa only [List.append_assoc] using split
 
-end Itasca.Runtime.Abs.BrTable
+end Itasca.Runtime.SourceMachine.BrTable

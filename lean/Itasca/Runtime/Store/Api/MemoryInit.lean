@@ -41,8 +41,8 @@ theorem memory_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   have bytesEq : decodeBytes (view buffer).val =
       Spec.Segment.copyInto (decodeBytes (view memory.buf).val) (decodeBytes segment.bytes.val) destination source count := by
     unfold decodeBytes
-    rw [copied,←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ inside.1 inside.2]
-    exact copyInto_map _ _ _ _ _ _ inside.1
+    rw [copied,←Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ inside.1 inside.2]
+    exact copy_into_map _ _ _ _ _ _ inside.1
   have lists := Itasca.Runtime.Representation.map_set_modify (decodeMemory view)
     (fun m => {m with BYTES := Spec.Segment.copyInto m.BYTES (decodeData segment).BYTES destination source count})
     store.memories.val memoryAddress.index.val memory {memory with buf := buffer} target
@@ -50,7 +50,7 @@ theorem memory_init_decodes {M : Type} (view : M → Slice U8) (code : CodeInter
   have addressBound : ambient.MODULE.MEMS[0]! < (decodeStore view code store).MEMS.length := by
     rw [memoryRead]
     simpa [decodeStore] using (List.getElem?_eq_some_iff.mp target).1
-  rw [Spec.Segment.memoryInit_eq _ _ _ _ _ _ addressBound
+  rw [Spec.Segment.memory_init_eq _ _ _ _ _ _ addressBound
     (by simpa [memoryLookup,decodeMemory,decodeBytes] using memoryBound)
     (by simpa [dataRead,decodeData,decodeBytes] using dataBound)
     (by simpa [memoryLookup,dataRead,decodeMemory,decodeData,decodeBytes] using inside),memoryRead,dataRead]
@@ -79,7 +79,7 @@ theorem MemoryInitializationEffect.refines {M : Type} (view : M → Slice U8) (c
     simp [fun_mem,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,memoryMapped,target]
   have dataRead : fun_data ⟨decodeStore view code store,ambient⟩ (.mk_uN dataIndex.val) = decodeData segment := by
     simp [fun_data,moduleEq,decodeInstance,decodeStore,proj_uN_0,List.getElem!_eq_getElem?_getD,dataMapped,resolved]
-  have wf := decodeStore_wf view code store shape sourceSyntax
+  have wf := decode_store_wf view code store shape sourceSyntax
   unfold MemoryInitializationEffect at effect
   split at effect
   · rename_i inside
@@ -95,11 +95,11 @@ theorem MemoryInitializationEffect.refines {M : Type} (view : M → Slice U8) (c
       rw [addressRead]
       simpa [decodeStore] using (List.getElem?_eq_some_iff.mp target).1
     · rw [dataRead]
-      exact decodeBytes_wf segment.bytes.val
+      exact decode_bytes_wf segment.bytes.val
     · simpa [memoryRead,dataRead,decodeMemory,decodeData,decodeBytes] using And.intro inside.2 inside.1
   · rename_i outside
     rw [effect]
-    apply Spec.stepsH_single
+    apply Spec.steps_h_single
     apply Spec.Segment.memory_init_trap _ _ _ _ _ _ wf ambientWf dstBound srcBound countBound (by scalar_tac)
     simp only [memoryRead,dataRead,decodeMemory,decodeData,decodeBytes,List.length_map]
     simp only [alloc.vec.Vec.length,Slice.length] at outside

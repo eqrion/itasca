@@ -11,7 +11,7 @@ Normal return of direct and conditional branch callbacks. The conditional proof 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -94,7 +94,7 @@ private theorem branch_if_underflow_total {A} (ops : runtime.platform.Alloc A)
           lookup position loop nonempty different sourcePosition conditionAt rfl fixupsFit codeFits sourceFits coordinateFits) (by simp)
     · exact branch_if_underflow_total ops compiler frame index depth lookup position (by cases kindEq : frame.kind <;> simp_all)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -102,7 +102,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -164,7 +164,7 @@ private theorem branch_if_empty_total {A} (ops : runtime.platform.Alloc A)
       simp [condition,show compiler.before.val.length-1 < compiler.before.val.length by omega]
     exact compiler_branch_if_total ops law compiler frame index depth condition lookup position conditionAt
       fixupsFit pcBound codeFits sourceFits coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -172,7 +172,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -240,6 +240,6 @@ theorem branch_depth_target (frames : alloc.vec.Vec runtime.compiler.Frame) (dep
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
       exact compiler_observe_stack ops law after state
   · exact compiler_observe_stack ops law compiler state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

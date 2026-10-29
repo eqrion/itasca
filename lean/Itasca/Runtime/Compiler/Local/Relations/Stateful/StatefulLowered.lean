@@ -7,15 +7,15 @@ Actual accepted non-pair callbacks produce their source-indexed emission.
 Main declarations: `compiler_stateful_single_emission` and `compiler_stateful_emission`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual accepted non-pair callbacks produce their source-indexed emission. -/
 theorem compiler_stateful_single_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (C : context) (front input output : List valtype) (op : Abs.Stateful.Instruction) (a b : U32)
-    (signature : Abs.Stateful.Signature C op input output)
+    (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
+    (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
@@ -45,8 +45,8 @@ the returned table entry; layout and code evidence refer to the original state. 
 theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (C : context) (front input output : List valtype) (op : Abs.Stateful.Instruction) (a b : U32)
-    (signature : Abs.Stateful.Signature C op input output)
+    (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
+    (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
@@ -66,7 +66,7 @@ theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc
   have pairedLayout : CompilerLayout paired (front ++ input) :=
     ⟨layout.localSlots,layout.localOffsets,layout.operandOffsets,layout.height,layout.capacity⟩
   obtain ⟨first,second,reads,position,secondPosition⟩ := stateful_operands ops paired C front input output op signature pairedLayout
-  have arity : op.arity = 3 := by cases op <;> simp_all [statefulUsesPair,Abs.Stateful.Instruction.arity]
+  have arity : op.arity = 3 := by cases op <;> simp_all [statefulUsesPair,SourceMachine.Stateful.Instruction.arity]
   have read : runtime.compiler.FunctionCompiler.operand ops paired 3#usize = .ok (.Ok first) := by
     simpa [statefulDepth,arity] using reads.1
   rw [lower_stateful_pair_eq ops before paired state op first second a b entry reachable pairOpcode pairRun read] at accepted
@@ -88,8 +88,8 @@ theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc
 theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (C : context) (front input output : List valtype) (op : Abs.Stateful.Instruction) (a b : U32)
-    (signature : Abs.Stateful.Signature C op input output)
+    (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
+    (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
@@ -110,4 +110,4 @@ theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
       signature locals arguments layout reachable concrete typed codeFits sourceFits coordinateFits single accepted
     exact ⟨⟨[],by simp [pairs]⟩,emission⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

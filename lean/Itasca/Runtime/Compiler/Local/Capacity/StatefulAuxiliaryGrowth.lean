@@ -1,12 +1,12 @@
 import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
 
 theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (),after)) :
     AuxiliaryGrowth before after := by
   by_cases live : before.reachable = true
@@ -17,4 +17,4 @@ theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
     rw [if_neg live] at accepted
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -29,7 +29,7 @@ theorem extend_bits_source {width : Nat} (output : Nat) (signed : Bool) (bits : 
   cases signed
   · simp only [extendBits,Bool.false_eq_true,↓reduceIte,extend__]
     rw [BitVec.toNat_setWidth_of_le le]
-  · simp only [extendBits,Bool.true_eq,↓reduceIte,extend__,proj_uN_0,Itasca.Runtime.Spec.signedValue_bitvec]
+  · simp only [extendBits,Bool.true_eq,↓reduceIte,extend__,proj_uN_0,Itasca.Runtime.Spec.signed_value_bitvec]
     rfl
 
 inductive WidenWidth where | i8 | i16 | i32
@@ -141,8 +141,8 @@ open SpecExt.Builtins
 theorem widen_multiply_source_wf (ty : WidenWidth) (high signed : Bool) :
     wf_admininstr (widenSource ty true high signed) := by
   apply wf_admininstr.admininstr_case_37
-  · exact .ishape_case_0 _ _ (shapeOf_wf _) rfl
-  · exact .ishape_case_0 _ _ (shapeOf_wf _) rfl
+  · exact .ishape_case_0 _ _ (shape_of_wf _) rfl
+  · exact .ishape_case_0 _ _ (shape_of_wf _) rfl
   · apply wf_vextbinop__.vextbinop___case_0
     · apply wf_vextbinop__Jnn_1_M_1_Jnn_2_M_2.vextbinop__Jnn_1_M_1_Jnn_2_M_2_case_0
       cases ty <;> decide
@@ -173,8 +173,8 @@ theorem widen_multiply_vector (ty : WidenWidth) (high signed : Bool) (x y : BitV
     · exact widen_selected .i8 high x
     · exact widen_selected .i8 high y
     · rfl
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact widen_words_wf .i8 true high signed x y
     · rfl
     · rfl
@@ -196,8 +196,8 @@ theorem widen_multiply_vector (ty : WidenWidth) (high signed : Bool) (x y : BitV
     · exact widen_selected .i16 high x
     · exact widen_selected .i16 high y
     · rfl
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact widen_words_wf .i16 true high signed x y
     · rfl
     · rfl
@@ -219,8 +219,8 @@ theorem widen_multiply_vector (ty : WidenWidth) (high signed : Bool) (x y : BitV
     · exact widen_selected .i32 high x
     · exact widen_selected .i32 high y
     · rfl
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact widen_words_wf .i32 true high signed x y
     · rfl
     · rfl

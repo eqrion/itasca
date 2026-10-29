@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 8192
 
@@ -23,14 +23,14 @@ inductive SourceOpcodeFamily (opcode : U8) : Prop where
   | control (kind : ControlReaderKind) : opcode = kind.opcode → SourceOpcodeFamily opcode
   | table : opcode = 14#u8 → SourceOpcodeFamily opcode
   | typedSelect : opcode = 28#u8 → SourceOpcodeFamily opcode
-  | integer (op : Abs.Numeric.Instruction) : (integerOpcode op).val < 192 →
+  | integer (op : SourceMachine.Numeric.Instruction) : (integerOpcode op).val < 192 →
       opcode = UScalar.cast .U8 (integerOpcode op) → SourceOpcodeFamily opcode
-  | float (op : Abs.Float.Instruction) : (floatOpcode op).val < 256 →
+  | float (op : SourceMachine.Float.Instruction) : (floatOpcode op).val < 256 →
       opcode = UScalar.cast .U8 (floatOpcode op) → SourceOpcodeFamily opcode
-  | sign (op : Abs.Numeric.Instruction) : 192 ≤ (integerOpcode op).val →
+  | sign (op : SourceMachine.Numeric.Instruction) : 192 ≤ (integerOpcode op).val →
       opcode = UScalar.cast .U8 (integerOpcode op) → SourceOpcodeFamily opcode
-  | load (op : Abs.Memory.Load) : opcode = UScalar.cast .U8 (memoryLoadOpcode op) → SourceOpcodeFamily opcode
-  | store (op : Abs.Memory.Store) : opcode = UScalar.cast .U8 (memoryStoreOpcode op) → SourceOpcodeFamily opcode
+  | load (op : SourceMachine.Memory.Load) : opcode = UScalar.cast .U8 (memoryLoadOpcode op) → SourceOpcodeFamily opcode
+  | store (op : SourceMachine.Memory.Store) : opcode = UScalar.cast .U8 (memoryStoreOpcode op) → SourceOpcodeFamily opcode
   | stateful : opcode.val ∈ [37,38,63,64,208,209,210] → SourceOpcodeFamily opcode
   | misc : opcode = 252#u8 → SourceOpcodeFamily opcode
   | simd : opcode = 253#u8 → SourceOpcodeFamily opcode
@@ -62,7 +62,7 @@ theorem source_opcode_family (opcode : U8) : SourceOpcodeFamily opcode := by
   by_cases numeric : 69 ≤ opcode.val ∧ opcode.val < 192
   · rcases source_numeric_byte_partition opcode numeric.1 numeric.2 with integer | float
     · obtain ⟨op,same⟩ := integer_opcode_of_mem integer
-      have bounded := integerOpcode_byte op
+      have bounded := integer_opcode_byte op
       have base : (integerOpcode op).val < 192 := by
         have values := congrArg UScalar.val same
         scalar_tac
@@ -117,4 +117,4 @@ theorem ReservedSourceOpcode.rejects {V : Type} (source : code.OpVisitor V)
       code.step_numeric.unrecognized source st.core opcode before absent] at raw
     simp at raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

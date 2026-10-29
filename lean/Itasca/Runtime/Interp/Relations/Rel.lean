@@ -16,16 +16,16 @@ def WordsAt (words : List U64) (base : Nat) (bits : List Nat) : Prop :=
     base + index < words.length ∧ words[base + index]!.val = bits[index]!
 
 def ValuesAt (words : List U64) (base : Nat) (values : List val) : Prop :=
-  WordsAt words base (Code.encodeValues values)
+  WordsAt words base (Compiler.encodeValues values)
 
 def FrameSlots (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
-    (source : Abs.AFrame) : Prop :=
+    (source : SourceMachine.AFrame) : Prop :=
   ValuesAt exec.slots.val raw.base.val (source.locals ++ source.vals)
 
 /-- Resolve a concrete frame through the retained store, instance, function,
 and signature tables, preserving actual owning-module bindings. -/
 def FrameBinding {M : Type} (s : runtime.store.Store M) (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
-    (source : Abs.AFrame) : Prop :=
+    (source : SourceMachine.AFrame) : Prop :=
   ∃ inst fn compiled signature,
     exec.store = s.id ∧ raw ∈ exec.frames.val ∧
     s.instances.val[raw.instance.val]? = some inst ∧
@@ -35,7 +35,7 @@ def FrameBinding {M : Type} (s : runtime.store.Store M) (exec : runtime.interp.E
     s.types.val[fn.signature.val]? = some signature ∧
     source.module = Store.decodeInstance s inst ∧
     source.resultTypes = signature.results.val.map sourceType ∧
-    source.locals.map Code.valueType = compiled.locals.val.map sourceType ∧
+    source.locals.map Compiler.valueType = compiled.locals.val.map sourceType ∧
     raw.base.val + compiled.slot_count.val ≤ exec.slots.length
 
 theorem WordsAt.append_left {words : List U64} {base : Nat} {left right : List Nat}
@@ -89,13 +89,13 @@ theorem WordsAt.binary_result {words : List U64} {base : Nat} {front : List Nat}
 
 theorem ValuesAt.locals {words : List U64} {base : Nat} {locals values : List val}
     (h : ValuesAt words base (locals ++ values)) : ValuesAt words base locals := by
-  simp only [ValuesAt, Code.encodeValues_append] at h ⊢
+  simp only [ValuesAt, Compiler.encode_values_append] at h ⊢
   exact h.append_left
 
 theorem ValuesAt.operands {words : List U64} {base : Nat} {locals values : List val}
     (h : ValuesAt words base (locals ++ values)) :
-    ValuesAt words (base + Code.slots (locals.map Code.valueType)) values := by
-  simp only [ValuesAt, Code.encodeValues_append] at h ⊢
-  simpa only [Code.encodeValues_length] using h.append_right
+    ValuesAt words (base + Compiler.slots (locals.map Compiler.valueType)) values := by
+  simp only [ValuesAt, Compiler.encode_values_append] at h ⊢
+  simpa only [Compiler.encode_values_length] using h.append_right
 
 end Itasca.Runtime.Interp

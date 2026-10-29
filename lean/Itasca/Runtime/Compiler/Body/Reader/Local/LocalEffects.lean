@@ -7,7 +7,7 @@ Successful local reads return the declared local type and append exactly that co
 Main declarations: `reader_local_get_effect` and `reader_local_tee_effect`. A direct consumer is `Compiler.Body.Reader.Control.BranchEffects`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful local reads return the declared local type and append exactly
@@ -125,4 +125,4 @@ theorem reader_local_tee_effect (st out : code.OpIterState) (data : Slice U8) (c
       · simp [values, segmentShape, List.append_assoc]
       · simp [finalValues, nextValues, values, segmentShape, List.append_assoc]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

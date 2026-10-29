@@ -5,7 +5,7 @@ import Itasca.Support.Result
 changes only one branch target, preserves existing slot layout and code length,
 and leaves every separately addressed pending fixup untouched. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 inductive BranchKind where
@@ -89,4 +89,4 @@ theorem Patched.other {A : Type} {before after : runtime.compiler.FunctionCompil
   obtain ⟨code, rfl, hcode⟩ := patched
   simp [hcode, Ne.symm different]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

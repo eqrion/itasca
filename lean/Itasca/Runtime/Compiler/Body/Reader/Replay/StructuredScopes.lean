@@ -47,7 +47,7 @@ Control-scope compilation through a structured reader point.
 Main declarations: `StructuredReaderCompilerPointWasm2.scope_step`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem StructuredReaderCompilerPointWasm2.scope_step {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -90,4 +90,4 @@ theorem StructuredReaderCompilerPointWasm2.scope_step {jumpTables : List U32} {A
     obtain ⟨x0, x1, post⟩ := state.br_if ops law next advance inbounds out sourceBound
       (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact post.point
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

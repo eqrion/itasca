@@ -7,7 +7,7 @@ Compiler metadata retained when entering a scope.
 Main declarations: `compiler_enter_stable_result`. A direct consumer is `Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -21,4 +21,4 @@ theorem compiler_enter_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     CompilerStable before after := by
   unfold runtime.compiler.control.FunctionCompiler.enter at accepted
   repeat' metadata_step accepted using ops, law
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

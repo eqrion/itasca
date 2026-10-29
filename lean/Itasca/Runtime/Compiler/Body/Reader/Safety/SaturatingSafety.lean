@@ -7,13 +7,13 @@ Prefix decoding, all eight saturating conversions, and rejected subopcodes retur
 Main declarations: `compiler_reader_saturating_dispatch_total`. A direct consumer is `Compiler.Body.Reader.Safety.OrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem saturating_descriptor (opcode : U32) (small : opcode.val < 8) :
-    ∃ op : Abs.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
+    ∃ op : SourceMachine.Float.Instruction, 256 ≤ (floatOpcode op).val ∧
       opcode.val = (floatOpcode op).val - 256 := by
   interval_cases h : opcode.val
   · exact ⟨.truncate .F32 .I32 .S true,by decide,rfl⟩
@@ -27,7 +27,7 @@ private theorem saturating_descriptor (opcode : U32) (small : opcode.val < 8) :
 
 private theorem saturating_callback {A} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (subopcode : U32) (op : Abs.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
+    (subopcode : U32) (op : SourceMachine.Float.Instruction) (extension : 256 ≤ (floatOpcode op).val)
     (index : subopcode.val = (floatOpcode op).val - 256) :
     code.visit_saturating (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       compiler state subopcode =
@@ -73,4 +73,4 @@ theorem compiler_reader_saturating_dispatch_total {A} (ops : runtime.platform.Al
       · intro state value converted
         rw [saturating_callback ops compiler state subopcode op extension index]
         exact compiler_float_total ops law compiler state op ready.codeFits ready.sourceFits ready.coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

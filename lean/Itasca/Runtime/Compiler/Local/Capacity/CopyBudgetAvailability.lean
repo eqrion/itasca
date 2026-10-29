@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Available raw emission retains its exact code frame and consumes one
@@ -49,4 +49,4 @@ theorem compiler_copy_available_effect {A : Type} (ops : runtime.platform.Alloc 
         intro out post
         exact ⟨post.1,Or.inr ⟨_,post.2.1⟩,post.2.2⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

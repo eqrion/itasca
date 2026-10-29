@@ -1,6 +1,6 @@
 import Itasca.Module.Elab.TypingInversion
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Generated function typing also supplies the runtime function-code syntax.
@@ -62,7 +62,7 @@ theorem source_functions_typed {raw : ModuleBinary.Module}
       · exact ⟨_, first⟩
       · exact ih source member
   intro source member
-  rw [sourceFunctions_eq] at member
+  rw [source_functions_eq] at member
   obtain ⟨function, found, rfl⟩ := List.mem_map.mp member
   obtain ⟨type, checked⟩ := all (ModuleElaboration.sections_of_typing elaborates typed).functions function found
   cases function with
@@ -76,4 +76,4 @@ theorem source_functions_wf {raw : ModuleBinary.Module}
   obtain ⟨index, locals, body, type, rfl, checked⟩ := source_functions_typed elaborates typed source member
   exact function_code_wf checked
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

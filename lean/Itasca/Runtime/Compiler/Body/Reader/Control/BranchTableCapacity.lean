@@ -11,7 +11,7 @@ Compiler capacity after reading a br_table label vector.
 Main declarations: `reader_table_capacity_wasm2`. A direct consumer is `Compiler.Body.Capacity.ExecutableFunctionCapacity`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_capacity_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -23,4 +23,4 @@ theorem reader_table_capacity_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨count,first,selector,popped,depths,fallback,types,defaultStart,readState,budget,buffer,
     _,_,_,_,_,_,_,callback⟩ := compiler_read_br_table ops law before after st out data env _ accepted
   exact compiler_br_table_capacity ops law {before with budget,table_depths:=buffer} after out.core fallback types callback
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

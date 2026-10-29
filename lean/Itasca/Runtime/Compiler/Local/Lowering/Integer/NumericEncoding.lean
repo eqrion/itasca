@@ -7,7 +7,7 @@ All scalar integer numeric opcode bytes.
 Main declarations: `integerOpcodes`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- All scalar integer numeric opcode bytes. -/
@@ -15,7 +15,7 @@ def integerOpcodes : List U8 :=
   [106#u8, 107#u8, 108#u8, 109#u8, 110#u8, 111#u8, 112#u8, 113#u8, 114#u8, 115#u8, 116#u8, 117#u8, 118#u8, 119#u8, 120#u8, 124#u8, 125#u8, 126#u8, 127#u8, 128#u8, 129#u8, 130#u8, 131#u8, 132#u8, 133#u8, 134#u8, 135#u8, 136#u8, 137#u8, 138#u8, 70#u8, 71#u8, 72#u8, 73#u8, 74#u8, 75#u8, 76#u8, 77#u8, 78#u8, 79#u8, 81#u8, 82#u8, 83#u8, 84#u8, 85#u8, 86#u8, 87#u8, 88#u8, 89#u8, 90#u8, 103#u8, 104#u8, 105#u8, 192#u8, 193#u8, 121#u8, 122#u8, 123#u8, 194#u8, 195#u8, 196#u8, 69#u8, 80#u8, 167#u8, 173#u8, 172#u8]
 
 theorem integer_opcode_of_mem {opcode : U8} (member : opcode ∈ integerOpcodes) :
-    ∃ op : Abs.Numeric.Instruction, UScalar.cast .U8 (integerOpcode op) = opcode := by
+    ∃ op : SourceMachine.Numeric.Instruction, UScalar.cast .U8 (integerOpcode op) = opcode := by
   simp only [integerOpcodes, List.mem_cons, List.mem_nil_iff, or_false] at member
   rcases member with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact ⟨.binary .I32 (.ADD), rfl⟩
@@ -85,13 +85,13 @@ theorem integer_opcode_of_mem {opcode : U8} (member : opcode ∈ integerOpcodes)
   · exact ⟨.conversion .extendUnsigned, rfl⟩
   · exact ⟨.conversion .extendSigned, rfl⟩
 
-theorem integer_source_declared (op : Abs.Numeric.Instruction) (refs : List funcidx) :
+theorem integer_source_declared (op : SourceMachine.Numeric.Instruction) (refs : List funcidx) :
     DeclaredReferences.Instruction refs op.source := by
   cases op with
-  | binary ty operator => cases ty <;> cases operator <;> simp [Abs.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
-  | compare ty operator => cases ty <;> cases operator <;> simp [Abs.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
-  | unary ty operator => cases ty <;> cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.UnaryOperator.operation, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
-  | eqz ty => cases ty <;> simp [Abs.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
-  | conversion operator => cases operator <;> simp [Abs.Numeric.Instruction.source, Abs.Numeric.Conversion.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
+  | binary ty operator => cases ty <;> cases operator <;> simp [SourceMachine.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
+  | compare ty operator => cases ty <;> cases operator <;> simp [SourceMachine.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
+  | unary ty operator => cases ty <;> cases operator <;> simp [SourceMachine.Numeric.Instruction.source, SourceMachine.Numeric.UnaryOperator.operation, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
+  | eqz ty => cases ty <;> simp [SourceMachine.Numeric.Instruction.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
+  | conversion operator => cases operator <;> simp [SourceMachine.Numeric.Instruction.source, SourceMachine.Numeric.Conversion.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.State
 import SpecExt.Builtins.Counts
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt.Builtins
 
 /-- Deterministic integer unary semantics at the source word width. -/
@@ -159,4 +159,4 @@ def Instruction.apply (op : Instruction) :
   | .conversion conv => fun a _ => some (conv.apply a)
 
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

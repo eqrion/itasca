@@ -9,7 +9,7 @@ Issued compiler batch submission and retirement, connected to source progress. S
 
 section
 
-namespace Itasca.Runtime.Code.SubmissionTransfer
+namespace Itasca.Runtime.Compiler.SubmissionTransfer
 open Aeneas Aeneas.Std Itasca
 
 /-- Local accepted submission preserves a source-position-indexed invariant.
@@ -263,7 +263,7 @@ theorem retire_of_poll {V : Type} (visitor : stream.StreamingVisitor V) (moduleI
   intro v v' pos func pending remaining invariant accepted
   obtain ⟨batch, poll, _⟩ := stream.retire_code_batch.accepted visitor moduleId v v' pending remaining accepted
   exact polled v v' batch pos func invariant poll
-end Itasca.Runtime.Code.SubmissionTransfer
+end Itasca.Runtime.Compiler.SubmissionTransfer
 
 end
 
@@ -271,14 +271,14 @@ end
 
 section
 
-namespace Itasca.Runtime.Code.SourceSubmission
+namespace Itasca.Runtime.Compiler.SourceSubmission
 open Aeneas Aeneas.Std Itasca ModuleBinary
 
 /-- The unconsumed source suffix is encoded at the actual next framing cursor.
 The processed prefix fixes the global source-function index independently of
 any compiler certificate. -/
 def Progress {V : Type} (profile : ValidationProfile) (code : Slice U8)
-    (env : module.Env) (entries : List Code) (Q : V → Prop)
+    (env : module.Env) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (position first : Usize) (visitor : V) : Prop :=
   ∃ processed remaining, entries = processed ++ remaining ∧
     processed.length = first.val ∧ first.val + remaining.length = env.func_type_indices.val.length ∧
@@ -287,8 +287,8 @@ def Progress {V : Type} (profile : ValidationProfile) (code : Slice U8)
 /-- A local batch proof receives its exact decoded source slice and issued
 function offset. This contract is instantiated by the concrete entry fold. -/
 def Batch {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
-    (profile : ValidationProfile) (env : module.Env) (entries : List Code) (Q : V → Prop) : Prop :=
-  ∀ (before after : V) (issued : StreamBatch.Issued) (processed taken remaining : List Code),
+    (profile : ValidationProfile) (env : module.Env) (entries : List ModuleBinary.Code) (Q : V → Prop) : Prop :=
+  ∀ (before after : V) (issued : StreamBatch.Issued) (processed taken remaining : List ModuleBinary.Code),
     entries = processed ++ taken ++ remaining → issued.module_id = moduleId → issued.profile = profile →
     issued.env = env → issued.first_func.val = processed.length → issued.num_funcs.val = taken.length →
     Rep (Profile.CodeEncoding profile) taken issued.code.val → issued.Bounded → Q before →
@@ -296,7 +296,7 @@ def Batch {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
 
 theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
-    (profile : ValidationProfile) (config : stream.Config) (entries : List Code) (Q : V → Prop)
+    (profile : ValidationProfile) (config : stream.Config) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (batch : Batch visitor moduleId profile env entries Q) :
@@ -339,7 +339,7 @@ theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : strea
 independently encoded source list, provided each real issued batch is checked. -/
 theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
-    (profile : ValidationProfile) (config : stream.Config) (entries : List Code) (Q : V → Prop)
+    (profile : ValidationProfile) (config : stream.Config) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (start : Usize) (sourceBytes : At (Rep (Profile.CodeEncoding profile)) code start entries (Slice.len code))
@@ -366,6 +366,6 @@ theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.Streami
       (progress_submit source visitor state moduleId env code profile config entries Q environment tail available capacity batch)
       retired before after start pending capacity startBound initialProgress accepted
   exact final
-end Itasca.Runtime.Code.SourceSubmission
+end Itasca.Runtime.Compiler.SourceSubmission
 
 end

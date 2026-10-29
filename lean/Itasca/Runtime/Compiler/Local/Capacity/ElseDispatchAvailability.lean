@@ -10,7 +10,7 @@ Availability of else callbacks in live, dormant and unentered cases. The final d
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -142,7 +142,7 @@ theorem compiler_else_unentered_available {A : Type} (ops : runtime.platform.All
     reachable := frame.entry_reachable}
   exact compiler_observe_available_budget ops bound available updated state request slotsFit
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -150,7 +150,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem representable_pc (count : Nat) (bounded : count ≤ U32.max) :
@@ -200,6 +200,6 @@ theorem compiler_else_available {A : Type} (ops : runtime.platform.Alloc A)
       rw [post.2]
       exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -10,8 +10,8 @@ Metadata, source-offset and capacity effects of stateful lowering.
 Main declarations: `compiler_stateful_ordinary_result` and `compiler_stateful_capacity`. A direct consumer is `Compiler.Local.Publication.LoweringMapPublication`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Stateful
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Stateful
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_stateful_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -68,4 +68,4 @@ theorem compiler_stateful_capacity {A : Type} (ops : runtime.platform.Alloc A)
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

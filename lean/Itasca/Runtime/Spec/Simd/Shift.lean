@@ -48,7 +48,7 @@ theorem shift_lane_relation (ty : Jnn) (kind : ShiftKind)
       (.mk_vshiftop__0 ty (128/lsize (lanetype_Jnn ty)) (shiftOperation kind))
       (laneOfBits (lanetype_Jnn ty) bits.toNat) (.mk_uN amount)
       (some (laneOfBits (lanetype_Jnn ty) (shiftBits kind bits (amount%lsize (lanetype_Jnn ty))).toNat)) := by
-  have wf := laneOfBits_wf (lanetype_Jnn ty) (shiftBits kind bits (amount%lsize (lanetype_Jnn ty))).toNat
+  have wf := lane_of_bits_wf (lanetype_Jnn ty) (shiftBits kind bits (amount%lsize (lanetype_Jnn ty))).toNat
     (BitVec.toNat_lt_twoPow_of_le (by rfl))
   have laneEq (n : Nat) : laneOfBits (lanetype_Jnn ty) n = .mk_lane__0 ty (.mk_uN n) := by cases ty <;> rfl
   simp only [laneEq] at wf ⊢
@@ -112,7 +112,7 @@ theorem shift_step (ty : Jnn) (kind : ShiftKind) (bits result : BitVec 128) (amo
   let inputs := (List.range (128/lsize (lanetype_Jnn ty))).map (fun j =>
     laneOfBits (lanetype_Jnn ty) (vectorLane (lanetype_Jnn ty) bits j).toNat)
   let outputs := (shiftLaneValues ty kind bits amount.toNat).map some
-  have shapeWf := shapeOf_wf (lanetype_Jnn ty)
+  have shapeWf := shape_of_wf (lanetype_Jnn ty)
   have integerShape : wf_ishape (.mk_ishape (shapeOf (lanetype_Jnn ty))) :=
     .ishape_case_0 ty _ shapeWf rfl
   apply Step_pure.vshiftop (.mk_uN bits.toNat) amount.toNat ty (128/lsize (lanetype_Jnn ty))
@@ -131,7 +131,7 @@ theorem shift_step (ty : Jnn) (kind : ShiftKind) (bits result : BitVec 128) (amo
   · simpa [outputs,Map,List.map_map,Function.comp_def,shapeOf] using packed
   · intro lane member
     obtain ⟨j,_,rfl⟩ := List.mem_map.mp member
-    exact laneOfBits_wf _ _ (BitVec.toNat_lt_twoPow_of_le (by rfl))
+    exact lane_of_bits_wf _ _ (BitVec.toNat_lt_twoPow_of_le (by rfl))
   · exact const_wf bits
   · exact .admininstr_case_13 _ _ (unsigned_num_wf .I32 _ amount.isLt)
   · exact .admininstr_case_29 _ _ integerShape (.vshiftop__case_0 _ _ _ _ rfl)

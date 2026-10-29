@@ -11,7 +11,7 @@ br_table reader inversion through label-vector body and loop execution. The fina
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 
  theorem table_rest_cont {V : Type} (visitor : code.OpVisitor V)
@@ -73,7 +73,7 @@ theorem table_rest_done {V : Type} (visitor : code.OpVisitor V)
     · simp only [isLast,ite_false] at rest
       obtain ⟨_,_,rest⟩ := bind_ok_inv _ _ _ rest
       simp at rest
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -81,7 +81,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -193,7 +193,7 @@ theorem compiler_table_body_done {A : Type} (ops : runtime.platform.Alloc A)
         simp only [code.visit,bind_ok,uncurry_apply_pair] at rest
         exact False.elim (isLast (table_rest_done _ s final env count index depth types arity _ middle
           after rest).1)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -201,7 +201,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -264,7 +264,7 @@ theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
       · exact (BrTable.LabelsDecoded.snoc .nil decoded).append remaining
       · simp only [List.length_cons]
         omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -272,7 +272,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -318,6 +318,6 @@ theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
           (by scalar_tac) rest
       exact ⟨count,first,selector,popped,depths,default,types,defaultStart,readState,budget,buffer,
         readSpec,popCall,bufferEq,decoded,defaultDecoded,by simpa using countEq,marked,callback⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

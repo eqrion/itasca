@@ -81,7 +81,7 @@ theorem bitvec_inv_signed (width : Nat) (bits : BitVec width) :
           omega)
       simpa only [encoded] using raw
 
-@[simp] theorem truncz_intCast (value : Int) : truncz (value : Rat) = value := by
+@[simp] theorem truncz_int_cast (value : Int) : truncz (value : Rat) = value := by
   simp [truncz]
 
 /-- A representable toward-zero quotient satisfies the signed division rule. -/
@@ -98,7 +98,7 @@ theorem signed_div_relation (width : Nat) (a b result : BitVec width)
   · intro overflow
     have truncated := congrArg truncz overflow
     have hp : (2 : Rat) ^ (width - 1) = (((2 : Int) ^ (width - 1) : Int) : Rat) := by simp
-    rw [truncz_int_div, ← quotient, exponent, hp, truncz_intCast] at truncated
+    rw [truncz_int_div, ← quotient, exponent, hp, truncz_int_cast] at truncated
     have bound := BitVec.toInt_lt (x := result)
     omega
   · exact unsigned_wf_of_lt width result.toNat result.isLt

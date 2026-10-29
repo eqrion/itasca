@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringForwardBranch
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringLoopBranch
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
@@ -205,4 +205,4 @@ theorem branch_elided_forward_success {A : Type} (ops : runtime.platform.Alloc A
         · simpa [exactState] using finalCode
         · simp [alloc.vec.Vec.len]
         · simp [exactState, hback, kindEq]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

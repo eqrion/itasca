@@ -11,13 +11,13 @@ def integerWord (ty : Inn) (raw : U64) : BitVec (sizenn (numtype_Inn ty)) :=
   | .I32 => (UScalar.cast .U32 raw).bv
   | .I64 => raw.bv
 
-@[simp] theorem integerWord32_toNat (raw : U64) :
+@[simp] theorem integer_word32_to_nat (raw : U64) :
     (integerWord .I32 raw).toNat = raw.val % 4294967296 := by
   change (UScalar.cast .U32 raw).bv.toNat = _
   rw [UScalar.bv_toNat, UScalar.cast_val_eq]
   rfl
 
-@[simp] theorem integerWord64_toNat (raw : U64) :
+@[simp] theorem integer_word64_to_nat (raw : U64) :
     (integerWord .I64 raw).toNat = raw.val := by
   change raw.bv.toNat = _
   exact UScalar.bv_toNat raw
@@ -78,192 +78,192 @@ theorem scalar_binary_sound {F : Type} (floats : runtime.platform.FloatOps F)
     | ADD =>
       apply WP.spec_mono (scalar_i32_add_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SUB =>
       apply WP.spec_mono (scalar_i32_sub_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | MUL =>
       apply WP.spec_mono (scalar_i32_mul_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | DIV sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i32_divs_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨trap, rfl, allowed, relation⟩
-          exact ⟨allowed, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨allowed, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
       | U =>
         apply WP.spec_mono (scalar_i32_divu_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
     | REM sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i32_rems_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
       | U =>
         apply WP.spec_mono (scalar_i32_remu_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
     | AND =>
       apply WP.spec_mono (scalar_i32_and_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | OR =>
       apply WP.spec_mono (scalar_i32_or_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | XOR =>
       apply WP.spec_mono (scalar_i32_xor_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SHL =>
       apply WP.spec_mono (scalar_i32_shl_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SHR sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i32_shrs_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
-        exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
       | U =>
         apply WP.spec_mono (scalar_i32_shru_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
-        exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | ROTL =>
       apply WP.spec_mono (scalar_i32_rotl_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | ROTR =>
       apply WP.spec_mono (scalar_i32_rotr_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
   | I64 =>
     cases op with
     | ADD =>
       apply WP.spec_mono (scalar_i64_add_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SUB =>
       apply WP.spec_mono (scalar_i64_sub_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | MUL =>
       apply WP.spec_mono (scalar_i64_mul_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | DIV sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i64_divs_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨trap, rfl, allowed, relation⟩
-          exact ⟨allowed, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨allowed, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
       | U =>
         apply WP.spec_mono (scalar_i64_divu_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
     | REM sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i64_rems_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
       | U =>
         apply WP.spec_mono (scalar_i64_remu_sound floats a b)
         intro status evidence
         rcases evidence with ⟨value, rfl, relation⟩ | trapped
-        · exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        · exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
         · rcases trapped with ⟨rfl, relation⟩
-          exact ⟨Or.inl rfl, by exact (by simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
+          exact ⟨Or.inl rfl, by exact (by simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)⟩
     | AND =>
       apply WP.spec_mono (scalar_i64_and_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | OR =>
       apply WP.spec_mono (scalar_i64_or_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | XOR =>
       apply WP.spec_mono (scalar_i64_xor_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SHL =>
       apply WP.spec_mono (scalar_i64_shl_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | SHR sign =>
       cases sign with
       | S =>
         apply WP.spec_mono (scalar_i64_shrs_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
-        exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
       | U =>
         apply WP.spec_mono (scalar_i64_shru_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
-        exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+        exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | ROTL =>
       apply WP.spec_mono (scalar_i64_rotl_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
     | ROTR =>
       apply WP.spec_mono (scalar_i64_rotr_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
-      exact (by try (simp only [BinaryStatus]); simp only [integerWord32_toNat, integerWord64_toNat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
+      exact (by try (simp only [BinaryStatus]); simp only [integer_word32_to_nat, integer_word64_to_nat]; simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation)
 
 /-- Concrete results equal the deterministic word semantics; traps preserve the
 same empty source result, and cannot become unrelated runtime errors. -/
 def BinaryExact (ty : Inn) (op : binop_Inn) (a b : U64)
     (status : core.result.Result U64 runtime.ExecError) : Prop :=
   match status with
-  | .Ok value => ∃ word, Abs.Numeric.binary ty op (integerWord ty a) (integerWord ty b) = some word ∧ value.val = word.toNat
+  | .Ok value => ∃ word, SourceMachine.Numeric.binary ty op (integerWord ty a) (integerWord ty b) = some word ∧ value.val = word.toNat
   | .Err (.Trap trap) => (trap = .IntegerDivideByZero ∨ trap = .IntegerOverflow) ∧
-      Abs.Numeric.binary ty op (integerWord ty a) (integerWord ty b) = none
+      SourceMachine.Numeric.binary ty op (integerWord ty a) (integerWord ty b) = none
   | _ => False
 
 theorem BinaryStatus.exact {ty : Inn} {op : binop_Inn} {a b : U64}
     {status : core.result.Result U64 runtime.ExecError} (sound : BinaryStatus ty op a b status) :
     BinaryExact ty op a b status := by
-  have specified := Abs.Numeric.binary_relation ty op (integerWord ty a) (integerWord ty b)
+  have specified := SourceMachine.Numeric.binary_relation ty op (integerWord ty a) (integerWord ty b)
   cases status with
   | Ok value =>
     have same := Spec.integer_binop_deterministic sound specified
-    cases result : Abs.Numeric.binary ty op (integerWord ty a) (integerWord ty b) with
-    | none => simp [result, Abs.Numeric.binaryNumbers] at same
+    cases result : SourceMachine.Numeric.binary ty op (integerWord ty a) (integerWord ty b) with
+    | none => simp [result, SourceMachine.Numeric.binaryNumbers] at same
     | some word =>
       refine ⟨word, result, ?_⟩
-      simpa only [result, Abs.Numeric.binaryNumbers, List.singleton_inj, num_.mk_num__0.injEq, uN.mk_uN.injEq, true_and] using same
+      simpa only [result, SourceMachine.Numeric.binaryNumbers, List.singleton_inj, num_.mk_num__0.injEq, uN.mk_uN.injEq, true_and] using same
   | Err error =>
     cases error <;> try exact False.elim sound
     rename_i trap
     have same := Spec.integer_binop_deterministic sound.2 specified
     refine ⟨sound.1, ?_⟩
-    cases result : Abs.Numeric.binary ty op (integerWord ty a) (integerWord ty b) with
+    cases result : SourceMachine.Numeric.binary ty op (integerWord ty a) (integerWord ty b) with
     | none => rfl
-    | some word => simp [result, Abs.Numeric.binaryNumbers] at same
+    | some word => simp [result, SourceMachine.Numeric.binaryNumbers] at same
 
 theorem scalar_binary_exact {F : Type} (floats : runtime.platform.FloatOps F)
     (ty : Inn) (op : binop_Inn) (a b : U64) :

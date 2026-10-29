@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.ObserveAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Available stack observation leaves the complete compilation budget intact,
@@ -41,4 +41,4 @@ theorem compiler_observe_available_budget {A : Type} (ops : runtime.platform.All
   · exact WP.spec.ret ⟨rfl,same⟩
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

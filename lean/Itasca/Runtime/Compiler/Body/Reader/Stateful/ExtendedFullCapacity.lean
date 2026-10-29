@@ -14,7 +14,7 @@ Capacity follows the actual scalar/reference callback and canonical reader state
 Main declarations: `reader_stateful_base_full_capacity_wasm2` and `reader_typed_select_full_capacity_wasm2`. A direct consumer is `Compiler.Body.Capacity.ExecutableFunctionCapacity`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Capacity follows the actual scalar/reference callback and canonical reader state. -/
@@ -75,4 +75,4 @@ theorem reader_typed_select_full_capacity_wasm2 {data env locals index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact compiler_core_capacity ops law before after out.core (.select true) callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

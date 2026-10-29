@@ -113,7 +113,7 @@ import Itasca.Runtime.Interp.Relations.EventfulControl
 import Itasca.Runtime.Interp.Relations.FrameStorePrefix
 import Itasca.Runtime.Spec.EventfulInfinite
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- An execution state with a current certificate and reference ownership.
@@ -124,12 +124,12 @@ structure EventfulMachine
   store : runtime.store.Store M
   exec : runtime.interp.Execution
   platform : P
-  source : Abs.AState
+  source : SourceMachine.AState
   pc : Nat
   pending : Bool
-  invariant : StructuredMachine.Execution view code store exec source expected pc pending
+  invariant : Machine.Execution view code store exec source expected pc pending
   certified : CertifiedSupportedStore view code store
-  owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source
+  owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) source
 
 /-- History edges retain the actual extracted dispatch equation. The labeled
 simulation and raw metadata retention must be supplied by checked dispatch
@@ -151,4 +151,4 @@ def EventfulMachine.potential {M P view code expected}
     (machine : EventfulMachine M P view code expected) : Nat :=
   dispatchMeasure machine.pending U32.max machine.pc machine.source
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

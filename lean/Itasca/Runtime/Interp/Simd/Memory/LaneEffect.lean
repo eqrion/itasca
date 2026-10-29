@@ -23,14 +23,14 @@ def LaneLoadEffect (ty : Jnn) (offset index : U32) (address value : U128) (bytes
     runtime.interp.simd.memory_op (memoryLaneOpcode ty false) offset index address value bytes
       ⦃ LaneLoadEffect ty offset index address value bytes ⦄ := by
   rw [memory_lane_unfold,if_neg (by omega : ¬ index.val ≥ 128/(shiftWidth ty).val)]
-  step with memory_range bytes (UScalar.cast .U32 address) offset (memoryLaneBytes ty) (memoryLaneBytes_small ty)
+  step with memory_range bytes (UScalar.cast .U32 address) offset (memoryLaneBytes ty) (memory_lane_bytes_small ty)
     as ⟨result,effect⟩
   by_cases fits : (UScalar.cast .U32 address).val + offset.val + (memoryLaneBytes ty).val ≤ bytes.length
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_true] at effect
     obtain ⟨start,rfl,startEq⟩ := effect
     simp only [Bool.false_eq_true,if_false]
     unfold runtime.interp.simd.read
-    step with read_loop_effect bytes (memoryLaneBytes ty) start 0#u128 0#usize (memoryLaneBytes_small ty)
+    step with read_loop_effect bytes (memoryLaneBytes ty) start 0#u128 0#usize (memory_lane_bytes_small ty)
       (by omega) (by simp) as ⟨word,wordEq⟩
     step with put value (shiftWidth ty) index (UScalar.cast .U64 word)
       (by cases ty <;> decide) (by cases ty <;> decide)
@@ -54,7 +54,7 @@ def LaneStoreEffect (ty : Jnn) (offset index : U32) (address value : U128) (byte
     runtime.interp.simd.memory_op (memoryLaneOpcode ty true) offset index address value bytes
       ⦃ LaneStoreEffect ty offset index address value bytes ⦄ := by
   rw [memory_lane_unfold,if_neg (by omega : ¬ index.val ≥ 128/(shiftWidth ty).val)]
-  step with memory_range bytes (UScalar.cast .U32 address) offset (memoryLaneBytes ty) (memoryLaneBytes_small ty)
+  step with memory_range bytes (UScalar.cast .U32 address) offset (memoryLaneBytes ty) (memory_lane_bytes_small ty)
     as ⟨result,effect⟩
   by_cases fits : (UScalar.cast .U32 address).val + offset.val + (memoryLaneBytes ty).val ≤ bytes.length
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_true] at effect
@@ -65,7 +65,7 @@ def LaneStoreEffect (ty : Jnn) (offset index : U32) (address value : U128) (byte
       (by cases ty <;> simp [shiftWidth] at valid ⊢ <;> omega) as ⟨word,bits⟩
     unfold runtime.interp.simd.write
     step with write_loop_effect (UScalar.cast .U128 word) bytes (memoryLaneBytes ty) start 0#usize
-      (memoryLaneBytes_small ty) (by omega) (by simp) as ⟨updated,updatedEq⟩
+      (memory_lane_bytes_small ty) (by omega) (by simp) as ⟨updated,updatedEq⟩
     simp only [WP.spec_ok,LaneStoreEffect,if_pos fits]
     exact ⟨word,bits,True.intro,by simpa only [startEq,Nat.sub_zero] using updatedEq⟩
   · simp only [MemoryAddressEffect,Slice.len_val,fits,if_false] at effect

@@ -24,8 +24,8 @@ Main declarations: `SupportedHeads`. A direct consumer is `Interp.Machine.Covera
 namespace Itasca.Runtime.Interp
 open Aeneas.Std
 
-theorem linearEmission_ready_head {locals before op emitted after}
-    (head : Code.LinearEmission locals before op emitted after)
+theorem linear_emission_ready_head {locals before op emitted after}
+    (head : Compiler.LinearEmission locals before op emitted after)
     (ready : ReadyInstruction op) : DispatchHead op := by
   cases head with
   | nop => exact False.elim ready
@@ -50,11 +50,11 @@ theorem linearEmission_ready_head {locals before op emitted after}
   | localSet stack ty index dst src localType localPos stackPos => exact .ordinary (.localWrite index false)
   | localTee stack ty index dst src localType localPos stackPos => exact .ordinary (.localWrite index true)
 
-theorem scalarEmission_ready_head {C before op emitted after}
-    (head : Code.ScalarEmission C before op emitted after)
+theorem scalar_emission_ready_head {C before op emitted after}
+    (head : Compiler.ScalarEmission C before op emitted after)
     (ready : ReadyInstruction op) : DispatchHead op := by
   cases head with
-  | linear original => exact linearEmission_ready_head original ready
+  | linear original => exact linear_emission_ready_head original ready
   | float32 stack dst bits slot => exact .float32 bits
   | float64 stack dst bits slot => exact .float64 bits
   | select => exact .select
@@ -66,7 +66,7 @@ theorem scalarEmission_ready_head {C before op emitted after}
 
 end Itasca.Runtime.Interp
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas.Std
 
 /-- Static emission syntax classifies each retained non-erased linear head. -/
@@ -78,7 +78,7 @@ variable {jumpTables : List Aeneas.Std.U32}
 theorem code_head_coverage {emission : ContextEmission} [SupportedHeads emission]
     {C returns locals code labels stack op source next output}
     (ready : ReadyInstruction op) :
-    ∀ pc, Code.StructuredCode (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack
+    ∀ pc, Compiler.StructuredCode (emission C) C.TYPES C.FUNCS returns locals code jumpTables labels stack
       (op::source) pc next output → DispatchHead op := by
   intro pc relation
   generalize measureEq : code.length-pc = measure
@@ -101,11 +101,11 @@ theorem code_head_coverage {emission : ContextEmission} [SupportedHeads emission
 
 /-- Every non-erased head of the complete compiler relation selects a proved
 machine branch. Branch-table layout itself is supplied by the indexed point. -/
-instance (tables : Code.CompilerTables) : SupportedHeads (Code.ExecutableEmission tables) where
+instance (tables : Compiler.CompilerTables) : SupportedHeads (Compiler.ExecutableEmission tables) where
   head := by
     intro C stack source emitted output ready head
     cases head with
-    | scalar h => exact scalarEmission_ready_head h ready
+    | scalar h => exact scalar_emission_ready_head h ready
     | stateful h => cases h; exact .stateful _
     | indirect h => cases h; exact .indirect _ _
     | simd h => exact .simd h.allowed
@@ -120,4 +120,4 @@ theorem frame_head_coverage {sourceStore raw f compiled C targets next output}
   have readyOp : ReadyInstruction op := by
     cases op <;> simp_all only [ReadyInstruction,ReadySource,code]
   exact code_head_coverage readyOp raw.pc.val (by simpa only [code] using point.code.current)
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

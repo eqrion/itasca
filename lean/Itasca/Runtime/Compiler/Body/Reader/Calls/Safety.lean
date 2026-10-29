@@ -14,7 +14,7 @@ Direct-call reader bounds and callback safety, composing accepted reader steps w
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxHeartbeats 2000000
 attribute [local step] code.pop_with_type.total code.pop_types.total
@@ -34,7 +34,7 @@ theorem reader_call_indirect_info_bound (st : code.BodyState) (data : Slice U8) 
   unfold code.call_indirect_info
   step*
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -42,7 +42,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_call_wasm2_total {A} (ops : runtime.platform.Alloc A)
@@ -83,6 +83,6 @@ theorem compiler_reader_call_indirect_wasm2_total {A} (ops : runtime.platform.Al
     exact compiler_on_call_indirect_total ops law compiler state.core index table
       (by simpa [ready.namespaces.signatures] using bound)
       ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

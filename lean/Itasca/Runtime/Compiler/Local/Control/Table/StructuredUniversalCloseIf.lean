@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- END without ELSE resolves the guard at the shared exit. The missing arm
@@ -43,7 +43,7 @@ theorem StructuredCompletedPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A
     StructuredUniversalElse (jumpTables := jumpTables) emit after types functions returns locals parents
       (parent.advance (.IFELSE bt child.source [])) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   have advance : ∀ parentLabel labels groups,
       FramePlans after.function.code.val.length locals after.frames.val (parentLabel :: labels) groups →
       ScopeLabel (parent.advance (.IFELSE bt child.source [])) parentLabel →
@@ -93,7 +93,7 @@ theorem StructuredCompletedPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A
       have away := outer.away_guard
         (fun f member => invariant.sites f (by rw [frames]; exact List.mem_append_left _ member))
         guardCode distinct
-      exact resolvedCode_guard _ [] _ guard condition old target guardCode (by
+      exact resolved_code_guard _ [] _ guard condition old target guardCode (by
         intro group member site atSite
         simp only [List.nil_append, List.mem_cons] at member
         rcases member with rfl | remaining
@@ -111,7 +111,7 @@ theorem StructuredCompletedPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A
         simpa only [label, bodyStart, position, sameTypes] using noCode
       have sig : BlockSignature types bt child.params child.params := by simpa only [sameTypes] using signature
       simpa [SourceScope.arguments, SourceScope.input, form, sameTypes] using
-        StructuredPrefix.ifEnd sig conditionSlot guardFound body
+        StructuredPrefix.if_end sig conditionSlot guardFound body
     have restored := parentSaved.resume parentEntered childEntered closed
     have resolve : resolvedCode after.function.code.val groups =
         resolvedCode before.function.code.val (⟨[guard], target⟩ :: ⟨frame.fixups.val, target⟩ :: groups) := by
@@ -136,5 +136,5 @@ theorem StructuredCompletedPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

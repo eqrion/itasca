@@ -11,7 +11,7 @@ Branch-table transitions with ownership and code-bound preservation. Basic branc
 
 section
 
-namespace Itasca.Runtime.Abs.BrTable
+namespace Itasca.Runtime.SourceMachine.BrTable
 open Ownership
 
 /-- Selecting a label only removes the integer selector; all owned references
@@ -21,8 +21,8 @@ theorem owned {bounds : Bounds} {s : store} {ambient : frame} {f : AFrame} {rest
     (before : StatefulOwned bounds ⟨s,ambient,{f with code := .BR_TABLE labels fallback::after,vals := front ++ [integerVal .I32 bits]}::rest,[]⟩) :
     StatefulOwned bounds ⟨s,ambient,{f with code := .BR (select labels fallback bits)::after,vals := front}::rest,[]⟩ := by
   have frame := before.values.2 _ (List.mem_cons_self ..)
-  apply stateful_owned_advance (step := rfl) before.heap (valuesOwned_nil _) ?_ ?_
-  · exact ⟨frame.1,(valuesOwned_append.mp frame.2).1⟩
+  apply stateful_owned_advance (step := rfl) before.heap (values_owned_nil _) ?_ ?_
+  · exact ⟨frame.1,(values_owned_append.mp frame.2).1⟩
   · exact fun item member => before.values.2 item (List.mem_cons_of_mem _ member)
 
 theorem bounded {bound : Nat} {s : store} {ambient : frame} {f : AFrame} {rest : List AFrame}
@@ -49,10 +49,10 @@ theorem covered
   · refine ⟨?_,frame.2⟩
     intro instruction member
     rcases List.mem_cons.mp member with rfl | member
-    · exact Abs.BinaryInstr.br _
+    · exact SourceMachine.BinaryInstr.br _
     · exact frame.1 instruction (List.mem_cons_of_mem _ member)
   · exact before.active item (List.mem_cons_of_mem _ member)
-end Itasca.Runtime.Abs.BrTable
+end Itasca.Runtime.SourceMachine.BrTable
 
 end
 
@@ -60,7 +60,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.BrTable
+namespace Itasca.Runtime.SourceMachine.BrTable
 open SpecExt Itasca.Runtime.Spec Ownership
 
 inductive Transition : AState → AState → Prop where
@@ -99,6 +99,6 @@ theorem Transition.next_bound {bound before next} (transition : Transition befor
   cases transition with
   | next values bound => exact bounded (by simpa only [normalized values] using initial)
 
-end Itasca.Runtime.Abs.BrTable
+end Itasca.Runtime.SourceMachine.BrTable
 
 end

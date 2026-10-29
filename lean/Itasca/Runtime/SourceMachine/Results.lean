@@ -5,7 +5,7 @@ import Itasca.Runtime.SourceMachine.Invoke
 Retention of the invocation result signature through source-machine frames. The outermost frame and final returned values keep the declared result types while inner calls may use other signatures.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The outermost active function retains the invocation's declared results;
@@ -43,7 +43,7 @@ theorem advance_result {s : store} {ambient : frame} {f f' : AFrame}
   rw [← step]
   exact FramesReturn.replace h same
 
-theorem returnFrame_result {s : store} {ambient : frame} {f : AFrame}
+theorem return_frame_result {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {next : AState} {expected : List valtype}
     (typed : ATyped ⟨s, ambient, f :: rest, []⟩)
     (h : InvocationResult expected ⟨s, ambient, f :: rest, []⟩)
@@ -99,10 +99,10 @@ theorem instruction_result (s : store) (ambient : frame) (f : AFrame)
     obtain ⟨values, rfl⟩ := Numeric.astep_effect ⟨s, ambient, [], []⟩ f rest after descriptor next step
     exact advance_result h rfl rfl
   | call index => cases index with | mk_uN i => exact call_result h step
-  | ret => exact returnFrame_result typed h step
+  | ret => exact return_frame_result typed h step
   | _ =>
     simp only [astep, integerBinary, branch, enterLabel] at step
     repeat' first | split at step | contradiction
     all_goals exact advance_result h step rfl
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

@@ -1,11 +1,11 @@
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem LinearEmission.float_decode_none {locals before instruction emitted after}
     (emission : LinearEmission locals before instruction emitted after) :
-    Abs.Float.decodeInstruction instruction = none := by
+    SourceMachine.Float.decodeInstruction instruction = none := by
   cases emission with
   | binary stack ty op => cases ty <;> cases op <;> rfl
   | numeric stack op =>
@@ -18,7 +18,7 @@ theorem LinearEmission.float_decode_none {locals before instruction emitted afte
   | _ => rfl
 
 theorem ScalarEmission.float_inv {C before emitted after}
-    (op : Abs.Float.Instruction)
+    (op : SourceMachine.Float.Instruction)
     (emission : ScalarEmission C before op.source emitted after) :
     ∃ stack left right,
       before = stack ++ List.replicate op.arity (valtype_numtype op.input) ∧
@@ -30,14 +30,14 @@ theorem ScalarEmission.float_inv {C before emitted after}
   cases emission with
   | linear h =>
     have impossible := h.float_decode_none
-    rw [← sourceEq, Abs.Float.decodeInstruction_source] at impossible
+    rw [← sourceEq, SourceMachine.Float.decode_instruction_source] at impossible
     contradiction
   | float stack selected left right leftSlot rightSlot =>
-    have same : op = selected := Abs.Float.Instruction.source_injective sourceEq
+    have same : op = selected := SourceMachine.Float.Instruction.source_injective sourceEq
     subst selected
     exact ⟨stack,left,right,rfl,rfl,rfl,leftSlot,rightSlot⟩
   | _ =>
-    have decoded := congrArg Abs.Float.decodeInstruction sourceEq
-    rw [Abs.Float.decodeInstruction_source] at decoded
-    simp [Abs.Float.decodeInstruction,Abs.Memory.Load.source,Abs.Memory.Store.source] at decoded
-end Itasca.Runtime.Code
+    have decoded := congrArg SourceMachine.Float.decodeInstruction sourceEq
+    rw [SourceMachine.Float.decode_instruction_source] at decoded
+    simp [SourceMachine.Float.decodeInstruction,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at decoded
+end Itasca.Runtime.Compiler

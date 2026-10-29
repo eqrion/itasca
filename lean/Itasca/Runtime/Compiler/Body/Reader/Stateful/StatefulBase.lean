@@ -9,7 +9,7 @@ Composition of base stateful reader cases.
 Main declarations: `reader_stateful_base_wasm2`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
@@ -91,4 +91,4 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     · exact ⟨rfl,rfl⟩
     · simpa only [statefulCallback,Translate.referenceType] using callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

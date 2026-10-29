@@ -23,15 +23,15 @@ end
 def frameDepth : config → Nat
   | .mk_config _ body => instrsDepth body
 
-@[simp] theorem instrsDepth_nil : instrsDepth [] = 0 := rfl
+@[simp] theorem instrs_depth_nil : instrsDepth [] = 0 := rfl
 
-@[simp] theorem instrsDepth_append (xs ys : List admininstr) :
+@[simp] theorem instrs_depth_append (xs ys : List admininstr) :
     instrsDepth (xs ++ ys) = max (instrsDepth xs) (instrsDepth ys) := by
   induction xs with
   | nil => simp [instrsDepth]
   | cons ai rest ih => simp [instrsDepth, ih, Nat.max_assoc]
 
-@[simp] theorem instrsDepth_singleton (ai : admininstr) :
+@[simp] theorem instrs_depth_singleton (ai : admininstr) :
     instrsDepth [ai] = instrDepth ai := by simp [instrsDepth]
 
 end Itasca.Runtime.Spec

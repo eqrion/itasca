@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Float
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Float
 
 /-- Scalar numeric operands occupy one word each. Unary operations reuse
 the same source slot in both scalar operands. -/
@@ -56,4 +56,4 @@ theorem float_operands {A : Type} (ops : runtime.platform.Alloc A)
   step with finish_op ops law compiler state types (floatInstruction op left left right) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨left, right, leftPosition, rightPosition, by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

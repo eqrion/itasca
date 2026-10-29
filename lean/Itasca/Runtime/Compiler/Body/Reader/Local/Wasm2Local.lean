@@ -6,7 +6,7 @@ Reader context extension and local get/set/tee effects.
 Main declarations: `reader_append_context_wasm2` and `reader_local_tee_wasm2`. A direct consumer is `Compiler.Body.Reader.Calls.Instructions`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_append_context_wasm2 {data env locals index st}
@@ -133,4 +133,4 @@ theorem reader_local_tee_wasm2 {data env locals index st}
     (fun idx _ encoded => .localTee idx encoded) out idx post
   exact ⟨idx, values, callback, read, source⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

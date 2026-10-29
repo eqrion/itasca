@@ -21,7 +21,7 @@ Live and dormant scalar-memory reader prefixes, composed into compiler-state pre
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -31,7 +31,7 @@ theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env s
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
-    (dead : before.reachable = false) (op : Abs.Memory.Load)
+    (dead : before.reachable = false) (op : SourceMachine.Memory.Load)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -62,7 +62,7 @@ theorem reader_prefix_dead_memory_store_wasm2 {jumpTables : List U32} {data env 
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
     {emit types functions returns locals parents current}
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
-    (dead : before.reachable = false) (op : Abs.Memory.Store)
+    (dead : before.reachable = false) (op : SourceMachine.Memory.Store)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -85,7 +85,7 @@ theorem reader_prefix_dead_memory_store_wasm2 {jumpTables : List U32} {data env 
   have cursor := compiler_core_cursor ops law before after out.core (.store op arg.offset arg.align) callback
   exact ⟨arg,values,post,post.structured_skip ops law invariant dead ordinary sources cursor
     (memoryStoreOpcode op) arg.offset arg.align 0#u128 callback⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -93,7 +93,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -106,7 +106,7 @@ theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env source
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Memory.Load)
+    (op : SourceMachine.Memory.Load)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
@@ -127,7 +127,7 @@ theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env source
     reader_emit_memory_load_wasm2 p ops law before after out ctx contextLocals op C (contextCodeLocals.trans retained.localsEq.symm) contextMemories (invariant.known reachable) monomorphic retained.layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨arg, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨arg, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
@@ -141,7 +141,7 @@ theorem reader_prefix_memory_store_wasm2 {jumpTables : List U32} {data env sourc
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (reachable : before.reachable = true) (monomorphic : p.current.ctrl.polymorphic_base = false)
-    (op : Abs.Memory.Store)
+    (op : SourceMachine.Memory.Store)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
@@ -162,11 +162,11 @@ theorem reader_prefix_memory_store_wasm2 {jumpTables : List U32} {data env sourc
     reader_emit_memory_store_wasm2 p ops law before after out ctx contextLocals op C (contextCodeLocals.trans retained.localsEq.symm) contextMemories (invariant.known reachable) monomorphic retained.layout reachable
       codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨arg, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨arg, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -174,7 +174,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.memory_load {jumpTables : List U32} {A : Type}
@@ -186,7 +186,7 @@ theorem StructuredReaderCompilerStateWasm2.memory_load {jumpTables : List U32} {
     (contextLocals : C.LOCALS = locals)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Memory.Load)
+    (out : code.BodyState) (op : SourceMachine.Memory.Load)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (memoryLoadOpcode op)))
@@ -198,11 +198,11 @@ theorem StructuredReaderCompilerStateWasm2.memory_load {jumpTables : List U32} {
   | true =>
     obtain ⟨arg,values,post,compiled⟩ := reader_prefix_memory_load_wasm2 p ops law initial before after out ctx rfl C
       contextLocals contextMemories state.compiled live (state.reach.current live) op sourceBound bodyBound byte accepted
-    exact (state.advance next advance inbounds post (by cases op <;> simp [Abs.Memory.Load.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (fun _ => state.reach.current live)).point
+    exact (state.advance next advance inbounds post (by cases op <;> simp [SourceMachine.Memory.Load.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (fun _ => state.reach.current live)).point
   | false =>
     obtain ⟨arg,values,post,compiled,dead⟩ := reader_prefix_dead_memory_load_wasm2 p ops law initial before after out ctx rfl
       state.compiled live op byte accepted
-    exact (state.advance next advance inbounds post (by cases op <;> simp [Abs.Memory.Load.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
+    exact (state.advance next advance inbounds post (by cases op <;> simp [SourceMachine.Memory.Load.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
 
 theorem StructuredReaderCompilerStateWasm2.memory_store {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -213,7 +213,7 @@ theorem StructuredReaderCompilerStateWasm2.memory_store {jumpTables : List U32} 
     (contextLocals : C.LOCALS = locals)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
-    (out : code.BodyState) (op : Abs.Memory.Store)
+    (out : code.BodyState) (op : SourceMachine.Memory.Store)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (memoryStoreOpcode op)))
@@ -225,12 +225,12 @@ theorem StructuredReaderCompilerStateWasm2.memory_store {jumpTables : List U32} 
   | true =>
     obtain ⟨arg,values,post,compiled⟩ := reader_prefix_memory_store_wasm2 p ops law initial before after out ctx rfl C
       contextLocals contextMemories state.compiled live (state.reach.current live) op sourceBound bodyBound byte accepted
-    exact (state.advance next advance inbounds post (by cases op <;> simp [Abs.Memory.Store.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (fun _ => state.reach.current live)).point
+    exact (state.advance next advance inbounds post (by cases op <;> simp [SourceMachine.Memory.Store.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (fun _ => state.reach.current live)).point
   | false =>
     obtain ⟨arg,values,post,compiled,dead⟩ := reader_prefix_dead_memory_store_wasm2 p ops law initial before after out ctx rfl
       state.compiled live op byte accepted
-    exact (state.advance next advance inbounds post (by cases op <;> simp [Abs.Memory.Store.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
+    exact (state.advance next advance inbounds post (by cases op <;> simp [SourceMachine.Memory.Store.source, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

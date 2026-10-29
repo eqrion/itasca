@@ -15,8 +15,8 @@ Main declarations: `FrameOwnershipClosure.stateful`. A direct consumer is `Inter
 namespace Itasca.Runtime.Interp
 
 theorem FrameOwnershipClosure.stateful {before after} (closure : FrameOwnershipClosure before after)
-    {bounds s ambient rest} (owned : Abs.Ownership.StatefulOwned bounds ⟨s,ambient,before::rest,[]⟩) :
-    Abs.Ownership.StatefulOwned bounds ⟨s,ambient,after::rest,[]⟩ := by
+    {bounds s ambient rest} (owned : SourceMachine.Ownership.StatefulOwned bounds ⟨s,ambient,before::rest,[]⟩) :
+    SourceMachine.Ownership.StatefulOwned bounds ⟨s,ambient,after::rest,[]⟩ := by
   refine ⟨⟨owned.values.1,?_⟩,owned.heap⟩
   intro frame member
   rcases List.mem_cons.mp member with rfl | member

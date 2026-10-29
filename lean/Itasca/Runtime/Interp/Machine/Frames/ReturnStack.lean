@@ -7,22 +7,22 @@ Returning to a suspended caller restores the active certificate and preserves th
 Main declarations: `FrameStackRel.return_to_caller_ready` and `FrameStackRel.return_complete`. A direct consumer is `Interp.Machine.Coverage.SupportedBoundarySemantics`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- Returning to a suspended caller restores the active certificate and
 preserves the older caller chain. -/
 theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
-    {before after : runtime.interp.Execution} {callee caller : Abs.AFrame} {rest : List Abs.AFrame}
+    {before after : runtime.interp.Execution} {callee caller : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before (callee :: caller :: rest))
     (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
     {src count : Nat} (effect : ReturnEffect before after raw.base.val src count)
     (results : List val)
     (represented : ValuesAt before.slots.val (raw.base.val + src) results)
-    (types : results.map Code.valueType = callee.resultTypes)
-    (width : count = Code.slots (results.map Code.valueType))
+    (types : results.map Compiler.valueType = callee.resultTypes)
+    (width : count = Compiler.slots (results.map Compiler.valueType))
     (bounds : raw.base.val + src + count ≤ before.slots.length)
-    (heights : Abs.FrameHeights caller) :
+    (heights : SourceMachine.FrameHeights caller) :
     FrameStackRel store sourceStore after ({ caller with vals := caller.vals ++ results } :: rest) ∧
       ReadyTop store sourceStore after { caller with vals := caller.vals ++ results } := by
   cases relation with
@@ -51,7 +51,7 @@ theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.S
 
 /-- The last return removes the concrete frame stack completely. -/
 theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
-    {before after : runtime.interp.Execution} {callee : Abs.AFrame}
+    {before after : runtime.interp.Execution} {callee : SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before [callee])
     {base src count : Nat} (effect : ReturnEffect before after base src count) :
     FrameStackRel store sourceStore after [] := by
@@ -62,17 +62,17 @@ theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {s
     simpa only [empty, List.reverse_nil] using effect.frames frames
 
 theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
-    {before after : runtime.interp.Execution} {callee : Abs.AFrame} {rest : List Abs.AFrame}
+    {before after : runtime.interp.Execution} {callee : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before (callee :: rest))
     (ambient : frame)
     (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
     {src count : Nat} (effect : ReturnEffect before after raw.base.val src count)
     (results : List val)
     (represented : ValuesAt before.slots.val (raw.base.val + src) results)
-    (types : results.map Code.valueType = callee.resultTypes)
-    (width : count = Code.slots (results.map Code.valueType))
+    (types : results.map Compiler.valueType = callee.resultTypes)
+    (width : count = Compiler.slots (results.map Compiler.valueType))
     (bounds : raw.base.val + src + count ≤ before.slots.length)
-    (heights : ∀ caller ∈ rest, Abs.FrameHeights caller) :
+    (heights : ∀ caller ∈ rest, SourceMachine.FrameHeights caller) :
     FrameStackRel store sourceStore after (returnedState sourceStore ambient rest results).frames ∧
       ReadyState store after (returnedState sourceStore ambient rest results) := by
   cases rest with
@@ -84,4 +84,4 @@ theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M}
     exact relation.return_to_caller_ready raw top effect results represented types width bounds
       (heights caller (by simp))
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

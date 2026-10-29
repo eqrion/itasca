@@ -452,7 +452,7 @@ def TruncSourceOutcome (source : Fnn) (target : Inn) (sign : sx) (saturating : B
       (reason = .IntegerOverflow ∨ reason = .InvalidConversionToInteger)
   | .Err _ => False
 
-theorem truncOutcome_source (source : Fnn) (target : Inn) (sign : sx) (saturating : Bool)
+theorem trunc_outcome_source (source : Fnn) (target : Inn) (sign : sx) (saturating : Bool)
     (input : fN) (result : core.result.Result U64 runtime.ExecError)
     (inputWf : wf_fN (sizenn (numtype_Fnn source)) input)
     (effect : TruncOutcome (if saturating then trunc_sat__ (sizenn (numtype_Fnn source)) (sizenn (numtype_Inn target)) sign input
@@ -470,7 +470,7 @@ theorem scalar_i32_trunc_f32_s_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F32 .I32 .S false (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_f32_s ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I32 .S false _ result
+  apply trunc_outcome_source .F32 .I32 .S false _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -479,7 +479,7 @@ theorem scalar_i32_trunc_f32_u_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F32 .I32 .U false (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_f32_u ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I32 .U false _ result
+  apply trunc_outcome_source .F32 .I32 .U false _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -488,7 +488,7 @@ theorem scalar_i32_trunc_f64_s_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F64 .I32 .S false (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_f64_s ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I32 .S false _ result
+  apply trunc_outcome_source .F64 .I32 .S false _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -497,7 +497,7 @@ theorem scalar_i32_trunc_f64_u_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F64 .I32 .U false (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_f64_u ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I32 .U false _ result
+  apply trunc_outcome_source .F64 .I32 .U false _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -506,7 +506,7 @@ theorem scalar_i64_trunc_f32_s_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F32 .I64 .S false (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_f32_s ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I64 .S false _ result
+  apply trunc_outcome_source .F32 .I64 .S false _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -515,7 +515,7 @@ theorem scalar_i64_trunc_f32_u_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F32 .I64 .U false (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_f32_u ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I64 .U false _ result
+  apply trunc_outcome_source .F32 .I64 .U false _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -524,7 +524,7 @@ theorem scalar_i64_trunc_f64_s_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F64 .I64 .S false (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_f64_s ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I64 .S false _ result
+  apply trunc_outcome_source .F64 .I64 .S false _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -533,7 +533,7 @@ theorem scalar_i64_trunc_f64_u_source {F : Type} (ops : runtime.platform.FloatOp
       TruncSourceOutcome .F64 .I64 .U false (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_f64_u ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I64 .U false _ result
+  apply trunc_outcome_source .F64 .I64 .U false _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -542,7 +542,7 @@ theorem scalar_i32_trunc_sat_f32_s_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F32 .I32 .S true (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_sat_f32_s ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I32 .S true _ result
+  apply trunc_outcome_source .F32 .I32 .S true _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -551,7 +551,7 @@ theorem scalar_i32_trunc_sat_f32_u_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F32 .I32 .U true (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_sat_f32_u ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I32 .U true _ result
+  apply trunc_outcome_source .F32 .I32 .U true _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -560,7 +560,7 @@ theorem scalar_i32_trunc_sat_f64_s_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F64 .I32 .S true (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_sat_f64_s ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I32 .S true _ result
+  apply trunc_outcome_source .F64 .I32 .S true _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -569,7 +569,7 @@ theorem scalar_i32_trunc_sat_f64_u_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F64 .I32 .U true (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i32_trunc_sat_f64_u ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I32 .U true _ result
+  apply trunc_outcome_source .F64 .I32 .U true _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -578,7 +578,7 @@ theorem scalar_i64_trunc_sat_f32_s_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F32 .I64 .S true (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_sat_f32_s ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I64 .S true _ result
+  apply trunc_outcome_source .F32 .I64 .S true _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -587,7 +587,7 @@ theorem scalar_i64_trunc_sat_f32_u_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F32 .I64 .U true (floatOfBits 32 (UScalar.cast .U32 a).val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_sat_f32_u ops a b)
   intro result effect
-  apply truncOutcome_source .F32 .I64 .U true _ result
+  apply trunc_outcome_source .F32 .I64 .U true _ result
   · exact floatOfBits_wf 32 (by omega) _
   · exact effect
 
@@ -596,7 +596,7 @@ theorem scalar_i64_trunc_sat_f64_s_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F64 .I64 .S true (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_sat_f64_s ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I64 .S true _ result
+  apply trunc_outcome_source .F64 .I64 .S true _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 
@@ -605,7 +605,7 @@ theorem scalar_i64_trunc_sat_f64_u_source {F : Type} (ops : runtime.platform.Flo
       TruncSourceOutcome .F64 .I64 .U true (floatOfBits 64 a.val) result ⦄ := by
   apply WP.spec_mono (scalar_i64_trunc_sat_f64_u ops a b)
   intro result effect
-  apply truncOutcome_source .F64 .I64 .U true _ result
+  apply trunc_outcome_source .F64 .I64 .U true _ result
   · exact floatOfBits_wf 64 (by omega) _
   · exact effect
 

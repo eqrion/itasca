@@ -9,7 +9,7 @@ Availability of function start, from a single local allocation through the local
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- One local declaration accepts from independently bounded reserves, word
@@ -58,7 +58,7 @@ theorem compiler_add_local_available {A : Type} (ops : runtime.platform.Alloc A)
     simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
     exact ⟨trivial,locals,offsets,localSlots,used,rfl,appendedLocals,appendedOffsets,by scalar_tac,usedEq⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -66,7 +66,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual local declaration loop accepts independently bounded remaining
@@ -148,7 +148,7 @@ theorem compiler_locals_available {A : Type} (ops : runtime.platform.Alloc A)
         by simpa [last] using offsetCount,by simpa [last] using used,by simpa [last] using words⟩
   · exact ⟨.refl _,rfl,rfl,inside,rfl,rfl,rfl,by dsimp only; omega⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -156,7 +156,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent resource demand of function-start setup, including expanded
@@ -245,6 +245,6 @@ theorem compiler_function_start_available {A : Type} (ops : runtime.platform.All
   · simpa [initial] using used
   · simpa [retainedControls] using chargedEq
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

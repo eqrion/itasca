@@ -1,11 +1,11 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Memory.Load) (offset alignment : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Memory.Load) (offset alignment : U32)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -21,7 +21,7 @@ open Aeneas Aeneas.Std
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok word =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        memoryLoadInstruction_make, core.option.Option.ok_or]
+        memory_load_instruction_make, core.option.Option.ok_or]
       exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
   · unfold runtime.compiler.lower.FunctionCompiler.op
     rw [if_neg live]
@@ -29,7 +29,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_store_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Memory.Store) (offset alignment : U32)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Memory.Store) (offset alignment : U32)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -51,9 +51,9 @@ open Aeneas Aeneas.Std
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok value =>
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          memoryStoreInstruction_make, core.option.Option.ok_or]
+          memory_store_instruction_make, core.option.Option.ok_or]
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
   · unfold runtime.compiler.lower.FunctionCompiler.op
     rw [if_neg live]
     exact compiler_observe_stack ops law compiler state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

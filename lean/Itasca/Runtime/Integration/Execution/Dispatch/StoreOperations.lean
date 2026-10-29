@@ -5,7 +5,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.SegmentDrop
 import Itasca.Runtime.Integration.Execution.Dispatch.TableSet
 import Itasca.Runtime.Integration.Api.SupportedMemoryGrowExecution
 import Itasca.Runtime.Integration.Api.SupportedTableGrowExecution
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem stateful_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -13,21 +13,21 @@ theorem stateful_execution_supported
     (allocation : Platform.AllocCorrect allocator) (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (op : Abs.Stateful.Instruction)
+    [Machine.StatefulProjection (emission compiled) compiled.indirect.val]
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (op : SourceMachine.Stateful.Instruction)
     (last : index.val+1=exec.frames.length)
     (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (point : Machine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec
+    (machine : Machine.Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩) :
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
         ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ out ⦄ := by
@@ -67,4 +67,4 @@ theorem stateful_execution_supported
   | dataDrop data =>
     exact stateful_drop_execution_supported memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest after (.dataDrop data) rfl last frameFound found codeFound moduleEq slots point expected machine program shaped sourceSyntax bounds
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

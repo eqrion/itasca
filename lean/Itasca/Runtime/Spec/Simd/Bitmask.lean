@@ -13,7 +13,7 @@ section
 namespace Itasca.Runtime.Spec.Simd
 open SpecExt.Builtins
 
-theorem integerBits_reverse (width : Nat) (bits : BitVec width) :
+theorem integer_bits_reverse (width : Nat) (bits : BitVec width) :
     integerBits width bits.reverse.toNat = (integerBits width bits.toNat).reverse := by
   apply List.ext_getElem
   · simp [integerBits_length]
@@ -27,7 +27,7 @@ theorem integerBits_reverse (width : Nat) (bits : BitVec width) :
 theorem irev_reverse (width : Nat) (bits : BitVec width) :
     irev_ width (.mk_uN bits.reverse.toNat) = .mk_uN bits.toNat := by
   unfold irev_ ibits_ inv_ibits_
-  simp only [proj_uN_0,integerBits_reverse,List.reverse_reverse,integerBits_roundtrip bits.isLt]
+  simp only [proj_uN_0,integer_bits_reverse,List.reverse_reverse,integerBits_roundtrip bits.isLt]
 end Itasca.Runtime.Spec.Simd
 
 end
@@ -105,10 +105,10 @@ theorem bitmask_step (ty : Jnn) (bits : BitVec 128) (result : BitVec 32)
   · exact listEq
   · exact const_wf bits
   · apply wf_admininstr.admininstr_case_30
-    exact .ishape_case_0 ty _ (shapeOf_wf _) rfl
+    exact .ishape_case_0 ty _ (shape_of_wf _) rfl
   · rw [reverseEq]
     exact .admininstr_case_13 _ _ (unsigned_num_wf .I32 result.toNat result.isLt)
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
   · exact outputWf
   · constructor; simp
 end Itasca.Runtime.Spec.Simd

@@ -9,7 +9,7 @@ Actual Wasm 2 root END establishes the strict final map checker bounds. The sour
 Main declarations: `reader_root_map_publication_wasm2`. A direct consumer is `Compiler.Body.Reader.Publication.SourcePublicationAdvanceWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem source_body_form_wasm2 {bt : signature.BlockType} {form : ScopeForm}
@@ -70,4 +70,4 @@ theorem reader_root_map_publication_wasm2 {jumpTables : List U32}
     p.current.bt maps consumed endBound callback,?_⟩
   exact (compiler_end_sources ops law before after out.core p.current.ctrl.kind p.current.bt callback).aligned invariant.sources
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

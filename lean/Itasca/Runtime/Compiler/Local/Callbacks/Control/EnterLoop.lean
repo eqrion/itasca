@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
 /-! Actual LOOP entry emits its charged hook instruction and retains exact
 control-map and compiler-label coordinates before observing the typed stack. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem enter_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -130,4 +130,4 @@ open Aeneas Aeneas.Std
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_loop] using
     enter_loop ops law compiler state ctrl prior bt signature pc controls selected valuesFit heightFits
       sourceFits position codeFits offsetsFit mapsFit framesFit reachable
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

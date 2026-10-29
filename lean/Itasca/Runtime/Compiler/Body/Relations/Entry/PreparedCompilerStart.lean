@@ -7,7 +7,7 @@ Entry framing and captured signature lookup justify every unchecked operation in
 Main declarations: `prepared_compiler_start_total`. A direct consumer is `Compiler.Body.Relations.Entry.PreparedRawInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Entry framing and captured signature lookup justify every unchecked
@@ -38,4 +38,4 @@ theorem prepared_compiler_start_total {A : Type} (ops : runtime.platform.Alloc A
   intros
   trivial
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

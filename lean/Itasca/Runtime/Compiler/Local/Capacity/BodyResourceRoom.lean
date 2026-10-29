@@ -15,7 +15,7 @@ Source compilation budgets and the body resource-room certificate. Source-only i
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A source-byte allowance for every compiler counter, relative to the
@@ -62,7 +62,7 @@ theorem SourceCompilationBudget.room {A : Type}
   rw [frames]
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -70,13 +70,13 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Multi-instruction callbacks use the same source footprint. Their larger
 reserve and PC bounds are stated over source accounting, rather than a
 successfully emitted branch sequence. -/
-theorem callbackCapacity_of_source {A : Type}
+theorem callback_capacity_of_source {A : Type}
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
     (bound position peak count : Nat)
     (code : SourceCodeBudget compiler position) (sources : SourceAligned compiler)
@@ -93,7 +93,7 @@ theorem callbackCapacity_of_source {A : Type}
 
 /-- Source control accounting bounds every scope map and physical frame
 reserve, including maps retained after their corresponding frames close. -/
-theorem scopeDemand_of_source {A : Type}
+theorem scope_demand_of_source {A : Type}
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
     (bound position : Nat) (demand : CallbackDemand compiler state bound)
     (controls : SourceControlBudget compiler position)
@@ -106,7 +106,7 @@ theorem scopeDemand_of_source {A : Type}
   refine ⟨demand.pc,demand.coordinate,maps,?_,frames,?_,room,demand.operands,demand.slots⟩ <;>
     simp only [alloc.vec.Vec.length] <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -114,7 +114,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Conservative per-byte charges after function-start preparation. Expanded
@@ -172,7 +172,7 @@ theorem BodyResourceRoom.capacity {A : Type}
   have compilerSlots : compiler.function.local_slots.val+2*peak ≤ U32.max := by
     rw [localSlots]
     exact slots
-  exact callbackCapacity_of_source compiler state bound position peak count codeBudget sources
+  exact callback_capacity_of_source compiler state bound position peak count codeBudget sources
     (by omega) (by omega) compilerCoordinate instructionRoom operands room.operands compilerSlots
 
 /-- Every ordinary callback is paid by its opcode byte. Its resource demand
@@ -201,9 +201,9 @@ theorem BodyResourceRoom.scope {A : Type}
   have controlRoom := budget.room .controls (room.counters .controls) (bytes := 1) (amount := 1)
     (by omega) (by decide)
   change compiler.budget.controls.val+1 ≤ compiler.budget.limits.max_controls.val at controlRoom
-  exact scopeDemand_of_source compiler state bound position demand controls
+  exact scope_demand_of_source compiler state bound position demand controls
     ((Nat.le_of_lt remaining).trans room.source_bound) (by have reserve := room.temporary; omega) (by omega)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

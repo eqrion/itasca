@@ -7,7 +7,7 @@ The shared reader/compiler point indexed by emitted jump and control tables.
 Main declarations: `IndexedTableReaderCompilerPointWasm2`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundPointAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 structure IndexedTableReaderCompilerPointWasm2
@@ -41,4 +41,4 @@ theorem IndexedTableReaderCompilerPointWasm2.append_step {A : Type}
   intro future
   apply step future
   simpa only [tables,CompilerTables.append_assoc] using point.future (extra.append future)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

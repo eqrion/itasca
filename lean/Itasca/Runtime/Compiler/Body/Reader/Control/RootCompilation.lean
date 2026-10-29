@@ -11,7 +11,7 @@ Finishing the root scope of a structured reader state.
 Main declarations: `StructuredReaderCompilerStateWasm2.finish_root` and `StructuredReaderCompilerStateWasm2.root_scopes`. A direct consumer is `Compiler.Body.Reader.Control.RootInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.finish_root {jumpTables : List U32} {A : Type}
@@ -92,4 +92,4 @@ theorem StructuredReaderCompilerStateWasm2.root_scopes {jumpTables : List U32} {
   rw [saved] at paired
   cases paired
   exact ⟨rfl, saved⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

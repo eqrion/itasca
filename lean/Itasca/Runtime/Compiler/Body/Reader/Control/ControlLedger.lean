@@ -9,7 +9,7 @@ Allocation accounting for control reader steps.
 Main declarations: `reader_control_ledger_wasm2`. A direct consumer is `Compiler.Body.Relations.Replay.ReachedCompilerLedger`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_control_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
@@ -48,4 +48,4 @@ theorem reader_control_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
   · obtain rfl : opcode = 15#u8 := UScalar.eq_of_val_eq h
     have effects := reader_return_effects_wasm2 ops law before after st out data env ctx index (by simpa only [global_simps] using accepted)
     exact ⟨effects.auxiliary_growth, effects.fixups budget⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

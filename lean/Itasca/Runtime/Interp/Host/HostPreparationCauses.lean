@@ -20,12 +20,12 @@ open Aeneas Aeneas.Std
 @[step] theorem host_arguments_loop (words : alloc.vec.Vec U64)
     (store base : Usize) (results : alloc.vec.Vec runtime.Value)
     (index slot : Usize) (types : alloc.vec.Vec Itasca.types.ValueType) (values : List val)
-    (typed : types.val.map sourceType = values.map Code.valueType)
+    (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt words.val base.val values)
     (bound : index.val ≤ values.length)
-    (position : slot.val = base.val + Code.offset (values.map Code.valueType) index.val)
+    (position : slot.val = base.val + Compiler.offset (values.map Compiler.valueType) index.val)
     (prior : results.val.map sourceValue = values.take index.val) :
     runtime.interp.call_loop0 words results store types index slot ⦃ after =>
       after.val.map sourceValue = values ⦄ := by
@@ -35,7 +35,7 @@ open Aeneas Aeneas.Std
   unfold runtime.interp.call_loop0
   apply loop.spec_decr_nat (fun p => values.length - p.2.1.val)
     (fun p => p.2.1.val ≤ values.length ∧
-      p.2.2.val = base.val + Code.offset (values.map Code.valueType) p.2.1.val ∧
+      p.2.2.val = base.val + Compiler.offset (values.map Compiler.valueType) p.2.1.val ∧
       p.1.val.map sourceValue = values.take p.2.1.val)
   · rintro ⟨current, i, offset⟩ ⟨hi, hoffset, hprior⟩
     dsimp only at hi hoffset hprior
@@ -48,10 +48,10 @@ open Aeneas Aeneas.Std
       have hlookup : values[i.val]? = some value := by simp [value, List.getElem?_eq_getElem hib]
       have member : value ∈ values := List.getElem_mem hib
       step as ⟨ty, hty⟩
-      have htype : sourceType ty = Code.valueType value := by
+      have htype : sourceType ty = Compiler.valueType value := by
         have h := congrArg (fun xs => xs[i.val]?) typed
         simpa [List.getElem?_eq_getElem hit, hlookup, ← hty] using h
-      have hrep : WordsAt (alloc.vec.Vec.deref words).val offset.val (Code.encodeValue value) := by
+      have hrep : WordsAt (alloc.vec.Vec.deref words).val offset.val (Compiler.encodeValue value) := by
         have h := represented.lookup hlookup
         simpa [alloc.vec.Vec.deref, hoffset] using h
       step with decode_slot_value (alloc.vec.Vec.deref words) offset ty store value
@@ -62,17 +62,17 @@ open Aeneas Aeneas.Std
         simpa [List.length_take, Nat.min_eq_left hi] using h
       step as ⟨after, hafter⟩
       step with width_spec ty as ⟨width, hwidth⟩
-      have hnextOffset : base.val + Code.offset (values.map Code.valueType) (i.val + 1) =
-          offset.val + Code.width (sourceType ty) := by
+      have hnextOffset : base.val + Compiler.offset (values.map Compiler.valueType) (i.val + 1) =
+          offset.val + Compiler.width (sourceType ty) := by
         rw [hoffset]
-        simp [Code.offset, List.take_add_one, hlookup, Code.slots_append, Code.slots, ← htype, Nat.add_assoc]
-      have hcapacity : offset.val + Code.width (sourceType ty) ≤ words.length := by
-        have hpositive := Code.width_positive (sourceType ty)
-        have hlen : (Code.encodeValue value).length = Code.width (sourceType ty) := by
-          rw [Code.encodeValue_length, ← htype]
-        have last := hrep ((Code.encodeValue value).length - 1) (by omega)
+        simp [Compiler.offset, List.take_add_one, hlookup, Compiler.slots_append, Compiler.slots, ← htype, Nat.add_assoc]
+      have hcapacity : offset.val + Compiler.width (sourceType ty) ≤ words.length := by
+        have hpositive := Compiler.width_positive (sourceType ty)
+        have hlen : (Compiler.encodeValue value).length = Compiler.width (sourceType ty) := by
+          rw [Compiler.encode_value_length, ← htype]
+        have last := hrep ((Compiler.encodeValue value).length - 1) (by omega)
         simp only [alloc.vec.Vec.deref, Slice.from_val] at last
-        change offset.val + Code.width (sourceType ty) ≤ words.val.length
+        change offset.val + Compiler.width (sourceType ty) ≤ words.val.length
         omega
       step as ⟨widthSize, hwidthSize⟩
       step as ⟨nextSlot, hnextSlot⟩
@@ -91,7 +91,7 @@ open Aeneas Aeneas.Std
 @[step] theorem host_arguments (words : alloc.vec.Vec U64) (store base : Usize)
     (results : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
     (values : List val) (empty : results.val = [])
-    (typed : types.val.map sourceType = values.map Code.valueType)
+    (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt words.val base.val values) :
@@ -99,7 +99,7 @@ open Aeneas Aeneas.Std
       after.val.map sourceValue = values ⦄ := by
   apply host_arguments_loop words store base results 0#usize base types values typed wellFormed fits represented
   · simp
-  · simp [Code.offset, Code.slots]
+  · simp [Compiler.offset, Compiler.slots]
   · simp [empty]
 end Itasca.Runtime.Interp
 
@@ -121,10 +121,10 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
   | .FuncRef => .FuncRef none
   | .ExternRef => .ExternRef none
 
-@[simp] theorem zeroValue_type (ty : Itasca.types.ValueType) : rawType (zeroValue ty) = ty := by
+@[simp] theorem zero_value_type (ty : Itasca.types.ValueType) : rawType (zeroValue ty) = ty := by
   cases ty <;> rfl
 
-@[simp] theorem zeroValue_exact (ty : Itasca.types.ValueType) : runtime.Value.zero ty = .ok (zeroValue ty) := by
+@[simp] theorem zero_value_exact (ty : Itasca.types.ValueType) : runtime.Value.zero ty = .ok (zeroValue ty) := by
   cases ty <;> rfl
 
 /-- Default host results have exactly the signature's arity and raw types. -/
@@ -146,7 +146,7 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
         simp only [alloc.vec.Vec.length, currentEq, List.length_map, List.length_take]
         exact Nat.min_eq_left hi
       step as ⟨ty, found⟩
-      rw [zeroValue_exact]
+      rw [zero_value_exact]
       simp only [bind_ok]
       step as ⟨after, added⟩
       step as ⟨next, nextEq⟩
@@ -243,7 +243,7 @@ theorem call_host_composition_causes {M P F A : Type}
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)
     (values : List val)
-    (typed : signature.params.val.map sourceType = values.map Code.valueType)
+    (typed : signature.params.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
     (represented : ValuesAt exec.slots.val base.val values)
@@ -253,7 +253,7 @@ theorem call_host_composition_causes {M P F A : Type}
         (args results : alloc.vec.Vec runtime.Value),
       (∃ padding, SlotsEffect exec ready (exec.slots.val ++ padding)) →
       ready.frames = exec.frames →
-      base.val + Code.slots (signature.results.val.map sourceType) ≤ ready.slots.length →
+      base.val + Compiler.slots (signature.results.val.map sourceType) ≤ ready.slots.length →
       args.val.map sourceValue = values → results.val = signature.results.val.map zeroValue →
       DivSpec cause (do
         let (status,p,s,returned) ← hooks.call_host nextPlatform store identity args.slice results.slice
@@ -348,8 +348,8 @@ theorem call_host_composition_causes {M P F A : Type}
             have resultsSame : ready.host_results = exec.host_results := by
               have h := congrArg runtime.interp.Execution.host_results fields
               exact h
-            have resultCapacity : base.val + Code.slots (signature.results.val.map sourceType) ≤ ready.slots.length := by
-              have resultSize : resultWidth.val = Code.slots (signature.results.val.map sourceType) := by
+            have resultCapacity : base.val + Compiler.slots (signature.results.val.map sourceType) ≤ ready.slots.length := by
+              have resultSize : resultWidth.val = Compiler.slots (signature.results.val.map sourceType) := by
                 simpa only [typeSlots,alloc.vec.Vec.deref,Slice.from_val] using resultEffect
               have maximum : resultWidth.val ≤ width.val := by scalar_tac
               scalar_tac

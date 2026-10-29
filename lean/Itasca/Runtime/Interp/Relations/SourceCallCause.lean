@@ -6,26 +6,26 @@ open Aeneas Aeneas.Std
 
 /-- Storage retained by suspended source callers. Arguments passed to the
 callee have already been removed from these operand lists. -/
-def suspendedSourceWords : List Abs.AFrame → Nat
+def suspendedSourceWords : List SourceMachine.AFrame → Nat
   | [] => 0
-  | f :: rest => Code.slots ((f.locals ++ f.vals).map Code.valueType) + suspendedSourceWords rest
+  | f :: rest => Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType) + suspendedSourceWords rest
 
 /-- A reachable source call identifies its callee and shared argument position.
 This predicate uses only source configurations, values, and addresses. -/
-def SourceCallSite (initial : Abs.AState) (address : funcaddr) (base : Nat) : Prop :=
-  ∃ (f : Abs.AFrame) (rest : List Abs.AFrame)
+def SourceCallSite (initial : SourceMachine.AState) (address : funcaddr) (base : Nat) : Prop :=
+  ∃ (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
       (target : Nat) (after : List instr) (front args : List val) (callee : funcinst)
       (params results : List valtype) (count : Nat),
-    Spec.StepsHN count (Abs.decode initial) [] (Abs.decode ⟨initial.store, initial.ambient,
+    Spec.StepsHN count (SourceMachine.decode initial) [] (SourceMachine.decode ⟨initial.store, initial.ambient,
       {f with code := .CALL (.mk_uN target) :: after, vals := front ++ args} :: rest, []⟩) ∧
     f.module.FUNCS[target]? = some address ∧
     initial.store.FUNCS[address]? = some callee ∧
     callee.TYPE = .mk_functype (.mk_list params) (.mk_list results) ∧
-    args.map Code.valueType = params ∧
-    base = suspendedSourceWords rest + Code.slots ((f.locals ++ front).map Code.valueType)
+    args.map Compiler.valueType = params ∧
+    base = suspendedSourceWords rest + Compiler.slots ((f.locals ++ front).map Compiler.valueType)
 
-theorem SourceCallSite.prepend {before middle : Abs.AState} {address base count}
-    (steps : Spec.StepsHN count (Abs.decode before) [] (Abs.decode middle))
+theorem SourceCallSite.prepend {before middle : SourceMachine.AState} {address base count}
+    (steps : Spec.StepsHN count (SourceMachine.decode before) [] (SourceMachine.decode middle))
     (sameStore : middle.store = before.store) (sameAmbient : middle.ambient = before.ambient)
     (site : SourceCallSite middle address base) :
     SourceCallSite before address base := by
@@ -40,7 +40,7 @@ def SourceDirectCallCause {A M P : Type} (allocator : runtime.platform.Alloc A)
     (hooks : runtime.platform.Platform P M) (before : runtime.interp.Execution)
     (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
     (raw : runtime.interp.Frame) (caller : runtime.store.ModuleInst)
-    (callerCode : runtime.bytecode.CompiledFunction) (source : Abs.AState)
+    (callerCode : runtime.bytecode.CompiledFunction) (source : SourceMachine.AState)
     (error : runtime.ExecError) : Prop :=
   ∃ (target offset pc : U32) (address : runtime.FuncAddr) (base : Usize)
     (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)
@@ -61,7 +61,7 @@ theorem SourceDirectCallCause.concrete {A M P : Type} {allocator : runtime.platf
     {hooks : runtime.platform.Platform P M} {before : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {frameIndex : Usize}
     {raw : runtime.interp.Frame} {caller : runtime.store.ModuleInst}
-    {callerCode : runtime.bytecode.CompiledFunction} {source : Abs.AState} {error : runtime.ExecError}
+    {callerCode : runtime.bytecode.CompiledFunction} {source : SourceMachine.AState} {error : runtime.ExecError}
     (cause : SourceDirectCallCause allocator hooks before store platform frameIndex raw caller callerCode source error) :
     DirectCallCause allocator hooks before store platform frameIndex raw caller callerCode error := by
   obtain ⟨target, offset, pc, address, base, function, instanceIndex, functionIndex,
@@ -73,8 +73,8 @@ theorem SourceDirectCallCause.prepend {A M P : Type} {allocator : runtime.platfo
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {frameIndex : Usize}
     {raw : runtime.interp.Frame} {caller : runtime.store.ModuleInst}
-    {compiled : runtime.bytecode.CompiledFunction} {before after : Abs.AState} {error : runtime.ExecError} {count}
-    (steps : Spec.StepsHN count (Abs.decode before) [] (Abs.decode after))
+    {compiled : runtime.bytecode.CompiledFunction} {before after : SourceMachine.AState} {error : runtime.ExecError} {count}
+    (steps : Spec.StepsHN count (SourceMachine.decode before) [] (SourceMachine.decode after))
     (sameStore : after.store = before.store) (sameAmbient : after.ambient = before.ambient)
     (cause : SourceDirectCallCause allocator hooks exec store platform frameIndex raw caller compiled after error) :
     SourceDirectCallCause allocator hooks exec store platform frameIndex raw caller compiled before error := by

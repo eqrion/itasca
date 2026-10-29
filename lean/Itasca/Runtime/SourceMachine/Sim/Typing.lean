@@ -1,12 +1,12 @@
 import Itasca.Runtime.SourceMachine.Progress
 import Itasca.Runtime.SourceMachine.Sim.Context
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- The semantic label invariant provides syntax well-formedness for every
 continuation used while lifting source reductions through nested labels. -/
-theorem codeStack_labels_wf {C : context} {labels : List Label}
+theorem code_stack_labels_wf {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results) : LabelsWf labels := by
   induction h with
@@ -15,16 +15,16 @@ theorem codeStack_labels_wf {C : context} {labels : List Label}
     intro l hl
     simp only [List.mem_cons] at hl
     rcases hl with rfl | hl
-    · exact ⟨(Itasca.DeclarativeComplete.wellFormed cont).2, codeStack_wf after⟩
+    · exact ⟨(Itasca.DeclarativeComplete.wellFormed cont).2, code_stack_wf after⟩
     · exact ih l hl
 
-theorem frameTyped_wf {s : store} {f : AFrame} {incoming : List valtype}
+theorem frame_typed_wf {s : store} {f : AFrame} {incoming : List valtype}
     (h : FrameTyped s f incoming) : FrameWf f := by
   cases h with
   | mk C bindings localTypes locals values returns code hw =>
-    exact ⟨hw, codeStack_labels_wf code, resultsTyped_wf values, codeStack_wf code⟩
+    exact ⟨hw, code_stack_labels_wf code, results_typed_wf values, code_stack_wf code⟩
 
-theorem framesTyped_wf {s : store} {frames : List AFrame} {incoming : List valtype}
+theorem frames_typed_wf {s : store} {frames : List AFrame} {incoming : List valtype}
     (h : FramesTyped s frames incoming) : Forall FrameWf frames := by
   induction h with
   | nil => exact forall_nil _
@@ -32,10 +32,10 @@ theorem framesTyped_wf {s : store} {frames : List AFrame} {incoming : List valty
     intro f hm
     simp only [List.mem_cons] at hm
     rcases hm with rfl | hm
-    · exact frameTyped_wf hf
+    · exact frame_typed_wf hf
     · exact ih f hm
 
-theorem decodeLabels_wf (labels : List Label) (values : List val) (code : List admininstr)
+theorem decode_labels_wf (labels : List Label) (values : List val) (code : List admininstr)
     (hl : LabelsWf labels) (hv : Forall wf_val values) (hc : Forall wf_admininstr code) :
     Forall wf_admininstr (decodeLabels labels values code) := by
   induction labels generalizing values code with
@@ -51,7 +51,7 @@ theorem decodeLabels_wf (labels : List Label) (values : List val) (code : List a
     exact .admininstr_case_71 _ _ _ hlabel.1
       (forall_append (wf_vals (fun value hm => hv value (List.mem_of_mem_drop hm))) hc)
 
-theorem decodeFrames_wf (frames : List AFrame) (code : List admininstr)
+theorem decode_frames_wf (frames : List AFrame) (code : List admininstr)
     (hf : Forall FrameWf frames) (hc : Forall wf_admininstr code) :
     Forall wf_admininstr (decodeFrames frames code) := by
   induction frames generalizing code with
@@ -63,12 +63,12 @@ theorem decodeFrames_wf (frames : List AFrame) (code : List admininstr)
     simp only [List.mem_singleton] at hi
     subst i
     exact .admininstr_case_72 _ _ _ frame
-      (decodeLabels_wf f.labels f.vals _ labels values (forall_append hc (wf_instrs body)))
+      (decode_labels_wf f.labels f.vals _ labels values (forall_append hc (wf_instrs body)))
 
 /-- Source typing supplies all endpoint well-formedness premises needed by the
 generated reduction rules and by zero-step administrative simulations. -/
 theorem ATyped.decode_wf {s : AState} (h : ATyped s) : wf_config (decode s) :=
   wf_config_make h.store h.ambient
-    (decodeFrames_wf s.frames (vals s.results) (framesTyped_wf h.frames) (wf_vals h.results))
+    (decode_frames_wf s.frames (vals s.results) (frames_typed_wf h.frames) (wf_vals h.results))
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

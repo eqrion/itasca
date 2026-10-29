@@ -27,7 +27,7 @@ theorem synthetic_loop_initializer (exec : runtime.interp.Execution)
   subst status1 store1 platform1
   have capacity1 : width.val ≤ exec1.slots.length := by
     change width.val ≤ exec1.slots.val.length
-    rw [slots1, initialSlots_length]
+    rw [slots1, initial_slots_length]
     exact returnCapacity
   obtain ⟨⟨status2, exec2, store2, platform2⟩, second, hok2, slots2, frames2, hs2, hp2⟩ :=
     WP.spec_imp_exists (step_initial_return memory hooks floats allocator exec1 store platform

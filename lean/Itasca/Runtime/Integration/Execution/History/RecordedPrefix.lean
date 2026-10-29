@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.World.Loop
 import Itasca.Runtime.Interp.Invocation.LoopRecordingFacts
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem world_recorded_history_writer_prefix {M P F A : Type}
@@ -15,7 +15,7 @@ theorem world_recorded_history_writer_prefix {M P F A : Type}
   induction history generalizing prior with
   | refl state => simp only [List.append_nil]
   | cons edge tail ih =>
-    rw [recordedInvokeLoop_step memory hooks floats allocator edge.edge.actual prior,←edge.recorded]
+    rw [recorded_invoke_loop_step memory hooks floats allocator edge.edge.actual prior,←edge.recorded]
     simpa only [List.append_assoc] using ih (prior++_)
 
 theorem world_recorded_history_stopped_writer {M P F A : Type}
@@ -29,6 +29,6 @@ theorem world_recorded_history_stopped_writer {M P F A : Type}
     recordedInvokeLoop memory hooks floats allocator before.machine.exec before.machine.store before.machine.platform (.Ok ()) prior =
       .ok (finishExecution (after.machine.exec,after.machine.store,after.machine.platform,.Ok ()),prior++events) := by
   rw [world_recorded_history_writer_prefix history prior]
-  exact recordedInvokeLoop_stopped memory hooks floats allocator _ stopped _
+  exact recorded_invoke_loop_stopped memory hooks floats allocator _ stopped _
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

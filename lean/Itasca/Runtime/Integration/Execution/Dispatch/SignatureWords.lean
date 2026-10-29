@@ -1,8 +1,8 @@
 import Itasca.Runtime.Representation.Layout
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open SpecExt
 /-- Public buffer storage is computed from decoded parameter/result types. -/
 def signatureWords : functype → Nat
-  | .mk_functype (.mk_list params) (.mk_list results) => max (Code.slots params) (Code.slots results)
+  | .mk_functype (.mk_list params) (.mk_list results) => max (Compiler.slots params) (Compiler.slots results)
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

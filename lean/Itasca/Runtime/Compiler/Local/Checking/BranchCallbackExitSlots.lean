@@ -12,7 +12,7 @@ Exit-slot bounds for branch instructions and their public compiler callbacks. Th
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The source transfer interval pays for a recorded forward exit. This holds
@@ -85,7 +85,7 @@ theorem compiler_branch_if_exit_slots {A : Type} (ops : runtime.platform.Alloc A
     rw [width] at sourceFits
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -93,7 +93,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Actual operand observation preserves every recorded forward-exit region. -/
@@ -159,6 +159,6 @@ theorem compiler_br_if_callback_exit_slots {A : Type} (ops : runtime.platform.Al
       exact compiler_observe_exit_slots ops law middle after state (branch live middle emitted) rest
   · exact compiler_observe_exit_slots ops law before after state held called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

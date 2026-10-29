@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual scope entry retains previous result bounds and introduces a frame
@@ -44,4 +44,4 @@ theorem compiler_scope_entry_exit_slots {A : Type} (ops : runtime.platform.Alloc
     obtain ⟨code,_,height,source,_,_,frames,_⟩ := effect rfl
     exact held.push _ frames rfl capacity
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

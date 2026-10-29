@@ -7,7 +7,7 @@ The final executable check turns a completed actual body compilation into its re
 Main declarations: `StructuredCompiledBody.finish`. A direct consumer is `Compiler.Body.Relations.Entry.ExecutableEntryCompilerFinish`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The final executable check turns a completed actual body compilation into
@@ -33,4 +33,4 @@ theorem StructuredCompiledBody.finish {A : Type} (ops : runtime.platform.Alloc A
     params declared results source epilogue stable signature locals parameterSlots localSlots capacity
     bound code ?_ ending accepted⟩
   exact ⟨count, by simpa only [sourceEq] using fetched⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

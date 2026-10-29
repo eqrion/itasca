@@ -15,7 +15,7 @@ def ElementInitializers {M : Type} (store : runtime.store.Store M)
       ∃ expr function code words,
         segment.init.val[j.val]? = some expr ∧ functions.val[j.val]? = some function ∧
         inst.module.functions.val[function.val]? = some code ∧
-        Code.InitializerCode code expr (elementValueType segment.elem) ∧
+        Compiler.InitializerCode code expr (elementValueType segment.elem) ∧
         Interp.InitializerResolution store inst expr (elementValueType segment.elem) words
 
 private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :

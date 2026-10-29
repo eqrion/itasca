@@ -17,7 +17,7 @@ Structured loop reader prefixes and their complete-profile transport. These are 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A literal successful LOOP callback lifts its exact emitted frame to the
@@ -77,7 +77,7 @@ theorem structured_callback_loop_prefix {jumpTables : List U32} {emit : List val
     (by simpa [child, SourceScope.enterLoop, SourceScope.arguments, SourceScope.input] using oldTypes.symm)
     sources (by simp) consumed (by rw [cursor])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -85,7 +85,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- An accepted canonical LOOP reader constructs the complete live child
@@ -146,6 +146,6 @@ theorem structured_reader_prefix_loop_wasm2 {jumpTables : List U32} {emit : List
     rfl
   · exact post.scope_fronts (.inr (.inl rfl)) fronts _ (by simpa [SourceScope.enterLoop] using newTypes)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

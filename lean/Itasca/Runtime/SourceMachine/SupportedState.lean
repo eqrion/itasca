@@ -5,7 +5,7 @@ import Itasca.Runtime.SourceMachine.BinaryInstr
 Source instruction-support certificates for active frames and stored functions. This grammar restriction is independent of runtime bytecode and concrete values.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Source support is independent of values and concrete bytecode emission. -/
 def FrameSupported (f : AFrame) : Prop :=
@@ -36,4 +36,4 @@ theorem SupportedState.tail {before afterStore : store}
     exact ⟨fun instruction member => old.1 instruction (List.mem_cons_of_mem _ member),old.2⟩
   · exact covered.active item (List.mem_cons_of_mem _ member)
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

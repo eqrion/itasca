@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Numeric.Semantics
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 
 /-- Recognize exactly the integer instruction descriptors, including matching
 outer and inner source type tags. -/
@@ -27,7 +27,7 @@ def decodeInstruction : instr → Option Instruction
   | .CVTOP .I64 .I32 (.mk_cvtop___0 .I32 .I64 (.EXTEND .S)) => some (.conversion .extendSigned)
   | _ => none
 
-@[simp] theorem decodeInstruction_source (op : Instruction) : decodeInstruction op.source = some op := by
+@[simp] theorem decode_instruction_source (op : Instruction) : decodeInstruction op.source = some op := by
   cases op with
   | binary ty op => cases ty <;> rfl
   | compare ty op => cases ty <;> rfl
@@ -35,4 +35,4 @@ def decodeInstruction : instr → Option Instruction
   | unary ty op => cases op <;> (try cases ty) <;> rfl
   | conversion op => cases op <;> rfl
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

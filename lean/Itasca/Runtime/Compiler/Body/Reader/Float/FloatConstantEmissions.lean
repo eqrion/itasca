@@ -16,7 +16,7 @@ Floating-point constant encoding and compiler emission from accepted reader step
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem scalar_float_value_32 (bits : U32) :
     SpecExt.Builtins.floatOfBits 32 bits.val = ScalarConst.floatValue 23 8 bits.val := by
@@ -35,7 +35,7 @@ theorem scalar_float_value_64 (bits : U64) :
     SpecExt.Builtins.floatBias, sign]
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -43,7 +43,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- An actual successful constant reader and compiler callback extends the
 retained code prefix and the supplied source zipper together. -/
@@ -147,6 +147,6 @@ theorem reader_emit_float64_wasm2 {data env locals index st}
   apply ScalarEmission.float64
   simpa only [localTypes] using layout.height
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

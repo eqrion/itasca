@@ -54,13 +54,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
       apply WP.spec_mono (scalar_i32_eq_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | NE =>
       apply WP.spec_mono (scalar_i32_ne_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | LT sign =>
       cases sign with
@@ -68,13 +68,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i32_lts_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i32_ltu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | GT sign =>
       cases sign with
@@ -82,13 +82,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i32_gts_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i32_gtu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | LE sign =>
       cases sign with
@@ -96,13 +96,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i32_les_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i32_leu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | GE sign =>
       cases sign with
@@ -110,13 +110,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i32_ges_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i32_geu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
   | I64 =>
     cases op with
@@ -124,13 +124,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
       apply WP.spec_mono (scalar_i64_eq_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | NE =>
       apply WP.spec_mono (scalar_i64_ne_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | LT sign =>
       cases sign with
@@ -138,13 +138,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i64_lts_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i64_ltu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | GT sign =>
       cases sign with
@@ -152,13 +152,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i64_gts_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i64_gtu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | LE sign =>
       cases sign with
@@ -166,13 +166,13 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i64_les_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i64_leu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
     | GE sign =>
       cases sign with
@@ -180,23 +180,23 @@ theorem scalar_compare_sound {F : Type} (floats : runtime.platform.FloatOps F)
         apply WP.spec_mono (scalar_i64_ges_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
       | U =>
         apply WP.spec_mono (scalar_i64_geu_sound floats a b)
         rintro status ⟨value, rfl, relation⟩
         refine ⟨value, rfl, ?_⟩
-        simp only [integerWord32_toNat, integerWord64_toNat]
+        simp only [integer_word32_to_nat, integer_word64_to_nat]
         simpa only [UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn, show (2:Nat)^32=4294967296 from rfl] using relation
 
 theorem scalar_compare_exact {F : Type} (floats : runtime.platform.FloatOps F)
     (ty : Inn) (op : relop_Inn) (a b : U64) :
     runtime.interp.int.scalar floats (compareOpcode ty op) a b ⦃ status => ∃ value, status = .Ok value ∧
-      value.val = Abs.Numeric.compare ty op (integerWord ty a) (integerWord ty b) ⦄ := by
+      value.val = SourceMachine.Numeric.compare ty op (integerWord ty a) (integerWord ty b) ⦄ := by
   apply WP.spec_mono (scalar_compare_sound floats ty op a b)
   rintro status ⟨value, rfl, relation⟩
   refine ⟨value, rfl, ?_⟩
-  have same := Spec.integer_relop_deterministic relation (Abs.Numeric.compare_relation ty op (integerWord ty a) (integerWord ty b))
+  have same := Spec.integer_relop_deterministic relation (SourceMachine.Numeric.compare_relation ty op (integerWord ty a) (integerWord ty b))
   simpa only [num_.mk_num__0.injEq, uN.mk_uN.injEq, true_and] using same
 end Itasca.Runtime.Interp
 
@@ -207,7 +207,7 @@ end
 section
 
 namespace Itasca.Runtime.Interp
-open Aeneas Aeneas.Std Abs.Numeric
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 def conversionOpcode : Conversion → U16
   | .wrap => 167#u16
@@ -225,20 +225,20 @@ theorem scalar_conversion_sound {F : Type} (floats : runtime.platform.FloatOps F
     apply WP.spec_mono (scalar_wrap_sound floats a b)
     rintro status ⟨value, rfl, relation⟩
     refine ⟨value, rfl, ?_⟩
-    simp only [Conversion.input, integerWord64_toNat]
+    simp only [Conversion.input, integer_word64_to_nat]
     exact relation
   | extendUnsigned =>
     apply WP.spec_mono (scalar_extendu_sound floats a b)
     rintro status ⟨value, rfl, relation⟩
     refine ⟨value, rfl, ?_⟩
-    simp only [Conversion.input, integerWord32_toNat]
+    simp only [Conversion.input, integer_word32_to_nat]
     simpa only [Conversion.output, Conversion.operator, UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn,
       show (2:Nat)^32=4294967296 from rfl] using relation
   | extendSigned =>
     apply WP.spec_mono (scalar_extends_sound floats a b)
     rintro status ⟨value, rfl, relation⟩
     refine ⟨value, rfl, ?_⟩
-    simp only [Conversion.input, integerWord32_toNat]
+    simp only [Conversion.input, integer_word32_to_nat]
     simpa only [Conversion.output, Conversion.operator, UScalar.cast_val_eq, UScalarTy.numBits, numtype_Inn,
       show (2:Nat)^32=4294967296 from rfl] using relation
 
@@ -263,8 +263,8 @@ theorem scalar_eqz_exact {F : Type} (floats : runtime.platform.FloatOps F)
     runtime.interp.int.scalar floats (eqzOpcode ty) a b ⦃ status => ∃ value, status = .Ok value ∧
       value.val = if (integerWord ty a).toNat = 0 then 1 else 0 ⦄ := by
   cases ty
-  · simpa only [eqzOpcode, integerWord32_toNat] using scalar_i32_eqz floats a b
-  · simpa only [eqzOpcode, integerWord64_toNat] using scalar_i64_eqz floats a b
+  · simpa only [eqzOpcode, integer_word32_to_nat] using scalar_i32_eqz floats a b
+  · simpa only [eqzOpcode, integer_word64_to_nat] using scalar_i64_eqz floats a b
 end Itasca.Runtime.Interp
 
 end
@@ -274,7 +274,7 @@ end
 section
 
 namespace Itasca.Runtime.Interp
-open Aeneas Aeneas.Std Abs.Numeric
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 def unaryOpcode {ty : Inn} (op : UnaryOperator ty) : U16 :=
   UScalar.ofNat op.opcode (by have := op.opcode_bound; change op.opcode ≤ 65535; omega)
@@ -292,35 +292,35 @@ theorem scalar_unary_sound {F : Type} (floats : runtime.platform.FloatOps F)
       apply WP.spec_mono (scalar_i32_clz_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | ctz =>
       apply WP.spec_mono (scalar_i32_ctz_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | popcnt =>
       apply WP.spec_mono (scalar_i32_popcnt_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | extend8 =>
       apply WP.spec_mono (scalar_i32_extend8_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | extend16 =>
       apply WP.spec_mono (scalar_i32_extend16_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
   | I64 =>
@@ -329,42 +329,42 @@ theorem scalar_unary_sound {F : Type} (floats : runtime.platform.FloatOps F)
       apply WP.spec_mono (scalar_i64_clz_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | ctz =>
       apply WP.spec_mono (scalar_i64_ctz_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | popcnt =>
       apply WP.spec_mono (scalar_i64_popcnt_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | extend8 =>
       apply WP.spec_mono (scalar_i64_extend8_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | extend16 =>
       apply WP.spec_mono (scalar_i64_extend16_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
     | extend32 =>
       apply WP.spec_mono (scalar_i64_extend32_sound floats a b)
       rintro status ⟨value, rfl, relation⟩
       refine ⟨value, rfl, ?_⟩
-      simp only [integerWord32_toNat, integerWord64_toNat]
+      simp only [integer_word32_to_nat, integer_word64_to_nat]
       simpa only [UnaryOperator.operation, numtype_Inn, UScalar.cast_val_eq, UScalarTy.numBits,
         show (2:Nat)^32=4294967296 from rfl] using relation
 
@@ -386,9 +386,9 @@ end
 section
 
 namespace Itasca.Runtime.Interp
-open Aeneas Aeneas.Std Abs.Numeric
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
-theorem integerOpcode_agrees (op : Instruction) : Code.integerOpcode op =
+theorem integer_opcode_agrees (op : Instruction) : Compiler.integerOpcode op =
     (match op with
     | .binary ty binop => binaryOpcode ty binop
     | .unary _ unop => unaryOpcode unop
@@ -413,8 +413,8 @@ def IntegerExact (op : Instruction) (a b : U64)
 /-- All 66 scalar integer instructions agree with their source word semantics. -/
 theorem scalar_integer_exact {F : Type} (floats : runtime.platform.FloatOps F)
     (op : Instruction) (a b : U64) :
-    runtime.interp.int.scalar floats (Code.integerOpcode op) a b ⦃ IntegerExact op a b ⦄ := by
-  rw [integerOpcode_agrees]
+    runtime.interp.int.scalar floats (Compiler.integerOpcode op) a b ⦃ IntegerExact op a b ⦄ := by
+  rw [integer_opcode_agrees]
   cases op with
   | binary ty op => exact scalar_binary_exact floats ty op a b
   | unary ty op =>
@@ -425,8 +425,8 @@ theorem scalar_integer_exact {F : Type} (floats : runtime.platform.FloatOps F)
     apply WP.spec_mono (scalar_compare_exact floats ty op a b)
     rintro status ⟨value, rfl, same⟩
     refine ⟨_, rfl, ?_⟩
-    change value.val = (BitVec.ofNat 32 (Abs.Numeric.compare ty op (integerWord ty a) (integerWord ty b))).toNat
-    have bound : Abs.Numeric.compare ty op (integerWord ty a) (integerWord ty b) < 2^32 := compare_bound ty op (integerWord ty a) (integerWord ty b)
+    change value.val = (BitVec.ofNat 32 (SourceMachine.Numeric.compare ty op (integerWord ty a) (integerWord ty b))).toNat
+    have bound : SourceMachine.Numeric.compare ty op (integerWord ty a) (integerWord ty b) < 2^32 := compare_bound ty op (integerWord ty a) (integerWord ty b)
     rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt bound]
     exact same
   | eqz ty =>
@@ -448,12 +448,12 @@ theorem execute_integer_effect {F : Type} (floats : runtime.platform.FloatOps F)
     (hl : base.val + left.val < exec.slots.length)
     (hr : base.val + right.val < exec.slots.length)
     (hd : base.val + dst.val < exec.slots.length) :
-    runtime.interp.execute_scalar floats exec base (Code.integerOpcode op) dst left right ⦃ out =>
+    runtime.interp.execute_scalar floats exec base (Compiler.integerOpcode op) dst left right ⦃ out =>
       ∃ numeric, IntegerExact op exec.slots.val[base.val + left.val]! exec.slots.val[base.val + right.val]! numeric ∧
         ScalarEffect exec (base.val + dst.val) numeric out ⦄ := by
   obtain ⟨numeric, equation, exactResult⟩ := WP.spec_imp_exists
     (scalar_integer_exact floats op exec.slots.val[base.val + left.val]! exec.slots.val[base.val + right.val]!)
-  apply WP.spec_mono (execute_scalar_effect floats exec base (Code.integerOpcode op) dst left right hl hr hd numeric equation)
+  apply WP.spec_mono (execute_scalar_effect floats exec base (Compiler.integerOpcode op) dst left right hl hr hd numeric equation)
   exact fun _ effect => ⟨numeric, exactResult, effect⟩
 end Itasca.Runtime.Interp
 

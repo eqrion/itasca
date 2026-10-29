@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Api.InvocationObjectExclusion
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Resource bounds at the actual reached machine. Host callbacks may change
@@ -16,11 +16,11 @@ def EventfulSourceResourceCause {M P A : Type}
       ((∃ words,SourceCanonicalFunctionCapacity machine.source.store address words ∧
         machine.store.limits.max_values.val<base+words) ∨
        ∃ identity params results,HostFunction machine.source.store address identity params results ∧
-        machine.store.limits.max_values.val<base+max (Code.slots params) (Code.slots results))
+        machine.store.limits.max_values.val<base+max (Compiler.slots params) (Compiler.slots results))
   | .Exhausted .Allocation => SourceInvocationAllocation allocator machine.source ∨
       ∃ address identity base params results,SourceInvocationSite machine.source address base ∧
         HostFunction machine.source.store address identity params results ∧ HostSignatureAllocation allocator params results base
-  | .Exhausted .CallStack => machine.store.limits.max_frames.val≤Spec.frameDepth (Abs.decode machine.source) ∨
+  | .Exhausted .CallStack => machine.store.limits.max_frames.val≤Spec.frameDepth (SourceMachine.decode machine.source) ∨
       ∃ identity p args defaults returned,
         hooks.call_host p machine.store identity args defaults=.ok (.Err .StackOverflow,out.2.2.2,out.2.2.1,returned)
   | .Terminated => ∃ after,hooks.interrupt machine.platform=.ok (.Terminate,after)
@@ -59,4 +59,4 @@ theorem EventfulDispatchCause.source_resources {M P F A : Type}
     | Objects => exact cause.no_objects
   | _ => trivial
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -12,7 +12,7 @@ A public failure is explained at its original signature/entry boundary or at an 
 Main declarations: `WorldDefinedSourceResourceCause` and `invoke_defined_world_recorded_resources`. A direct consumer is `Integration.Invocation.Resources`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A public failure is explained at its original signature/entry boundary or
@@ -29,7 +29,7 @@ def WorldDefinedSourceResourceCause {M P F A : Type}
   CanonicalInvocationResourceCause allocator hooks initial (Store.decodeStore view code store)
     (Store.decodeFuncType signature) address.index.val store.limits.max_values.val store.limits.max_frames.val error ∨
   ∃ first : EventfulWorld M P view (signature.results.val.map sourceType),
-    first.code=code ∧ first.machine.store=store ∧ StepH initial [] (Abs.decode first.machine.source) ∧
+    first.code=code ∧ first.machine.store=store ∧ StepH initial [] (SourceMachine.decode first.machine.source) ∧
     ∃ result,result.2.2.2.2.2.1=after ∧ WorldLoopResourceCause memory hooks floats allocator Inv first result error
 
 /-- Actual public defined-function invocation keeps one selected final code
@@ -63,7 +63,7 @@ theorem invoke_defined_world_recorded_resources
         (out.1=.Ok () →
           ResultsTyped (Store.decodeStore view afterCode out.2.2.1) (signature.results.val.map sourceType)
             (out.2.2.2.2.val.map sourceValue) ∧
-          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
+          SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.2.2.2.val.map sourceValue) ∧
           (StepsH ⟨⟨Store.decodeStore view code store,ambient⟩,
             vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ events
             ⟨⟨Store.decodeStore view afterCode out.2.2.1,ambient⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
@@ -74,7 +74,7 @@ theorem invoke_defined_world_recorded_resources
           WorldDefinedSourceResourceCause memory hooks floats allocator view code Inv
             store ambient address signature args out.2.2.1 error) ⦄div := by
   have certified := certify code store valid
-  have storeWf := Store.decodeStore_wf view code store certified.shape certified.storeSyntax
+  have storeWf := Store.decode_store_wf view code store certified.shape certified.storeSyntax
   have arguments := checked_arguments_typed memory view code store storeWf args signature.params accepted owned
   have initialWf := Spec.host_call_wf (fa:=address.index.val) storeWf ambientWf arguments
   let retained := fun after => FrameStorePrefix store after
@@ -82,7 +82,7 @@ theorem invoke_defined_world_recorded_resources
     Inv afterCode after ∧ Store.CodeAgreesOn store code afterCode ∧
     Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
     ResultsTyped (Store.decodeStore view afterCode after) (signature.results.val.map sourceType) values ∧
-    Abs.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
+    SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds after) values ∧
     StepsH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ events
       ⟨⟨Store.decodeStore view afterCode after,ambient⟩,vals values⟩
   let errors := fun after error events => ∃ afterCode,
@@ -94,10 +94,10 @@ theorem invoke_defined_world_recorded_resources
       WorldDefinedSourceResourceCause memory hooks floats allocator view code Inv
         store ambient address signature args after error
   let entry := fun (after : runtime.store.Store M) (prepared : runtime.interp.Execution) (events : List HostEvent) => events=[] ∧ after=store ∧ ∃source,
-    StructuredMachine.Execution view code store prepared source
+    Machine.Execution view code store prepared source
       (signature.results.val.map sourceType) 0 false ∧
-    Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
-    StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (Abs.decode source)
+    SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) source ∧ source.ambient=ambient ∧
+    StepH ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩ [] (SourceMachine.decode source)
   refine (DivSpec.mono (recorded_invoke_with_prefix_owned_causes_composition_mode memory hooks floats allocator True laws.allocCorrect exec store platform
     address function signature args results [] owner hf hs accepted (fun value member=>(owned value member).1)
     entry retained (.refl _) property errors ?_ ?_ ?_ ?_) ?_).dspec
@@ -119,7 +119,7 @@ theorem invoke_defined_world_recorded_resources
       prepared store p certified.shape certified.storeSyntax certified.segmentBounds certified.typed certified.supported certified.compiled
       ambient ambientWf address function signature instanceIndex functionIndex args empty identity represented accepted owned hf hs hw)
     intro out outcome
-    rw [callHostEvents_wasm hf hw]
+    rw [call_host_events_wasm hf hw]
     simp only [List.nil_append,WP.spec_ok]
     refine ⟨?_,?_,?_⟩
     · simpa only [outcome.1] using (show retained store from .refl _)
@@ -146,16 +146,16 @@ theorem invoke_defined_world_recorded_resources
     refine ⟨kept,kept,?_,?_⟩
     · intro status
       obtain ⟨values,typed,ownedValues,represented,reductions⟩ := success status
-      have tags : signature.results.val.map sourceType=values.map Code.valueType := by
-        simpa only [show Code.valueType=Abs.valueType from funext valueType_eq_abs] using (Abs.results_type_of_typed typed).symm
-      refine ⟨values,tags,Spec.resultsTyped_wf typed,?_,represented,afterCode,newValid,agrees,extension,typed,ownedValues,?_⟩
+      have tags : signature.results.val.map sourceType=values.map Compiler.valueType := by
+        simpa only [show Compiler.valueType=SourceMachine.valueType from funext value_type_eq_abs] using (SourceMachine.results_type_of_typed typed).symm
+      refine ⟨values,tags,Spec.results_typed_wf typed,?_,represented,afterCode,newValid,agrees,extension,typed,ownedValues,?_⟩
       · intro value member
         exact Store.owned_result_fits _ value (ownedValues value member)
       · simpa only [machine,ambientEq,List.nil_append] using StepsH.cons sourceStep reductions
     · intro error status
       have errorSource := failed error status
       refine ⟨afterCode,newValid,agrees,extension,?_,Or.inr ⟨machine,rfl,rfl,sourceStep,out,rfl,causes error status⟩⟩
-      have first : StepsH _ [] (Abs.decode source) := StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf)
+      have first : StepsH _ [] (SourceMachine.decode source) := StepsH.cons sourceStep (StepsH.refl invariant.typed.typed.decode_wf)
       simpa only [machine,ambientEq,List.nil_append] using errorSource.prepend first
   · rintro ⟨out,events⟩ outcome
     cases status : out.1 with
@@ -181,4 +181,4 @@ theorem invoke_defined_world_recorded_resources
         have equal : error=reported := by simpa only [status,core.result.Result.Err.injEq] using failed
         subst reported
         exact reductions
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

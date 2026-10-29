@@ -7,7 +7,7 @@ Successful pair allocation retains the whole compiler frame and appends exactly 
 Main declarations: `compiler_pair_success`. A direct consumer is `Compiler.Local.Relations.Calls.IndirectCallLowering`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Successful pair allocation retains the whole compiler frame and appends
@@ -42,4 +42,4 @@ theorem compiler_pair_success {A : Type} (ops : runtime.platform.Alloc A)
       exact ⟨budget,pairs,rfl,(budget_push_success ops law before.budget budget before.function.indirect pairs (a,b) pushed).2,
         by simpa using valueEq⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

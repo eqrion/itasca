@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalInitial
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The saved IF condition occupies the word immediately above its parameters.
@@ -66,4 +66,4 @@ theorem ScopeConditions.initial {locals returns} : ScopeConditions locals [] (So
   subst scope
   trivial
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

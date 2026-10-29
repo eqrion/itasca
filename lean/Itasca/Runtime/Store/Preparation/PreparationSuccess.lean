@@ -40,7 +40,7 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
     simp [TypeEntries, maps.types]
   have typeChecked := type_staging_loop memory allocator law before before seed seed 0#usize
     (by simp) rfl rfl (.refl _) objectBound emptyTypes
-  have typePost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have typePost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ typeChecked typed typeInst (.Ok ()) typeRun
   obtain ⟨typeStore, typeMap, typePrefix, typeBound, typeEntries⟩ := typePost
   have typeStore_funcs := congrArg runtime.store.Store.funcs typeStore
@@ -87,7 +87,7 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
     simpa only [typeFuncs, typeSource] using maps.function_capacity cache
   have functionChecked := function_staging_loop memory allocator law typed typed typeInst typeInst instanceIndex 0#usize
     (by simp) rfl rfl (.refl _) typeBound preparedIndices typedIssued (by simp) functionCapacity
-  have functionPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have functionPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ functionChecked functions funcInst (.Ok ()) functionRun
   obtain ⟨functionStore, functionMap, functionPrefix, functionBound, functionIssued, functionCount⟩ := functionPost
   have functionStore_tables := congrArg runtime.store.Store.tables functionStore
@@ -123,7 +123,7 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
     simpa only [functionMap_tables, typeMap_tables, functionStore_tables, typeStore_tables] using importedTables
   have tableChecked := table_staging_loop memory allocator law functions functions funcInst funcInst funcInst.tables.len
     tableStartBound rfl rfl (.refl _) functionBound tableIssued (by simp)
-  have tablePost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have tablePost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ tableChecked tabled tableInst (.Ok ()) tableRun
   obtain ⟨tableStore, tableMap, tablePrefix, tableBound, tableAddresses, tableCount⟩ := tablePost
   have tableStore_funcs := congrArg runtime.store.Store.funcs tableStore
@@ -157,7 +157,7 @@ theorem preparation_success {M A : Type} (memory : runtime.platform.MemoryBuffer
     simpa only [tableMap_memories, functionMap_memories, typeMap_memories, tableStore_memories, functionStore_memories, typeStore_memories] using importedMemories
   have memoryChecked := memory_staging_loop memory allocator law view laws tabled tabled tableInst tableInst tableInst.memories.len
     memoryStartBound rfl rfl (.refl _) tableBound memoryIssued (by simp)
-  have memoryPost := preparation_result typeParts (fun a b s t i j h => (typeParts_inj a b s t i j).mp h)
+  have memoryPost := preparation_result typeParts (fun a b s t i j h => (type_parts_inj a b s t i j).mp h)
     _ _ memoryChecked after inst (.Ok ()) memoryRun
   obtain ⟨memoryStore, memoryMap, memoryPrefix, memoryBound, memoryAddresses, memoryCount⟩ := memoryPost
   have memoryStore_funcs := congrArg runtime.store.Store.funcs memoryStore

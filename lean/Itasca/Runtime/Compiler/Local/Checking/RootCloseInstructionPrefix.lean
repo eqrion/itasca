@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Checking.RootInstructionPublication
 import Itasca.Runtime.Compiler.Local.Publication.ScopeClosePublication
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The actual final END patches the root frame and emits a checked return.
@@ -39,11 +39,11 @@ theorem compiler_root_close_checked_instructions_of_slots {A : Type} (ops : runt
     [.Return geometry.frame.height (if scopeExitLive before.reachable geometry.frame then geometry.frame.results else 0#u32)]
     (by simpa only [frameInstructionSites,noIf,Option.toList_none,List.nil_append] using code) (by simp)
   · change geometry.target.val < after.function.code.val.length
-    rw [code,List.length_append,patchCode_length,List.length_singleton,geometry.position]
+    rw [code,List.length_append,patch_code_length,List.length_singleton,geometry.position]
     omega
   · intro instruction member
     simp only [List.mem_singleton] at member
     subst instruction
     exact (CoreInstructionBounds.return_ returnFits).accepts
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

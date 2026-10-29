@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.MemoryAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -18,4 +18,4 @@ theorem compiler_dead_source_coordinates {A : Type} (ops : runtime.platform.Allo
   rw [if_neg (by simp [dead])] at called
   exact compiler_observe_source_coordinates ops law before after state held forward called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

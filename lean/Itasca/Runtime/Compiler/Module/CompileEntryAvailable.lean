@@ -10,7 +10,7 @@ Successful scheduled entry compilation from batch entry availability.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A valid worker entry compiles and finishes successfully, with actual worker
@@ -59,7 +59,7 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
   refine ⟨count,after,by simpa using countValue,?_,finished,effect⟩
   simp [Itasca.stream.CodeBatch.validate_func,noError,core.option.Option.is_none,next,increment]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -67,7 +67,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The scheduler compiles and publishes an independently valid dispatched
@@ -137,6 +137,6 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     rfl
   · simpa only [CompilationBudgetEffect] using effect
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

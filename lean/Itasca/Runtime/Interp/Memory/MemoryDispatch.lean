@@ -98,7 +98,7 @@ theorem execute_store_effect {M : Type} (memory : runtime.platform.MemoryBuffer 
     split at effect
     · obtain ⟨_,bytesEq⟩ := effect
       change written.val.length = (view object.buf).val.length
-      rw [bytesEq,scalarStoreBytes_length]
+      rw [bytesEq,scalar_store_bytes_length]
     · have same := congrArg Prod.snd effect
       simpa using congrArg Slice.length same
   have restored := writeLaw written lengthEq

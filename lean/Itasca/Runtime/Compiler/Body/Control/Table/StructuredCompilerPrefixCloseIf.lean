@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseBlock
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseIf
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A live-entered IF without ELSE restores the identity arm at END, so the
@@ -49,11 +49,11 @@ theorem StructuredCompilerPrefix.close_if {jumpTables : List Aeneas.Std.U32} {A 
   have frames := (invariant.frames.close_guard frame guard condition old target framesEq guardEq guardCode
     branches codeEq (by rw [maps])).advance (.IFELSE bt child.source [])
   have clean : DormantFrames after.frames.val := (framesEq ▸ invariant.dormant).pop
-  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patchCode_length]
+  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patch_code_length]
   refine ⟨invariant.metadata.trans stable, frames, invariant.entryChain.pop.advance _, clean,
     invariant.conditions.pop.advance _, (fun _ => sourceTypes.concrete), ?_, arms, sources.aligned invariant.sources,
     invariant.codeBudget.advance (by omega) consumed,
     (invariant.controlBudget.transport maps (by simp [framesEq])).advance (Nat.le_of_lt consumed), cursor⟩
   refine StructuredPrefixMode.live live (by exact parentEntered) ?_
   simpa only [sourceTypes.decoded] using next
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -7,7 +7,7 @@ Only source syntax is matched here; control locations and liveness remain compil
 Main declarations: `ScopeFormMatchesWasm2` and `SourceScopeMatchesWasm2`. A direct consumer is `Compiler.Body.Reader.Control.EndSignature`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Only source syntax is matched here; control locations and liveness remain compiler ghosts. -/
@@ -28,7 +28,7 @@ structure SourceScopeMatchesWasm2 (scope : SourceScope) (saved : Wasm2.Frames.Sa
 theorem ScopeFormMatchesWasm2.kind {bt scope saved} (same : ScopeFormMatchesWasm2 bt scope saved) :
     scope.kind = saved.kind := by cases same <;> rfl
 
-theorem SourceScopeMatchesWasm2.branchTypes {scope saved} (same : SourceScopeMatchesWasm2 scope saved) :
+theorem SourceScopeMatchesWasm2.branch_types {scope saved} (same : SourceScopeMatchesWasm2 scope saved) :
     scope.branchTypes = saved.form.label saved.ins saved.outs := by
   obtain ⟨form, params, results, source⟩ := same
   generalize scopeForm : scope.form = f at form
@@ -78,4 +78,4 @@ theorem SourceScopeMatchesWasm2.fresh (bt : signature.BlockType) (form : Wasm2.F
       (Wasm2.Frames.Saved.fresh base form bt ins outs) :=
   ⟨matched, rfl, rfl, rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

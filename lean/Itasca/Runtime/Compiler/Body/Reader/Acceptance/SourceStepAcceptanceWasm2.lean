@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceBoundAccepta
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SourceBoundSimdAcceptance
 import Itasca.Visitor.ReaderAcceptedProgress
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 8192
 set_option maxHeartbeats 2000000
@@ -123,4 +123,4 @@ theorem IndexedTableReaderCompilerPointWasm2.step_available_from_source {A : Typ
   | reserved rejected =>
     exact False.elim (rejected.rejects recorder _ out data env ⟨sourceLocals,ft.results⟩ index _ before after reference)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

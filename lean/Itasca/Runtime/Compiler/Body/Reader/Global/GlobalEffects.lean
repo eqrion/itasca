@@ -6,7 +6,7 @@ Successful global reads return the declared global type and append exactly that 
 Main declarations: `reader_global_get_effect` and `reader_global_set_effect`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedSimpleAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- Successful global reads return the declared global type and append exactly
 that concrete operand to the physical validator stack. -/
@@ -70,4 +70,4 @@ theorem reader_global_set_effect (st out : code.OpIterState) (data : Slice U8) (
         exact ⟨ty, by simpa [List.getElem?_eq_getElem bound] using congrArg some lookup, mutable,
           by simp [values, nextValues, segmentShape, List.append_assoc]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

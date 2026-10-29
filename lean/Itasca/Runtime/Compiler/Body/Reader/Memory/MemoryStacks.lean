@@ -6,7 +6,7 @@ Accepted load readers replace exactly the live i32 address with the specified nu
 Main declarations: `reader_memory_load_stack` and `reader_memory_store_stack`. A direct consumer is `Compiler.Body.Reader.Memory.Instructions`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Accepted load readers replace exactly the live i32 address with the
@@ -86,7 +86,7 @@ theorem reader_memory_store_stack (st out : code.OpIterState) (data : Slice U8) 
         have poly : Control.polymorphic middle = false := by simpa [Control.polymorphic,controls] using monomorphic
         rw [poly] at popEffect
         have old := typed_pop_exact known popEffect
-        have remainingKnown : ConcreteStack remaining := (concreteStack_append.mp (old ▸ known)).1
+        have remainingKnown : ConcreteStack remaining := (concrete_stack_append.mp (old ▸ known)).1
         obtain ⟨⟨addressResult,final⟩,addressPop,addressControls,_,rest,restValues,addressEffect⟩ := WP.spec_imp_exists
           (code.pop_with_type.segment popped outer remaining .I32 remainingValues
             (by simpa [Control.base,popControls,controls] using base))
@@ -103,4 +103,4 @@ theorem reader_memory_store_stack (st out : code.OpIterState) (data : Slice U8) 
           obtain ⟨rfl,rfl⟩ := accepted
           exact ⟨rest,by simpa only [remainingShape,List.append_assoc,List.cons_append,List.nil_append] using old,
             restValues,addressControls.trans (popControls.trans controls),check⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

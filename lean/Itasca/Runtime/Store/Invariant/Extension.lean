@@ -11,7 +11,7 @@ private theorem prefix_lookup {T : Type} (before after : List T)
   have h := congrArg (fun xs => xs[index]?) hprefix
   simpa [List.getElem?_take, hi] using h
 
-private theorem prefix_getD_map {T U : Type} (before after : List T) (f : T → U) (fallback : U)
+private theorem prefix_get_d_map {T U : Type} (before after : List T) (f : T → U) (fallback : U)
     (hprefix : after.take before.length = before) (index : Nat) (hi : index < before.length) :
     (after.map f).getD index fallback = (before.map f).getD index fallback := by
   simp only [List.getD_eq_getElem?_getD, List.getElem?_map,
@@ -19,25 +19,25 @@ private theorem prefix_getD_map {T U : Type} (before after : List T) (f : T → 
 
 /-- Canonical signature insertion does not change the types in an existing
 instance's decoded module environment. -/
-theorem decodeInstance_prefix {M : Type} (before after : runtime.store.Store M)
+theorem decode_instance_prefix {M : Type} (before after : runtime.store.Store M)
     (hprefix : StagedPrefix before after) (inst : runtime.store.ModuleInst)
     (hinst : InstanceShape before inst) : decodeInstance after inst = decodeInstance before inst := by
   unfold decodeInstance
   congr 1
   apply List.map_congr_left
   intro index hindex
-  exact prefix_getD_map _ _ decodeFuncType default hprefix.types index.val (hinst.2.2.2.2.2.2.2.1 index hindex)
+  exact prefix_get_d_map _ _ decodeFuncType default hprefix.types index.val (hinst.2.2.2.2.2.2.2.1 index hindex)
 
 /-- Existing function instances retain both their signature and defining module
 when new objects and canonical signatures are appended during instantiation. -/
-theorem decodeFunction_prefix {M : Type} (code : CodeInterpretation)
+theorem decode_function_prefix {M : Type} (code : CodeInterpretation)
     (before after : runtime.store.Store M) (hprefix : StagedPrefix before after)
     (view : M → Slice U8) (shape : Shape view before)
     (function : runtime.store.FuncInst) (hfunction : function ∈ before.funcs.val) :
     decodeFunction code after function = decodeFunction code before function := by
   have hf := shape.functions function hfunction
   unfold decodeFunction
-  rw [prefix_getD_map _ _ decodeFuncType default hprefix.types function.signature.val hf.1]
+  rw [prefix_get_d_map _ _ decodeFuncType default hprefix.types function.signature.val hf.1]
   cases hc : function.code with
   | Host id => rfl
   | Wasm index fn =>
@@ -48,12 +48,12 @@ theorem decodeFunction_prefix {M : Type} (code : CodeInterpretation)
       exact List.getElem?_eq_some_iff.mp hlookup |>.1
     have hnew := prefix_lookup before.instances.val after.instances.val hprefix.instances index.val hib
     simp only [hnew, hlookup]
-    rw [decodeInstance_prefix before after hprefix inst (shape.instances inst (List.mem_of_getElem? hlookup))]
+    rw [decode_instance_prefix before after hprefix inst (shape.instances inst (List.mem_of_getElem? hlookup))]
 
 /-- Appending raw store objects preserves every decoded object already present.
 The proof includes the indirect dependency of function instances on the
 canonical signature pool and defining instance maps. -/
-theorem decodeStore_prefix {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
+theorem decode_store_prefix {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (before after : runtime.store.Store M) (shape : Shape view before)
     (hprefix : StagedPrefix before after) :
     let old := decodeStore view code before
@@ -69,7 +69,7 @@ theorem decodeStore_prefix {M : Type} (view : M → Slice U8) (code : CodeInterp
   · rw [hprefix.funcs]
     apply List.map_congr_left
     intro function hfunction
-    exact decodeFunction_prefix code before after hprefix view shape function hfunction
+    exact decode_function_prefix code before after hprefix view shape function hfunction
   · rw [hprefix.globals]
   · rw [hprefix.tables]
   · rw [hprefix.memories]
@@ -82,7 +82,7 @@ private theorem prefix_length {T : Type} (before after : List T)
   simp only [List.length_take] at h
   exact h ▸ Nat.min_le_right _ _
 
-private theorem prefix_getBang {T : Type} [Inhabited T] (before after : List T)
+private theorem prefix_get_bang {T : Type} [Inhabited T] (before after : List T)
     (hprefix : after.take before.length = before) (index : Nat) (hi : index < before.length) :
     after[index]! = before[index]! := by
   simp only [List.getElem!_eq_getElem?_getD, prefix_lookup before after hprefix index hi]
@@ -99,7 +99,7 @@ private theorem prefix_rel {T : Type} [Inhabited T] (rel : T → T → Prop) (va
     Forall (fun i => rel before[i]! after[i]!) (List.range before.length) := by
   intro i hi
   have hib := List.mem_range.mp hi
-  rw [prefix_getBang before after hprefix i hib]
+  rw [prefix_get_bang before after hprefix i hib]
   apply hrefl
   simpa only [getElem!_pos before i hib] using hvalid before[i] (List.getElem_mem hib)
 

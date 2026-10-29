@@ -18,7 +18,7 @@ A syntactic inclusion of the existing pure bytecode emission cases.
 Main declarations: `LinearEmbedding`. A direct consumer is `Compiler.Body.Control.Embedding.StructuredScalarEmbedding`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A syntactic inclusion of the existing pure bytecode emission cases. -/
@@ -26,4 +26,4 @@ def LinearEmbedding (locals : List valtype)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop) : Prop :=
   ∀ {input instruction code output}, LinearEmission locals input instruction code output → emit input instruction code output
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -17,7 +17,7 @@ theorem memory_lane_selected (ty : Jnn) (index : Nat) (before : BitVec 128)
       .mk_lane__0 ty (.mk_uN (laneBits (lsize (lanetype_Jnn ty)) index before).toNat) := by
   simp only [lanes_,Spec.Simd.shapeOf,proj_uN_0,List.getElem!_eq_getElem?_getD,
     unpackLanes_getElem?,if_pos valid,Option.getD_some]
-  rw [←laneBits_toNat]
+  rw [←lane_bits_to_nat]
   cases ty <;> rfl
 
 theorem lane_store_source (ty : Jnn) (address value : U128) (offset index : U32) (bytes : Slice U8)
@@ -41,11 +41,11 @@ theorem lane_store_source (ty : Jnn) (address value : U128) (offset index : U32)
         StepH ⟨⟨s,f⟩,[Spec.Segment.i32 (UScalar.cast .U32 address).val,.VCONST .V128 (.mk_uN value.val),
           .VSTORE_LANE .V128 (.mk_sz (lsize (lanetype_Jnn ty))) argument (.mk_uN index.val)]⟩ []
           ⟨⟨s,f⟩,[.TRAP]⟩ ⦄ := by
-  have valid' : index.val < 128/lsize (lanetype_Jnn ty) := by simpa only [shiftWidth_val] using valid
+  have valid' : index.val < 128/lsize (lanetype_Jnn ty) := by simpa only [shift_width_val] using valid
   have source := Spec.Simd.lane_store_step ty s f argument (UScalar.cast .U32 address).val index.val value.bv
     (laneBits (lsize (lanetype_Jnn ty)) index.val value.bv) valid' (memory_lane_selected _ _ _ valid')
     storeWf frameWf (by scalar_tac) operationWf mapped
-  simp only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memoryLaneBytes_val] at source
+  simp only [memoryEq,offsetEq,Store.decodeBytes,List.length_map,←memory_lane_bytes_val] at source
   apply WP.spec_mono (memory_lane_store_effect ty offset index address value bytes valid)
   intro out effect
   unfold LaneStoreEffect at effect
@@ -53,10 +53,10 @@ theorem lane_store_source (ty : Jnn) (address value : U128) (offset index : U32)
   · rw [if_pos fits] at source effect ⊢
     obtain ⟨word,bits,status,written⟩ := effect
     refine ⟨status,?_,source⟩
-    rw [written,vectorStoreBytes_source _ _ _ _ fits]
+    rw [written,vector_store_bytes_source _ _ _ _ fits]
     have wordVal : word.val = (laneBits (lsize (lanetype_Jnn ty)) index.val value.bv).toNat := by
       have valueEq := congrArg BitVec.toNat bits
-      rw [shiftWidth_val,BitVec.toNat_setWidth_of_le (by cases ty <;> decide)] at valueEq
+      rw [shift_width_val,BitVec.toNat_setWidth_of_le (by cases ty <;> decide)] at valueEq
       exact valueEq
     simp only [U64.cast_U128_val_eq,wordVal]
   · rw [if_neg fits] at source effect ⊢

@@ -13,7 +13,7 @@ Nop/drop source prefixes and their structured compiler-state composition.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_nop_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -32,7 +32,7 @@ theorem structured_reader_prefix_nop_wasm2 {jumpTables : List U32} {data env sou
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .NOP)
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff _).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff _).mp (invariant.known reachable)
   have decoded := (SourceStack.of_map rawTypes concrete rfl).decoded
   have layout : CompilerLayout before (rawTypes.map Translate.valueType) := decoded ▸ retained.layout
   obtain ⟨ordinary, sources, cursor, post, lower, emission⟩ :=
@@ -67,7 +67,7 @@ theorem structured_reader_prefix_drop_wasm2 {jumpTables : List U32} {data env so
   · simpa only [retained.localsEq, inputTypes] using emission
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -75,7 +75,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.nop {jumpTables : List U32} {A : Type}
@@ -130,6 +130,6 @@ theorem StructuredReaderCompilerStateWasm2.drop {jumpTables : List U32} {A : Typ
       state.compiled reach byte accepted
     exact ⟨values, state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 
 /-! Compiler primitives accept independently bounded available resources.
 These lemmas do not assume a successful callback or compilation trace. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An available bounded reserve request makes the actual compiler append
@@ -36,4 +36,4 @@ theorem charge_instruction_available {A : Type} (ops : runtime.platform.Alloc A)
   step as ⟨used,increment⟩
   exact increment
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

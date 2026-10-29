@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
 theorem global_lookup_back {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame) (index sourceAddress : Nat)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : SourceMachine.AFrame) (index sourceAddress : Nat)
     (sourceObject : globalinst) (moduleEq : f.module = Store.decodeInstance store inst)
     (mapped : f.module.GLOBALS[index]? = some sourceAddress)
     (issued : (Store.decodeStore view code store).GLOBALS[sourceAddress]? = some sourceObject) :
@@ -18,11 +18,11 @@ theorem global_lookup_back {M : Type} (view : M → Slice U8) (code : Store.Code
   obtain ⟨object,rawIssued,objectEq⟩ := Option.map_eq_some_iff.mp issued
   exact ⟨address,object,rawMapped,by simpa only [addressEq] using rawIssued,objectEq⟩
 
-theorem coreGlobal_lookup {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : Abs.AFrame)
+theorem core_global_lookup {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (f : SourceMachine.AFrame)
     (C : context) (index : Nat) (mutability : «mut») (ty : valtype)
     (moduleEq : f.module = Store.decodeInstance store inst)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) f.module C)
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) f.module C)
     (lookup : C.GLOBALS[index]? = some (.mk_globaltype mutability ty)) :
     ∃ address object, inst.globals.val[index]? = some address ∧
       store.globals.val[address.index.val]? = some object ∧
@@ -33,11 +33,11 @@ theorem coreGlobal_lookup {M : Type} (view : M → Slice U8) (code : Store.CodeI
   cases typeEq
   exact ⟨address,object,rawMapped,rawIssued,rfl,rfl⟩
 
-theorem global_set_typed_operand {s : store} (f : Abs.AFrame) (after : List instr) (index : Nat)
-    (typed : Abs.FrameTyped s {f with code := .GLOBAL_SET (.mk_uN index) :: after} []) :
+theorem global_set_typed_operand {s : store} (f : SourceMachine.AFrame) (after : List instr) (index : Nat)
+    (typed : SourceMachine.FrameTyped s {f with code := .GLOBAL_SET (.mk_uN index) :: after} []) :
     ∃ front value, f.vals = front ++ [value] ∧ wf_val value ∧
       (∀ label ∈ f.labels, label.height ≤ front.length) := by
-  obtain ⟨C,front,operands,ins,outs,bindings,_,operation,split,operandTypes,frontWf,heights⟩ := Abs.frame_typed_operands_bounds typed
+  obtain ⟨C,front,operands,ins,outs,bindings,_,operation,split,operandTypes,frontWf,heights⟩ := SourceMachine.frame_typed_operands_bounds typed
   cases operation
   cases operandTypes with
   | cons valueTyped tail =>

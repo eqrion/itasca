@@ -8,7 +8,7 @@ Frame and resource-measure preservation for compiler observation, used by callba
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Observation changes only compiler work state and allocation high-water marks. -/
@@ -23,7 +23,7 @@ def ObserveFrame {A : Type} (before after : runtime.compiler.FunctionCompiler A)
   split <;> step*
   all_goals cases r <;> simp_all [ObserveFrame, core.cmp.impls.OrdU32.max, alloc.vec.Vec.deref]
   all_goals try exact fun e => ⟨e⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -31,7 +31,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- High-water marks are exactly the maxima of previously observed capacity
@@ -53,6 +53,6 @@ and the current validator stack; dead source positions do not increase them. -/
   all_goals split <;> simp_all
   all_goals split <;> simp_all
   all_goals scalar_tac
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

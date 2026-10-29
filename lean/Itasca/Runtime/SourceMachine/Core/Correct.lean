@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Core.PureMetadata
 import Itasca.Runtime.SourceMachine.Core.MemoryAccess
 
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 /-- Every successful covered instruction preserves source store/frame typing
@@ -20,8 +20,8 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
   cases covered with
   | pure allowed =>
     rw [instruction_slice s ambient f rest _ after allowed frameTyped] at equation
-    refine ⟨⟨Itasca.Runtime.Abs.instruction_preservation s ambient f rest _ after next allowed typed.typed equation,?_⟩,
-      Itasca.Runtime.Abs.instruction_simulation s ambient f rest _ after next allowed typed.typed equation⟩
+    refine ⟨⟨Itasca.Runtime.SourceMachine.instruction_preservation s ambient f rest _ after next allowed typed.typed equation,?_⟩,
+      Itasca.Runtime.SourceMachine.instruction_simulation s ambient f rest _ after next allowed typed.typed equation⟩
     simpa only [astep_store equation] using typed.contents
   | const ty value =>
     obtain ⟨actual,actualEq,fresh,simulation⟩ := constant_progress s ambient f rest after ty value typed
@@ -37,7 +37,7 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
   | global_get index =>
     cases index with
     | mk_uN index =>
-      obtain ⟨actual,actualEq,fresh,simulation⟩ := globalGet_progress s ambient f rest index after typed
+      obtain ⟨actual,actualEq,fresh,simulation⟩ := global_get_progress s ambient f rest index after typed
       change globalGet _ _ _ _ _ = .next next at equation
       rw [actualEq] at equation
       cases equation
@@ -45,7 +45,7 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
   | global_set index =>
     cases index with
     | mk_uN index =>
-      obtain ⟨actual,actualEq,fresh,extension,simulation⟩ := globalSet_progress s ambient f rest index after typed
+      obtain ⟨actual,actualEq,fresh,extension,simulation⟩ := global_set_progress s ambient f rest index after typed
       change globalSet _ _ _ _ _ = .next next at equation
       rw [actualEq] at equation
       cases equation
@@ -84,10 +84,10 @@ theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
     | nil =>
       have valuesTyped := frame_end_typed (f := frame) frameTyped
       change ResultsTyped s resultTypes values at valuesTyped
-      have count := resultsTyped_length valuesTyped
+      have count := results_typed_length valuesTyped
       have returned : ResultsTyped s resultTypes (values.drop (values.length-resultTypes.length)) := by
         simpa only [count,Nat.sub_self,List.drop_zero] using valuesTyped
-      exact ⟨⟨returnFrame_preservation typed.typed returned equation,contents⟩,
+      exact ⟨⟨return_frame_preservation typed.typed returned equation,contents⟩,
         .single (typed_frame_end_simulation s ambient frame rest next typed.typed equation)⟩
     | cons label labels =>
       have simulation := typed_label_end_simulation s ambient frame rest label labels next typed.typed equation
@@ -99,4 +99,4 @@ theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
         exact active_frame_preservation typed.typed (label_exit_frame_preservation (f := frame) frameTyped) rfl
       · contradiction
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

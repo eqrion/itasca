@@ -11,7 +11,7 @@ Structured compiler branch exit slots and their reader-step lift. The source-pre
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed source label selection supplies every transfer and target premise
@@ -78,7 +78,7 @@ theorem StructuredCompilerPrefix.br_if_exit_slots
   exact compiler_branch_if_exit_slots ops law before middle index frame depth source condition resume
     found frameAt (by omega) conditionAt rfl order (by omega) held branch
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -86,7 +86,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed br reading preserves the slot regions of recorded forward exits. -/
@@ -136,6 +136,6 @@ theorem reader_br_if_exit_slots_wasm2 {jumpTables : List U32} {data env sourceLo
     (invariant.known live) (monomorphic live) depth view out read
   exact ⟨scope,discarded,_,selected,input,targetStack⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

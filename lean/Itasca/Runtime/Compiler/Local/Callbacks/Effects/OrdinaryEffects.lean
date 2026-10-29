@@ -7,7 +7,7 @@ What every compiler callback preserves when it emits code without opening,
 closing or branching to a structured frame.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 structure OrdinaryEffects {A : Type} (before after : runtime.compiler.FunctionCompiler A)
@@ -28,4 +28,4 @@ theorem OrdinaryEffects.auxiliary_growth {A : Type} {before after : runtime.comp
     {state : Itasca.code.OpIterState} (effects : OrdinaryEffects before after state) : AuxiliaryGrowth before after :=
   .of_tables effects.tables effects.code_mono
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

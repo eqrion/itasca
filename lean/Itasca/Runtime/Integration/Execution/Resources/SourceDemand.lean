@@ -144,14 +144,14 @@ import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses
 import Itasca.Runtime.Interp.Relations.SourceIndirectResources
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- All defined-call Values refusals retain a selected source call and its
 source-certified frame requirement, including indirect calls. -/
 theorem CumulativeFailure.source_values {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : Abs.AState}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)
@@ -171,7 +171,7 @@ theorem CumulativeFailure.source_values {M P A : Type} {allocator : runtime.plat
 
 theorem CumulativeFailure.source_allocation {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : Abs.AState}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (decoded : source.store=Store.decodeStore view code store)
     (capacities : Store.FunctionCapacities code store)
@@ -187,4 +187,4 @@ theorem CumulativeFailure.source_allocation {M P A : Type} {allocator : runtime.
       exact ⟨address,base,words,site,capacity,refusal⟩
     · exact indirect.source_allocation view code decoded capacities typed
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

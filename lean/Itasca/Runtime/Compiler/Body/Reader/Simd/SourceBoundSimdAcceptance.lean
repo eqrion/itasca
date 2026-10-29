@@ -19,7 +19,7 @@ Complete SIMD reader replay from source bounds. Scalar, lane, bitwise and memory
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1000000
@@ -72,7 +72,7 @@ theorem reader_simd_nonconstant_available {data env locals index st source value
     exact ⟨held.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -80,7 +80,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -124,9 +124,9 @@ theorem reached_profile_simd_memory_available_wasm2 {data env locals index st}
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_memory compiler out.core sub arg ⦃ _ ⦄
     rw [compiler_simd_memory_callback ops compiler out.core sub (simdCompilerOpcode sub) bounded
-      (simdCompilerOpcode_val sub bounded) arg]
+      (simd_compiler_opcode_val sub bounded) arg]
     exact reader_simd_nonconstant_available p ops bound allocation compiler out.core C (simdCompilerOpcode sub)
-      sub arg.offset arg.align 0#u128 (simdCompilerOpcode_val sub bounded) normalized post effect read capacity
+      sub arg.offset arg.align 0#u128 (simd_compiler_opcode_val sub bounded) normalized post effect read capacity
       known monomorphic wholeLayout demand simdBound
   apply simd_prefix_available (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index
     compiler sub next (fun after => CompilationBudgetEffect compiler.budget after.budget
@@ -178,9 +178,9 @@ theorem reached_profile_simd_memory_lane_available_wasm2 {data env locals index 
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_memory_lane compiler out.core sub arg lane ⦃ _ ⦄
     rw [compiler_simd_memory_lane_callback ops compiler out.core sub (simdCompilerOpcode sub) bounded
-      (simdCompilerOpcode_val sub bounded) arg lane]
+      (simd_compiler_opcode_val sub bounded) arg lane]
     exact reader_simd_nonconstant_available p ops bound allocation compiler out.core C (simdCompilerOpcode sub)
-      sub arg.offset arg.align (UScalar.cast .U128 lane) (simdCompilerOpcode_val sub bounded) normalized post effect read capacity
+      sub arg.offset arg.align (UScalar.cast .U128 lane) (simd_compiler_opcode_val sub bounded) normalized post effect read capacity
       known monomorphic wholeLayout demand simdBound
   apply simd_prefix_available (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index
     compiler sub next (fun after => CompilationBudgetEffect compiler.budget after.budget
@@ -192,7 +192,7 @@ theorem reached_profile_simd_memory_lane_available_wasm2 {data env locals index 
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -200,7 +200,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -239,9 +239,9 @@ theorem reached_profile_simd_pure_available_wasm2 {data env locals index st}
         CompilationBudgetEffect compiler.budget result.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd compiler out.core sub ⦃ _ ⦄
-    rw [compiler_simd_callback ops compiler out.core sub (simdCompilerOpcode sub) bounded (simdCompilerOpcode_val sub bounded)]
+    rw [compiler_simd_callback ops compiler out.core sub (simdCompilerOpcode sub) bounded (simd_compiler_opcode_val sub bounded)]
     exact reader_simd_nonconstant_available p ops bound allocation compiler out.core C (simdCompilerOpcode sub)
-      sub 0#u32 0#u32 0#u128 (simdCompilerOpcode_val sub bounded) retained post effect read capacity
+      sub 0#u32 0#u32 0#u128 (simd_compiler_opcode_val sub bounded) retained post effect read capacity
       known monomorphic wholeLayout demand simdBound
   apply simd_prefix_available (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index
     compiler sub next (fun after => CompilationBudgetEffect compiler.budget after.budget
@@ -289,9 +289,9 @@ theorem reached_profile_simd_lane_available_wasm2 {data env locals index st}
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
     change (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_lane compiler out.core sub lane ⦃ _ ⦄
     rw [compiler_simd_lane_callback ops compiler out.core sub (simdCompilerOpcode sub) bounded
-      (simdCompilerOpcode_val sub bounded) lane]
+      (simd_compiler_opcode_val sub bounded) lane]
     exact reader_simd_nonconstant_available p ops bound allocation compiler out.core C (simdCompilerOpcode sub)
-      sub (UScalar.cast .U32 lane) 0#u32 0#u128 (simdCompilerOpcode_val sub bounded) normalized post effect read capacity
+      sub (UScalar.cast .U32 lane) 0#u32 0#u128 (simd_compiler_opcode_val sub bounded) normalized post effect read capacity
       known monomorphic wholeLayout demand simdBound
   apply simd_prefix_available (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index
     compiler sub next (fun after => CompilationBudgetEffect compiler.budget after.budget
@@ -304,7 +304,7 @@ theorem reached_profile_simd_lane_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -312,7 +312,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -393,7 +393,7 @@ theorem reached_profile_simd_shuffle_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -401,7 +401,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Complete accepted SIMD dispatch: every pure, lane, memory, memory-lane,
@@ -453,7 +453,7 @@ theorem reached_profile_simd_available_wasm2 {data env locals index st}
             decoded demand known monomorphic wholeLayout simdBound byte reference
         · simp at raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -461,7 +461,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem reader_source_event {R : Type}
@@ -506,7 +506,7 @@ theorem source_simd_callback (st out : code.BodyState) (data : Slice U8) (env : 
         · exact reader_source_event _ (fun bits : U64 × U64 => .simd_shuffle bits.1 bits.2) before after out.core raw
         · simp at raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -514,7 +514,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Source typing, source byte room, and the independent final reference
@@ -558,6 +558,6 @@ theorem IndexedTableReaderCompilerPointWasm2.simd_available_from_source {A : Typ
     ⟨sourceLocals,ft.results⟩ C matched.mems demand state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) ledger.simd ledger.constants byte canonical
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

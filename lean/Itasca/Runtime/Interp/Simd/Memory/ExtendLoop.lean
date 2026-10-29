@@ -37,7 +37,7 @@ theorem memory_extend_loop (op width i : U32) (x initial : U128)
       have range : width.val*2*index.val+width.val*2 ≤ 128 := by nlinarith
       step with lane x width index positive (by omega) (by nlinarith) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by
-        rw [laneBits_toNat];exact aEq
+        rw [lane_bits_to_nat];exact aEq
       step as ⟨parity,parityEq⟩
       have parityTest : (parity = 1#u32) = (op.val % 2 = 1) := by scalar_tac
       simp only [parityTest]

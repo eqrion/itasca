@@ -44,8 +44,8 @@ def comparisonBits (width : Nat) (answer : Bool) : BitVec width :=
       have range := lane_range width.val index.val less
       step with lane as ⟨a,aEq⟩
       step with lane as ⟨b,bEq⟩
-      have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by rw [laneBits_toNat]; exact aEq
-      have bBits : b.val = (laneBits width.val index.val y.bv).toNat := by rw [laneBits_toNat]; exact bEq
+      have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by rw [lane_bits_to_nat]; exact aEq
+      have bBits : b.val = (laneBits width.val index.val y.bv).toNat := by rw [lane_bits_to_nat]; exact bEq
       have compareCall :
           (if float then do
             let op ← lift (UScalar.cast .U16 cmp)

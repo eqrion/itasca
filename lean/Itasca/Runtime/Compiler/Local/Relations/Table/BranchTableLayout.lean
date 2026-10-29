@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- An emitted table destination has the ordinary branch layout and exact
 transfer/jump fragment for its source depth. -/
@@ -25,4 +25,4 @@ structure BranchTableLayout (jumpTables : List U32) (locals : List valtype)
     ∃ entry, jumpTables[start.val+index]? = some entry ∧
       BranchTableEntry locals labels stack code depth entry next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.ChargeAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Numerical counter growth and retained budget metadata, independently
@@ -59,4 +59,4 @@ theorem CompilationBudgetEffect.uncharged {A : Type} {before after : runtime.com
   apply UScalar.eq_of_val_eq
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

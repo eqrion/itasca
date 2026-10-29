@@ -7,7 +7,7 @@ A successful fixed-operand reader retains the supplied source zipper and its exa
 Main declarations: `reader_simd_fixed_post`. A direct consumer is `Compiler.Body.Reader.Simd.SimdPure`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A successful fixed-operand reader retains the supplied source zipper and
@@ -59,4 +59,4 @@ theorem reader_simd_fixed_post {data env locals index st}
   · exact p.append_result C outer spine header base {st with core := out} source
       p.current.ctrl.polymorphic_base values wf finalEncoded finalTyped finalControls finalBlocks valuesEq (fun h => nomatch h) declared
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

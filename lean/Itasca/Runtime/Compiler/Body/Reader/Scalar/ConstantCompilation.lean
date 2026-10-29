@@ -13,7 +13,7 @@ Integer-constant source prefixes and their structured compiler-state composition
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_const32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -35,7 +35,7 @@ theorem structured_reader_prefix_const32_wasm2 {jumpTables : List U32} {data env
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (Spec.i32Const value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff _).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff _).mp (invariant.known reachable)
   have decoded := (SourceStack.of_map rawTypes concrete rfl).decoded
   have layout : CompilerLayout before (rawTypes.map Translate.valueType) := decoded ▸ retained.layout
   have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
@@ -71,7 +71,7 @@ theorem structured_reader_prefix_const64_wasm2 {jumpTables : List U32} {data env
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.i64 value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff _).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff _).mp (invariant.known reachable)
   have decoded := (SourceStack.of_map rawTypes concrete rfl).decoded
   have layout : CompilerLayout before (rawTypes.map Translate.valueType) := decoded ▸ retained.layout
   have bound : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
@@ -88,7 +88,7 @@ theorem structured_reader_prefix_const64_wasm2 {jumpTables : List U32} {data env
   · simpa only [retained.localsEq, decoded] using emission
   · rw [cursor]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -96,7 +96,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.const32 {jumpTables : List U32} {A : Type}
@@ -155,6 +155,6 @@ theorem StructuredReaderCompilerStateWasm2.const64 {jumpTables : List U32} {A : 
       state.compiled reach byte accepted
     exact ⟨value, state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices, Spec.i32Const, ScalarConst.i64]) compiled (by simp [dead])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

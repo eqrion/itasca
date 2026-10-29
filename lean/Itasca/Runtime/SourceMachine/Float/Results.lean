@@ -16,7 +16,7 @@ Typed scalar floating-point instruction results and progress. These source-only 
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
@@ -46,7 +46,7 @@ theorem Instruction.source_wf (op : Instruction) : wf_instr op.source := by
   | promote => exact .instr_case_18 _ _ _ (.cvtop___case_3 _ _ _ _ _ (.cvtop__Fnn_1_Fnn_2_case_0 _ _ (by decide)) rfl rfl) (by decide)
   | demote => exact .instr_case_18 _ _ _ (.cvtop___case_3 _ _ _ _ _ (.cvtop__Fnn_1_Fnn_2_case_1 _ _ (by decide)) rfl rfl) (by decide)
 
-theorem numberOfBits_wf (ty : numtype) (bits : Nat) (bound : bits < 2^sizenn ty) :
+theorem number_of_bits_wf (ty : numtype) (bits : Nat) (bound : bits < 2^sizenn ty) :
     wf_num_ ty (numberOfBits ty bits) := by
   cases ty
   · exact Itasca.Runtime.Spec.unsigned_num_wf .I32 bits bound
@@ -62,22 +62,22 @@ theorem Instruction.operands_wf (op : Instruction) (a b : Nat)
   · intro value member
     simp only [List.mem_singleton] at member
     subst value
-    exact .val_case_0 _ _ (numberOfBits_wf _ _ first)
+    exact .val_case_0 _ _ (number_of_bits_wf _ _ first)
   · intro value member
     simp only [List.mem_cons, List.not_mem_nil, or_false] at member
     rcases member with rfl | rfl
-    · exact .val_case_0 _ _ (numberOfBits_wf _ _ first)
-    · exact .val_case_0 _ _ (numberOfBits_wf _ _ second)
+    · exact .val_case_0 _ _ (number_of_bits_wf _ _ first)
+    · exact .val_case_0 _ _ (number_of_bits_wf _ _ second)
 
 def Instruction.signature (op : Instruction) : functype :=
   .mk_functype (.mk_list (List.replicate op.arity (valtype_numtype op.input))) (.mk_list [valtype_numtype op.output])
 
-theorem numberOfBits_typed (s : store) (storeWf : wf_store s) (ty : numtype) (bits : Nat)
+theorem number_of_bits_typed (s : store) (storeWf : wf_store s) (ty : numtype) (bits : Nat)
     (bound : bits < 2^sizenn ty) :
     Val_ok s (.CONST ty (numberOfBits ty bits)) (valtype_numtype ty) :=
-  .numtype _ _ _ storeWf (.val_case_0 _ _ (numberOfBits_wf ty bits bound))
+  .numtype _ _ _ storeWf (.val_case_0 _ _ (number_of_bits_wf ty bits bound))
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -85,14 +85,14 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
-theorem numberOfBits_float (ty : Fnn) (bits : Nat) :
+theorem number_of_bits_float (ty : Fnn) (bits : Nat) :
     numberOfBits (numtype_Fnn ty) bits = .mk_num__1 ty (floatOfBits (sizenn (numtype_Fnn ty)) bits) := by
   cases ty <;> rfl
 
-theorem numberOfBits_integer (ty : Inn) (bits : Nat) :
+theorem number_of_bits_integer (ty : Inn) (bits : Nat) :
     numberOfBits (numtype_Inn ty) bits = .mk_num__0 ty (.mk_uN bits) := by
   cases ty <;> rfl
 
@@ -102,7 +102,7 @@ theorem float_encoding (ty : Fnn) (value : fN) (valid : wf_fN (sizenn (numtype_F
   · exact ⟨floatBits 32 value, floatBits_lt_32 value valid, float_roundtrip_32 value valid⟩
   · exact ⟨floatBits 64 value, floatBits_lt_64 value valid, float_roundtrip_64 value valid⟩
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -110,7 +110,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem integer_number_bound (target : Inn) (bits : Nat)
@@ -122,6 +122,6 @@ theorem integer_number_bound (target : Inn) (bits : Nat)
     | uN_case_0 _ limit =>
       cases target <;> norm_num [sizenn, numtype_Inn, valtype_numtype, valtype_Inn, size] at limit ⊢ <;> omega
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end

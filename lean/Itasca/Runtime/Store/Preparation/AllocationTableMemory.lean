@@ -10,7 +10,7 @@ theorem decode_table_allocation (ty : types.TableType) (elements : alloc.vec.Vec
     decodeTable {elements, ty := ty.elem, maximum := ty.limits.max} =
       Spec.allocationTable (EnvTranslation.tableType ty) := by
   simp [decodeTable, alloc.vec.Vec.length, zeros, List.length_replicate, List.map_replicate,
-    decodeRef, ↓reduceIte, decodeElemType_source,
+    decodeRef, ↓reduceIte, decode_elem_type_source,
     Spec.allocationTable, EnvTranslation.tableType, EnvTranslation.limitsType, decodeLimits]
 
 theorem decode_memory_allocation {M : Type} (view : M → Slice U8) (ty : types.MemType) (buffer : M)

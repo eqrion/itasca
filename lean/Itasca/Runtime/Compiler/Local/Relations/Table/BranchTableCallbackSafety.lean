@@ -11,7 +11,7 @@ Normal return of br_table compilation, from one target through the target loop a
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -74,7 +74,7 @@ private theorem charge_branch_total {A} (ops : runtime.platform.Alloc A)
   | Ok unit =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
     step with budget_push ops law budget compiler.table_depths depth fits
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -82,7 +82,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -143,7 +143,7 @@ set_option maxRecDepth 4096
         simpa only [progress] using advanced
     · simp [WP.spec_ok]
   · exact held
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -151,7 +151,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -207,7 +207,7 @@ set_option maxRecDepth 4096
             · change compiler.function.jump_tables.val.length ≤ code.val.length
               omega
           step with compiler_table_loop_total ops law next 0#usize (.Ok ()) Usize.max (Nat.le_refl _) (fun _ => safe)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -215,7 +215,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -267,6 +267,6 @@ set_option maxRecDepth 4096
         exact compiler_observe_stack ops law {lowered with reachable := false,table_depths := cleared} state
     · step with runtime_clear labels as ⟨cleared,_⟩
       exact compiler_observe_stack ops law {compiler with budget,table_depths := cleared} state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

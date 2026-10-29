@@ -8,7 +8,7 @@ Explicit select has the same width-specific checker as ordinary select.
 Main declarations: `TypedSelectEmission.instructions_accept` and `ExecutableEmission.ordinary_instructions_accept`. A direct consumer is `Compiler.Body.Relations.Checking.ExecutableInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Explicit select has the same width-specific checker as ordinary select. -/
@@ -42,4 +42,4 @@ theorem ExecutableEmission.ordinary_instructions_accept (function : runtime.byte
   | typedSelect head => exact head.instructions_accept function inputs outputs
   | branchTable stack depths fallback selector start len => exact False.elim (ordinary depths fallback rfl)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

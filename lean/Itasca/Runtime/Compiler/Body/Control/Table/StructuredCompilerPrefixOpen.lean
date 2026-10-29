@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalOpen
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact entry effects preserve the whole retained invariant. The future
@@ -84,4 +84,4 @@ theorem StructuredCompilerPrefix.open_if {jumpTables : List Aeneas.Std.U32} {A :
     invariant.controlBudget.enter maps (by simp [framesEq]) consumed, cursor⟩
   simpa only [sourceTypes.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

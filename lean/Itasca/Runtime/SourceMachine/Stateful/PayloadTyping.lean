@@ -1,10 +1,10 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.MemoryMutation
 import Itasca.Runtime.Spec.SegmentCopy
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
-theorem copyInto_forall {T : Type} [Inhabited T] (property : T → Prop)
+theorem copy_into_forall {T : Type} [Inhabited T] (property : T → Prop)
     (before source : List T) (destination offset count : Nat)
     (old : Forall property before) (values : Forall property source)
     (inside : offset+count ≤ source.length) :
@@ -38,4 +38,4 @@ theorem memory_payload_typed {s : store} {object : meminst} (typed : Meminst_ok 
     refine ⟨.mk_Meminst_ok _ _ _ _ typeOk ?_ storeWf (.meminst_case_ _ _ typeWf values) typeWf,?_⟩
     · exact length.trans oldLength
     · exact extend_mem_contents count count maximum old bytes (by rfl) (by simpa only using length.ge) objectWf (.meminst_case_ _ _ typeWf values)
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

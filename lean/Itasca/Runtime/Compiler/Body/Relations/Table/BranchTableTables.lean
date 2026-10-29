@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_br_table_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -36,4 +36,4 @@ theorem compiler_reader_table_tables_wasm2 {A : Type} (ops : runtime.platform.Al
   obtain ⟨budget,buffer,types,_,callback⟩ := compiler_table_source_wasm2 ops law before after st final data env
     shape depths fallback next encoded accepted
   exact compiler_br_table_tables ops law {before with budget,table_depths := buffer} after final.core fallback types callback
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

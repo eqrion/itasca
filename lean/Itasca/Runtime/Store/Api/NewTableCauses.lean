@@ -16,7 +16,7 @@ theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryB
     after = store ∧ next = inst ∧ TableAllocationCause allocator store ty limit := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
   simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.table_types,bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.table_types.deref index ty
+  rw [Compiler.initializer_slice_index inst.module.module.env.table_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found),bind_ok] at run
   obtain ⟨⟨status,staged⟩,defined,run⟩ := normal_bind_exists _ _ _ run
   have effect := define_table_resource_causes memory allocator law store ty bound

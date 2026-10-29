@@ -24,7 +24,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Integration.Instantiation.StartAmbient
 import Itasca.Runtime.SourceMachine.Sim.Call
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 
 /-- Module-start execution uses the newly installed module and no ambient locals. -/
@@ -35,13 +35,13 @@ def moduleStartConfiguration {M : Type} (view : M → Slice U8) (code : Store.Co
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : U32) : config :=
   ⟨⟨Store.decodeStore view code store, moduleStartFrame store inst⟩, [.CALL (.mk_uN index.val)]⟩
 
-theorem moduleStartFrame_wf {M : Type} (code : Store.CodeInterpretation)
+theorem module_start_frame_wf {M : Type} (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (index : Usize) (inst : runtime.store.ModuleInst)
     (sourceSyntax : Store.StoreSyntax code store) (found : store.instances.val[index.val]? = some inst) :
     wf_frame (moduleStartFrame store inst) := by
   apply wf_frame.frame_case_
   · simp [Forall]
-  · exact Store.decodeInstance_wf code index.val store inst (sourceSyntax index.val inst found)
+  · exact Store.decode_instance_wf code index.val store inst (sourceSyntax index.val inst found)
 
 theorem module_start_resolve {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : U32) (address : runtime.FuncAddr)
@@ -50,8 +50,8 @@ theorem module_start_resolve {M : Type} (view : M → Slice U8) (code : Store.Co
     (mapped : inst.funcs.val[index.val]? = some address) :
     StepH (moduleStartConfiguration view code store inst index) []
       (ambientStartConfiguration view code store (moduleStartFrame store inst) address) := by
-  apply Abs.call_resolve _ _ index.val address.index.val storeWf frameWf
+  apply SourceMachine.call_resolve _ _ index.val address.index.val storeWf frameWf
   · simp only [moduleStartFrame, Store.decodeInstance, List.getElem?_map, mapped, Option.map_some]
   · scalar_tac
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

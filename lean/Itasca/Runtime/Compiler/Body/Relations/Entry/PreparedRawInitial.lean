@@ -9,7 +9,7 @@ Fresh entry establishes the raw operand and auxiliary-buffer ledger before any b
 Main declarations: `prepared_compiler_raw_initial`. A direct consumer is `Compiler.Module.PreparedExecutableSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Fresh entry establishes the raw operand and auxiliary-buffer ledger before
@@ -55,6 +55,6 @@ theorem prepared_compiler_raw_initial {A : Type} (ops : runtime.platform.Alloc A
   refine ⟨⟨?_,?_⟩,by omega,by omega,by omega,?_⟩
   · simpa only [stackOffsets,List.length_nil,List.range_zero,List.map_nil,observedOffsets]
       using layout.operandOffsets
-  · simpa [layout.localSlots,stackWords,Code.slots] using layout.height
+  · simpa [layout.localSlots,stackWords,Compiler.slots] using layout.height
   · simp [FixupBudget,framesEq,frames,alloc.vec.Vec.new]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

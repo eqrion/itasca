@@ -17,7 +17,7 @@ def integerArithmeticOpcode (ty : Jnn) (kind : IntegerArithmetic) : U32 :=
   | .I32,.add => 174#u32 | .I32,.sub => 177#u32 | .I32,.mul => 181#u32
   | .I64,.add => 206#u32 | .I64,.sub => 209#u32 | .I64,.mul => 213#u32
 
-theorem integerArithmeticOpcode_index (ty : Jnn) (kind : IntegerArithmetic) :
+theorem integer_arithmetic_opcode_index (ty : Jnn) (kind : IntegerArithmetic) :
     (integerArithmeticOpcode ty kind).val%32 = (integerArithmeticIndex kind).val := by
   cases ty <;> cases kind <;> decide
 
@@ -33,7 +33,7 @@ theorem integer_arithmetic_loop (ty : Jnn) (kind : IntegerArithmetic) (x y : U12
       y (integerCompareWidth ty) 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerArithmeticBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
-  have widthEq := integerCompareWidth_val ty
+  have widthEq := integer_compare_width_val ty
   rw [←widthEq]
   apply integer_binary_loop x y 0#u128 (integerCompareWidth ty) (integerArithmeticOpcode ty kind) 0#u32
     (by cases ty <;> decide) (by cases ty <;> decide)
@@ -42,7 +42,7 @@ theorem integer_arithmetic_loop (ty : Jnn) (kind : IntegerArithmetic) (x y : U12
   · intro j valid a b sa sb remainder aEq bEq saEq sbEq remainderEq
     have exactIndex : remainder = integerArithmeticIndex kind := by
       apply UScalar.eq_of_val_eq
-      exact remainderEq.trans (integerArithmeticOpcode_index ty kind)
+      exact remainderEq.trans (integer_arithmetic_opcode_index ty kind)
     subst remainder
     have aBits := lane_word_cast _ j x.bv a aEq
     have bBits := lane_word_cast _ j y.bv b bEq

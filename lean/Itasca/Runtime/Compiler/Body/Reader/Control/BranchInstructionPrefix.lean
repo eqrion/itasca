@@ -8,7 +8,7 @@ Actual source-typed br reading preserves checks of every stored word.
 Main declarations: `reader_br_open_instructions_wasm2` and `reader_br_if_open_instructions_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ControlCheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed br reading preserves checks of every stored word. -/
@@ -61,4 +61,4 @@ theorem reader_br_if_open_instructions_wasm2 {jumpTables : List U32} {data env s
     (invariant.known live) (monomorphic live) depth view out read
   exact ⟨scope,discarded,_,selected,input,targetStack⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

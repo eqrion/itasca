@@ -57,11 +57,11 @@ theorem float_binary_loop {F : Type} (floats : runtime.platform.FloatOps F)
       have range := lane_range width.val index.val less
       step with lane x width index positive widthBound (by omega) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by
-        rw [laneBits_toNat]
+        rw [lane_bits_to_nat]
         exact aEq
       step with lane y width index positive widthBound (by omega) as ⟨b,bEq⟩
       have bBits : b.val = (laneBits width.val index.val y.bv).toNat := by
-        rw [laneBits_toNat]
+        rw [lane_bits_to_nat]
         exact bEq
       with_unfolding_all change (Aeneas.Std.bind (floatBinaryWord floats width bin a b) _) ⦃ _ ⦄
       step with wordLaw index.val less a b aBits bBits as ⟨value,allowed⟩
@@ -264,7 +264,7 @@ theorem float_binary_loop_sound {F : Type} (floats : runtime.platform.FloatOps F
           floatBinaryChoices (lsize (lanetype_Fnn ty)) op
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j x.bv).toNat)
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j y.bv).toNat) ⦄ := by
-  have widthEq := floatCompareWidth_val ty
+  have widthEq := float_compare_width_val ty
   rw [←widthEq]
   apply float_binary_loop floats x y 0#u128 (floatCompareWidth ty) (floatBinaryIndex op) 0#u32
     (by cases ty <;> decide) (by cases ty <;> decide)

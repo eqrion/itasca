@@ -8,7 +8,7 @@ A fixed future pair table suffices for both sides of indirect-call lowering. Dea
 Main declarations: `structured_reader_prefix_indirect_call_wasm2`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectPairPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A fixed future pair table suffices for both sides of indirect-call lowering.
@@ -69,4 +69,4 @@ theorem structured_reader_prefix_indirect_call_wasm2 {jumpTables : List U32} {da
       (compiler_indirect_call_cursor ops law before after out.core index table callback)
       17#u16 index table 0#u128 callback
     exact ⟨index,table,values,[],pairs,reader,compiled,deadAfter.trans dead.symm⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -50,10 +50,10 @@ theorem initialize_segments_compiled_object_metadata {M P F A : Type}
     (bindings : InitializerBindings store inst) :
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => SegmentObjectMetadata view store out.2.1 ⦄ := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Code.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
   have instanceShape := shape.instances inst (List.mem_of_getElem? found)
   have ready := segment_program_ready store inst code program pcBound instanceShape imports bindings valid.elements dataValid
   exact initialize_segments_object_metadata memory hooks floats allocator view laws law store platform instIndex inst code
@@ -109,10 +109,10 @@ theorem initialize_segments_compiled_shape {M P F A : Type}
     (bindings : InitializerBindings store inst) (types : SegmentTypeBindings store inst) :
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => Shape view out.2.1 ∧ SegmentTypes store out.2.1 ⦄ := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Code.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
   have instanceShape := shape.instances inst (List.mem_of_getElem? found)
   have ready := segment_program_ready store inst code program pcBound instanceShape imports bindings valid.elements dataValid
   have compatible := segment_program_compatible store inst code program types valid.elements

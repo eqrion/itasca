@@ -11,7 +11,7 @@ Final END fixes the root's coordinates and both liveness flags, producing one ad
 Main declarations: `root_frame_plan` and `root_scope_label`. A direct consumer is `Compiler.Local.Control.Table.StructuredUniversalCloseBlock`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Final END fixes the root's coordinates and both liveness flags, producing
@@ -47,4 +47,4 @@ theorem root_scope_label (scope : SourceScope) (returns : List valtype)
   refine ⟨front.symm, ?_, results.symm⟩
   simp [SourceScope.branchTypes, form, results]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

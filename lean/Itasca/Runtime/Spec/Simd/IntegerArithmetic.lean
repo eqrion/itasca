@@ -138,7 +138,7 @@ theorem integer_arithmetic_vector_relation (ty : Jnn) (kind : IntegerArithmetic)
   have nonY := integer_lanes_nonempty ty y
   have relation := arithmetic_words_relation ty kind x y
   have maskWf := arithmetic_words_wf ty kind x y
-  have shapeWf := shapeOf_wf (lanetype_Jnn ty)
+  have shapeWf := shape_of_wf (lanetype_Jnn ty)
   cases ty <;> cases kind
   all_goals first
     | apply fun_vbinop_.fun_vbinop__case_0 (var_1_lst := arithmeticWords _ _ x y) (var_0_lst := arithmeticWords _ _ x y) (lane_1_lst := lanes_ (shapeOf _) (.mk_uN x.toNat)) (lane_2_lst := lanes_ (shapeOf _) (.mk_uN y.toNat))
@@ -188,7 +188,7 @@ theorem integer_arithmetic_step (ty : Jnn) (kind : IntegerArithmetic) (x y resul
   · simp
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_26 _ _ (shapeOf_wf _) (integer_arithmetic_source_wf ty kind supported)
+  · exact .admininstr_case_26 _ _ (shape_of_wf _) (integer_arithmetic_source_wf ty kind supported)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

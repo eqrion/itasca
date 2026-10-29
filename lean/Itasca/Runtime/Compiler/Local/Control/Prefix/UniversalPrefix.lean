@@ -9,7 +9,7 @@ Append one source instruction to the current open scope. Its saved entry, contro
 Main declarations: `SourceScope.advance` and `UniversalPrefix`. A direct consumer is `Compiler.Local.Control.Prefix.UniversalTerminal`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Append one source instruction to the current open scope. Its saved entry,
@@ -34,4 +34,4 @@ structure UniversalPrefix {A : Type} (compiler : runtime.compiler.FunctionCompil
     CodePrefix types functions returns locals (resolvedCode compiler.function.code.val groups)
       (label :: labels) current.input current.source current.bodyPc compiler.function.code.val.length stack
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

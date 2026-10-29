@@ -98,7 +98,7 @@ Allocation accounting for ordinary reader steps. Auxiliary-table growth and fixu
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_stateful_base_auxiliary_growth_wasm2 {data env locals index st}
@@ -170,7 +170,7 @@ theorem reader_typed_select_auxiliary_growth_wasm2 {data env locals index st}
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact .of_tables (compiler_core_tables ops law before after out.core (.select true) callback)
     (compiler_core_code_mono ops law before after out.core (.select true) callback)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -178,7 +178,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual scalar/reference callbacks preserve previously emitted code slots. -/
@@ -265,7 +265,7 @@ theorem SimdReaderEvent.fixup_budget {A : Type} {ops : runtime.platform.Alloc A}
     (compiler_lower_simd_code_mono ops law before after out event.opcode event.a event.b event.bits
       (by omega) (by omega) event.callback)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -273,7 +273,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful ordinary readers charge auxiliary entries and retain the
@@ -340,6 +340,6 @@ theorem reader_ordinary_ledger_wasm2 {data env locals index st}
     exact ⟨reader_typed_select_auxiliary_growth_wasm2 p ops law before after out ctx byte accepted,
       reader_typed_select_fixup_budget_wasm2 p ops law before after out ctx byte accepted⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

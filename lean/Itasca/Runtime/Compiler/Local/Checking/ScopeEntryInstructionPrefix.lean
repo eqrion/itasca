@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem pending_append {A : Type} {before after : runtime.compiler.FunctionCompiler A}
@@ -77,4 +77,4 @@ theorem compiler_scope_entry_open_instructions {A : Type} (ops : runtime.platfor
     obtain ⟨code,_,height,source,_,_,frames,_⟩ := effect rfl
     exact held.append growth (pending_append frames) [] (by simpa using congrArg alloc.vec.Vec.val code) (by simp)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

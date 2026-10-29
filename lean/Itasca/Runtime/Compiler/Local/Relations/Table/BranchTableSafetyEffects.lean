@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 
@@ -72,4 +72,4 @@ theorem TableLoopSafe.advance {A} (ops : runtime.platform.Alloc A) (law : Platfo
     omega
   · rw [metadata.2.2.2.2.2.2.2.1,cursor]
     exact safe.coordinate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

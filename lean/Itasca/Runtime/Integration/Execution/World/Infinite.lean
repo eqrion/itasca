@@ -6,7 +6,7 @@ An actual divergent loop either calls a diverging callback from the current stor
 Main declarations: `world_divergent_next` and `world_loop_infinite`. A direct consumer is `Integration.Invocation.DefinedDivergence`.
 -/
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- An actual divergent loop either calls a diverging callback from the current store, or retains
@@ -30,7 +30,7 @@ theorem world_divergent_next {M P F A : Type}
   · exact Or.inl diverged
   refine Or.inr ?_
   change loop (executionBody memory hooks floats allocator) (before.machine.exec,before.machine.store,before.machine.platform,.Ok ())=.div at divergent
-  rw [loop.eq_def,executionBody_active memory hooks floats allocator _ ⟨active,rfl⟩,returned] at divergent
+  rw [loop.eq_def,execution_body_active memory hooks floats allocator _ ⟨active,rfl⟩,returned] at divergent
   simp [bind_ok] at divergent
   cases status with
   | Err error => rw [execution_loop_error memory hooks floats allocator] at divergent; simp at divergent
@@ -55,7 +55,7 @@ theorem world_loop_infinite {M P F A : Type}
     (steps : WorldStepOutcomes memory hooks floats allocator view expected Inv)
     (initial : EventfulWorld M P view expected) (valid : Inv initial.code initial.machine.store)
     (divergent : runtime.interp.invoke_with_loop1 memory hooks floats allocator initial.machine.exec initial.machine.store initial.machine.platform (.Ok ())=.div) :
-    Spec.InfiniteSourceWithEvents (Abs.decode initial.machine.source) ∨
+    Spec.InfiniteSourceWithEvents (SourceMachine.decode initial.machine.source) ∨
     ∃ (count : Nat) (events : List SpecExt.HostEvent) (reached : EventfulWorld M P view expected),
       Spec.Iterations (WorldRecordedTransition memory hooks floats allocator) count initial events reached ∧
       HostDiverges hooks reached.machine.store := by
@@ -71,7 +71,7 @@ theorem world_loop_infinite {M P F A : Type}
   let next := fun (before : {s // running s}) events (after : {s // running s}) =>
     WorldRecordedTransition memory hooks floats allocator before.val events after.val
   apply Spec.infinite_source_of_decreasing_stutter next
-    (fun s=>Abs.decode s.val.machine.source) (fun s=>s.val.machine.potential) ?_ ?_
+    (fun s=>SourceMachine.decode s.val.machine.source) (fun s=>s.val.machine.potential) ?_ ?_
     ⟨initial,valid,divergent,0,[],.refl initial⟩
   · intro current
     obtain ⟨fresh,divergent,count,prior,history⟩ := current.property
@@ -81,4 +81,4 @@ theorem world_loop_infinite {M P F A : Type}
     · exact ⟨events,⟨after,afterValid,afterDivergent,_,_,history_append history (.cons edge (.refl after))⟩,edge⟩
   · intro before events after edge
     exact edge.edge.simulation
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -9,7 +9,7 @@ Complete instruction effects at reader boundaries, after the private label buffe
 Main declarations: `TableReaderEffect`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableIndexed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Complete instruction effects at reader boundaries, after the private label
@@ -37,4 +37,4 @@ theorem compiler_reader_table_effect_wasm2 {A : Type} (ops : runtime.platform.Al
     source,cursor,afterBoundary,dead,?_⟩
   simpa only [bufferEq,boundary.depths,List.nil_append] using growth
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

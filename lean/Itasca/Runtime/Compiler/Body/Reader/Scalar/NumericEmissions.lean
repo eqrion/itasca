@@ -9,7 +9,7 @@ Integer opcode emission from accepted reader steps.
 Main declarations: `reader_emit_numeric_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_numeric_wasm2 {data env locals index st}
@@ -17,7 +17,7 @@ theorem reader_emit_numeric_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
     (reachable : before.reachable = true)
@@ -63,4 +63,4 @@ theorem reader_emit_numeric_wasm2 {data env locals index st}
   exact LinearEmission.numeric front op left right
     leftPosition rightPosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

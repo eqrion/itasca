@@ -9,7 +9,7 @@ Skipped forward and loop branches during br_table compilation. The common result
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -197,7 +197,7 @@ theorem branch_elided_forward_skip_success {A : Type} (ops : runtime.platform.Al
         · simpa [exactState] using finalCode
         · simp [alloc.vec.Vec.len]
         · simp [exactState, hback, kindEq]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -205,7 +205,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -372,7 +372,7 @@ theorem branch_elided_loop_skip_success {A : Type} (ops : runtime.platform.Alloc
       have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
       simpa only [← kindEq, ← atIndex] using List.set_getElem_self inBounds
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -380,7 +380,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_branch_forward_skip_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -440,6 +440,6 @@ theorem compiler_branch_loop_skip_success {A : Type} (ops : runtime.platform.All
     have effect := branch_transfer_loop_skip_success ops law compiler frame index depth source skip lookup
       position kind nonempty different sourcePosition after accepted
     simpa [branchInstructions, elided] using effect
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

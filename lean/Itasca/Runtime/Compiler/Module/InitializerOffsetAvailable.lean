@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source-typed i32 offsets compile with one instruction and no pool reserve.
@@ -31,4 +31,4 @@ theorem initializer_offset_available {A : Type} (ops : runtime.platform.Alloc A)
       as ⟨status,charged,instructions,accepted,used,limits,appended⟩
     exact ⟨accepted,used,limits,_,appended,.global .I32 index (by intro h; cases h)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

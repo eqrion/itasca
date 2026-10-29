@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStack
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An entered child has entered ancestors. Unreachable child scopes impose
@@ -78,4 +78,4 @@ theorem ScopeFrameStack.frame_entered {A : Type} {locals parents current}
     (frame : runtime.compiler.Frame) (member : frame ∈ compiler.frames.val) : frame.entry_reachable = true := by
   obtain ⟨scope, present, shape⟩ := paired_member stack.frames member
   exact shape.entered.trans (chain.all_entered live scope present)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

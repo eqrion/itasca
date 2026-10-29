@@ -8,7 +8,7 @@ SIMD shuffle reader decoding and fixed-instruction characterization, used by SIM
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Shuffle validation retains its checked lane vector, exact source bytes,
@@ -65,7 +65,7 @@ theorem reader_simd_shuffle_wasm2 {data env locals index st}
   · exact p.append_result C outer spine header base {st with core := out.core} _
       p.current.ctrl.polymorphic_base values (Wasm2.Simd.shuffle_wf low high) encoded typed finalControls finalBlocks valuesEq
       (fun h => nomatch h) (Wasm2.Simd.shuffle_declared _ low high)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -73,7 +73,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The checked shuffle scan is followed by the same fixed operand reader as
@@ -113,6 +113,6 @@ theorem simd_shuffle_fixed (st out : code.OpIterState) (data : Slice U8)
           simpa only [parsedEq] using read
   rw [accepted,WP.spec_ok] at spec
   exact spec low high rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

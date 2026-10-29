@@ -4,7 +4,7 @@ Every listed branch receives the exit PC, including duplicate fixup addresses;
 branch conditions, code length, unrelated instructions, and compiler layout are
 preserved. The initial branch-shape premise is a syntactic hole invariant. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def retarget (instruction : runtime.bytecode.Instr) (target : U32) : runtime.bytecode.Instr :=
@@ -114,7 +114,7 @@ def compilerSnapshot {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
         after.function.code.val = patchCode compiler.function.code.val (sites.val.drop i.val) target ⦄ := by
   exact compiler_fixups ops compiler sites target i index branches
 
-theorem patchCode_length (code : List runtime.bytecode.Instr) (sites : List Usize) (target : U32) :
+theorem patch_code_length (code : List runtime.bytecode.Instr) (sites : List Usize) (target : U32) :
     (patchCode code sites target).length = code.length := by
   induction sites generalizing code with
   | nil => rfl
@@ -122,7 +122,7 @@ theorem patchCode_length (code : List runtime.bytecode.Instr) (sites : List Usiz
     simp only [patchCode]
     split <;> simp [ih]
 
-theorem patchCode_other (code : List runtime.bytecode.Instr) (sites : List Usize)
+theorem patch_code_other (code : List runtime.bytecode.Instr) (sites : List Usize)
     (target : U32) (pc : Nat) (separate : ∀ site, site ∈ sites → pc ≠ site.val) :
     (patchCode code sites target)[pc]? = code[pc]? := by
   induction sites generalizing code with
@@ -138,4 +138,4 @@ theorem patchCode_other (code : List runtime.bytecode.Instr) (sites : List Usize
       simp [Ne.symm different]
     · exact ih code restSeparate
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

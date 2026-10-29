@@ -17,7 +17,7 @@ Base and bulk stateful reader replay from independent source bounds. The two dis
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -46,7 +46,7 @@ theorem reached_profile_stateful_base_available_wasm2 {data env locals index st}
     simp only [List.mem_cons,List.not_mem_nil,or_false] at member
     rcases member with h | h | h | h | h | h | h <;> simp only [h,Wasm2.controlOpcodes] <;> decide
   obtain ⟨capacity,raw⟩ := profile_scalar_success source st out data env ctx index opcode before after ordinary reference
-  have callbacks {op : Abs.Stateful.Instruction} (post : StatefulReaderPost p out.core op)
+  have callbacks {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out.core op)
       (a b : U32) (arguments : StatefulArguments op a b) :=
     post.callback_available ops bound allocation compiler demand C matched known monomorphic wholeLayout pairs a b arguments
   apply profile_scalar_available_wasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out.core
@@ -144,7 +144,7 @@ theorem reached_profile_stateful_base_available_wasm2 {data env locals index st}
     have post := reader_ref_func_post_wasm2 p value out.core byte capacity read
     exact callbacks post value 0#u32 ⟨rfl,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -152,7 +152,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -183,7 +183,7 @@ theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
     simp only [List.mem_cons,List.not_mem_nil,or_false] at member
     omega
   obtain ⟨capacity,raw⟩ := profile_scalar_success source st out data env ctx index 252#u8 before after ordinary reference
-  have callbacks {op : Abs.Stateful.Instruction} (post : StatefulReaderPost p out.core op)
+  have callbacks {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out.core op)
       (a b : U32) (arguments : StatefulArguments op a b) :=
     post.callback_available ops bound allocation compiler demand C matched known monomorphic wholeLayout pairs a b arguments
   apply profile_scalar_available_wasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out.core
@@ -296,7 +296,7 @@ theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
     have post := reader_table_fill_post_wasm2 p byte next decoded capacity value out.core read
     exact callbacks post value 0#u32 ⟨rfl,rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -304,7 +304,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -397,6 +397,6 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk_available_from_source
     ⟨sourceLocals,ft.results⟩ subopcode prefixEnd member decoded demand C matched state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) ledger.indirect byte canonical
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core
 import Itasca.Runtime.SourceMachine.FrameTypingExtension
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Semantic typing of store payloads used by mutable instructions. Function
 bodies remain in `ATyped.functions`; no unproved generated `Store_ok` is used. -/
@@ -58,4 +58,4 @@ theorem StoreContentsTyped.global_value {s : store} (contents : StoreContentsTyp
     cases type
     exact valueTyped
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

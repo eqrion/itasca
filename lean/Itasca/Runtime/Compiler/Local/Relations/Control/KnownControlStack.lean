@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Handler.RawControl
 import Itasca.Wasm2.Control.EnterSound
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
@@ -21,11 +21,11 @@ theorem concrete_end_effect {st out : code.BodyState} {parents blocks frame isEl
     rw [effect.2.2]
     split
     · exact known
-    · exact concreteStack_append.mpr ⟨known, concrete_values outputs⟩
+    · exact concrete_stack_append.mpr ⟨known, concrete_values outputs⟩
   | true =>
     simp only [↓reduceIte] at effect
     rw [effect.2.2]
-    exact concreteStack_append.mpr ⟨known, concrete_values inputs⟩
+    exact concrete_stack_append.mpr ⟨known, concrete_values inputs⟩
 
 theorem wasm2_end_concrete (st out : code.BodyState) (env : module.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType) (frame : code.Ctrl)
@@ -42,4 +42,4 @@ theorem wasm2_end_concrete (st out : code.BodyState) (env : module.Env) (isElse 
   rw [accepted, WP.spec_ok] at effect
   exact concrete_end_effect known (effect rfl).2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

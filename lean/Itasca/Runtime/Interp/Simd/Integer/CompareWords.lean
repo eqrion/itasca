@@ -105,10 +105,10 @@ def integerCompareOpcode (ty : Jnn) (op : vrelop_Jnn_N) : U32 :=
   | .I64,.LE _ => 218#u32
   | .I64,.GE _ => 219#u32
 
-theorem integerCompareWidth_val (ty : Jnn) :
+theorem integer_compare_width_val (ty : Jnn) :
     (integerCompareWidth ty).val = lsize (lanetype_Jnn ty) := by cases ty <;> rfl
 
-theorem integerCompareIndex_roundtrip (op : vrelop_Jnn_N) :
+theorem integer_compare_index_roundtrip (op : vrelop_Jnn_N) :
     UScalar.cast .U16 (UScalar.cast .U32 (integerCompareIndex op)) = integerCompareIndex op := by
   cases op <;> (try rename_i sign; cases sign) <;> rfl
 

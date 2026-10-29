@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 4000000
 set_option maxRecDepth 4096
@@ -132,4 +132,4 @@ theorem compiler_lower_simd_auxiliary_growth {A : Type} (ops : runtime.platform.
       observe_auxiliary_result ops law before after state (.Ok ()) accepted
     simp [simd, pool, indirect, code]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

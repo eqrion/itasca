@@ -53,8 +53,8 @@ theorem host_signature_extension {M : Type} (view : M → Slice U8) (code : Code
   have decoded : decodeFuncType nextSignature = decodeFuncType signature := by
     simpa only [decodeStore,List.getElem!_eq_getElem?_getD,List.getElem?_map,
       found,nextFound,Option.map_some,Option.getD_some,
-      decodeFunction_type code before function oldSigBound,
-      decodeFunction_type code after nextFunction sigBound,oldSigEqual,nextSigEqual] using equal
-  have same := decodeFuncType_injective decoded
+      decode_function_type code before function oldSigBound,
+      decode_function_type code after nextFunction sigBound,oldSigEqual,nextSigEqual] using equal
+  have same := decode_func_type_injective decoded
   exact ⟨nextFunction,nextFound,by rw [←same]; exact nextSig⟩
 end Itasca.Runtime.Store

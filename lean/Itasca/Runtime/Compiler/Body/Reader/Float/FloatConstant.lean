@@ -6,7 +6,7 @@ Reader inversion for 32-bit and 64-bit floating-point constants.
 Main declarations: `reader_f32_const_wasm2` and `reader_f64_const_wasm2`. A direct consumer is `Compiler.Body.Reader.Float.ConstantPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 open Itasca.Wasm1 in
 open Itasca.Wasm2 in
@@ -69,4 +69,4 @@ theorem reader_f64_const_wasm2 {data env locals index st}
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

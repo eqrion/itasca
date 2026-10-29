@@ -7,7 +7,7 @@ Live Wasm 2 entry exposes the full physical prefix below its block parameters an
 Main declarations: `ReaderEnterPostWasm2.stacks`. A direct consumer is `Compiler.Body.Reader.Control.KnownFrontEntry`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Live Wasm 2 entry exposes the full physical prefix below its block parameters and condition. -/
@@ -23,7 +23,7 @@ theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins ou
   obtain ⟨C, outer, spine, header, position, typed, controls, blocks, old⟩ := id p.opened
   have old' : st.core.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ p.current.vals := by
     simpa only [wasm2_spine_values spine] using old
-  have knownParts := concreteStack_append.mp (old' ▸ known)
+  have knownParts := concrete_stack_append.mp (old' ▸ known)
   have transfer := post.popped
   rw [live] at transfer
   have remainingKnown := concrete_stack_transfer knownParts.2 transfer
@@ -38,7 +38,7 @@ theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins ou
       congrArg (Sequence.stackTypes (p.parents.flatMap Wasm2.Frames.Saved.vals) ++ ·) before.symm
   · simp [new', Sequence.stackTypes, List.map_map, Function.comp_def]
   · rw [new']
-    exact concreteStack_append.mpr ⟨concreteStack_append.mpr ⟨knownParts.1, remainingKnown⟩,
-      (concreteStack_iff _).mpr ⟨ins, rfl⟩⟩
+    exact concrete_stack_append.mpr ⟨concrete_stack_append.mpr ⟨knownParts.1, remainingKnown⟩,
+      (concrete_stack_iff _).mpr ⟨ins, rfl⟩⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

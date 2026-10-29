@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Control.StructuredPoint
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
-theorem sourceType_injective : Function.Injective sourceType := by
+theorem source_type_injective : Function.Injective sourceType := by
   intro left right same
   cases left <;> cases right <;> simp_all [sourceType]
 
@@ -20,10 +20,10 @@ theorem typed_arguments_match {s : _root_.store} {id : Usize}
     (owned : ∀ value ∈ args, ValueOwnedFits id value) :
     List.Forall₂ (ArgumentMatches id) args types := by
   have tags : args.map rawType = types := by
-    apply List.map_injective_iff.mpr sourceType_injective
-    have tags := Abs.results_type_of_typed typed
-    simpa only [List.map_map, show Abs.valueType = Code.valueType from (funext valueType_eq_abs).symm,
-      Function.comp_def, sourceValue_type] using tags
+    apply List.map_injective_iff.mpr source_type_injective
+    have tags := SourceMachine.results_type_of_typed typed
+    simpa only [List.map_map, show SourceMachine.valueType = Compiler.valueType from (funext value_type_eq_abs).symm,
+      Function.comp_def, source_value_type] using tags
   induction args generalizing types with
   | nil => cases types <;> simp_all
   | cons value args ih =>

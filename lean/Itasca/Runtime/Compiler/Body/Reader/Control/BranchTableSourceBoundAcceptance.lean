@@ -24,7 +24,7 @@ Source-bounded br_table reader replay. Label-collection invariants, loop framing
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -85,7 +85,7 @@ theorem LabelCollectionPrefix.collect_available {A : Type}
   refine ⟨(.Ok (),after),called,rfl,nextBudget,nextDepths,?_,counts,nextEffect⟩
   rw [nextFrame,frame]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -93,7 +93,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem table_suffix_final_observation {data start remaining observations result state}
@@ -126,7 +126,7 @@ theorem source_table_loop_demand
   dsimp only [id] at recorded
   simp only [retained,recorded,events,List.append_assoc,List.singleton_append]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -134,7 +134,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Replay all actual Wasm 2 vector labels with independent scratch and branch
@@ -206,7 +206,7 @@ theorem compiler_table_loop_collect_available {A V : Type}
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,targetAfter),called,rfl,rfl,retained⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -214,7 +214,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Independent source table loops retain operands and controls until their
@@ -287,7 +287,7 @@ theorem source_table_loop_marked {V : Type} (source : code.OpVisitor V)
   rw [same,lastMark] at mark
   simpa only [Result.ok.injEq] using mark.symm
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -295,7 +295,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -382,7 +382,7 @@ theorem compiler_table_reader_loop_available {A V : Type}
   rw [frame] at lowerEffect
   exact (effect.trans lowerEffect).weaken (by intro counter; cases counter <;> simp [bufferLength])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -390,7 +390,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -496,7 +496,7 @@ theorem reached_profile_br_table_available_wasm2 {jumpTables : List U32} {data e
   refine ⟨(.Ok (),out,targetAfter),called,rfl,rfl,?_⟩
   exact effect.weaken (by intro counter; cases counter <;> simp [lengthSource])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -504,7 +504,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -595,6 +595,6 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
   intro counter
   cases counter <;> simp only [bodyResourceRate] <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

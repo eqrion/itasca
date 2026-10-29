@@ -1,10 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOpcode
 import Itasca.Runtime.Equations
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 def statefulCallback {V : Type} (visitor : code.OpVisitor V) (before : V)
-    (state : code.OpIterState) (op : Abs.Stateful.Instruction) (a b : U32) :=
+    (state : code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32) :=
   match op with
   | .refNull .FUNCREF => visitor.on_ref_null before state .FuncRef
   | .refNull .EXTERNREF => visitor.on_ref_null before state .ExternRef
@@ -29,7 +29,7 @@ def statefulCallback {V : Type} (visitor : code.OpVisitor V) (before : V)
 immediates; paired table instructions keep their compiler argument order. -/
 theorem stateful_callback_lower {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
-    (op : Abs.Stateful.Instruction) (a b : U32) (arguments : StatefulArguments op a b) :
+    (op : SourceMachine.Stateful.Instruction) (a b : U32) (arguments : StatefulArguments op a b) :
     statefulCallback (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before state op a b =
       runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 := by
   cases op <;> simp only [StatefulArguments,statefulArguments] at arguments
@@ -43,4 +43,4 @@ theorem stateful_callback_lower {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,Bool.false_eq_true,↓reduceIte]
   all_goals rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

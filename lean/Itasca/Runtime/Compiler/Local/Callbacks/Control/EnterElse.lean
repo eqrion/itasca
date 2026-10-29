@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 /-! The actual ELSE callback preserves source control metadata, records the
 then-arm skip when needed, and retargets the original condition to the start
 of the else arm. Unentered and non-fallthrough arms are handled explicitly. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- When the then arm does not fall through, ELSE emits no skip instruction;
@@ -68,4 +68,4 @@ it still retargets the initial conditional guard and restores entry reachability
   obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
   refine ⟨hr, hcode, ?_⟩
   simp [hframes, backEq, alloc.vec.Vec.set_val_eq, atLast, frames]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

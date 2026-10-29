@@ -3,8 +3,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Float
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Float
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_float_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -61,4 +61,4 @@ theorem compiler_float_capacity {A : Type} (ops : runtime.platform.Alloc A)
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

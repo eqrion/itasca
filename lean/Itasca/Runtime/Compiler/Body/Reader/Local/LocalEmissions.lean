@@ -18,7 +18,7 @@ Local get/set/tee emission from accepted reader steps.
 Main declarations: `reader_emit_local_get_wasm2` and `reader_emit_local_tee_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.CoreInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_local_get_wasm2 {data env locals typeIndex st}
@@ -101,12 +101,12 @@ theorem reader_emit_local_set_wasm2 {data env locals typeIndex st}
   obtain ⟨index, values, callback, read, post⟩ := reader_local_set_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core byte run
   obtain ⟨_, outer, _, _, base, _, controls, _, vals⟩ := p.opened
-  have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ known)).2
+  have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ known)).2
   obtain ⟨ty, found, shape⟩ := reader_local_set_effect st.core out.core data ⟨locals, p.ft.results⟩ index
     outer p.current.vals vals (by simpa [Control.base, controls] using base)
     (by simpa [Control.polymorphic, controls] using monomorphic) segmentKnown read
-  have afterKnown : ConcreteStack out.core.vals.val := (concreteStack_append.mp (shape ▸ known)).1
-  obtain ⟨types, concrete⟩ := (concreteStack_iff out.core.vals.val).mp afterKnown
+  have afterKnown : ConcreteStack out.core.vals.val := (concrete_stack_append.mp (shape ▸ known)).1
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff out.core.vals.val).mp afterKnown
   have beforeTypes : Sequence.stackTypes st.core.vals.val = types.map Translate.valueType ++ [Translate.valueType ty] := by
     simp [shape, concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
   have localFound : before.function.locals.val[index.val]? = some ty := by simpa [localsMatch] using found
@@ -158,12 +158,12 @@ theorem reader_emit_local_tee_wasm2 {data env locals typeIndex st}
   obtain ⟨index, values, callback, read, post⟩ := reader_local_tee_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core capacity byte run
   obtain ⟨_, outer, _, _, base, _, controls, _, vals⟩ := p.opened
-  have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ known)).2
+  have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ known)).2
   obtain ⟨ty, found, rest, shape, unchanged⟩ := reader_local_tee_effect st.core out.core data ⟨locals, p.ft.results⟩ index capacity
     outer p.current.vals vals (by simpa [Control.base, controls] using base)
     (by simpa [Control.polymorphic, controls] using monomorphic) segmentKnown read
-  have restKnown : ConcreteStack rest := (concreteStack_append.mp (shape ▸ known)).1
-  obtain ⟨types, concrete⟩ := (concreteStack_iff rest).mp restKnown
+  have restKnown : ConcreteStack rest := (concrete_stack_append.mp (shape ▸ known)).1
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff rest).mp restKnown
   have postConcrete : out.core.vals.val = (types ++ [ty]).map code.StackType.Val := by simp [unchanged, shape, concrete]
   have beforeTypes : Sequence.stackTypes st.core.vals.val = types.map Translate.valueType ++ [Translate.valueType ty] := by
     simp [shape, concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
@@ -186,4 +186,4 @@ theorem reader_emit_local_tee_wasm2 {data env locals typeIndex st}
   · exact localPosition
   · exact operandPosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

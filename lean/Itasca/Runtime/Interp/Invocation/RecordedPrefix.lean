@@ -71,7 +71,7 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
         (fun ((_, words, _, _, _, afterStore, _, status),trace) =>
           FrameStorePrefix store afterStore ∧ retained afterStore ∧
           (status = .Ok () → ∃ values,
-            signature.results.val.map sourceType = values.map Code.valueType ∧
+            signature.results.val.map sourceType = values.map Compiler.valueType ∧
             (∀ value ∈ values, wf_val value) ∧
             (∀ value ∈ values, ResultIndexFits value) ∧
             ValuesAt words.val 0 values ∧ property afterStore values trace) ∧
@@ -155,17 +155,17 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
           have wordsEq := sameWords.symm
           have argsEq := sameArgs.symm
           have resultsEq := sameResults.symm
-          have capacity : (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length := by
+          have capacity : (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length := by
             have length : grown.slots.length = exec.slots.length + ((core.cmp.impls.OrdUsize.max params returns).val - exec.slots.length) := by
               change grown.slots.val.length = _
               rw [growth.2.1, List.length_append, List.length_replicate]
-            rw [wordsEq, Code.encodeValues_length]
+            rw [wordsEq, Compiler.encode_values_length]
             simp only [alloc.vec.Vec.deref, typeSlots, Slice.from_val] at paramCount
-            have typeEq : (args.val.map sourceValue).map Code.valueType = signature.params.val.map sourceType := by
+            have typeEq : (args.val.map sourceValue).map Compiler.valueType = signature.params.val.map sourceType := by
               rw [tags, List.map_map, List.map_map]
               congr 1
               funext value
-              exact sourceValue_type value
+              exact source_value_type value
             rw [typeEq]
             scalar_tac
           step with marshal_arguments words args signature.params store.id tags owned capacity

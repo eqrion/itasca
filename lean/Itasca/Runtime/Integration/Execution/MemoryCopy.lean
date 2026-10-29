@@ -17,7 +17,7 @@ MemoryCopy correspondence from store handler through dispatch to structured exec
 
 section
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 
 theorem stateful_memory_copy_effect {M : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -25,19 +25,19 @@ theorem stateful_memory_copy_effect {M : Type} (memory : runtime.platform.Memory
     (store : runtime.store.Store M) (instIndex function base : Usize) (slots : Slice U64)
     (operand : U32) (inst : runtime.store.ModuleInst) (address : runtime.MemoryAddr)
     (object : runtime.store.MemInst M) (destination source count : U64)
-    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
+    (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (front : List val)
     (found : store.instances.val[instIndex.val]? = some inst)
     (mapped : inst.memories.val[0]? = some address) (target : store.memories.val[address.index.val]? = some object)
     (destinationSlot : slots.val[base.val+operand.val]? = some destination)
     (sourceSlot : slots.val[base.val+operand.val+1]? = some source)
     (countSlot : slots.val[base.val+operand.val+2]? = some count)
     (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
-    (sources : f.vals = front++[Abs.integerVal .I32 (bulkWord destination).val,
-      Abs.integerVal .I32 (bulkWord source).val,Abs.integerVal .I32 (bulkWord count).val]) :
+    (sources : f.vals = front++[SourceMachine.integerVal .I32 (bulkWord destination).val,
+      SourceMachine.integerVal .I32 (bulkWord source).val,SourceMachine.integerVal .I32 (bulkWord count).val]) :
     runtime.interp.bulk.execute memory store instIndex function base slots (.MemoryCopy operand) ⦃ out =>
       MemoryCopyEffect view store address.index object (bulkWord destination) (bulkWord source) (bulkWord count) out ∧
       FrameStoreMetadata store out.2 ∧
-      Abs.Stateful.Transition state f rest after .memoryCopy
+      SourceMachine.Stateful.Transition state f rest after .memoryCopy
         (statefulBulkResult view code state f rest after front out) ⦄ := by
   apply WP.spec_mono (bulk_memory_copy memory view laws store instIndex function base slots operand inst address object
     destination source count found mapped target destinationSlot sourceSlot countSlot)
@@ -50,24 +50,24 @@ theorem stateful_memory_copy_effect {M : Type} (memory : runtime.platform.Memory
     simp only [statefulBulkResult]
     rw [memory_copy_decodes view code store inst f.toFrame address object _ _ _ buffer
       moduleEq mapped target ⟨inside.2,inside.1⟩ filled]
-    simp only [Abs.Stateful.evaluate,Abs.Stateful.memoryCopy,sources,Abs.Stateful.popThree_append]
+    simp only [SourceMachine.Stateful.evaluate,SourceMachine.Stateful.memoryCopy,sources,SourceMachine.Stateful.pop_three_append]
     simp only [moduleEq,sourceStore,decodeInstance,decodeStore,List.getElem?_map,mapped,target,
-      Option.map_some,bulk_integer_decoded,Abs.Stateful.asReference_value]
+      Option.map_some,bulk_integer_decoded,SourceMachine.Stateful.as_reference_value]
     simp [bulkWord,Slice.length,alloc.vec.Vec.length] at inside
     simp [
       decodeMemory,decodeBytes,bulk_integer_decoded,inside,And.comm,U32.cast_U64_val_eq]
   · rename_i outside
     rw [effect]
-    simp only [statefulBulkResult,Abs.Stateful.evaluate,Abs.Stateful.memoryCopy,sources,Abs.Stateful.popThree_append]
+    simp only [statefulBulkResult,SourceMachine.Stateful.evaluate,SourceMachine.Stateful.memoryCopy,sources,SourceMachine.Stateful.pop_three_append]
     simp only [moduleEq,sourceStore,decodeInstance,decodeStore,List.getElem?_map,mapped,target,
-      Option.map_some,bulk_integer_decoded,Abs.Stateful.asReference_value]
+      Option.map_some,bulk_integer_decoded,SourceMachine.Stateful.as_reference_value]
     simp [bulkWord,Slice.length,alloc.vec.Vec.length] at outside
     simp [
       decodeMemory,decodeBytes,bulk_integer_decoded,And.comm,outside]
     intro destinationFits sourceFits
     have impossible := outside destinationFits
     omega
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end
 
@@ -75,7 +75,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_memory_copy_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -83,41 +83,41 @@ theorem stateful_memory_copy_dispatch {M P F A : Type} (memory : runtime.platfor
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
-    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front operands : List val) (input output : List valtype) (first second a entry : U32)
-    (signature : Abs.Stateful.Signature C .memoryCopy input output)
-    (bindings : Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C)
+    (signature : SourceMachine.Stateful.Signature C .memoryCopy input output)
+    (bindings : SourceMachine.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (sourceStore : state.store=decodeStore view code store) (moduleEq : f.module=decodeInstance store inst)
     (slots : FrameSlots exec raw f) (values : f.vals=front++operands)
-    (operandTypes : operands.map Code.valueType=input)
-    (typed : ∀ value∈operands,Val_ok (decodeStore view code store) value (Code.valueType value))
-    (position : first.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType)) :
+    (operandTypes : operands.map Compiler.valueType=input)
+    (typed : ∀ value∈operands,Val_ok (decodeStore view code store) value (Compiler.valueType value))
+    (position : first.val=Compiler.slots (f.locals.map Compiler.valueType)+Compiler.slots (front.map Compiler.valueType)) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex raw.instance raw.function raw.base
-      (Code.statefulInstruction .memoryCopy first second a entry) ⦃ out =>
+      (Compiler.statefulInstruction .memoryCopy first second a entry) ⦃ out =>
       out.2.1=exec ∧ out.2.2.2=platform ∧ output=[] ∧
       (∃ address : runtime.MemoryAddr,∃ object destination source count, store.memories.val[address.index.val]?=some object ∧
         MemoryCopyEffect view store address.index object destination source count (out.1,out.2.2.1)) ∧
       FrameStoreMetadata store out.2.2.1 ∧ FrameSlots out.2.1 raw {f with code:=after,vals:=front} ∧
-      Abs.Stateful.Transition state f rest after .memoryCopy
+      SourceMachine.Stateful.Transition state f rest after .memoryCopy
         (statefulBulkResult view code state f rest after front (out.1,out.2.2.1)) ⦄ := by
   cases signature with
   | memoryCopy type selected =>
     obtain ⟨destination,source,count,rfl⟩ := three_i32_operands _ operands operandTypes typed
     obtain ⟨destinationSlot,sourceSlot,countSlot⟩ := frame_three_i32_slots destination source count slots values position
     obtain ⟨address,object,mapped,issued⟩ := memory_binding_raw view code store inst C type bindings selected
-    have normalized : f.vals=front++[Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 destination)).val,
-        Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 source)).val,Abs.integerVal .I32 (bulkWord (UScalar.cast .U64 count)).val] := by
+    have normalized : f.vals=front++[SourceMachine.integerVal .I32 (bulkWord (UScalar.cast .U64 destination)).val,
+        SourceMachine.integerVal .I32 (bulkWord (UScalar.cast .U64 source)).val,SourceMachine.integerVal .I32 (bulkWord (UScalar.cast .U64 count)).val] := by
       simpa [bulkWord] using values
     obtain ⟨out,run,same,effect,metadata,transition⟩ := WP.spec_imp_exists
       (segment_execute_bulk memory exec store raw.instance raw.function raw.base (.MemoryCopy first) _
         (stateful_memory_copy_effect memory view laws code store raw.instance raw.function raw.base (alloc.vec.Vec.deref exec.slots)
           first inst address object (UScalar.cast .U64 destination) (UScalar.cast .U64 source) (UScalar.cast .U64 count)
           state f rest after front found mapped issued (by simpa [alloc.vec.Vec.deref] using destinationSlot) (by simpa [alloc.vec.Vec.deref] using sourceSlot) (by simpa [alloc.vec.Vec.deref] using countSlot) sourceStore moduleEq normalized))
-    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    simp only [Compiler.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
     exact ⟨same,rfl,trivial,⟨address,object,_,_,_,issued,effect⟩,metadata,
       by rw [same];exact frame_consume after slots values,transition⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end
 
@@ -125,7 +125,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 
 theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -133,33 +133,33 @@ theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platf
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [projection : Itasca.Runtime.Interp.StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    [projection : Itasca.Runtime.Interp.Machine.StatefulProjection (emission compiled) compiled.indirect.val]
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val+1=exec.frames.length)
     (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (fetchBound : compiled.code.length≤U32.max)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} compiled C targets next output)
-    (typed : Abs.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩) :
-    let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩
+    (point : Machine.FramePoint (decodeStore view code store) raw {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} compiled C targets next output)
+    (typed : SourceMachine.CoreTyped ⟨decodeStore view code store,ambient,{f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨decodeStore view code store,ambient,{f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩
     (∃ target : U32,raw.pc.val<target.val ∧ compiled.code.val[raw.pc.val]?=some (.Jump target) ∧
-      StructuredMachine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} compiled C targets next output) ∨
+      Machine.FramePoint (decodeStore view code store) {raw with pc:=target} {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} compiled C targets next output) ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.2=platform ∧ FrameStoreMetadata store out.2.2.1 ∧
       ((∃ pc : U32,∃ front : List val,
         out.1=.Ok () ∧ pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}} ∧
         (∃ address : runtime.MemoryAddr,∃ object destination source count,store.memories.val[address.index.val]?=some object ∧ MemoryCopyEffect view store address.index object destination source count (out.1,out.2.2.1)) ∧
         FrameSlots out.2.1 {raw with pc:=pc} {f with code:=after,vals:=front} ∧
-        StructuredMachine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
-        Abs.Cumulative.Step initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩)) ∨
+        Machine.FramePoint (decodeStore view code out.2.2.1) {raw with pc:=pc} {f with code:=after,vals:=front} compiled C targets next output ∧
+        SourceMachine.Cumulative.Step initial (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩)) ∨
       (out.1=.Err (.Trap .MemoryOutOfBounds) ∧ out.2.2.1=store ∧
         (∃ pc : U32,pc.val=raw.pc.val+1 ∧ out.2.1={exec with frames:=exec.frames.set index {raw with pc:=pc}}) ∧
-        Abs.Cumulative.Step initial .trap)) ⦄ := by
+        SourceMachine.Cumulative.Step initial .trap)) ⦄ := by
   dsimp only
-  have frameTyped : Abs.FrameTyped (decodeStore view code store) {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} [] := by
+  have frameTyped : SourceMachine.FrameTyped (decodeStore view code store) {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} [] := by
     cases typed.typed.frames with | cons head _ => exact head
   rcases point_values (pairs:=compiled.indirect.val) (decodeStore view code store) f .memoryCopy after frameTyped point.code with jump | operation
   · obtain ⟨target,forward,fetch,tail⟩ := jump
@@ -169,19 +169,19 @@ theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platf
       have inCode := (List.getElem?_eq_some_iff.mp fetch).1
       change compiled.code.val.length≤U32.max at fetchBound
       omega
-    have actualPosition : first.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType) := by
+    have actualPosition : first.val=Compiler.slots (f.locals.map Compiler.valueType)+Compiler.slots (front.map Compiler.valueType) := by
       simpa only [point.locals] using position
-    have bindings : Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C := by
+    have bindings : SourceMachine.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C := by
       rw [←moduleEq]
       exact point.bindings
     apply Or.inr
     apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled _ last frameFound found codeFound fetch pcBound
     intro pc pcNext
     let advanced := {exec with frames:=exec.frames.set index {raw with pc:=pc}}
-    let initial : Abs.AState := ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨decodeStore view code store,ambient,{f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after}::rest,[]⟩
     obtain ⟨out,run,same,samePlatform,resultNil,rawEffect,metadata,represented,transition⟩ := WP.spec_imp_exists
       (stateful_memory_copy_dispatch memory hooks floats allocator view laws code advanced store platform index raw inst C initial
-        {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} rest after front operands input result first second a entry signature
+        {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} rest after front operands input result first second a entry signature
         bindings found rfl moduleEq slots values operandTypes operandTyped actualPosition)
     rw [run]
     apply WP.spec.ret
@@ -190,19 +190,19 @@ theorem stateful_memory_copy_point_step {M P F A : Type} (memory : runtime.platf
     have classified := (effect.mutation view store address object destination source count _).2
     rcases classified with ⟨success,mutation⟩ | ⟨error,sameStore⟩
     · change out.1=.Ok () at success
-      have sourceStep : Abs.Stateful.Transition initial {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} rest after .memoryCopy
+      have sourceStep : SourceMachine.Stateful.Transition initial {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} rest after .memoryCopy
           (.next ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩) := by
-        simpa [statefulBulkResult,success,initial,Abs.advance] using transition
+        simpa [statefulBulkResult,success,initial,SourceMachine.advance] using transition
       refine Or.inl ⟨pc,front,success,pcNext,same,⟨address,object,destination,source,count,issued,effect⟩,represented,?_,?_⟩
-      · have safe := Abs.Stateful.transition_next .memoryCopy (decodeStore view code store) ambient {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} rest after
+      · have safe := SourceMachine.Stateful.transition_next .memoryCopy (decodeStore view code store) ambient {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} rest after
           ⟨decodeStore view code out.2.2.1,ambient,{f with code:=after,vals:=front}::rest,[]⟩ typed sourceStep
         have continued := point.continue safe.2.1 front operands [] after values heights (by simpa only [resultNil,List.map_nil] using tail) pc pcNext
         simpa only [List.append_nil] using continued
       · exact .stateful sourceStep (by intro impossible;cases impossible)
     · change out.1=.Err (.Trap .MemoryOutOfBounds) at error
-      have sourceStep : Abs.Stateful.Transition initial {f with code:=Abs.Stateful.Instruction.memoryCopy.source::after} rest after .memoryCopy .trap := by
+      have sourceStep : SourceMachine.Stateful.Transition initial {f with code:=SourceMachine.Stateful.Instruction.memoryCopy.source::after} rest after .memoryCopy .trap := by
         simpa [statefulBulkResult,error] using transition
       exact Or.inr ⟨error,sameStore,⟨pc,pcNext,same⟩,.stateful sourceStep (by intro impossible;cases impossible)⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end

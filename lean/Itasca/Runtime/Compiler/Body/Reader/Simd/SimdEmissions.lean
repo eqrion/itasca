@@ -8,7 +8,7 @@ Canonical SIMD reader effects and the actual accepted callback produce exact typ
 Main declarations: `reader_simd_fixed_emission`. A direct consumer is `Compiler.Body.Reader.Simd.CallbackEmission`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Canonical SIMD reader effects and the actual accepted callback produce
@@ -51,4 +51,4 @@ theorem reader_simd_fixed_emission {data env locals index st source values posit
     codeFits sourceFits coordinateFits accepted
   exact ⟨ordinary,sources,cursor,simd,pool,front,emitted,oldTypes,
     ⟨lowered,SourceStack.of_map types concrete newTypes⟩,emission⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

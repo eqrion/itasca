@@ -24,7 +24,7 @@ def widenWord (width : U32) (extmul signed : Bool) (a b : U64) : Result U64 := d
     else Result.ok b
   if extmul then Result.ok (core.num.U64.wrapping_mul a1 b1) else Result.ok a1
 
-theorem widenWord_bind {α : Type} (width : U32) (extmul signed : Bool) (a b : U64) (k : U64 → Result α) :
+theorem widen_word_bind {α : Type} (width : U32) (extmul signed : Bool) (a b : U64) (k : U64 → Result α) :
     Aeneas.Std.bind (widenWord width extmul signed a b) k = (do
       let a1 ← if signed then do
         let value ← runtime.interp.simd.signed a width
@@ -78,10 +78,10 @@ theorem widen_loop (width i : U32) (extmul high signed : Bool) (x y initial : U1
       step with lane x width selected positive (by omega) selectedRange as ⟨a,aEq⟩
       step with lane y width selected positive (by omega) selectedRange as ⟨b,bEq⟩
       have aBits : a.val = (laneBits width.val (index.val + if high then 64/width.val else 0) x.bv).toNat := by
-        rw [laneBits_toNat,←offsetEq,←selectedEq]; exact aEq
+        rw [lane_bits_to_nat,←offsetEq,←selectedEq]; exact aEq
       have bBits : b.val = (laneBits width.val (index.val + if high then 64/width.val else 0) y.bv).toNat := by
-        rw [laneBits_toNat,←offsetEq,←selectedEq]; exact bEq
-      with_unfolding_all rw [←widenWord_bind width extmul signed a b]
+        rw [lane_bits_to_nat,←offsetEq,←selectedEq]; exact bEq
+      with_unfolding_all rw [←widen_word_bind width extmul signed a b]
       step with wordLaw index.val less a b aBits bBits as ⟨value,allowed⟩
       step as ⟨wide,wideEq⟩
       step with put_lanes current wide index value (by omega) (by omega) (by rw [wideEq];exact range) as ⟨updated,same,other⟩
@@ -111,7 +111,7 @@ section
 namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
 
-theorem signExtend_restrict {width : Nat} (bits : BitVec width) (output : Nat) (le : output ≤ 64) :
+theorem sign_extend_restrict {width : Nat} (bits : BitVec width) (output : Nat) (le : output ≤ 64) :
     (bits.signExtend 64).setWidth output = bits.signExtend output := by
   apply BitVec.eq_of_getLsbD_eq
   intro i
@@ -142,7 +142,7 @@ theorem signExtend_restrict {width : Nat} (bits : BitVec width) (output : Nat) (
       rw [aBits,BitVec.setWidth_setWidth_of_le _ (by omega),BitVec.setWidth_eq]
     have exactValue : value.bv = bits.signExtend 64 := by rw [valueEq,narrow]
     exact (congrArg (BitVec.setWidth (width.val*2)) exactValue).trans
-      (signExtend_restrict bits _ (by omega))
+      (sign_extend_restrict bits _ (by omega))
 
 @[step] theorem widen_word (width : U32) (multiply signed : Bool) (a b : U64)
     (x y : BitVec width.val) (positive : 0 < width.val) (bound : width.val ≤ 32)

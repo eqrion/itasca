@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.CompileAssembly
 import Itasca.Runtime.Compiler.Local.Relations.Function.Environment
 import Itasca.Runtime.Compiler.Module.CompilerDrain
 import Itasca.Stream.DriverRun
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Compiler custom-section callbacks preserve every scheduler predicate. -/
@@ -78,4 +78,4 @@ theorem compiler_driver_configured {A S : Type} (ops : runtime.platform.Alloc A)
     run.remaining.configured_call
   have origin := congrArg (fun fields => fields.2.2) frame
   exact ⟨signatures, widths, functions, by simpa only [schedulerFrame, decoded] using origin⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

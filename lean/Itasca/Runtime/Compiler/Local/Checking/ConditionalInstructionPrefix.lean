@@ -9,7 +9,7 @@ Checked instruction-prefix preservation for forward and loop conditional branche
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual conditional forward branching checks its condition and transfer,
@@ -54,7 +54,7 @@ theorem compiler_branch_if_forward_open_instructions {A : Type} (ops : runtime.p
   · intro position owned
     exact pending_instruction_replace index.val frame _ lookup frames rfl
       (by intro site member; change site ∈ fixups.val; rw [appended]; exact List.mem_append_left _ member) position owned
-  · apply branchIfInstructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
+  · apply branch_if_instructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
       frame.height source frame.results core.num.U32.MAX condition resume order (sourceFits.trans growth.slots) (test.trans growth.slots)
     · intro transfer
       change resume.val ≤ after.function.code.val.length
@@ -63,7 +63,7 @@ theorem compiler_branch_if_forward_open_instructions {A : Type} (ops : runtime.p
       omega
     · exact .inr (by rw [← siteAt]; exact pending)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -71,7 +71,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual conditional loop branching checks its selector and transfer, retains
@@ -108,7 +108,7 @@ theorem compiler_branch_if_loop_open_instructions {A : Type} (ops : runtime.plat
   refine held.append_open growth ?_ _ code ?_
   · intro index owned
     simpa only [PendingInstructionSite,frames] using owned
-  · apply branchIfInstructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
+  · apply branch_if_instructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
       frame.height source frame.params frame.start_pc condition resume order (sourceFits.trans growth.slots) (test.trans growth.slots)
     · intro transfer
       change resume.val ≤ after.function.code.val.length
@@ -117,6 +117,6 @@ theorem compiler_branch_if_loop_open_instructions {A : Type} (ops : runtime.plat
       omega
     · exact .inl (target.trans growth.code)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -24,7 +24,7 @@ theorem add_table_errors_metadata {M A : Type} (memory : runtime.platform.Memory
     ErrorAllowed ResourceError out.1 ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
   simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.table_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
+  rw [Compiler.initializer_slice_index inst.module.module.env.table_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok] at run
   obtain ⟨⟨status, after⟩, defined, rest⟩ := normal_bind_exists _ _ _ run
   have cause := define_table_errors memory allocator law store ty fit _ defined
@@ -49,7 +49,7 @@ theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.Memor
   obtain ⟨size, sizeRun, sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
   simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.mem_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
+  rw [Compiler.initializer_slice_index inst.module.module.env.mem_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,
     lift, sizeRun] at run
   split at run

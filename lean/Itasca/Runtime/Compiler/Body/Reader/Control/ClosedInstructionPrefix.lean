@@ -7,7 +7,7 @@ Closing the actual reader control stack publishes checks for every stored instru
 Main declarations: `StructuredReaderCompilerStateWasm2.closed_checked_instructions`. A direct consumer is `Compiler.Body.Reader.Checking.SourceCheckedStepsWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing the actual reader control stack publishes checks for every stored instruction. -/
@@ -42,4 +42,4 @@ theorem StructuredReaderCompilerStateWasm2.closed_checked_instructions
   exact (state.root_checked_instructions (ctx := ctx) ops law root next advance inbounds out state.boundary.source_bound
     bodyExtent initialLayout initialLocals initialCapacity maps held exits byte accepted).1
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -27,7 +27,7 @@ theorem PreparedRun.segment_bounds {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before) (bounded : SegmentBounds before)
     {tables memories} (cache : Itasca.ModuleEnv.Cache module.module.env tables memories)
     (valid : Itasca.ModuleEnv.Valid module.module.env module.profile)
-    (compiled : Code.InitializerMappings module)
+    (compiled : Compiler.InitializerMappings module)
     (elementBounds : ∀ element ∈ module.module.env.elements.val, element.init.length < 2^32)
     (dataBounds : ∀ data ∈ module.module.tail.data.val, data.init.length < 2^32) : SegmentBounds ready := by
   have prepared := prepared_commit_segment_bounds memory hooks floats allocator law view laws before trace.seed platform
@@ -53,14 +53,14 @@ theorem PreparedRun.compiled_segment_bounds {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before) (bounded : SegmentBounds before)
     (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module)) : SegmentBounds ready := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, _⟩ := witness.semantic law
   have actualValid : Itasca.ModuleEnv.Valid module.module.env module.profile := by
     rw [certificates.2.1]
     exact valid
-  obtain ⟨elementBounds, dataBounds⟩ := Code.compile_segment_payload_bounds allocator law bytes profile limits module accepted
+  obtain ⟨elementBounds, dataBounds⟩ := Compiler.compile_segment_payload_bounds allocator law bytes profile limits module accepted
   exact trace.segment_bounds laws law shape accounted bounded cache actualValid certificates.2.2.2 elementBounds dataBounds
 end Itasca.Runtime.Store
 
@@ -83,7 +83,7 @@ theorem PreparedRun.global_types {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Itasca.ModuleEnv.Cache module.module.env tables memories)
     (valid : Itasca.ModuleEnv.Valid module.module.env module.profile)
-    (compiled : Code.InitializerMappings module)
+    (compiled : Compiler.InitializerMappings module)
     : ∃ inst, ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       ready.instances.length = before.instances.length + 1 ∧
       GlobalTypeMap ready module.module.env.global_types.val inst.globals.val ∧
@@ -122,7 +122,7 @@ theorem PreparedRun.shape_data {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Itasca.ModuleEnv.Cache module.module.env tables memories)
     (valid : Itasca.ModuleEnv.Valid module.module.env module.profile)
-    (compiled : Code.InitializerMappings module)
+    (compiled : Compiler.InitializerMappings module)
     : ∃ inst, trace.dataStore.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
       Shape view ready ∧ SegmentTypeBindings trace.dataStore inst ∧
       StagedPrefix before trace.dataStore ∧ SegmentAccounting trace.dataStore ∧

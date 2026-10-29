@@ -181,7 +181,7 @@ theorem memory_grow_effect {M : Type} (ops : runtime.platform.MemoryBuffer M)
               simp [MemoryGrowth]
               left
               constructor
-              · rw [decodeStore_memory_update]
+              · rw [decode_store_memory_update]
                 have hdecoded : decodeMemory view {m' with buf := after} = decodeMemory view m' := by
                   simp [decodeMemory, hafter]
                 simp only [hback, alloc.vec.Vec.set_val_eq, List.map_set, hdecoded]

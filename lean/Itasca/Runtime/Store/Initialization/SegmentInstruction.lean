@@ -76,7 +76,7 @@ theorem segment_instruction_total (view : M → Slice U8) (laws : Platform.Memor
       (by simpa using capacity) frames fetched pcBound)
     rintro out ⟨success, slots, next, nextValue, frames, rfl, rfl⟩
     refine ⟨Or.inl success, ?_, .refl _, rfl, ?_⟩
-    · rw [alloc.vec.Vec.length, slots, initialSlots_length]
+    · rw [alloc.vec.Vec.length, slots, initial_slots_length]
     · exact ⟨next, nextValue, frames⟩
   | bulk instruction ready capacity =>
     apply WP.spec_mono (segment_step_bulk memory hooks floats allocator exec store platform instIndex function position

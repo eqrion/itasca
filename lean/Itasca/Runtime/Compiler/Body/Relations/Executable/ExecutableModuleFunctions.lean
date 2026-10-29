@@ -8,7 +8,7 @@ The executable-function certificate for a compiled module.
 Main declarations: `ExecutableModuleFunctions`. A direct consumer is `Compiler.Module.ExecutableCollectedFunctions`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 structure ExecutableModuleFunctions (module : runtime.compiler.ExecutableModule)
     (sources : List funccode) : Prop where
@@ -32,4 +32,4 @@ theorem ExecutableModuleFunctions.extend {before after : runtime.compiler.Execut
   have same := (List.getElem?_eq_some_iff.mp foundCode).2
   have retained := congrArg (fun list => list[index]?) preserved
   simpa [List.getElem?_take, bound, same] using retained
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

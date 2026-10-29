@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Concrete append effects separate local emission checks and ownership
@@ -73,4 +73,4 @@ theorem CompilerInstructionPrefixExcept.complete {A : Type} {compiler : runtime.
     exact .checked (dispatch instruction found)
   · exact held index instruction same found
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

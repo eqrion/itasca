@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions
 import Itasca.Runtime.Compiler.Module.CollectFunctions
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 structure PendingExecutableModuleFunctions (env : Itasca.module.Env)
     (pending : List (Option runtime.bytecode.CompiledFunction)) (sources : List funccode) : Prop where
@@ -22,4 +22,4 @@ theorem PendingExecutableModuleFunctions.collected {env pending sources}
   refine ⟨compiled, source, ?_, sourceFound, by simpa only [sameEnv] using code⟩
   rw [collected, List.getElem?_map] at codeFound
   cases actual : module.functions.val[index]? <;> simp_all
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

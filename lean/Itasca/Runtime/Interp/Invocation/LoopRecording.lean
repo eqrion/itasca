@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Relations.StepRecording
 /-!
 Proof-only recording of interpreter-loop events, with erasure back to the extracted loop.
 
-Main declarations: `recordedInvokeLoop` and `recordedInvokeLoop_erase`. A direct consumer is `Interp.Invocation.LoopRecordingFacts`.
+Main declarations: `recordedInvokeLoop` and `recorded_invoke_loop_erase`. A direct consumer is `Interp.Invocation.LoopRecordingFacts`.
 -/
 
 namespace Itasca.Runtime.Interp
@@ -32,7 +32,7 @@ def recordedInvokeLoop {M P F A : Type}
     (fun (exec,store,platform,status) => runtime.interp.invoke_with_loop1.body memory hooks floats allocator exec store platform status)
     invokeLoopEvents (exec,store,platform,status) prior
 
-theorem recordedInvokeLoop_erase {M P F A : Type}
+theorem recorded_invoke_loop_erase {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)

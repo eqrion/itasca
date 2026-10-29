@@ -10,7 +10,7 @@ import Itasca.Runtime.SourceMachine.Stateful.TableTransfer
 import Itasca.Runtime.SourceMachine.Stateful.MemoryGrow
 import Itasca.Runtime.SourceMachine.Stateful.TableGrow
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 /-- The only nondeterministic choices are successful growth or permitted refusal. -/
@@ -85,42 +85,42 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       (evaluate choice op ⟨s,ambient,{f with code := op.source::after}::rest,[]⟩ f rest after) := by
   cases op with
   | refNull type =>
-    obtain ⟨next,result,fresh,simulation⟩ := refNull_progress s ambient f rest type after typed
+    obtain ⟨next,result,fresh,simulation⟩ := ref_null_progress s ambient f rest type after typed
     have same := evaluate_read_store choice (.refNull type) ⟨s,ambient,{f with code := (.refNull type : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
     change ResultSafe _ (refNull _ f rest type after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh, by rw [same]; exact extend_store_refl _ typed.typed.store, simulation⟩
   | refFunc index =>
-    obtain ⟨next,result,fresh,simulation⟩ := refFunc_progress s ambient f rest index after typed
+    obtain ⟨next,result,fresh,simulation⟩ := ref_func_progress s ambient f rest index after typed
     have same := evaluate_read_store choice (.refFunc index) ⟨s,ambient,{f with code := (.refFunc index : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
     change ResultSafe _ (refFunc _ f rest index after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh, by rw [same]; exact extend_store_refl _ typed.typed.store, simulation⟩
   | refIsNull =>
-    obtain ⟨next,result,fresh,simulation⟩ := refIsNull_progress s ambient f rest after typed
+    obtain ⟨next,result,fresh,simulation⟩ := ref_is_null_progress s ambient f rest after typed
     have same := evaluate_read_store choice (.refIsNull) ⟨s,ambient,{f with code := (.refIsNull : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
     change ResultSafe _ (refIsNull _ f rest after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh, by rw [same]; exact extend_store_refl _ typed.typed.store, simulation⟩
   | tableSize index =>
-    obtain ⟨next,result,fresh,simulation⟩ := tableSize_progress s ambient f rest index after typed
+    obtain ⟨next,result,fresh,simulation⟩ := table_size_progress s ambient f rest index after typed
     have same := evaluate_read_store choice (.tableSize index) ⟨s,ambient,{f with code := (.tableSize index : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
     change ResultSafe _ (tableSize _ f rest index after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh, by rw [same]; exact extend_store_refl _ typed.typed.store, simulation⟩
   | memorySize =>
-    obtain ⟨next,result,fresh,simulation⟩ := memorySize_progress s ambient f rest after typed
+    obtain ⟨next,result,fresh,simulation⟩ := memory_size_progress s ambient f rest after typed
     have same := evaluate_read_store choice (.memorySize) ⟨s,ambient,{f with code := (.memorySize : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
     change ResultSafe _ (memorySize _ f rest after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh, by rw [same]; exact extend_store_refl _ typed.typed.store, simulation⟩
   | tableGet index =>
-    rcases tableGet_progress s ambient f rest index after typed with ⟨next,result,fresh,simulation⟩ | ⟨result,trap⟩
+    rcases table_get_progress s ambient f rest index after typed with ⟨next,result,fresh,simulation⟩ | ⟨result,trap⟩
     · have same := evaluate_read_store choice (.tableGet index) ⟨s,ambient,{f with code := (.tableGet index : Instruction).source::after}::rest,[]⟩ f rest after next rfl result
       change ResultSafe _ (tableGet _ f rest index after)
       simp only [Instruction.source]
@@ -131,7 +131,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | tableSet index =>
-    rcases tableSet_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases table_set_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (tableSet _ f rest index after)
       simp only [Instruction.source]
       rw [result]
@@ -141,7 +141,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | tableFill index =>
-    rcases tableFill_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases table_fill_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (tableFill _ f rest index after)
       simp only [Instruction.source]
       rw [result]
@@ -151,7 +151,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | tableCopy index source =>
-    rcases tableCopy_progress s ambient f rest index source after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases table_copy_progress s ambient f rest index source after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (tableCopy _ f rest index source after)
       simp only [Instruction.source]
       rw [result]
@@ -161,7 +161,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | tableInit index source =>
-    rcases tableInit_progress s ambient f rest index source after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases table_init_progress s ambient f rest index source after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (tableInit _ f rest index source after)
       simp only [Instruction.source]
       rw [result]
@@ -171,7 +171,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | memoryFill =>
-    rcases memoryFill_progress s ambient f rest  after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases memory_fill_progress s ambient f rest  after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (memoryFill _ f rest  after)
       simp only [Instruction.source]
       rw [result]
@@ -181,7 +181,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | memoryCopy =>
-    rcases memoryCopy_progress s ambient f rest  after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases memory_copy_progress s ambient f rest  after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (memoryCopy _ f rest  after)
       simp only [Instruction.source]
       rw [result]
@@ -191,7 +191,7 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | memoryInit index =>
-    rcases memoryInit_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
+    rcases memory_init_progress s ambient f rest index after typed with ⟨next,result,fresh,extended,simulation⟩ | ⟨result,trap⟩
     · change ResultSafe _ (memoryInit _ f rest index after)
       simp only [Instruction.source]
       rw [result]
@@ -201,26 +201,26 @@ theorem evaluate_safe (choice : Selection) (op : Instruction) (s : store) (ambie
       rw [result]
       exact trap
   | elemDrop index =>
-    obtain ⟨next,result,fresh,extended,simulation⟩ := elementDrop_progress s ambient f rest index after typed
+    obtain ⟨next,result,fresh,extended,simulation⟩ := element_drop_progress s ambient f rest index after typed
     change ResultSafe _ (elementDrop _ f rest index after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh,extended,simulation⟩
   | dataDrop index =>
-    obtain ⟨next,result,fresh,extended,simulation⟩ := dataDrop_progress s ambient f rest index after typed
+    obtain ⟨next,result,fresh,extended,simulation⟩ := data_drop_progress s ambient f rest index after typed
     change ResultSafe _ (dataDrop _ f rest index after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh,extended,simulation⟩
   | memoryGrow =>
-    obtain ⟨front,delta,address,object,values,mapped,found,choices⟩ := memoryGrow_choices s ambient f rest after typed
+    obtain ⟨front,delta,address,object,values,mapped,found,choices⟩ := memory_grow_choices s ambient f rest after typed
     obtain ⟨next,result,fresh,extended,simulation⟩ := choices choice.memory (allowed front delta address object values mapped found)
     change ResultSafe _ (memoryGrow _ _ f rest after)
     simp only [Instruction.source]
     rw [result]
     exact ⟨fresh,extended,simulation⟩
   | tableGrow index =>
-    obtain ⟨front,reference,delta,address,object,values,mapped,found,choices⟩ := tableGrow_choices s ambient f rest index after typed
+    obtain ⟨front,reference,delta,address,object,values,mapped,found,choices⟩ := table_grow_choices s ambient f rest index after typed
     obtain ⟨next,result,fresh,extended,simulation⟩ := choices choice.table (allowed front reference delta address object values mapped found)
     change ResultSafe _ (tableGrow _ _ f rest index after)
     simp only [Instruction.source]
@@ -251,4 +251,4 @@ theorem transition_trap (op : Instruction) (s : store) (ambient : frame)
       ⟨⟨s,ambient⟩,[.TRAP]⟩ :=
   transition_safe op s ambient f rest after .trap typed step
 
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

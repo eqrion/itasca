@@ -47,14 +47,14 @@ theorem shift_word (kind : ShiftKind) (op width amount : U32) (value : U64)
     step as ⟨shifted,shiftedEq,shiftedBits⟩
     simp only [shiftBits]
     simp only [IScalar.hcast_bv_eq, UScalarTy.U64_numBits_eq, IScalarTy.I64_numBits_eq, BitVec.signExtend_eq]
-    rw [shiftedBits,signedEq,truncated,shiftRight_signed_widen _ _ _ positive widthBound]
+    rw [shiftedBits,signedEq,truncated,shift_right_signed_widen _ _ _ positive widthBound]
   | unsignedRight =>
     have eq : op=13#u32 := UScalar.eq_of_val_eq operation
     subst op
     with_unfolding_all change (value >>> amount) ⦃ _ ⦄
     step as ⟨result,valueEq,bitsEq⟩
     simp only [shiftBits]
-    rw [bitsEq,input,shiftRight_widen _ _ _ widthBound]
+    rw [bitsEq,input,shift_right_widen _ _ _ widthBound]
 end Itasca.Runtime.Interp.Simd
 
 end
@@ -123,7 +123,7 @@ def shiftOpcode (ty : Jnn) (kind : ShiftKind) : U32 :=
 def shiftWidth (ty : Jnn) : U32 :=
   match ty with | .I8 => 8#u32 | .I16 => 16#u32 | .I32 => 32#u32 | .I64 => 64#u32
 
-theorem shiftWidth_val (ty : Jnn) : (shiftWidth ty).val=lsize (lanetype_Jnn ty) := by cases ty <;> rfl
+theorem shift_width_val (ty : Jnn) : (shiftWidth ty).val=lsize (lanetype_Jnn ty) := by cases ty <;> rfl
 
 @[step] theorem shift_lanes (ty : Jnn) (kind : ShiftKind) (x y : U128) :
     runtime.interp.simd.shift_lanes (shiftOpcode ty kind) x y ⦃ result =>

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -25,19 +25,19 @@ elab "growth_effect " h:ident " using " ops:term ", " law:term : tactic => withM
     | ``runtime.compiler.lower.FunctionCompiler.finish_op =>
       `(tactic| have effect := compiler_finish_op_growth $ops $law _ _ _ _ _ $h)
     | ``runtime.compiler.simd.FunctionCompiler.simd_op => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_simd_growth
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_simd_growth
       `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_code_result
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_pc_code_result
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_code_length
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_patch_code_length
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_code_length
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_code_length
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1 => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_fixups_after_if_code_length
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_after_if_code_length
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -64,4 +64,4 @@ macro "growth_step " h:ident " using " ops:term ", " law:term : tactic => `(tact
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | split at $h:ident)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

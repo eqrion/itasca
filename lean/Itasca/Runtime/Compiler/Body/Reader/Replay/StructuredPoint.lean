@@ -6,7 +6,7 @@ The structured source/compiler point extracted from a reader state.
 Main declarations: `StructuredReaderCompilerPointWasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 def StructuredReaderCompilerPointWasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
@@ -25,4 +25,4 @@ theorem StructuredReaderCompilerStateWasm2.point {jumpTables : List U32} {A : Ty
       parents current savedParents savedCurrent) :
     StructuredReaderCompilerPointWasm2 (jumpTables := jumpTables) emit initial compiler types functions returns locals data env sourceLocals index ft st :=
   ⟨parents, current, savedParents, savedCurrent, state⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

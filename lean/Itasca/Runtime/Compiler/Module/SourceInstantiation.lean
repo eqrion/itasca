@@ -2,7 +2,7 @@ import Itasca.Runtime.Spec.Instantiation
 import Itasca.Runtime.Spec.SegmentPrograms
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Module.SegmentPayloadBounds
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem mapped_two {α β γ δ : Type} (xs : List α) (f : α → β) (g : α → γ)
@@ -191,4 +191,4 @@ theorem source_instantiate {raw : ModuleBinary.Module} {R bytes profile}
     · simpa using Nat.le_of_lt counts.1
     · simpa using Nat.le_of_lt counts.2
   simpa only [Option.map_map, Function.comp_def] using desired
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

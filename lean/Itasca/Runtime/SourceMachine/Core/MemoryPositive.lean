@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.MemoryAccess
 import Itasca.Runtime.SourceMachine.Core.Step
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt
 theorem load_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Load) (argument : memarg) (next : AState)
@@ -32,4 +32,4 @@ theorem store_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (r
   · rw [actualEq] at equation
     contradiction
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

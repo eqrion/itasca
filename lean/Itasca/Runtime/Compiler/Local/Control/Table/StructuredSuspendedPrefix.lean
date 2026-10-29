@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A suspended parent owns only the bytecode before its child-entry cursor.
@@ -51,5 +51,5 @@ theorem StructuredSuspendedPrefix.resume_dead {jumpTables : List U32} {emission 
     StructuredDeadPrefix (jumpTables := jumpTables) emission types functions returns locals code labels before (source ++ more) start finish :=
   suspended.full.terminal child
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

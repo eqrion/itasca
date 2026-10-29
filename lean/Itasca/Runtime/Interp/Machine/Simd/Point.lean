@@ -8,24 +8,24 @@ Inversion of a SIMD code point.
 Main declarations: `simd_point_head`. A direct consumer is `Interp.Machine.Simd.Prepare`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas.Std
 
 variable {jumpTables : List Aeneas.Std.U32}
 theorem simd_point_head {emission : ContextEmission} {immediates constants C returns code labels stack pc next output}
     (source : instr) (after : List instr)
-    (allowed : Abs.SimdInstr source)
+    (allowed : SourceMachine.SimdInstr source)
     (project : ∀ before emitted result, emission C before source emitted result →
-      Code.SimdEmission immediates constants C before source emitted result)
-    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Compiler.SimdEmission immediates constants C before source emitted result)
+    (point : Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
       code jumpTables labels stack (source::after) pc next output) :
     (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels stack (source::after) target.val next output) ∨
-    (∃ (instruction : Code.Bytecode) (result : List valtype),
-      Code.SimdEmission immediates constants C stack source [instruction] result ∧
+    (∃ (instruction : Compiler.Bytecode) (result : List valtype),
+      Compiler.SimdEmission immediates constants C stack source [instruction] result ∧
       code[pc]? = some instruction ∧
-      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
         code jumpTables labels result after (pc+1) next output) := by
   have relation := point.current
   generalize sourceEq : source::after = cursor at relation
@@ -56,4 +56,4 @@ theorem simd_point_head {emission : ContextEmission} {immediates constants C ret
     | pure signature => cases signature <;> simp at sourceEq
     | constant => simp at sourceEq
     | memory signature => cases signature <;> simp at sourceEq
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

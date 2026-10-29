@@ -13,7 +13,7 @@ Emitted-code monotonicity for indirect calls, typed select and SIMD reader event
 Main declarations: `reader_indirect_call_code_mono_wasm2` and `SimdReaderEvent.code_mono`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedStateful`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_indirect_call_code_mono_wasm2 {data env locals index st}
@@ -51,4 +51,4 @@ theorem SimdReaderEvent.code_mono {A : Type} {ops : runtime.platform.Alloc A}
   exact compiler_lower_simd_code_mono ops law before after out event.opcode event.a event.b event.bits
     (by omega) (by omega) event.callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

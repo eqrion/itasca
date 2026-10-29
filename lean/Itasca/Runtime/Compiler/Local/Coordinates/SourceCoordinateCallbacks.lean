@@ -10,7 +10,7 @@ Source-coordinate order and bounds, with preservation by the compiler primitives
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Retained source coordinates lie in the declared body interval, are ordered,
@@ -53,7 +53,7 @@ theorem SourceCoordinates.advance {A : Type} {before after : runtime.compiler.Fu
 
 /-- Actual emission appends precisely the current body-relative source origin.
 The retained upper bound supplies ordering with every earlier instruction. -/
-theorem Emitted.sourceCoordinates {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+theorem Emitted.source_coordinates {A : Type} {before after : runtime.compiler.FunctionCompiler A}
     {instruction : runtime.bytecode.Instr} (emitted : Emitted before after instruction)
     (held : SourceCoordinates before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val) :
@@ -103,7 +103,7 @@ theorem SourceCoordinates.checker {A : Type} {compiler : runtime.compiler.Functi
     simpa only [List.length_map] using bounded
   simpa only [List.getElem_map] using order (index-1) index previousBound currentBound (by omega)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -111,7 +111,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Function setup establishes the empty coordinate invariant before reading
@@ -151,7 +151,7 @@ theorem compiler_emit_source_coordinates {A : Type} (ops : runtime.platform.Allo
   have endBound : before.function.body_end.val ≤ Usize.max := by scalar_tac
   have emitted := compiler_emit ops law before instruction (by omega) (by omega) (by omega)
   rw [called,WP.spec_ok] at emitted
-  exact (emitted rfl).sourceCoordinates held inside
+  exact (emitted rfl).source_coordinates held inside
 
 /-- Elided copies retain the vector; emitted copies append the current source
 origin just like any other actual instruction. -/
@@ -344,6 +344,6 @@ theorem compiler_finish_op_source_coordinates_result {A : Type} (ops : runtime.p
   subst status
   exact compiler_finish_op_source_coordinates ops law before after state instruction held inside forward called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

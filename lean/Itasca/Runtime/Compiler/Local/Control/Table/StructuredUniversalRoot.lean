@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixClose
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredUniversalPrefix.root_finish {jumpTables : List Aeneas.Std.U32} {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals current}
@@ -19,7 +19,7 @@ theorem StructuredUniversalPrefix.root_finish {jumpTables : List Aeneas.Std.U32}
   rw [← frames] at plans
   have shape := root_scope_label current returns target true frame.end_reachable form front results
   have code := (invariant.prefixes _ [] _ plans shape .nil).2
-  have finished := code.finish (by simp [resolvedCode_length]) (by simp [NormalLive])
+  have finished := code.finish (by simp [resolved_code_length]) (by simp [NormalLive])
   simpa [resolvedCode, SourceScope.input, front, params, start, position] using finished
 
 /-- A terminal root body closes at the actual final PC even when its result
@@ -40,8 +40,8 @@ theorem StructuredUniversalTerminal.root_finish {jumpTables : List Aeneas.Std.U3
   rw [← frames] at plans
   have shape := root_scope_label current returns target false frame.end_reachable form front results
   have code := (invariant.prefixes _ [] _ plans shape .nil).2
-  have finished := code.finish target.val returns (by omega) (by simp [resolvedCode_length, position])
+  have finished := code.finish target.val returns (by omega) (by simp [resolved_code_length, position])
   simpa [resolvedCode, SourceScope.input, front, params, start, position] using finished
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

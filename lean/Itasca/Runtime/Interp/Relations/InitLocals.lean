@@ -8,13 +8,13 @@ def zeroWords (words : List U64) (start : Nat) : Nat → List U64
   | 0 => words
   | n + 1 => zeroWords (words.set start 0#u64) (start + 1) n
 
-theorem zeroWords_length (words : List U64) (start n : Nat) :
+theorem zero_words_length (words : List U64) (start n : Nat) :
     (zeroWords words start n).length = words.length := by
   induction n generalizing words start with
   | zero => rfl
   | succ n ih => simp only [zeroWords, ih, List.length_set]
 
-theorem zeroWords_effect (words : List U64) (start n : Nat)
+theorem zero_words_effect (words : List U64) (start n : Nat)
     (bound : start + n ≤ words.length) :
     (∀ j, j < n → (zeroWords words start n)[start + j]? = some 0#u64) ∧
     (∀ j, j < start ∨ start + n ≤ j → (zeroWords words start n)[j]? = words[j]?) := by

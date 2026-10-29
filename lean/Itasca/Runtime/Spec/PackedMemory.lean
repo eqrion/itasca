@@ -43,12 +43,12 @@ theorem size_present (op : PackedMemory) : size (valtype_Inn op.type) ≠ none :
 
 theorem stored_wrap (op : PackedMemory) (value : Nat) :
     ibytes_ op.bits (wrap__ (sizenn (numtype_Inn op.type)) op.bits (.mk_uN value)) = op.stored value := by
-  cases op <;> exact integerBytes_mod _ _
+  cases op <;> exact integer_bytes_mod _ _
 
 theorem loaded_wf (op : PackedMemory) (sign : sx) (payload : List byte)
     (valid : Forall wf_byte payload) (lengthEq : payload.length = op.bytes) :
     wf_num_ (numtype_Inn op.type) (op.loaded sign payload) := by
-  have bound := integerOfBytes_bound payload valid
+  have bound := integer_of_bytes_bound payload valid
   rw [lengthEq] at bound
   cases sign
   · unfold loaded extend__ inv_ibytes_
@@ -100,10 +100,10 @@ theorem load_step (s : _root_.store) (f : frame) (op : PackedMemory) (sign : sx)
     apply Step_read.load_pack_val _ _ _ _ _ _ (inv_ibytes_ op.bits payload)
     · exact op.size_present
     · simp [proj_num__0]
-    · have encoded := integerBytes_ofBytes payload payloadWf
+    · have encoded := integer_bytes_of_bytes payload payloadWf
       rw [payloadLength] at encoded
       simpa only [ibytes_,inv_ibytes_,proj_uN_0,proj_num__0,byte_count,Option.get!_some,bytes,payload] using encoded
-    · have bounded := integerOfBytes_bound payload payloadWf
+    · have bounded := integer_of_bytes_bound payload payloadWf
       rw [payloadLength] at bounded
       change Builtins.integerOfBytes payload < 2^op.bits
       cases op <;> norm_num [bytes,bits] at bounded ⊢ <;> exact bounded
@@ -141,8 +141,8 @@ theorem store_step (s : _root_.store) (f : frame) (op : PackedMemory) (argument 
     · exact operationWf)
   split
   · rename_i inside
-    have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET) (op.stored value)
-      storeWf (integerBytes_wf op.bytes value)
+    have updatedWf := memory_payload_write_wf s f (address+proj_uN_0 argument.OFFSET) (op.stored value)
+      storeWf (integer_bytes_wf op.bytes value)
     apply StepH.step
     apply Step.store_pack_val _ _ _ _ _ _ (op.stored value)
     · simp [proj_num__0]

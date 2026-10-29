@@ -9,7 +9,7 @@ Normal return of initializer emission and segment loops, composed into complete 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -113,7 +113,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
     | assumption
     | rfl
     | scalar_tac
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -121,7 +121,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 
@@ -214,7 +214,7 @@ set_option maxHeartbeats 2000000
     · simp only [WP.spec_ok]
       exact ⟨by omega, by omega, pairs⟩
   · exact ⟨Nat.le_refl _, Nat.le_refl _, rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -222,7 +222,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 1800000
 set_option maxRecDepth 4096
@@ -344,6 +344,6 @@ theorem initializer_lower_fresh_total {A : Type} (ops : runtime.platform.Alloc A
   apply WP.spec_mono (initializer_lower_total ops law m budget headroom segmentSpace)
   intros; trivial
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

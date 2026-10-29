@@ -10,7 +10,7 @@ END safety needs only retained fixup/map addresses and vector headroom, not a so
 Main declarations: `compiler_end_total`. A direct consumer is `Compiler.Body.Relations.Control.ReachedControlSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- END safety needs only retained fixup/map addresses and vector headroom,
@@ -59,4 +59,4 @@ not a source body typing or final compilation-success hypothesis. -/
   rw [observed, WP.spec_ok] at result
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The ghost item charge affects neither source objects nor source instance
 maps. It is used only to discharge the complete structural store invariant. -/
-theorem decodeStore_instance_items {M : Type} (view : M → Slice U8)
+theorem decode_store_instance_items {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (store : runtime.store.Store M) (charged : Usize) :
     decodeStore view code {store with instance_items := charged} = decodeStore view code store := by
   rfl
@@ -25,25 +25,25 @@ theorem PrecommitOrigins.source_bounds {M : Type} {memory : runtime.platform.Mem
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw) :
     ∃ inst, staged.instances.val[before.instances.length]? = some inst ∧ inst.module = module ∧
       SpecExt.Wasm1.SegmentBoundsFailure
-        (decodeStore view (installCode code before.instances.length (Code.sourceFunctions raw)) staged)
+        (decodeStore view (installCode code before.instances.length (Compiler.sourceFunctions raw)) staged)
         (decodeInstance staged inst) (raw.elements.map ModuleElaboration.element)
         (raw.data.map ModuleData.translate) := by
   obtain ⟨charged, inst, shape, count, found, source, cause⟩ := origins.staging trap rfl
   have instMatched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw := by
     simpa only [source] using matched
   have fresh := instance_syntax_source code before.instances.length inst raw elaborated typed instMatched
-  have allSyntax : StoreSyntax (installCode code before.instances.length (Code.sourceFunctions raw)) staged := by
-    apply oldSyntax.staged (installCode_agrees before code (Code.sourceFunctions raw)) retained (Nat.le_of_eq count)
+  have allSyntax : StoreSyntax (installCode code before.instances.length (Compiler.sourceFunctions raw)) staged := by
+    apply oldSyntax.staged (install_code_agrees before code (Compiler.sourceFunctions raw)) retained (Nat.le_of_eq count)
     intro actual lookup
     have equal : actual = inst := Option.some.inj (lookup.symm.trans found)
     exact equal ▸ fresh
-  have storeWf : wf_store (decodeStore view (installCode code before.instances.length (Code.sourceFunctions raw)) staged) := by
-    rw [← decodeStore_instance_items view _ staged charged]
-    exact decodeStore_wf view _ _ shape (allSyntax.instances_eq rfl)
+  have storeWf : wf_store (decodeStore view (installCode code before.instances.length (Compiler.sourceFunctions raw)) staged) := by
+    rw [← decode_store_instance_items view _ staged charged]
+    exact decode_store_wf view _ _ shape (allSyntax.instances_eq rfl)
   have frameWf : wf_frame ⟨[], decodeInstance staged inst⟩ := by
     constructor
     · simp [Forall]
-    · exact decodeInstance_wf _ _ _ _ fresh
+    · exact decode_instance_wf _ _ _ _ fresh
   have failure := cause.source view _ staged inst trap storeWf frameWf
   obtain ⟨elements, datas⟩ := source_segments_raw inst raw instMatched
   exact ⟨inst, found, source, by simpa only [elements, datas] using failure⟩

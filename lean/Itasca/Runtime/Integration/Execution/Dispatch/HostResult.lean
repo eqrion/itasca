@@ -15,10 +15,10 @@ import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
 import Itasca.Runtime.Interp.Relations.EventfulNormalize
 import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 abbrev EventfulDispatchResult (M P : Type) :=
   core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

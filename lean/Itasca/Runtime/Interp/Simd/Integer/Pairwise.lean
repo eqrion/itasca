@@ -53,9 +53,9 @@ theorem pairwise_loop (width i : U32) (signed : Bool) (x initial : U128)
       step as ⟨second,secondEq⟩
       step with lane x width second positive (by omega) (by rw [secondEq,firstEq];nlinarith) as ⟨b,bEq⟩
       have aBits : a.val = (laneBits width.val (2*index.val) x.bv).toNat := by
-        rw [laneBits_toNat,←firstEq]; exact aEq
+        rw [lane_bits_to_nat,←firstEq]; exact aEq
       have bBits : b.val = (laneBits width.val (2*index.val+1) x.bv).toNat := by
-        rw [laneBits_toNat,←firstEq,←secondEq]; exact bEq
+        rw [lane_bits_to_nat,←firstEq,←secondEq]; exact bEq
       with_unfolding_all change Aeneas.Std.bind (pairwiseWord width signed a b) _ ⦃ _ ⦄
       step with wordLaw index.val less a b aBits bBits as ⟨value,allowed⟩
       step as ⟨wide,wideEq⟩
@@ -147,7 +147,7 @@ open Aeneas Aeneas.Std Itasca.Runtime.Spec.Simd
     simp only [IScalar.hcast_bv_eq,UScalarTy.U64_numBits_eq,IScalarTy.I64_numBits_eq,BitVec.signExtend_eq]
     refine (congrArg (BitVec.setWidth (width.val*2)) valueBits).trans ?_
     rw [BitVec.setWidth_add _ _ (by omega),saExact,sbExact,
-      signExtend_restrict _ _ (by omega),signExtend_restrict _ _ (by omega)]
+      sign_extend_restrict _ _ (by omega),sign_extend_restrict _ _ (by omega)]
     rfl
 end Itasca.Runtime.Interp.Simd
 
@@ -176,7 +176,7 @@ theorem pairwise_dispatch_eq (ty : PairwiseWidth) (signed : Bool) (x : U128) :
       ∀ j, j < ty.widen.count → laneBits (ty.widen.width*2) j result.bv =
         pairwiseBits signed (laneBits ty.widen.width (2*j) x.bv) (laneBits ty.widen.width (2*j+1) x.bv) ⦄ := by
   rw [pairwise_dispatch_eq]
-  have widthEq := widenWidth_val ty.widen
+  have widthEq := widen_width_val ty.widen
   have loopLaw := pairwise_loop (widenWidth ty.widen) 0#u32 signed x 0#u128
     (by cases ty <;> decide) (by cases ty <;> decide)
     (fun j bits => bits = pairwiseBits signed
@@ -203,7 +203,7 @@ theorem pairwise_packed (ty : PairwiseWidth) (signed : Bool) (x result : U128)
     uN.mk_uN result.val = pairwiseResult ty signed x.bv := by
   have packed := pack_map_of_lanes (lanetype_Jnn ty.widen.output) ty.widen.count result.bv.toNat
     (fun j => (pairwiseBits signed (laneBits ty.widen.width (2*j) x.bv) (laneBits ty.widen.width (2*j+1) x.bv)).toNat)
-    (by intro j valid;rw [←laneBits_toNat];cases ty <;> exact congrArg BitVec.toNat (lanes j valid))
+    (by intro j valid;rw [←lane_bits_to_nat];cases ty <;> exact congrArg BitVec.toNat (lanes j valid))
   have covers : lsize (lanetype_Jnn ty.widen.output)*ty.widen.count = 128 := by cases ty <;> decide
   rw [covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold pairwiseResult pairwiseWords Map

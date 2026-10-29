@@ -10,7 +10,7 @@ Normal return of scalar reader dispatch.
 Main declarations: `compiler_reader_scalar_total`. A direct consumer is `Compiler.Body.Reader.Safety.OrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_scalar_total {A} (ops : runtime.platform.Alloc A)
@@ -80,4 +80,4 @@ theorem compiler_reader_scalar_total {A} (ops : runtime.platform.Alloc A)
     scalar_tac
   rw [code.step.reserved _ st data env ctx opcode compiler reserved]
   simp
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

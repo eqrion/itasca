@@ -6,7 +6,7 @@ The root source cursor before the first body instruction.
 Main declarations: `SourceScope.initial`. A direct consumer is `Compiler.Body.Reader.Control.ScopeFronts`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- The root source cursor before the first body instruction. -/
@@ -43,4 +43,4 @@ theorem UniversalElse.initial {A : Type} (compiler : runtime.compiler.FunctionCo
   cases parentShapes
   exact .cons _ label (ElseEvidence.fresh rfl) .nil
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

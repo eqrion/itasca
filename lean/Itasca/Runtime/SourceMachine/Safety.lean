@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Typing
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt
 open Itasca.DeclarativeComplete
 
@@ -37,7 +37,7 @@ theorem nop_preservation (s : store) (ambient : frame) (f : AFrame)
   cases frames with
   | cons hf hr =>
     exact ⟨hs, functions, ha, .cons (nop_frame_preservation hf) hr, values, (fun _ => active (by simp)),
-      replace_frame_heights heights (frameTyped_heights (nop_frame_preservation hf))⟩
+      replace_frame_heights heights (frame_typed_heights (nop_frame_preservation hf))⟩
 
 @[simp] theorem pop_append (values : List val) (value : val) :
     pop (values ++ [value]) = some (values, value) := by
@@ -62,7 +62,7 @@ theorem const_code_preservation {C : context} {labels : List Label}
     simpa only [List.append_assoc] using
       (CodeStackTyped.label height nesting (const_typing_tail hc) cont rest)
 
-theorem codeStack_wf {C : context} {labels : List Label}
+theorem code_stack_wf {C : context} {labels : List Label}
     {stack results : List valtype} {code : List instr}
     (h : CodeStackTyped C labels stack code results) : Forall wf_instr code := by
   cases h with
@@ -75,7 +75,7 @@ theorem const_frame_preservation {s : store} {f : AFrame} {code : List instr}
     FrameTyped s { f with code := code, vals := f.vals ++ [.CONST ty value] } [] := by
   cases h with
   | mk C bindings localTypes locals values returns codeTyped hw =>
-    have hconst := codeStack_wf codeTyped (.CONST ty value) (by simp)
+    have hconst := code_stack_wf codeTyped (.CONST ty value) (by simp)
     cases hconst with
     | instr_case_13 _ _ hnum =>
       have hval : Val_ok s (.CONST ty value) (valtype_numtype ty) :=
@@ -97,9 +97,9 @@ theorem const_preservation (s : store) (ambient : frame) (f : AFrame)
   | cons hf hr =>
     exact ⟨hs, functions, ha, .cons (const_frame_preservation hs hf) hr,
       values, (fun _ => active (by simp)),
-      replace_frame_heights heights (frameTyped_heights (const_frame_preservation hs hf))⟩
+      replace_frame_heights heights (frame_typed_heights (const_frame_preservation hs hf))⟩
 
-theorem codeStack_head {C : context} {labels : List Label}
+theorem code_stack_head {C : context} {labels : List Label}
     {stack results : List valtype} {op : instr} {code : List instr}
     (concrete : Forall (fun ty => ty ≠ valtype.BOT) stack)
     (h : CodeStackTyped C labels stack (op :: code) results) :
@@ -117,7 +117,7 @@ theorem codeStack_head {C : context} {labels : List Label}
     have heq := concrete_result_sub_eq cop hin
     exact ⟨saved ++ front, ins, outs, hop, by simp only [heq, List.append_assoc]⟩
 
-theorem resultsTyped_split {s : store} {before after : List valtype} {values : List val}
+theorem results_typed_split {s : store} {before after : List valtype} {values : List val}
     (h : ResultsTyped s (before ++ after) values) :
     ∃ first last, values = first ++ last ∧
       ResultsTyped s before first ∧ ResultsTyped s after last := by
@@ -142,17 +142,17 @@ theorem frame_typed_operands {s : store} {f : AFrame} {op : instr} {code : List 
     have concrete : Forall (fun ty => ty ≠ valtype.BOT) (f.vals.map valueType) := by
       intro ty hty
       obtain ⟨value, _, rfl⟩ := List.mem_map.mp hty
-      exact valueType_ne_bot value
+      exact value_type_ne_bot value
     have hc' : CodeStackTyped C f.labels (f.vals.map valueType) (op :: code) f.resultTypes := by
       simpa only [List.append_nil] using hc
-    obtain ⟨front, ins, outs, hop, heq⟩ := codeStack_head concrete hc'
+    obtain ⟨front, ins, outs, hop, heq⟩ := code_stack_head concrete hc'
     have values' : ResultsTyped s (front ++ ins) f.vals := by rw [← heq]; exact values
-    obtain ⟨first, operands, hsplit, _, hoperands⟩ := resultsTyped_split values'
+    obtain ⟨first, operands, hsplit, _, hoperands⟩ := results_typed_split values'
     exact ⟨C, first, operands, ins, outs, bindings, locals, hop, hsplit, hoperands⟩
 
 /-- Every saved label lies below the primitive instruction's operands. This
 strengthens stack inversion with the absolute heights needed by branches. -/
-theorem codeStack_head_bounds {C : context} {labels : List Label}
+theorem code_stack_head_bounds {C : context} {labels : List Label}
     {stack results : List valtype} {op : instr} {code : List instr}
     (concrete : Forall (fun ty => ty ≠ valtype.BOT) stack)
     (h : CodeStackTyped C labels stack (op :: code) results) :
@@ -178,7 +178,7 @@ theorem codeStack_head_bounds {C : context} {labels : List Label}
 
 /-- Normalizing the first generated typing rule also retains the typed
 continuation after replacing its operand suffix by the declared outputs. -/
-theorem codeStack_after {C : context} {labels : List Label}
+theorem code_stack_after {C : context} {labels : List Label}
     {stack results : List valtype} {op : instr} {code : List instr}
     (concrete : Forall (fun ty => ty ≠ valtype.BOT) stack)
     (h : CodeStackTyped C labels stack (op :: code) results) :
@@ -198,12 +198,12 @@ theorem codeStack_after {C : context} {labels : List Label}
       by simp only [heq, List.append_assoc],
       by simpa only [List.append_assoc] using CodeStackTyped.label height nesting hrest cont rest⟩
 
-theorem resultsTyped_take {s : store} {values : List val} (n : Nat)
+theorem results_typed_take {s : store} {values : List val} (n : Nat)
     (h : ResultsTyped s (values.map valueType) values) :
     ResultsTyped s ((values.take n).map valueType) (values.take n) := by
   simpa only [ResultsTyped, List.map_take] using List.forall₂_take n h
 
-theorem codeStack_after_bounds {C : context} {labels : List Label}
+theorem code_stack_after_bounds {C : context} {labels : List Label}
     {stack results : List valtype} {op : instr} {code : List instr}
     (concrete : Forall (fun ty => ty ≠ valtype.BOT) stack)
     (h : CodeStackTyped C labels stack (op :: code) results) :
@@ -229,4 +229,4 @@ theorem codeStack_after_bounds {C : context} {labels : List Label}
     · have hh := nesting target ht
       simp only [List.length_append, height]; omega
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

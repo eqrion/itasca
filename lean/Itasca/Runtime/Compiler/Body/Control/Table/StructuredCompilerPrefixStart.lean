@@ -10,7 +10,7 @@ Initial structured prefixes and the compiler function-start callback. The initia
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 theorem StructuredUniversalPrefix.initial {jumpTables : List Aeneas.Std.U32} {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -42,9 +42,9 @@ theorem StructuredUniversalElse.initial {jumpTables : List Aeneas.Std.U32} {A : 
   cases parentShapes
   exact .cons _ label (by simp [StructuredElseEvidence, SourceScope.initial]) .nil
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 theorem StructuredCompilerPrefix.initial {jumpTables : List Aeneas.Std.U32} {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
     (emit : List valtype → instr → List Bytecode → List valtype → Prop)
@@ -60,7 +60,7 @@ theorem StructuredCompilerPrefix.initial {jumpTables : List Aeneas.Std.U32} {A :
   · simp [ConcreteStack]
   · omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -68,7 +68,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual construction and successful function-start establish every component
@@ -123,6 +123,6 @@ theorem structured_compiler_function_start_prefix {jumpTables : List Aeneas.Std.
     (StructuredUniversalElse.initial started emit types functions returns _)
     (sourceFrame.sources.aligned initialSources) codeBudget controlBudget
     (by rw [sourceFrame.cursor, newCursor]; rfl) live
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

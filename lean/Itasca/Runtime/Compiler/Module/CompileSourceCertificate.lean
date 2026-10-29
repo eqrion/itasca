@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CompileSource
 import Itasca.Runtime.Compiler.Local.Source.SourceRun
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The canonical source syntax and exact code-region framing from an actual
@@ -68,4 +68,4 @@ theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.All
     (initialScheduler A limits w.codeStart) w.scheduler w.env bytes environment code tail coherent recombine initial run
   exact ⟨⟨environment, code, tail, run, coherent, recombine, raw, encoded, matched, valid,
     entryBounds, environmentProfile, functions, types, codeCount, header, entries, codeBound, moduleBound⟩⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

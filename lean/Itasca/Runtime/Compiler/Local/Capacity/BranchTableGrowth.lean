@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackProduction
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem TableTargetCode.code_growth {A : Type}
@@ -41,4 +41,4 @@ theorem compiler_br_table_code_growth {A : Type} (ops : runtime.platform.Alloc A
   obtain ⟨_,newCode,_,emittedEq,codeEq,_⟩ := emission
   rw [emittedEq] at growth
   simpa only [code,codeEq,List.length_append,List.length_singleton] using growth
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

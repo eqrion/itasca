@@ -15,7 +15,7 @@ Resolved br_table target layouts and their callback certificate. Per-target reso
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Resolve one physical table arm under any admissible completion plan. The
@@ -47,7 +47,7 @@ theorem TableTargetCode.resolve {A : Type}
     refine ⟨groups,label,guard,frame,source,index.val,prior,labelAt,future.loopLive kind,
       lookup,position,future,?_,?_⟩
     · simpa only [frameBranchWidth,kind] using operands
-    · rw [code,resolvedCode_append_code _ _ _ (prior.inside sites),future.loopTarget kind]
+    · rw [code,resolved_code_append_code _ _ _ (prior.inside sites),future.loopTarget kind]
       simp only [frameBranchWidth,kind]
   | forward index frame source fixups site lookup position kind operands code frames appended sitePosition =>
     obtain ⟨label,earlier,later,labelAt,live,previous,grouped⟩ := plans.before_mark fixups frames lookup position
@@ -60,9 +60,9 @@ theorem TableTargetCode.resolve {A : Type}
     refine ⟨_,label,guard,frame,source,index.val,prior,labelAt,live,lookup,position,future,?_,?_⟩
     · simpa only [width] using operands
     · rw [code,grouped,appended,width]
-      exact resolvedCode_new_br before.function.code.val earlier later ⟨frame.fixups.val,label.target⟩
+      exact resolved_code_new_br before.function.code.val earlier later ⟨frame.fixups.val,label.target⟩
         frame.height source frame.results core.num.U32.MAX site sitePosition (prior.inside sites)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -70,7 +70,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -109,7 +109,7 @@ theorem TableTargetsBuilt.resolved {A : Type}
       frameAt,position,future,sourceEq,armResolved⟩ := effect.resolve locals labels middleGroups sites middlePlans
     obtain ⟨scope,discarded,scopeAt,entered,input⟩ := inputs head (by simp)
     have shape := table_scope_shape paired index head.val scope frame scopeAt frameAt position
-    have labelShape := scopeLabels_lookup labelShapes scopeAt labelAt
+    have labelShape := scope_labels_lookup labelShapes scopeAt labelAt
     have layout := table_operand_layout shape labelShape entered input source before.height height sourceEq
     let fragment := branchInstructions frame.height source (frameBranchWidth frame) label.target
     have resolved : resolvedCode after.function.code.val groups =
@@ -118,7 +118,7 @@ theorem TableTargetsBuilt.resolved {A : Type}
     have lengthArm : middle.function.code.val.length =
         before.function.code.val.length+fragment.length := by
       have equation := congrArg List.length armResolved
-      simpa only [resolvedCode_length,List.length_append] using equation
+      simpa only [resolved_code_length,List.length_append] using equation
     have middleBound : middle.function.code.val.length ≤ after.function.code.val.length := by
       obtain ⟨suffix,code,_⟩ := rest.code_prefix
       simp only [code,List.length_append]
@@ -129,9 +129,9 @@ theorem TableTargetsBuilt.resolved {A : Type}
         labelAt,live,layout,?_,middleBound,?_⟩
       · refine ⟨resolvedCode before.function.code.val previous,tailCode,?_,?_,?_⟩
         · simpa only [List.append_assoc,fragment] using resolved
-        · simpa only [resolvedCode_length] using targetPC.symm
+        · simpa only [resolved_code_length] using targetPC.symm
         · simpa only [targetPC,fragment] using lengthArm
-      · simp only [resolvedCode_length]
+      · simp only [resolved_code_length]
         exact le_rfl
     refine ⟨previous,fragment++tailCode,priorPlans,resolved,?_⟩
     intro selected depth lookup
@@ -143,7 +143,7 @@ theorem TableTargetsBuilt.resolved {A : Type}
     | succ selected =>
       simp only [List.getElem?_cons_succ] at lookup ⊢
       exact tailEntries selected depth lookup
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -151,7 +151,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -207,11 +207,11 @@ theorem compiler_lower_table_layout_prefix {A : Type} (ops : runtime.platform.Al
   have order : before.function.code.val.length≤code.val.length := by simp [codeEq]
   have priorPlans : FramePlans before.function.code.val.length locals before.frames.val labels previous := emittedPlans.before order
   have headerResolved : resolvedCode code.val previous = resolvedCode before.function.code.val previous ++ [.JumpTable selector start len] := by
-    rw [codeEq,resolvedCode_append_code _ _ _ (priorPlans.inside sites)]
+    rw [codeEq,resolved_code_append_code _ _ _ (priorPlans.inside sites)]
   have dispatch : (resolvedCode after.function.code.val groups)[before.function.code.val.length]? =
       some (.JumpTable selector start len) := by
     rw [resolved,headerResolved,List.append_assoc]
-    simp [List.getElem?_append,resolvedCode_length]
+    simp [List.getElem?_append,resolved_code_length]
   have arithmetic := built.dispatch_arithmetic emittedDominance
   refine ⟨previous,start,len,selector,priorPlans,?_,header,built.table_dominance emittedDominance,extra,?_⟩
   swap
@@ -234,7 +234,7 @@ theorem compiler_lower_table_layout_prefix {A : Type} (ops : runtime.platform.Al
       rw [tables,startEq]
       rw [List.getElem?_append_right (by omega)]
       simpa only [Nat.add_sub_cancel_left] using entryAt
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -242,7 +242,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -298,6 +298,6 @@ theorem compiler_br_table_layout_prefix {A : Type} (ops : runtime.platform.Alloc
     · simpa only [depthsEq] using clearedEq
     · simpa only [codeEq,tablesEq] using targets
   · simpa only [codeEq] using resolved
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

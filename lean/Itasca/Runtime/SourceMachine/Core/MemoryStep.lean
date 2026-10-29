@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Memory.Semantics
 import Itasca.Runtime.SourceMachine.Core.Globals
 import Itasca.Runtime.SourceMachine.Core.Select
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt
 
 /-- Scalar loads resolve memory zero in the current instance and use unwrapped
@@ -41,4 +41,4 @@ def store (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr)
     else .stuck
   | _,_ => .stuck
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

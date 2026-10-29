@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CompileSource
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentComplete
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful canonical environment and tail validation expose their checked
@@ -74,4 +74,4 @@ theorem CompileWitness.segment_program {A : Type} {allocator : runtime.platform.
   have result := initializer_lower_segments allocator law _ _ _ _ rfl rfl rfl rfl elements dataOffsets w.lowered
   exact result.2.2.2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

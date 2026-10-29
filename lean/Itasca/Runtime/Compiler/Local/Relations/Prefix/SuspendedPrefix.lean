@@ -6,7 +6,7 @@ A suspended parent owns only the bytecode before its child-entry cursor. Later c
 Main declarations: `SuspendedPrefix`. A direct consumer is `Compiler.Local.Callbacks.Fixups.OpenPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A suspended parent owns only the bytecode before its child-entry cursor.
@@ -17,4 +17,4 @@ def SuspendedPrefix (types functions : List functype) (returns locals : List val
   cursor ≤ code.length ∧
     CodePrefix types functions returns locals (code.take cursor) labels before source start cursor stack
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

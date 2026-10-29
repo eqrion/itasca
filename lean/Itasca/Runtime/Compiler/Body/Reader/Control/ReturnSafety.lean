@@ -11,7 +11,7 @@ Normal return of a return reader callback.
 Main declarations: `compiler_return_reader_wasm2_total`. A direct consumer is `Compiler.Body.Reader.Control.ControlSafetyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_return_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
@@ -28,4 +28,4 @@ theorem compiler_return_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
   · exact WP.spec_mono (Wasm2.CallbackTrace.return_position state env index shape) (by simp)
   · intro out value read
     exact compiler_on_return_total ops law compiler out.core bodyFrame codeFits sourceFits coordinate
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

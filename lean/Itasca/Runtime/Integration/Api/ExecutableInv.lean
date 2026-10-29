@@ -11,7 +11,7 @@ import Itasca.Runtime.Store.Initialization.SegmentAccounting
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Initialization.SegmentCounts
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- Public execution invariant with the two reachable-store ledgers retained
@@ -27,7 +27,7 @@ namespace ExecutableInv
 theorem well_formed {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} (held : ExecutableInv view code store) :
     wf_store (Store.decodeStore view code store) :=
-  Store.decodeStore_wf view code store held.shape held.storeSyntax
+  Store.decode_store_wf view code store held.shape held.storeSyntax
 
 /-- Every store satisfying the public invariant has the generated semantic
 store typing, including host functions. -/
@@ -44,4 +44,4 @@ theorem update {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretati
     held.capacities.metadata mutation.metadata.functions mutation.metadata.instances mutation.metadata.types mutation.metadata.identity⟩
 
 end ExecutableInv
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

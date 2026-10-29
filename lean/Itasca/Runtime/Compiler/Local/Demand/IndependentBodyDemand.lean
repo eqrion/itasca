@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Demand.ObservationDemand
 import Itasca.Profile.BodyVisitor
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- A canonical independent validator observation log. Invalid inputs map to
@@ -52,4 +52,4 @@ theorem independentBodyLog.of_valid (profile : ValidationProfile) (data : Slice 
   | Wasm1 => exact code.validate_body_with.wasm1_of_body recorder data env ctx index [] _ limits size body called
   | Wasm2 => exact called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

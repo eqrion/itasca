@@ -7,7 +7,7 @@ def copyInto {T : Type} [Inhabited T] (before source : List T) (dst src : Nat) :
   | 0 => before
   | count+1 => copyInto (before.set dst source[src]!) source (dst+1) (src+1) count
 
-theorem copyInto_length {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat) :
+theorem copy_into_length {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat) :
     (copyInto before source dst src count).length = before.length := by
   induction count generalizing before dst src with
   | zero => rfl

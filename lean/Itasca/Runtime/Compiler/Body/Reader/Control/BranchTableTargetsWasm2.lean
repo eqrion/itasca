@@ -8,7 +8,7 @@ Canonical accepted target checks retain a suffix obligation for every label, ind
 Main declarations: `reader_table_targets_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableInputsWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -57,4 +57,4 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
       obtain ⟨all,arity,length,decoded,targets,_,_,_,_⟩ := checked rfl
       exact ⟨count,first,selector,popped,all,arity,readSpec,popCall,popSpec.2.1,popSpec.2.2.1,
         length,by simpa only [popSpec.2.2.1] using decoded,targets⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -11,7 +11,7 @@ Normal return of extended and complete ordinary reader dispatch.
 Main declarations: `compiler_reader_extended_total` and `compiler_reader_wasm2_total`. A direct consumer is `Compiler.Body.Reader.Safety.ProfileOrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem compiler_reader_extended_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -82,4 +82,4 @@ theorem compiler_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
     have neq {a b : U8} (h : a ≠ b) : a.val ≠ b.val := fun he => h (UScalar.eq_of_val_eq he)
     exact ⟨neq h28,neq h37,neq h38,neq h208,neq h209,neq h210,neq h252,neq h253⟩)]
   exact compiler_reader_extended_total ops law compiler st data env ctx ready shape capacity opcode ordinary
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

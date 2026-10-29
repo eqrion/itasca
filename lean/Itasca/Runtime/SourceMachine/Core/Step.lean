@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Core.MemoryStep
 import Itasca.Runtime.SourceMachine.Memory.Decode
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 
 /-- Execute a scalar Core instruction. Pure integer/control instructions reuse
 the established transition; mutable instructions resolve their own store maps. -/
@@ -37,12 +37,12 @@ theorem instruction_load (s : _root_.store) (ambient : frame) (f : AFrame) (rest
     (after : List instr) (op : Memory.Load) (argument : memarg) :
     instruction s ambient f rest (op.source argument) after =
       load ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after op argument := by
-  simp only [instruction,Memory.Load.source,Memory.decodeLoad_descriptor]
+  simp only [instruction,Memory.Load.source,Memory.decode_load_descriptor]
 
 theorem instruction_store (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Store) (argument : memarg) :
     instruction s ambient f rest (op.source argument) after =
       store ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after op argument := by
-  simp only [instruction,Memory.Store.source,Memory.decodeStore_descriptor]
+  simp only [instruction,Memory.Store.source,Memory.decode_store_descriptor]
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

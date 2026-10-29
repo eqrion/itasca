@@ -4,7 +4,7 @@ import Itasca.Runtime.Spec.Wf
 positions independently of the compiler's counters. Vector values use adjacent
 low/high slots; every scalar or reference uses one slot. -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 
 def width : valtype → Nat
   | .V128 => 2
@@ -62,4 +62,4 @@ theorem slots_le_twice_length (ts : List valtype) : slots ts ≤ 2 * ts.length :
     simp only [List.length_cons, slots]
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

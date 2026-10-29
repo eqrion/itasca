@@ -6,7 +6,7 @@ Source-offset vector length after a successful emit operation.
 Main declarations: `compiler_emit_source_length_success`. A direct consumer is `Compiler.Local.Relations.Control.BranchSuccessEmit`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 theorem compiler_emit_source_length_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
@@ -46,4 +46,4 @@ theorem compiler_emit_source_length_success {A : Type} (ops : runtime.platform.A
         simp [sourceEq]
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

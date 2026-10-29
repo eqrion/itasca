@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A forward branch carries the complete compiler invariant into terminal
@@ -98,4 +98,4 @@ theorem StructuredCompilerPrefix.branch_if_forward {jumpTables : List Aeneas.Std
     layout conditionSlot resumePosition
   simpa only [sourceTypes.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -25,7 +25,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem step_head_supported_host_site
  {M P F A : Type}
@@ -35,22 +35,22 @@ theorem step_head_supported_host_site
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : instr) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : instr) (after : List instr)
     (head : DispatchHead op)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
-    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code := op::after} compiled C targets next output)
+    (point : Machine.FramePoint (Store.decodeStore view code store) raw {f with code := op::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := op::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : Machine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := op::after}::rest,[]⟩ expected raw.pc.val false)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store)
+    (compiledFunctions : Machine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := op::after}::rest,[]⟩) :
     StructuredHostSite view code exec store expected raw.pc.val false ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -59,33 +59,33 @@ theorem step_head_supported_host_site
   cases head with
   | ordinary operation =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_ordinary_advance memory hooks floats allocator view code exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.step_ordinary_advance memory hooks floats allocator view code exec store platform index raw inst compiled
       C targets next output ambient f rest operation after last hf hi hc program slots point expected machine)
     intro out effect
     exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds effect.2.1 effect.1 effect.2.2.2
   | numeric operation =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_numeric_execution_owned memory hooks floats allocator view code exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.step_numeric_execution_owned memory hooks floats allocator view code exec store platform index raw inst compiled
       C targets next output ambient f rest operation after last hf hi hc program slots point expected machine)
     intro out effect
     obtain ⟨sameStore,samePlatform,success | trapped⟩ := effect
     · obtain ⟨status,pc,g,machine,simulation,ownership,bounded⟩ := success
-      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
     · obtain ⟨trap,status,kind,count,positive,steps⟩ := trapped
       apply SupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) status (by simp only [sameStore])
       exact Or.inl ⟨⟨trap,rfl,Or.inl (by rcases kind with rfl | rfl <;> simp [FloatCoreTrap])⟩,count,positive,steps⟩
   | loop bt body =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_loop_execution memory hooks floats allocator laws.interruptsReturn platform index view code exec store raw inst compiled
+    apply WP.spec_mono (Machine.step_loop_execution memory hooks floats allocator laws.interruptsReturn platform index view code exec store raw inst compiled
       ambient f rest bt body after C targets next output hi slots last hf hc program point expected machine)
     intro out effect
     obtain ⟨sameStore,success | stopped⟩ := effect
     · obtain ⟨status,pc,g,pending,machine,simulation,ownership,bounded⟩ := success
-      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
     · apply SupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) stopped.1 (by simp only [sameStore])
       exact Or.inr (Or.inl ⟨rfl,_,stopped.2⟩)
   | call functionIndex =>
-    rcases StructuredMachine.step_call_execution memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code exec store platform index raw inst compiled
+    rcases Machine.step_call_execution memory hooks floats allocator laws.allocCorrect laws.interruptsReturn view code exec store platform index raw inst compiled
       C targets next output ambient f rest functionIndex after compiledFunctions functionTyping last hf hi hc slots program point expected machine with host | operation
     · obtain ⟨address,function,host,offset,fetched,mapped,issued,hostCode⟩ := host
       exact Or.inl (.ready ⟨index,raw,inst,compiled,C,targets,next,output,last,hf,hi,hc,program,slots,moduleEq,point,machine,owned.values⟩ (Or.inl ⟨functionIndex,offset,address,function,host,rfl,fetched,mapped,issued,hostCode⟩))
@@ -103,66 +103,66 @@ theorem step_head_supported_host_site
         exact Or.inr (Or.inr ⟨index,raw,inst,compiled,last,hf,hi,hc,Or.inl (rejected error status)⟩)
   | return_ =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_return_execution memory hooks floats allocator view code exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.step_return_execution memory hooks floats allocator view code exec store platform index raw inst compiled
       C targets next output ambient f rest after last hf hi hc program slots point expected machine)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,source,machine,simulation,ownership,ambientEq,bounded⟩ := effect
     exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status ⟨pc,false,source,machine,simulation,ownership,ambientEq,bounded⟩
   | unreachable =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Unreachable.step_unreachable_core_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.Unreachable.step_unreachable_core_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
       C targets next output view code ambient f rest after last hf hi hc slots point expected machine program)
     intro out effect
     obtain ⟨sameStore,samePlatform,pc,frames,success | trapped⟩ := effect
     · obtain ⟨status,machine,simulation,ownership⟩ := success
-      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl (fun _ h => h))
+      exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl (fun _ h => h))
     · apply SupportedStepOutcome.failure (by rw [sameStore]; exact .refl_of_shape shaped sourceSyntax bounds) trapped.1 (by simp only [sameStore])
       exact Or.inl ⟨⟨.Unreachable,rfl,Or.inl (by simp [FloatCoreTrap])⟩,trapped.2⟩
   | float32 bits =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.FloatConstant.step_float32_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.FloatConstant.step_float32_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
       C targets next output view code ambient f rest (Builtins.floatOfBits 32 bits.val) after last hf hi hc slots point expected machine program)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,g,machine,simulation,ownership,bounded⟩ := effect
-    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
   | float64 bits =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.FloatConstant.step_float64_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.FloatConstant.step_float64_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
       C targets next output view code ambient f rest (Builtins.floatOfBits 64 bits.val) after last hf hi hc slots point expected machine program)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,g,machine,simulation,ownership,bounded⟩ := effect
-    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
   | select =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Select.step_select_core_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.Select.step_select_core_execution_owned memory hooks floats allocator exec store platform index raw inst compiled
       C targets next output view code ambient f rest after last hf hi hc slots point expected machine program)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,g,machine,simulation,ownership,bounded⟩ := effect
-    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
   | globalGet globalIndex =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Global.step_globalGet_core_execution_owned memory hooks floats allocator platform index view code exec store raw inst compiled
+    apply WP.spec_mono (Machine.Global.step_global_get_core_execution_owned memory hooks floats allocator platform index view code exec store raw inst compiled
       ambient f rest after globalIndex.val C targets next output hi moduleEq slots last hf hc program small point expected machine)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,g,machine,simulation,ownership,bounded⟩ := effect
-    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+    exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
   | globalSet globalIndex =>
     apply Or.inr
     have pcBound : raw.pc.val < U32.max := by
-      rcases StructuredMachine.Global.corePoint_globalSet_head globalIndex.val after point.code with ⟨target,forward,fetch,tail⟩ | operation
+      rcases Machine.Global.core_point_global_set_head globalIndex.val after point.code with ⟨target,forward,fetch,tail⟩ | operation
       · exact program.fetched_bound _ fetch
       · obtain ⟨ty,idx,src,front,indexEq,lookup,values,position,fetch,tail⟩ := operation
         exact program.fetched_bound _ fetch
-    have mutation := StructuredMachine.Global.coreFramePoint_globalSet_store_mutation memory hooks floats allocator platform index view code exec store raw inst compiled
+    have mutation := Machine.Global.core_frame_point_global_set_store_mutation memory hooks floats allocator platform index view code exec store raw inst compiled
       ambient f rest after globalIndex.val C targets next output hi moduleEq slots last hf hc pcBound point machine.typed
-    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (StructuredMachine.Global.step_globalSet_core_execution_owned memory hooks floats allocator platform index view code exec store raw inst compiled
+    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (Machine.Global.step_global_set_core_execution_owned memory hooks floats allocator platform index view code exec store raw inst compiled
       ambient f rest after globalIndex.val C targets next output hi moduleEq slots last hf hc program point expected machine)
     rw [run,WP.spec_ok] at mutation ⊢
     obtain ⟨status,samePlatform,metadata,extension,pc,g,machine,simulation,ownership,bounded⟩ := effect
-    exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+    exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
   | load operation argument =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Memory.step_memory_load_execution_owned memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
+    apply WP.spec_mono (Machine.Memory.step_memory_load_execution_owned memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
       ambient f rest after operation argument C targets next output hi moduleEq slots last hf hc point expected machine program)
     intro out effect
     obtain ⟨samePlatform,changed,metadata,extension,success | trapped⟩ := effect
@@ -171,7 +171,7 @@ theorem step_head_supported_host_site
         · rw [same]; exact .unchanged
         · exact .memory issued mutation
       obtain ⟨status,pc,g,machine,simulation,ownership,bounded⟩ := success
-      exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+      exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
     · have mutation : CoreStoreMutation view ⟨Store.decodeStore view code store,ambient,{f with code := operation.source argument::after}::rest,[]⟩ store out.2.2.1 := by
         rcases changed with same | ⟨address,object,issued,mutation⟩
         · rw [same]; exact .unchanged
@@ -180,7 +180,7 @@ theorem step_head_supported_host_site
       exact Or.inl ⟨⟨.MemoryOutOfBounds,rfl,Or.inl (by simp [FloatCoreTrap])⟩,trapped.2.2⟩
   | store operation argument =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.Memory.step_memory_store_execution_owned memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
+    apply WP.spec_mono (Machine.Memory.step_memory_store_execution_owned memory hooks floats allocator platform index view laws.memoryLaws code exec store raw inst compiled
       ambient f rest after operation argument C targets next output hi moduleEq slots last hf hc point expected machine program)
     intro out effect
     obtain ⟨samePlatform,changed,metadata,extension,success | trapped⟩ := effect
@@ -189,7 +189,7 @@ theorem step_head_supported_host_site
         · rw [same]; exact .unchanged
         · exact .memory issued mutation
       obtain ⟨status,pc,g,machine,simulation,ownership,bounded⟩ := success
-      exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (StructuredMachine.Advance.of_frame machine simulation ownership rfl bounded)
+      exact SupportedStepOutcome.success (core_mutation_cumulative_of_shape view code store _ _ shaped sourceSyntax bounds owned.core mutation) status (Machine.Advance.of_frame machine simulation ownership rfl bounded)
     · have mutation : CoreStoreMutation view ⟨Store.decodeStore view code store,ambient,{f with code := operation.source argument::after}::rest,[]⟩ store out.2.2.1 := by
         rcases changed with same | ⟨address,object,issued,mutation⟩
         · rw [same]; exact .unchanged
@@ -244,22 +244,22 @@ theorem step_ready_supported_host_site
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
-    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw f compiled C targets next output)
+    (point : Machine.FramePoint (Store.decodeStore view code store) raw f compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false)
+    (machine : Machine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false)
     (ready : ReadySource f)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩) :
+    (compiledFunctions : Machine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩) :
     StructuredHostSite view code exec store expected raw.pc.val false ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
@@ -269,7 +269,7 @@ theorem step_ready_supported_host_site
     apply Or.inr
     have labels : f.labels=[] := by simpa only [ReadySource,source] using ready
     have same : {f with code:=[],labels:=[]}=f := by rw [←source,←labels]
-    apply WP.spec_mono (StructuredMachine.step_function_end_execution memory hooks floats allocator view code exec store platform index raw inst compiled
+    apply WP.spec_mono (Machine.step_function_end_execution memory hooks floats allocator view code exec store platform index raw inst compiled
       C targets next output ambient f rest last hf hi hc program slots (by simpa only [same] using point) expected (by simpa only [same] using machine))
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,nextSource,fresh,simulation,ownership,ambientEq,bounded⟩ := effect
@@ -277,7 +277,7 @@ theorem step_ready_supported_host_site
     exact ⟨pc,false,nextSource,fresh,by simpa only [same] using simulation,by simpa only [same] using ownership,ambientEq,by simpa only [same] using bounded⟩
   | cons op after =>
     have same : {f with code:=op::after}=f := by rw [←source]
-    have head := StructuredMachine.frame_head_coverage point ready op after source
+    have head := Machine.frame_head_coverage point ready op after source
     have result := step_head_supported_host_site memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output
       ambient f rest op after head last hf hi hc program slots moduleEq small (by simpa only [same] using point) expected
       (by simpa only [same] using machine) shaped sourceSyntax bounds compiledFunctions functionTyping (by simpa only [same] using owned)
@@ -291,22 +291,22 @@ theorem step_frame_supported_host_site
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (moduleEq : f.module = Store.decodeInstance store inst)
     (small : ∀ object ∈ store.globals.val, object.ty.valtype = .I32 ∨ object.ty.valtype = .F32 → object.lo.val < 2^32)
     (pending : Bool)
-    (point : StructuredMachine.ControlPoint (Store.decodeStore view code store) raw f compiled C targets next output pending)
+    (point : Machine.ControlPoint (Store.decodeStore view code store) raw f compiled C targets next output pending)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val pending)
+    (machine : Machine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val pending)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩) :
+    (compiledFunctions : Machine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩) :
     StructuredHostSite view code exec store expected raw.pc.val pending ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val pending
@@ -314,20 +314,20 @@ theorem step_frame_supported_host_site
   cases point with
   | jump target fetched continuation =>
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_pending_execution memory hooks floats allocator platform index view code exec store raw inst compiled
+    apply WP.spec_mono (Machine.step_pending_execution memory hooks floats allocator platform index view code exec store raw inst compiled
       ambient f rest C targets next output hi slots last hf hc program (.jump target fetched continuation) expected machine)
     intro out effect
     obtain ⟨status,sameStore,samePlatform,pc,retained,simulation⟩ := effect
     exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore status ⟨pc.val,false,_,retained,simulation,fun _ h=>h,rfl,fun _ h=>h⟩
   | ready point =>
     obtain ⟨count,g,labels,stop,types,chain,bound,represented,continuation,retained,metadata,done⟩ :=
-      StructuredMachine.normalize_execution view code store exec raw index compiled C targets next output ambient f rest
+      Machine.normalize_execution view code store exec raw index compiled C targets next output ambient f rest
         last hf program slots point expected machine
-    have nextProgram : FrameProgram store raw compiled (g.locals.map Code.valueType) g.resultTypes C.FUNCS := program.reposition raw.pc metadata
+    have nextProgram : FrameProgram store raw compiled (g.locals.map Compiler.valueType) g.resultTypes C.FUNCS := program.reposition raw.pc metadata
     rcases done with skip | ready
     · obtain ⟨target,forward,fetched,tail⟩ := skip
       apply Or.inr
-      apply WP.spec_mono (StructuredMachine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled
+      apply WP.spec_mono (Machine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled
         ambient g rest expected C labels stop types target last hf hi hc forward fetched represented tail retained nextProgram)
       intro out effect
       have outcome := SupportedStepOutcome.unchanged_success (allocator:=allocator) (hooks:=hooks) (exec:=exec) (platform:=platform)
@@ -349,12 +349,12 @@ theorem step_supported_host_site
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (source : Abs.AState) (expected : List valtype) (pc : Nat) (pending : Bool)
+    (source : SourceMachine.AState) (expected : List valtype) (pc : Nat) (pending : Bool)
     (decoded : source.store = Store.decodeStore view code store)
     (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
-    (owned : Abs.Ownership.StatefulOwned (Store.ownershipBounds store) source)
-    (invariant : StructuredMachine.Execution view code store exec source expected pc pending)
+    (compiledFunctions : Machine.CompiledFunctions code store) (functionTyping : CoreFunctionsTyped view code store)
+    (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) source)
+    (invariant : Machine.Execution view code store exec source expected pc pending)
     (active : 0 < exec.frames.length) :
     StructuredHostSite view code exec store expected pc pending source ∨
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
@@ -397,4 +397,4 @@ theorem step_supported_host_site
       simpa only [position] using outcome.widen program.fetchBound
 
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

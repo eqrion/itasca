@@ -51,7 +51,7 @@ theorem float_unary_loop {F : Type} (floats : runtime.platform.FloatOps F)
       have range := lane_range width.val index.val less
       step with lane x width index positive widthBound (by omega) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by
-        rw [laneBits_toNat]
+        rw [lane_bits_to_nat]
         exact aEq
       with_unfolding_all change (Aeneas.Std.bind (floatUnaryWord floats width unary a) _) ⦃ _ ⦄
       step with wordLaw index.val less a aBits as ⟨value,allowed⟩
@@ -167,7 +167,7 @@ theorem float_unary_loop_sound {F : Type} (floats : runtime.platform.FloatOps F)
         floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j result.bv).toNat ∈
           floatUnaryChoices (lsize (lanetype_Fnn ty)) op
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j x.bv).toNat) ⦄ := by
-  have widthEq := floatCompareWidth_val ty
+  have widthEq := float_compare_width_val ty
   rw [←widthEq]
   apply float_unary_loop floats x 0#u128 (floatCompareWidth ty) (floatUnaryIndex op) 0#u32
     (by cases ty <;> decide) (by cases ty <;> decide)

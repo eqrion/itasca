@@ -19,7 +19,7 @@ Recorded public invocation outcomes and their source resource causes. The cause 
 section
 
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Resource and boundary errors retain the original public selection or the
@@ -38,7 +38,7 @@ def ExecutableWorldInvocationSourceCause {M P F A : Type}
         memory hooks floats allocator view code Inv store Spec.invocationFrame address signature args after error) ∨
      ∃ identity,function.code=.Host identity ∧ InitialHostSourceResourceCause hooks allocator store after identity signature error)
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end
 
@@ -48,7 +48,7 @@ section
 
 /-! Canonical public invocation construction: exact recording, full invariant,
 source correspondence and classified resource causes share all witnesses. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The construction for any invariant that refines `ExecutableInv`, survives store
@@ -178,9 +178,9 @@ theorem invoke_executable_world_source_resources {M P F A : Type}
         ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
         ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error ⦄div :=
   Platform.Recording.erase_dspec _ _ _
-    (recordedInvokeWith_erase memory hooks floats allocator exec store platform address args results [])
+    (recorded_invoke_with_erase memory hooks floats allocator exec store platform address args results [])
     (invoke_executable_world_recorded_resources memory hooks floats allocator view laws code
       callbacks exec store platform valid address args results issued argumentIssued initial invoked)
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration
 
 end

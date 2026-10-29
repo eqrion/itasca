@@ -27,7 +27,7 @@ theorem SlotPrefix.simd_result (base : Nat) (words : List U64) (position : Nat)
 
 theorem module_memories_issued {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (C : context)
-    (bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C) :
+    (bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C) :
     ∀ address, inst.memories.val[0]? = some address →
       ∃ object, store.memories.val[address.index.val]? = some object := by
   intro address mapped
@@ -50,8 +50,8 @@ theorem FrameProgram.simd_capacity {M : Type} {store : runtime.store.Store M}
     raw.base.val + operand.val + wa.val + wb.val ≤ Usize.max ∧
     (wc = 2#u32 → raw.base.val + operand.val + wa.val + wb.val < Usize.max) ∧
     raw.base.val + operand.val + wr.val ≤ slots.length := by
-  obtain ⟨input,output,_⟩ := Code.simd_valid_bounds compiled instruction opcode operand operand entry wa wb wc wr
-    view shape (Code.well_formed_fetched compiled program.checked raw.pc.val instruction fetch)
+  obtain ⟨input,output,_⟩ := Compiler.simd_valid_bounds compiled instruction opcode operand operand entry wa wb wc wr
+    view shape (Compiler.well_formed_fetched compiled program.checked raw.pc.val instruction fetch)
   exact simd_frame_capacity slots raw.base compiled.slot_count operand operand wa wb wc wr allocated input output
 
 end Itasca.Runtime.Interp

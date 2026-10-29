@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterElse
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -84,4 +84,4 @@ theorem compiler_else_live_success {A : Type} (ops : runtime.platform.Alloc A)
       · simpa [patchedEq, emittedEq] using hr
       · simpa [hcode, patchedEq, emittedEq, codeAppend, BranchKind.instruction] using codeSet
       · simp [hframes, patchedEq, emittedEq, backEq]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -112,7 +112,7 @@ private theorem extend_mem_inv {a b : meminst} (h : Extend_meminst a b) :
   | mk_Extend_meminst n mx xs n' ys hn hl ha hb =>
     exact ⟨n, mx, xs, n', ys, rfl, rfl, hn, hl, ha, hb⟩
 
-private theorem option_uN_injective {a b : Option Nat}
+private theorem option_u_n_injective {a b : Option Nat}
     (h : OMap uN.mk_uN a = OMap uN.mk_uN b) : a = b := by
   cases a <;> cases b <;> simp_all [OMap]
 
@@ -124,7 +124,7 @@ theorem extend_mem_trans {a b c : meminst}
   injection hty with hlim
   injection hlim with hnEq hmx
   injection hnEq with hnEq
-  have hmEq := option_uN_injective hmx
+  have hmEq := option_u_n_injective hmx
   subst n₂; subst mx₂; subst ys₂
   exact .mk_Extend_meminst _ _ _ _ _ (Nat.le_trans hn hn') (Nat.le_trans hl hl') ha hc
 
@@ -145,7 +145,7 @@ theorem extend_table_trans {a b c : tableinst}
   injection hty with hlim hrt
   injection hlim with hnEq hmx
   injection hnEq with hnEq
-  have hmEq := option_uN_injective hmx
+  have hmEq := option_u_n_injective hmx
   subst n₂; subst mx₂; subst ys₂; subst rt₂
   exact .mk_Extend_tableinst _ _ _ _ _ _ (Nat.le_trans hn hn') (Nat.le_trans hl hl') ha hc
 

@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 /-! Integer lowering returns normally even for missing operands. Only emission
 capacity and source-coordinate bounds are required; operand errors remain
 ordinary visitor errors. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_operand_total {A} (ops : runtime.platform.Alloc A)
@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_numeric_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (op : Abs.Numeric.Instruction)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -26,7 +26,7 @@ open Aeneas Aeneas.Std
   by_cases live : compiler.reachable = true
   · rw [lower_numeric_dispatch ops compiler state op live]
     unfold numericLowering
-    rw [integerOpcode_binary]
+    rw [integer_opcode_binary]
     simp only [bind_ok]
     have depthEq : (if decide (op.arity = 2) = true then Result.ok 2#usize else Result.ok 1#usize) =
         Result.ok (integerDepth op) := by simp [integerDepth]; split <;> rfl
@@ -43,7 +43,7 @@ open Aeneas Aeneas.Std
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok right =>
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          integerInstruction_make, core.option.Option.ok_or]
+          integer_instruction_make, core.option.Option.ok_or]
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state
         (integerOpcode op) 0#u32 0#u32 0#u128 =
@@ -53,4 +53,4 @@ open Aeneas Aeneas.Std
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

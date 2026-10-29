@@ -4,13 +4,13 @@ import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcce
 /-!
 Instruction-check acceptance of emitted integer operations.
 
-Main declarations: `integerInstruction_scalar` and `numeric_instruction_accepts`. A direct consumer is `Compiler.Local.Checking.NumericInstructionPrefix`.
+Main declarations: `integer_instruction_scalar` and `numeric_instruction_accepts`. A direct consumer is `Compiler.Local.Checking.NumericInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
-theorem integerInstruction_scalar (op : Instruction) (dst a b : U32) :
+theorem integer_instruction_scalar (op : Instruction) (dst a b : U32) :
     runtime.bytecode.Instr.scalar (integerInstruction op dst a b) = .ok (some (integerOpcode op,dst,a,b)) := by
   cases op with
   | binary ty operator => cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;> rfl
@@ -39,7 +39,7 @@ theorem numeric_instruction_accepts (function : runtime.bytecode.CompiledFunctio
     runtime.bytecode.CompiledFunction.instruction_valid function (integerInstruction op left left right) = .ok true := by
   rw [slots_append,slots_integer_replicate] at inputBound
   have positive : 0 < op.arity := by cases op <;> simp [Instruction.arity]
-  apply scalar_instruction_accepts function _ (integerOpcode op) left left right (integerInstruction_scalar op left left right)
+  apply scalar_instruction_accepts function _ (integerOpcode op) left left right (integer_instruction_scalar op left left right)
   all_goals omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

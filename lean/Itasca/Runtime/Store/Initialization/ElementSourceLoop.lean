@@ -28,7 +28,7 @@ theorem eval_const_source {M P F A : Type}
     (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (codeFound : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code expr ty)
+    (compiled : Compiler.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (bindings : InitializerBindings store inst)
     (sourceStore : _root_.store) (sourceInstance : moduleinst)

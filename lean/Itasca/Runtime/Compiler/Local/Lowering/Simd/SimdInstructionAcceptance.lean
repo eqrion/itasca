@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.SimdInstructionAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 private theorem source_width_some (ty : valtype) :
@@ -12,7 +12,7 @@ private theorem source_width_none : (simdSourceWidth none).val = 0 := rfl
 
 /-- The checker reads the first three source operand widths. Their sum never
 exceeds the full independently typed input region. -/
-theorem simdSourceShape_input_bound (input output : List valtype) :
+theorem simd_source_shape_input_bound (input output : List valtype) :
     (simdSourceShape input output).1.val+(simdSourceShape input output).2.1.val+
       (simdSourceShape input output).2.2.1.val ≤ slots input := by
   cases input with
@@ -28,7 +28,7 @@ theorem simdSourceShape_input_bound (input output : List valtype) :
         omega
 
 /-- The first result width is bounded by the complete source output region. -/
-theorem simdSourceShape_output_bound (input output : List valtype) :
+theorem simd_source_shape_output_bound (input output : List valtype) :
     (simdSourceShape input output).2.2.2.val ≤ slots output := by
   cases output with
   | nil => simp [simdSourceShape,source_width_none,slots]
@@ -52,8 +52,8 @@ theorem SimdEmission.instructions_accept {immediates constants C before source e
     simp only [List.mem_singleton] at member
     subst selected
     have projection := make_simd_roundtrip_bounded opcode operand operand entry instruction meaning.opcode_bound constructed
-    have inputWidths := simdSourceShape_input_bound input output
-    have outputWidth := simdSourceShape_output_bound input output
+    have inputWidths := simd_source_shape_input_bound input output
+    have outputWidth := simd_source_shape_output_bound input output
     dsimp only [simdSourceShape] at inputWidths outputWidth
     have row := (List.getElem?_eq_some_iff.mp metadata).1
     rw [immediateTable] at row
@@ -71,4 +71,4 @@ theorem SimdEmission.instructions_accept {immediates constants C before source e
     simp only [slots_append,slots,width] at outputs
     exact (CoreInstructionBounds.constV128 (by omega) row).accepts
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

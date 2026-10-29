@@ -38,7 +38,7 @@ theorem zero_load_source (op : PlainLoad) (zero : op ≠ .full) (address value :
     rw [effect]
     refine ⟨rfl,?_⟩
     dsimp only
-    rw [vectorLoadBytes_source _ _ _ op.small fits]
+    rw [vector_load_bytes_source _ _ _ op.small fits]
     simpa only [inv_vbytes_,inv_ibytes_,Store.decodeBytes,List.map_take,List.map_drop] using source
   · rw [if_neg fits] at source effect
     rw [effect]

@@ -14,7 +14,7 @@ Typed-pop prefixes and safe control-scope entry. EntryPrefix carries the paramet
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem popped_prefix {poly before value after}
@@ -100,7 +100,7 @@ theorem typed_pop_prefix {poly before expected result after}
       exact ⟨trivial, trivial, segment, values, ⟨[], by simp⟩⟩
     · cases part <;> step as ⟨ty, tyEq⟩
       all_goals exact pop_types_prefix st outer segment _ values base
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -108,7 +108,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 
@@ -171,8 +171,8 @@ def EntryPrefix (before after : code.OpIterState) : Prop :=
       rcases restPrefix with ⟨suffix,suffixEq⟩
       exact ⟨suffix, by rw [middleValues,values,← suffixEq,List.append_assoc]⟩
     · step*
-end Itasca.Runtime.Code
-namespace Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
 
 theorem reader_enter_prefix_wasm2 {data env locals index st out bt} {form : Frames.Form}
@@ -208,7 +208,7 @@ theorem reader_enter_prefix_wasm2 {data env locals index st out bt} {form : Fram
         initial values base ⟨p.opened.shape.core.ordered, p.opened.shape.core.bounded⟩ capacity
       rw [rest, WP.spec_ok] at effect
       exact effect rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -216,7 +216,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_enter_signature_wasm2 {data env locals index st out bt} {form : Frames.Form}
@@ -279,6 +279,6 @@ theorem compiler_enter_reader_total {A} (ops : runtime.platform.Alloc A)
       controls selected bound height coordinate pcBound codeFits sourceFits mapsFit framesFit
       (by rcases initial with rfl | rfl | rfl <;> simp [Frames.Form.kind])
     rcases initial with rfl | rfl | rfl <;> exact normal
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

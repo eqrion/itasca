@@ -7,7 +7,7 @@ Checked syntactic inclusion of the scalar, stateful and indirect-call families, 
 Main declarations: `OrdinaryEmbedding`. A direct consumer is `Compiler.Body.Control.Table.IndexedTablePointControl`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Checked syntactic inclusion of the scalar, stateful and indirect-call
@@ -21,4 +21,4 @@ class OrdinaryEmbedding (pairs : List (U32 × U32)) (C : context)
   indirect : ∀ {input instruction code output}, IndirectCallEmission pairs C input instruction code output →
     emit input instruction code output
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

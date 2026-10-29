@@ -8,7 +8,7 @@ Publication of control maps when entering and closing scopes, retaining source c
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Physical frame owners of still-open control maps, in nesting order. -/
@@ -76,7 +76,7 @@ theorem ControlMapPublication.initial {A : Type} (compiler : runtime.compiler.Fu
     subst index
     simp [active] at inactive
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -84,7 +84,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Popping the innermost owner and recording its bounded exit preserves all
@@ -180,7 +180,7 @@ theorem ControlMapPublication.close_last_publish {A : Type} {before after : runt
     have inactive : other ∉ activeControlMaps before := by simpa only [owners,List.mem_singleton] using Ne.symm same
     exact (held.closed other map lookup inactive).publish code start finish
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -188,7 +188,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Appending a fresh map and its uniquely indexed owner preserves every
@@ -255,6 +255,6 @@ theorem ControlMapPublication.push {A : Type} {before after : runtime.compiler.F
       exact List.mem_append_left _ member
     exact (held.closed index map lookup oldInactive).grow code start finish
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

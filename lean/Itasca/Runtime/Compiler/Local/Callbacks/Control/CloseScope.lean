@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseBlock
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 /-- Reachability restored by END, including the implicit empty else arm. -/
 def scopeExitLive (reachable : Bool) (frame : runtime.compiler.Frame) : Bool :=
@@ -87,4 +87,4 @@ def scopeExitLive (reachable : Bool) (frame : runtime.compiler.Frame) : Bool :=
       scalar_tac
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

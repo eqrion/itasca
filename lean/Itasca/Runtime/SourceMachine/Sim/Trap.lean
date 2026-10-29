@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Sim.Trace
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 theorem wf_trap : Forall wf_admininstr [admininstr.TRAP] := by
@@ -49,12 +49,12 @@ theorem trap_labels (s : store) (f : frame) (labels : List Label)
     have ht : Forall wf_val (values.take label.height) := fun v hm => hv v (List.mem_of_mem_take hm)
     obtain ⟨n, inner⟩ := trap_values s f (values.drop label.height) after hs hf
       (fun v hm => hv v (List.mem_of_mem_drop hm)) ha
-    have first := stepsHN_decodeLabels
-      (stepsHN_instrs (stepsHN_label inner label.arity label.cont hc.1) []
+    have first := steps_hn_decode_labels
+      (steps_hn_instrs (steps_hn_label inner label.arity label.cont hc.1) []
         (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hc.2))
       labels (values.take label.height) hr ht
-    have second := stepH_decodeLabels
-      (stepH_instrs (trap_label s f label.arity label.cont hs hf hc.1) []
+    have second := step_h_decode_labels
+      (step_h_instrs (trap_label s f label.arity label.cont hs hf hc.1) []
         (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hc.2))
       labels (values.take label.height) hr ht
     obtain ⟨m, tail⟩ := ih (values.take label.height) (label.after.map admininstr_instr) hr ht (wf_instrs hc.2)
@@ -82,10 +82,10 @@ theorem trap_frames (s : store) (ambient : frame) (frames : List AFrame)
     have hr : Forall FrameWf rest := fun f hm => hf f (by simp [hm])
     obtain ⟨n, inner⟩ := trap_labels s f.toFrame f.labels f.vals (f.code.map admininstr_instr)
       hs hw hl hv (wf_instrs hc)
-    have first := stepsHN_decodeFrames ambient rest
-      (stepsHN_frame inner f.arity (activeFrame ambient rest) (activeFrame_wf ha hr)) ha hr
-    have second := stepH_decodeFrames ambient rest
-      (trap_frame s (activeFrame ambient rest) f.toFrame f.arity hs (activeFrame_wf ha hr) hw) ha hr
+    have first := steps_hn_decode_frames ambient rest
+      (steps_hn_frame inner f.arity (activeFrame ambient rest) (active_frame_wf ha hr)) ha hr
+    have second := step_h_decode_frames ambient rest
+      (trap_frame s (activeFrame ambient rest) f.toFrame f.arity hs (active_frame_wf ha hr) hw) ha hr
     obtain ⟨m, tail⟩ := ih hr
     exact ⟨n + (m + 1), by
       simpa [decodeFrames, frameContext] using first.trans (StepsHN.cons second tail)⟩
@@ -105,8 +105,8 @@ theorem unreachable_simulation (s : store) (ambient : frame) (f : AFrame)
   have ht := wf_config_make hs hf wf_trap
   have step : StepH ⟨⟨s, f.toFrame⟩, [.UNREACHABLE]⟩ [] ⟨⟨s, f.toFrame⟩, [.TRAP]⟩ :=
     .step (.pure _ _ _ (.unreachable .admininstr_case_1 .admininstr_case_73) hw ht)
-  have lifted := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
+  have lifted := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
       f.labels f.vals hl hv) ha hr
   have hframes : Forall FrameWf ({ f with code := after } :: rest) := by
     intro frame hm
@@ -119,4 +119,4 @@ theorem unreachable_simulation (s : store) (ambient : frame) (f : AFrame)
   simpa [decode, decodeFrames, vals, instrContext, AFrame.arity, AFrame.toFrame, admininstr_instr] using
     StepsHN.cons lifted tail
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

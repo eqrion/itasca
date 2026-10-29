@@ -8,7 +8,7 @@ Lookup of a defined function from its compilation certificate.
 Main declarations: `CompiledFunctions.defined`. A direct consumer is `Interp.Machine.Calls.IndirectSelected`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
@@ -23,11 +23,11 @@ theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
       inst.module.functions.val[functionIndex.val]? = some compiled ∧
       store.types.val[function.signature.val]? = some signature ∧
       FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType) ∧
-      FunctionCode (Code.moduleFunctionContext inst.module
+      FunctionCode (Compiler.moduleFunctionContext inst.module
         (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType))
         (signature.params.val.map sourceType) declared (signature.results.val.map sourceType) body compiled epilogue ∧
-      Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)
-        (Code.moduleFunctionContext inst.module (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType)) ∧
+      SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)
+        (Compiler.moduleFunctionContext inst.module (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType)) ∧
       (Store.decodeStore view code store).FUNCS[address.index.val]? =
         some ⟨Store.decodeFuncType signature,Store.decodeInstance store inst,
           .FUNC (.mk_uN compiled.type_index.val) (declared.map local.LOCAL) body⟩ := by
@@ -41,4 +41,4 @@ theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
   have contextBindings := bindings.scope (signature.params.val.map sourceType++declared) [] (some (.mk_list (signature.results.val.map sourceType)))
   exact ⟨inst,compiled,signature,declared,body,epilogue,hi,hc,hs,table,certificate,contextBindings,
     defined_function_lookup view code store address function signature instanceIndex functionIndex inst _ lookup hs defined hi source⟩
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

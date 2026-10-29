@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An indirect call retains both source indices and the actual function-local
@@ -27,4 +27,4 @@ theorem IndirectCallEmission.append_pairs {pairs C before instruction emitted af
       _ basePosition indexPosition
     have bound := (List.getElem?_eq_some_iff.mp pair).1
     simpa [List.getElem?_append,bound] using pair
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

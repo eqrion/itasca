@@ -7,7 +7,7 @@ Independent Wasm 2 body validity and source-only resource demand imply actual bo
 Main declarations: `compiler_body_wasm2_checked_available`. A direct consumer is `Compiler.Module.EntryFinishAvailable`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Independent Wasm 2 body validity and source-only resource demand imply
@@ -57,4 +57,4 @@ theorem compiler_body_wasm2_checked_available {A} (ops : runtime.platform.Alloc 
       initialLocals initialCapacity
       (independentBodyLog data env ⟨sourceLocals,ft.results⟩ index) room extent
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

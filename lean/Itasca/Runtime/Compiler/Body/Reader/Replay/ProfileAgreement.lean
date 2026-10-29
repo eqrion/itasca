@@ -7,7 +7,7 @@ Agreement of shared scalar reader steps across validation profiles.
 Main declarations: `profile_scalar_eq` and `profile_base_success_wasm2`. A direct consumer is `Compiler.Body.Reader.Acceptance.ProfileAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
@@ -81,4 +81,4 @@ theorem profile_base_success_wasm2 {V : Type} (visitor : code.OpVisitor V)
     Wasm2.scalar_context _ _ _ _ ctx ctx' _ _ ordinary locals] at run
   exact ⟨capacity, run⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

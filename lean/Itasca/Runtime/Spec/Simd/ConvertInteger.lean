@@ -133,8 +133,8 @@ theorem convert_integer_vector_relation (ty : Fnn) (sign : sx) (x result : BitVe
     · exact List.length_pos_of_mem member
     · with_unfolding_all simpa only [List.contains_iff_mem,shapeOf,lanetype_Fnn,lsize,size,valtype_numtype,Option.get!_some] using member
     · exact wf
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · rfl
   · apply fun_vcvtop__.fun_vcvtop___case_1 .I32 4 .F64 2 (convertIntegerSource .F64 sign)
       (.mk_uN x.toNat) (.mk_uN result.toNat) .LOW (convertIntegerInputs .F64 x) products choices (some (some .LOW))
@@ -149,8 +149,8 @@ theorem convert_integer_vector_relation (ty : Fnn) (sign : sx) (x result : BitVe
     · exact List.length_pos_of_mem member
     · with_unfolding_all simpa only [List.contains_iff_mem,shapeOf,lanetype_Fnn,lsize,size,valtype_numtype,Option.get!_some] using member
     · exact wf
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
 
 end Itasca.Runtime.Spec.Simd
 
@@ -191,8 +191,8 @@ theorem convert_integer_step (ty : Fnn) (sign : sx) (x result : BitVec 128)
   · rfl
   · exact const_wf x
   · apply wf_admininstr.admininstr_case_39
-    · exact shapeOf_wf _
-    · exact shapeOf_wf _
+    · exact shape_of_wf _
+    · exact shape_of_wf _
     · exact convert_integer_source_wf ty sign
   · exact const_wf result
 

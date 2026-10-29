@@ -12,7 +12,7 @@ Normal return of default and explicit-profile compilation, projecting the shared
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -22,7 +22,7 @@ open runtime.compiler
   step
   step
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -30,7 +30,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -125,6 +125,6 @@ theorem compile_with_total_of_profile_prepared_bodies {A : Type} (ops : runtime.
     runtime.compiler.compile_with ops bytes profile limits ⦃ _ => True ⦄ :=
   compile_with_total_of_profile_entries ops law bytes profile limits
     (compiler_profile_entries_total_of_prepared_bodies ops law profile bodies)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

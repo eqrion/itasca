@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 /-- Exact finite callback trace of the target loop. This intermediate execution
 witness is eliminated when producing the final syntax-only table certificate. -/
@@ -61,4 +61,4 @@ theorem compiler_table_loop_trace {A : Type} (ops : runtime.platform.Alloc A)
       subst output
       exact ⟨successful, .done _ _ (by scalar_tac)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

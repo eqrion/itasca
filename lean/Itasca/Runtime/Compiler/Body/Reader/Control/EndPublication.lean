@@ -10,7 +10,7 @@ Structured compiler scope-close source map publication and their reader-step lif
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A reached prefix supplies the physical closing frame and all branch and
@@ -62,7 +62,7 @@ theorem structured_scope_close_publication {jumpTables : List U32}
       cases guardPosition
     exact .guarded guard condition old nonBody hasIf guardCode
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -70,7 +70,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual Wasm 2 END reader supplies progress and a bounded source
@@ -107,6 +107,6 @@ theorem reader_end_publication_wasm2 {jumpTables : List U32}
   exact structured_scope_close_publication ops law invariant sourceBound out.core p.current.ctrl.kind
     p.current.bt coordinates maps consumed endBound callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

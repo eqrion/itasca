@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Interp.Machine.Calls.IndirectSelected
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem step_indirect_supported_execution
  {M P F A : Type}
@@ -13,34 +13,34 @@ theorem step_indirect_supported_execution
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [StructuredMachine.IndirectProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (table type : U32) (after : List instr)
+    [Machine.IndirectProjection (emission compiled) compiled.indirect.val]
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type : U32) (after : List instr)
     (last : index.val+1=exec.frames.length) (hf : exec.frames.val[index.val]?=some raw)
     (hi : store.instances.val[raw.instance.val]?=some inst) (hc : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=Store.decodeInstance store inst)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
+    (point : Machine.FramePoint (Store.decodeStore view code store) raw {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
+    (machine : Machine.Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩ expected raw.pc.val false)
     (shaped : Store.Shape view store)
-    (compiledFunctions : StructuredMachine.CompiledFunctions code store)
+    (compiledFunctions : Machine.CompiledFunctions code store)
     (functionTyping : CoreFunctionsTyped view code store) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
     SourceIndirectHostBoundary store initial ∨ runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1=store ∧
-      (out.1=.Ok () → StructuredMachine.Advance view code store out.2.1 expected compiled.code.length raw.pc.val false initial) ∧
+      (out.1=.Ok () → Machine.Advance view code store out.2.1 expected compiled.code.length raw.pc.val false initial) ∧
       (∀ error,out.1=.Err error →
-        ((∃ trap,error=.Trap trap ∧ IndirectTrap trap) ∧ ∃ count,0<count ∧ Spec.StepsHN count (Abs.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩) ∨
+        ((∃ trap,error=.Trap trap ∧ IndirectTrap trap) ∧ ∃ count,0<count ∧ Spec.StepsHN count (SourceMachine.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩) ∨
         SourceIndirectCallCause allocator hooks code exec store platform index raw compiled initial error) ⦄ := by
   dsimp only
-  have frameTyped : Abs.FrameTyped (Store.decodeStore view code store) {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
+  have frameTyped : SourceMachine.FrameTyped (Store.decodeStore view code store) {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} [] := by
     cases machine.typed.typed.frames with | cons head _ => exact head
-  rcases StructuredMachine.indirect_values_head table.val type.val after point frameTyped with skip | actual
+  rcases Machine.indirect_values_head table.val type.val after point frameTyped with skip | actual
   · obtain ⟨target,forward,fetch,tail⟩ := skip
     apply Or.inr
-    apply WP.spec_mono (StructuredMachine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled ambient
+    apply WP.spec_mono (Machine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled ambient
       {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after} rest expected C targets next output target last hf hi hc forward fetch slots tail machine program)
     intro out effect
     refine ⟨effect.2.1,fun _ => ⟨target.val,false,_,effect.2.2.2.2.1,effect.2.2.2.2.2,fun _ h=>h,rfl,fun _ h=>h⟩,?_⟩
@@ -53,7 +53,7 @@ theorem step_indirect_supported_execution
     have tablesSame : tableIndex=table := UScalar.eq_of_val_eq tableEq
     subst typeIndex
     subst tableIndex
-    have bindings : Abs.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C := by
+    have bindings : SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst) C := by
       simpa only [moduleEq] using point.bindings
     obtain ⟨signatureIndex,rawSignature,tableAddress,object,signatureMapped,signatureFound,signatureEq,tableMapped,tableFound,funcref,typeLookup,tableLookup⟩ :=
       indirect_bindings_raw view code store inst f.toFrame C shaped (List.mem_of_getElem? hi) bindings moduleEq type table _ bounds signature tableType
@@ -63,12 +63,12 @@ theorem step_indirect_supported_execution
       scalar_tac
     let base : Usize := UScalar.ofNatCore (raw.base.val+offset.val) baseFits
     have baseOffset : base.val=raw.base.val+offset.val := rfl
-    have decodedPosition : Abs.integer numtype.I32 (Abs.integerVal .I32 position)=some position := Abs.integer_accepts .I32 position bounded
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
-    have trapped (missing : Abs.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=none) :
-        ∃count,0<count ∧ Spec.StepsHN count (Abs.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩ := by
-      apply Abs.Indirect.trap_simulation _ _ _ _ _ _ _ machine.typed
-      simp only [Abs.Indirect.step,values,Abs.pop_append,decodedPosition,missing]
+    have decodedPosition : SourceMachine.integer numtype.I32 (SourceMachine.integerVal .I32 position)=some position := SourceMachine.integer_accepts .I32 position bounded
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
+    have trapped (missing : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=none) :
+        ∃count,0<count ∧ Spec.StepsHN count (SourceMachine.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩ := by
+      apply SourceMachine.Indirect.trap_simulation _ _ _ _ _ _ _ machine.typed
+      simp only [SourceMachine.Indirect.step,values,SourceMachine.pop_append,decodedPosition,missing]
     classical
     by_cases host : SourceIndirectHostBoundary store initial
     · exact Or.inl host
@@ -111,7 +111,7 @@ theorem step_indirect_supported_execution
       | Host id => exact (host ⟨f,rest,table.val,type.val,position,after,front++args,address,function,id,rfl,values,bounded,resolved,functionAt,defined⟩).elim
       | Wasm instanceIndex functionIndex =>
         apply DivSpec.of_spec
-        apply WP.spec_mono (StructuredMachine.call_indirect_selected memory hooks floats allocator allocation interrupts view code exec store platform index raw compiled C targets next output
+        apply WP.spec_mono (Machine.call_indirect_selected memory hooks floats allocator allocation interrupts view code exec store platform index raw compiled C targets next output
           ambient f rest table.val type.val position after front args params results pc base {store:=store.id,index:=address} function instanceIndex functionIndex
           compiledFunctions functionTyping functionAt defined resolved (sameType.trans signatureEq) last hf pcEq values bounded argumentTypes
           (by rw [baseOffset,basePosition]) heights slots program point (by simpa only [pcEq] using tail.current) expected machine)
@@ -122,4 +122,4 @@ theorem step_indirect_supported_execution
         exact Or.inr ⟨entry,selector,offset,table,type,pc,address,base,function,instanceIndex,functionIndex,calleeInst,callee,
           fetch,pair,functionAt,defined,calleeInstAt,calleeAt,baseOffset,pcEq,cause,
           f,rest,after,front,args,position,params,results,0,Spec.StepsHN.refl machine.typed.typed.decode_wf,values,bounded,resolved,sameType.trans signatureEq,argumentTypes,basePosition,machine.stack.source_base last hf⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

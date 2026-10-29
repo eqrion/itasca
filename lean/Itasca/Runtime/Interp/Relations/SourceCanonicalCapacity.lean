@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- The complete source module namespace. The data namespace is completed
 from the parsed module tail, as in the canonical function-typing certificate. -/
 def sourceCapacityContext (env : Itasca.module.Env) (dataCount : Nat) : context :=
-  { Code.sourceFunctionContext env [] [] with
+  { Compiler.sourceFunctionContext env [] [] with
     DATAS := List.replicate dataCount datatype.OK, RETURN := none }
 
 /-- A source frame requirement whose complete validation environment is tied
@@ -17,10 +17,10 @@ def SourceCanonicalFunctionCapacity (store : _root_.store) (address : funcaddr) 
       (typeIndex : U32) (dataCount : Nat),
     store.FUNCS[address]? = some function ∧
     SourceCapacityEnvironment store function env typeIndex ∧
-    Abs.ModuleBindings store function.MODULE (sourceCapacityContext env dataCount) ∧
+    SourceMachine.ModuleBindings store function.MODULE (sourceCapacityContext env dataCount) ∧
     (∃ index locals body, function.CODE = .FUNC index locals body ∧
       Func_ok (sourceCapacityContext env dataCount) (.FUNC index locals body) function.TYPE) ∧
-    Code.SourceFrameCapacity profile env typeIndex function.CODE words
+    Compiler.SourceFrameCapacity profile env typeIndex function.CODE words
 
 /-- Canonical module typing supplies every namespace required by full-profile
 capacity traces, including mutable globals, tables, memories and segments. -/
@@ -49,7 +49,7 @@ theorem function_canonical_capacity_decoded {M : Type} (view : M → Slice U8)
   obtain ⟨typedInst,sourceIndex,locals,body,typedFound,sourceEq,bindings,sourceTyped⟩ := functionTyped
   have sameInst : typedInst = inst := Option.some.inj (typedFound.symm.trans instanceFound)
   subst typedInst
-  have contextEq : Code.moduleSourceContext inst.module =
+  have contextEq : Compiler.moduleSourceContext inst.module =
       sourceCapacityContext inst.module.module.env inst.module.module.tail.data.length := by rfl
   refine ⟨words,⟨Store.decodeFunction code store function,inst.module.profile,
     inst.module.module.env,typeIndex,inst.module.module.tail.data.length,?_,?_,?_,?_,?_⟩,bound⟩

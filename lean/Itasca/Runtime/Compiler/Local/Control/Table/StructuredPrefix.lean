@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeAlgebra
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A builder invariant for a still-open source prefix. Its hole is another
@@ -42,7 +42,7 @@ theorem StructuredPrefix.call {jumpTables : List U32} {emission types functions 
   intro suffix tail next final rest
   exact .call signature arguments (fetch_extend instruction suffix) rest
 
-theorem StructuredPrefix.branchIf {jumpTables : List U32} {emission types functions returns locals code labels stack depth label dst src count cond resume pc}
+theorem StructuredPrefix.branch_if {jumpTables : List U32} {emission types functions returns locals code labels stack depth label dst src count cond resume pc}
     (lookup : labels[depth]? = some label) (live : label.branchLive = true)
     (layout : BranchLayout locals stack label dst src count)
     (condition : cond.val = slots locals + slots stack)
@@ -115,7 +115,7 @@ theorem StructuredDeadPrefix.extend {jumpTables : List U32} {emission types func
 
 /-- A completed branch-table header closes one source instruction after all of
 its independently certified target fragments have been emitted. -/
-theorem StructuredDeadPrefix.branchTable
+theorem StructuredDeadPrefix.branch_table
     {emission types functions returns locals code tables labels stack depths fallback pc cursor selector start len}
     (gate : emission (stack ++ [.I32]) (.BR_TABLE depths fallback) [.JumpTable selector start len] stack)
     (table : BranchTableLayout tables locals labels stack code depths fallback pc cursor selector start len)
@@ -129,5 +129,5 @@ theorem StructuredDeadPrefix.branchTable
   | cons first rest =>
     intro suffix tail next final order bound
     exact .branchTable gate ((table.extend suffix).weaken_next order bound) ⟨header.trans order,bound⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

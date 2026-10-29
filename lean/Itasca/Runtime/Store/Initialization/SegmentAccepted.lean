@@ -135,7 +135,7 @@ theorem initialize_segments_program_total {M P F A : Type}
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (found : store.instances.val[instIndex.val]? = some inst)
     (functionFound : inst.module.functions.val[inst.module.initialization.val]? = some code)
-    (program : Code.SegmentProgram inst.module code) (pcBound : code.code.length < U32.max)
+    (program : Compiler.SegmentProgram inst.module code) (pcBound : code.code.length < U32.max)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst)
     (elementsValid : ∀ segment ∈ inst.module.module.env.elements.val,
@@ -175,10 +175,10 @@ theorem initialize_segments_compiled {M P F A : Type}
     (bindings : InitializerBindings store inst) :
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ := by
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Code.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
   exact initialize_segments_program_total memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound program pcBound shape imports bindings valid.elements dataValid
 

@@ -18,7 +18,7 @@ theorem global_allocated_loop {M P F A : Type}
     (inst : runtime.store.ModuleInst) (status : core.result.Result Unit runtime.ExecError)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ global ∈ inst.module.module.env.globals.val,
       Itasca.ModuleConstants.Valid inst.module.module.env global.init global.gtype.valtype)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)

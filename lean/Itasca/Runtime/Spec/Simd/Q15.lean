@@ -28,7 +28,7 @@ def q15Bits (a b : BitVec 16) : BitVec 16 :=
 
 theorem q15_bits_source (a b : BitVec 16) :
     uN.mk_uN (q15Bits a b).toNat = iq15mulr_sat_ 16 .S (.mk_uN a.toNat) (.mk_uN b.toNat) := by
-  simp only [q15Bits,iq15mulr_sat_,proj_uN_0,Itasca.Runtime.Spec.signedValue_bitvec]
+  simp only [q15Bits,iq15mulr_sat_,proj_uN_0,Itasca.Runtime.Spec.signed_value_bitvec]
   exact signed_saturate_bits _ _
 
 end Itasca.Runtime.Spec.Simd
@@ -84,7 +84,7 @@ theorem q15_vector_relation (x y : BitVec 128) :
   have lengths : (lanes_ (shapeOf .I16) (.mk_uN x.toNat)).length =
       (lanes_ (shapeOf .I16) (.mk_uN y.toNat)).length := by
     rw [lanes_map_words,lanes_map_words,List.length_map,List.length_map]
-  exact .fun_vbinop__case_35 _ _ _ _ _ _ _ rfl rfl nonX nonY packed.symm (shapeOf_wf _) lengths nonX nonY (q15_lanes_wf x y) rfl
+  exact .fun_vbinop__case_35 _ _ _ _ _ _ _ rfl rfl nonX nonY packed.symm (shape_of_wf _) lengths nonX nonY (q15_lanes_wf x y) rfl
 
 theorem q15_step (x y result : BitVec 128) (packed : uN.mk_uN result.toNat = q15Result x y) :
     Step_pure [.VCONST .V128 (.mk_uN x.toNat),.VCONST .V128 (.mk_uN y.toNat),
@@ -96,7 +96,7 @@ theorem q15_step (x y result : BitVec 128) (packed : uN.mk_uN result.toNat = q15
   · simp
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_26 _ _ (shapeOf_wf _) q15_source_wf
+  · exact .admininstr_case_26 _ _ (shape_of_wf _) q15_source_wf
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.ControlSafety
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec Itasca.DeclarativeComplete
 
 theorem zero_float_wf (ty : Fnn) :
@@ -11,7 +11,7 @@ theorem zero_float_wf (ty : Fnn) :
   exact wf_fNmag.fNmag_case_1 _ _ _ ⟨by positivity, rfl⟩
 
 /-- Zero/null local defaults inhabit their exact declared Wasm value type. -/
-theorem defaultValue_typed {s : store} (hs : wf_store s) (ty : valtype)
+theorem default_value_typed {s : store} (hs : wf_store s) (ty : valtype)
     (ht : ty ≠ .BOT) :
     ∃ value, defaultValue ty = some value ∧ Val_ok s value ty := by
   cases ty with
@@ -26,13 +26,13 @@ theorem defaultValue_typed {s : store} (hs : wf_store s) (ty : valtype)
   | EXTERNREF => exact ⟨_, rfl, .reftype _ _ _ (.null _ _ hs) hs⟩
   | BOT => contradiction
 
-theorem defaultLocals_typed {s : store} (hs : wf_store s) (types : List valtype)
+theorem default_locals_typed {s : store} (hs : wf_store s) (types : List valtype)
     (h : Forall (fun ty => ty ≠ valtype.BOT) types) :
     ∃ values, defaultLocals (types.map local.LOCAL) = some values ∧ ResultsTyped s types values := by
   induction types with
   | nil => exact ⟨[], rfl, .nil⟩
   | cons ty types ih =>
-    obtain ⟨value, hv, hvt⟩ := defaultValue_typed hs ty (h ty (by simp))
+    obtain ⟨value, hv, hvt⟩ := default_value_typed hs ty (h ty (by simp))
     obtain ⟨values, hs, hvs⟩ := ih (fun ty ht => h ty (by simp [ht]))
     exact ⟨value :: values, by simp [defaultLocals, hv, hs], .cons hvt hvs⟩
 
@@ -71,14 +71,14 @@ theorem callee_frame_typed {s : store} {m : moduleinst} {C : context}
         [⟨results, results, [], 0, []⟩], body, []⟩ [] := by
   cases hf with
   | mk_Func_ok _ types _ _ _ _ _ nonbot expression _ _ _ =>
-    obtain ⟨defaults, hd, hdt⟩ := defaultLocals_typed hs types nonbot
+    obtain ⟨defaults, hd, hdt⟩ := default_locals_typed hs types nonbot
     refine ⟨defaults, hd, ?_⟩
     let C' : context := { C with LOCALS := params ++ types, LABELS := [], RETURN := some (.mk_list results) }
     have hv : ResultsTyped s (params ++ types) (args ++ defaults) := List.rel_append ha hdt
     have hmap := results_type_of_typed hv
     have hw : wf_context (labelContext C' []) := wf_context_scope bindings.wf _ _ _
     apply FrameTyped.mk (f := ⟨address, results, args ++ defaults, m, [⟨results, results, [], 0, []⟩], body, []⟩) C' (bindings.scope _ _ _) hmap.symm hv (.nil) rfl ?_
-      (.frame_case_ _ _ (resultsTyped_wf hv) hm)
+      (.frame_case_ _ _ (results_typed_wf hv) hm)
     apply CodeStackTyped.label (saved := []) (operands := []) rfl (by simp) ?_ ?_ ?_
     · cases expression with
       | mk_Expr_ok _ code _ _ =>
@@ -101,7 +101,7 @@ theorem call_preservation (s : store) (ambient : frame) (f : AFrame)
     | mk C bindings localTypes locals values returns hc hw =>
       simp only [List.append_nil] at hc
       obtain ⟨front, ins, outs, hop, hstack, hafter, heights⟩ :=
-        codeStack_after_bounds (value_types_concrete f.vals) hc
+        code_stack_after_bounds (value_types_concrete f.vals) hc
       cases hop with
       | call _ _ inputs outputs hi ht _ _ =>
         simp only [labelContext, proj_uN_0] at hi ht
@@ -119,14 +119,14 @@ theorem call_preservation (s : store) (ambient : frame) (f : AFrame)
         have hheight : f.vals.length - ins.length = front.length := by omega
         have hbound : ins.length ≤ f.vals.length := by omega
         have hargs : ResultsTyped s ins (f.vals.drop front.length) := by
-          apply resultsTyped_drop (before := front)
+          apply results_typed_drop (before := front)
           simpa only [hstack] using values
         have hargtypes := results_type_of_typed hargs
         have hfront : (f.vals.take front.length).map valueType = front := by
           rw [List.map_take, hstack, List.take_left]
         have hcaller : FrameTyped s { f with vals := f.vals.take front.length, code := after } outs := by
           apply FrameTyped.mk (f := { f with vals := f.vals.take front.length, code := after }) C
-            bindings localTypes locals (resultsTyped_take front.length values) returns ?_ hw
+            bindings localTypes locals (results_typed_take front.length values) returns ?_ hw
           simpa only [hfront] using hafter
         have hcallerHeights : FrameHeights { f with vals := f.vals.take front.length, code := after } := by
           intro label hm
@@ -155,8 +155,8 @@ theorem call_preservation (s : store) (ambient : frame) (f : AFrame)
           intro frame hm
           simp only [List.mem_cons] at hm
           rcases hm with rfl | rfl | hm
-          · exact frameTyped_heights hcallee
+          · exact frame_typed_heights hcallee
           · exact hcallerHeights
           · exact typed.heights frame (by simp [hm])
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

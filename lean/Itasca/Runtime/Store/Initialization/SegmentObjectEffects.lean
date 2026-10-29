@@ -11,7 +11,7 @@ theorem TableInitializationEffect.object_metadata {M : Type} {view : M → Slice
   split at effect
   · obtain ⟨words, rfl, values⟩ := effect
     have length : words.length = table.elements.length := by
-      simpa only [alloc.vec.Vec.length] using (congrArg List.length values).trans (copySegment_length _ _ _ _ _)
+      simpa only [alloc.vec.Vec.length] using (congrArg List.length values).trans (copy_segment_length _ _ _ _ _)
     refine ⟨by constructor <;> simp, ?_, ?_, ?_, ?_⟩
     · simpa only [alloc.vec.Vec.set_val_eq] using lookup_set_relation store.tables.val index.val table
         {table with elements := words} target

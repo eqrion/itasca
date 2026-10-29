@@ -13,13 +13,13 @@ Source-typed stateful metadata readers check every newly emitted word and retain
 Main declarations: `StatefulReaderPost.instruction_prefix`. A direct consumer is `Compiler.Body.Reader.Checking.NoncontrolCheckedPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Source-typed stateful metadata readers check every newly emitted word and
 retain both pending instruction checks and the slots of recorded exits. -/
 theorem StatefulReaderPost.instruction_prefix {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : Abs.Stateful.Instruction}
+    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (C : context)
@@ -58,8 +58,8 @@ theorem StatefulReaderPost.instruction_prefix {jumpTables : List U32} {data env 
       (compiler_stateful_auxiliary_tables ops law before after out op a b (.Ok ()) callback)
     have growth := instruction_check_extends_of_tables_append before.function after.function _ tables
       ordinary.capacity (by change before.function.code.val.length ≤ after.function.code.val.length; rw [lowered.1.1,List.length_append,List.length_singleton]; omega)
-    exact ⟨lowered.1.executableInstructionPrefix retained.layout reachable (contextLocals.trans retained.localsEq.symm)
-      (.stateful emission) emission.not_branchTable growth held ordinary.frames,
+    exact ⟨lowered.1.executable_instruction_prefix retained.layout reachable (contextLocals.trans retained.localsEq.symm)
+      (.stateful emission) emission.not_branch_table growth held ordinary.frames,
       exits.retained (congrArg alloc.vec.Vec.val ordinary.frames) ordinary.capacity⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
 /-! Exact allocation-aware local declaration accumulation and prefix offsets.
 The actual function-start loop terminates with an explicit compiler error or
 with every declared local represented at its source-order slot position. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem charge_local {A : Type} (ops : runtime.platform.Alloc A)
     (budget : runtime.compiler.Budget A) :
@@ -57,7 +57,7 @@ open Aeneas Aeneas.Std
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem localOffsets_append (types : List valtype) (ty : valtype) :
+theorem local_offsets_append (types : List valtype) (ty : valtype) :
     (List.range (types ++ [ty]).length).map (offset (types ++ [ty])) =
       (List.range types.length).map (offset types) ++ [slots types] := by
   simp only [List.length_append, List.length_singleton, List.range_succ, List.map_append,
@@ -74,7 +74,7 @@ def LocalFrame {A : Type} (before after : runtime.compiler.FunctionCompiler A) :
   after = { before with budget := after.budget, function := { before.function with locals := after.function.locals, local_slots := after.function.local_slots }, local_offsets := after.local_offsets }
 
 structure LocalLayout {A : Type} (compiler : runtime.compiler.FunctionCompiler A) : Prop where
-  slots : compiler.function.local_slots.val = Code.slots (compilerLocals compiler)
+  slots : compiler.function.local_slots.val = Compiler.slots (compilerLocals compiler)
   offsets : compiler.local_offsets.val.map (fun word => word.val) =
     (List.range (compilerLocals compiler).length).map (offset (compilerLocals compiler))
 
@@ -109,8 +109,8 @@ theorem LocalFrame.trans {A : Type} {a b c : runtime.compiler.FunctionCompiler A
       slots_append, slots, Nat.add_zero]
     simpa [compilerLocals, layout.slots] using exactCount
   · simp only [offsetAppend, List.map_append, List.map_singleton, compilerLocals,
-      appended, localOffsets_append]
-    simpa [compilerLocals, List.map_append, List.map_singleton, localOffsets_append,
+      appended, local_offsets_append]
+    simpa [compilerLocals, List.map_append, List.map_singleton, local_offsets_append,
       layout.slots] using congrArg (fun xs => xs ++ [slots (compilerLocals compiler)]) layout.offsets
 
 def localLoopOutput {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
@@ -170,4 +170,4 @@ def localLoopOutput {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
       intro accepted
       simpa [finalIndex] using invariant accepted
   · exact ⟨bound, fun _ => ⟨.refl compiler, layout, prefixTypes⟩⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

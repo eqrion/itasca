@@ -10,7 +10,7 @@ def copyBackward {T : Type} [Inhabited T] (words : List T) (dst src : Nat) : Nat
   | 0 => words
   | count+1 => copyBackward (words.set (dst+count) words[src+count]!) dst src count
 
-theorem copyForward_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src index remaining count : Nat)
+theorem copy_forward_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src index remaining count : Nat)
     (state : CopyPrefix before current dst src index) (progress : index+remaining=count)
     (direction : dst ≤ src) (sourceBound : src+count ≤ before.length) (targetBound : dst+count ≤ before.length)
     (lengthBound : before.length ≤ 2^32) :
@@ -39,7 +39,7 @@ theorem copyForward_snapshot {T : Type} [Inhabited T] (before current : List T) 
       rw [copyForward,dstNext,srcNext]
       exact ih _ (index+1) fresh (by omega)
 
-theorem copyBackward_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src remaining count : Nat)
+theorem copy_backward_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src remaining count : Nat)
     (state : CopySuffix before current dst src remaining count) (progress : remaining≤count)
     (direction : src ≤ dst) (sourceBound : src+count ≤ before.length) (targetBound : dst+count ≤ before.length) :
     copyBackward current dst src remaining = before.setSlice! dst (before.slice src (src+count)) := by

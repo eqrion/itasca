@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A source-bounded auxiliary index passes the executable u32 gate. -/
@@ -41,4 +41,4 @@ theorem compiler_pair_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
   exact ⟨index,pairs,rfl,indexEq,by rw [same],appended⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

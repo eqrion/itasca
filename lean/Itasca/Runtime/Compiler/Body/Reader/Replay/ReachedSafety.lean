@@ -10,7 +10,7 @@ Normal return of a reader step at a reached compiler point.
 Main declarations: `IndexedTableReaderCompilerPointWasm2.reader_total`. A direct consumer is `Compiler.Body.Relations.Replay.ReachedBodySafetyWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.reader_total {A} (ops : runtime.platform.Alloc A)
@@ -49,4 +49,4 @@ theorem IndexedTableReaderCompilerPointWasm2.reader_total {A} (ops : runtime.pla
     have tableNe : opcode.val ≠ 14 := fun h => table (UScalar.eq_of_val_eq h)
     tauto
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

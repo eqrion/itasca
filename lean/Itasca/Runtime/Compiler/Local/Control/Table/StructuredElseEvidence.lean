@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- An ELSE scope retains its completed then arm, resolved guard, and literal
@@ -90,8 +90,8 @@ theorem StructuredUniversalElse.append {jumpTables : List Aeneas.Std.U32} {A : T
   have oldShape : ScopeLabel current label :=
     ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
   have prior := invariant label labels groups oldPlans oldShape parentShapes
-  rw [codeEq, resolvedCode_append_code _ _ _ (oldPlans.inside sites)]
+  rw [codeEq, resolved_code_append_code _ _ _ (oldPlans.inside sites)]
   exact (prior.extend emitted).advance instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

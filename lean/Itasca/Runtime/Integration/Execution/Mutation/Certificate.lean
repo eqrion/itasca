@@ -12,7 +12,7 @@ import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- An internal dispatch witness, established from exact runtime mutation
@@ -34,4 +34,4 @@ theorem CumulativeStoreMutation.ownership_bounds {M : Type} {view : M → Slice 
   unfold Store.ownershipBounds
   rw [mutation.metadata.functions,mutation.externs]
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

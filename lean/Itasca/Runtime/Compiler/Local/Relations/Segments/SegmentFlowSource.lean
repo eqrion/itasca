@@ -9,7 +9,7 @@ Every emitted global read uses an imported i32 global.
 Main declarations: `SegmentGlobalTypes`. A direct consumer is `Store.Initialization.SegmentInitializeSource`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem constant_i32_flow {function expr instruction env valueType}
@@ -345,4 +345,4 @@ theorem SegmentProgram.global_types {module function} (program : SegmentProgram 
   · exact dataTypes slot index member
   · cases impossible
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredLabelWiden
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeAlgebra
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Appending the literal epilogue reconciles the root's separate normal and
@@ -31,7 +31,7 @@ theorem structured_body_code_epilogue {jumpTables : List Aeneas.Std.U32} {emit t
   refine ⟨?_, found, by simp [emitted, position]⟩
   have extended := relation.extend [.Return src (if normal || branch then count else 0#u32)]
   rw [← emitted] at extended
-  apply extended.widenLabels
+  apply extended.widen_labels
   exact .cons ⟨rfl, rfl, rfl, rfl, rfl, normalLive, branchLive⟩ .nil
 
 /-- The actual final END constructs the retained body/epilogue relation from
@@ -69,7 +69,7 @@ the completed root prefix, after resolving every root branch. -/
       [.Return frame.height (if compiler.reachable || frame.end_reachable then frame.results else 0#u32)] := by
     simpa [scopeExitLive, kind] using code
   obtain ⟨body', return', end'⟩ := structured_body_code_epilogue bodyCode
-    (by simpa only [patchCode_length] using position) out.2.function frame.height frame.results width code'
+    (by simpa only [patch_code_length] using position) out.2.function frame.height frame.results width code'
   exact ⟨popped, body', ⟨_, return'⟩, end'⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

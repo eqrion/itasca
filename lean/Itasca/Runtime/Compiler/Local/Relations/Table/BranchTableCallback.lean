@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLower
 import Itasca.Runtime.Representation.Collection
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 /-- Label collection changes only its buffer and allocation accounting. -/
@@ -58,4 +58,4 @@ theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
       have empty := runtime_clear lowered.table_depths
       rw [clearCalled,WP.spec_ok] at empty
       exact ⟨budget,depths,lowered,cleared,depthEq,by simpa only [live] using lowerCalled,empty,observeCalled⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

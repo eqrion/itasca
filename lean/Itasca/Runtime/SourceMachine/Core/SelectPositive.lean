@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.Select
 import Itasca.Runtime.SourceMachine.Core.Step
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt
 
 theorem select_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
@@ -13,4 +13,4 @@ theorem select_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (
   rw [actualEq] at step
   cases step
   exact simulation
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

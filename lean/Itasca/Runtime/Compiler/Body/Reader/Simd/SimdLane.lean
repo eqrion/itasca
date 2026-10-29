@@ -6,7 +6,7 @@ A successful fixed checker returns exactly its already decoded payload.
 Main declarations: `simd_carry_success` and `reader_simd_lane_wasm2`. A direct consumer is `Compiler.Body.Reader.References.TypedSelect`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 set_option maxRecDepth 4096
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
@@ -79,4 +79,4 @@ theorem reader_simd_lane_wasm2 {data env locals index st}
       (fun C wf _ => by simpa only [Wasm2.Simd.LaneOperation.inputs_pop,Wasm2.Simd.LaneOperation.outputs_pop]
           using op.typed C (.mk_uN lane.val) wf laneWf bound) encoded fixed
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

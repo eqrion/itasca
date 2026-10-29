@@ -104,19 +104,19 @@ theorem signed_unary_relation (ty : Jnn) (kind : SignedUnaryKind) (bits result :
   have outputWf : Forall (fun word => wf_lane_ (lanetype_Jnn ty) (.mk_lane__0 ty word)) outputs := by
     intro word member
     obtain ⟨j,_,rfl⟩ := List.mem_map.mp member
-    have wf := laneOfBits_wf (lanetype_Jnn ty)
+    have wf := lane_of_bits_wf (lanetype_Jnn ty)
       (signedUnaryBits kind (vectorLane (lanetype_Jnn ty) bits j)).toNat (BitVec.toNat_lt_twoPow_of_le (by rfl))
     cases ty <;> exact wf
   cases kind <;> cases ty
   all_goals first
-    | exact .fun_vunop__case_0 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_1 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_2 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_3 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_4 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_5 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_6 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
-    | exact .fun_vunop__case_7 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shapeOf_wf _) outputWf rfl
+    | exact .fun_vunop__case_0 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_1 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_2 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_3 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_4 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_5 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_6 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
+    | exact .fun_vunop__case_7 _ _ _ inputs _ outputs outputs lengthEq projected related lengthEq projected related inputEq packed (shape_of_wf _) outputWf rfl
 
 theorem signed_unary_step (ty : Jnn) (kind : SignedUnaryKind) (bits result : BitVec 128)
     (packed : uN.mk_uN result.toNat = inv_lanes_ (shapeOf (lanetype_Jnn ty))
@@ -129,7 +129,7 @@ theorem signed_unary_step (ty : Jnn) (kind : SignedUnaryKind) (bits result : Bit
   · simp
   · simp
   · exact const_wf bits
-  · apply wf_admininstr.admininstr_case_25 _ _ (shapeOf_wf _)
+  · apply wf_admininstr.admininstr_case_25 _ _ (shape_of_wf _)
     apply wf_vunop_.vunop__case_0 _ _ _ _ _ rfl
     cases kind <;> constructor
   · exact const_wf result

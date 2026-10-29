@@ -9,7 +9,7 @@ Compilation of the additional core scalar reader cases.
 Main declarations: `StructuredReaderCompilerStateWasm2.core_extra`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.core_extra {jumpTables : List U32} {A : Type}
@@ -139,4 +139,4 @@ theorem StructuredReaderCompilerStateWasm2.core_extra {jumpTables : List U32} {A
     rw [equal] at byte accepted
     have exactOpcode : UScalar.cast .U8 (memoryStoreOpcode (.packed .I64 .word)) = 62#u8 := rfl
     exact state.memory_store ops law C contextLocals contextMemories next advance inbounds out (.packed .I64 .word) sourceBound bodyBound (by simpa only [exactOpcode] using byte) (by simpa only [exactOpcode] using accepted)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -6,7 +6,7 @@ Source control information retained while callbacks are still reading the body. 
 Main declarations: `ScopeForm` and `ScopeForm.kind`. A direct consumer is `Compiler.Module.CompileSlice`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Source control information retained while callbacks are still reading the
@@ -82,4 +82,4 @@ inductive ParentPrefixes (types functions : List functype) (returns locals : Lis
       (saved : ParentPrefix types functions returns locals code (label :: labels) parent child) :
       ParentPrefixes types functions returns locals code (parents ++ [parent]) (label :: labels) child
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

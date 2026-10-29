@@ -7,7 +7,7 @@ Independently decoded table labels remaining at a reader boundary. The scratch l
 Main declarations: `TableDecodePrefix` and `TableDecodeRead`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableInstructionPrefixWasm2`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Independently decoded table labels remaining at a reader boundary. The
@@ -98,4 +98,4 @@ theorem TableDecodeRead.cursor {data all finish index state depths depth}
   subst tail
   exact (decoded.unique .nil rfl).2.symm
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

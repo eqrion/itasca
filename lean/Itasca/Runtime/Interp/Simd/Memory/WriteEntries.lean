@@ -23,7 +23,7 @@ theorem memory_entry_11 : MemoryOperationSound 11#u32 := by
     refine ⟨_,MemoryBufferChange.write ((UScalar.cast .U32 x).val + offset.val)
       (vbytes_ .V128 (.mk_uN y.val)) result.2 ?_ ?_ written,?_⟩
     · simpa only [vbytes_,ibytes_,vsize,SpecExt.Builtins.integerBytes_length] using fits
-    · exact Spec.integerBytes_wf 16 y.val
+    · exact Spec.integer_bytes_wf 16 y.val
     · with_unfolding_all exact source
   · rw [if_neg fits] at effect
     obtain ⟨returned,source⟩ := effect
@@ -44,7 +44,7 @@ theorem memory_entry_88 : MemoryOperationSound 88#u32 := by
     refine ⟨_,MemoryBufferChange.write ((UScalar.cast .U32 x).val + offset.val)
       (SpecExt.Builtins.integerBytes (memoryLaneBytes .I8).val (laneBits (lsize (lanetype_Jnn .I8)) index.val y.bv).toNat) result.2 ?_ ?_ written,?_⟩
     · simpa only [SpecExt.Builtins.integerBytes_length] using fits
-    · exact Spec.integerBytes_wf _ _
+    · exact Spec.integer_bytes_wf _ _
     · with_unfolding_all exact source
   · rw [if_neg fits] at effect
     obtain ⟨returned,source⟩ := effect
@@ -66,7 +66,7 @@ theorem memory_entry_89 : MemoryOperationSound 89#u32 := by
     refine ⟨_,MemoryBufferChange.write ((UScalar.cast .U32 x).val + offset.val)
       (SpecExt.Builtins.integerBytes (memoryLaneBytes .I16).val (laneBits (lsize (lanetype_Jnn .I16)) index.val y.bv).toNat) result.2 ?_ ?_ written,?_⟩
     · simpa only [SpecExt.Builtins.integerBytes_length] using fits
-    · exact Spec.integerBytes_wf _ _
+    · exact Spec.integer_bytes_wf _ _
     · with_unfolding_all exact source
   · rw [if_neg fits] at effect
     obtain ⟨returned,source⟩ := effect
@@ -88,7 +88,7 @@ theorem memory_entry_90 : MemoryOperationSound 90#u32 := by
     refine ⟨_,MemoryBufferChange.write ((UScalar.cast .U32 x).val + offset.val)
       (SpecExt.Builtins.integerBytes (memoryLaneBytes .I32).val (laneBits (lsize (lanetype_Jnn .I32)) index.val y.bv).toNat) result.2 ?_ ?_ written,?_⟩
     · simpa only [SpecExt.Builtins.integerBytes_length] using fits
-    · exact Spec.integerBytes_wf _ _
+    · exact Spec.integer_bytes_wf _ _
     · with_unfolding_all exact source
   · rw [if_neg fits] at effect
     obtain ⟨returned,source⟩ := effect
@@ -110,7 +110,7 @@ theorem memory_entry_91 : MemoryOperationSound 91#u32 := by
     refine ⟨_,MemoryBufferChange.write ((UScalar.cast .U32 x).val + offset.val)
       (SpecExt.Builtins.integerBytes (memoryLaneBytes .I64).val (laneBits (lsize (lanetype_Jnn .I64)) index.val y.bv).toNat) result.2 ?_ ?_ written,?_⟩
     · simpa only [SpecExt.Builtins.integerBytes_length] using fits
-    · exact Spec.integerBytes_wf _ _
+    · exact Spec.integer_bytes_wf _ _
     · with_unfolding_all exact source
   · rw [if_neg fits] at effect
     obtain ⟨returned,source⟩ := effect

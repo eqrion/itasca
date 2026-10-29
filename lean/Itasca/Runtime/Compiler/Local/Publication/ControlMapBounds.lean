@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Numerical bounds for a closed control map. Intermediate closing targets
@@ -57,4 +57,4 @@ theorem OpenControlMapBounds.close_fields {A : Type} {compiler : runtime.compile
   rw [startPc,startSource,position,endSource]
   exact ⟨pc,le_rfl,lower,endBound,by omega⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

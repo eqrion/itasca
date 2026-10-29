@@ -14,7 +14,7 @@ Reader inversion and compiler emission for untyped select.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_select_wasm2 {data env locals index st}
@@ -52,7 +52,7 @@ theorem reader_select_wasm2 {data env locals index st}
   · simpa [controls] using blocks
   · exact stack
   · exact encoded.declared _
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -60,7 +60,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_select_wasm2 {data env locals typeIndex st}
@@ -106,6 +106,6 @@ theorem reader_emit_select_wasm2 {data env locals typeIndex st}
   obtain ⟨emitted, lower, emission⟩ := lowered rfl
   exact ⟨ordinary, sources, cursor, ty, front, values, beforeTypes, post, emitted,
     ⟨lower, SourceStack.of_map types concrete output⟩, emission⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

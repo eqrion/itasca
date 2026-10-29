@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOperands
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every reference, table, memory-size/growth, and bulk-memory callback
@@ -12,8 +12,8 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
     (demand : CallbackDemand compiler state bound) (C : context)
-    (front input output : List valtype) (op : Abs.Stateful.Instruction)
-    (signature : Abs.Stateful.Signature C op input output) (a b : U32)
+    (front input output : List valtype) (op : SourceMachine.Stateful.Instruction)
+    (signature : SourceMachine.Stateful.Signature C op input output) (a b : U32)
     (layout : compiler.reachable = true → CompilerLayout compiler (front ++ input))
     (pairIndex : statefulUsesPair op = true → compiler.function.indirect.length ≤ U32.max)
     (pairCapacity : statefulUsesPair op = true → compiler.function.indirect.length < Usize.max)
@@ -31,7 +31,7 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
       subst status
       have read : runtime.compiler.FunctionCompiler.operand ops after 3#usize = .ok (.Ok first) := by
         rw [frame]
-        have arity : op.arity = 3 := by cases op <;> simp_all [statefulUsesPair,Abs.Stateful.Instruction.arity]
+        have arity : op.arity = 3 := by cases op <;> simp_all [statefulUsesPair,SourceMachine.Stateful.Instruction.arity]
         simpa [StatefulReads,arity,statefulDepth,runtime.compiler.FunctionCompiler.operand] using reads.1
       rw [lower_stateful_pair_eq ops compiler after state op first second a b index live paired actual read]
       have afterDemand : CallbackDemand after state bound := by
@@ -51,4 +51,4 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

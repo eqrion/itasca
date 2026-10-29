@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFramePatch
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- ELSE keeps the original frame signature and stack base, consumes its guard,
@@ -51,4 +51,4 @@ theorem FrameScope.record_branch {A : Type} {locals} {compiler : runtime.compile
     FrameScope locals compiler scope {frame with fixups, end_reachable := true} :=
   ⟨shape.toScopeFrameShape.record_branch fixups forward, shape.mapBound, shape.entryBound,
     shape.bodyBound, shape.entryCode⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

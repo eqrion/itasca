@@ -7,7 +7,7 @@ Dormant source prefixes for constants, nop and drop.
 Main declarations: `structured_reader_prefix_dead_const32_wasm2` and `structured_reader_prefix_dead_drop_wasm2`. A direct consumer is `Compiler.Body.Reader.Scalar.ConstantCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_const32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
@@ -117,4 +117,4 @@ theorem structured_reader_prefix_dead_drop_wasm2 {jumpTables : List U32} {data e
   apply post.structured_dead_op ops law invariant dead 26#u16 0#u32 0#u32 0#u128
   exact callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

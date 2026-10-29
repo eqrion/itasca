@@ -13,14 +13,14 @@ open SpecExt.Builtins SpecExt.Builtins.Float
 
 def shapeOf (ty : lanetype) : shape := .X ty (.mk_dim (128/lsize ty))
 
-theorem shapeOf_wf (ty : lanetype) : wf_shape (shapeOf ty) := by
+theorem shape_of_wf (ty : lanetype) : wf_shape (shapeOf ty) := by
   cases ty <;> constructor
   all_goals first | exact .dim_case_0 _ (by decide) | decide
 
-theorem shapeOf_covers (ty : lanetype) : lsize ty * (128/lsize ty) = 128 := by
+theorem shape_of_covers (ty : lanetype) : lsize ty * (128/lsize ty) = 128 := by
   cases ty <;> decide
 
-theorem laneOfBits_wf (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
+theorem lane_of_bits_wf (ty : lanetype) (bits : Nat) (bound : bits < 2^lsize ty) :
     wf_lane_ ty (laneOfBits ty bits) := by
   cases ty with
   | I8 => exact .lane__case_0 _ _ _ (unsigned_wf_of_lt 8 bits bound) rfl
@@ -37,7 +37,7 @@ def scalarInput (ty : lanetype) (bits : BitVec 64) : num_ :=
   | .F32 => .mk_num__1 .F32 (floatOfBits 32 (bits.setWidth 32).toNat)
   | .F64 => .mk_num__1 .F64 (floatOfBits 64 bits.toNat)
 
-theorem scalarInput_wf (ty : lanetype) (bits : BitVec 64) :
+theorem scalar_input_wf (ty : lanetype) (bits : BitVec 64) :
     wf_num_ (unpack ty) (scalarInput ty bits) := by
   cases ty with
   | I8 | I16 | I32 => exact unsigned_num_wf .I32 _ (BitVec.toNat_lt_twoPow_of_le (by rfl))
@@ -45,10 +45,10 @@ theorem scalarInput_wf (ty : lanetype) (bits : BitVec 64) :
   | F32 => exact float_num_wf .F32 _ (floatOfBits_wf_32 _ (BitVec.toNat_lt_twoPow_of_le (by rfl)))
   | F64 => exact float_num_wf .F64 _ (floatOfBits_wf_64 _ (BitVec.toNat_lt_twoPow_of_le (by rfl)))
 
-theorem pack_scalarInput (ty : lanetype) (bits : BitVec 64) :
+theorem pack_scalar_input (ty : lanetype) (bits : BitVec 64) :
     fun_packnum_ ty (scalarInput ty bits)
       (some (laneOfBits ty (bits.setWidth (lsize ty)).toNat)) := by
-  have wf := laneOfBits_wf ty (bits.setWidth (lsize ty)).toNat
+  have wf := lane_of_bits_wf ty (bits.setWidth (lsize ty)).toNat
     (BitVec.toNat_lt_twoPow_of_le (by rfl))
   cases ty with
   | I32 => exact .fun_packnum__case_0 _ wf
@@ -93,8 +93,8 @@ theorem splat_step (ty : lanetype) (bits : BitVec 64) (result : BitVec 128)
       [.VCONST .V128 (.mk_uN result.toNat)] := by
   exact .vsplat ty (scalarInput ty bits) (128/lsize ty) (.mk_uN result.toNat)
     (some (laneOfBits ty (bits.setWidth (lsize ty)).toNat))
-    (pack_scalarInput ty bits) (by simp) packed
-    (.admininstr_case_13 _ _ (scalarInput_wf ty bits))
-    (.admininstr_case_33 _ (shapeOf_wf ty)) (const_wf result) (shapeOf_wf ty)
+    (pack_scalar_input ty bits) (by simp) packed
+    (.admininstr_case_13 _ _ (scalar_input_wf ty bits))
+    (.admininstr_case_33 _ (shape_of_wf ty)) (const_wf result) (shape_of_wf ty)
 
 end Itasca.Runtime.Spec.Simd

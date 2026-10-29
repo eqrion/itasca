@@ -18,7 +18,7 @@ theorem clamp_signed (width : Nat) (x : Int) : clampLane width true x = sat_s_ w
   have exponent : ((width:Int)-1).toNat = width-1 := by omega
   simp only [clampLane,Bool.true_eq,↓reduceIte,sat_s_,exponent]
 
-theorem clamp_signed_toInt (width : Nat) (x : Int) (positive : 0 < width) :
+theorem clamp_signed_to_int (width : Nat) (x : Int) (positive : 0 < width) :
     (BitVec.ofInt width (clampLane width true x)).toInt = sat_s_ width x := by
   have exponent : ((width:Int)-1).toNat = width-1 := by omega
   have power : 0 < (2^(width-1):Int) := pow_pos (by decide) _
@@ -27,7 +27,7 @@ theorem clamp_signed_toInt (width : Nat) (x : Int) (positive : 0 < width) :
   all_goals simp only [sat_s_,exponent]
   all_goals split <;> (try split) <;> omega
 
-theorem clamp_unsigned_toNat (width : Nat) (x : Int) :
+theorem clamp_unsigned_to_nat (width : Nat) (x : Int) :
     (BitVec.ofInt width (clampLane width false x)).toNat = sat_u_ width x := by
   have power : 0 < (2^width:Int) := pow_pos (by decide) _
   simp only [clampLane,Bool.false_eq_true,↓reduceIte,sat_u_]

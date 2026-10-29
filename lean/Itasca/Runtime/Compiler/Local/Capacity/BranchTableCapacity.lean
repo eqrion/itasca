@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 theorem compiler_table_branch_capacity {A : Type} (ops : runtime.platform.Alloc A)
@@ -61,4 +61,4 @@ theorem compiler_br_table_capacity {A : Type} (ops : runtime.platform.Alloc A)
       have effect := compiler_observe_capacity_bound ops law {before with budget,table_depths:=cleared} after state (.Ok ())
         (by simpa only [dead] using observed)
       exact ⟨effect.1,effect.2 rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

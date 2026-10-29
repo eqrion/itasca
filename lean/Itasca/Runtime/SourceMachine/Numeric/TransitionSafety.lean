@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Numeric.Instruction
 
-namespace Itasca.Runtime.Abs.Numeric
+namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 
 theorem transition_preservation (s : store) (ambient : frame) (f : AFrame)
@@ -35,4 +35,4 @@ theorem astep_preservation (s : store) (ambient : frame) (f : AFrame)
   rw [astep_typed_eq ⟨s, ambient, [], []⟩ f rest after op hf] at step
   exact transition_preservation s ambient f rest after op next typed step
 
-end Itasca.Runtime.Abs.Numeric
+end Itasca.Runtime.SourceMachine.Numeric

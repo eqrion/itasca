@@ -1,6 +1,6 @@
 import Itasca.Visitor.Recording
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca VisitorTrace
 
 /-- Source-only temporary-storage demand of one validated observation. Compiler
@@ -50,4 +50,4 @@ theorem observationDemand.recorded_op {prior suffix final : List Observation}
     simp
   exact ⟨(observationDemand.member member).1,(observationDemand.member member).2.1⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

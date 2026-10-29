@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Host.HostCallSource
 import Itasca.Runtime.Interp.Host.HostReturnFrames
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Successful actual host calls supply the concrete slot/frame transport used
@@ -20,4 +20,4 @@ theorem HostCallSourceOutcome.return_effect {M P : Type}
     exact ⟨identity,frames,capacity,values,fun j bound below => preserved j bound (Or.inl below)⟩
   · rcases failed.1 with status | status <;> rw [success] at status <;> cases status
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -18,15 +18,15 @@ open SpecExt
 def zeroMemarg : memarg := ⟨.mk_uN 0,.mk_uN 0⟩
 def storeByte : admininstr := .STORE .I32 (some (.mk_sz 8)) zeroMemarg
 
-theorem zeroMemarg_wf : wf_memarg zeroMemarg := by
+theorem zero_memarg_wf : wf_memarg zeroMemarg := by
   constructor <;> exact index_wf 0 (by norm_num)
 
-theorem storeByte_wf : wf_admininstr storeByte := by
+theorem store_byte_wf : wf_admininstr storeByte := by
   apply wf_admininstr.admininstr_case_57 (some .I32)
   · simp only [Option.toList_some,Forall,List.mem_cons,List.not_mem_nil,false_implies,forall_const,and_true,forall_eq_or_imp]
     constructor
     decide
-  · exact zeroMemarg_wf
+  · exact zero_memarg_wf
   · simp
   · norm_num [Forall₂,numtype_Inn,proj_sz_0,sizenn,size,valtype_numtype]
 
@@ -57,7 +57,7 @@ def memoryWrite (s : store) (f : frame) (position : Nat) (value : byte) : store 
   {s with MEMS := s.MEMS.modify f.MODULE.MEMS[0]! (fun memory =>
     {memory with BYTES := memory.BYTES.set position value})}
 
-theorem memoryWrite_wf (s : store) (f : frame) (position : Nat) (value : byte)
+theorem memory_write_wf (s : store) (f : frame) (position : Nat) (value : byte)
     (hs : wf_store s) (hb : wf_byte value) : wf_store (memoryWrite s f position value) := by
   cases s with | MKstore funcs globals tables mems elems datas =>
   cases hs with | store_case_ _ _ _ _ _ _ hfn hg ht hm hd =>
@@ -79,7 +79,7 @@ theorem memory_write_step (s : store) (f : frame) (position : Nat) (value : byte
     (inside : position < (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length) :
     StepH ⟨⟨s,f⟩,[i32 position,i32 (proj_byte_0 value),storeByte]⟩ []
       ⟨⟨memoryWrite s f position value,f⟩,[]⟩ := by
-  have fresh := memoryWrite_wf s f position value hs hb
+  have fresh := memory_write_wf s f position value hs hb
   apply StepH.step
   apply Step.store_pack_val _ _ .I32 _ 8 zeroMemarg [value] _
   · simp [proj_num__0]
@@ -92,7 +92,7 @@ theorem memory_write_step (s : store) (f : frame) (position : Nat) (value : byte
   · exact (byte_store_encoding value hb).symm
   · apply wf_config_make hs hf
     simp only [Forall,List.mem_cons,List.not_mem_nil,false_implies,forall_const,and_true,forall_eq_or_imp]
-    exact ⟨i32_wf _ hp,i32_wf _ (by have := byte_bound value hb; omega),storeByte_wf⟩
+    exact ⟨i32_wf _ hp,i32_wf _ (by have := byte_bound value hb; omega),store_byte_wf⟩
   · exact wf_config_make fresh hf (by simp [Forall])
 
 def next32 (value : Nat) : Nat := (value+1) % 2^32
@@ -123,15 +123,15 @@ theorem memory_init_expand (s : store) (f : frame) (destination source count dat
     apply wf_config_make hs hf
     simp only [operands,List.cons_append,List.nil_append,Forall,List.mem_cons,
       List.not_mem_nil,false_implies,forall_const,and_true,forall_eq_or_imp]
-    exact ⟨i32_wf _ hd,valueWf,storeByte_wf,i32_wf _ (next32_bound _),i32_wf _ (next32_bound _),i32_wf _ (by omega),memoryWf⟩
+    exact ⟨i32_wf _ hd,valueWf,store_byte_wf,i32_wf _ (next32_bound _),i32_wf _ (next32_bound _),i32_wf _ (by omega),memoryWf⟩
   apply StepH.step
   apply Step.read _ _ _ ?_ input output
   have read := Step_read.memory_init_succ ⟨s,f⟩ (.mk_num__0 .I32 (.mk_uN destination))
     (.mk_num__0 .I32 (.mk_uN source)) (count+1) (.mk_uN dataIndex)
     (.mk_uN (next32 source)) (.mk_uN (next32 destination)) zeroMemarg srcInside
     (by simp [proj_num__0]) (next32_add source) (by simp [proj_num__0]) (next32_add destination)
-    (.fun_memarg0_case_0 zeroMemarg_wf) (Nat.succ_ne_zero count) inside input
-    (i32_wf _ hd) valueWf storeByte_wf (i32_wf _ (next32_bound _)) (i32_wf _ (next32_bound _))
+    (.fun_memarg0_case_0 zero_memarg_wf) (Nat.succ_ne_zero count) inside input
+    (i32_wf _ hd) valueWf store_byte_wf (i32_wf _ (next32_bound _)) (i32_wf _ (next32_bound _))
     (by simpa [i32] using i32_wf count (by omega)) memoryWf
   simpa [operands,i32,storeByte,proj_num__0,proj_uN_0] using read
 
@@ -141,7 +141,7 @@ def memoryInit (s : store) (f : frame) (dataIndex destination source : Nat) : Na
       (memoryWrite s f destination ((fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES[source]!))
       f dataIndex (next32 destination) (next32 source) count
 
-theorem memoryWrite_mem_length (s : store) (f : frame) (position : Nat) (value : byte)
+theorem memory_write_mem_length (s : store) (f : frame) (position : Nat) (value : byte)
     (address : f.MODULE.MEMS[0]! < s.MEMS.length) :
     (fun_mem ⟨memoryWrite s f position value,f⟩ (.mk_uN 0)).BYTES.length =
       (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length := by
@@ -160,18 +160,18 @@ theorem memory_init_steps (s : store) (f : frame) (destination source count data
     StepsH ⟨⟨s,f⟩,operands destination source count ++ [.MEMORY_INIT (.mk_uN dataIndex)]⟩ []
       ⟨⟨memoryInit s f dataIndex destination source count,f⟩,[]⟩ := by
   induction count generalizing s destination source with
-  | zero => exact stepsH_single (memory_init_zero s f destination source dataIndex hs hf hd hi he inside)
+  | zero => exact steps_h_single (memory_init_zero s f destination source dataIndex hs hf hd hi he inside)
   | succ count ih =>
     let value := (fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES[source]!
     have srcInside : source < (fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES.length := by omega
     have valueWf : wf_byte value := bytesWf _ (by simp [value,srcInside])
     let fresh := memoryWrite s f destination value
-    have hw := memoryWrite_wf s f destination value hs valueWf
-    have lengthEq := memoryWrite_mem_length s f destination value address
+    have hw := memory_write_wf s f destination value hs valueWf
+    have lengthEq := memory_write_mem_length s f destination value address
     have afterWf := (wf_config_parts (init_config_wf fresh f (next32 destination) (next32 source) count _ hw hf (next32_bound _) (next32_bound _)
       (by omega) (.admininstr_case_66 _ (index_wf _ he)))).2
     have first := memory_init_expand s f destination source count dataIndex hs hf hd hi hn he bytesWf inside
-    have second := stepH_instrs (memory_write_step s f destination value hs hf hd valueWf mapped (by have := inside.2; omega)) []
+    have second := step_h_instrs (memory_write_step s f destination value hs hf hd valueWf mapped (by have := inside.2; omega)) []
       (operands (next32 destination) (next32 source) count ++ [.MEMORY_INIT (.mk_uN dataIndex)])
       (by simp [Forall]) afterWf
     have rest := ih fresh (next32 destination) (next32 source) hw (next32_bound _) (next32_bound _) (by omega)
@@ -182,7 +182,7 @@ theorem memory_init_steps (s : store) (f : frame) (destination source count data
           have := next32_le source
           have := next32_le destination
           omega)
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans (steps_h_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,memoryInit,value,fresh] using combined
 
 end Itasca.Runtime.Spec.Segment
@@ -196,7 +196,7 @@ section
 namespace Itasca.Runtime.Spec.Segment
 open SpecExt
 
-theorem memoryInit_eq (s : store) (f : frame) (dataIndex destination source count : Nat)
+theorem memory_init_eq (s : store) (f : frame) (dataIndex destination source count : Nat)
     (address : f.MODULE.MEMS[0]! < s.MEMS.length)
     (memoryBound : (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES.length ≤ 2^32)
     (dataBound : (fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES.length ≤ 2^32)
@@ -218,7 +218,7 @@ theorem memoryInit_eq (s : store) (f : frame) (dataIndex destination source coun
       have srcBound : source+1 < 2^32 := by omega
       have dstNext : next32 destination = destination+1 := Nat.mod_eq_of_lt dstBound
       have srcNext : next32 source = source+1 := Nat.mod_eq_of_lt srcBound
-      have lengthEq := memoryWrite_mem_length s f destination
+      have lengthEq := memory_write_mem_length s f destination
         ((fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES[source]!) address
       rw [memoryInit,dstNext,srcNext,ih (memoryWrite s f destination ((fun_data ⟨s,f⟩ (.mk_uN dataIndex)).BYTES[source]!)) (destination+1) (source+1)
         (by simpa [memoryWrite] using address)

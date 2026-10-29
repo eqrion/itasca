@@ -8,7 +8,7 @@ SIMD lowering operand counts and opcode reduction. Count-position facts discharg
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -74,7 +74,7 @@ theorem simd_count_position {A : Type} (ops : runtime.platform.Alloc A)
   have same : first = operand := by simpa only [read,Result.ok.injEq,core.result.Result.Ok.injEq] using executed.symm
   subst first
   exact ⟨count,by simpa [offset,List.length_append,count] using position⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -82,7 +82,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem simd_opcode_reduction (opcode : U16) (sub : U32)
@@ -95,6 +95,6 @@ theorem simd_opcode_reduction (opcode : U16) (sub : U32)
   have bound := reduced.hBounds
   rw [UScalar.cast_val_eq]
   scalar_tac
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

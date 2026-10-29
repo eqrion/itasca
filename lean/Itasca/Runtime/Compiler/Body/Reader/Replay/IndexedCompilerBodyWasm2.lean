@@ -91,7 +91,7 @@ Actual accepted complete-profile body execution produces indexed code evidence a
 Main declarations: `TypedRunWasm2.compile_executable`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- Actual accepted complete-profile body execution produces indexed code
 evidence against all four final function-local tables. -/
@@ -160,4 +160,4 @@ theorem TypedRunWasm2.compile_executable {A : Type}
     exact .inr (point.simd ops law C contextLocals matched.mems (fun tables => (inferInstance : SimdEmbedding tables.simd tables.constants C (ExecutableEmission tables C))) next advance inbounds out sourceBound bodyBound simd accepted)
   · rw [typedSelect] at accepted
     exact .inr (point.typed_select ops law C (by intro tables input instruction code output h; exact .typedSelect h) contextLocals next advance inbounds out sourceBound bodyBound typedSelect accepted)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

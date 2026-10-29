@@ -11,7 +11,7 @@ SIMD lowering certificates through constant emission and final table metadata. T
 section
 
 set_option maxRecDepth 4096
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 
 theorem simd_const_lowering_allocation_success {A : Type} (ops : runtime.platform.Alloc A)
@@ -41,7 +41,7 @@ theorem simd_const_lowering_allocation_success {A : Type} (ops : runtime.platfor
       simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
       exact ⟨entry,budget,values,indexEq,pushEq,rest⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -49,7 +49,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 theorem compiler_finish_simd_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -71,7 +71,7 @@ theorem compiler_finish_simd_tables {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨budget,code,sources,middleEq,_,_⟩ := compiler_emit_success ops law before middle instruction emitted
     rw [frame,middleEq]
     exact ⟨rfl,rfl⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -79,7 +79,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
@@ -180,6 +180,6 @@ theorem compiler_simd_const_emission {A : Type} (ops : runtime.platform.Alloc A)
   · apply SimdEmission.constant front bits before.height entry _ (by simpa only [locals] using layout.height)
     rw [afterTable,indexVal]
     simp
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

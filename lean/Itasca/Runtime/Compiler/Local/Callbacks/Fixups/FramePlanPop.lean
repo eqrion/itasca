@@ -6,7 +6,7 @@ Invert the compiler's physical push without losing the source label or that fram
 Main declarations: `FramePlans.pop`. A direct consumer is `Compiler.Local.Callbacks.Control.ElseFrames`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Invert the compiler's physical push without losing the source label or
@@ -30,4 +30,4 @@ theorem FramePlans.pop {length locals frames frame labels groups}
     subst old current
     exact ⟨label, labels, groups, guardTarget, rfl, rfl, prior, future⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

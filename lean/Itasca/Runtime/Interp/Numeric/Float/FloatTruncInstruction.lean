@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Numeric.Float.FloatTruncSource
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float
 
-theorem truncOutcome_value_bound (source : Fnn) (target : Inn) (sign : sx) (sat : Bool)
+theorem trunc_outcome_value_bound (source : Fnn) (target : Inn) (sign : sx) (sat : Bool)
     (input : fN) (value : U64)
     (effect : TruncOutcome (if sat then trunc_sat__ (sizenn (numtype_Fnn source)) (sizenn (numtype_Inn target)) sign input
       else trunc__ (sizenn (numtype_Fnn source)) (sizenn (numtype_Inn target)) sign input) (.Ok value)) :
@@ -16,7 +16,7 @@ theorem truncOutcome_value_bound (source : Fnn) (target : Inn) (sign : sx) (sat 
     · exact Spec.float_trunc_sat_results_wf _ target sign input
   change _ = some (uN.mk_uN value.val) at effect
   rw [effect] at valid
-  exact Abs.Float.integer_number_bound target value.val (valid _ (by simp))
+  exact SourceMachine.Float.integer_number_bound target value.val (valid _ (by simp))
 
 theorem trunc_instruction_result (source : Fnn) (target : Inn) (sign : sx) (sat : Bool)
     (a b : U64) (result : core.result.Result U64 runtime.ExecError)
@@ -29,7 +29,7 @@ theorem trunc_instruction_result (source : Fnn) (target : Inn) (sign : sx) (sat 
     FloatScalarOutcome (.truncate source target sign sat) a b result := by
   cases result with
   | Ok value =>
-    have bound := truncOutcome_value_bound source target sign sat _ value semantic
+    have bound := trunc_outcome_value_bound source target sign sat _ value semantic
     cases source <;> cases target <;> exact ⟨bound, sourceStep⟩
   | Err error =>
     cases error <;> simp only [TruncSourceOutcome] at sourceStep

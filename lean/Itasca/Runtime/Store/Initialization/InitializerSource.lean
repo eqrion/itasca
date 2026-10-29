@@ -63,7 +63,7 @@ theorem initializer_resolution_source_in_state {M : Type}
       (ModuleConstants.expression expression)
       ⟨sourceStore, ⟨[], sourceInstance⟩⟩
       [decodeWords ty ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64)] := by
-  have outputWf := decodeWords_wf ty ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64)
+  have outputWf := decode_words_wf ty ((words[0]?).getD 0#u64) ((words[1]?).getD 0#u64)
   have inputWf := ModuleConstants.instruction_wf expression
   cases resolved with
   | i32 value =>

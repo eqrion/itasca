@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The source byte budget pays for at most three emitted instructions per byte.
@@ -46,4 +46,4 @@ theorem SourceCodeBudget.code_capacity {A : Type} {compiler : runtime.compiler.F
   have fetchBound := budget.fetch_bound sourceBound
   have wordBound : U32.max ≤ Usize.max := by scalar_tac
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

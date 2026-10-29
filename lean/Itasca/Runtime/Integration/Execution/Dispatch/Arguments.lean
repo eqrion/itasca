@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Invoke
 
 /-! Invocation entry bridges checked API arguments and retained function
 metadata to the typed abstract state. Compiler/body certificates remain explicit. -/
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 
 theorem arguments_typed {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
@@ -45,16 +45,16 @@ theorem checked_arguments_typed {M : Type} (memory : runtime.platform.MemoryBuff
 
 theorem argument_type_tags {id : Usize} {args : List runtime.Value} {types : List Itasca.types.ValueType}
     (matched : List.Forall₂ (Interp.ArgumentMatches id) args types) :
-    (args.map Interp.sourceValue).map Code.valueType = types.map Interp.sourceType := by
+    (args.map Interp.sourceValue).map Compiler.valueType = types.map Interp.sourceType := by
   induction matched with
   | nil => rfl
   | cons head tail ih =>
-    simp only [List.map_cons, Interp.sourceValue_type, head.2, ih]
+    simp only [List.map_cons, Interp.source_value_type, head.2, ih]
 
 theorem checked_argument_type_tags {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
     (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref types) = .ok (.Ok ())) :
-    (args.val.map Interp.sourceValue).map Code.valueType = types.val.map Interp.sourceType := by
+    (args.val.map Interp.sourceValue).map Compiler.valueType = types.val.map Interp.sourceType := by
   have h := Interp.check_values_accepts_iff memory store args (alloc.vec.Vec.deref types)
   rw [accepted] at h
   simp only [WP.spec_ok] at h
@@ -62,4 +62,4 @@ theorem checked_argument_type_tags {M : Type} (memory : runtime.platform.MemoryB
     simpa [alloc.vec.Vec.deref] using h.mp trivial
   exact argument_type_tags matched
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

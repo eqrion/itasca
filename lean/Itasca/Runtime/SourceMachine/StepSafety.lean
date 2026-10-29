@@ -1,10 +1,10 @@
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
 import Itasca.Runtime.SourceMachine.CallSafety
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
-theorem returnFrame_preservation {s : store} {ambient : frame} {f : AFrame}
+theorem return_frame_preservation {s : store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {next : AState}
     (typed : ATyped ⟨s, ambient, f :: rest, []⟩)
     (values : ResultsTyped s f.resultTypes (f.vals.drop (f.vals.length - f.arity)))
@@ -46,7 +46,7 @@ theorem instruction_preservation (s : store) (ambient : frame) (f : AFrame)
   | loop bt body => exact loop_preservation s ambient f rest after bt body next typed step
   | br index => cases index with | mk_uN i => exact br_preservation s ambient f rest after i next typed step
   | call index => cases index with | mk_uN i => exact call_preservation s ambient f rest after i next typed step
-  | ret => exact returnFrame_preservation typed (return_suffix_typed hf) step
+  | ret => exact return_frame_preservation typed (return_suffix_typed hf) step
   | drop =>
     obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands⟩ := frame_typed_operands hf
     cases hop
@@ -114,7 +114,7 @@ theorem instruction_preservation (s : store) (ambient : frame) (f : AFrame)
   | ifelse bt yes no =>
     obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands⟩ := frame_typed_operands hf
     cases hop
-    obtain ⟨args, conditions, rfl, _, hcond⟩ := resultsTyped_split hoperands
+    obtain ⟨args, conditions, rfl, _, hcond⟩ := results_typed_split hoperands
     cases hcond with
     | cons hv hend =>
       cases hend
@@ -130,7 +130,7 @@ theorem instruction_preservation (s : store) (ambient : frame) (f : AFrame)
     | mk_uN i =>
       obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands⟩ := frame_typed_operands hf
       cases hop
-      obtain ⟨args, conditions, rfl, _, hcond⟩ := resultsTyped_split hoperands
+      obtain ⟨args, conditions, rfl, _, hcond⟩ := results_typed_split hoperands
       cases hcond with
       | cons hv hend =>
         cases hend
@@ -142,4 +142,4 @@ theorem instruction_preservation (s : store) (ambient : frame) (f : AFrame)
         apply active_frame_preservation typed (br_if_frame_preservation (f := f) ?_) rfl
         simpa only [hvals] using hf
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

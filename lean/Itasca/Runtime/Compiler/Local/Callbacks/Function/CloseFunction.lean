@@ -7,7 +7,7 @@ Effects of closing the outermost compiled function.
 Main declarations: `close_function_effect`. A direct consumer is `Compiler.Local.Callbacks.Control.CloseMapEffect`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem close_function_effect {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -78,7 +78,7 @@ open Aeneas Aeneas.Std
   rw [bind_ok]
   simp only [ite_true]
   have codeLength : code.val.length = compiler.function.code.val.length := by
-    simpa only [patchCode_length] using congrArg List.length effect
+    simpa only [patch_code_length] using congrArg List.length effect
   change WP.spec (Aeneas.Std.bind (if scopeExitLive compiler.reachable frame then
     .ok frame.results else .ok 0#u32) _) _
   have choose : (if scopeExitLive compiler.reachable frame then .ok frame.results else .ok 0#u32) =
@@ -109,4 +109,4 @@ open Aeneas Aeneas.Std
         scalar_tac
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

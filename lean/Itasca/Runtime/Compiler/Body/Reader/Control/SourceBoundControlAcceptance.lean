@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -124,4 +124,4 @@ theorem IndexedTableReaderCompilerPointWasm2.control_available_from_source {A : 
       ⟨sourceLocals,ft.results⟩ (capacity.one (by decide)) currentSignatures state.compiled.known state.reach.current
       (fun live => (state.compiled.live live).2.layout) ledger.indirect byte reference
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

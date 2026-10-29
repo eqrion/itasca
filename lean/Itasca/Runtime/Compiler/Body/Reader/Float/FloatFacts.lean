@@ -11,8 +11,8 @@ All base float instructions use the canonical scalar reader and visitor dispatch
 Main declarations: `float_reader_facts`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedNumericAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
-open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Abs.Float
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace SourceMachine.Float
 
 /-- All base float instructions use the canonical scalar reader
 and visitor dispatch table, with exactly the descriptor's operand types. -/
@@ -32,12 +32,12 @@ theorem float_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
       Wasm2.NumericExtensions.signMeaning (UScalar.cast .U8 (floatOpcode op)) = none ∧
       UScalar.cast .U8 (floatOpcode op) ≠ code.OP_MISC_PREFIX := by
   cases op with
-  | unary ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | binary ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | compare ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | convert source target sign => cases source <;> cases target <;> cases sign <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | truncate source target sign saturating => cases source <;> cases target <;> cases sign <;> cases saturating <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | reinterpretFloat source => cases source <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | reinterpretInt source => cases source <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-  | promote | demote => skip <;> (first | (solve | norm_num [floatOpcode,Abs.Float.Instruction.opcode,Abs.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
-end Itasca.Runtime.Code
+  | unary ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | binary ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | compare ty operator => cases ty <;> cases operator <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | convert source target sign => cases source <;> cases target <;> cases sign <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | truncate source target sign saturating => cases source <;> cases target <;> cases sign <;> cases saturating <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | reinterpretFloat source => cases source <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | reinterpretInt source => cases source <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+  | promote | demote => skip <;> (first | (solve | norm_num [floatOpcode,SourceMachine.Float.Instruction.opcode,SourceMachine.Float.signIndex] at base) | (refine ⟨_, _, rfl, rfl, rfl, rfl, rfl, rfl, by decide, by decide, rfl, ?_⟩; simp only [global_simps]; decide))
+end Itasca.Runtime.Compiler

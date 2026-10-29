@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseTransition
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- ELSE freezes the completed arm under every future outer plan and starts
@@ -78,7 +78,7 @@ theorem StructuredCompletedPrefix.begin_else {jumpTables : List Aeneas.Std.U32} 
       have outerAway := oldOuter.away_guard
         (fun f member => invariant.sites f (by rw [change.beforeFrames]; exact List.mem_append_left _ member))
         change.guardCode distinct
-      exact resolvedCode_guard _ [] _ guard condition old noEntry change.guardCode (by
+      exact resolved_code_guard _ [] _ guard condition old noEntry change.guardCode (by
         intro group member atSite atMember
         simp only [List.nil_append, List.mem_cons] at member
         rcases member with rfl | remaining
@@ -104,7 +104,7 @@ theorem StructuredCompletedPrefix.begin_else {jumpTables : List Aeneas.Std.U32} 
       rw [resolved]
       exact .emitted ⟨resolvedCode before.function.code.val
         (⟨[guard], noEntry⟩ :: ⟨frame.fixups.val, label.target⟩ :: pending), [],
-        by simp, resolvedCode_length _ _, by
+        by simp, resolved_code_length _ _, by
           cases normal <;> simpa using change.noPosition⟩
     refine ⟨?_, ?_, ?_⟩
     · rw [resolved]
@@ -128,5 +128,5 @@ theorem StructuredCompletedPrefix.begin_else {jumpTables : List Aeneas.Std.U32} 
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

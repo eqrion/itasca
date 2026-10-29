@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Bounds
 
-namespace Itasca.Runtime.Abs.Ownership
+namespace Itasca.Runtime.SourceMachine.Ownership
 
 /-- Publication may enlarge either reference namespace. Existing references
 remain owned only when both address bounds are retained. -/
@@ -36,12 +36,12 @@ theorem StateOwned.host_return {before after : Bounds} {s target : store} {ambie
     StateOwned after ⟨target,ambient,{caller with code:=code,vals:=front++returned}::rest,[]⟩ := by
   have previous := owned.extend extension
   have current := previous.2 caller (List.mem_cons_self ..)
-  refine ⟨valuesOwned_nil _,?_⟩
+  refine ⟨values_owned_nil _,?_⟩
   intro item member
   rcases List.mem_cons.mp member with rfl | member
-  · refine ⟨current.1,valuesOwned_append.mpr ⟨?_,results⟩⟩
+  · refine ⟨current.1,values_owned_append.mpr ⟨?_,results⟩⟩
     have operands := current.2
     rw [split] at operands
-    exact (valuesOwned_append.mp operands).1
+    exact (values_owned_append.mp operands).1
   · exact previous.2 item (List.mem_cons_of_mem _ member)
-end Itasca.Runtime.Abs.Ownership
+end Itasca.Runtime.SourceMachine.Ownership

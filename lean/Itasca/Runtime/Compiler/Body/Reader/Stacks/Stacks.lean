@@ -6,7 +6,7 @@ A live concrete stack has exactly one declarative interpretation.
 Main declarations: `realized_concrete_types` and `numeric_effect_types`. A direct consumer is `Compiler.Body.Reader.Control.ElseExitSlots`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A live concrete stack has exactly one declarative interpretation. -/
@@ -39,4 +39,4 @@ theorem numeric_effect_types {before after : List code.StackType} {inputs output
   have beforeTypes := realized_concrete_types known (transfer _ (Sequence.realizes_default false rest))
   exact ⟨Sequence.stackTypes rest, beforeTypes.symm, by simp [Sequence.stackTypes], afterKnown⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

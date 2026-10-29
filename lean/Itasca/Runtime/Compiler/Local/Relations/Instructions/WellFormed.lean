@@ -7,7 +7,7 @@ Instruction-check loops and compiled-function well-formedness.
 Main declarations: `checkInstructionBody` and `checkInstructions`. A direct consumer is `Compiler.Local.Relations.Instructions.SlotCheckAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
 abbrev checkInstructionBody (f : runtime.bytecode.CompiledFunction)
@@ -24,7 +24,7 @@ abbrev checkInstructions (f : runtime.bytecode.CompiledFunction)
 
 /-- A successful check iteration records the actual instruction-validity
 result and advances the bounded counter. -/
-theorem checkInstructionBody_cont (f : runtime.bytecode.CompiledFunction)
+theorem check_instruction_body_cont (f : runtime.bytecode.CompiledFunction)
     (length : Usize) (synthetic valid nextValid : Bool) (index nextIndex : Usize)
     (lengthEq : length.val = f.code.length)
     (run : checkInstructionBody f length synthetic valid index = .ok (.cont (nextValid, nextIndex))) :
@@ -66,7 +66,7 @@ theorem checkInstructionBody_cont (f : runtime.bytecode.CompiledFunction)
     · cases Result.ok_injective run
   · cases Result.ok_injective run
 
-theorem checkInstructionBody_done (f : runtime.bytecode.CompiledFunction)
+theorem check_instruction_body_done (f : runtime.bytecode.CompiledFunction)
     (length : Usize) (synthetic valid : Bool) (index : Usize)
     (run : checkInstructionBody f length synthetic valid index = .ok (.done true)) :
     length.val ≤ index.val ∧ valid = true := by
@@ -88,7 +88,7 @@ theorem checkInstructionBody_done (f : runtime.bytecode.CompiledFunction)
 /-- Successful observed checking validates every remaining instruction. The
 proof follows the extracted counter loop, without assuming its termination or
 that instruction validation itself succeeds on arbitrary malformed input. -/
-theorem checkInstructions_valid (f : runtime.bytecode.CompiledFunction)
+theorem check_instructions_valid (f : runtime.bytecode.CompiledFunction)
     (length : Usize) (synthetic valid : Bool) (index : Usize)
     (lengthEq : length.val = f.code.length)
     (run : checkInstructions f length synthetic valid index = .ok true) :
@@ -111,13 +111,13 @@ theorem checkInstructions_valid (f : runtime.bytecode.CompiledFunction)
       | done result =>
         have same : result = true := Result.ok_injective rest
         subst result
-        have terminal := checkInstructionBody_done f length synthetic valid index checked
+        have terminal := check_instruction_body_done f length synthetic valid index checked
         refine ⟨terminal.2, ?_⟩
         intro j lower upper
         omega
       | cont state =>
         rcases state with ⟨nextValid, nextIndex⟩
-        have advanced := checkInstructionBody_cont f length synthetic valid nextValid index nextIndex lengthEq checked
+        have advanced := check_instruction_body_cont f length synthetic valid nextValid index nextIndex lengthEq checked
         have smaller : length.val - nextIndex.val < n := by omega
         have remaining := ih _ smaller nextIndex nextValid rfl rest
         have current := advanced.2.2.2 remaining.1
@@ -128,14 +128,14 @@ theorem checkInstructions_valid (f : runtime.bytecode.CompiledFunction)
         · exact remaining.2 j (by omega) upper
   exact main _ index valid rfl run
 
-theorem checkJumpTable_false (values : alloc.vec.Vec U32) (length index : Usize) :
+theorem check_jump_table_false (values : alloc.vec.Vec U32) (length index : Usize) :
     runtime.bytecode.CompiledFunction.well_formed_loop1 values length false index = .ok false := by
   unfold runtime.bytecode.CompiledFunction.well_formed_loop1
   rw [loop.eq_def]
   simp only [runtime.bytecode.CompiledFunction.well_formed_loop1.body]
   split <;> simp
 
-theorem checkControls_false (values : alloc.vec.Vec runtime.compiler.ControlMap)
+theorem check_controls_false (values : alloc.vec.Vec runtime.compiler.ControlMap)
     (start stop length index : Usize) :
     runtime.bytecode.CompiledFunction.well_formed_loop2 values start stop length false index = .ok false := by
   unfold runtime.bytecode.CompiledFunction.well_formed_loop2
@@ -143,19 +143,19 @@ theorem checkControls_false (values : alloc.vec.Vec runtime.compiler.ControlMap)
   simp only [runtime.bytecode.CompiledFunction.well_formed_loop2.body]
   split <;> simp
 
-theorem checkJumpTable_true (values : alloc.vec.Vec U32) (length index : Usize) (valid : Bool)
+theorem check_jump_table_true (values : alloc.vec.Vec U32) (length index : Usize) (valid : Bool)
     (run : runtime.bytecode.CompiledFunction.well_formed_loop1 values length valid index = .ok true) :
     valid = true := by
   cases valid with
-  | false => rw [checkJumpTable_false] at run; cases Result.ok_injective run
+  | false => rw [check_jump_table_false] at run; cases Result.ok_injective run
   | true => rfl
 
-theorem checkControls_true (values : alloc.vec.Vec runtime.compiler.ControlMap)
+theorem check_controls_true (values : alloc.vec.Vec runtime.compiler.ControlMap)
     (start stop length index : Usize) (valid : Bool)
     (run : runtime.bytecode.CompiledFunction.well_formed_loop2 values start stop length valid index = .ok true) :
     valid = true := by
   cases valid with
-  | false => rw [checkControls_false] at run; cases Result.ok_injective run
+  | false => rw [check_controls_false] at run; cases Result.ok_injective run
   | true => rfl
 
 /-- Later jump-table/control checks cannot turn failed instruction validation
@@ -170,11 +170,11 @@ theorem checked_tail (f : runtime.bytecode.CompiledFunction) (length : Usize) (s
       runtime.bytecode.CompiledFunction.instruction_valid f instruction = .ok true := by
   obtain ⟨valid, instructions, run⟩ := bind_ok_inv _ _ _ run
   obtain ⟨valid', jumps, controls⟩ := bind_ok_inv _ _ _ run
-  have controlTrue := checkControls_true _ _ _ _ _ _ controls
+  have controlTrue := check_controls_true _ _ _ _ _ _ controls
   subst valid'
-  have jumpsTrue := checkJumpTable_true _ _ _ _ jumps
+  have jumpsTrue := check_jump_table_true _ _ _ _ jumps
   subst valid
-  have checked := checkInstructions_valid f length synthetic true 0#usize lengthEq instructions
+  have checked := check_instructions_valid f length synthetic true 0#usize lengthEq instructions
   intro j bound
   exact checked.2 j (by scalar_tac) (by omega)
 
@@ -203,5 +203,5 @@ theorem well_formed_fetched (f : runtime.bytecode.CompiledFunction)
   have same : actual = instruction := Option.some.inj (found.symm.trans fetched)
   exact same ▸ checked
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

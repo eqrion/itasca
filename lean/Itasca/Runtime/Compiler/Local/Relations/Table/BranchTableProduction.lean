@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableBuild
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLower
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- An accepted dispatch emits one header followed by the exact ordered target
@@ -32,4 +32,4 @@ theorem compiler_lower_table_production {A : Type} (ops : runtime.platform.Alloc
   exact ⟨start,len,selector,_,targets,startEq,lenEq,operand,
     ⟨budget,code,sources,rfl,codeEq,sourcesEq⟩,built,built.tables,
     built.length.trans lenEq.symm,built.height,headerBound⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.ExtensionTyping
 import Itasca.Runtime.SourceMachine.Typing
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Module bindings survive specification store extension, including growth,
 content writes, and dropping segments. -/
@@ -43,4 +43,4 @@ theorem FunctionsTyped.extend_same {s t : store} (functions : FunctionsTyped s)
     (extension : Extend_store s t) (same : t.FUNCS = s.FUNCS) : FunctionsTyped t := by
   intro fn member
   exact functions.extend_old extension fn (same ▸ member)
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

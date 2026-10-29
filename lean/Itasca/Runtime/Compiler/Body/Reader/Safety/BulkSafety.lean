@@ -9,7 +9,7 @@ The extracted bulk dispatcher returns for every subopcode and immediate, includi
 Main declarations: `compiler_reader_bulk_total`. A direct consumer is `Compiler.Body.Reader.Safety.OrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- The extracted bulk dispatcher returns for every subopcode and immediate,
@@ -76,4 +76,4 @@ theorem compiler_reader_bulk_total {A} (ops : runtime.platform.Alloc A)
       exact compiler_stateful_total ops law compiler state (.tableFill 0) value 0#u32
         ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
   · simp
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

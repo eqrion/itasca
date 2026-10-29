@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Host.HostCallSource
 import Itasca.Runtime.Integration.Execution.World.ExecutionCode
 import Itasca.Runtime.Interp.Relations.FrameStorePrefix
 import Itasca.Runtime.Integration.Host.HostResumeOwned
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem call_host_source_retained_world {M P F A : Type}
@@ -22,7 +22,7 @@ theorem call_host_source_retained_world {M P F A : Type}
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)
     (values : List val)
-    (typed : signature.params.val.map sourceType = values.map Code.valueType)
+    (typed : signature.params.val.map sourceType = values.map Compiler.valueType)
     (arguments : ResultsTyped (Store.decodeStore view code store) (signature.params.val.map sourceType) values)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
@@ -42,7 +42,7 @@ theorem call_host_source_retained_world {M P F A : Type}
        (HostCallSourceOutcome view afterCode store ambient address values base exec out ∧
         (out.1 = .Ok () → ResultsTyped (Store.decodeStore view afterCode out.2.2.1)
           (signature.results.val.map sourceType) (out.2.1.host_results.val.map sourceValue) ∧
-          Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ∧
+          SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) ∧
       HostCallCauses allocator hooks exec store platform signature base identity out := by
   apply DivSpec.mono (call_host_composition_causes memory hooks floats allocator allocation interrupts
     exec store platform address base function identity signature functionAt host signatureAt values
@@ -53,7 +53,7 @@ theorem call_host_source_retained_world {M P F A : Type}
       (HostCallSourceOutcome view afterCode store ambient address values base exec out ∧
        (out.1 = .Ok () → ResultsTyped (Store.decodeStore view afterCode out.2.2.1)
          (signature.results.val.map sourceType) (out.2.1.host_results.val.map sourceValue) ∧
-         Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))) ∧
+         SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue))) ∧
       HostCallCauses allocator hooks exec store platform signature base identity out) ?_)
   · intro out result
     rcases result with early | observed
@@ -72,7 +72,7 @@ theorem call_host_source_retained_world {M P F A : Type}
     · rw [called,bind_div]
       exact .div _ diverged
     rw [called,bind_ok]
-    have same := Store.decodeStore_code_agrees view agrees
+    have same := Store.decode_store_code_agrees view agrees
     have extension : Extend_store (Store.decodeStore view afterCode store)
         (Store.decodeStore view afterCode nextStore) := by simpa only [same] using crossExtension
     have hostSource := Store.decode_host_function view afterCode store address function identity signature functionAt host signatureAt
@@ -112,9 +112,9 @@ theorem call_host_source_retained_world {M P F A : Type}
             by simpa only [hostResults] using valuesAt,
             by simpa only [hostResults] using source,?_⟩⟩
           intro j bound outside
-          have tags := Abs.results_type_of_typed typedResults
+          have tags := SourceMachine.results_type_of_typed typedResults
           simp only [List.map_map,Function.comp_def] at tags
-          simp only [hostResults,Function.comp_def,valueType_eq_abs] at outside
+          simp only [hostResults,Function.comp_def,value_type_eq_abs] at outside
           rw [tags] at outside
           exact (preserved j outside).trans (oldSlots j bound)
         · obtain ⟨statusEq,same,source⟩ := failure
@@ -128,4 +128,4 @@ theorem call_host_source_retained_world {M P F A : Type}
         · simp [trapped] at success
         · simp [exhausted] at success
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

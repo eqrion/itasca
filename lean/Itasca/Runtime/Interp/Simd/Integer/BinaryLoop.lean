@@ -85,11 +85,11 @@ theorem integer_binary_loop
       have range := lane_range width.val index.val less
       step with lane x width index positive widthBound (by omega) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits width.val index.val x.bv).toNat := by
-        rw [laneBits_toNat]
+        rw [lane_bits_to_nat]
         exact aEq
       step with lane y width index positive widthBound (by omega) as ⟨b,bEq⟩
       have bBits : b.val = (laneBits width.val index.val y.bv).toNat := by
-        rw [laneBits_toNat]
+        rw [lane_bits_to_nat]
         exact bEq
       step with signed a width positive widthBound as ⟨sa,saEq⟩
       step with signed b width positive widthBound as ⟨sb,sbEq⟩

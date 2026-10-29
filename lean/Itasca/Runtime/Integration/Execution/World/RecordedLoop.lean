@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.History.RecordedPrefix
 import Itasca.Runtime.Platform.Recording
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def WorldRecordedLoopOutcome {M P : Type} {view : M → Slice U8} {expected : List valtype}
@@ -13,10 +13,10 @@ def WorldRecordedLoopOutcome {M P : Type} {view : M → Slice U8} {expected : Li
     Extend_store (Store.decodeStore view initial.code initial.machine.store) (Store.decodeStore view finalCode finalStore) ∧
     (status=.Ok () → ∃values,
       ResultsTyped (Store.decodeStore view finalCode finalStore) expected values ∧
-      Abs.Ownership.ValuesOwned (Store.ownershipBounds finalStore) values ∧ ValuesAt result.2.1.val 0 values ∧
-      StepsH (Abs.decode initial.machine.source) events
+      SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds finalStore) values ∧ ValuesAt result.2.1.val 0 values ∧
+      StepsH (SourceMachine.decode initial.machine.source) events
         ⟨⟨Store.decodeStore view finalCode finalStore,initial.machine.source.ambient⟩,vals values⟩) ∧
-    (∀error,status=.Err error → EventfulInvocationError (Abs.decode initial.machine.source) events
+    (∀error,status=.Err error → EventfulInvocationError (SourceMachine.decode initial.machine.source) events
       (Store.decodeStore view finalCode finalStore) initial.machine.source.ambient error)
 
 theorem world_recorded_loop_finished {M P F A : Type}
@@ -51,7 +51,7 @@ theorem world_recorded_loop_finished {M P F A : Type}
       obtain ⟨n,reductions⟩ := EventfulWorld.history_source unrecorded
       refine ⟨current.machine.source.results,?_,current.machine.owned.values.1,represented,?_⟩
       · simpa only [finishExecution,current.machine.invariant.storeEq] using typed
-      · simpa only [finishExecution,Abs.decode,sourceEmpty,Abs.decodeFrames_nil,current.machine.invariant.storeEq,ambient] using reductions.erase
+      · simpa only [finishExecution,SourceMachine.decode,sourceEmpty,SourceMachine.decode_frames_nil,current.machine.invariant.storeEq,ambient] using reductions.erase
     · intro error impossible
       cases impossible
   | Err error =>
@@ -63,8 +63,8 @@ theorem world_recorded_loop_finished {M P F A : Type}
     refine ⟨events++terminal,?_,afterCode,fresh,certified,metadata.2.1.trans retained,
       metadata.2.2.trans_prefix metadata.2.1 agrees,Spec.extend_store_trans metadata.1 extension,?_,?_⟩
     · intro prior
-      rw [world_recorded_history_writer_prefix history prior,recordedInvokeLoop_step memory hooks floats allocator actual]
-      simpa only [terminal,List.append_assoc] using recordedInvokeLoop_stopped memory hooks floats allocator (exec,store,platform,.Err error) (by simp [ActiveExecution]) ((prior++events)++terminal)
+      rw [world_recorded_history_writer_prefix history prior,recorded_invoke_loop_step memory hooks floats allocator actual]
+      simpa only [terminal,List.append_assoc] using recorded_invoke_loop_stopped memory hooks floats allocator (exec,store,platform,.Err error) (by simp [ActiveExecution]) ((prior++events)++terminal)
     · intro impossible
       cases impossible
     · intro reported failed
@@ -73,4 +73,4 @@ theorem world_recorded_loop_finished {M P F A : Type}
       obtain ⟨n,reductions⟩ := EventfulWorld.history_source unrecorded
       simpa only [finishExecution,ambient] using outcome.prepend reductions.erase
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

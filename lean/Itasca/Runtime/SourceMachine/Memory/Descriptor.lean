@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.State
 
-namespace Itasca.Runtime.Abs.Memory
+namespace Itasca.Runtime.SourceMachine.Memory
 
 /-- Packed scalar widths admitted by the binary format, indexed by result width. -/
 inductive PackedWidth : Inn → Type where
@@ -55,4 +55,4 @@ def Store.operation : Store → Option sz
 def Store.source (op : Store) (argument : memarg) : instr :=
   .STORE op.type op.operation argument
 
-end Itasca.Runtime.Abs.Memory
+end Itasca.Runtime.SourceMachine.Memory

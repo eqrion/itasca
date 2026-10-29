@@ -7,7 +7,7 @@ Actual construction and successful function-start establish every component of t
 Main declarations: `compiler_function_start_prefix`. A direct consumer is `Compiler.Body.Relations.Entry.EntryCompilerInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual construction and successful function-start establish every component
@@ -41,4 +41,4 @@ theorem compiler_function_start_prefix {A : Type} (ops : runtime.platform.Alloc 
   exact CompilerPrefix.initial started types functions returns _ stack retained arms
     (sourceFrame.sources.aligned initialSources) codeBudget controlBudget
     (by rw [sourceFrame.cursor, newCursor]; rfl) live
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

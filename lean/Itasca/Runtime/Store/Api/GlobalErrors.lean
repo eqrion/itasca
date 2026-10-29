@@ -16,7 +16,7 @@ theorem add_global_errors {M P F A : Type}
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
     (hmapping : inst.module.global_initializers.val[index.val]? = some function)
     (hc : inst.module.functions.val[function.val]? = some code)
-    (compiled : Code.InitializerCode code global.init global.gtype.valtype)
+    (compiled : Compiler.InitializerCode code global.init global.gtype.valtype)
     (resolved : Interp.InitializerResolution store inst global.init global.gtype.valtype words)
     (bindings : InitializerBindings store inst)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × P)
@@ -34,11 +34,11 @@ theorem add_global_errors {M P F A : Type}
   rw [evalRun] at errors
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
-  simp only [Code.initializer_vec_index store.instances instIndex inst hi,
+  simp only [Compiler.initializer_vec_index store.instances instIndex inst hi,
     runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
+  rw [Compiler.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
-    Code.initializer_vec_index inst.module.global_initializers index function hmapping,
+    Compiler.initializer_vec_index inst.module.global_initializers index function hmapping,
     evalRun] at run
   cases value with
   | Err error =>

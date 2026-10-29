@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.terminate {jumpTables : List Aeneas.Std.U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
@@ -27,4 +27,4 @@ theorem StructuredCompilerPrefix.terminate {jumpTables : List Aeneas.Std.U32} {A
     (invariant.controlBudget.transport (congrArg (fun maps => maps.val.length) ordinary.controls)
       (by rw [ordinary.frames])).advance (Nat.le_of_lt consumed), cursor⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

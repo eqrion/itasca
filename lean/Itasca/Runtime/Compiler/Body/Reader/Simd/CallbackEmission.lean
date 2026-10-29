@@ -10,7 +10,7 @@ SIMD constant emission and callback lowering certificates, consumed by structure
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_simd_constant_fixed_emission {data env locals index st values position}
@@ -49,7 +49,7 @@ theorem reader_simd_constant_fixed_emission {data env locals index st values pos
     (Sequence.stackTypes st.core.vals.val) a bits contextLocals layout concrete finalTypes
     codeFits sourceFits coordinateFits accepted
   exact ⟨ordinary,sources,cursor,simd,pool,emitted,⟨lowered,SourceStack.of_map types concrete finalTypes⟩,emission⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -57,7 +57,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Every independently classified SIMD callback yields typed emitted code
@@ -107,6 +107,6 @@ theorem reader_simd_callback_emission {data env locals index st source values po
     · simp only [CompilerTables.ofFunction,CompilerTables.append,indirect,jumps,simd,pool,List.append_nil]
     · simp [Wasm2.Simd.inputTypes]
     · simpa [Wasm2.Simd.inputTypes,Wasm2.Simd.outputTypes,Translate.valueType] using emission
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

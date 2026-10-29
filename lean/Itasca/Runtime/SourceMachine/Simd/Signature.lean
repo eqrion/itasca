@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Typing
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt
 
 /-- Principal stack signatures of pure SIMD source instructions. This relation
@@ -56,4 +56,4 @@ theorem numeric_value_typed {s : store} {value : val} {output : valtype}
     · simp_all [valueType]
     · cases nt <;> simp_all [valueType,valtype_numtype]
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd

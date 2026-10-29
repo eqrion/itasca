@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Support.TypeTranslation
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- Complete retained syntax/layout evidence for one defined function. The
 well-formedness field is the actual bytecode check, not execution correctness. -/
@@ -37,7 +37,7 @@ theorem StructuredFunctionCode.entry {emit typeTable functions params declared r
     intro _
     obtain ⟨count, found⟩ := certificate.returnCode
     exact ⟨certificate.endPosition.symm, rfl, compiled.local_slots, count,
-      functionRootLabel_live found live, found⟩
+      function_root_label_live found live, found⟩
   refine ⟨certificate.bodyCode, ?_, ?_, ExitAligned.cons _ _, RootAligned.cons _ _ _ _ _ _⟩
   · apply StructuredCode.Targets.cons
     · intro depth label lookup; simp at lookup
@@ -52,4 +52,4 @@ theorem StructuredFunctionCode.entry {emit typeTable functions params declared r
     · intro _ label lookup; simp at lookup
     · exact root
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

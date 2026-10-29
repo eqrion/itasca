@@ -9,7 +9,7 @@ Element/data initializer program prefixes, loops and finishing. SegmentProgram.c
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
@@ -154,7 +154,7 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
                         simp [indirectValues, same]
                       · exact .inr ⟨rfl, by rw [firstFields]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -162,7 +162,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem ElementProgram.extend {before after : runtime.bytecode.CompiledFunction}
@@ -314,7 +314,7 @@ theorem data_program_append {A : Type} (ops : runtime.platform.Alloc A)
       · simp [empty] at five
       · exact three
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -322,7 +322,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual successful segment-emission loop establishes a complete syntactic
@@ -497,7 +497,7 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     (by exact fun _ => ⟨bound, programs, prefixInv⟩) (budgetAfter, .Ok (), after) success
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -505,7 +505,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem segment_program_finish (module : runtime.compiler.ExecutableModule)
@@ -573,6 +573,6 @@ theorem SegmentProgram.change_module {before after : runtime.compiler.Executable
   cases certificate
   constructor <;> (try simp only [source]) <;> assumption
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

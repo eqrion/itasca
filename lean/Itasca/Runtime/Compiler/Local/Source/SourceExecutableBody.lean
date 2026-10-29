@@ -10,14 +10,14 @@ Independent instruction encodings belong to the executable source grammar. Token
 
 section
 
-namespace Itasca.Runtime.Code.SourceExecutable
+namespace Itasca.Runtime.Compiler.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
-theorem integer (op : Abs.Numeric.Instruction) : Abs.BinaryInstr op.source := .numeric op
-theorem floating (op : Abs.Float.Instruction) : Abs.BinaryInstr op.source := .float op
+theorem integer (op : SourceMachine.Numeric.Instruction) : SourceMachine.BinaryInstr op.source := .numeric op
+theorem floating (op : SourceMachine.Float.Instruction) : SourceMachine.BinaryInstr op.source := .float op
 
 theorem numeric {opcode operation} (meaning : Numeric.opcodeMeaning opcode = some operation) :
-    Abs.BinaryInstr operation.instruction := by
+    SourceMachine.BinaryInstr operation.instruction := by
   unfold Numeric.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -146,7 +146,7 @@ theorem numeric {opcode operation} (meaning : Numeric.opcodeMeaning opcode = som
   · exact floating (.reinterpretInt .I64)
 
 theorem sign {opcode operation} (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation) :
-    Abs.BinaryInstr operation.instruction := by
+    SourceMachine.BinaryInstr operation.instruction := by
   unfold Wasm2.NumericExtensions.signMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -157,7 +157,7 @@ theorem sign {opcode operation} (meaning : Wasm2.NumericExtensions.signMeaning o
   · exact integer (.unary .I64 .extend32)
 
 theorem saturating {opcode operation} (meaning : Wasm2.NumericExtensions.saturatingMeaning opcode = some operation) :
-    Abs.BinaryInstr operation.instruction := by
+    SourceMachine.BinaryInstr operation.instruction := by
   unfold Wasm2.NumericExtensions.saturatingMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -172,7 +172,7 @@ theorem saturating {opcode operation} (meaning : Wasm2.NumericExtensions.saturat
 
 theorem memory {opcode operation} (arg : code.MemArg)
     (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) :
-    Abs.BinaryInstr (operation.op arg) := by
+    SourceMachine.BinaryInstr (operation.op arg) := by
   unfold MemoryMeaning.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq, reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
@@ -199,7 +199,7 @@ theorem memory {opcode operation} (arg : code.MemArg)
   · exact .store (.packed .I64 .byte) _
   · exact .store (.packed .I64 .half) _
   · exact .store (.packed .I64 .word) _
-end Itasca.Runtime.Code.SourceExecutable
+end Itasca.Runtime.Compiler.SourceExecutable
 
 end
 
@@ -207,14 +207,14 @@ end
 
 section
 
-namespace Itasca.Runtime.Code.SourceExecutable
+namespace Itasca.Runtime.Compiler.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
 def TokenWasm2 : Wasm2.Token → Prop
-  | .plain source => Abs.BinaryInstr source
+  | .plain source => SourceMachine.BinaryInstr source
   | _ => True
 
-theorem stateful (op : Abs.Stateful.Instruction) : Abs.BinaryInstr op.source :=
+theorem stateful (op : SourceMachine.Stateful.Instruction) : SourceMachine.BinaryInstr op.source :=
   .stateful op
 
 theorem immediate_wasm1 {opcode token bytes} (encoded : Wasm1.Immediate opcode token bytes) :
@@ -246,7 +246,7 @@ theorem immediate_wasm1 {opcode token bytes} (encoded : Wasm1.Immediate opcode t
   | numeric opcode operation meaning => exact numeric meaning
 
 theorem reference {opcode source bytes} (encoded : Wasm2.ReferencesBinary.Immediate opcode source bytes) :
-    Abs.BinaryInstr source := by
+    SourceMachine.BinaryInstr source := by
   cases encoded with
   | refNull type => exact stateful (.refNull _)
   | refIsNull => exact stateful .refIsNull
@@ -257,7 +257,7 @@ theorem reference {opcode source bytes} (encoded : Wasm2.ReferencesBinary.Immedi
   | callIndirect => exact .call_indirect _ _
 
 theorem bulk {opcode source bytes} (encoded : Wasm2.BulkBinary.Immediate opcode source bytes) :
-    Abs.BinaryInstr source := by
+    SourceMachine.BinaryInstr source := by
   cases encoded with
   | memoryInit index _ => exact stateful (.memoryInit index.val)
   | dataDrop index _ => exact stateful (.dataDrop index.val)
@@ -271,15 +271,15 @@ theorem bulk {opcode source bytes} (encoded : Wasm2.BulkBinary.Immediate opcode 
   | tableFill index _ => exact stateful (.tableFill index.val)
 
 theorem simd {opcode source bytes} (encoded : Wasm2.Simd.Immediate opcode source bytes) :
-    Abs.BinaryInstr source := by
-  apply Abs.BinaryInstr.simd
+    SourceMachine.BinaryInstr source := by
+  apply SourceMachine.BinaryInstr.simd
   cases encoded with
   | pure _ _ meaning => exact .pure (pure_source_signature meaning)
   | lane _ op lane _ => exact .pure (lane_source_signature op _)
   | memory _ op arg _ _ _ _ => exact .memory (memory_source_signature op _ _)
   | memoryLane _ op arg lane _ _ _ _ => exact .memory (memory_source_signature op _ _)
   | constant => exact .constant _
-  | shuffle => with_unfolding_all exact Abs.SimdInstr.pure (.shuffle _ _)
+  | shuffle => with_unfolding_all exact SourceMachine.SimdInstr.pure (.shuffle _ _)
 
 theorem immediate_wasm2 {opcode token bytes} (encoded : Wasm2.Immediate opcode token bytes) :
     TokenWasm2 token := by
@@ -291,7 +291,7 @@ theorem immediate_wasm2 {opcode token bytes} (encoded : Wasm2.Immediate opcode t
   | bulk _ _ encoded => exact bulk encoded
   | simd _ _ encoded => exact simd encoded
   | block | loop | if_ | else_ | end_ => trivial
-end Itasca.Runtime.Code.SourceExecutable
+end Itasca.Runtime.Compiler.SourceExecutable
 
 end
 
@@ -299,7 +299,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code.SourceExecutable
+namespace Itasca.Runtime.Compiler.SourceExecutable
 open Aeneas Aeneas.Std Itasca
 
 theorem token_wasm1 {token bytes} (encoded : Wasm1.TokenEncoding token bytes) : TokenWasm2 token := by
@@ -319,7 +319,7 @@ theorem consumed_wasm2 {data start tokens next} (encoded : Wasm2.Consumed data s
     simpa [Forall, or_imp, forall_and] using And.intro ih (token_wasm2 encoded)
 
 theorem emits_wasm2 {tokens source} (emitted : Wasm2.Emits tokens source)
-    (known : Forall TokenWasm2 tokens) : Forall Abs.BinaryInstr source := by
+    (known : Forall TokenWasm2 tokens) : Forall SourceMachine.BinaryInstr source := by
   induction emitted with
   | nil => simp [Forall]
   | simple _ simple ih =>
@@ -330,30 +330,30 @@ theorem emits_wasm2 {tokens source} (emitted : Wasm2.Emits tokens source)
     simp only [Forall, List.mem_append, List.mem_singleton, or_imp, forall_and] at known
     have hbody := body known.1.2
     have prior := ih known.1.1.1
-    simpa [Forall, or_imp, forall_and] using And.intro prior (Abs.BinaryInstr.block _ _ hbody)
+    simpa [Forall, or_imp, forall_and] using And.intro prior (SourceMachine.BinaryInstr.block _ _ hbody)
   | loop bt _ _ ih body =>
     simp only [Forall, List.mem_append, List.mem_singleton, or_imp, forall_and] at known
     have hbody := body known.1.2
     have prior := ih known.1.1.1
-    simpa [Forall, or_imp, forall_and] using And.intro prior (Abs.BinaryInstr.loop _ _ hbody)
+    simpa [Forall, or_imp, forall_and] using And.intro prior (SourceMachine.BinaryInstr.loop _ _ hbody)
   | ifElse bt _ _ _ ih yes no =>
     simp only [Forall, List.mem_append, List.mem_singleton, or_imp, forall_and] at known
     have hyes := yes known.1.1.1.2
     have hno := no known.1.2
     have prior := ih known.1.1.1.1.1
-    simpa [Forall, or_imp, forall_and] using And.intro prior (Abs.BinaryInstr.ifelse _ _ _ hyes hno)
+    simpa [Forall, or_imp, forall_and] using And.intro prior (SourceMachine.BinaryInstr.ifelse _ _ _ hyes hno)
   | ifEnd bt _ _ ih body =>
     simp only [Forall, List.mem_append, List.mem_singleton, or_imp, forall_and] at known
     have hbody := body known.1.2
     have prior := ih known.1.1.1
     simpa [Forall, or_imp, forall_and] using And.intro prior
-      (Abs.BinaryInstr.ifelse _ _ [] hbody (by simp [Forall]))
+      (SourceMachine.BinaryInstr.ifelse _ _ [] hbody (by simp [Forall]))
 
 theorem body_wasm2 {data source} (encoded : Wasm2.BodyEncoding data source) :
-    Forall Abs.BinaryInstr source := by
+    Forall SourceMachine.BinaryInstr source := by
   obtain ⟨tokens, next, consumed, _, inner, rfl, emitted⟩ := encoded
   have known := consumed_wasm2 consumed
   exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
-end Itasca.Runtime.Code.SourceExecutable
+end Itasca.Runtime.Compiler.SourceExecutable
 
 end

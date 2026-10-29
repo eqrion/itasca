@@ -8,7 +8,7 @@ theorem CallEntryEffect.slots_length {before after : runtime.interp.Execution}
     (effect : CallEntryEffect before after instanceIndex functionIndex base code) :
     before.slots.length ≤ after.slots.length ∧ base.val + code.slot_count.val ≤ after.slots.length := by
   change before.slots.val.length ≤ after.slots.val.length ∧ _ ≤ after.slots.val.length
-  rw [effect.2.1, zeroWords_length, List.length_append, List.length_replicate]
+  rw [effect.2.1, zero_words_length, List.length_append, List.length_replicate]
   simp only [alloc.vec.Vec.length, alloc.vec.Vec.val]
   omega
 
@@ -16,7 +16,7 @@ theorem CallEntryEffect.slots_length {before after : runtime.interp.Execution}
 and allocated capacity. Suspended operand contents are handled separately. -/
 theorem CallEntryEffect.preserve_binding {M : Type} {store : runtime.store.Store M}
     {before after : runtime.interp.Execution} {instanceIndex functionIndex base : Usize}
-    {code : runtime.bytecode.CompiledFunction} {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {code : runtime.bytecode.CompiledFunction} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (effect : CallEntryEffect before after instanceIndex functionIndex base code)
     (binding : FrameBinding store before raw source) : FrameBinding store after raw source := by
   obtain ⟨inst, fn, compiled, signature, identity, member, hi, hf, hw, hc, hs, hm, hr, hl, bound⟩ := binding
@@ -35,7 +35,7 @@ theorem CallEntryEffect.callee_binding {M : Type}
     (args defaults : List val) (body : List instr)
     (effect : CallEntryEffect before after instanceIndex functionIndex base compiled)
     (identity : before.store = store.id)
-    (localTypes : (args ++ defaults).map Code.valueType = compiled.locals.val.map sourceType)
+    (localTypes : (args ++ defaults).map Compiler.valueType = compiled.locals.val.map sourceType)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)
     (hw : function.code = .Wasm instanceIndex functionIndex)

@@ -13,7 +13,7 @@ Allocator availability for elided and emitted conditional branches, composed int
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -144,7 +144,7 @@ theorem branch_if_elided_forward_available {A : Type} (ops : runtime.platform.Al
         simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
         exact ⟨trivial,jumpEffect⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -152,7 +152,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -366,7 +366,7 @@ theorem branch_if_transfer_forward_available {A : Type} (ops : runtime.platform.
         rw [patchedEq]
         exact ((guardEffect.trans copyEffect).trans jumpEffect).weaken (by intro counter; cases counter <;> simp)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -374,7 +374,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Conditional branches accept at every label depth and kind with at most
@@ -465,6 +465,6 @@ theorem compiler_on_br_if_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

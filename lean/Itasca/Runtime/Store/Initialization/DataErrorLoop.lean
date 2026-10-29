@@ -25,7 +25,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     · cases status with
       | Err error =>
         simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at run
-        have statuses := ((storeStateParts_inj _ _ _ _).mp run).2
+        have statuses := ((store_state_parts_inj _ _ _ _).mp run).2
         exact statuses ▸ allowed
       | Ok unitValue =>
         cases unitValue
@@ -45,7 +45,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
             runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail, Itasca.module.Module.impl.tail, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
-      have statuses := ((storeStateParts_inj _ _ _ _).mp run).2
+      have statuses := ((store_state_parts_inj _ _ _ _).mp run).2
       exact statuses ▸ allowed
 
 end Itasca.Runtime.Store

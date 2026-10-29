@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 
@@ -44,4 +44,4 @@ theorem compiler_br_table_dead_effect {A : Type} (ops : runtime.platform.Alloc A
     · rw [kept]
       exact empty
     · rw [kept]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

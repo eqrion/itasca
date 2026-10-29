@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStack
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual compiler construction and function-start establish the root physical
@@ -55,4 +55,4 @@ theorem compiler_function_start_scope {A : Type} (ops : runtime.platform.Alloc A
   · exact UniversalPrefix.initial started types functions returns _ frame codeEmpty frameEq rfl
       (by simp [frame, alloc.vec.Vec.new]) localEq layout
   · exact SourceControlBudget.initial (by simp [mapsEq, emptyMaps]) (by simp [frameEq])
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

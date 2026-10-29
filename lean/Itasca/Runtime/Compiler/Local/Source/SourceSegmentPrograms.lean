@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 import Itasca.Runtime.Spec.SegmentPrograms
 import Itasca.Module.Elab.SectionInversion
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The generated data-mode typing rule fixes active memory indices to zero. -/
@@ -24,4 +24,4 @@ theorem source_datas_single_memory (raw : ModuleBinary.Module)
   intro segment member
   obtain ⟨rawSegment, present, rfl⟩ := List.mem_map.mp member
   exact source_data_single_memory rawSegment ((ModuleElaboration.sections_of_typing elaborates typed).data rawSegment present)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Host.HostFrameSiteExecution
 import Itasca.Runtime.Integration.Host.HostDirectWorld
 import Itasca.Runtime.Integration.Execution.World.SourceStep
 import Itasca.Runtime.Integration.Host.HostIndirectWorld
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- A ready host boundary retains enough static and source evidence to execute
@@ -18,11 +18,11 @@ theorem host_ready_world_outcomes {M P F A : Type}
     (certify : ∀ c s,Inv c s → CertifiedSupportedStore view c s)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
-    (expected : List valtype) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (expected : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : instr) (after : List instr)
     (site : HostFrameSite view code exec store expected ambient {f with code:=op::after} rest)
-    [StructuredMachine.OrdinaryHeads (emission site.compiled)]
-    [StructuredMachine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
+    [Machine.OrdinaryHeads (emission site.compiled)]
+    [Machine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
     (kind : DirectHostInstruction store site.raw site.inst site.compiled op ∨
       ∃table type : U32,op=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val) ∧
         SourceIndirectHostBoundary store ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩)
@@ -51,12 +51,12 @@ theorem host_ready_world_outcomes {M P F A : Type}
     change {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest =
       {other with code:=.CALL_INDIRECT (.mk_uN sourceTable) (.mk_uN sourceType)::sourceAfter}::callers at frames
     obtain ⟨frameEq,restEq⟩ := List.cons.inj frames
-    have codeEq := congrArg Abs.AFrame.code frameEq
+    have codeEq := congrArg SourceMachine.AFrame.code frameEq
     simp only [List.cons.injEq,instr.CALL_INDIRECT.injEq,uN.mk_uN.injEq] at codeEq
     obtain ⟨⟨tableEq,typeEq⟩,tailEq⟩ := codeEq
-    have positionSplit : f.vals=operands++[Abs.integerVal .I32 position] := (congrArg Abs.AFrame.vals frameEq).trans split
-    have resolved : Abs.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.val := by
-      change Abs.Indirect.resolve (Store.decodeStore view code store)
+    have positionSplit : f.vals=operands++[SourceMachine.integerVal .I32 position] := (congrArg SourceMachine.AFrame.vals frameEq).trans split
+    have resolved : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.val := by
+      change SourceMachine.Indirect.resolve (Store.decodeStore view code store)
         {other with code:=.CALL_INDIRECT (.mk_uN sourceTable) (.mk_uN sourceType)::sourceAfter}
         sourceTable sourceType position=some address.val at selected
       rw [←frameEq,←tableEq,←typeEq] at selected
@@ -68,4 +68,4 @@ theorem host_ready_world_outcomes {M P F A : Type}
       (fun p=>callback p host) (retains host))
     intro out result
     exact result.unbundle
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

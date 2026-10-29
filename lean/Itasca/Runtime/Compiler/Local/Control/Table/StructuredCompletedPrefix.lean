@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixClose
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A completed current arm, still quantified over every admissible future
@@ -27,7 +27,7 @@ theorem StructuredUniversalPrefix.completed {jumpTables : List Aeneas.Std.U32} {
   refine ⟨invariant.sites, ?_⟩
   intro label labels groups plans shape parentShapes endpoint normal
   obtain ⟨saved, body⟩ := invariant.prefixes label labels groups plans shape parentShapes
-  exact ⟨saved, body.finish (by simp [resolvedCode_length]) (NormalLive.cons normal)⟩
+  exact ⟨saved, body.finish (by simp [resolved_code_length]) (NormalLive.cons normal)⟩
 
 theorem StructuredUniversalTerminal.completed {jumpTables : List Aeneas.Std.U32} {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {emit types functions returns locals parents current}
@@ -36,6 +36,6 @@ theorem StructuredUniversalTerminal.completed {jumpTables : List Aeneas.Std.U32}
   refine ⟨invariant.sites, ?_⟩
   intro label labels groups plans shape parentShapes endpoint normal
   obtain ⟨saved, body⟩ := invariant.prefixes label labels groups plans shape parentShapes
-  exact ⟨saved, body.finish _ _ (Nat.le_refl _) (by simp [resolvedCode_length])⟩
+  exact ⟨saved, body.finish _ _ (Nat.le_refl _) (by simp [resolved_code_length])⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

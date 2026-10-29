@@ -13,7 +13,7 @@ proves that each decoded body satisfies it. It is an internal store invariant, n
 premise of a headline theorem.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 inductive BinaryInstr : instr → Prop where
   | nop : BinaryInstr .NOP
@@ -99,4 +99,4 @@ theorem BinaryInstr.if_bodies {ty yes no} (allowed : BinaryInstr (.IFELSE ty yes
   | simd simd => have tag := simd_unstructured simd; rw [← equal] at tag; cases tag
   | _ => cases equal
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

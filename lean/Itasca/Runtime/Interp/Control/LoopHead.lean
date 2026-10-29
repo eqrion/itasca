@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Relations.Fetch
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem dispatch_loopHead_eq {M P F A : Type}
+theorem dispatch_loop_head_eq {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform after : P)
@@ -19,7 +19,7 @@ theorem dispatch_loopHead_eq {M P F A : Type}
 
 /-- LoopHead is exactly the interrupt boundary. It cannot mutate the store or
 slot/frame state, and termination has an actual terminating hook witness. -/
-theorem dispatch_loopHead_effect {M P F A : Type}
+theorem dispatch_loop_head_effect {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
@@ -30,7 +30,7 @@ theorem dispatch_loopHead_effect {M P F A : Type}
       out.2.1 = exec ∧ out.2.2.1 = store ∧ ∃ decision,
       hooks.interrupt platform = .ok (decision, out.2.2.2) ∧ out.1 = interruptResult decision ⦄ := by
   obtain ⟨⟨decision, after⟩, hook, _⟩ := WP.spec_imp_exists (law platform)
-  rw [dispatch_loopHead_eq memory hooks floats allocator exec store platform after index raw decision hook]
+  rw [dispatch_loop_head_eq memory hooks floats allocator exec store platform after index raw decision hook]
   exact ⟨rfl, rfl, decision, hook, rfl⟩
 
 end Itasca.Runtime.Interp

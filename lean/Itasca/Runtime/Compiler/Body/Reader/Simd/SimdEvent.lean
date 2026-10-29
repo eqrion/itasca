@@ -22,7 +22,7 @@ All information retained from one actually accepted SIMD reader and callback. Th
 Main declarations: `SimdReaderEvent`. A direct consumer is `Compiler.Body.Reader.Simd.Dispatch`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- All information retained from one actually accepted SIMD reader and
@@ -56,4 +56,4 @@ theorem SimdReaderEvent.capacity_step {A : Type} {ops : runtime.platform.Alloc A
   exact (compiler_lower_simd_effects ops law before after out event.opcode event.a event.b event.bits
     (by have number := event.number; omega) (by have number := event.number; omega) event.callback).2.2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixPop
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 
 open Aeneas.Std
 theorem StructuredPrefix.suspend_after {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals labels initial source start stack}
@@ -30,5 +30,5 @@ theorem StructuredParentPrefixes.change_current {jumpTables : List Aeneas.Std.U3
     exact .push prior label after shape (by simpa only [entry] using bound)
       (held.change_child entered entry arguments)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

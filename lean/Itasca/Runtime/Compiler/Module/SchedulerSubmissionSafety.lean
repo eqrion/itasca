@@ -2,11 +2,11 @@ import Itasca.Runtime.Compiler.Module.SchedulerSafety
 import Itasca.Runtime.Compiler.Module.SubmitTotal
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
-theorem CompileEntryWitness.schedulerReady {A : Type} {ops : runtime.platform.Alloc A}
+theorem CompileEntryWitness.scheduler_ready {A : Type} {ops : runtime.platform.Alloc A}
     {before after : CompileScheduler A} {worker finalWorker : stream.CodeBatch}
     (entry : CompileEntryWitness ops before after worker finalWorker)
     {env : module.Env} {cursor : Nat} (ready : SchedulerReady env cursor before) :
@@ -37,7 +37,7 @@ theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
     intro accepted
     dsimp only at accepted
     obtain ⟨w⟩ := compile_entry_accepted ops current after worker batch (by simpa only [accepted] using run)
-    exact ⟨w.schedulerReady held.1,w.reachable held.2⟩
+    exact ⟨w.scheduler_ready held.1,w.reachable held.2⟩
   have room : ∀ current worker, safe current worker → current.completed.val.length < Usize.max := by
     intro current worker held
     have count := bounded.1
@@ -55,7 +55,7 @@ theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨middle,worker,compiled,queue,updated⟩ := compiler_submit_accepted ops law scheduler after issued.seed
     (by simpa only [accepted] using run)
   have retained := compiled.fold (fun current _ => SchedulerReady env issued.first_func.val current)
-    ready (fun _ _ _ _ held w => w.schedulerReady held)
+    ready (fun _ _ _ _ held w => w.scheduler_ready held)
   have bound : issued.first_func.val + issued.num_funcs.val ≤ env.func_type_indices.val.length := by
     simpa only [sameEnv] using bounded.2.1
   refine ⟨?_,?_,?_,?_,?_,bound⟩
@@ -72,4 +72,4 @@ theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
     have := bounded.1
     omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

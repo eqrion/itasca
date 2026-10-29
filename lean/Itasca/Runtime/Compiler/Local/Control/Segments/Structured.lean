@@ -6,7 +6,7 @@ Concrete copy specialization shared by compiler and execution certificates.
 Main declarations: `transferInstruction` and `Segment`. A direct consumer is `Compiler.Local.Control.Segments.StructuredComposition`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Concrete copy specialization shared by compiler and execution certificates. -/
@@ -175,4 +175,4 @@ inductive CodeRel (types functions : List functype) (returns locals : List valty
       (remaining : pc + 1 ≤ next) (scope : next ≤ code.length) :
       CodeRel types functions returns locals code labels (front ++ returns) (.RETURN :: after) pc next final
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

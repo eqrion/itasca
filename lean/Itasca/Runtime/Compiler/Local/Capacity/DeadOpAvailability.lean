@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Every ordinary opcode on a dead input path only observes the validator
@@ -25,4 +25,4 @@ theorem compiler_dead_op_available {A : Type} (ops : runtime.platform.Alloc A)
         out.1 = .Ok () ∧ out.2.budget = budget ⦄
       exact compiler_observe_available_budget ops bound available current state request slotsFit
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

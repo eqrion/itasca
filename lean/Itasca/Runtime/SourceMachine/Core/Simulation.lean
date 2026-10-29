@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.Spec.Globals
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Lift a store-changing redex through the active operand stack, labels and
@@ -19,12 +19,12 @@ theorem mutable_stack_simulation (before afterStore : store) (ambient : frame) (
       { f with code := instruction :: after, vals := baseValues ++ consumed } :: rest, []⟩) []
       (decode ⟨afterStore, ambient,
       { f with code := after, vals := baseValues ++ produced } :: rest, []⟩) := by
-  have h₁ := stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
-  have h₂ := stepH_decodeLabels h₁ f.labels baseValues hl hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc)
+  have h₂ := step_h_decode_labels h₁ f.labels baseValues hl hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights, decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights, decode_labels_move_values _ _ _ _ heights]
   simpa [instrContext, vals, List.append_assoc, AFrame.arity, AFrame.toFrame] using h₃
 
 theorem global_get_simulation (s : store) (ambient : frame) (f : AFrame)
@@ -59,4 +59,4 @@ theorem global_set_simulation (s : store) (ambient : frame) (f : AFrame)
     (Spec.globalWrite s f.toFrame index value) ambient f rest
     (.GLOBAL_SET (.mk_uN index)) after front [value] [] ha hl hv hc hr heights step
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

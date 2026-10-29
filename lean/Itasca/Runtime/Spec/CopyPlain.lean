@@ -6,7 +6,7 @@ def copyForwardPlain {T : Type} [Inhabited T] (words : List T) (dst src : Nat) :
   | 0 => words
   | n+1 => copyForwardPlain (words.set dst words[src]!) (dst+1) (src+1) n
 
-theorem copyForwardPlain_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src index remaining count : Nat)
+theorem copy_forward_plain_snapshot {T : Type} [Inhabited T] (before current : List T) (dst src index remaining count : Nat)
     (state : CopyPrefix before current dst src index) (progress : index+remaining=count)
     (direction : dst ≤ src) (sourceBound : src+count ≤ before.length) (targetBound : dst+count ≤ before.length) :
     copyForwardPlain current (dst+index) (src+index) remaining = before.setSlice! dst (before.slice src (src+count)) := by
@@ -22,13 +22,13 @@ def copyBackwardFrom {T : Type} [Inhabited T] (words source : List T) (dst src :
   | 0 => words
   | n+1 => copyBackwardFrom (words.set (dst+n) source[src+n]!) source dst src n
 
-@[simp] theorem copyBackwardFrom_length {T : Type} [Inhabited T] (words source : List T) (dst src count : Nat) :
+@[simp] theorem copy_backward_from_length {T : Type} [Inhabited T] (words source : List T) (dst src count : Nat) :
     (copyBackwardFrom words source dst src count).length = words.length := by
   induction count generalizing words with
   | zero => rfl
   | succ n ih => simp only [copyBackwardFrom,ih,List.length_set]
 
-theorem copyBackwardFrom_effect {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
+theorem copy_backward_from_effect {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
     (sourceBound : src+count ≤ source.length) (targetBound : dst+count ≤ before.length) :
     (∀ j, j < count → (copyBackwardFrom before source dst src count)[dst+j]? = source[src+j]?) ∧
     (∀ j, j < dst ∨ dst+count ≤ j → (copyBackwardFrom before source dst src count)[j]? = before[j]?) := by
@@ -50,11 +50,11 @@ theorem copyBackwardFrom_effect {T : Type} [Inhabited T] (before source : List T
       have distinct : dst+n ≠ j := by omega
       simpa only [copyBackwardFrom,List.getElem?_set,distinct,if_false] using old
 
-theorem copyBackwardFrom_snapshot {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
+theorem copy_backward_from_snapshot {T : Type} [Inhabited T] (before source : List T) (dst src count : Nat)
     (sourceBound : src+count ≤ source.length) (targetBound : dst+count ≤ before.length) :
     copyBackwardFrom before source dst src count = before.setSlice! dst (source.slice src (src+count)) := by
   have sliceLength : (source.slice src (src+count)).length = count := by rw [List.slice_length]; omega
-  obtain ⟨copied,outside⟩ := copyBackwardFrom_effect before source dst src count sourceBound targetBound
+  obtain ⟨copied,outside⟩ := copy_backward_from_effect before source dst src count sourceBound targetBound
   apply List.ext_getElem?
   intro index
   by_cases first : index < dst

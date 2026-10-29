@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameSelect
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem StructuredCompilerPrefix.branch_if_coordinates {jumpTables : List Aeneas.Std.U32} {A : Type}
     {initial before : runtime.compiler.FunctionCompiler A}
@@ -33,4 +33,4 @@ theorem StructuredCompilerPrefix.branch_if_coordinates {jumpTables : List Aeneas
   · simpa [slots_append, slots, width, Nat.add_assoc] using sourceWidth
   · simpa only [retained.localsEq] using conditionSlot
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

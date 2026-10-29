@@ -10,7 +10,7 @@ The shared state invariant for structured source/compiler replay.
 Main declarations: `StructuredReaderCompilerStateWasm2`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 structure StructuredReaderCompilerStateWasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
@@ -44,4 +44,4 @@ theorem StructuredReaderCompilerStateWasm2.advance {jumpTables : List U32} {A : 
   ⟨compiled, post.boundary declared, state.sources.advance _ _ _ _, state.reach.advance _ _ _ _ _ mono,
     state.fronts.advance instruction, state.knownFronts.advance instruction⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

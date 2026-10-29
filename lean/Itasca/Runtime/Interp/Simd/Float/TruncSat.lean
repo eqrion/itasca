@@ -119,7 +119,7 @@ theorem trunc_sat_loop {F : Type} (floats : runtime.platform.FloatOps F)
       have range := lane_range (floatCompareWidth ty).val index.val (by omega : index.val < 128/(floatCompareWidth ty).val)
       step with lane x (floatCompareWidth ty) index positive widthBound (by omega) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits (floatCompareWidth ty).val index.val x.bv).toNat := by
-        rw [laneBits_toNat]; exact aEq
+        rw [lane_bits_to_nat]; exact aEq
       step with wordLaw index.val less a aBits as ⟨outcome,value,eq,allowed⟩
       subst outcome
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
@@ -173,7 +173,7 @@ theorem trunc_sat_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
             (floatOfBits (lsize (lanetype_Fnn ty)) (laneBits (lsize (lanetype_Fnn ty)) j x.bv).toNat)) ∧
         (∀ j, truncSatCount ty ≤ j → j < 4 → laneBits 32 j value.bv = 0) ⦄ := by
   rw [trunc_sat_dispatch_eq]
-  have widthEq := floatCompareWidth_val ty
+  have widthEq := float_compare_width_val ty
   have countEq : (truncSatCountU32 ty).val = 128/(floatCompareWidth ty).val := by cases ty <;> decide
   have spec := trunc_sat_loop floats ty signed x 0#u128 0#u32 (truncSatCountU32 ty) countEq
     (fun j bits => uN.mk_uN bits.toNat = truncSatWord (lsize (lanetype_Fnn ty)) (if signed then .S else .U)

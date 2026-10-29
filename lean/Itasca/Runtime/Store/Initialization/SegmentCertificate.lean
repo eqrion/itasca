@@ -11,10 +11,10 @@ private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store
     (expr : Itasca.types.ConstExpr) (instruction : runtime.bytecode.Instr) (width : Nat)
     (typed : Itasca.ModuleConstants.Valid inst.module.module.env expr .I32)
     (imports : InitializerImports store inst) (bindings : InitializerBindings store inst)
-    (emitted : Code.ConstantInstruction code 0#u32 expr .I32 instruction)
+    (emitted : Compiler.ConstantInstruction code 0#u32 expr .I32 instruction)
     (capacity : 1 ≤ width) : SegmentInstructionReady store inst code width instruction := by
   obtain ⟨words, resolved⟩ := initializer_resolves store inst expr .I32 typed bindings imports
-  rcases Code.valid_offset_shape typed with ⟨bits, rfl⟩ | ⟨index, rfl⟩
+  rcases Compiler.valid_offset_shape typed with ⟨bits, rfl⟩ | ⟨index, rfl⟩
   · cases emitted
     exact .constant _ _ (by simp; omega)
   · cases emitted
@@ -26,7 +26,7 @@ private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store
 theorem element_program_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
-    (width : Nat) (program : Code.ElementProgram code index segment instructions)
+    (width : Nat) (program : Compiler.ElementProgram code index segment instructions)
     (sourceBound : index < inst.module.module.env.elements.length)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst)
@@ -71,7 +71,7 @@ theorem element_program_ready {M : Type} (store : runtime.store.Store M)
 theorem data_program_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
     (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
-    (width : Nat) (program : Code.DataProgram code index segment instructions)
+    (width : Nat) (program : Compiler.DataProgram code index segment instructions)
     (sourceBound : index < inst.module.module.tail.data.length)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst)

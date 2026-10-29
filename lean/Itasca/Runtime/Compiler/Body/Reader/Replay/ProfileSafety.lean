@@ -6,7 +6,7 @@ The actual profile capacity guard is checked before ordinary decoding. Only the 
 Main declarations: `reader_profile_scalar_reached`. A direct consumer is `Compiler.Body.Reader.Safety.ProfileOrdinarySafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual profile capacity guard is checked before ordinary decoding.
@@ -40,4 +40,4 @@ theorem reader_profile_scalar_reached {V} (visitor : code.OpVisitor V)
     | Ok unitValue =>
       cases unitValue
       simpa only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Std.uncurry,WP.spec_ok] using success
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -17,7 +17,7 @@ Typed-select replay from reached source state and independently bounded demand.
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Explicit-select source typing supplies the full live operand layout.
@@ -63,7 +63,7 @@ theorem reached_profile_typed_select_available_wasm2 {data env locals index st}
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) raw sourceCalled callback
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -71,7 +71,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Source typing, source byte room, and the independent final reference
@@ -114,6 +114,6 @@ theorem IndexedTableReaderCompilerPointWasm2.typed_select_available_from_source 
     ⟨sourceLocals,ft.results⟩ demand state.compiled.known state.reach.current
     (fun live => (state.compiled.live live).2.layout) byte canonical
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

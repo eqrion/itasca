@@ -3,7 +3,7 @@ import Itasca.Runtime.SourceMachine.Sim.Typed
 import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Runtime.Spec.PureWf
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec
 
 /-- A source pure reduction retains every permitted numerical result, including
@@ -26,13 +26,13 @@ theorem PureSignature.frame_preservation {source inputs output}
   | mk C bindings localTypes locals values returns code contextWf =>
     simp only [List.append_nil] at code
     obtain ⟨prefixTypes, ins, outs, instruction, stack, continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ operands)) code
+      code_stack_after (value_types_concrete (front ++ operands)) code
     have principal := signature.principal instruction
     simp only [functype.mk_functype.injEq,list.mk_list.injEq] at principal
     rcases principal with ⟨rfl,rfl⟩
     simp only [List.map_append,types,List.append_cancel_right_eq] at stack
     have frontTyped : ResultsTyped s (front.map valueType) front := by
-      simpa using resultsTyped_take front.length values
+      simpa using results_typed_take front.length values
     have resultTyped := numeric_value_typed signature.output_numeric storeWf effect.wf effect.2
     apply FrameTyped.mk (f := {f with code := after, vals := front ++ [value]}) C
       bindings localTypes locals ?_ returns ?_ contextWf
@@ -64,10 +64,10 @@ theorem PureSignature.prefix_bounds {source inputs output}
     have first := congrArg List.length split
     have second := congrArg List.length values
     have size := congrArg List.length types
-    have actualSize := resultsTyped_length actualTyped
+    have actualSize := results_typed_length actualTyped
     simp only [List.length_append,List.length_map] at first second size
     omega
-  have valid := (frameTyped_wf typed).2.2.1
+  have valid := (frame_typed_wf typed).2.2.1
   change Forall wf_val f.vals at valid
   rw [values] at valid
   exact ⟨fun v hv => valid v (List.mem_append_left _ hv),
@@ -110,8 +110,8 @@ theorem transition_simulation {s : store} {ambient : frame} {f : AFrame}
     have hf : FrameTyped s {f with code := source :: after} [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨frameWf,labelsWf,_,codeWf⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨frameWf,labelsWf,_,codeWf⟩ := frame_typed_wf hf
     obtain ⟨frontWf,operandsWf,heights⟩ := signature.prefix_bounds hf values types
     have simulated := pure_stack_simulation s ambient f rest source after front operands [value]
       typed.store typed.ambient frameWf labelsWf frontWf
@@ -121,4 +121,4 @@ theorem transition_simulation {s : store} {ambient : frame} {f : AFrame}
     apply NextSim.single
     simpa only [values] using simulated
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd

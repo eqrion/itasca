@@ -8,7 +8,7 @@ Element initializer mappings and append composition. ElementMappingPrefix and Of
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def ElementMappingPrefix (before current : runtime.compiler.ExecutableModule)
@@ -144,7 +144,7 @@ theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, outIndices, .Ok ()) success
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -152,7 +152,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def sourceElementOffset (segment : Itasca.module.Element) : Option Itasca.types.ConstExpr :=
@@ -286,6 +286,6 @@ theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
             rw [functions, position]
             simp
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

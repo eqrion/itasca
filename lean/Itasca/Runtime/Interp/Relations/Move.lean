@@ -10,27 +10,27 @@ theorem dispatch_move_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index inst function base : Usize) (ty : valtype) (dst src : U32)
-    (source : base.val + src.val + Code.width ty ≤ exec.slots.length)
-    (destination : base.val + dst.val + Code.width ty ≤ exec.slots.length) :
+    (source : base.val + src.val + Compiler.width ty ≤ exec.slots.length)
+    (destination : base.val + dst.val + Compiler.width ty ≤ exec.slots.length) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index inst function base
-      (Code.move ty dst src) ⦃ out =>
+      (Compiler.move ty dst src) ⦃ out =>
         out.1 = .Ok () ∧ SlotsEffect exec out.2.1
-          (copyWords exec.slots.val (base.val + dst.val) (base.val + src.val) (Code.width ty)) ∧
+          (copyWords exec.slots.val (base.val + dst.val) (base.val + src.val) (Compiler.width ty)) ∧
         out.2.2.1 = store ∧ out.2.2.2 = platform ⦄ := by
-  by_cases vector : Code.width ty = 2
+  by_cases vector : Compiler.width ty = 2
   · have hs : base.val + src.val + 2 ≤ exec.slots.length := by omega
     have hd : base.val + dst.val + 2 ≤ exec.slots.length := by omega
-    simp only [Code.move, if_pos vector, runtime.interp.dispatch]
+    simp only [Compiler.move, if_pos vector, runtime.interp.dispatch]
     obtain ⟨out, result, success, slots⟩ := WP.spec_imp_exists
       (copy2_effect exec base dst src hs hd)
     rw [result, bind_ok]
     rcases out with ⟨answer, next⟩
     with_unfolding_all apply WP.spec.ret
     exact ⟨success, by simpa only [vector] using slots, rfl, rfl⟩
-  · have scalar : Code.width ty = 1 := by cases ty <;> simp_all [Code.width]
+  · have scalar : Compiler.width ty = 1 := by cases ty <;> simp_all [Compiler.width]
     have hs : base.val + src.val < exec.slots.length := by omega
     have hd : base.val + dst.val < exec.slots.length := by omega
-    simp only [Code.move, if_neg vector, runtime.interp.dispatch]
+    simp only [Compiler.move, if_neg vector, runtime.interp.dispatch]
     obtain ⟨out, result, success, slots⟩ := WP.spec_imp_exists
       (copy_effect exec base dst src hs hd)
     rw [result, bind_ok]

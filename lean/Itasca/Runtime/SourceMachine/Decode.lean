@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.State
 absolute label heights. The innermost frame's current values and code appear
 at the unique redex position, before the suspended callers' continuations. -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt
 
 def decodeLabels : List Label → List val → List admininstr → List admininstr
@@ -23,9 +23,9 @@ def decodeFrames : List AFrame → List admininstr → List admininstr
 def decode (s : AState) : config :=
   .mk_config (.mk_state s.store s.ambient) (decodeFrames s.frames (vals s.results))
 
-@[simp] theorem decodeLabels_nil (values : List val) (code : List admininstr) :
+@[simp] theorem decode_labels_nil (values : List val) (code : List admininstr) :
     decodeLabels [] values code = vals values ++ code := rfl
 
-@[simp] theorem decodeFrames_nil (code : List admininstr) : decodeFrames [] code = code := rfl
+@[simp] theorem decode_frames_nil (code : List admininstr) : decodeFrames [] code = code := rfl
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

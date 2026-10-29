@@ -1,9 +1,9 @@
 import Itasca.Runtime.SourceMachine.Sim.Typed
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
-theorem blockType_spec (s : store) (f : AFrame) (bt : blocktype) (ft : functype)
+theorem block_type_spec (s : store) (f : AFrame) (bt : blocktype) (ft : functype)
     (h : blockType f.module bt = some ft) : fun_blocktype ⟨s, f.toFrame⟩ bt = ft := by
   cases bt with
   | _RESULT result => cases result <;> simpa only [blockType, fun_blocktype, Option.some.injEq] using h
@@ -23,12 +23,12 @@ theorem typed_block_simulation (s : store) (ambient : frame) (f : AFrame)
   have frames := typed.frames
   cases frames with
   | cons hf hr =>
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨C, first, args, inputs, outputs, bindings, _, hop, hsplit, hargs, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop with
     | block _ _ _ ins outs hbt hbody hC hi hnew =>
-      have hbt' := blockType_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
-      have hlen := resultsTyped_length hargs
+      have hbt' := block_type_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
+      have hlen := results_typed_length hargs
       have htypes := results_type_of_typed hargs
       have hheight : f.vals.length - inputs.length = first.length := by rw [hsplit, List.length_append, hlen]; omega
       have hbound : inputs.length ≤ f.vals.length := by rw [hsplit, List.length_append, hlen]; omega
@@ -36,9 +36,9 @@ theorem typed_block_simulation (s : store) (ambient : frame) (f : AFrame)
         rw [hheight, hsplit, List.drop_left]
         exact htypes
       have result := block_simulation s ambient f rest after body first args bt inputs outputs
-        typed.store typed.ambient hw hl hfirst (resultsTyped_wf hargs)
-        (fun i hm => hc i (by simp [hm])) (framesTyped_wf hr) heights hi
-        (blockType_spec s f bt _ hbt') hlen
+        typed.store typed.ambient hw hl hfirst (results_typed_wf hargs)
+        (fun i hm => hc i (by simp [hm])) (frames_typed_wf hr) heights hi
+        (block_type_spec s f bt _ hbt') hlen
       have hnext : next = ⟨s, ambient,
           { f with code := body, labels := ⟨outputs, outputs, [], first.length, after⟩ :: f.labels } :: rest, []⟩ := by
         simpa [astep, enterLabel, hbt', hbound, htail, hheight, hsplit, hlen, htypes, advance] using step.symm
@@ -55,12 +55,12 @@ theorem typed_loop_simulation (s : store) (ambient : frame) (f : AFrame)
   have frames := typed.frames
   cases frames with
   | cons hf hr =>
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨C, first, args, inputs, outputs, bindings, _, hop, hsplit, hargs, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop with
     | loop _ _ _ ins outs hbt hbody hC hi hnew =>
-      have hbt' := blockType_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
-      have hlen := resultsTyped_length hargs
+      have hbt' := block_type_of_typing (m := f.module) (C := labelContext C f.labels) bindings.types hbt
+      have hlen := results_typed_length hargs
       have htypes := results_type_of_typed hargs
       have hheight : f.vals.length - inputs.length = first.length := by rw [hsplit, List.length_append, hlen]; omega
       have hbound : inputs.length ≤ f.vals.length := by rw [hsplit, List.length_append, hlen]; omega
@@ -68,9 +68,9 @@ theorem typed_loop_simulation (s : store) (ambient : frame) (f : AFrame)
         rw [hheight, hsplit, List.drop_left]
         exact htypes
       have result := loop_simulation s ambient f rest after body first args bt inputs outputs
-        typed.store typed.ambient hw hl hfirst (resultsTyped_wf hargs)
-        (fun i hm => hc i (by simp [hm])) (framesTyped_wf hr) heights hi
-        (blockType_spec s f bt _ hbt') hlen
+        typed.store typed.ambient hw hl hfirst (results_typed_wf hargs)
+        (fun i hm => hc i (by simp [hm])) (frames_typed_wf hr) heights hi
+        (block_type_spec s f bt _ hbt') hlen
       have hnext : next = ⟨s, ambient,
           { f with code := body, labels := ⟨inputs, outputs, [.LOOP bt body], first.length, after⟩ :: f.labels } :: rest, []⟩ := by
         simpa [astep, enterLabel, hbt', hbound, htail, hheight, hsplit, hlen, htypes, advance] using step.symm
@@ -78,4 +78,4 @@ theorem typed_loop_simulation (s : store) (ambient : frame) (f : AFrame)
       apply NextSim.single
       simpa only [← hsplit] using result
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

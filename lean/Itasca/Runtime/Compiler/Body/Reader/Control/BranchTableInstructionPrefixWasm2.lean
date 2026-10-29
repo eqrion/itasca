@@ -14,7 +14,7 @@ Checked br_table reader instructions, including scratch-slot bounds and instruct
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed labels and a source transfer intervals discharge the actual complete
@@ -53,7 +53,7 @@ theorem StructuredCompilerPrefix.br_table_scratch_exit_slots
     rw [appended] at member
     exact geometry depth member index frame found position
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -61,7 +61,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Typed labels and a source-paid stub budget discharge the actual complete
@@ -121,7 +121,7 @@ theorem StructuredCompilerPrefix.br_table_scratch_open_instructions
     rw [appended] at member
     exact geometry depth member index frame found position
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -129,7 +129,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem table_source_word_room : 3*limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
@@ -152,7 +152,7 @@ theorem table_instruction_room {A : Type} {compiler : runtime.compiler.FunctionC
   have paid : compiler.function.code.val.length+1+2*(depths.length+1) ≤ 3*data.length := by omega
   exact paid.trans ((Nat.mul_le_mul_left 3 sourceBound).trans table_source_word_room)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -160,7 +160,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -221,6 +221,6 @@ theorem reader_table_open_instructions_wasm2 {jumpTables : List U32} {data env s
       fixups room boundary.targets coordinate labels held callback,
     invariant.br_table_scratch_exit_slots ops law budget buffer final.core fallback view labels exits callback⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

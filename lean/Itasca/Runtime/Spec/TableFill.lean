@@ -87,22 +87,22 @@ theorem table_fill_steps (s : store) (f : frame) (destination count tableIndex :
     StepsH ⟨⟨s,f⟩,fillOperands destination value count ++ [.TABLE_FILL (.mk_uN tableIndex)]⟩ []
       ⟨⟨tableFill s f tableIndex destination value count,f⟩,[]⟩ := by
   induction count generalizing s destination with
-  | zero => exact stepsH_single (table_fill_zero s f destination tableIndex value hs hf hd ht (by simpa using inside))
+  | zero => exact steps_h_single (table_fill_zero s f destination tableIndex value hs hf hd ht (by simpa using inside))
   | succ count ih =>
     have hd' : destination+1 < 2^32 := by omega
     let fresh := tableWrite s f tableIndex destination value
-    have hw := tableWrite_wf s f tableIndex destination value hs
-    have lengthEq := tableWrite_table_length s f tableIndex destination value address
+    have hw := table_write_wf s f tableIndex destination value hs
+    have lengthEq := table_write_table_length s f tableIndex destination value address
     have afterWf := (wf_config_parts (fill_config_wf fresh f (destination+1) count tableIndex value hw hf hd' (by omega) ht)).2
     have first := table_fill_expand s f destination count tableIndex value hs hf hd' hn ht inside
-    have second := stepH_instrs (table_write_step s f tableIndex destination value hs hf hd ht mapped (by omega)) []
+    have second := step_h_instrs (table_write_step s f tableIndex destination value hs hf hd ht mapped (by omega)) []
       (fillOperands (destination+1) value count ++ [.TABLE_FILL (.mk_uN tableIndex)]) (by simp [Forall]) afterWf
     have rest := ih fresh (destination+1) hw hd' (by omega)
       (by simpa [fresh,tableWrite] using address)
       (by simpa only [fresh,lengthEq] using tableBound)
       (by rw [show (fun_table ⟨fresh,f⟩ (.mk_uN tableIndex)).REFS.length =
             (fun_table ⟨s,f⟩ (.mk_uN tableIndex)).REFS.length from lengthEq]; omega)
-    have combined := stepsH_trans (stepsH_single first) (stepsH_trans (stepsH_single second) rest)
+    have combined := steps_h_trans (steps_h_single first) (steps_h_trans (steps_h_single second) rest)
     simpa only [instrContext,vals,List.map_nil,List.nil_append,List.append_nil,tableFill,fresh] using combined
 end Itasca.Runtime.Spec.Segment
 
@@ -119,14 +119,14 @@ def fillInto {T : Type} (before : List T) (destination : Nat) (value : T) : Nat 
   | 0 => before
   | count+1 => fillInto (before.set destination value) (destination+1) value count
 
-theorem fillInto_map {T U : Type} (decode : T → U) (before : List T) (destination count : Nat) (value : T) :
+theorem fill_into_map {T U : Type} (decode : T → U) (before : List T) (destination count : Nat) (value : T) :
     (fillInto before destination value count).map decode =
       fillInto (before.map decode) destination (decode value) count := by
   induction count generalizing before destination with
   | zero => rfl
   | succ count ih => simp only [fillInto,ih,List.map_set]
 
-theorem tableFill_eq (s : store) (f : frame) (tableIndex destination count : Nat) (value : ref) :
+theorem table_fill_eq (s : store) (f : frame) (tableIndex destination count : Nat) (value : ref) :
     tableFill s f tableIndex destination value count =
       {s with TABLES := s.TABLES.modify f.MODULE.TABLES[tableIndex]! (fun table =>
         {table with REFS := fillInto table.REFS destination value count})} := by

@@ -7,16 +7,16 @@ open Aeneas Aeneas.Std
 /-- Administrative potential covers source constants, forward skip jumps,
 and the second half of a branch, including backward loop targets. The pending
 phase weighs more than any possible remaining instruction distance. -/
-def dispatchMeasure (pending : Bool) (codeLength pc : Nat) (state : Abs.AState) : Nat :=
-  Abs.administrativeMeasure state * (2 * (codeLength + 1)) +
+def dispatchMeasure (pending : Bool) (codeLength pc : Nat) (state : SourceMachine.AState) : Nat :=
+  SourceMachine.administrativeMeasure state * (2 * (codeLength + 1)) +
     (if pending then codeLength + 1 else 0) + (codeLength - pc)
 
-theorem dispatchMeasure_jump (state : Abs.AState) (codeLength pc target : Nat) :
+theorem dispatch_measure_jump (state : SourceMachine.AState) (codeLength pc target : Nat) :
     dispatchMeasure false codeLength target state < dispatchMeasure true codeLength pc state := by
   simp only [dispatchMeasure, Bool.false_eq_true, ite_false, ite_true]
   omega
 
-theorem dispatchMeasure_forward (state : Abs.AState) (codeLength pc target : Nat)
+theorem dispatch_measure_forward (state : SourceMachine.AState) (codeLength pc target : Nat)
     (forward : pc < target) (bound : target ≤ codeLength) :
     dispatchMeasure false codeLength target state < dispatchMeasure false codeLength pc state := by
   simp only [dispatchMeasure, Bool.false_eq_true, ite_false]

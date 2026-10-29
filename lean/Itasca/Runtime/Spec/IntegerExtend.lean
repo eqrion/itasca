@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Spec
 
 theorem extend_signed_bitvec (small large : Nat) (bits : BitVec small) :
     extend__ small large .S (.mk_uN bits.toNat) = .mk_uN (bits.signExtend large).toNat := by
-  simp only [extend__, proj_uN_0, signedValue_bitvec, SpecExt.Builtins.encodeSigned,
+  simp only [extend__, proj_uN_0, signed_value_bitvec, SpecExt.Builtins.encodeSigned,
     BitVec.signExtend, BitVec.toNat_ofInt, Nat.cast_pow, Nat.cast_ofNat]
 
 theorem extend_unary_bitvec (ty : Inn) (small : Nat) (bits : BitVec (sizenn (numtype_Inn ty))) :

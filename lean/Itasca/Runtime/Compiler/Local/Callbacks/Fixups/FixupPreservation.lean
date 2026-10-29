@@ -10,7 +10,7 @@ Fixup-budget preservation through ordinary and control callbacks.
 Main declarations: `FixupBudget.ordinary` and `compiler_end_fixup_budget`. A direct consumer is `Compiler.Local.Callbacks.Control.FixupBranchPreservation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 4000000
 set_option maxRecDepth 4096
@@ -153,4 +153,4 @@ theorem compiler_end_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
   all_goals try exact fun frame member => (budget frame (List.mem_of_mem_dropLast member)).trans growth
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

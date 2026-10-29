@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
 import Itasca.Runtime.Spec.TableGrowth
 import Itasca.Runtime.Spec.MemoryGrowth
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 def limitMaximum : limits → Option Nat
@@ -115,4 +115,4 @@ theorem growmemory_typed {s : store} {object next : meminst} {delta : Nat}
           storeWf targetWf newMemoryWf
       · exact extend_mem_contents old (old+delta) max bytes (bytes++List.replicate (delta*(64*Ki)) (.mk_byte 0))
           (by omega) (by simp) objectWf targetWf
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

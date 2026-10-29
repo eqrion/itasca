@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.PureHead
 import Itasca.Module.Soundness
 import Itasca.Results.Unique
 import Itasca.Profile.EntrySound
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The store's code constructor for one independently decoded function. -/
@@ -17,10 +17,10 @@ separate inductive constructor types. -/
 def functionCode : func → funccode
   | .FUNC index locals body => .FUNC index locals body
 
-@[simp] theorem functionCode_entry (index : U32) (entry : ModuleBinary.Code) :
+@[simp] theorem function_code_entry (index : U32) (entry : ModuleBinary.Code) :
     functionCode (CodeEntry.function index entry) = sourceFunctionCode index entry := rfl
 
-theorem sourceFunctions_eq (raw : ModuleBinary.Module) :
+theorem source_functions_eq (raw : ModuleBinary.Module) :
     sourceFunctions raw = (List.zipWith CodeEntry.function raw.functions raw.codes).map functionCode := by
   simp [sourceFunctions, List.map_zipWith, Function.comp_def]
 
@@ -32,4 +32,4 @@ theorem witness_type_profile {V : Type} {visitor : code.OpVisitor V}
   rw [← w.function_type]
   exact List.getElem_mem _
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

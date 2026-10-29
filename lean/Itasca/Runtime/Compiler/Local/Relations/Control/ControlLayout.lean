@@ -1,12 +1,12 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
 /-! Exact word heights for validator control-stack prefixes, including bottom
 stack entries, using the extracted integer-width and accumulation loops. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 
 
-theorem stackWords_take_mono (values : List Itasca.code.StackType) {a b : Nat} (order : a ≤ b) :
+theorem stack_words_take_mono (values : List Itasca.code.StackType) {a b : Nat} (order : a ≤ b) :
     stackWords (values.take a) ≤ stackWords (values.take b) := by
   have nested : (values.take b).take a = values.take a := by simp [List.take_take, Nat.min_eq_left order]
   rw [← nested]
@@ -15,7 +15,7 @@ theorem stackWords_take_mono (values : List Itasca.code.StackType) {a b : Nat} (
   simp only [List.sum_append, List.map_take] at sum
   omega
 
-theorem stackWords_take_succ (values : List Itasca.code.StackType) (i : Nat) (bound : i < values.length) :
+theorem stack_words_take_succ (values : List Itasca.code.StackType) (i : Nat) (bound : i < values.length) :
     stackWords (values.take (i + 1)) = stackWords (values.take i) + compilerStackWidth values[i] := by
   rw [← List.take_concat_get' values i bound]
   simp only [stackWords, List.map_append, List.sum_append, List.map_singleton, List.sum_singleton]
@@ -44,8 +44,8 @@ theorem stackWords_take_succ (values : List Itasca.code.StackType) (i : Nat) (bo
       have inBounds : i.val < values.length := by change i.val < values.val.length; omega
       step as ⟨ty, hty⟩
       step with control_stack_width ty as ⟨word, hword⟩
-      have increment := stackWords_take_succ values.val i.val (by omega)
-      have bounded := stackWords_take_mono values.val (a := i.val + 1) (b := count.val) (by omega)
+      have increment := stack_words_take_succ values.val i.val (by omega)
+      have bounded := stack_words_take_mono values.val (a := i.val + 1) (b := count.val) (by omega)
       have additionFits : height.val + word.val ≤ U32.max := by
         rw [hheight, hword, hty]
         omega
@@ -60,4 +60,4 @@ theorem stackWords_take_succ (values : List Itasca.code.StackType) (i : Nat) (bo
       have same : i.val = count.val := by scalar_tac
       simpa [WP.spec_ok, same] using hheight
   · simp [stackWords]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

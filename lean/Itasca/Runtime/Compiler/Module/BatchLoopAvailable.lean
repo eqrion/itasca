@@ -12,7 +12,7 @@ Successful compiler batch-loop execution, including entry dispatch and the publi
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 private theorem count_room (count limit : Usize) (less : count.val < limit.val) :
@@ -54,7 +54,7 @@ theorem compiler_next_entry_available (batch : stream.CodeBatch) (content finish
   simp [Itasca.stream.CodeBatch.next_entry,more,added,framed,
     core.result.Result.Insts.CoreOpsTry.branch,subtracted,increment]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -62,7 +62,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Published source slots form a dense prefix; all later slots remain vacant. -/
@@ -89,7 +89,7 @@ theorem FunctionSlotPrefix.publish {count cursor functions}
     rw [List.getElem?_set_ne (by omega)]
     exact held.vacant index (by omega) upper
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -97,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -219,6 +219,6 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
       simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,
         runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok,core.result.Result.is_ok] using continued
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

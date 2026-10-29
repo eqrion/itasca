@@ -20,7 +20,7 @@ theorem dispatch_const_v128_values {M P F A : Type}
     (found : store.instances.val[instIndex.val]? = some inst)
     (compiled : inst.module.functions.val[function.val]? = some code)
     (metadata : code.v128_pool.val[pool.val]? = some value)
-    (position : dst.val = Code.slots (front.map Code.valueType))
+    (position : dst.val = Compiler.slots (front.map Compiler.valueType))
     (represented : ValuesAt exec.slots.val base.val front)
     (capacity : base.val + dst.val + 2 ≤ exec.slots.length) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform index instIndex function base (.ConstV128 dst pool)

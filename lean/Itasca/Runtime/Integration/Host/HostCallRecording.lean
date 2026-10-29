@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Host.HostRecording
 import Itasca.Runtime.Integration.Host.HostCallSource
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- The observable source endpoint for an isolated host call. A preparation
@@ -25,9 +25,9 @@ theorem HostCallSourceOutcome.events {M P : Type} (view : M → Slice U8)
       (hostCallEvents address out) (hostCallResultConfig view code ambient address args out) := by
   obtain ⟨arguments,_,_,_,outcome⟩ := observed
   rcases outcome with ⟨success,_,source,_⟩ | ⟨error,source,_⟩
-  · simpa only [hostCallEvents,hostCallResultConfig,success,arguments] using Spec.stepsH_single source
+  · simpa only [hostCallEvents,hostCallResultConfig,success,arguments] using Spec.steps_h_single source
   · rcases error with trap | exhausted
-    · simpa only [hostCallEvents,hostCallResultConfig,trap,arguments] using Spec.stepsH_single source
-    · simpa only [hostCallEvents,hostCallResultConfig,exhausted,arguments] using Spec.stepsH_single source
+    · simpa only [hostCallEvents,hostCallResultConfig,trap,arguments] using Spec.steps_h_single source
+    · simpa only [hostCallEvents,hostCallResultConfig,exhausted,arguments] using Spec.steps_h_single source
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

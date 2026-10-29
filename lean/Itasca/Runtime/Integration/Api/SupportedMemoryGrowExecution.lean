@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Integration.Api.StatefulMemoryGrowExecution
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem stateful_memory_grow_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
@@ -10,26 +10,26 @@ theorem stateful_memory_grow_execution_supported
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    [StructuredMachine.StatefulProjection (emission compiled) compiled.indirect.val]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    [Machine.StatefulProjection (emission compiled) compiled.indirect.val]
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val+1=exec.frames.length) (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
     (moduleEq : f.module=decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : StructuredMachine.FramePoint (decodeStore view code store) raw {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
+    (point : Machine.FramePoint (decodeStore view code store) raw {f with code:=SourceMachine.Stateful.Instruction.memoryGrow.source::after} compiled C targets next output)
     (expected : List valtype)
-    (machine : StructuredMachine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (machine : Machine.Execution view code store exec ⟨decodeStore view code store,ambient,{f with code:=SourceMachine.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (shaped : Shape view store) (sourceSyntax : StoreSyntax code store) (bounds : SegmentBounds store) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       SupportedStepOutcome allocator hooks view code exec store platform expected compiled.code.length raw.pc.val false
-        ⟨decodeStore view code store,ambient,{f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ out ⦄ := by
+        ⟨decodeStore view code store,ambient,{f with code:=SourceMachine.Stateful.Instruction.memoryGrow.source::after}::rest,[]⟩ out ⦄ := by
   rcases stateful_memory_grow_point_step memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output
     ambient f rest after last frameFound found codeFound program.fetchBound shaped.memories moduleEq slots point machine.typed with jump | actual
   · obtain ⟨target,forward,fetch,retained⟩ := jump
-    apply WP.spec_mono (StructuredMachine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled ambient
-      {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after} rest expected C targets next output target last frameFound found codeFound forward fetch slots retained machine program)
+    apply WP.spec_mono (Machine.step_forward_jump memory hooks floats allocator view code exec store platform index raw inst compiled ambient
+      {f with code:=SourceMachine.Stateful.Instruction.memoryGrow.source::after} rest expected C targets next output target last frameFound found codeFound forward fetch slots retained machine program)
     intro out result
     obtain ⟨success,sameStore,samePlatform,exactState,fresh,simulation⟩ := result
     exact SupportedStepOutcome.unchanged_success shaped sourceSyntax bounds sameStore success ⟨target.val,false,_,fresh,simulation,fun _ h => h,rfl,fun _ h => h⟩
@@ -39,9 +39,9 @@ theorem stateful_memory_grow_execution_supported
     obtain ⟨address,delta,issued,effect⟩ := rawEffect
     have mutation := memory_growth_cumulative_mutation_of_shape shaped sourceSyntax bounds issued effect (transition.next_extends_supported machine.typed machine.core)
     apply SupportedStepOutcome.success mutation success
-    exact StructuredMachine.ordinary_cumulative_step view code ambient {f with code:=Abs.Stateful.Instruction.memoryGrow.source::after}
-      {f with code:=after,vals:=front++[Abs.integerVal .I32 result.val]} rest expected raw.pc.val false
+    exact Machine.ordinary_cumulative_step view code ambient {f with code:=SourceMachine.Stateful.Instruction.memoryGrow.source::after}
+      {f with code:=after,vals:=front++[SourceMachine.integerVal .I32 result.val]} rest expected raw.pc.val false
       machine metadata raw index pc last frameFound program (.ready retained) represented ⟨rfl,rfl,rfl,rfl⟩
       written.2 (by rw [written.1]; exact SlotPrefix.set _ _ _ _ above) transition
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

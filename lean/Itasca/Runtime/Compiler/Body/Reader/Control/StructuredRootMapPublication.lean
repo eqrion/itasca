@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Local.Publication.RootMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.FinalControlMapBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A reached root prefix supplies its sole body frame and branch sites. The
@@ -40,4 +40,4 @@ theorem structured_root_map_publication {jumpTables : List U32}
   exact compiler_root_map_publication ops law before after state frame rest target maps physical restEmpty root noIf
     rfl sites shape.mapBound coordinateFits codeFits offsetsFit emitFits progress endBound called
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

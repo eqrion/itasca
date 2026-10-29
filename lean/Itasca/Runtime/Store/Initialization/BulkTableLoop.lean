@@ -11,7 +11,7 @@ def copySegment (before source : List U64) (dst src : Nat) : Nat → List U64
   | 0 => before
   | n + 1 => (copySegment before source dst src n).set (dst + n) source[src + n]!
 
-theorem copySegment_length (before source : List U64) (dst src count : Nat) :
+theorem copy_segment_length (before source : List U64) (dst src count : Nat) :
     (copySegment before source dst src count).length = before.length := by
   induction count with
   | zero => rfl
@@ -48,7 +48,7 @@ theorem table_init_loop (tables : alloc.vec.Vec runtime.store.TableInst)
     dsimp only at indexBound wordValues currentEq ⊢
     have wordLength : words.length = table.elements.length := by
       simpa only [alloc.vec.Vec.length] using congrArg List.length wordValues |>.trans
-        (copySegment_length _ _ _ _ _)
+        (copy_segment_length _ _ _ _ _)
     have currentFound : current.val[tableIndex.val]? = some {table with elements := words} := by
       rw [currentEq]
       simp [alloc.vec.Vec.set_val_eq, tableBound]

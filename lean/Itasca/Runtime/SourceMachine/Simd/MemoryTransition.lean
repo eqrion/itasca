@@ -12,7 +12,7 @@ SIMD memory transition typing and source simulation. Pure SIMD transition and sh
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec
 
 theorem MemorySignature.memory_present {source inputs outputs C signature}
@@ -63,13 +63,13 @@ theorem MemorySignature.frame_preservation {source inputs outputs}
   | mk C bindings localTypes locals values returns code contextWf =>
     simp only [List.append_nil] at code
     obtain ⟨prefixTypes, ins, outs, instruction, stack, continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ operands)) code
+      code_stack_after (value_types_concrete (front ++ operands)) code
     have principal := signature.principal instruction
     simp only [functype.mk_functype.injEq,list.mk_list.injEq] at principal
     rcases principal with ⟨rfl,rfl⟩
     simp only [List.map_append,types,List.append_cancel_right_eq] at stack
     have frontTyped : ResultsTyped s (front.map valueType) front := by
-      simpa using resultsTyped_take front.length values
+      simpa using results_typed_take front.length values
     have resultTypes := results_type_of_typed resultTyped
     apply FrameTyped.mk (f := {f with code := after, vals := front ++ results}) C
       bindings localTypes locals ?_ returns ?_ contextWf
@@ -94,10 +94,10 @@ theorem MemoryChange.typed {before frame after} (change : MemoryChange before fr
   cases change with
   | same => exact ⟨extend_store_refl before storeWf,contents⟩
   | write start payload valid => exact
-      ⟨memoryPayloadWrite_extends before frame address start object payload storeWf contents mapped found valid,
+      ⟨memory_payload_write_extends before frame address start object payload storeWf contents mapped found valid,
        contents.memory_write storeWf frame address start object payload mapped found valid⟩
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end
 
@@ -105,7 +105,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Simd
+namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec
 
 /-- The source SIMD memory relation uses the generated local reduction and an
@@ -140,7 +140,7 @@ theorem memory_transition_preservation {s : _root_.store} {ambient : frame} {f :
     obtain ⟨_,_,address,object,_,_,mapped,found,_,_⟩ := signature.typed_operands hf
     obtain ⟨extension,contents⟩ := change.typed typed.typed.store typed.contents mapped found
     have resultWf : Forall wf_val results := by
-      have wf := (wf_config_parts (stepH_wf effect).2).2
+      have wf := (wf_config_parts (step_h_wf effect).2).2
       intro value member
       exact val_wf_of_admin (wf _ (List.mem_map.mpr ⟨value,member,rfl⟩))
     have resultTyped := signature.results_typed (extend_store_wf extension).2 resultWf resultTypes
@@ -160,10 +160,10 @@ theorem MemorySignature.prefix_bounds {source inputs outputs}
     have first := congrArg List.length split
     have second := congrArg List.length values
     have size := congrArg List.length types
-    have actualSize := resultsTyped_length actualTyped
+    have actualSize := results_typed_length actualTyped
     simp only [List.length_append,List.length_map] at first second size
     omega
-  have valid := (frameTyped_wf typed).2.2.1
+  have valid := (frame_typed_wf typed).2.2.1
   change Forall wf_val f.vals at valid
   rw [values] at valid
   exact ⟨fun v hv => valid v (List.mem_append_left _ hv),by simpa only [equal] using heights⟩
@@ -181,8 +181,8 @@ theorem memory_transition_simulation {s : _root_.store} {ambient : frame} {f : A
     have hf : FrameTyped s {f with code := source :: after} [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨_,labelsWf,_,codeWf⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨_,labelsWf,_,codeWf⟩ := frame_typed_wf hf
     obtain ⟨frontWf,heights⟩ := signature.prefix_bounds hf values types
     apply NextSim.single
     have simulated := mutable_stack_simulation s store ambient f rest source after front operands results
@@ -203,14 +203,14 @@ theorem memory_transition_trap_simulation {s : _root_.store} {ambient : frame} {
     have hf : FrameTyped s {f with code := source :: after} [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨frameWf,labelsWf,_,codeWf⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨frameWf,labelsWf,_,codeWf⟩ := frame_typed_wf hf
     obtain ⟨frontWf,heights⟩ := signature.prefix_bounds hf values types
     have simulated := operand_trap_simulation s ambient f rest source after front operands
       typed.store typed.ambient frameWf labelsWf frontWf
       (fun op member => codeWf op (by simp [member])) hr heights effect
     simpa only [values] using simulated
 
-end Itasca.Runtime.Abs.Simd
+end Itasca.Runtime.SourceMachine.Simd
 
 end

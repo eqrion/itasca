@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.GrowthTyping
 import Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement
 import Itasca.Runtime.SourceMachine.Stateful.ReferenceOperands
-namespace Itasca.Runtime.Abs.Stateful
+namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
 /-- Refusal is permitted independently of the pure successful-growth rule. -/
@@ -22,7 +22,7 @@ def tableGrow (choice : Option tableinst) (s : AState) (f : AFrame) (rest : List
     | _,_,_ => .stuck
   | _,_ => .stuck
 
-theorem tableGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem table_grow_choices (s : store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (index : Nat) (after : List instr)
     (typed : CoreTyped ⟨s,ambient,{f with code := .TABLE_GROW (.mk_uN index)::after}::rest,[]⟩) :
     ∃ front reference delta address object,
@@ -53,14 +53,14 @@ theorem tableGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Lis
         have indexBound : index<2^32 := by cases instructionWf; rename_i valid; cases valid; norm_num at *; omega
         have constant_admin : ∀ bits, admininstr_val (integerVal .I32 bits) = Segment.i32 bits := fun _ => rfl
         intro choice allowed
-        obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf hf
+        obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf hf
         have tailWf : Forall wf_instr after := fun instruction member => codeWf instruction (by simp [member])
-        have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+        have restWf : Forall FrameWf rest := by cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
         cases allowed with
         | refused =>
           have resultTyped := integer_val_typed typed.typed.store .I32 (2^32-1) (by decide)
           have freshFrame := continuation [integerVal .I32 (2^32-1)] (.cons resultTyped .nil)
-          refine ⟨_,by simp only [tableGrow,split',pop_append,mapped,decoded,found,asReference_value,advance],
+          refine ⟨_,by simp only [tableGrow,split',pop_append,mapped,decoded,found,as_reference_value,advance],
             ⟨active_frame_preservation typed.typed freshFrame rfl,typed.contents⟩,extend_store_refl _ typed.typed.store,NextSim.single ?_⟩
           have source := table_grow_fail_step s f.toFrame index delta reference typed.typed.store frameWf indexBound deltaBound
           have full := mutable_stack_simulation s s ambient f rest (.TABLE_GROW (.mk_uN index)) after front [val_ref reference,integerVal .I32 delta]
@@ -76,7 +76,7 @@ theorem tableGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Lis
           have resultTyped := integer_val_typed typed.typed.store .I32 (object.REFS.length) bound
           have frameNext := continuation [integerVal .I32 (object.REFS.length)] (.cons resultTyped .nil)
           have fresh := (active_frame_preservation typed.typed frameNext rfl).extend_same extension rfl
-          refine ⟨_,by simp only [tableGrow,split',pop_append,mapped,decoded,found,asReference_value,advance],⟨fresh,contents⟩,extension,NextSim.single ?_⟩
+          refine ⟨_,by simp only [tableGrow,split',pop_append,mapped,decoded,found,as_reference_value,advance],⟨fresh,contents⟩,extension,NextSim.single ?_⟩
           have tableEq : fun_table ⟨s,f.toFrame⟩ (.mk_uN index) = object := by
             simp [fun_table,AFrame.toFrame,proj_uN_0,List.getElem!_eq_getElem?_getD,mapped,found]
           have storeEq : {s with TABLES := s.TABLES.modify f.module.TABLES[index]! (fun _ => grownObject)} =
@@ -91,4 +91,4 @@ theorem tableGrow_choices (s : store) (ambient : frame) (f : AFrame) (rest : Lis
             [val_ref reference,integerVal .I32 delta] [integerVal .I32 (object.REFS.length)] typed.typed.ambient labelsWf frontWf tailWf restWf heights
             (by simpa [AFrame.toFrame,vals,reference_admin_value,admininstr_instr,constant_admin] using source)
           simpa only [split] using full
-end Itasca.Runtime.Abs.Stateful
+end Itasca.Runtime.SourceMachine.Stateful

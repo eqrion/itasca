@@ -1,5 +1,5 @@
 import Itasca.Generated.Types
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Function-local syntactic tables used by emitted instructions. -/
@@ -27,4 +27,4 @@ theorem append_empty (a : CompilerTables) : append a empty = a := by
 
 end CompilerTables
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

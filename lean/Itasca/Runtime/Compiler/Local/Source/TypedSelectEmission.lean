@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Explicit select emits the same width-specific instruction as implicit
@@ -15,4 +15,4 @@ inductive TypedSelectEmission (C : context) :
       TypedSelectEmission C (front ++ [ty,ty,.I32]) (.SELECT (some [ty]))
         [selectInstruction (decide (width ty = 2)) left right condition] (front ++ [ty])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

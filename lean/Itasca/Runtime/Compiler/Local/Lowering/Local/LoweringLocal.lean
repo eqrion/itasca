@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 theorem CompilerLayout.local_slot {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
@@ -189,4 +189,4 @@ set_option maxRecDepth 4096 in
   intro out result success
   exact ⟨localSlot, operand, slotPosition, operandPosition, result success⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -7,7 +7,7 @@ Saved operand segments determine the exact source prefix below every open scope.
 Main declarations: `SourceFronts` and `ReaderScopeFronts`. A direct consumer is `Compiler.Body.Reader.Control.BranchLayout`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Saved operand segments determine the exact source prefix below every open
@@ -112,4 +112,4 @@ theorem ReaderScopeFronts.branch {parents current values}
   rw [whole, prefixEq, arguments]
   simp only [List.append_assoc]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

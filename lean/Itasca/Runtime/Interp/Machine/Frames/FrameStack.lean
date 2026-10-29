@@ -7,22 +7,22 @@ Saved and active frames in the structured machine relation.
 Main declarations: `FrameStackRel` and `SavedFrames`. A direct consumer is `Interp.Machine.Execution`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 structure SavedFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
     (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
-    (source : Abs.AFrame) (waiting : List valtype) (childBase : Nat) : Prop where
+    (source : SourceMachine.AFrame) (waiting : List valtype) (childBase : Nat) : Prop where
   binding : FrameBinding store exec raw source
   slots : FrameSlots exec raw source
-  destination : childBase = raw.base.val + Code.slots ((source.locals ++ source.vals).map Code.valueType)
+  destination : childBase = raw.base.val + Compiler.slots ((source.locals ++ source.vals).map Compiler.valueType)
   continuation : ∃ compiled C targets next output,
-    FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS ∧
+    FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS ∧
     SuspendedFramePoint sourceStore raw source compiled C targets next output waiting
 
 inductive SavedFrames {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
     (exec : runtime.interp.Execution) :
-    List runtime.interp.Frame → List Abs.AFrame → List valtype → Nat → Prop where
+    List runtime.interp.Frame → List SourceMachine.AFrame → List valtype → Nat → Prop where
   | nil (waiting) : SavedFrames store sourceStore exec [] [] waiting 0
   | cons {raw raws source sources waiting base} :
       SavedFrame store sourceStore exec raw source waiting base →
@@ -71,7 +71,7 @@ theorem SavedFrames.transport {M : Type} {store : runtime.store.Store M} {source
   | @cons raw raws source sources waiting base head tail ih =>
     apply SavedFrames.cons
     · exact ⟨bindings raw source head.binding (by simp),
-        preserve _ _ head.slots (by rw [Code.encodeValues_length,←head.destination]),head.destination,head.continuation⟩
+        preserve _ _ head.slots (by rw [Compiler.encode_values_length,←head.destination]),head.destination,head.continuation⟩
     · apply ih
       · intro other source binding member
         exact bindings other source binding (by simp only [List.mem_cons]; exact Or.inr member)
@@ -79,22 +79,22 @@ theorem SavedFrames.transport {M : Type} {store : runtime.store.Store M} {source
         exact preserve position bits represented (bound.trans head.base_le)
 
 structure ActiveFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
-    (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (source : Abs.AFrame) : Prop where
+    (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (source : SourceMachine.AFrame) : Prop where
   binding : FrameBinding store exec raw source
   slots : FrameSlots exec raw source
   continuation : ∃ compiled C targets next output pending,
-    FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS ∧
+    FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS ∧
     ControlPoint sourceStore raw source compiled C targets next output pending
 
 def ReadyTop {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
-    (exec : runtime.interp.Execution) (source : Abs.AFrame) : Prop :=
+    (exec : runtime.interp.Execution) (source : SourceMachine.AFrame) : Prop :=
   ∃ raw compiled C targets next output,
     exec.frames.val.getLast? = some raw ∧
-    FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS ∧
+    FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS ∧
     FramePoint sourceStore raw source compiled C targets next output
 
 inductive FrameStackRel {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
-    (exec : runtime.interp.Execution) : List Abs.AFrame → Prop where
+    (exec : runtime.interp.Execution) : List SourceMachine.AFrame → Prop where
   | empty (frames : exec.frames.val = []) : FrameStackRel store sourceStore exec []
   | active {raw source raws sources}
       (frames : exec.frames.val = raws.reverse ++ [raw])
@@ -118,7 +118,7 @@ theorem FrameStackRel.store_extension {M : Type} {before after : runtime.store.S
   | empty frames => exact .empty frames
   | active frames top saved => exact .active frames (top.store_extension metadata extension) (saved.store_extension metadata extension)
 
-def ReadyState {M : Type} (store : runtime.store.Store M) (exec : runtime.interp.Execution) (source : Abs.AState) : Prop :=
+def ReadyState {M : Type} (store : runtime.store.Store M) (exec : runtime.interp.Execution) (source : SourceMachine.AState) : Prop :=
   match source.frames with
   | [] => ValuesAt exec.slots.val 0 source.results
   | frame :: _ => ReadyTop store source.store exec frame
@@ -154,16 +154,16 @@ theorem SavedFrame.resume {M : Type} {store : runtime.store.Store M} {sourceStor
     (saved : SavedFrame store sourceStore before raw source waiting base)
     (effect : ReturnEffect before after base src count) (member : raw ∈ before.frames.val.dropLast)
     (results : List val) (represented : ValuesAt before.slots.val (base + src) results)
-    (types : results.map Code.valueType = waiting) (width : count = Code.slots (results.map Code.valueType))
-    (bounds : base + src + count ≤ before.slots.length) (heights : Abs.FrameHeights source) :
+    (types : results.map Compiler.valueType = waiting) (width : count = Compiler.slots (results.map Compiler.valueType))
+    (bounds : base + src + count ≤ before.slots.length) (heights : SourceMachine.FrameHeights source) :
     FrameBinding store after raw {source with vals := source.vals ++ results} ∧
     FrameSlots after raw {source with vals := source.vals ++ results} ∧
     ∃ compiled C targets next output,
-      FrameProgram store raw compiled (source.locals.map Code.valueType) source.resultTypes C.FUNCS ∧
+      FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS ∧
       FramePoint sourceStore raw {source with vals := source.vals ++ results} compiled C targets next output := by
   refine ⟨effect.preserve_binding saved.binding member,
     effect.resume saved.slots represented width saved.destination bounds,?_⟩
   obtain ⟨compiled,C,targets,next,output,program,point⟩ := saved.continuation
   exact ⟨compiled,C,targets,next,output,program,point.resume results types heights⟩
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

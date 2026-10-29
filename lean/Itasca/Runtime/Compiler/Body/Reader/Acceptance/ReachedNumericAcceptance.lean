@@ -14,7 +14,7 @@ Successful integer and floating-point reader replay at a reached source point. L
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -26,7 +26,7 @@ theorem compiler_reader_numeric_available {A V : Type} (ops : runtime.platform.A
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (layout : compiler.reachable = true →
       CompilerLayout compiler (front ++ List.replicate op.arity (integerType op.input)))
     (reference : code.step source st data env ctx (UScalar.cast .U8 (integerOpcode op)) before =
@@ -59,7 +59,7 @@ theorem compiler_reader_float_available {A V : Type} (ops : runtime.platform.All
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
     (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (layout : compiler.reachable = true →
       CompilerLayout compiler (front ++ List.replicate op.arity (valtype_numtype op.input)))
     (reference : code.step source st data env ctx (UScalar.cast .U8 (floatOpcode op)) before =
@@ -84,7 +84,7 @@ theorem compiler_reader_float_available {A V : Type} (ops : runtime.platform.All
   rw [callback]
   exact compiler_float_available_effect ops bound available compiler final demand front op layout
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -92,7 +92,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 
@@ -104,7 +104,7 @@ theorem reached_reader_numeric_available_wasm2 {data env locals index st}
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (demand : CallbackDemand compiler out bound)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (capacity : st.core.vals.val.length < Usize.max)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -139,7 +139,7 @@ theorem reached_reader_float_available_wasm2 {data env locals index st}
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (demand : CallbackDemand compiler out bound)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (capacity : st.core.vals.val.length < Usize.max)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
@@ -175,7 +175,7 @@ theorem reached_profile_numeric_available_wasm2 {data env locals index st}
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
     (demand : CallbackDemand compiler out.core bound)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192)
+    (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
@@ -206,7 +206,7 @@ theorem reached_profile_float_available_wasm2 {data env locals index st}
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
     (demand : CallbackDemand compiler out.core bound)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256)
+    (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (known : compiler.reachable = true → ConcreteStack st.core.vals.val)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
@@ -228,6 +228,6 @@ theorem reached_profile_float_available_wasm2 {data env locals index st}
     (reached_reader_float_available_wasm2 p ops bound available source before after compiler out.core demand
       op base capacity known monomorphic wholeLayout byte raw)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

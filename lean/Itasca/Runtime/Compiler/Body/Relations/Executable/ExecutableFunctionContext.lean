@@ -7,7 +7,7 @@ Transport of executable emission and function certificates across source context
 Main declarations: `ExecutableEmission.context` and `ExecutableFunctionCode.complete_module`. A direct consumer is `Store.Invariant.ExecutableInstantiationCode`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem ExecutableEmission.context {tables C D before instruction emitted after}
@@ -64,4 +64,4 @@ theorem ExecutableFunctionCode.complete_module {module params declared results b
   | none => simp [Itasca.EnvTranslation.dataTypes,declaredCount] at found
   | some n => simpa only [Itasca.EnvTranslation.dataTypes,declaredCount,Option.map_some,
       Option.getD_some,count n declaredCount] using found
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

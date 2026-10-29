@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SingleCallbackExtended
 import Itasca.Wasm2.Trace.Refinement
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -92,4 +92,4 @@ theorem reader_single_callback_simd {V : Type} (visitor : code.OpVisitor V)
     obtain ⟨opcode,next⟩ := pair
     exact reader_single_callback_simd_sub visitor _ data env opcode before after out accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

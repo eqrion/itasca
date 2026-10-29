@@ -8,7 +8,7 @@ The root scope starts with an empty concrete operand stack and a live empty sour
 Main declarations: `CompilerPrefix.initial`. A direct consumer is `Compiler.Body.Callbacks.Prefix.CompilerPrefixStart`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The root scope starts with an empty concrete operand stack and a live
@@ -26,4 +26,4 @@ theorem CompilerPrefix.initial {A : Type} (compiler : runtime.compiler.FunctionC
   · simp [ConcreteStack]
   · omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

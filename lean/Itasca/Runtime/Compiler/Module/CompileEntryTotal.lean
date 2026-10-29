@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 import Itasca.Runtime.Compiler.Module.SchedulerSafety
 import Itasca.Stream.BatchBounds
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
@@ -75,4 +75,4 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
           simp only [Option.isSome,Bool.false_eq_true,↓reduceIte]
           step
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

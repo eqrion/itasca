@@ -6,7 +6,7 @@ Preservation of an indexed reader/compiler point across one step.
 Main declarations: `IndexedTableReaderCompilerPointWasm2.preserved_step`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem IndexedTableReaderCompilerPointWasm2.preserved_step {A : Type}
@@ -26,4 +26,4 @@ theorem IndexedTableReaderCompilerPointWasm2.preserved_step {A : Type}
     simpa only [targets] using point.tables.targets.trans growth
   · intro future
     simpa only [tables] using step future (point.future future)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Checking.PendingInstructionClose
 import Itasca.Runtime.Compiler.Local.Publication.ScopeClosePublication
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual nested END patches all sites of its closing frame, removes that
@@ -49,7 +49,7 @@ theorem compiler_scope_close_open_instructions {A : Type} (ops : runtime.platfor
     apply compiler_instruction_prefix_close held geometry.frame geometry.rest geometry.target geometry.frames frames growth _ inside
     rw [frameInstructionSites,hasIf]
     simp only [Option.toList_some]
-    rw [patchCode_append_sites,patched]
+    rw [patch_code_append_sites,patched]
     exact code
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

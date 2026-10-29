@@ -46,7 +46,7 @@ theorem jump_table_effect {M : Type}
     step with vec_index_given compiled.jump_tables tablePosition target (by simpa only [selectedEq] using targetLookup) as ⟨actual,actualEq⟩
     subst actual
     step* <;> simp_all [JumpEffect,getElem!_pos]
-theorem dispatch_jumpTable_exact {M P F A : Type}
+theorem dispatch_jump_table_exact {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -80,7 +80,7 @@ theorem dispatch_jumpTable_exact {M P F A : Type}
   apply WP.spec.ret
   exact ⟨success,exactState,sameStore,rfl⟩
 
-theorem step_jumpTable_exact {M P F A : Type}
+theorem step_jump_table_exact {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
@@ -107,7 +107,7 @@ theorem step_jumpTable_exact {M P F A : Type}
   have valid : index.val < exec.frames.val.length := List.getElem?_eq_some_iff.mp hf |>.1
   have lookup : (exec.frames.set index { raw with pc := pc }).val[index.val]? = some { raw with pc := pc } := by
     simp [alloc.vec.Vec.set_val_eq, valid]
-  apply WP.spec_mono (dispatch_jumpTable_exact memory hooks floats allocator
+  apply WP.spec_mono (dispatch_jump_table_exact memory hooks floats allocator
     { exec with frames := exec.frames.set index { raw with pc := pc } }
     store platform index {raw with pc := pc} inst compiled selector start len target value
     lookup hi hc bound input nonempty tableBound targetLookup)

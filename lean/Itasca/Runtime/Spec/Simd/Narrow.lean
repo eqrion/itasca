@@ -13,7 +13,7 @@ open SpecExt.Builtins
 
 theorem unsigned_saturate_bits (width : Nat) (x : Int) :
     uN.mk_uN (BitVec.ofInt width (clampLane width false x)).toNat = saturate width .U x := by
-  rw [clamp_unsigned_toNat]
+  rw [clamp_unsigned_to_nat]
   have power : 0 < (2^width:Int) := pow_pos (by decide) _
   simp only [saturate,sat_u_,max_def,min_def]
   split_ifs <;> congr 1 <;> congr 1 <;> omega
@@ -24,7 +24,7 @@ def narrowBits (width : Nat) (signed : Bool) {input : Nat} (a : BitVec input) : 
 theorem narrow_bits_source (width : Nat) (signed : Bool) {input : Nat} (a : BitVec input) :
     uN.mk_uN (narrowBits width signed a).toNat =
       narrow__ input width (if signed then .S else .U) (.mk_uN a.toNat) := by
-  simp only [narrow__,proj_uN_0,Itasca.Runtime.Spec.signedValue_bitvec,narrowBits]
+  simp only [narrow__,proj_uN_0,Itasca.Runtime.Spec.signed_value_bitvec,narrowBits]
   cases signed
   · exact unsigned_saturate_bits width a.toInt
   · exact signed_saturate_bits width a.toInt
@@ -45,7 +45,7 @@ def narrowSource (ty : NarrowWidth) (signed : Bool) : admininstr :=
 
 theorem narrow_source_wf (ty : NarrowWidth) (signed : Bool) : wf_admininstr (narrowSource ty signed) := by
   have ishape (t : Jnn) : wf_ishape (.mk_ishape (shapeOf (lanetype_Jnn t))) :=
-    .ishape_case_0 t _ (shapeOf_wf _) rfl
+    .ishape_case_0 t _ (shape_of_wf _) rfl
   cases ty <;> cases signed
   all_goals apply wf_admininstr.admininstr_case_38
   all_goals first | exact ishape _ | decide
@@ -115,8 +115,8 @@ theorem narrow_step (ty : NarrowWidth) (signed : Bool) (x y result : BitVec 128)
   · exact const_wf y
   · exact narrow_source_wf ty signed
   · exact const_wf result
-  · exact shapeOf_wf _
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
+  · exact shape_of_wf _
   · exact narrow_words_wf ty signed x
   · exact narrow_words_wf ty signed y
 

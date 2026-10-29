@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseBlock
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseGuardedScope
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Successful END exposes its actual frame removal and fixup effects from
@@ -86,4 +86,4 @@ theorem StructuredCompilerPrefix.end_guarded {jumpTables : List U32} {A : Type} 
     have entryReachable := shape.entered.trans entered
     exact ⟨frame, target, guard, by simpa [popped, restVal] using frames, shape, positionEq, hasGuard, hook,
       by simpa [scopeExitLive, thenKind, entryReachable] using live, codeEq⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,9 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Initializer
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Packing a vector constant retains the full low and high words. -/
-theorem initializerBits_val (lo hi : U64) :
+theorem initializer_bits_val (lo hi : U64) :
     (initializerBits lo hi).val = lo.val + hi.val * 2^64 := by
   have hlo : lo.val < 2^64 := by scalar_tac
   have hloWide : lo.val < 2^128 := by scalar_tac
@@ -14,4 +14,4 @@ theorem initializerBits_val (lo hi : U64) :
   rw [Nat.mod_eq_of_lt hloWide,Nat.mod_eq_of_lt hhiWide,Nat.shiftLeft_eq,Nat.mod_eq_of_lt hshift]
   rw [Nat.or_comm,←Nat.shiftLeft_eq,←Nat.shiftLeft_add_eq_or_of_lt hlo,Nat.shiftLeft_eq]
   omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

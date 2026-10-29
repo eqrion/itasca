@@ -112,7 +112,7 @@ import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 
 /-- Actual accepted compilation and instantiation either retain a rollback
@@ -140,26 +140,26 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
           .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged) ∨
        ∃ ready inst,
         ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
-        CertifiedExecutableApiStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready ∧
+        CertifiedExecutableApiStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready ∧
         (FunctionCapacities code before → FunctionCapacities
-          (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready) ∧
+          (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) ∧
         SegmentAccounting ready ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧
         Interp.FunctionTable ready inst (inst.module.module.env.func_types.val.map decodeFuncType) ∧
         fun_instantiate (decodeStore view code before) (ModuleElaboration.moduleOf raw) (imports.val.map decodeExternal)
-          (sourceInstantiationConfiguration view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready inst raw) ∧
+          (sourceInstantiationConfiguration view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready inst raw) ∧
         Extend_store (decodeStore view code before)
-          (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready) ∧
+          (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) ∧
         Interp.FrameStorePrefix before ready ∧
         runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
           runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false) := by
   obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors, functions, initializers, actualProfile⟩ :=
-    Code.compile_executable_functions allocator law bytes profile limits module accepted
+    Compiler.compile_executable_functions allocator law bytes profile limits module accepted
   obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities,_⟩ :=
-    Code.compile_executable_capacities allocator law bytes profile limits module accepted
+    Compiler.compile_executable_capacities allocator law bytes profile limits module accepted
   have sameRaw := Profile.module_unique encoded capacityEncoded
   subst capacityRaw
   refine ⟨raw, encoded, elaborated, matched, typed, ?_⟩
-  obtain ⟨witness⟩ := Code.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
   have valid : ModuleEnv.Valid module.module.env module.profile := by
     rw [actualProfile]
     exact (witness.semantic law).1
@@ -177,22 +177,22 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
     have sameSource : sourceInst = inst := Option.some.inj (sourceFound.symm.trans found)
     subst sourceInst
     obtain ⟨_,_,_,_,_,retained,_,_⟩ := trace.toPreparedRun.shape_data laws law certified.shape accounted matched.2 valid initializers
-    obtain ⟨hfuncs,hglobals,htables,hmems,helems,hdatas⟩ := decodeStore_prefix view
-      (installCode code before.instances.len.val (Code.sourceFunctions raw)) before trace.toPreparedRun.dataStore certified.shape retained
-    have decodedReady : decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready =
-        decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) trace.toPreparedRun.dataStore := by
-      refine (congrArg (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw))) trace.toPreparedRun.committed).trans ?_
+    obtain ⟨hfuncs,hglobals,htables,hmems,helems,hdatas⟩ := decode_store_prefix view
+      (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before trace.toPreparedRun.dataStore certified.shape retained
+    have decodedReady : decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready =
+        decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) trace.toPreparedRun.dataStore := by
+      refine (congrArg (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw))) trace.toPreparedRun.committed).trans ?_
       unfold decodeStore
       congr 1
-    have agrees : decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) before = decodeStore view code before := by
-      simpa only [alloc.vec.Vec.len_val] using decodeStore_code_agrees view (installCode_agrees before code (Code.sourceFunctions raw))
+    have agrees : decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before = decodeStore view code before := by
+      simpa only [alloc.vec.Vec.len_val] using decode_store_code_agrees view (install_code_agrees before code (Compiler.sourceFunctions raw))
     have extension : Extend_store (decodeStore view code before)
-        (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready) := by
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) := by
       have result := store_prefix_extends
-        (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) before)
-        (decodeStore view (installCode code before.instances.len.val (Code.sourceFunctions raw)) ready)
-        (by rw [agrees]; exact decodeStore_wf view code before certified.shape certified.storeSyntax)
-        (decodeStore_wf view _ ready readyCertified.shape readyCertified.storeSyntax)
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before)
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready)
+        (by rw [agrees]; exact decode_store_wf view code before certified.shape certified.storeSyntax)
+        (decode_store_wf view _ ready readyCertified.shape readyCertified.storeSyntax)
         (by simpa only [decodedReady] using hfuncs) (by simpa only [decodedReady] using hglobals)
         (by simpa only [decodedReady] using htables) (by simpa only [decodedReady] using hmems)
         (by simpa only [decodedReady] using helems) (by simpa only [decodedReady] using hdatas)
@@ -200,8 +200,8 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
     refine Or.inr ⟨ready, inst, found, source, readyCertified, ?_, readyAccounting, initializersReady,
       types, metadata.function_table, instantiated, extension, ?_, continued⟩
     · intro oldCapacities
-      exact metadata.capacities code oldCapacities found (Code.sourceFunctions raw)
+      exact metadata.capacities code oldCapacities found (Compiler.sourceFunctions raw)
         (by simpa only [source] using capacities) (by simpa only [source] using matched.2)
     · rw [trace.toPreparedRun.committed]
       exact ⟨retained.identity,retained.funcs,retained.types,retained.instances⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

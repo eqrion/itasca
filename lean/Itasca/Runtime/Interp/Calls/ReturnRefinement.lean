@@ -8,19 +8,19 @@ open Aeneas Aeneas.Std
 
 /-- The abstract state after returning either resumes the immediate caller or
 records the final invocation values. -/
-def returnedState (s : _root_.store) (ambient : frame) (rest : List Abs.AFrame)
-    (results : List val) : Abs.AState :=
+def returnedState (s : _root_.store) (ambient : frame) (rest : List SourceMachine.AFrame)
+    (results : List val) : SourceMachine.AState :=
   match rest with
   | [] => ⟨s, ambient, [], results⟩
   | caller :: tail => ⟨s, ambient, { caller with vals := caller.vals ++ results } :: tail, []⟩
 
-theorem return_next (s : _root_.store) (ambient : frame) (f : Abs.AFrame)
-    (rest : List Abs.AFrame) (after : List instr) (front results : List val)
-    (types : results.map Abs.valueType = f.resultTypes) :
-    Abs.astep ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩ =
+theorem return_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+    (rest : List SourceMachine.AFrame) (after : List instr) (front results : List val)
+    (types : results.map SourceMachine.valueType = f.resultTypes) :
+    SourceMachine.astep ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩ =
       .next (returnedState s ambient rest results) := by
   have length : f.resultTypes.length = results.length := by rw [← types, List.length_map]
-  cases rest <;> simp [Abs.astep, Abs.returnFrame, Abs.AFrame.arity, length, types, returnedState, Abs.advance]
+  cases rest <;> simp [SourceMachine.astep, SourceMachine.returnFrame, SourceMachine.AFrame.arity, length, types, returnedState, SourceMachine.advance]
 
 /-- Return dispatch copies exact results and removes the frame, while its
 source transition performs a positive number of reductions through labels. -/
@@ -29,13 +29,13 @@ theorem dispatch_return_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (src count : U32)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front results : List val)
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
-    (types : results.map Abs.valueType = f.resultTypes)
+    (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
+    (types : results.map SourceMachine.valueType = f.resultTypes)
     (slots : FrameSlots exec raw { f with vals := front ++ results })
-    (source : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
-    (width : count.val = Code.slots (results.map Code.valueType))
+    (source : src.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType))
+    (width : count.val = Compiler.slots (results.map Compiler.valueType))
     (bounds : raw.base.val + src.val + count.val ≤ exec.slots.length)
     (sourceBound : raw.base.val + src.val ≤ Usize.max) :
     runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
@@ -43,17 +43,17 @@ theorem dispatch_return_refines {M P F A : Type}
       out.1 = .Ok () ∧ ReturnEffect exec out.2.1 raw.base.val src.val count.val ∧
       ValuesAt out.2.1.slots.val raw.base.val results ∧
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      Abs.NextSim
+      SourceMachine.NextSim
         ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩
         (returnedState s ambient rest results) ⦄ := by
   have step := return_next s ambient f rest after front results types
-  have simulation := Abs.instruction_simulation s ambient { f with vals := front ++ results } rest
+  have simulation := SourceMachine.instruction_simulation s ambient { f with vals := front ++ results } rest
     .RETURN after _ .ret typed step
   have represented : ValuesAt exec.slots.val (raw.base.val + src.val) results := by
     have words : WordsAt exec.slots.val raw.base.val
-        (Code.encodeValues (f.locals ++ front) ++ Code.encodeValues results) := by
-      simpa only [FrameSlots, ValuesAt, Code.encodeValues_append, List.append_assoc] using slots
-    simpa only [ValuesAt, Code.encodeValues_length, source] using words.append_right
+        (Compiler.encodeValues (f.locals ++ front) ++ Compiler.encodeValues results) := by
+      simpa only [FrameSlots, ValuesAt, Compiler.encode_values_append, List.append_assoc] using slots
+    simpa only [ValuesAt, Compiler.encode_values_length, source] using words.append_right
   simp only [runtime.interp.dispatch]
   step with return_effect exec raw.base src count bounds sourceBound
     as ⟨result, next, success, effect⟩
@@ -89,20 +89,20 @@ theorem step_return_refines {M P F A : Type}
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (fetched : compiled.code.val[raw.pc.val]? = some (.Return src count))
     (pcBound : raw.pc.val < U32.max)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front results : List val)
-    (typed : Abs.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
-    (types : results.map Abs.valueType = f.resultTypes)
+    (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
+    (types : results.map SourceMachine.valueType = f.resultTypes)
     (slots : FrameSlots exec raw { f with vals := front ++ results })
-    (source : src.val = Code.slots ((f.locals ++ front).map Code.valueType))
-    (width : count.val = Code.slots (results.map Code.valueType))
+    (source : src.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType))
+    (width : count.val = Compiler.slots (results.map Compiler.valueType))
     (bounds : raw.base.val + src.val + count.val ≤ exec.slots.length)
     (sourceBound : raw.base.val + src.val ≤ Usize.max) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ ReturnEffect exec out.2.1 raw.base.val src.val count.val ∧
       ValuesAt out.2.1.slots.val raw.base.val results ∧
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      Abs.NextSim
+      SourceMachine.NextSim
         ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩
         (returnedState s ambient rest results) ⦄ := by
   apply step_fetch memory hooks floats allocator exec store platform frameIndex raw inst compiled

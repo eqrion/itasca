@@ -12,7 +12,7 @@ extensions: table access, references, the `0xFC` prefix, SIMD and typed select.
 set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
 open Aeneas Aeneas.Std Itasca
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 
 /-- Ordinary opcodes besides the integer numeric operators. Structured
 openers, branches, `else` and `end` are handled by the source-zipper
@@ -40,7 +40,7 @@ def floatBaseOpcodeValues : List Nat :=
    191, 187, 182]
 
 theorem float_base_opcode_of_mem {opcode : U8} (member : opcode.val ∈ floatBaseOpcodeValues) :
-    ∃ op : Abs.Float.Instruction, (floatOpcode op).val < 256 ∧ UScalar.cast .U8 (floatOpcode op) = opcode := by
+    ∃ op : SourceMachine.Float.Instruction, (floatOpcode op).val < 256 ∧ UScalar.cast .U8 (floatOpcode op) = opcode := by
   simp only [floatBaseOpcodeValues,List.mem_cons,List.mem_nil_iff,or_false] at member
   rcases member with h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h
   · exact ⟨.unary .F32 .ABS,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
@@ -194,23 +194,23 @@ theorem wasm2_immediate_reader_opcode {opcode token bytes}
   | reference encoded => cases encoded <;> reader_opcode
   | _ => reader_opcode
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 namespace Itasca.Wasm2
 theorem At.reader_opcode {data start token next}
     (encoded : At data start token next) (inbounds : start.val < data.length) :
-    Itasca.Runtime.Code.ReaderOpcode .Wasm2 data.val[start.val] := by
+    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[start.val] := by
   obtain ⟨bytes,⟨opcode,immediate,rfl,grammar⟩,span⟩ := encoded
   have head := congrArg List.head? span.suffix
   have equal : data.val[start.val] = opcode := by
     simpa only [List.drop_eq_getElem_cons inbounds,List.cons_append,List.head?_cons,Option.some.injEq] using head
   rw [equal]
-  exact Itasca.Runtime.Code.wasm2_immediate_reader_opcode grammar
+  exact Itasca.Runtime.Compiler.wasm2_immediate_reader_opcode grammar
 
 theorem BodyEncoding.next_reader_opcode {data body tokens position}
     (encoded : BodyEncoding data body)
     (before : Consumed data 0#usize tokens position) (remaining : position.val < data.length) :
-    Itasca.Runtime.Code.ReaderOpcode .Wasm2 data.val[position.val] := by
-  obtain ⟨token,next,atToken,_⟩ := encoded.next_executable_token (Itasca.Runtime.Code.SourceExecutable.body_wasm2 encoded) before remaining
+    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[position.val] := by
+  obtain ⟨token,next,atToken,_⟩ := encoded.next_executable_token (Itasca.Runtime.Compiler.SourceExecutable.body_wasm2 encoded) before remaining
   exact atToken.reader_opcode remaining
 end Itasca.Wasm2

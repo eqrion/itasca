@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerAcceptance
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The executable slot-range gate accepts an independent arithmetic bound. -/
@@ -42,4 +42,4 @@ theorem initial_instruction_capacity_accepts (function : runtime.bytecode.Compil
   have inside := (List.getElem?_eq_some_iff.mp embedded).1
   simpa [lift] using inside
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

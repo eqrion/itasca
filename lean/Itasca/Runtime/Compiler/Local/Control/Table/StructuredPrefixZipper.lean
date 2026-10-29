@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredSuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- A terminal suspended parent owns just the code before its child, exactly
 as a live suspended parent does. No instruction in an unentered child is needed. -/
@@ -122,4 +122,4 @@ theorem StructuredParentPrefix.close_unentered {jumpTables : List U32} {emission
   simp only [StructuredParentPrefix, parentEntered, childEntered, Bool.false_eq_true, ite_true, ite_false] at saved
   exact saved.close_child instruction
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -35,7 +35,7 @@ def ElementInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
     inst.module.element_initializers.val[index.val]? = some functions ∧
     functions.val[k.val]? = some function ∧ segment.init.val[k.val]? = some expr ∧
     inst.module.functions.val[function.val]? = some code ∧
-    Code.InitializerCode code expr (elementValueType segment.elem) ∧
+    Compiler.InitializerCode code expr (elementValueType segment.elem) ∧
     Interp.SyntheticPreparationCause allocator store code error
 
 private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :
@@ -170,9 +170,9 @@ theorem add_element_resource_cause {M P F A : Type}
     (run : runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index = .ok (.Err error,after,host)) :
     after = store ∧ host = platform ∧ ElementAllocationCause allocator store inst index segment error := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
-  simp only [Code.initializer_vec_index store.instances instIndex inst found,
+  simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
     runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
-  rw [Code.initializer_slice_index inst.module.module.env.elements.deref index segment
+  rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun,refusal⟩ := reserve_with_cause allocator law (alloc.vec.Vec.new U64) segment.init.len
   simp only [bind_ok, reserveRun] at run
@@ -254,7 +254,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ instIndex.val)
     (found : store.instances.val[instIndex.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : ∀ segment ∈ inst.module.module.env.elements.val,
       Itasca.ModuleSegments.elementValid inst.module.module.env segment)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)

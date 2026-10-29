@@ -10,7 +10,7 @@ Exact live branch slot coordinates follow from source scope selection and the co
 Main declarations: `StructuredCompilerPrefix.branch_layout`. A direct consumer is `Compiler.Body.Reader.Control.ReachedBranchAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact live branch slot coordinates follow from source scope selection and
@@ -38,4 +38,4 @@ theorem StructuredCompilerPrefix.branch_layout {jumpTables : List Aeneas.Std.U32
     (input ▸ retained.layout) retained.localsEq
   exact ⟨index, frame, source, found, position, shape, height, sourcePosition, sourceWidth⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

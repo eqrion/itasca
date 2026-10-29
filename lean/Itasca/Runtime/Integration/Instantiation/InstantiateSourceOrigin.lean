@@ -33,7 +33,7 @@ import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Compiler.Module.CompileSlice
 import Itasca.Runtime.Store.Instantiation.PreparedSourceInstantiation
 import Itasca.Runtime.Store.Instantiation.Linked
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 
 /-- The generated instantiation configuration at the actual publication
@@ -45,4 +45,4 @@ def sourceInstantiationConfiguration {M : Type} (view : M → Slice U8) (code : 
     ((Spec.Segment.dataPrograms (raw.data.map ModuleData.translate)).flatten.map admininstr_instr ++
       (raw.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList)⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

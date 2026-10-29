@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Observation of one scalar, reference, SIMD, or polymorphic-bottom value
@@ -97,4 +97,4 @@ theorem observe_values_available {A : Type} (ops : runtime.platform.Alloc A)
       exact ⟨by simpa [last] using count,by simpa [last] using words⟩
   · exact ⟨rfl,rfl,inside,rfl,by dsimp only; omega⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

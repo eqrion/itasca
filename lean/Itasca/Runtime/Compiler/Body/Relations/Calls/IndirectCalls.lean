@@ -12,7 +12,7 @@ Indirect-call signature selection, callback effects and lowering certificates us
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Successful indirect-call checking exposes the actual function/table metadata
@@ -150,7 +150,7 @@ theorem reader_indirect_call_stack_wasm2 (st out : code.BodyState) (data : Slice
     (by simpa [List.map_append,Translate.valueType] using transfer)
   refine ⟨ft,tt,front,typeFound,tableFound,elem,?_,afterConcrete⟩
   simpa [List.map_append,Translate.valueType,List.append_assoc] using beforeTypes
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -158,7 +158,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The captured table supplies an actual readable signature at every canonical
@@ -186,7 +186,7 @@ theorem SignatureSequence.indirect_call {signatures : Slice runtime.compiler.Sig
   · have equal : r = signature := by simpa [signature] using result
     simpa only [equal] using read
   · simpa only [same.1,same.2] using matched
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -194,7 +194,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Successful indirect-call lowering appends the exact table/type pair and
@@ -273,6 +273,6 @@ theorem compiler_indirect_call_emission_captured {A : Type} (ops : runtime.platf
   exact compiler_indirect_call_emission ops law before after state types C front params results typeIndex tableIndex bounds
     signature signatureFound tableFound read matched.paramWords locals layout reachable concrete typed
     codeFits sourceFits coordinateFits accepted
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

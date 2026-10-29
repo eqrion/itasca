@@ -13,7 +13,7 @@ The source function context is fixed by the independently decoded module metadat
 Main declarations: `sourceFunctionContext`. A direct consumer is `Compiler.Local.Relations.Function.CoreFunctionContext`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- The source function context is fixed by the independently decoded module
@@ -30,8 +30,8 @@ def sourceFunctionContext (env : Itasca.module.Env) (locals results : List valty
     LABELS := []
     RETURN := some (.mk_list results) }
 
-theorem sourceFunctionContext_reader (env : Itasca.module.Env) (ctx : Itasca.code.Context) :
+theorem source_function_context_reader (env : Itasca.module.Env) (ctx : Itasca.code.Context) :
     sourceFunctionContext env (ctx.locals.val.map Itasca.Translate.valueType)
       (ctx.results.val.map Itasca.Translate.valueType) = Itasca.EnvTranslation.context env ctx := rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

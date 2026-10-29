@@ -7,7 +7,7 @@ Successful table iterations either continue or finish with acceptance.
 Main declarations: `TableFlowAccepted` and `TableFlowRelated`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Visitor
 set_option maxRecDepth 4096
 
@@ -246,4 +246,4 @@ theorem table_loop_reader_accepted_replay {V W : Type}
           index'' progress.2 arity'' first'' next' before' compiler' retained tail rfl
         exact ⟨targetAfter,by simpa only [bind_ok,code.branch_table_with_loop] using targetTail,retained'⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

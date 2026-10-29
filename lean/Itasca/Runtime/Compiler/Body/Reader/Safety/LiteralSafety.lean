@@ -12,7 +12,7 @@ Normal return of constant and basic scalar reader callbacks.
 Main declarations: `compiler_reader_i32_const_total` and `compiler_reader_nop_total`. A direct consumer is `Compiler.Body.Reader.Safety.ScalarSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_i32_const_total {A} (ops : runtime.platform.Alloc A)
@@ -156,4 +156,4 @@ theorem compiler_reader_nop_total {A} (ops : runtime.platform.Alloc A)
   · exact by simp
   · intro state value read
     exact compiler_on_nop_total ops law compiler state
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

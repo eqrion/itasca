@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Platform
 
 /-- Every scalar float opcode returns a bounded permitted source result or its exact numeric trap. -/
 theorem scalar_float_instruction {F : Type} (ops : runtime.platform.FloatOps F)
-    (correct : FloatOpsCorrect ops) (op : Abs.Float.Instruction) (a b : U64) :
+    (correct : FloatOpsCorrect ops) (op : SourceMachine.Float.Instruction) (a b : U64) :
     runtime.interp.float.scalar ops (floatOpcode op) a b ⦃ result =>
       FloatScalarOutcome op a b result ⦄ := by
   cases op with
@@ -124,7 +124,7 @@ namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Platform
 
 theorem scalar_float_dispatch {F : Type} (ops : runtime.platform.FloatOps F)
-    (op : Abs.Float.Instruction) (a b : U64) :
+    (op : SourceMachine.Float.Instruction) (a b : U64) :
     runtime.interp.int.scalar ops (floatOpcode op) a b =
       runtime.interp.float.scalar ops (floatOpcode op) a b := by
   unfold runtime.interp.int.scalar
@@ -142,7 +142,7 @@ theorem scalar_float_dispatch {F : Type} (ops : runtime.platform.FloatOps F)
 
 theorem execute_float_effect {F : Type} (floats : runtime.platform.FloatOps F)
     (correct : FloatOpsCorrect floats)
-    (exec : runtime.interp.Execution) (base : Usize) (op : Abs.Float.Instruction) (dst left right : U32)
+    (exec : runtime.interp.Execution) (base : Usize) (op : SourceMachine.Float.Instruction) (dst left right : U32)
     (hl : base.val + left.val < exec.slots.length)
     (hr : base.val + right.val < exec.slots.length)
     (hd : base.val + dst.val < exec.slots.length) :

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def ElementValueMappings (functions : List runtime.bytecode.CompiledFunction)
@@ -156,4 +156,4 @@ theorem initializer_elements_loop {A : Type} (ops : runtime.platform.Alloc A)
     (after, budgetAfter, .Ok ()) success
   exact result rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

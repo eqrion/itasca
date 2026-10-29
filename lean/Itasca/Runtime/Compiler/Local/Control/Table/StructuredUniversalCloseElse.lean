@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- END of an explicit ELSE obtains both arm relations from retained uniform
@@ -37,7 +37,7 @@ theorem StructuredCompletedPrefix.close_else {jumpTables : List Aeneas.Std.U32} 
     StructuredUniversalElse (jumpTables := jumpTables) emit after types functions returns locals parents
       (parent.advance (.IFELSE bt yes child.source)) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   have advance : ∀ parentLabel labels groups,
       FramePlans after.function.code.val.length locals after.frames.val (parentLabel :: labels) groups →
       ScopeLabel (parent.advance (.IFELSE bt yes child.source)) parentLabel →
@@ -97,7 +97,7 @@ theorem StructuredCompletedPrefix.close_else {jumpTables : List Aeneas.Std.U32} 
           (child.front ++ child.results) := by
         simpa only [noStart, position] using noCode
       simpa [SourceScope.arguments, SourceScope.input, form, label] using
-        StructuredPrefix.ifElse signature conditionSlot guardFound yesCode skip body
+        StructuredPrefix.if_else signature conditionSlot guardFound yesCode skip body
     have restored := parentSaved.resume parentEntered childEntered closed
     have resolve : resolvedCode after.function.code.val groups =
         resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups) := by
@@ -122,5 +122,5 @@ theorem StructuredCompletedPrefix.close_else {jumpTables : List Aeneas.Std.U32} 
   · intro label labels groups plans shape parentShapes
     exact (advance label labels groups plans shape parentShapes).2.2
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

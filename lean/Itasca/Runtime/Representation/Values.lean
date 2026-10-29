@@ -18,8 +18,8 @@ def sourceType : Itasca.types.ValueType → valtype
   | .ExternRef => .EXTERNREF
 
 @[step] theorem width_spec (ty : Itasca.types.ValueType) :
-    runtime.value.width ty ⦃ result => result.val = Code.width (sourceType ty) ⦄ := by
-  cases ty <;> simp [runtime.value.width, sourceType, Code.width]
+    runtime.value.width ty ⦃ result => result.val = Compiler.width (sourceType ty) ⦄ := by
+  cases ty <;> simp [runtime.value.width, sourceType, Compiler.width]
 
 def rawType : runtime.Value → Itasca.types.ValueType
   | .I32 _ => .I32
@@ -49,14 +49,14 @@ def sourceValue : runtime.Value → val
 def pairWords (ty : Itasca.types.ValueType) (pair : U64 × U64) : List Nat :=
   if sourceType ty = .V128 then [pair.1.val, pair.2.val] else [pair.1.val]
 
-theorem sourceValue_type (value : runtime.Value) :
-    Code.valueType (sourceValue value) = sourceType (rawType value) := by
+theorem source_value_type (value : runtime.Value) :
+    Compiler.valueType (sourceValue value) = sourceType (rawType value) := by
   cases value with
   | FuncRef address => cases address <;> rfl
   | ExternRef address => cases address <;> rfl
   | _ => rfl
 
-theorem sourceValue_wf (value : runtime.Value) : wf_val (sourceValue value) := by
+theorem source_value_wf (value : runtime.Value) : wf_val (sourceValue value) := by
   cases value with
   | I32 bits =>
     apply wf_val.val_case_0
@@ -94,8 +94,8 @@ theorem sourceValue_wf (value : runtime.Value) : wf_val (sourceValue value) := b
 theorem encode_value_spec (value : runtime.Value) (store : Usize)
     (hv : ValueOwnedFits store value) :
     runtime.value.encode value ⦃ words =>
-      pairWords (rawType value) words = Code.encodeValue (sourceValue value) ⦄ := by
-  cases value <;> simp only [runtime.value.encode, sourceValue, Code.encodeValue, rawType, pairWords, sourceType]
+      pairWords (rawType value) words = Compiler.encodeValue (sourceValue value) ⦄ := by
+  cases value <;> simp only [runtime.value.encode, sourceValue, Compiler.encodeValue, rawType, pairWords, sourceType]
   all_goals simp [lift]
   case F32 bits =>
     exact (SpecExt.Builtins.Float.float_bits_roundtrip_32 bits.val (by scalar_tac)).symm
@@ -129,17 +129,17 @@ def written (words : List U64) (position : Nat) (ty : Itasca.types.ValueType)
 @[step] theorem encode_slot_spec (slots : Slice U64) (position : Usize)
     (ty : Itasca.types.ValueType) (value : runtime.Value) (lo hi : U64)
     (he : runtime.value.encode value = .ok (lo, hi))
-    (hb : position.val + Code.width (sourceType ty) ≤ slots.length) :
+    (hb : position.val + Compiler.width (sourceType ty) ≤ slots.length) :
     runtime.interp.encode_slot slots position ty value ⦃ result =>
       result.val = written slots.val position.val ty lo hi ⦄ := by
   have hp : position.val < slots.length := by
-    have := Code.width_positive (sourceType ty)
+    have := Compiler.width_positive (sourceType ty)
     omega
   unfold runtime.interp.encode_slot
   rw [he]
   step as ⟨old, back, hold, hback⟩
   subst back
-  cases ty <;> simp only [runtime.value.width, sourceType, Code.width] at hb ⊢
+  cases ty <;> simp only [runtime.value.width, sourceType, Compiler.width] at hb ⊢
   all_goals try simp [written, sourceType]
   step as ⟨next, hnext⟩
   step as ⟨after, hafter⟩
@@ -158,13 +158,13 @@ theorem index_eq (slots : Slice U64) (position : Usize) (word : U64)
 boundary, then uses the extracted value decoder on those words. -/
 @[step] theorem decode_slot_spec (slots : Slice U64) (position : Usize)
     (ty : Itasca.types.ValueType) (store : Usize) (lo hi : U64) (value : runtime.Value)
-    (hb : position.val + Code.width (sourceType ty) ≤ slots.length)
+    (hb : position.val + Compiler.width (sourceType ty) ≤ slots.length)
     (hlo : slots.val[position.val]! = lo)
     (hhi : if sourceType ty = .V128 then slots.val[position.val + 1]! = hi else hi = 0#u64)
     (hd : runtime.value.decode ty lo hi store = .ok value) :
     runtime.interp.decode_slot slots position ty store ⦃ result => result = value ⦄ := by
   have hp : position.val < slots.length := by
-    have := Code.width_positive (sourceType ty)
+    have := Compiler.width_positive (sourceType ty)
     omega
   have hread := index_eq slots position lo hp hlo
   cases ty <;> simp only [sourceType, reduceCtorEq, ↓reduceIte] at hhi
@@ -175,7 +175,7 @@ boundary, then uses the extracted value decoder on those words. -/
   simp [runtime.value.width]
   step as ⟨next, hnext⟩
   have hn : next.val < slots.length := by
-    simp only [sourceType, Code.width] at hb
+    simp only [sourceType, Compiler.width] at hb
     omega
   have hnword : slots.val[next.val]! = hi := by simpa [hnext] using hhi
   have hreadHi := index_eq slots next hi hn hnword
@@ -198,7 +198,7 @@ theorem written_high (words : List U64) (position : Nat) (ty : Itasca.types.Valu
 
 /-- The total slot width of a signature component, as computed by `value::type_slots`. -/
 def valueTypeSlots (types : List Itasca.types.ValueType) : Nat :=
-  Code.slots (types.map sourceType)
+  Compiler.slots (types.map sourceType)
 
 def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
     (amount : Usize) (index : Usize) (overflow : Bool) : Prop :=
@@ -227,11 +227,11 @@ def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
         simp only [Bool.false_eq_true, ite_false]
         simp only [ValueTypeSlotsState, Bool.false_eq_true, ite_false] at hs
         rw [List.drop_eq_getElem_cons hb] at hs
-        simp only [valueTypeSlots, List.map_cons, Code.slots] at hs
+        simp only [valueTypeSlots, List.map_cons, Compiler.slots] at hs
         step as ⟨ty, hty⟩
         step with width_spec ty as ⟨word, hword⟩
         simp only [lift, bind_ok]
-        have hw : (UScalar.cast .Usize word).val = Code.width (sourceType ty) := by
+        have hw : (UScalar.cast .Usize word).val = Compiler.width (sourceType ty) := by
           simpa only [U32.cast_Usize_val_eq] using hword
         have hc := Usize.checked_add_bv_spec amount (UScalar.cast .Usize word)
         cases he : Usize.checked_add amount (UScalar.cast .Usize word) with
@@ -253,7 +253,7 @@ def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
           scalar_tac
     · rename_i finished
       have same : i.val = types.val.length := by scalar_tac
-      cases overflow <;> simpa [ValueTypeSlotsState, same, valueTypeSlots, Code.slots] using hs
+      cases overflow <;> simpa [ValueTypeSlotsState, same, valueTypeSlots, Compiler.slots] using hs
   · exact ⟨bound, state⟩
 
 @[step] theorem value_type_slots (types : Slice Itasca.types.ValueType) :

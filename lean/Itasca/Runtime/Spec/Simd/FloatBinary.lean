@@ -91,7 +91,7 @@ theorem float_binary_lanes_wf (ty : Fnn) (op : vbinop_Fnn_N) (x y : BitVec 128) 
 theorem float_binary_relation (ty : Fnn) (op : vbinop_Fnn_N) (x y : BitVec 128) :
     fun_vbinop_ (shapeOf (lanetype_Fnn ty)) (floatBinarySource ty op)
       (.mk_uN x.toNat) (.mk_uN y.toNat) (some (floatBinaryResults ty op x y)) := by
-  have shapeWf := shapeOf_wf (lanetype_Fnn ty)
+  have shapeWf := shape_of_wf (lanetype_Fnn ty)
   have lanesWf := float_binary_lanes_wf ty op x y
   have lengths : (lanes_ (shapeOf (lanetype_Fnn ty)) (.mk_uN x.toNat)).length =
       (lanes_ (shapeOf (lanetype_Fnn ty)) (.mk_uN y.toNat)).length := by
@@ -172,7 +172,7 @@ theorem float_binary_step (ty : Fnn) (op : vbinop_Fnn_N) (x y result : BitVec 12
   · simpa only [Option.get!_some,List.contains_iff_mem] using chosen
   · exact const_wf x
   · exact const_wf y
-  · exact .admininstr_case_26 _ _ (shapeOf_wf _) (float_binary_source_wf ty op)
+  · exact .admininstr_case_26 _ _ (shape_of_wf _) (float_binary_source_wf ty op)
   · exact const_wf result
 
 end Itasca.Runtime.Spec.Simd

@@ -11,7 +11,7 @@ Every base integer numeric reader and its concrete compiler callback return norm
 Main declarations: `compiler_reader_numeric_total` and `compiler_reader_float_total`. A direct consumer is `Compiler.Body.Reader.Safety.ExtendedNumericSafety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Every base integer numeric reader and its concrete compiler callback return
@@ -21,7 +21,7 @@ theorem compiler_reader_numeric_total {A} (ops : runtime.platform.Alloc A)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
-    (op : Abs.Numeric.Instruction) (base : (integerOpcode op).val < 192) :
+    (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
@@ -43,7 +43,7 @@ theorem compiler_reader_float_total {A} (ops : runtime.platform.Alloc A)
     (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
-    (op : Abs.Float.Instruction) (base : (floatOpcode op).val < 256) :
+    (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (floatOpcode op)) compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.vals.val ⦄ := by
@@ -58,4 +58,4 @@ theorem compiler_reader_float_total {A} (ops : runtime.platform.Alloc A)
     rw [callback]
     exact compiler_float_total ops law compiler state op ready.codeFits ready.sourceFits ready.coordinateFits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

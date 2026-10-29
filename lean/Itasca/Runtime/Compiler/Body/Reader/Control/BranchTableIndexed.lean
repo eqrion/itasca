@@ -23,7 +23,7 @@ Indexed br_table compilation from the decoded reader instruction through source 
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An actual successful live table callback advances the indexed compiler
@@ -101,7 +101,7 @@ theorem StructuredCompilerPrefix.br_table {A : Type}
   · exact invariant.codeBudget.table growth (by omega)
   · exact (invariant.controlBudget.transport (by rw [fixed.controls]) (Nat.le_of_eq framesLength)).advance (by omega)
   · rw [cursor]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -109,7 +109,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Collecting table labels changes only private scratch and allocation
@@ -136,7 +136,7 @@ theorem StructuredCompilerPrefix.table_scratch {A : Type}
       exact .terminal reachable entered ⟨retained.localsEq,retained.sites,retained.prefixes⟩
     | dormant reachable retained =>
       exact .dormant reachable ⟨retained.unentered,retained.localsEq,retained.sites,retained.prefixes⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -144,7 +144,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_decoded_wasm2 {V : Type} (visitor : code.OpVisitor V)
@@ -166,7 +166,7 @@ theorem reader_table_decoded_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [erased,WP.spec_ok] at effect
   obtain ⟨depths,fallback,decoded,_⟩ := effect rfl
   exact ⟨depths,fallback,decoded⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -174,7 +174,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
@@ -234,7 +234,7 @@ theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
       rfl
     exact invariant.skip (BrTable.instruction depths fallback) beforeDead dead ordinary codeEq sources
       (by rw [endEq]; omega) (by rw [cursor])
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -242,7 +242,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.br_table {A : Type}
@@ -272,7 +272,7 @@ theorem StructuredReaderCompilerStateWasm2.br_table {A : Type}
     futureTables tableEq gate byte accepted
   refine ⟨state.advance next advance inbounds post ?_ compiled (by simp [dead]),afterBoundary⟩
   simp [DeclaredReferences.Instruction,DeclaredReferences.instructionIndices,BrTable.instruction]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -280,7 +280,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem IndexedTableReaderCompilerPointWasm2.br_table {A : Type}
@@ -313,6 +313,6 @@ theorem IndexedTableReaderCompilerPointWasm2.br_table {A : Type}
   obtain ⟨advanced,_⟩ := state.br_table ops law point.tables next advance inbounds out depths fallback out.core.pos decoded
     future.jumpTables rfl (gate _ depths fallback) byte accepted
   exact advanced.point
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

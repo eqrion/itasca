@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowering
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Binary.Wasm2.Simd
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca.Wasm2.Simd
 
@@ -84,4 +84,4 @@ theorem SimdEmission.context {immediates constants C D before source code after}
   | constant front bits dst entry metadata position =>
     exact .constant _ bits dst entry metadata (locals ▸ position)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

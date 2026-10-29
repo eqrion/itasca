@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowering
 set_option maxRecDepth 4096
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 
 theorem simd_lowering_allocation_success {A : Type} (ops : runtime.platform.Alloc A)
@@ -43,8 +43,8 @@ theorem simd_lowering_allocation_success {A : Type} (ops : runtime.platform.Allo
         simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
         exact ⟨entry,budget,immediates,instruction,indexEq,pushEq,makeEq,rest⟩
 
-end Itasca.Runtime.Code
-namespace Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result Itasca.ResultFacts
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

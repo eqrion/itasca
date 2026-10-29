@@ -12,7 +12,7 @@ Complete-profile single-callback replay, composing scalar and SIMD replay and tr
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
@@ -71,7 +71,7 @@ theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
   rw [code.step_wasm2.base visitor st data env ctx opcode before base] at accepted
   exact reader_single_callback_extended visitor st data env ctx opcode before after out accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -79,7 +79,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -139,6 +139,6 @@ theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisito
   obtain ⟨_,raw⟩ := profile_scalar_success visitor st out data env ctx index opcode before after ordinary accepted
   exact reader_single_callback_wasm2 visitor st.core data env ctx opcode before after out.core raw
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

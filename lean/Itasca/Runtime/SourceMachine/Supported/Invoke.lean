@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Invoke
 import Itasca.Runtime.SourceMachine.SupportedState
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- A real defined function address and typed arguments construct the initial
@@ -28,7 +28,7 @@ theorem defined_supported_invocation (s : store) (ambient : frame) (address : fu
     intro frame hm
     simp only [entryState, List.mem_singleton] at hm
     subst frame
-    exact frameTyped_heights hcallee
+    exact frame_typed_heights hcallee
   · refine ⟨?_, covered⟩
     intro frame hm
     simp only [entryState, List.mem_singleton] at hm
@@ -37,7 +37,7 @@ theorem defined_supported_invocation (s : store) (ambient : frame) (address : fu
   · obtain ⟨types, hlocals, nonbot⟩ := function_local_types hfunc
     subst locals
     have result := call_invoke s ambient address typeIndex moduleInst params results types body args defaults
-      hs ha lookup nonbot hdefaults (resultsTyped_wf arguments) (resultsTyped_length arguments)
+      hs ha lookup nonbot hdefaults (results_typed_wf arguments) (results_typed_length arguments)
     simpa [entryState, decode, decodeFrames, decodeLabels, vals, AFrame.arity, AFrame.toFrame, Label.arity] using result
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

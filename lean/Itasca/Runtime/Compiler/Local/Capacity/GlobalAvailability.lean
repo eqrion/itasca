@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalSafety
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Global reads accept for every observed stack, including unreachable code
@@ -51,4 +51,4 @@ theorem compiler_global_set_available {A : Type} (ops : runtime.platform.Alloc A
     rw [post.2]
     exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

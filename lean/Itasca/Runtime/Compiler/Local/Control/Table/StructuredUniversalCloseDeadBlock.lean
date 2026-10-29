@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseBlock
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- A block with neither a normal exit nor a recorded forward branch leaves
@@ -24,7 +24,7 @@ theorem StructuredUniversalTerminal.close_block_dead {jumpTables : List Aeneas.S
     (signature : BlockSignature types bt child.params child.results) :
     StructuredUniversalTerminal (jumpTables := jumpTables) emit after types functions returns locals parents (parent.advance (.BLOCK bt child.source)) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   refine ⟨localsEq, ?_, ?_⟩
   · intro f member
     have original := invariant.sites f (by rw [frames]; exact List.mem_append_left _ member)
@@ -58,7 +58,7 @@ theorem StructuredUniversalTerminal.close_block_dead {jumpTables : List Aeneas.S
     have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
       simpa using List.Forall₂.cons oldParentShape parentShapes
     obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
-    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolvedCode_length, position])
+    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolved_code_length, position])
     obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
     have closed : StructuredDeadPrefix (jumpTables := jumpTables) emit types functions returns locals
         (resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups))
@@ -100,7 +100,7 @@ theorem StructuredUniversalTerminal.close_block_resume {jumpTables : List Aeneas
     StructuredUniversalPrefix (jumpTables := jumpTables) emit after types functions returns locals parents
       (parent.advance (.BLOCK bt child.source)) (child.front ++ child.results) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   refine ⟨localsEq, layout, ?_, ?_⟩
   · intro f member
     have original := invariant.sites f (by rw [frames]; exact List.mem_append_left _ member)
@@ -134,7 +134,7 @@ theorem StructuredUniversalTerminal.close_block_resume {jumpTables : List Aeneas
     have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
       simpa using List.Forall₂.cons oldParentShape parentShapes
     obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
-    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolvedCode_length, position])
+    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolved_code_length, position])
     obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
     have closed : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals
         (resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups))
@@ -155,5 +155,5 @@ theorem StructuredUniversalTerminal.close_block_resume {jumpTables : List Aeneas
       exact outerSaved.advance_current (.BLOCK bt child.source)
     · simpa only [resolve, lengthEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

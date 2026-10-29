@@ -63,7 +63,7 @@ import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Interp.Calls.CallCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp
 
 /-- A conservative primitive allocation bound covering any representable
@@ -75,4 +75,4 @@ theorem reserve_ne_refusal_of_universal_bound {A T : Type} {allocator : runtime.
   rw [available T values n fits]
   simp
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

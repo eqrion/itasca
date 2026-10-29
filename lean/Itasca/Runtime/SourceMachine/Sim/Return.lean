@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Sim.Branch
 import Itasca.Runtime.SourceMachine.Preservation
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Appending a callee's results to its suspended caller agrees with inserting
@@ -11,7 +11,7 @@ theorem decode_resume (s : store) (ambient : frame) (caller : AFrame)
     decode ⟨s, ambient, { caller with vals := caller.vals ++ values } :: rest, []⟩ =
       ⟨⟨s, ambient⟩, decodeFrames (caller :: rest) (vals values)⟩ := by
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   rfl
 
 theorem frame_end_simulation (s : store) (ambient : frame) (f : AFrame)
@@ -23,14 +23,14 @@ theorem frame_end_simulation (s : store) (ambient : frame) (f : AFrame)
   have hwrap : wf_admininstr (.FRAME_ f.arity f.toFrame (vals f.vals)) :=
     .admininstr_case_72 _ _ _ hf (wf_vals hv)
   have hsource : wf_config ⟨⟨s, activeFrame ambient rest⟩, [.FRAME_ f.arity f.toFrame (vals f.vals)]⟩ :=
-    wf_config_make hs (activeFrame_wf ha hr)
+    wf_config_make hs (active_frame_wf ha hr)
       (by intro i hi; simp only [List.mem_singleton] at hi; subst i; exact hwrap)
-  have htarget := wf_config_vals hs (activeFrame_wf ha hr) hv
+  have htarget := wf_config_vals hs (active_frame_wf ha hr) hv
   have step : StepH ⟨⟨s, activeFrame ambient rest⟩, [.FRAME_ f.arity f.toFrame (vals f.vals)]⟩ []
       ⟨⟨s, activeFrame ambient rest⟩, vals f.vals⟩ :=
     .step (.pure _ _ _ (.frame_vals _ _ _ hwrap arity) hsource htarget)
   simpa [decode, decodeFrames, decodeLabels, vals, AFrame.toFrame, AFrame.arity] using
-    stepH_decodeFrames ambient rest step ha hr
+    step_h_decode_frames ambient rest step ha hr
 
 /-- Explicit return at the outer function scope discards earlier operands and
 resumes the caller with exactly the function's result arity. -/
@@ -49,15 +49,15 @@ theorem return_frame_simulation (s : store) (ambient : frame) (f : AFrame)
       (by intro i hi; simp only [List.mem_singleton] at hi; subst i; exact .admininstr_case_12)) (wf_instrs hc)
   have hwrap : wf_admininstr (.FRAME_ f.arity f.toFrame redex) := .admininstr_case_72 _ _ _ hf hredex
   have hsource : wf_config ⟨⟨s, activeFrame ambient rest⟩, [.FRAME_ f.arity f.toFrame redex]⟩ :=
-    wf_config_make hs (activeFrame_wf ha hr)
+    wf_config_make hs (active_frame_wf ha hr)
       (by intro i hi; simp only [List.mem_singleton] at hi; subst i; exact hwrap)
-  have htarget := wf_config_vals hs (activeFrame_wf ha hr) hv
+  have htarget := wf_config_vals hs (active_frame_wf ha hr) hv
   have step : StepH ⟨⟨s, activeFrame ambient rest⟩, [.FRAME_ f.arity f.toFrame redex]⟩ []
       ⟨⟨s, activeFrame ambient rest⟩, vals results⟩ :=
     .step (.pure _ _ _ (.return_frame _ _ _ _ _ hwrap arity) hsource htarget)
   simpa [decode, decodeFrames, decodeLabels, redex, vals, List.map_append,
     List.append_assoc, admininstr_instr, AFrame.toFrame, AFrame.arity] using
-    stepH_decodeFrames ambient rest step ha hr
+    step_h_decode_frames ambient rest step ha hr
 
 theorem return_label_simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (label : Label) (labels : List Label) (after : List instr)
@@ -87,12 +87,12 @@ theorem return_label_simulation (s : store) (ambient : frame) (f : AFrame)
   have step : StepH ⟨⟨s, f.toFrame⟩, [.LABEL_ label.arity label.cont redex]⟩ []
       ⟨⟨s, f.toFrame⟩, vals operands ++ [.RETURN]⟩ :=
     .step (.pure _ _ _ (.return_label _ _ _ _ hwrap hbr) hsource htarget)
-  have h₁ := stepH_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
-  have h₂ := stepH_decodeLabels h₁ labels saved htail hv
-  have h₃ := stepH_active ambient rest f.arity h₂ ha hr
+  have h₁ := step_h_instrs step [] (label.after.map admininstr_instr) (forall_nil _) (wf_instrs hlabel.2)
+  have h₂ := step_h_decode_labels h₁ labels saved htail hv
+  have h₃ := step_h_active ambient rest f.arity h₂ ha hr
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, List.map_cons,
     List.map_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeLabels, height, Label.arity, redex, instrContext, vals, List.map_append,
     List.append_assoc, AFrame.toFrame, AFrame.arity, admininstr_instr] using h₃
 
@@ -117,7 +117,7 @@ theorem return_simulation (s : store) (ambient : frame) (f : AFrame)
       (fun v hm => hv v (List.mem_of_mem_drop hm)) hc hr
       (by simp only [List.length_drop]; omega)
     simpa only [List.take_append_drop, List.length_nil, List.nil_append] using
-      StepsHN.cons step (StepsHN.refl (stepH_wf step).2)
+      StepsHN.cons step (StepsHN.refl (step_h_wf step).2)
   | cons label labels ih =>
     have hb := heights label (by simp)
     have first := return_label_simulation s ambient f rest label labels after
@@ -144,16 +144,16 @@ theorem typed_return_simulation (s : store) (ambient : frame) (f : AFrame)
   cases frames with
   | cons hf hr =>
     have results := return_suffix_typed hf
-    have count := resultsTyped_length results
+    have count := results_typed_length results
     simp only [List.length_drop] at count
     have bound : f.arity ≤ f.vals.length := by unfold AFrame.arity; omega
     have heights : FrameHeights f := typed.heights { f with code := .RETURN :: after } (by simp)
     cases hf with
     | mk C bindings localTypes locals values returns hc hw =>
       have result := return_simulation s ambient f rest f.labels after typed.store typed.ambient hw
-        (codeStack_labels_wf hc) (resultsTyped_wf values)
-        (fun i hm => codeStack_wf hc i (by simp [hm])) (framesTyped_wf hr)
-        (codeStack_labels_nested hc) bound heights
+        (code_stack_labels_wf hc) (results_typed_wf values)
+        (fun i hm => code_stack_wf hc i (by simp [hm])) (frames_typed_wf hr)
+        (code_stack_labels_nested hc) bound heights
       simp only [astep, returnFrame] at step
       split at step
       · cases rest with
@@ -176,10 +176,10 @@ theorem typed_frame_end_simulation (s : store) (ambient : frame) (f : AFrame)
   cases frames with
   | cons hf hr =>
     have values := frame_end_typed hf
-    have count := resultsTyped_length values
+    have count := results_typed_length values
     have arity : f.arity = f.vals.length := count.symm
     have result := frame_end_simulation s ambient f rest typed.store typed.ambient
-      (frameTyped_wf hf).1 (resultsTyped_wf values) (framesTyped_wf hr) arity
+      (frame_typed_wf hf).1 (results_typed_wf values) (frames_typed_wf hr) arity
     simp only [astep, returnFrame] at step
     split at step
     · cases rest with
@@ -193,4 +193,4 @@ theorem typed_frame_end_simulation (s : store) (ambient : frame) (f : AFrame)
         simpa only [AFrame.arity, ← count, Nat.sub_self, List.drop_zero] using result
     · contradiction
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

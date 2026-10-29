@@ -9,7 +9,7 @@ Emission of integer sign-extension instructions.
 Main declarations: `reader_emit_sign_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_sign_wasm2 {data env locals index st}
@@ -17,7 +17,7 @@ theorem reader_emit_sign_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (op : Abs.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
+    (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
     (reachable : before.reachable = true)
@@ -56,4 +56,4 @@ theorem reader_emit_sign_wasm2 {data env locals index st}
   exact LinearEmission.numeric front op left right
     leftPosition rightPosition
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

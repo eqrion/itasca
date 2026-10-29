@@ -55,17 +55,17 @@ theorem bulk_table_copy {M : Type} (memory : runtime.platform.MemoryBuffer M)
   have bound := (List.getElem?_eq_some_iff.mp countSlot).1
   step as ⟨position,positionEq⟩
   have pos : position.val = base.val+operand.val := by simpa only [U32.cast_Usize_val_eq] using positionEq
-  rw [Code.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
+  rw [Compiler.initializer_slice_index slots position destination (by simpa only [pos] using destinationSlot)]
   simp only [bind_ok,lift]
   step as ⟨position1,position1Eq⟩
   step as ⟨position2,position2Eq⟩
   have pos2 : position2.val = base.val+operand.val+1 := by simpa only [position1Eq,U32.cast_Usize_val_eq] using position2Eq
-  rw [Code.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
+  rw [Compiler.initializer_slice_index slots position2 source (by simpa only [pos2] using sourceSlot)]
   simp only [bind_ok,lift]
   step as ⟨position3,position3Eq⟩
   step as ⟨position4,position4Eq⟩
   have pos4 : position4.val = base.val+operand.val+2 := by simpa only [position3Eq,U32.cast_Usize_val_eq] using position4Eq
-  rw [Code.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
+  rw [Compiler.initializer_slice_index slots position4 count (by simpa only [pos4] using countSlot)]
   simp only [bind_ok,lift]
   step with Interp.vec_index_given inst.tables (UScalar.cast .Usize tableId) tableAddress
     (by simpa using tableMapped) as ⟨actual, actualEq⟩
@@ -128,7 +128,7 @@ theorem bulk_table_copy {M : Type} (memory : runtime.platform.MemoryBuffer M)
           as ⟨tables,words,tablesEq,valuesEq⟩
         simp only [TableCopyEffect,fitsTarget,fitsSource,and_self,↓reduceIte]
         refine ⟨words,by rw [tablesEq],?_⟩
-        rw [valuesEq,copySegment_eq_copyInto,Spec.Segment.copyInto_eq_setSlice _ _ _ _ _
+        rw [valuesEq,copy_segment_eq_copy_into,Spec.Segment.copy_into_eq_set_slice _ _ _ _ _
           (by simpa [srcStart] using fitsSource) (by simpa [dstStart] using fitsTarget)]
         simp only [srcStart,dstStart]
     · change (if (bulkWord source).val + (bulkWord count).val ≤ sourceTable.elements.length then _ else _) at rangeEffect
@@ -168,7 +168,7 @@ theorem TableCopyEffect.initialization {M : Type} {store : runtime.store.Store M
     obtain ⟨words,rfl,values⟩ := effect
     simp only [inside,and_self,↓reduceIte]
     refine ⟨words,rfl,?_⟩
-    rw [values,copySegment_eq_copyInto,Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ inside.2 inside.1]
+    rw [values,copy_segment_eq_copy_into,Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ inside.2 inside.1]
   · rename_i outside
     simp only [outside,↓reduceIte]
     exact effect
@@ -227,9 +227,9 @@ theorem table_copy_decodes {M : Type} (view : M → Slice U8) (code : CodeInterp
   have refsEq : words.val.map (decodeRef table.ty) =
       (table.elements.val.map (decodeRef table.ty)).setSlice! destination
         ((sourceTable.elements.val.map (decodeRef sourceTable.ty)).slice source (source+count)) := by
-    rw [sameType,←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ (by simpa using inside.1) (by simpa using inside.2)]
-    rw [copied,←Spec.Segment.copyInto_eq_setSlice _ _ _ _ _ inside.1 inside.2]
-    exact copyInto_map _ _ _ _ _ _ inside.1
+    rw [sameType,←Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ (by simpa using inside.1) (by simpa using inside.2)]
+    rw [copied,←Spec.Segment.copy_into_eq_set_slice _ _ _ _ _ inside.1 inside.2]
+    exact copy_into_map _ _ _ _ _ _ inside.1
   unfold Spec.Segment.tableCopy
   rw [targetRead,sourceRead,targetLookup,sourceLookup]
   unfold decodeStore

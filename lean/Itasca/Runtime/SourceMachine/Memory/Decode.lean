@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Memory.Descriptor
 
-namespace Itasca.Runtime.Abs.Memory
+namespace Itasca.Runtime.SourceMachine.Memory
 
 def decodeLoad (ty : numtype) : Option loadop_ → Option Load
   | none => some (.full ty)
@@ -25,14 +25,14 @@ def decodeStore : numtype → Option sz → Option Store
   | .I64,some (.mk_sz 32) => some (.packed .I64 .word)
   | _,_ => none
 
-theorem decodeLoad_descriptor (op : Load) : decodeLoad op.type op.operation = some op := by
+theorem decode_load_descriptor (op : Load) : decodeLoad op.type op.operation = some op := by
   cases op with
   | full ty => rfl
   | packed ty width sign => cases ty <;> cases width <;> rfl
 
-theorem decodeStore_descriptor (op : Store) : decodeStore op.type op.operation = some op := by
+theorem decode_store_descriptor (op : Store) : decodeStore op.type op.operation = some op := by
   cases op with
   | full ty => rfl
   | packed ty width => cases ty <;> cases width <;> rfl
 
-end Itasca.Runtime.Abs.Memory
+end Itasca.Runtime.SourceMachine.Memory

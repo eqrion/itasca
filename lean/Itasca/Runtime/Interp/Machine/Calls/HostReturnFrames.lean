@@ -7,15 +7,15 @@ Resuming saved frames after a host call returns.
 Main declarations: `SavedFrame.resume_host` and `host_return_stack`. A direct consumer is `Interp.Machine.Calls.HostCallStack`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem SavedFrame.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
     {before after : runtime.interp.Execution} {base : Nat} {raw : runtime.interp.Frame}
-    {source : Abs.AFrame} {waiting : List valtype} {results : List val}
+    {source : SourceMachine.AFrame} {waiting : List valtype} {results : List val}
     (saved : SavedFrame store sourceStore before raw source waiting base)
     (effect : HostReturnEffect before after base results)
-    (types : results.map Code.valueType = waiting) (heights : Abs.FrameHeights source) :
+    (types : results.map Compiler.valueType = waiting) (heights : SourceMachine.FrameHeights source) :
     ActiveFrame store sourceStore after raw {source with vals := source.vals ++ results} := by
   refine ⟨effect.preserve_binding saved.binding,effect.resume saved.slots saved.destination,?_⟩
   obtain ⟨compiled,functions,targets,next,output,program,point⟩ := saved.continuation
@@ -39,12 +39,12 @@ caller keeps its own saved continuation. -/
 theorem host_return_stack {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
     {raw : runtime.interp.Frame} {raws : List runtime.interp.Frame}
-    {caller : Abs.AFrame} {rest : List Abs.AFrame} {waiting : List valtype}
+    {caller : SourceMachine.AFrame} {rest : List SourceMachine.AFrame} {waiting : List valtype}
     (frames : before.frames.val = raws.reverse ++ [raw])
     (saved : SavedFrame store sourceStore before raw caller waiting base)
     (older : SavedFrames store sourceStore before raws rest caller.resultTypes raw.base.val)
     (effect : HostReturnEffect before after base results)
-    (types : results.map Code.valueType = waiting) (heights : Abs.FrameHeights caller) :
+    (types : results.map Compiler.valueType = waiting) (heights : SourceMachine.FrameHeights caller) :
     FrameStackRel store sourceStore after ({caller with vals := caller.vals ++ results} :: rest) ∧
       ReadyTop store sourceStore after {caller with vals := caller.vals ++ results} := by
   refine ⟨.active (by simpa only [effect.frames] using frames)
@@ -53,4 +53,4 @@ theorem host_return_stack {M : Type} {store : runtime.store.Store M} {sourceStor
   refine ⟨raw,compiled,functions,targets,next,output,?_,program,point.resume results types heights⟩
   simp only [effect.frames,frames,List.getLast?_concat]
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

@@ -64,8 +64,8 @@ theorem extend_halfop (ty : WidenWidth) (high signed : Bool) :
 
 theorem extend_source_wf (ty : WidenWidth) (high signed : Bool) : wf_admininstr (widenSource ty false high signed) := by
   apply wf_admininstr.admininstr_case_39
-  · exact shapeOf_wf _
-  · exact shapeOf_wf _
+  · exact shape_of_wf _
+  · exact shape_of_wf _
   · apply wf_vcvtop__.vcvtop___case_0
     · apply wf_vcvtop__Jnn_1_M_1_Jnn_2_M_2.vcvtop__Jnn_1_M_1_Jnn_2_M_2_case_0
       cases ty <;> decide
@@ -106,8 +106,8 @@ theorem extend_vector (ty : WidenWidth) (high signed : Bool) (x result : BitVec 
   · exact List.length_pos_of_mem chosen
   · exact List.contains_iff_mem.mpr chosen
   · exact unsigned_wf_of_lt 128 result.toNat result.isLt
-  · exact shapeOf_wf _
-  · rw [←targetShape];exact shapeOf_wf _
+  · exact shape_of_wf _
+  · rw [←targetShape];exact shape_of_wf _
 
 theorem extend_step (ty : WidenWidth) (high signed : Bool) (x result : BitVec 128)
     (packed : uN.mk_uN result.toNat = widenResult ty false high signed x x) :

@@ -8,7 +8,7 @@ The actual i32 hook accepts and charges at most one instruction.
 Main declarations: `compiler_on_i32_const_available_effect` and `compiler_reader_f64_const_available`. A direct consumer is `Compiler.Body.Reader.Acceptance.ScalarAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -152,4 +152,4 @@ theorem compiler_reader_f64_const_available {A V : Type} (ops : runtime.platform
   intro bits _ _
   exact compiler_on_f64_const_available_effect ops bound available compiler final demand bits
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -4,13 +4,13 @@ import Itasca.Runtime.Interp.Relations.StepActive
 /-!
 One-step and stopped-case equations for the recorded invocation loop.
 
-Main declarations: `recordedInvokeLoop_step` and `recordedInvokeLoop_stopped`. A direct consumer is `Integration.Invocation.HostResources`.
+Main declarations: `recorded_invoke_loop_step` and `recorded_invoke_loop_stopped`. A direct consumer is `Integration.Invocation.HostResources`.
 -/
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 
-theorem recordedInvokeLoop_step {M P F A : Type}
+theorem recorded_invoke_loop_step {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
@@ -25,10 +25,10 @@ theorem recordedInvokeLoop_step {M P F A : Type}
   change Platform.Recording.loop (executionBody memory hooks floats allocator) invokeLoopEvents (exec,store,platform,.Ok ()) prior = _
   unfold Platform.Recording.loop
   rw [loop.eq_def]
-  simp only [Platform.Recording.loopBody,executionBody_active memory hooks floats allocator _ active,returned,bind_ok,Std.uncurry,invokeLoopEvents]
+  simp only [Platform.Recording.loopBody,execution_body_active memory hooks floats allocator _ active,returned,bind_ok,Std.uncurry,invokeLoopEvents]
   rfl
 
-theorem recordedInvokeLoop_stopped {M P F A : Type}
+theorem recorded_invoke_loop_stopped {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (state : ExecutionState M P) (stopped : ¬ActiveExecution state) (prior : List HostEvent) :
@@ -37,5 +37,5 @@ theorem recordedInvokeLoop_stopped {M P F A : Type}
   change Platform.Recording.loop (executionBody memory hooks floats allocator) invokeLoopEvents state prior = _
   unfold Platform.Recording.loop
   rw [loop.eq_def]
-  simp only [Platform.Recording.loopBody,executionBody_stopped memory hooks floats allocator state stopped,bind_ok,invokeLoopEvents,List.append_nil]
+  simp only [Platform.Recording.loopBody,execution_body_stopped memory hooks floats allocator state stopped,bind_ok,invokeLoopEvents,List.append_nil]
 end Itasca.Runtime.Interp

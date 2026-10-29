@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.Typing
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open Itasca.Runtime.Spec
 
 theorem globalinst_typed_extend {before after : store} (extension : Extend_store before after)
@@ -56,4 +56,4 @@ theorem StoreContentsTyped.global_replacement {before after : store}
     have wf : wf_datainst entry := by cases typed; assumption
     exact datainst_ok_extend extension (extend_data_refl entry wf) typed
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

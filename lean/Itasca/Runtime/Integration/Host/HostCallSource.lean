@@ -7,7 +7,7 @@ import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Generated.Types
 import Itasca.Runtime.Spec.Extend
 
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 /-- Observable behavior after an actual host callback. Preparation rejections
@@ -24,7 +24,7 @@ def HostCallSourceOutcome {M P : Type} (view : M → Slice U8) (code : Store.Cod
       [.call address.index.val args (some (out.2.1.host_results.val.map sourceValue))]
       ⟨⟨Store.decodeStore view code out.2.2.1,ambient⟩,vals (out.2.1.host_results.val.map sourceValue)⟩ ∧
     (∀ j, j < exec.slots.length →
-      j < base.val ∨ base.val + Code.slots (out.2.1.host_results.val.map (Code.valueType ∘ sourceValue)) ≤ j →
+      j < base.val ∨ base.val + Compiler.slots (out.2.1.host_results.val.map (Compiler.valueType ∘ sourceValue)) ≤ j →
       out.2.1.slots.val[j]? = exec.slots.val[j]?)) ∨
    ((out.1 = .Err (.Trap .Host) ∨ out.1 = .Err (.Exhausted .CallStack)) ∧
     StepH ⟨⟨Store.decodeStore view code before,ambient⟩,vals args ++ [.CALL_ADDR address.index.val]⟩
@@ -59,4 +59,4 @@ theorem HostCallCauses.of_preparation {A M P : Type} {allocator : runtime.platfo
   rename_i limit
   cases limit <;> simp_all [HostPreparationCause]
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

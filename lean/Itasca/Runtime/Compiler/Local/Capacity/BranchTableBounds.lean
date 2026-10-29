@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableBuild
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Each side-table entry is accompanied by at least one emitted instruction. -/
@@ -53,4 +53,4 @@ theorem TableTargetsBuilt.dispatch_arithmetic {A : Type}
   have bound := built.index_bound bounded depths.length entry (List.getElem?_eq_getElem inside)
   have entryMax : entry.val ≤ U32.max := by scalar_tac
   exact bound.trans entryMax
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

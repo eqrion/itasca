@@ -17,7 +17,7 @@ theorem staging_segment_bounds {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
@@ -44,7 +44,7 @@ theorem staging_segment_bounds {M P F A : Type}
   obtain ⟨actual, status, result, globalStaged, globalBound, globalsCanonical, globalAccounted, globalMetadata,
     globalInst, globalFound, globalSource, globalBindings, globalImports, globalSegments,
     globalElements, globalData, globalElementMap, globalDataMap, globalCount⟩ := globals
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have globalBounds : SegmentBounds globalStore := bounded.same globalElements globalData
   have globalEmpty : globalInst.elems.val = [] := by rw [globalElementMap, emptyElements]
   have initialTypes : ElementTypeMap globalStore (globalInst.module.module.env.elements.val.take 0#usize.val) globalInst.elems.val := by
@@ -63,7 +63,7 @@ theorem staging_segment_bounds {M P F A : Type}
   obtain ⟨actual, status, result, elementStaged, elementBound, elementBoundsAfter, elementAccounted, elementMetadata,
     elementInst, elementFound, elementSource, elementBindings, elementImports, elementSegments,
     elementData, elementDataMap, elementTypes⟩ := elements
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have elementEmpty : elementInst.datas.val = [] := by rw [elementDataMap, globalDataMap, emptyData]
   have dataRoom : elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [elementData, globalData, elementSource, globalSource] using dataCapacity
@@ -76,7 +76,7 @@ theorem staging_segment_bounds {M P F A : Type}
   rw [dataRun] at data
   simp only [WP.spec_ok] at data
   obtain ⟨actual, status, result, finalStaged, finalBound, finalBounds, rest⟩ := data
-  obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp result
+  obtain ⟨rfl, rfl⟩ := (store_state_parts_inj _ _ _ _).mp result
   exact finalBounds
 
 end Itasca.Runtime.Store

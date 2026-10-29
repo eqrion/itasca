@@ -10,7 +10,7 @@ Main declarations: `ShuffleSourceEffect` and `ShuffleEntrySound`. A direct consu
 namespace Itasca.Runtime.Interp.Simd
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 
-theorem shuffle_byteWords (bits : BitVec 128) (low high : U64)
+theorem shuffle_byte_words (bits : BitVec 128) (low high : U64)
     (combined : bits.toNat = low.val+high.val*2^64) :
     Spec.Simd.byteWords bits = shuffleIndices low high := by
   apply List.ext_getElem?
@@ -21,7 +21,7 @@ theorem shuffle_byteWords (bits : BitVec 128) (low high : U64)
   · interval_cases j
     all_goals norm_num [Spec.Simd.byteWords,Spec.Simd.byteAt,shuffleIndices,unpackBytes,combined,Nat.div_div_eq_div_mul]
     all_goals omega
-  · have left : (Spec.Simd.byteWords bits).length = 16 := Spec.Simd.byteWords_length _
+  · have left : (Spec.Simd.byteWords bits).length = 16 := Spec.Simd.byte_words_length _
     have right : (shuffleIndices low high).length = 16 := by simp [shuffleIndices,unpackBytes_length]
     rw [List.getElem?_eq_none (by omega),List.getElem?_eq_none (by omega)]
 end Itasca.Runtime.Interp.Simd
@@ -42,7 +42,7 @@ def ShuffleEntrySound {F : Type} (floats : runtime.platform.FloatOps F) : Prop :
 
 theorem shuffle_entry_sound {F : Type} (floats : runtime.platform.FloatOps F) : ShuffleEntrySound floats := by
   intro offset laneIndex bits x y z memory low high combined bounded
-  have indices := shuffle_byteWords bits.bv low high combined
+  have indices := shuffle_byte_words bits.bv low high combined
   have allowed : ∀ j,j < 16 → Spec.Simd.byteAt bits.bv j < 32 := by
     intro j valid
     have member : uN.mk_uN (Spec.Simd.byteAt bits.bv j) ∈ Spec.Simd.byteWords bits.bv := by

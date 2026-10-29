@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixElse
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormantElse
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- An ELSE reached inside an unentered IF changes the retained source arm
@@ -49,4 +49,4 @@ theorem StructuredCompilerPrefix.begin_else_dormant {jumpTables : List Aeneas.St
     .dormant dead next, arms, sources.aligned invariant.sources,
     invariant.codeBudget.advance (by simp [codeEq]) consumed,
     (invariant.controlBudget.transport maps (by simp [beforeFrames, afterFrames])).advance (Nat.le_of_lt consumed), cursor⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

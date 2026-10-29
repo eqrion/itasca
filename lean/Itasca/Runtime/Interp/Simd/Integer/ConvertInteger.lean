@@ -118,7 +118,7 @@ theorem convert_integer_loop {F : Type} (floats : runtime.platform.FloatOps F)
       have less : index.val < count.val := by scalar_tac
       step with lane x 32#u32 index (by decide) (by decide) (by scalar_tac) as ⟨a,aEq⟩
       have aBits : a.val = (laneBits 32 index.val x.bv).toNat := by
-        rw [laneBits_toNat]; exact aEq
+        rw [lane_bits_to_nat]; exact aEq
       step with wordLaw index.val less a aBits as ⟨value,allowed⟩
       have range := lane_range (floatCompareWidth ty).val index.val (by omega : index.val < 128/(floatCompareWidth ty).val)
       step with put_lanes current (floatCompareWidth ty) index value positive widthBound range as ⟨updated,same,other⟩
@@ -165,7 +165,7 @@ theorem convert_integer_dispatch_eq {F : Type} (floats : runtime.platform.FloatO
             convert__ 32 (lsize (lanetype_Fnn ty)) (if signed then .S else .U)
               (.mk_uN (laneBits 32 j x.bv).toNat) ⦄ := by
   rw [convert_integer_dispatch_eq]
-  have widthEq := floatCompareWidth_val ty
+  have widthEq := float_compare_width_val ty
   have countEq : (convertIntegerCountU32 ty).val = 128/(floatCompareWidth ty).val := by cases ty <;> decide
   have spec := convert_integer_loop floats ty signed x 0#u128 0#u32 (convertIntegerCountU32 ty) countEq
     (fun j bits => floatOfBits (floatCompareWidth ty).val bits.toNat =

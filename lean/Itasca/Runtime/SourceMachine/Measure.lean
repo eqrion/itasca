@@ -5,7 +5,7 @@ import Mathlib.Tactic
 The pending-instruction measure for administrative constant moves. Absorbing a constant strictly decreases this measure without constraining callers or value sizes.
 -/
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Pending instructions in the active frame. Suspended callers do not affect
 the bound on consecutive administrative constant moves; real steps may reset it. -/
@@ -24,4 +24,4 @@ theorem const_measure_decreases (s : store) (ambient : frame) (f : AFrame)
       { f with code := .CONST ty value :: after } :: rest, []⟩ := by
   simp [administrativeMeasure]
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

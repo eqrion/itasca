@@ -1,10 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanUpdate
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
-theorem scopeLabels_lookup {scopes labels} (shapes : List.Forall₂ ScopeLabel scopes labels)
+theorem scope_labels_lookup {scopes labels} (shapes : List.Forall₂ ScopeLabel scopes labels)
     {depth : Nat} {scope label} (source : scopes[depth]? = some scope) (target : labels[depth]? = some label) :
     ScopeLabel scope label := by
   induction shapes generalizing depth with
@@ -32,4 +32,4 @@ theorem FrameSites.add_branch {code frame} (valid : FrameSites code frame)
     · simp [branchInstructions, elided, position]
     · simp [branchInstructions, elided, position, List.getElem?_append]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

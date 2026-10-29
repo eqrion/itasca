@@ -7,14 +7,14 @@ Operand-stack facts at a return reader step.
 Main declarations: `reader_return_stack_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ReachedReturnAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 private theorem return_stack_suffix {before outer segment rest : List code.StackType} {results : List valtype}
     (values : before = outer ++ segment) (known : ConcreteStack before)
     (transfer : ∀ ts, Sequence.Realizes false rest ts → Sequence.Realizes false segment (ts ++ results)) :
     ∃ front, Sequence.stackTypes before = front ++ results := by
-  have segmentKnown := (concreteStack_append.mp (values ▸ known)).2
+  have segmentKnown := (concrete_stack_append.mp (values ▸ known)).2
   have types := realized_concrete_types segmentKnown (transfer _ (Sequence.realizes_default false rest))
   refine ⟨Sequence.stackTypes outer ++ Sequence.stackTypes rest, ?_⟩
   simpa [Sequence.stackTypes, values, List.map_append, List.append_assoc] using
@@ -37,4 +37,4 @@ theorem reader_return_stack_wasm2 (st out : code.BodyState) (env : module.Env) (
     rw [mono] at effect
     exact return_stack_suffix values known effect
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

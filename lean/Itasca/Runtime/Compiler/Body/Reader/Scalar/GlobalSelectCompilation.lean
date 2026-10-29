@@ -15,7 +15,7 @@ Live/dormant global get/set and untyped-select prefixes, composed into structure
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_global_get_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -43,7 +43,7 @@ theorem reader_prefix_global_get_wasm2 {jumpTables : List U32} {data env sourceL
     have cursor := invariant.cursor
     have position := p.inbounds
     omega
-  obtain ⟨rawTypes, concrete⟩ := (concreteStack_iff st.core.vals.val).mp (invariant.known reachable)
+  obtain ⟨rawTypes, concrete⟩ := (concrete_stack_iff st.core.vals.val).mp (invariant.known reachable)
   have decoded : Sequence.stackTypes st.core.vals.val = rawTypes.map Translate.valueType := by
     simp [concrete, Sequence.stackTypes, List.map_map, Function.comp_def]
   obtain ⟨ordinary, sources, cursor, idx, ty, values, found, post, emitted, lower, emission⟩ :=
@@ -51,7 +51,7 @@ theorem reader_prefix_global_get_wasm2 {jumpTables : List U32} {data env sourceL
       (retained.localsEq.trans contextCodeLocals.symm) contextGlobals rawTypes concrete
       (by simpa only [decoded] using retained.layout) reachable codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨idx, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨idx, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [decoded] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
@@ -87,7 +87,7 @@ theorem reader_prefix_global_set_wasm2 {jumpTables : List U32} {data env sourceL
       (retained.localsEq.trans contextCodeLocals.symm) contextGlobals (invariant.known reachable) monomorphic
       retained.layout reachable codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨idx, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨idx, values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
 
@@ -122,10 +122,10 @@ theorem reader_prefix_select_wasm2 {jumpTables : List U32} {data env sourceLocal
       (retained.localsEq.trans contextCodeLocals.symm) (invariant.known reachable) monomorphic
       retained.layout reachable codeFits sourceFits coordinateFits byte accepted
   have consumed : p.start.val < out.core.pos.val := by have pos := p.pos; have span := post.span; omega
-  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branchTable⟩
+  refine ⟨values, post, invariant.ordinary reachable ordinary lower ?_ sources consumed ?_ emission.not_branch_table⟩
   · simpa only [inputTypes] using (ScalarEmbedding.lift (emit := emit) emission)
   · rw [cursor]
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -133,7 +133,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_dead_global_get_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
@@ -221,7 +221,7 @@ theorem reader_prefix_dead_select_wasm2 {jumpTables : List U32} {data env source
   have cursor := compiler_core_cursor ops law before after out.core (.select false) callback
   exact ⟨values, post, post.structured_skip ops law invariant dead ordinary sources cursor
     27#u16 0#u32 0#u32 0#u128 callback⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -229,7 +229,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem StructuredReaderCompilerStateWasm2.global_get {jumpTables : List U32} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
@@ -311,6 +311,6 @@ theorem StructuredReaderCompilerStateWasm2.select {jumpTables : List U32} {A : T
       state.compiled live byte (by simpa only [code.OP_SELECT] using accepted)
     exact (state.advance next advance inbounds post (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) compiled (by simp [dead])).point
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

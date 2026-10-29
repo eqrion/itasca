@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Results
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 
 /-- Reference addresses carried by values fit a fixed address space. -/
 def ReferenceBound (bound : Nat) : val → Prop
@@ -11,9 +11,9 @@ def ValuesBound (bound : Nat) (values : List val) : Prop := ∀ value ∈ values
 def FrameReferencesBound (bound : Nat) (f : AFrame) : Prop :=
   ValuesBound bound f.locals ∧ ValuesBound bound f.vals
 
-@[simp] theorem valuesBound_nil (bound : Nat) : ValuesBound bound [] := by simp [ValuesBound]
+@[simp] theorem values_bound_nil (bound : Nat) : ValuesBound bound [] := by simp [ValuesBound]
 
-@[simp] theorem valuesBound_append {bound left right} :
+@[simp] theorem values_bound_append {bound left right} :
     ValuesBound bound (left ++ right) ↔ ValuesBound bound left ∧ ValuesBound bound right := by
   simp only [ValuesBound, List.mem_append]
   constructor
@@ -22,7 +22,7 @@ def FrameReferencesBound (bound : Nat) (f : AFrame) : Prop :=
     · exact hl v hv
     · exact hr v hv
 
-@[simp] theorem valuesBound_cons {bound value rest} :
+@[simp] theorem values_bound_cons {bound value rest} :
     ValuesBound bound (value :: rest) ↔ ReferenceBound bound value ∧ ValuesBound bound rest := by
   simp [ValuesBound]
 
@@ -32,8 +32,8 @@ def FrameReferencesBound (bound : Nat) (f : AFrame) : Prop :=
   | nil => simp
   | cons head tail ih =>
     cases index with
-    | zero => simpa using valuesBound_cons.mpr ⟨allowed, (valuesBound_cons.mp bounded).2⟩
+    | zero => simpa using values_bound_cons.mpr ⟨allowed, (values_bound_cons.mp bounded).2⟩
     | succ index =>
-      simpa using valuesBound_cons.mpr ⟨(valuesBound_cons.mp bounded).1, ih (valuesBound_cons.mp bounded).2 index⟩
+      simpa using values_bound_cons.mpr ⟨(values_bound_cons.mp bounded).1, ih (values_bound_cons.mp bounded).2 index⟩
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

@@ -16,7 +16,7 @@ Reachability selects a retained executable prefix, a terminal prefix, or an unen
 Main declarations: `PrefixMode` and `CompilerPrefix`. A direct consumer is `Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Reachability selects a retained executable prefix, a terminal prefix, or
@@ -51,4 +51,4 @@ structure CompilerPrefix {A : Type} (initial compiler : runtime.compiler.Functio
   controlBudget : SourceControlBudget compiler position
   cursor : compiler.next_source.val ≤ position
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

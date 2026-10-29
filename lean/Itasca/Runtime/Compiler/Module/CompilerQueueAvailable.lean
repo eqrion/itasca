@@ -14,7 +14,7 @@ Compiler queue availability and completed-worker collection. Prepared batch enco
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A queued worker retains its issued identity and a proved successful finish. -/
@@ -43,7 +43,7 @@ theorem completed_workers_append {queue workers issued worker}
     List.Forall₂ CompletedWorker (queue++[issued]) (workers++[worker]) :=
   List.rel_append held (.cons ready .nil)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -51,7 +51,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private def sourceOrdinal (env : module.Env) (index : Nat)
@@ -94,7 +94,7 @@ theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : module.Env) (pro
       exact .cons ordinal value (by simpa only [value] using indexBound) (by simpa only [value] using fullTyped)
         entryBytes w ending bytes locals operands (ih (index+1) next rest remaining)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -102,7 +102,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- Eager submission compiles every independently prepared source entry,
@@ -163,7 +163,7 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
   refine ⟨True.intro,published,charged,worker,?_,finished⟩
   rw [appended,queue]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -171,7 +171,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
 set_option maxHeartbeats 1600000
@@ -276,6 +276,6 @@ theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
     · exact ⟨ready.signatures,ready.functionSlots,ready.origin,ready.slots,ready.paid⟩
     · simpa only [after,completed,alloc.vec.Vec.from_val] using paired
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

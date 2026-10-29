@@ -7,7 +7,7 @@ The complete post-reader stack recovers a live Wasm 2 child front by cancelling 
 Main declarations: `ReaderEnterPostWasm2.scope_fronts` and `ReaderEnterPostWasm2.scope_fronts_dormant`. A direct consumer is `Compiler.Body.Reader.Control.BlockDormantPrefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The complete post-reader stack recovers a live Wasm 2 child front by
@@ -46,4 +46,4 @@ theorem ReaderEnterPostWasm2.scope_fronts_dormant {data env locals index st out 
     simpa only [List.flatMap_def] using same.trans (congrArg Sequence.stackTypes values)
   simpa only [List.map_append, List.map_cons, List.map_nil] using fronts.push child remaining front
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

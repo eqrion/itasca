@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.CompileEntry
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
@@ -20,7 +20,7 @@ def submitPack {A : Type} (scheduler : runtime.compiler.CompileScheduler A) (bat
     batch.profile, batch.env, batch.code, batch.code_offset, batch.first_func, batch.num_funcs,
     batch.num_dispatched, batch.dispatch_end, batch.num_validated, batch.validated_end, batch.error, result)
 
-theorem submitPack_injective {A : Type} (left right : runtime.compiler.CompileScheduler A)
+theorem submit_pack_injective {A : Type} (left right : runtime.compiler.CompileScheduler A)
     (batch other : stream.CodeBatch) (result final : core.result.Result Unit error.Error)
     (same : submitPack left batch result = submitPack right other final) :
     left = right ∧ batch = other ∧ result = final := by
@@ -68,7 +68,7 @@ theorem submit_loop_accepted {A : Type} (allocator : runtime.platform.Alloc A)
         exact ⟨rfl, .next entry rest⟩
     · have packed : submitPack before batch result = submitPack after finalBatch (.Ok ()) := by
         simpa only [submitPack, bind_ok, Result.ok.injEq] using accepted
-      obtain ⟨rfl, rfl, rfl⟩ := submitPack_injective _ _ _ _ _ _ packed
+      obtain ⟨rfl, rfl, rfl⟩ := submit_pack_injective _ _ _ _ _ _ packed
       exact ⟨rfl, .nil _ _⟩
 
 theorem CompileEntries.reachable {A : Type} {allocator : runtime.platform.Alloc A}
@@ -106,4 +106,4 @@ theorem CompileEntries.fold {A : Type} {allocator : runtime.platform.Alloc A}
   | next entry rest ih =>
     obtain ⟨w⟩ := compile_entry_accepted _ _ _ _ _ entry
     exact ih (preserved _ _ _ _ initial w)
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

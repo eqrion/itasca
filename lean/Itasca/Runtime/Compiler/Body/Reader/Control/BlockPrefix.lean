@@ -12,7 +12,7 @@ A literal successful BLOCK callback lifts its exact emitted frame to the whole s
 Main declarations: `structured_callback_block_prefix`. A direct consumer is `Compiler.Body.Reader.Control.BlockWasm2Prefix`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A literal successful BLOCK callback lifts its exact emitted frame to the
@@ -72,4 +72,4 @@ theorem structured_callback_block_prefix {jumpTables : List U32} {emit : List va
     (by simpa [child, SourceScope.enterBlock, SourceScope.arguments, SourceScope.input] using oldTypes.symm)
     sources (by simp) consumed (by rw [cursor])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

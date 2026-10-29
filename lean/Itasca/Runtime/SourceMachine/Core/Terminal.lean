@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Core.Pure
 import Itasca.Runtime.SourceMachine.Core.MemoryAccess
 import Itasca.Runtime.SourceMachine.Sim.Terminal
 
-namespace Itasca.Runtime.Abs.Core
+namespace Itasca.Runtime.SourceMachine.Core
 open SpecExt Itasca.Runtime.Spec
 
 /-- Core traps are generated source traps: integer exceptional arithmetic,
@@ -20,9 +20,9 @@ theorem instruction_trap (s : _root_.store) (ambient : frame) (f : AFrame)
   | pure pure =>
     rw [instruction_slice s ambient f rest _ after pure frameTyped] at equation
     rcases instruction_trap_eq s ambient f rest _ after pure equation with rfl | ⟨descriptor,rfl⟩
-    · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frameTyped_wf frameTyped
+    · obtain ⟨frameWf,labelsWf,valuesWf,codeWf⟩ := frame_typed_wf frameTyped
       have restWf : Forall FrameWf rest := by
-        cases typed.typed.frames with | cons _ tail => exact framesTyped_wf tail
+        cases typed.typed.frames with | cons _ tail => exact frames_typed_wf tail
       exact unreachable_simulation s ambient f rest after typed.typed.store typed.typed.ambient
         frameWf labelsWf valuesWf (fun i member => codeWf i (by simp [member])) restWf
     · exact Numeric.astep_trap_simulation s ambient f rest after descriptor typed.typed equation
@@ -35,14 +35,14 @@ theorem instruction_trap (s : _root_.store) (ambient : frame) (f : AFrame)
   | global_get index =>
     cases index with
     | mk_uN index =>
-      obtain ⟨next,actual,_,_⟩ := globalGet_progress s ambient f rest index after typed
+      obtain ⟨next,actual,_,_⟩ := global_get_progress s ambient f rest index after typed
       change globalGet _ _ _ _ _ = .trap at equation
       rw [actual] at equation
       contradiction
   | global_set index =>
     cases index with
     | mk_uN index =>
-      obtain ⟨next,actual,_,_,_⟩ := globalSet_progress s ambient f rest index after typed
+      obtain ⟨next,actual,_,_,_⟩ := global_set_progress s ambient f rest index after typed
       change globalSet _ _ _ _ _ = .trap at equation
       rw [actual] at equation
       contradiction
@@ -59,4 +59,4 @@ theorem instruction_trap (s : _root_.store) (ambient : frame) (f : AFrame)
       contradiction
     · exact source
 
-end Itasca.Runtime.Abs.Core
+end Itasca.Runtime.SourceMachine.Core

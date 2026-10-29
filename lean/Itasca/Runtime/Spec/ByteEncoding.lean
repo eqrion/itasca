@@ -14,7 +14,7 @@ private theorem byte_value_bound (value : byte) (hw : wf_byte value) : proj_byte
   omega
 
 /-- Well-formed little-endian bytes fit their represented width. -/
-theorem integerOfBytes_bound (bytes : List byte) (valid : Forall wf_byte bytes) :
+theorem integer_of_bytes_bound (bytes : List byte) (valid : Forall wf_byte bytes) :
     integerOfBytes bytes < 256^bytes.length := by
   induction bytes with
   | nil => simp [integerOfBytes]
@@ -27,7 +27,7 @@ theorem integerOfBytes_bound (bytes : List byte) (valid : Forall wf_byte bytes) 
 
 /-- Decoding and encoding an arbitrary well-formed byte string is exact,
 including leading zero bytes. -/
-theorem integerBytes_ofBytes (bytes : List byte) (valid : Forall wf_byte bytes) :
+theorem integer_bytes_of_bytes (bytes : List byte) (valid : Forall wf_byte bytes) :
     integerBytes bytes.length (integerOfBytes bytes) = bytes := by
   induction bytes with
   | nil => rfl
@@ -46,11 +46,11 @@ def scalarNumBytes : numtype → Nat
 
 /-- The source numeric decoder and encoder are inverse for exactly sized byte
 payloads, including every IEEE float bit pattern. -/
-theorem numericBytes_roundtrip (ty : numtype) (bytes : List byte)
+theorem numeric_bytes_roundtrip (ty : numtype) (bytes : List byte)
     (valid : Forall wf_byte bytes) (sized : bytes.length = scalarNumBytes ty) :
     nbytes_ ty (inv_nbytes_ ty bytes) = bytes := by
-  have bounded := integerOfBytes_bound bytes valid
-  have roundtrip := integerBytes_ofBytes bytes valid
+  have bounded := integer_of_bytes_bound bytes valid
+  have roundtrip := integer_bytes_of_bytes bytes valid
   cases ty <;> simp only [scalarNumBytes] at sized
   · simpa [nbytes_,inv_nbytes_,ibytes_,inv_ibytes_,proj_uN_0,sized] using roundtrip
   · simpa [nbytes_,inv_nbytes_,ibytes_,inv_ibytes_,proj_uN_0,sized] using roundtrip
@@ -58,10 +58,10 @@ theorem numericBytes_roundtrip (ty : numtype) (bytes : List byte)
     simpa [nbytes_,inv_nbytes_,fbytes_,inv_fbytes_,Float.float_bits_roundtrip_32 _ bits,sized] using roundtrip
   · have bits : integerOfBytes bytes < 2^64 := by rw [sized] at bounded; norm_num at bounded ⊢; exact bounded
     simpa [nbytes_,inv_nbytes_,fbytes_,inv_fbytes_,Float.float_bits_roundtrip_64 _ bits,sized] using roundtrip
-theorem numericBytes_wf (ty : numtype) (bytes : List byte)
+theorem numeric_bytes_wf (ty : numtype) (bytes : List byte)
     (valid : Forall wf_byte bytes) (sized : bytes.length = scalarNumBytes ty) :
     wf_num_ ty (inv_nbytes_ ty bytes) := by
-  have bounded := integerOfBytes_bound bytes valid
+  have bounded := integer_of_bytes_bound bytes valid
   cases ty <;> simp only [scalarNumBytes] at sized
   · apply wf_num_.num__case_0 .I32 .I32 _ (by decide) _ rfl
     apply wf_uN.uN_case_0

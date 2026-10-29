@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixChange
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Opening BLOCK or LOOP suspends the current source prefix and starts an
@@ -41,7 +41,7 @@ theorem StructuredUniversalPrefix.open_plain {jumpTables : List Aeneas.Std.U32} 
     have resolve : resolvedCode after.function.code.val (⟨[], label.target⟩ :: pending) =
         resolvedCode before.function.code.val pending ++ emitted := by
       simp only [resolvedCode, patchCode, codeEq]
-      apply resolvedCode_append_code
+      apply resolved_code_append_code
       exact priorPlans.inside invariant.sites
     simp only [List.reverse_append, List.reverse_cons, List.reverse_nil, List.nil_append,
       List.singleton_append] at parentShapes
@@ -53,15 +53,15 @@ theorem StructuredUniversalPrefix.open_plain {jumpTables : List Aeneas.Std.U32} 
       have prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val pending)
           (parentLabel :: outerLabels) current.input current.source current.bodyPc
           (resolvedCode before.function.code.val pending).length stack := by
-        simpa only [resolvedCode_length] using prefixCode
+        simpa only [resolved_code_length] using prefixCode
       refine ⟨?_, ?_⟩
       · rw [resolve]
         apply StructuredParentPrefixes.push (saved.extend emitted) parentLabel child parentShape
-        · simp only [List.length_append, resolvedCode_length, entry]
+        · simp only [List.length_append, resolved_code_length, entry]
           omega
         · unfold StructuredParentPrefix
           simp only [parentEntered, childEntered, ite_true]
-          simpa only [entry, arguments, resolvedCode_length] using prior.suspend_after emitted
+          simpa only [entry, arguments, resolved_code_length] using prior.suspend_after emitted
       · simpa only [source, input, body] using
           StructuredPrefix.empty emit types functions returns locals
             (resolvedCode after.function.code.val (⟨[], label.target⟩ :: pending))
@@ -108,7 +108,7 @@ theorem StructuredUniversalPrefix.open_if {jumpTables : List Aeneas.Std.U32} {A 
         resolvedCode before.function.code.val pending ++ [.JumpIfZero condition target] := by
       change resolvedCode after.function.code.val (⟨[site], target⟩ :: pending) = _
       rw [codeEq]
-      exact resolvedCode_open_guard _ _ condition core.num.U32.MAX target site sitePosition
+      exact resolved_code_open_guard _ _ condition core.num.U32.MAX target site sitePosition
         (priorPlans.inside invariant.sites)
     simp only [List.reverse_append, List.reverse_cons, List.reverse_nil, List.nil_append,
       List.singleton_append] at parentShapes
@@ -120,19 +120,19 @@ theorem StructuredUniversalPrefix.open_if {jumpTables : List Aeneas.Std.U32} {A 
       have prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val pending)
           (parentLabel :: outerLabels) current.input current.source current.bodyPc
           (resolvedCode before.function.code.val pending).length (stack ++ [.I32]) := by
-        simpa only [resolvedCode_length] using prefixCode
+        simpa only [resolved_code_length] using prefixCode
       refine ⟨?_, ?_⟩
       · rw [resolve]
         apply StructuredParentPrefixes.push (saved.extend [.JumpIfZero condition target]) parentLabel child parentShape
-        · simp only [List.length_append, resolvedCode_length, entry]
+        · simp only [List.length_append, resolved_code_length, entry]
           omega
         · unfold StructuredParentPrefix
           simp only [parentEntered, childEntered, ite_true]
-          simpa only [entry, arguments, resolvedCode_length] using prior.suspend_after [.JumpIfZero condition target]
+          simpa only [entry, arguments, resolved_code_length] using prior.suspend_after [.JumpIfZero condition target]
       · simpa only [source, input, body] using
           StructuredPrefix.empty emit types functions returns locals
             (resolvedCode after.function.code.val (⟨[site], target⟩ :: ⟨[], label.target⟩ :: pending))
             (label :: parentLabel :: outerLabels) stack after.function.code.val.length
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

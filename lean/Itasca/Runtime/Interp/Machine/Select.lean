@@ -20,21 +20,21 @@ Untyped select machine fetch, step and ownership. The resulting argument is cons
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Select
+namespace Itasca.Runtime.Interp.Machine.Select
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [FloatHeads family]
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
-theorem corePoint_select_head {C returns code labels stack pc next output} (after : List instr)
-    (point : Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
+theorem core_point_select_head {C returns code labels stack pc next output} (after : List instr)
+    (point : Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
       (.SELECT none :: after) pc next output) :
     (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
-      Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
+      Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
         (.SELECT none :: after) target.val next output) ∨
     (∃ front ty left right condition, stack = front ++ [ty,ty,.I32] ∧
-      left.val = Code.slots C.LOCALS+Code.slots front ∧ right.val = left.val+Code.width ty ∧
-      condition.val = right.val+Code.width ty ∧
-      code[pc]? = some (Code.selectInstruction (decide (Code.width ty = 2)) left right condition) ∧
-      Code.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels
+      left.val = Compiler.slots C.LOCALS+Compiler.slots front ∧ right.val = left.val+Compiler.width ty ∧
+      condition.val = right.val+Compiler.width ty ∧
+      code[pc]? = some (Compiler.selectInstruction (decide (Compiler.width ty = 2)) left right condition) ∧
+      Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels
         (front ++ [ty]) after (pc+1) next output) := by
   have relation := point.current
   generalize sourceEq : instr.SELECT none :: after = source at relation
@@ -42,7 +42,7 @@ theorem corePoint_select_head {C returns code labels stack pc next output} (afte
   | linear head ordinary fragment rest =>
     obtain ⟨headEq,tailEq⟩ := List.cons.inj sourceEq
     subst_vars
-    obtain ⟨front,ty,left,right,condition,input,emitted,result,leftPos,rightPos,conditionPos⟩ := scalarEmission_select_inv (FloatHeads.project (.core .select) head)
+    obtain ⟨front,ty,left,right,condition,input,emitted,result,leftPos,rightPos,conditionPos⟩ := scalar_emission_select_inv (FloatHeads.project (.core .select) head)
     subst_vars
     have fetch := fragment.fetch (index := 0) (by rfl)
     obtain ⟨_,_,_,_,nextEq⟩ := fragment
@@ -53,7 +53,7 @@ theorem corePoint_select_head {C returns code labels stack pc next output} (afte
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => simp at sourceEq
 
-end Itasca.Runtime.Interp.StructuredMachine.Select
+end Itasca.Runtime.Interp.Machine.Select
 
 end
 
@@ -61,7 +61,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Select
+namespace Itasca.Runtime.Interp.Machine.Select
 open Aeneas Aeneas.Std SpecExt
 
 theorem step_select_core {M P F A : Type}
@@ -69,28 +69,28 @@ theorem step_select_core {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
     (next : Nat) (output : List valtype) (sourceStore : _root_.store) (ambient : frame)
-    (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val+1 = exec.frames.length) (frameFound : exec.frames.val[index.val]? = some raw)
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max) (slots : FrameSlots exec raw f)
     (point : FramePoint sourceStore raw {f with code := .SELECT none::after} compiled C targets next output)
-    (typed : Abs.CoreTyped ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩) :
-    let initial : Abs.AState := ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩
+    (typed : SourceMachine.CoreTyped ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩) :
+    let initial : SourceMachine.AState := ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame),
+      ∃ (pc : U32) (g : SourceMachine.AFrame),
         {out.2.1 with slots := exec.slots} = {exec with frames := exec.frames.set index {raw with pc := pc}} ∧
         FrameSlots out.2.1 {raw with pc := pc} g ∧
         FramePoint sourceStore {raw with pc := pc} g compiled C targets next output ∧
-        Abs.CoreTyped {initial with frames := g::rest} ∧ FrameMetadata f g ∧
-        (initial = {initial with frames := g::rest} ∨ Abs.Core.step initial = .next {initial with frames := g::rest}) ∧
+        SourceMachine.CoreTyped {initial with frames := g::rest} ∧ FrameMetadata f g ∧
+        (initial = {initial with frames := g::rest} ∨ SourceMachine.Core.step initial = .next {initial with frames := g::rest}) ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
         SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ⦄ := by
   dsimp only
-  rcases corePoint_select_head after point.code with ⟨target,forward,fetched,tail⟩ | ⟨types,ty,a,b,condition,input,leftPos,rightPos,conditionPos,fetched,tail⟩
+  rcases core_point_select_head after point.code with ⟨target,forward,fetched,tail⟩ | ⟨types,ty,a,b,condition,input,leftPos,rightPos,conditionPos,fetched,tail⟩
   · have retained : FramePoint sourceStore {raw with pc := target} {f with code := .SELECT none::after} compiled C targets next output :=
       ⟨point.bindings,point.locals,point.labels,tail⟩
     apply WP.spec_mono (step_forward_jump_flat memory hooks floats allocator exec store platform index raw inst compiled
@@ -101,38 +101,38 @@ theorem step_select_core {M P F A : Type}
     refine ⟨success,sameStore,samePlatform,target,_,?_,represented,retained,fresh,⟨rfl,rfl,rfl,rfl⟩,Or.inl rfl,simulation,?_⟩
     · rw [exactState]
     · rw [exactState]; exact .refl _ _
-  · have frameTyped : Abs.FrameTyped sourceStore {f with code := .SELECT none::after} [] := by
+  · have frameTyped : SourceMachine.FrameTyped sourceStore {f with code := .SELECT none::after} [] := by
       cases typed.typed.frames with | cons head _ => exact head
     obtain ⟨front,left,right,bits,valueTy,split,bitsBound,leftType,rightType,heights⟩ := select_typed_operands frameTyped
-    have conditionType : Code.valueType (Abs.integerVal .I32 bits) = .I32 := rfl
-    have stackEq : front.map Code.valueType ++ [valueTy,valueTy,.I32] = types ++ [ty,ty,.I32] := by
+    have conditionType : Compiler.valueType (SourceMachine.integerVal .I32 bits) = .I32 := rfl
+    have stackEq : front.map Compiler.valueType ++ [valueTy,valueTy,.I32] = types ++ [ty,ty,.I32] := by
       simpa only [split,List.map_append,List.map_cons,List.map_nil,leftType,rightType,conditionType] using input
-    have lengthEq : (front.map Code.valueType).length = types.length := by
+    have lengthEq : (front.map Compiler.valueType).length = types.length := by
       have lengths := congrArg List.length stackEq
       simp only [List.length_append,List.length_cons,List.length_nil] at lengths
       omega
     obtain ⟨frontEq,typeEq⟩ := List.append_inj stackEq lengthEq
     have sameTy : valueTy = ty := (List.cons.inj typeEq).1
-    have leftType' : Code.valueType left = ty := leftType.trans sameTy
-    have rightType' : Code.valueType right = ty := rightType.trans sameTy
-    have position : a.val = Code.slots ((f.locals++front).map Code.valueType) := by
-      simpa only [List.map_append,Code.slots_append,point.locals,← frontEq] using leftPos
+    have leftType' : Compiler.valueType left = ty := leftType.trans sameTy
+    have rightType' : Compiler.valueType right = ty := rightType.trans sameTy
+    have position : a.val = Compiler.slots ((f.locals++front).map Compiler.valueType) := by
+      simpa only [List.map_append,Compiler.slots_append,point.locals,← frontEq] using leftPos
     have actual := select_source_next (s := sourceStore) (ambient := ambient) (rest := rest) (after := after) split (leftType.trans rightType.symm) bitsBound
-    obtain ⟨nextState,nextEq,fresh,source⟩ := Abs.Core.select_progress sourceStore ambient f rest after typed
-    have nextEq' : Abs.Core.step ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩ = .next nextState := nextEq
-    have sameState := Abs.AResult.next.inj (actual.symm.trans nextEq')
+    obtain ⟨nextState,nextEq,fresh,source⟩ := SourceMachine.Core.select_progress sourceStore ambient f rest after typed
+    have nextEq' : SourceMachine.Core.step ⟨sourceStore,ambient,{f with code := .SELECT none::after}::rest,[]⟩ = .next nextState := nextEq
+    have sameState := SourceMachine.AResult.next.inj (actual.symm.trans nextEq')
     subst nextState
     apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
-      (Code.selectInstruction (decide (Code.width ty = 2)) a b condition) last frameFound instanceFound codeFound fetched pcBound
+      (Compiler.selectInstruction (decide (Compiler.width ty = 2)) a b condition) last frameFound instanceFound codeFound fetched pcBound
     intro pc pcNext
     have continuation : FramePoint sourceStore {raw with pc := pc}
         {f with code := after,vals := front++[if bits = 0 then right else left]} compiled C targets next output := by
       refine ⟨point.bindings,point.locals,?_,?_⟩
-      · have labels : LabelsMatch (front++[left,right,Abs.integerVal .I32 bits]) f.labels targets := by simpa only [split] using point.labels
+      · have labels : LabelsMatch (front++[left,right,SourceMachine.integerVal .I32 bits]) f.labels targets := by simpa only [split] using point.labels
         exact labels.replace_suffix heights
-      · have selectedType : Code.valueType (if bits = 0 then right else left) = ty := by split <;> first | exact rightType' | exact leftType'
+      · have selectedType : Compiler.valueType (if bits = 0 then right else left) = ty := by split <;> first | exact rightType' | exact leftType'
         simpa only [List.map_append,List.map_cons,List.map_nil,selectedType,frontEq,pcNext] using tail
-    have represented : ValuesAt exec.slots.val raw.base.val ((f.locals++front)++[left,right,Abs.integerVal .I32 bits]) := by
+    have represented : ValuesAt exec.slots.val raw.base.val ((f.locals++front)++[left,right,SourceMachine.integerVal .I32 bits]) := by
       simpa only [FrameSlots,split,List.append_assoc] using slots
     apply WP.spec_mono (select_slots memory hooks floats allocator
       {exec with frames := exec.frames.set index {raw with pc := pc}} store platform index raw (f.locals++front) left right bits a b condition ty
@@ -141,8 +141,8 @@ theorem step_select_core {M P F A : Type}
     obtain ⟨success,sameStore,samePlatform,represented,fields,preserved⟩ := effect
     refine ⟨success,sameStore,samePlatform,pc,_,fields,?_,continuation,fresh,⟨rfl,rfl,rfl,rfl⟩,Or.inr actual,?_,preserved⟩
     · simpa only [FrameSlots,List.append_assoc] using represented
-    · exact Or.inr ⟨1,by omega,by simpa using Itasca.Runtime.Spec.StepsHN.cons source (Itasca.Runtime.Spec.StepsHN.refl (Itasca.Runtime.Spec.stepH_wf source).2)⟩
-end Itasca.Runtime.Interp.StructuredMachine.Select
+    · exact Or.inr ⟨1,by omega,by simpa using Itasca.Runtime.Spec.StepsHN.cons source (Itasca.Runtime.Spec.StepsHN.refl (Itasca.Runtime.Spec.step_h_wf source).2)⟩
+end Itasca.Runtime.Interp.Machine.Select
 
 end
 
@@ -150,16 +150,16 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine.Select
+namespace Itasca.Runtime.Interp.Machine.Select
 open Aeneas Aeneas.Std
 theorem step_select_core_execution_owned_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
     (next : Nat) (output : List valtype) (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame)
-    (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val+1 = exec.frames.length) (frameFound : exec.frames.val[index.val]? = some raw)
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
@@ -168,19 +168,19 @@ theorem step_select_core_execution_owned_uniform {M P F A : Type}
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame),
+      ∃ (pc : U32) (g : SourceMachine.AFrame),
         Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
         UniformConcreteSim raw.pc.val pc.val false false initial {initial with frames := g::rest} [] ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound {initial with frames := g::rest}) ⦄ := by
   dsimp only
   have pcBound : raw.pc.val < U32.max := by
-    rcases corePoint_select_head after point.code with ⟨target,forward,fetched,tail⟩ | ⟨types,ty,a,b,condition,input,leftPos,rightPos,conditionPos,fetched,tail⟩
+    rcases core_point_select_head after point.code with ⟨target,forward,fetched,tail⟩ | ⟨types,ty,a,b,condition,input,leftPos,rightPos,conditionPos,fetched,tail⟩
     · have bound := (List.getElem?_eq_some_iff.mp fetched).1
       have limit := program.fetchBound
       omega
@@ -197,23 +197,23 @@ theorem step_select_core_execution_owned_uniform {M P F A : Type}
     rcases transition with same | step
     · rw [← same] at simulation ⊢
       exact simulation.uniform_same (by scalar_tac)
-    · exact UniformConcreteSim.single (Abs.Core.select_step_positive _ _ _ _ _ _ machine.typed step)
-  have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+    · exact UniformConcreteSim.single (SourceMachine.Core.select_step_positive _ _ _ _ _ _ machine.typed step)
+  have covered : SourceMachine.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
     rcases transition with same | step
     · rw [← same]; exact machine.core
-    · exact StructuredMachine.core_step_supported machine.typed machine.core step
+    · exact Machine.core_step_supported machine.typed machine.core step
   exact ⟨success,sameStore,samePlatform,pc,g,
     Execution.ordinary view code ambient {f with code := .SELECT none::after} g rest expected raw.pc.val false machine
       (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
-      (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,uniform,StructuredMachine.owned_transition machine.typed machine.core transition,StructuredMachine.bound_transition machine.typed machine.core transition⟩
+      (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,uniform,Machine.owned_transition machine.typed machine.core transition,Machine.bound_transition machine.typed machine.core transition⟩
 theorem step_select_core_execution_owned {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
-    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Code.LabelTarget)
+    (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
     (next : Nat) (output : List valtype) (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame)
-    (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val+1 = exec.frames.length) (frameFound : exec.frames.val[index.val]? = some raw)
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
@@ -222,19 +222,19 @@ theorem step_select_core_execution_owned {M P F A : Type}
     (expected : List valtype)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT none::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ∃ (pc : U32) (g : Abs.AFrame),
+      ∃ (pc : U32) (g : SourceMachine.AFrame),
         Execution view code store out.2.1 {initial with frames := g::rest} expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial {initial with frames := g::rest} ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound {initial with frames := g::rest}) ⦄ := by
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds {initial with frames := g::rest}) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound {initial with frames := g::rest}) ⦄ := by
   apply WP.spec_mono (step_select_core_execution_owned_uniform memory hooks floats allocator exec store platform index raw inst compiled C targets next output view code ambient f rest after last frameFound instanceFound codeFound slots point expected machine program)
   rintro out ⟨success,same,platform,pc,g,machine,simulation,uniform,ownership,bounded⟩
   exact ⟨success,same,platform,pc,g,machine,simulation,ownership,bounded⟩
 
-end Itasca.Runtime.Interp.StructuredMachine.Select
+end Itasca.Runtime.Interp.Machine.Select
 
 end

@@ -3,14 +3,14 @@ import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem hostInstructionAddress_callTag {M : Type} (exec : runtime.interp.Execution)
+theorem host_instruction_address_call_tag {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (instruction : runtime.bytecode.Instr)
     (address : runtime.FuncAddr) (selected : hostInstructionAddress exec store raw inst compiled instruction=some address) :
-    Code.callTag instruction≠0 := by
-  cases instruction <;> first | (simp [Code.callTag]; done) | (simp only [hostInstructionAddress,Bind.bind,Option.bind] at selected; cases selected)
+    Compiler.callTag instruction≠0 := by
+  cases instruction <;> first | (simp [Compiler.callTag]; done) | (simp only [hostInstructionAddress,Bind.bind,Option.bind] at selected; cases selected)
 
-theorem hostInstructionAddress_direct_inv {M : Type} (exec : runtime.interp.Execution)
+theorem host_instruction_address_direct_inv {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (index offset : U32)
     (address : runtime.FuncAddr) (selected : hostInstructionAddress exec store raw inst compiled (.Call index offset)=some address) :
@@ -29,7 +29,7 @@ theorem hostInstructionAddress_direct_inv {M : Type} (exec : runtime.interp.Exec
         subst actual
         exact ⟨function,host,rfl,functionAt,hostCode⟩
 
-theorem hostInstructionAddress_indirect_inv {M : Type} (exec : runtime.interp.Execution)
+theorem host_instruction_address_indirect_inv {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (entry selector offset table type : U32)
     (tableAddress : runtime.TableAddr) (object : runtime.store.TableInst) (word : U64) (signature : Usize)
@@ -75,7 +75,7 @@ theorem hostInstructionAddress_indirect_inv {M : Type} (exec : runtime.interp.Ex
               change (UScalar.cast .Usize reference).val=(UScalar.cast .Usize reference).val-1+1
               omega
           · simp at selected
-theorem hostStepAddress_instruction {M : Type} (exec : runtime.interp.Execution)
+theorem host_step_address_instruction {M : Type} (exec : runtime.interp.Execution)
     (store : runtime.store.Store M) (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (last : index.val+1=exec.frames.length) (frameAt : exec.frames.val[index.val]?=some raw)

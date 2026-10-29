@@ -26,13 +26,13 @@ Integer numeric machine fetch, execution and trap classification. The resulting 
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 open Aeneas Aeneas.Std
-theorem emission_numeric_pure {compiled C before after emitted} (op : Abs.Numeric.Instruction)
+theorem emission_numeric_pure {compiled C before after emitted} (op : SourceMachine.Numeric.Instruction)
     (head : Interp.emission compiled C before op.source emitted after) :
-    Code.LinearEmission C.LOCALS before op.source emitted after :=
-  scalarEmission_numeric_pure op (FloatHeads.project (.core (.pure (.numeric op))) head)
-end Itasca.Runtime.Interp.StructuredMachine
+    Compiler.LinearEmission C.LOCALS before op.source emitted after :=
+  scalar_emission_numeric_pure op (FloatHeads.project (.core (.pure (.numeric op))) head)
+end Itasca.Runtime.Interp.Machine
 
 end
 
@@ -40,35 +40,35 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std SourceMachine.Numeric
 theorem step_numeric {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : Instruction) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
+    (typed : SourceMachine.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint s raw { f with code := op.source :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ((out.1 = .Ok () ∧
-      ∃ (pc : U32) (g : Abs.AFrame),
+      ∃ (pc : U32) (g : SourceMachine.AFrame),
         { out.2.1 with slots := exec.slots } =
           { exec with frames := exec.frames.set index { raw with pc := pc } } ∧
         FrameSlots out.2.1 { raw with pc := pc } g ∧
         FramePoint s { raw with pc := pc } g compiled C targets next output ∧
-        Abs.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
+        SourceMachine.CoreTyped ⟨s, ambient, g :: rest, []⟩ ∧
         FrameMetadata f g ∧
         SourceClosure { f with code := op.source :: after } g ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false
@@ -76,15 +76,15 @@ theorem step_numeric {M P F A : Type}
           ⟨s, ambient, g :: rest, []⟩ ∧
         SlotPrefix raw.base.val exec.slots.val out.2.1.slots.val ∧
         (g = {f with code := op.source :: after} ∨
-          Abs.Core.step ⟨s,ambient,{f with code := op.source :: after} :: rest,[]⟩ = .next ⟨s,ambient,g::rest,[]⟩)) ∨
+          SourceMachine.Core.step ⟨s,ambient,{f with code := op.source :: after} :: rest,[]⟩ = .next ⟨s,ambient,g::rest,[]⟩)) ∨
       (∃ trap, out.1 = .Err (.Trap trap) ∧
         (trap = .IntegerDivideByZero ∨ trap = .IntegerOverflow) ∧
         ∃ count, 0 < count ∧ Spec.StepsHN count
-          (Abs.decode ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩) []
+          (SourceMachine.decode ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩) []
           ⟨⟨s, ambient⟩, [.TRAP]⟩)) ⦄ := by
   have linear : linearSource op.source = true := by
     cases op <;> (try casesm* Conversion) <;> rfl
-  rcases structuredCode_linear_inv linear point.code.current with skip | branch
+  rcases structured_code_linear_inv linear point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     have targetPoint : FramePoint s { raw with pc := target }
         { f with code := op.source :: after } compiled C targets next output :=
@@ -98,20 +98,20 @@ theorem step_numeric {M P F A : Type}
     · rw [exactState]
     · rw [exactState]
       exact slots
-    · exact Or.inl ⟨rfl, dispatchMeasure_forward _ _ _ _ forward continuation.entry_bound⟩
+    · exact Or.inl ⟨rfl, dispatch_measure_forward _ _ _ _ forward continuation.entry_bound⟩
     · rw [exactState]
       exact SlotPrefix.refl _ _
   · obtain ⟨middle, emitted, tail, head, fragment, continuation⟩ := branch
-    obtain ⟨stack, left, right, shape, emittedEq, middleEq, leftPos, rightPos⟩ := linearEmission_numeric_inv op (emission_numeric_pure op head)
-    have frameTyped : Abs.FrameTyped s { f with code := op.source :: after } [] := by
+    obtain ⟨stack, left, right, shape, emittedEq, middleEq, leftPos, rightPos⟩ := linear_emission_numeric_inv op (emission_numeric_pure op head)
+    have frameTyped : SourceMachine.FrameTyped s { f with code := op.source :: after } [] := by
       cases typed.typed.frames with | cons h _ => exact h
     obtain ⟨front, a, b, split, wfFront, heights⟩ := op.typed_operands_bounds frameTyped
-    have frontTypes : front.map Code.valueType = stack := by
-      rw [split, List.map_append, numericOperand_types] at shape
+    have frontTypes : front.map Compiler.valueType = stack := by
+      rw [split, List.map_append, numeric_operand_types] at shape
       exact List.append_cancel_right shape
-    have leftPosition : left.val = Code.slots ((f.locals ++ front).map Code.valueType) := by
-      simpa only [point.locals,List.map_append, Code.slots_append, frontTypes] using leftPos
-    have fetched : compiled.code.val[raw.pc.val]? = some (Code.integerInstruction op left left right) := by
+    have leftPosition : left.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType) := by
+      simpa only [point.locals,List.map_append, Compiler.slots_append, frontTypes] using leftPos
+    have fetched : compiled.code.val[raw.pc.val]? = some (Compiler.integerInstruction op left left right) := by
       simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq, List.getElem?_cons_zero])
     have endpoint : tail = raw.pc.val + 1 := by
       obtain ⟨_, _, _, _, h⟩ := fragment
@@ -123,14 +123,14 @@ theorem step_numeric {M P F A : Type}
     rw [returned]
     simp only [WP.spec_ok]
     have prefixEffect := step_prefix memory hooks floats allocator exec store platform index raw inst compiled
-      (Code.integerInstruction op left left right) last hf hi hc fetched (.numeric op left left right) out returned
+      (Compiler.integerInstruction op left left right) last hf hi hc fetched (.numeric op left left right) out returned
     obtain ⟨sameStore, samePlatform, pc, pcEq, effect⟩ := effect
     refine ⟨sameStore, samePlatform, ?_⟩
     cases operation : op.apply a b with
     | none =>
       simp only [NumericValuesEffect, operation] at effect
       obtain ⟨trap, kind, exactEffect⟩ := effect
-      have sourceTrap : Abs.astep ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ = .trap := by
+      have sourceTrap : SourceMachine.astep ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ = .trap := by
         have h := astep_operands ⟨s, ambient, [], []⟩ f rest after front op a b
         simp only [finish, operation] at h
         simpa only [← split] using h
@@ -139,34 +139,34 @@ theorem step_numeric {M P F A : Type}
     | some value =>
       simp only [NumericValuesEffect, operation] at effect
       obtain ⟨success, represented, unchanged⟩ := effect
-      have sourceStep : Abs.astep ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ = .next
-          ⟨s, ambient, { f with code := after, vals := front ++ [Abs.integerVal op.output value.toNat] } :: rest, []⟩ := by
+      have sourceStep : SourceMachine.astep ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩ = .next
+          ⟨s, ambient, { f with code := after, vals := front ++ [SourceMachine.integerVal op.output value.toNat] } :: rest, []⟩ := by
         have h := astep_operands ⟨s, ambient, [], []⟩ f rest after front op a b
-        simp only [finish, operation, Abs.advance] at h
+        simp only [finish, operation, SourceMachine.advance] at h
         simpa only [← split] using h
-      have nextTyped := Abs.instruction_preservation s ambient f rest _ after _ (.numeric op) typed.typed sourceStep
+      have nextTyped := SourceMachine.instruction_preservation s ambient f rest _ after _ (.numeric op) typed.typed sourceStep
       have nextPoint : FramePoint s { raw with pc := pc }
-          { f with code := after, vals := front ++ [Abs.integerVal op.output value.toNat] }
+          { f with code := after, vals := front ++ [SourceMachine.integerVal op.output value.toNat] }
           compiled C targets next output := by
         apply linear_continuation point pc f.locals
-          (front ++ [Abs.integerVal op.output value.toNat]) after middle
+          (front ++ [SourceMachine.integerVal op.output value.toNat]) after middle
         · simpa only [endpoint, pcEq] using continuation
         · rfl
-        · simp only [middleEq, List.map_append, List.map_cons, List.map_nil, integerValue_type, frontTypes]
+        · simp only [middleEq, List.map_append, List.map_cons, List.map_nil, integer_value_type, frontTypes]
         · have labels : LabelsMatch (front ++ op.operands a b) f.labels targets := by
             simpa only [← split] using point.labels
           exact labels.replace_suffix heights
-      refine .inl ⟨success, pc, { f with code := after, vals := front ++ [Abs.integerVal op.output value.toNat] },
+      refine .inl ⟨success, pc, { f with code := after, vals := front ++ [SourceMachine.integerVal op.output value.toNat] },
         unchanged, ?_, nextPoint, ⟨nextTyped,typed.contents⟩, ⟨rfl,rfl,rfl,rfl⟩,
         .tail _ _ _ _ _ (frame_references_numeric f front _ _ _ split), ?_,prefixEffect,Or.inr ?_⟩
       · simpa only [FrameSlots, List.append_assoc] using represented
       · apply ConcreteSim.of_source
         exact astep_simulation s ambient f rest after op _ typed.typed sourceStep
-      · change Abs.Core.instruction s ambient {f with code := op.source :: after} rest op.source after = _
-        rw [Abs.Core.instruction_slice s ambient {f with code := op.source :: after} rest op.source after (.numeric op) frameTyped]
+      · change SourceMachine.Core.instruction s ambient {f with code := op.source :: after} rest op.source after = _
+        rw [SourceMachine.Core.instruction_slice s ambient {f with code := op.source :: after} rest op.source after (.numeric op) frameTyped]
         exact sourceStep
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine
 
 end
 
@@ -174,20 +174,20 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
-open Aeneas Aeneas.Std Abs.Numeric
-theorem numeric_fetched {raw compiled C targets next output s} {f : Abs.AFrame}
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std SourceMachine.Numeric
+theorem numeric_fetched {raw compiled C targets next output s} {f : SourceMachine.AFrame}
     (op : Instruction) (after : List instr)
     (point : FramePoint s raw {f with code := op.source :: after} compiled C targets next output) :
     ∃ instruction, compiled.code.val[raw.pc.val]? = some instruction := by
   have linear : linearSource op.source = true := by cases op <;> (try casesm* Conversion) <;> rfl
-  rcases structuredCode_linear_inv linear point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,rest⟩
+  rcases structured_code_linear_inv linear point.code.current with ⟨target,forward,fetch,tail⟩ | ⟨middle,emitted,tail,head,fragment,rest⟩
   · exact ⟨_,fetch⟩
-  · obtain ⟨stack,left,right,shape,emittedEq,middleEq,leftPos,rightPos⟩ := linearEmission_numeric_inv op (emission_numeric_pure op head)
-    refine ⟨Code.integerInstruction op left left right,?_⟩
+  · obtain ⟨stack,left,right,shape,emittedEq,middleEq,leftPos,rightPos⟩ := linear_emission_numeric_inv op (emission_numeric_pure op head)
+    refine ⟨Compiler.integerInstruction op left left right,?_⟩
     simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq,List.getElem?_cons_zero])
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine
 
 end
 
@@ -195,8 +195,8 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 theorem step_numeric_execution_owned_uniform {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -205,27 +205,27 @@ theorem step_numeric_execution_owned_uniform {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : Instruction) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : Instruction) (after : List instr)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ((out.1 = .Ok () ∧ ∃ pc : U32, ∃ g : Abs.AFrame,
+      ((out.1 = .Ok () ∧ ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
         UniformConcreteSim raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ [] ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩)) ∨
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩)) ∨
       (∃ trap, out.1 = .Err (.Trap trap) ∧ (trap = .IntegerDivideByZero ∨ trap = .IntegerOverflow) ∧
-        ∃ count, 0 < count ∧ Spec.StepsHN count (Abs.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+        ∃ count, 0 < count ∧ Spec.StepsHN count (SourceMachine.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
   obtain ⟨instruction,fetched⟩ := numeric_fetched op after point
   have pcBound := program.fetched_bound instruction fetched
@@ -241,18 +241,18 @@ theorem step_numeric_execution_owned_uniform {M P F A : Type}
       rcases sourceStep with same | step
       · subst g
         exact simulation.uniform_same (by scalar_tac)
-      · exact UniformConcreteSim.single (Abs.Numeric.core_step_positive _ _ _ _ _ _ _ machine.typed.typed step)
-    have covered : Abs.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+      · exact UniformConcreteSim.single (SourceMachine.Numeric.core_step_positive _ _ _ _ _ _ _ machine.typed.typed step)
+    have covered : SourceMachine.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
       rcases sourceStep with same | step
       · simpa only [same] using machine.core
-      · exact StructuredMachine.core_step_supported machine.typed machine.core step
-    have ownership : ∀ bounds, Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩ →
-        Abs.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+      · exact Machine.core_step_supported machine.typed machine.core step
+    have ownership : ∀ bounds, SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩ →
+        SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
       intro bounds bounded
       rcases sourceStep with same | step
       · simpa only [same] using bounded
-      · exact StructuredMachine.core_step_owned machine.typed machine.core step bounds bounded
-    refine Or.inl ⟨status,pc,g,?_,simulation,uniform,ownership,StructuredMachine.bound_transition machine.typed machine.core (sourceStep.imp_left (fun same => by rw [same]))⟩
+      · exact Machine.core_step_owned machine.typed machine.core step bounds bounded
+    refine Or.inl ⟨status,pc,g,?_,simulation,uniform,ownership,Machine.bound_transition machine.typed machine.core (sourceStep.imp_left (fun same => by rw [same]))⟩
     exact machine.ordinary view code ambient {f with code := op.source :: after} g rest expected raw.pc.val false
       (.refl store) (Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last hf program (.ready continuation)
       represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ unchanged prefixEffect fresh covered
@@ -264,33 +264,33 @@ theorem step_numeric_execution_owned {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context)
-    (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (op : Instruction) (after : List instr)
+    (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (op : Instruction) (after : List instr)
     (last : index.val+1 = exec.frames.length) (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
     (point : FramePoint (Store.decodeStore view code store) raw {f with code := op.source :: after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩ expected raw.pc.val false) :
-    let initial : Abs.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩
+    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := op.source :: after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1 = store ∧ out.2.2.2 = platform ∧
-      ((out.1 = .Ok () ∧ ∃ pc : U32, ∃ g : Abs.AFrame,
+      ((out.1 = .Ok () ∧ ∃ pc : U32, ∃ g : SourceMachine.AFrame,
         Execution view code store out.2.1 ⟨initial.store,ambient,g::rest,[]⟩ expected pc.val false ∧
         ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨initial.store,ambient,g::rest,[]⟩ ∧
-        (∀ bounds, Abs.Ownership.StatefulOwned bounds initial → Abs.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
-        (∀ bound, Abs.CodeBound bound initial → Abs.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩)) ∨
+        (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨initial.store,ambient,g::rest,[]⟩) ∧
+        (∀ bound, SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨initial.store,ambient,g::rest,[]⟩)) ∨
       (∃ trap, out.1 = .Err (.Trap trap) ∧ (trap = .IntegerDivideByZero ∨ trap = .IntegerOverflow) ∧
-        ∃ count, 0 < count ∧ Spec.StepsHN count (Abs.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+        ∃ count, 0 < count ∧ Spec.StepsHN count (SourceMachine.decode initial) [] ⟨⟨initial.store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   apply WP.spec_mono (step_numeric_execution_owned_uniform memory hooks floats allocator view code exec store platform index raw inst compiled C targets next output ambient f rest op after last hf hi hc program slots point expected machine)
   rintro out ⟨same,platform,success | trapped⟩
   · rcases success with ⟨success,pc,g,machine,simulation,uniform,ownership,bounded⟩
     exact ⟨same,platform,Or.inl ⟨success,pc,g,machine,simulation,ownership,bounded⟩⟩
   · exact ⟨same,platform,Or.inr trapped⟩
 
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine
 
 end
 
@@ -298,8 +298,8 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.StructuredMachine
-open Aeneas Aeneas.Std Abs.Numeric
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std SourceMachine.Numeric
 
 theorem step_numeric_no_trap {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -307,8 +307,8 @@ theorem step_numeric_no_trap {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : Instruction) (after : List instr)
     (total : ∀ a b, op.apply a b ≠ none)
     (last : index.val + 1 = exec.frames.length)
@@ -316,14 +316,14 @@ theorem step_numeric_no_trap {M P F A : Type}
     (hi : store.instances.val[raw.instance.val]? = some inst)
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (pcBound : raw.pc.val < U32.max)
-    (typed : Abs.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
+    (typed : SourceMachine.CoreTyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
     (point : FramePoint s raw { f with code := op.source :: after }
       compiled C targets next output) :
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out => out.1 = .Ok () ⦄ := by
   have linear : linearSource op.source = true := by
     cases op <;> (try casesm* Conversion) <;> rfl
-  rcases structuredCode_linear_inv linear point.code.current with skip | branch
+  rcases structured_code_linear_inv linear point.code.current with skip | branch
   · obtain ⟨target, forward, fetched, continuation⟩ := skip
     apply WP.spec_mono (step_jump_exact memory hooks floats allocator exec store platform
       index raw inst compiled target last hf hi hc pcBound fetched)
@@ -331,16 +331,16 @@ theorem step_numeric_no_trap {M P F A : Type}
     obtain ⟨success, exactState, sameStore, samePlatform⟩ := effect
     exact success
   · obtain ⟨middle, emitted, tail, head, fragment, continuation⟩ := branch
-    obtain ⟨stack, left, right, shape, emittedEq, middleEq, leftPos, rightPos⟩ := linearEmission_numeric_inv op (emission_numeric_pure op head)
-    have frameTyped : Abs.FrameTyped s { f with code := op.source :: after } [] := by
+    obtain ⟨stack, left, right, shape, emittedEq, middleEq, leftPos, rightPos⟩ := linear_emission_numeric_inv op (emission_numeric_pure op head)
+    have frameTyped : SourceMachine.FrameTyped s { f with code := op.source :: after } [] := by
       cases typed.typed.frames with | cons h _ => exact h
     obtain ⟨front, a, b, split, wfFront, heights⟩ := op.typed_operands_bounds frameTyped
-    have frontTypes : front.map Code.valueType = stack := by
-      rw [split, List.map_append, numericOperand_types] at shape
+    have frontTypes : front.map Compiler.valueType = stack := by
+      rw [split, List.map_append, numeric_operand_types] at shape
       exact List.append_cancel_right shape
-    have leftPosition : left.val = Code.slots ((f.locals ++ front).map Code.valueType) := by
-      simpa only [point.locals,List.map_append, Code.slots_append, frontTypes] using leftPos
-    have fetched : compiled.code.val[raw.pc.val]? = some (Code.integerInstruction op left left right) := by
+    have leftPosition : left.val = Compiler.slots ((f.locals ++ front).map Compiler.valueType) := by
+      simpa only [point.locals,List.map_append, Compiler.slots_append, frontTypes] using leftPos
+    have fetched : compiled.code.val[raw.pc.val]? = some (Compiler.integerInstruction op left left right) := by
       simpa only [Nat.add_zero] using fragment.fetch (index := 0) (by simp only [emittedEq, List.getElem?_cons_zero])
     have endpoint : tail = raw.pc.val + 1 := by
       obtain ⟨_, _, _, _, h⟩ := fragment
@@ -357,6 +357,6 @@ theorem step_numeric_no_trap {M P F A : Type}
     | some value =>
       simp only [NumericValuesEffect,operation] at effect
       exact effect.1
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine
 
 end

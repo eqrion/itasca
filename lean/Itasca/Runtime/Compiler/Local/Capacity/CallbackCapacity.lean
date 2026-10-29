@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.CopyBudgetAvailability
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent room for a callback that emits several instructions. The final
@@ -67,4 +67,4 @@ theorem CallbackCapacity.with_frames {A : Type} {compiler : runtime.compiler.Fun
   ⟨capacity.pc,capacity.codeCapacity,capacity.sourceCapacity,capacity.codeReserve,
     capacity.sourceReserve,capacity.coordinate,capacity.instructions,capacity.operands,capacity.slots⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

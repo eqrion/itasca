@@ -15,7 +15,7 @@ structure FrameProgram {M : Type} (store : runtime.store.Store M)
     FunctionTable store inst functions
   checked : runtime.bytecode.CompiledFunction.well_formed compiled = .ok true
   fetchBound : compiled.code.val.length ≤ U32.max
-  localSlots : compiled.local_slots.val = Code.slots locals
+  localSlots : compiled.local_slots.val = Compiler.slots locals
   epilogue : ∃ pc count : U32, compiled.code.val.length = pc.val + 1 ∧
     compiled.code.val[pc.val]? = some (.Return compiled.local_slots count)
 

@@ -34,8 +34,8 @@ theorem lane_store_step (ty : Jnn) (s : store) (f : frame) (argument : memarg) (
     · exact operationWf)
   split
   · rename_i inside
-    have updatedWf := memoryPayloadWrite_wf s f (address+proj_uN_0 argument.OFFSET)
-      (integerBytes (lsize (lanetype_Jnn ty)/8) word.toNat) storeWf (integerBytes_wf _ _)
+    have updatedWf := memory_payload_write_wf s f (address+proj_uN_0 argument.OFFSET)
+      (integerBytes (lsize (lanetype_Jnn ty)/8) word.toNat) storeWf (integer_bytes_wf _ _)
     apply StepH.step
     apply Step.vstore_lane_val _ _ _ _ _ _ _ ty (128/lsize (lanetype_Jnn ty))
     · simp [proj_num__0]

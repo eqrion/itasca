@@ -31,7 +31,7 @@ theorem staging_allocated_certificates {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
@@ -68,7 +68,7 @@ theorem staging_allocated_certificates {M P F A : Type}
   obtain ⟨actual, status, result, globalStaged, globalBound, globalAllocated, globalsCanonical, globalAccounted, globalMetadata,
     globalInst, globalFound, globalSource, nextGlobalIssued, globalBindings, globalImports, globalSegments,
     globalElements, globalData, globalElementMap, globalDataMap, globalCount⟩ := globals
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have globalTables := (globalMetadata.resolve globalFound).table_types tables
   have globalContents : ElementContents globalStore := by
     have funcs := (globalMetadata.resolve globalFound).functions
@@ -90,7 +90,7 @@ theorem staging_allocated_certificates {M P F A : Type}
   obtain ⟨actual, status, result, elementStaged, elementBound, elementAllocated, elementContents, elementGlobals, elementAccounted, elementMetadata,
     elementInst, elementFound, elementSource, elementGlobalMap, elementBindings, elementImports, elementSegments,
     elementData, elementDataMap, elementTypes⟩ := elements
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have elementTables := (elementMetadata.resolve elementFound).table_types globalTables
   have elementEmpty : elementInst.datas.val = [] := by rw [elementDataMap, globalDataMap, emptyData]
   have dataRoom : elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
@@ -104,7 +104,7 @@ theorem staging_allocated_certificates {M P F A : Type}
   simp only [WP.spec_ok] at data
   obtain ⟨actual, status, result, finalStaged, finalBound, finalAllocated, finalContents, finalGlobals, finalAccounted, finalMetadata,
     next, nextFound, nextSource, nextDataIssued, nextGlobalMap, nextBindings, nextImports, nextSegments, nextTypes, finalCount⟩ := data
-  obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp result
+  obtain ⟨rfl, rfl⟩ := (store_state_parts_inj _ _ _ _).mp result
   have finalTables := (finalMetadata.resolve nextFound).table_types elementTables
   refine ⟨next, nextFound, nextSource.trans (elementSource.trans globalSource), ?_, finalContents, ?_, ?_, ?_, ?_, ?_, nextDataIssued, ?_, ?_, finalAllocated, finalStaged, fun h => finalAccounted (elementAccounted (globalAccounted h))⟩
   · apply segment_type_bindings_of_maps
@@ -146,7 +146,7 @@ theorem staging_owned_certificates {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
@@ -181,7 +181,7 @@ theorem staging_owned_certificates {M P F A : Type}
   obtain ⟨actual, status, result, globalStaged, globalBound, globalsCanonical, globalAccounted, globalMetadata,
     globalInst, globalFound, globalSource, nextGlobalIssued, globalBindings, globalImports, globalSegments,
     globalElements, globalData, globalElementMap, globalDataMap, globalCount⟩ := globals
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have globalTables := (globalMetadata.resolve globalFound).table_types tables
   have globalContents : ElementContents globalStore := by
     have funcs := (globalMetadata.resolve globalFound).functions
@@ -203,7 +203,7 @@ theorem staging_owned_certificates {M P F A : Type}
   obtain ⟨actual, status, result, elementStaged, elementBound, elementContents, elementGlobals, elementAccounted, elementMetadata,
     elementInst, elementFound, elementSource, elementGlobalMap, elementBindings, elementImports, elementSegments,
     elementData, elementDataMap, elementTypes⟩ := elements
-  obtain ⟨rfl, _, rfl⟩ := (storeParts_inj _ _ _ _ _ _).mp result
+  obtain ⟨rfl, _, rfl⟩ := (store_parts_inj _ _ _ _ _ _).mp result
   have elementTables := (elementMetadata.resolve elementFound).table_types globalTables
   have elementEmpty : elementInst.datas.val = [] := by rw [elementDataMap, globalDataMap, emptyData]
   have dataRoom : elementStore.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
@@ -217,7 +217,7 @@ theorem staging_owned_certificates {M P F A : Type}
   simp only [WP.spec_ok] at data
   obtain ⟨actual, status, result, finalStaged, finalBound, finalContents, finalGlobals, finalAccounted, finalMetadata,
     next, nextFound, nextSource, nextDataIssued, nextGlobalMap, nextBindings, nextImports, nextSegments, nextTypes, finalCount⟩ := data
-  obtain ⟨rfl, rfl⟩ := (storeStateParts_inj _ _ _ _).mp result
+  obtain ⟨rfl, rfl⟩ := (store_state_parts_inj _ _ _ _).mp result
   have finalTables := (finalMetadata.resolve nextFound).table_types elementTables
   refine ⟨next, nextFound, nextSource.trans (elementSource.trans globalSource), ?_, finalContents, ?_, ?_, ?_, ?_, ?_, nextDataIssued, ?_, ?_⟩
   · apply segment_type_bindings_of_maps
@@ -259,7 +259,7 @@ theorem staging_instance_shape {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
@@ -336,7 +336,7 @@ theorem staging_commit_shape {M P F A : Type}
     (inst : runtime.store.ModuleInst)
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
-    (compiled : Code.InitializerMappings inst.module)
+    (compiled : Compiler.InitializerMappings inst.module)
     (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)

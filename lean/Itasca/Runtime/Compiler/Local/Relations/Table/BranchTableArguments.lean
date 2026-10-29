@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSkip
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
@@ -87,4 +87,4 @@ theorem compiler_branch_arguments_success {A : Type} (ops : runtime.platform.All
         have sub := checked_sub_success before.height total source sourceCall
         refine ⟨index,frame,source,lookup,position,?_⟩
         omega
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

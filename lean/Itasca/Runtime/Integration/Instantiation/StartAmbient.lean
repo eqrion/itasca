@@ -19,11 +19,11 @@ import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Interp.Relations.TypedArguments
 import Itasca.Runtime.Spec.Invocation
 import Itasca.Runtime.Store.Invariant.Typing
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 
 def ambientStartConfiguration {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (ambient : frame) (address : runtime.FuncAddr) : config :=
   ⟨⟨Store.decodeStore view code store, ambient⟩, [.CALL_ADDR address.index.val]⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

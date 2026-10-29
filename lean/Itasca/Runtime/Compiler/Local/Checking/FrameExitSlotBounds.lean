@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A recorded forward exit retains enough slots for its result transfer even
@@ -54,4 +54,4 @@ theorem FrameExitSlotBounds.record {A : Type} {before after : runtime.compiler.F
   · subst selected
     exact region
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

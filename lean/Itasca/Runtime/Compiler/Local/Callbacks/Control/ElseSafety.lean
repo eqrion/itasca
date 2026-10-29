@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 /-! The actual ELSE callback preserves source control metadata, records the
 then-arm skip when needed, and retargets the original condition to the start
 of the else arm. Unentered and non-fallthrough arms are handled explicitly. -/
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_else_live_raw {A : Type} (ops : runtime.platform.Alloc A)
@@ -191,4 +191,4 @@ private theorem else_live_no_guard {A} (ops : runtime.platform.Alloc A)
   have result := compiler_observe_stack ops law middle state
   rw [observed, WP.spec_ok] at result
   exact result rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

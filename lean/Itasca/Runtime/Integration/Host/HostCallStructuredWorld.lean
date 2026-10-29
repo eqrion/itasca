@@ -8,9 +8,9 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
 import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
-open Itasca.Runtime.Interp.StructuredMachine
+open Itasca.Runtime.Interp.Machine
 
 theorem step_host_call_structured_world_provenance {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -24,8 +24,8 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
     (valid : Inv code store)
     (frameIndex : Usize) (raw : runtime.interp.Frame)
     (caller : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
-    (C : context) (targets : List Code.LabelTarget) (next : Nat) (output : List valtype)
-    (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame) (index offset : U32) (after : List instr)
+    (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
+    (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (index offset : U32) (after : List instr)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64)
     (expected : List valtype)
     (last : frameIndex.val+1=exec.frames.length)
@@ -37,12 +37,12 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
     (functionAt : store.funcs.val[address.index.val]?=some function)
     (hostCode : function.code=.Host host)
     (binding : FrameBinding store exec raw f) (slots : FrameSlots exec raw f)
-    (program : FrameProgram store raw compiled (f.locals.map Code.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
     (point : FramePoint (Store.decodeStore view code store) raw
       {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output)
     (machine : Execution view code store exec
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false)
-    (owned : Abs.Ownership.StateOwned (Store.ownershipBounds store)
+    (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
       hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
@@ -67,16 +67,16 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
             store platform signature base error ∧ out.2.2.1=store ∧ hostCallEvents address out=[]) ∨
          ((out.1=.Ok () ∨ out.1=.Err (.Trap .Host) ∨ out.1=.Err (.Exhausted .CallStack)) ∧
           (∃ n, 2≤n ∧ Spec.StepsHN n
-           (Abs.decode ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
+           (SourceMachine.decode ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
            (hostCallEvents address out) (hostCallFrameResult view afterCode ambient f rest after front out)) ∧
           (out.1=.Ok () → ∃ finalPC, Execution view afterCode out.2.2.1 out.2.1
             ⟨Store.decodeStore view afterCode out.2.2.1,ambient,
               {f with code := after,vals := front++out.2.1.host_results.val.map sourceValue}::rest,[]⟩ expected finalPC false ∧
-            Abs.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) := by
+            SourceMachine.Ownership.ValuesOwned (Store.ownershipBounds out.2.2.1) (out.2.1.host_results.val.map sourceValue)))) := by
   have certified := certify code store valid
   have current := point.code.current
   rw [point.locals] at current
-  rcases codeRel_call_values index f.locals f.vals current with skip | actual
+  rcases code_rel_call_values index f.locals f.vals current with skip | actual
   · obtain ⟨target,_,fetch,_⟩ := skip
     rw [fetched] at fetch
     cases fetch
@@ -91,38 +91,38 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
     subst actualFunction
     have signatureTypes : signature.params.val.map sourceType=params ∧ signature.results.val.map sourceType=results := by
       simpa only [Store.decodeFuncType,functype.mk_functype.injEq,list.mk_list.injEq] using signatureEq
-    have argumentTypes' : args.map Code.valueType=signature.params.val.map sourceType := argumentTypes.trans signatureTypes.1.symm
+    have argumentTypes' : args.map Compiler.valueType=signature.params.val.map sourceType := argumentTypes.trans signatureTypes.1.symm
     have resolve := binding.resolve_call caller hi index.val address addressAt
     have hostSource := Store.decode_host_function view code store address function host signature functionAt hostCode signatureAtStore
     have sourceStep := structured_host_next (Store.decodeStore view code store) ambient f rest after index.val address.index.val host.val
       (signature.params.val.map sourceType) (signature.results.val.map sourceType) front args resolve hostSource argumentTypes'
     rw [← split] at sourceStep
-    obtain ⟨pending,identity,sourceParams,sourceHost,argumentTyped⟩ := Abs.host_call_preparation _ ambient f rest after index.val
+    obtain ⟨pending,identity,sourceParams,sourceHost,argumentTyped⟩ := SourceMachine.host_call_preparation _ ambient f rest after index.val
       address.index.val args _ _ machine.typed.typed sourceStep
     have sameTypes : sourceParams=signature.params.val.map sourceType := by
-      have tags := Abs.results_type_of_typed argumentTyped
-      have equal : Abs.valueType=Code.valueType := by funext v; exact (valueType_eq_abs v).symm
+      have tags := SourceMachine.results_type_of_typed argumentTyped
+      have equal : SourceMachine.valueType=Compiler.valueType := by funext v; exact (value_type_eq_abs v).symm
       rw [equal,argumentTypes'] at tags
       exact tags.symm
     rw [sameTypes] at argumentTyped
     obtain ⟨sourceFront,sourceSplit,resumeEq,_,indexBound,frameWf,labels,frontWf,tail,callers,heights⟩ :=
-      Abs.host_call_site _ ambient f rest after index.val address.index.val args _ _ machine.typed.typed sourceStep
+      SourceMachine.host_call_site _ ambient f rest after index.val address.index.val args _ _ machine.typed.typed sourceStep
     have fronts : sourceFront=front := by
       have parts := sourceSplit.symm.trans split
       exact List.append_cancel_right parts
     subst sourceFront
     have capacity := slots.capacity binding
     have baseFits : raw.base.val+offset.val≤Usize.max := by
-      have prefixBound : Code.slots ((f.locals++front).map Code.valueType)≤Code.slots ((f.locals++f.vals).map Code.valueType) := by
-        simp only [split,List.map_append,Code.slots_append]; omega
+      have prefixBound : Compiler.slots ((f.locals++front).map Compiler.valueType)≤Compiler.slots ((f.locals++f.vals).map Compiler.valueType) := by
+        simp only [split,List.map_append,Compiler.slots_append]; omega
       scalar_tac
     have encodedBound : raw.base.val+offset.val<2^UScalarTy.Usize.numBits := by scalar_tac
     let base : Usize := UScalar.ofNatCore (raw.base.val+offset.val) encodedBound
     have baseOffset : base.val=raw.base.val+offset.val := UScalar.ofNatCore_val_eq encodedBound
     have arguments : ValuesAt exec.slots.val base.val args := by
-      have words : WordsAt exec.slots.val raw.base.val (Code.encodeValues (f.locals++front)++Code.encodeValues args) := by
-        simpa only [FrameSlots,ValuesAt,split,Code.encodeValues_append,List.append_assoc] using slots
-      simpa only [ValuesAt,Code.encodeValues_length,baseOffset,argumentOffset] using words.append_right
+      have words : WordsAt exec.slots.val raw.base.val (Compiler.encodeValues (f.locals++front)++Compiler.encodeValues args) := by
+        simpa only [FrameSlots,ValuesAt,split,Compiler.encode_values_append,List.append_assoc] using slots
+      simpa only [ValuesAt,Compiler.encode_values_length,baseOffset,argumentOffset] using words.append_right
     have fits : ∀ value∈args, ResultIndexFits value := by
       intro value member
       apply Store.owned_result_fits store
@@ -131,28 +131,28 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
       index offset address base last hf hi hc fetched (program.fetched_bound _ fetched) addressAt baseOffset
       (HostDiverges hooks store) _
     intro pc hpc
-    have tailCode : Code.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
-        compiled.code.val compiled.jump_tables.val targets (front.map Code.valueType++signature.results.val.map sourceType) after pc.val next output := by
+    have tailCode : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS f.resultTypes C.LOCALS
+        compiled.code.val compiled.jump_tables.val targets (front.map Compiler.valueType++signature.results.val.map sourceType) after pc.val next output := by
       simpa only [hpc,signatureTypes.2,point.locals] using continuation
     rcases (call_host_source_retained_world memory hooks floats allocator allocation interrupts view code
       Inv (fun c s h => (certify c s h).shape)
       {exec with frames := exec.frames.set frameIndex {raw with pc := pc}} store platform valid
       address base f.toFrame frameWf function host signature functionAt hostCode signatureAtStore args argumentTypes'.symm
-      argumentTyped (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped) fits arguments machine.typed.typed.store callback
+      argumentTyped (Itasca.Runtime.Spec.results_typed_wf argumentTyped) fits arguments machine.typed.typed.store callback
       retains).imp_exists with ⟨out,callActual,result⟩ | ⟨callActual,diverged⟩
     swap
     · rw [callActual]
       exact .div _ diverged
     rw [callActual,DivSpec.ok_iff]
     obtain ⟨afterCode,agrees,freshInv,retained,extension,retainedExterns,outcome,causes⟩ := result
-    have same := Store.decodeStore_code_agrees view agrees
+    have same := Store.decode_store_code_agrees view agrees
     have newMachine : Execution view afterCode store exec
         ⟨Store.decodeStore view afterCode store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩ expected raw.pc.val false := by
       simpa only [same] using machine.change_code agrees
     have newPoint : FramePoint (Store.decodeStore view afterCode store) raw
         {f with code := .CALL (.mk_uN index.val)::after} compiled C targets next output := by
       simpa only [same] using point
-    have newPending : Abs.HostPending
+    have newPending : SourceMachine.HostPending
         ⟨Store.decodeStore view afterCode store,ambient,{f with code := after,vals := front}::rest,[]⟩
         (signature.results.val.map sourceType) := by simpa only [same] using pending
     have newExtension : Extend_store (Store.decodeStore view afterCode store)
@@ -183,13 +183,13 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
         · exact Or.inl success.1
         · exact Or.inr failure.1
       · have events := observed.1.frame_events view afterCode store ambient f rest after index.val address front args base _ out
-          newMachine.typed.typed.store (Store.decodeStore_wf view afterCode _ fresh.shape fresh.storeSyntax)
+          newMachine.typed.typed.store (Store.decode_store_wf view afterCode _ fresh.shape fresh.storeSyntax)
           machine.typed.typed.ambient frameWf labels frontWf tail callers heights resolve indexBound
-          (Itasca.Runtime.Spec.resultsTyped_wf argumentTyped)
+          (Itasca.Runtime.Spec.results_typed_wf argumentTyped)
         simpa only [← split,same] using events
       · intro success
         obtain ⟨finalPC,resumed⟩ := host_structured_resume newMachine last hf binding slots program newPoint split
           (by rw [baseOffset,argumentOffset]) heights tailCode newPending observed.1 success retained
           (frame_type_bounds_of_shape certified.shape) newExtension fresh (observed.2 success).1
         exact ⟨finalPC,resumed,(observed.2 success).2⟩
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

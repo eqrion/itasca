@@ -7,7 +7,7 @@ A retained scope's logical fallthrough endpoint agrees with its top label.
 Main declarations: `ExitAligned` and `RootAligned`. A direct consumer is `Compiler.Local.Control.Segments.StructuredLabels`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem Segment.split {code pc emitted next} (segment : Segment code pc emitted next)
@@ -42,4 +42,4 @@ theorem Segment.pc_le_next {code pc emitted next} (segment : Segment code pc emi
   obtain ⟨_, _, _, _, rfl⟩ := segment
   omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

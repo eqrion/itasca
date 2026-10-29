@@ -10,25 +10,25 @@ Main declarations: `point_values`. A direct consumer is `Integration.Api.Statefu
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 variable {jumpTables : List Aeneas.Std.U32}
-theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C returns code labels pc next output}
-    [StructuredMachine.StatefulProjection emission pairs]
-    (s : store) (f : Abs.AFrame) (op : Abs.Stateful.Instruction) (after : List instr)
-    (typed : Abs.FrameTyped s {f with code:=op.source::after} [])
-    (point : Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
-      code jumpTables labels (f.vals.map Code.valueType) (op.source::after) pc next output) :
+theorem point_values {emission : Machine.ContextEmission} {pairs C returns code labels pc next output}
+    [Machine.StatefulProjection emission pairs]
+    (s : store) (f : SourceMachine.AFrame) (op : SourceMachine.Stateful.Instruction) (after : List instr)
+    (typed : SourceMachine.FrameTyped s {f with code:=op.source::after} [])
+    (point : Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      code jumpTables labels (f.vals.map Compiler.valueType) (op.source::after) pc next output) :
     (∃ target : U32, pc<target.val ∧ code[pc]?=some (.Jump target) ∧
-      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
-        code jumpTables labels (f.vals.map Code.valueType) (op.source::after) target.val next output) ∨
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+        code jumpTables labels (f.vals.map Compiler.valueType) (op.source::after) target.val next output) ∨
     (∃ front operands input result first second a b entry,
-      f.vals=front++operands ∧ operands.map Code.valueType=input ∧
-      Abs.Stateful.Signature C op input result ∧
+      f.vals=front++operands ∧ operands.map Compiler.valueType=input ∧
+      SourceMachine.Stateful.Signature C op input result ∧
       (∀ label ∈ f.labels,label.height≤front.length) ∧
-      (∀ value ∈ operands,Val_ok s value (Code.valueType value)) ∧
-      first.val=Code.slots C.LOCALS+Code.slots (front.map Code.valueType) ∧
-      (op.arity≥2 → second.val=first.val+1) ∧ Code.StatefulArguments op a b ∧
-      Code.StatefulPair pairs op a b entry ∧ code[pc]?=some (Code.statefulInstruction op first second a entry) ∧
-      Code.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
-        code jumpTables labels (front.map Code.valueType++result) after (pc+1) next output) := by
+      (∀ value ∈ operands,Val_ok s value (Compiler.valueType value)) ∧
+      first.val=Compiler.slots C.LOCALS+Compiler.slots (front.map Compiler.valueType) ∧
+      (op.arity≥2 → second.val=first.val+1) ∧ Compiler.StatefulArguments op a b ∧
+      Compiler.StatefulPair pairs op a b entry ∧ code[pc]?=some (Compiler.statefulInstruction op first second a entry) ∧
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+        code jumpTables labels (front.map Compiler.valueType++result) after (pc+1) next output) := by
   rcases point_head (pairs:=pairs) op after point with jump | operation
   · exact Or.inl jump
   · obtain ⟨types,input,result,first,second,a,b,entry,signature,stack,position,secondSlot,arguments,pair,fetch,tail⟩ := operation
@@ -42,7 +42,7 @@ theorem point_values {emission : StructuredMachine.ContextEmission} {pairs C ret
       cases typed with
       | mk context bindings localTypes locals actualValues returns code frameWf =>
         have included : value∈f.vals := by rw [values]; exact List.mem_append_right front member
-        simpa only [valueType_eq_abs] using Abs.resultsTyped_self_mem actualValues included
+        simpa only [value_type_eq_abs] using SourceMachine.results_typed_self_mem actualValues included
     · simpa only [frontTypes] using position
     · simpa only [frontTypes] using tail
 end Itasca.Runtime.Interp.Stateful

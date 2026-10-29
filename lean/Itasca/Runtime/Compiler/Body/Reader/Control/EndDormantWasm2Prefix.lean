@@ -10,7 +10,7 @@ Complete-profile transport of a dormant end prefix.
 Main declarations: `structured_reader_prefix_end_dormant_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.EndWasm2Compilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 private theorem structured_closed_not_body_wasm2 {form bt ops instruction}
@@ -79,4 +79,4 @@ theorem structured_reader_prefix_end_dormant_wasm2 {jumpTables : List U32} {emit
     exact ⟨outer, parent, savedOuter, savedParent, instruction, sourceSplit, savedSplit, closed, dead,
       certified, nextSame, reach'.close after.reachable instruction (by simp [dead]), fronts'.pop instruction,
       reader_end_boundary_wasm2 p savedSplit encoded opened afterState, afterState⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

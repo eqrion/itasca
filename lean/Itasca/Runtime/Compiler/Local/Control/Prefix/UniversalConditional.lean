@@ -7,7 +7,7 @@ Adding a conditional branch to retained frame sites.
 Main declarations: `FrameSites.add_conditional`. A direct consumer is `Compiler.Local.Control.Table.StructuredElseBranches`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 theorem FrameSites.add_conditional {code frame} (valid : FrameSites code frame)
@@ -26,4 +26,4 @@ theorem FrameSites.add_conditional {code frame} (valid : FrameSites code frame)
     · exact Or.inr ⟨condition, old, by simp [branchIfInstructions, elided, position]⟩
     · exact Or.inl ⟨old, by simp [branchIfInstructions, elided, position]⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -106,7 +106,7 @@ theorem float_sign_mask32_unbounded (bits : U64) :
       have powerValue : power.val = exponent-127 := by rw [powerEq, exponentMask]
       split
       · have large : 64 ≤ exponent-127 := by scalar_tac
-        exact overflow_convertMagnitude negative width signed saturating validWidth _
+        exact overflow_convert_magnitude negative width signed saturating validWidth _
           (rawTruncMagnitude_large 23 127 exponent fraction width.val negative signed widthNat large fractionBound)
       · have small : exponent-127 < 64 := by scalar_tac
         have magnitudeBound := rawTruncMagnitude_u64 23 127 exponent fraction small fractionBound

@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- Reassigning ghost source code at unused instance keys preserves the full
@@ -22,7 +22,7 @@ theorem CertifiedSupportedStore.change_code {M : Type} {view : M → Slice U8}
     rw [agrees index inst found function]
     exact priorSyntax.functionCodes function bound
   · exact Store.core_functions_typed_code_agrees agrees certified.typed
-  · rw [Store.decodeStore_code_agrees view agrees]
+  · rw [Store.decode_store_code_agrees view agrees]
     exact certified.supported
   case compiled =>
     intro function present instanceIndex functionIndex defined
@@ -31,4 +31,4 @@ theorem CertifiedSupportedStore.change_code {M : Type} {view : M → Slice U8}
     exact ⟨inst,code,signature,declared,body,epilogue,found,functionFound,signatureFound,
       (agrees instanceIndex.val inst found functionIndex.val).trans source,table,types,certificate⟩
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

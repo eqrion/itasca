@@ -1,8 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCode
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
-theorem BranchTableEntry.widenLabels {locals labels stack code depth entry next}
+theorem BranchTableEntry.widen_labels {locals labels stack code depth entry next}
     (evidence : BranchTableEntry locals labels stack code depth entry next)
     {other} (shape : LabelsWiden labels other) :
     BranchTableEntry locals other stack code depth entry next := by
@@ -12,16 +12,16 @@ theorem BranchTableEntry.widenLabels {locals labels stack code depth entry next}
   · simpa only [BranchLayout, ← same.front, ← same.branchTypes] using layout
   · simpa only [← same.target] using fragment
 
-theorem BranchTableLayout.widenLabels {tables locals labels stack code depths fallback pc next selector start len}
+theorem BranchTableLayout.widen_labels {tables locals labels stack code depths fallback pc next selector start len}
     (evidence : BranchTableLayout tables locals labels stack code depths fallback pc next selector start len)
     {other} (shape : LabelsWiden labels other) :
     BranchTableLayout tables locals other stack code depths fallback pc next selector start len := by
   refine ⟨evidence.selectorSlot, evidence.length, evidence.instruction, evidence.arithmetic, ?_⟩
   intro index depth found
   obtain ⟨entry, lookup, arm⟩ := evidence.entries index depth found
-  exact ⟨entry, lookup, arm.widenLabels shape⟩
+  exact ⟨entry, lookup, arm.widen_labels shape⟩
 
-theorem StructuredCode.widenLabels {jumpTables : List U32} {emit types functions returns locals code labels stack source pc next after}
+theorem StructuredCode.widen_labels {jumpTables : List U32} {emit types functions returns locals code labels stack source pc next after}
     (relation : StructuredCode emit types functions returns locals code jumpTables labels stack source pc next after)
     {other} (shape : LabelsWiden labels other) :
     StructuredCode emit types functions returns locals code jumpTables other stack source pc next after := by
@@ -48,10 +48,10 @@ theorem StructuredCode.widenLabels {jumpTables : List U32} {emit types functions
     apply StructuredCode.branchIf (dst := dst) (src := src) (count := count) otherAt (same.branchLive live) ?_ condition ?_ (ih shape)
     · simpa only [BranchLayout, ← same.front, ← same.branchTypes] using layout
     · simpa only [← same.target] using fragment
-  | branchTable gate table bounds => exact .branchTable gate (table.widenLabels shape) bounds
+  | branchTable gate table bounds => exact .branchTable gate (table.widen_labels shape) bounds
   | call signature arguments instruction rest ih => exact .call signature arguments instruction (ih shape)
   | unreachable instruction remaining scope => exact .unreachable instruction remaining scope
   | return_ source size instruction remaining scope => exact .return_ source size instruction remaining scope
 
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

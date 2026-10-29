@@ -4,7 +4,7 @@ import Itasca.Runtime.Integration.Execution.World.ExecutionCode
 import Itasca.Generated.Types
 import Itasca.Runtime.Spec.Extend
 import Itasca.Runtime.Contracts
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 /-- Full actual dispatch under a current-world callback contract. Each ordinary
@@ -33,4 +33,4 @@ theorem world_step_outcomes
     · rw [actual]
       exact .div _ diverged
   · exact .of_spec _ _ _ _ ordinary
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

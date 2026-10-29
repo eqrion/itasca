@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Invocation.InitialHostCauses
 import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InitialHostSourceResourceCause.excludes_boundary {M P A : Type}
@@ -24,4 +24,4 @@ theorem InitialHostSourceResourceCause.excludes_boundary {M P A : Type}
     · exact reserve_ne_refusal_of_universal_bound available arguments n refused
     · exact reserve_ne_refusal_of_universal_bound available results n refused
   · exact cause
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

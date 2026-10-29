@@ -26,7 +26,7 @@ theorem HostReturnEffect.preserve_prefix {before after : runtime.interp.Executio
 theorem HostReturnEffect.preserve_binding {M : Type} {store : runtime.store.Store M}
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
     (effect : HostReturnEffect before after base results)
-    {raw : runtime.interp.Frame} {source : Abs.AFrame}
+    {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store before raw source) : FrameBinding store after raw source := by
   obtain ⟨inst,fn,compiled,signature,owner,member,found,functionAt,wasm,code,typed,moduleEq,resultTypes,locals,capacity⟩ := binding
   refine ⟨inst,fn,compiled,signature,effect.identity.trans owner,?_,found,functionAt,wasm,code,typed,moduleEq,resultTypes,locals,capacity.trans effect.capacity⟩
@@ -34,12 +34,12 @@ theorem HostReturnEffect.preserve_binding {M : Type} {store : runtime.store.Stor
 
 theorem HostReturnEffect.resume {before after : runtime.interp.Execution}
     {base : Nat} {results : List val} (effect : HostReturnEffect before after base results)
-    {raw : runtime.interp.Frame} {caller : Abs.AFrame}
+    {raw : runtime.interp.Frame} {caller : SourceMachine.AFrame}
     (saved : FrameSlots before raw caller)
-    (destination : base = raw.base.val + Code.slots ((caller.locals ++ caller.vals).map Code.valueType)) :
+    (destination : base = raw.base.val + Compiler.slots ((caller.locals ++ caller.vals).map Compiler.valueType)) :
     FrameSlots after raw {caller with vals := caller.vals ++ results} := by
-  have kept := effect.preserve_prefix saved (by rw [Code.encodeValues_length,destination])
-  have combined := WordsAt.append kept (by simpa only [ValuesAt,Code.encodeValues_length,←destination] using effect.results)
-  simpa only [FrameSlots,ValuesAt,Code.encodeValues_append,List.append_assoc] using combined
+  have kept := effect.preserve_prefix saved (by rw [Compiler.encode_values_length,destination])
+  have combined := WordsAt.append kept (by simpa only [ValuesAt,Compiler.encode_values_length,←destination] using effect.results)
+  simpa only [FrameSlots,ValuesAt,Compiler.encode_values_append,List.append_assoc] using combined
 
 end Itasca.Runtime.Interp

@@ -8,7 +8,7 @@ Availability of constant initializer instructions and complete initializer expre
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- All constant-expression forms lower successfully with one remaining
@@ -97,7 +97,7 @@ theorem initializer_constant_available {A : Type} (ops : runtime.platform.Alloc 
       scalar_tac
     simp [appended,poolValue,packed]
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -105,7 +105,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Source-shaped constant initializers compile and publish successfully with
@@ -165,6 +165,6 @@ theorem initializer_expression_available {A : Type} (ops : runtime.platform.Allo
   exact ⟨trivial,by rw [sameBudget]; omega,by rw [sameBudget,limitsAgain,limits],
     _,shape,appended,trivial⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

@@ -114,7 +114,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     step* <;> simp_all [SlotsEffect]
     exact ⟨reference, by scalar_tac, rfl⟩
 
-theorem copyWords_self (words : List U64) (src n : Nat) (h : src + n ≤ words.length) :
+theorem copy_words_self (words : List U64) (src n : Nat) (h : src + n ≤ words.length) :
     copyWords words src src n = words := by
   induction n generalizing src with
   | zero => rfl
@@ -135,7 +135,7 @@ theorem copyWords_self (words : List U64) (src n : Nat) (h : src + n ≤ words.l
   rintro out ⟨hok, hslots, hframes, hrest⟩
   have he : out.2.slots = exec.slots := by
     apply alloc.vec.Vec.ext
-    simpa [copyWords_self exec.slots.val 0 width.val (by simpa using hwidth)] using hslots
+    simpa [copy_words_self exec.slots.val 0 width.val (by simpa using hwidth)] using hslots
   exact ⟨hok, he, hframes, by simpa [he] using hrest⟩
 
 end Itasca.Runtime.Interp

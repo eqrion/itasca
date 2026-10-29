@@ -27,7 +27,7 @@ theorem core_source_functions_publish_wf {M : Type} (view : M → Slice U8)
     (raw : ModuleBinary.Module)
     (beforeShape : Shape view before)
     (beforeSyntax : StoreSyntax oldCode before)
-    (afterWf : wf_store (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) after))
+    (afterWf : wf_store (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after))
     (retained : StagedPrefix before after)
     (oldTyped : Interp.CoreFunctionsTyped view oldCode before)
     (inst : runtime.store.ModuleInst)
@@ -35,16 +35,16 @@ theorem core_source_functions_publish_wf {M : Type} (view : M → Slice U8)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
-    (bindings : Abs.ModuleBindings
-      (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) after)
+    (bindings : SourceMachine.ModuleBindings
+      (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after)
       (decodeInstance after inst) (ModuleElaboration.contextOf raw))
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
-    Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) after := by
+    Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after := by
   intro function member
   rcases staged function member with old | ⟨index, bound, encoded, signature⟩
-  · have agrees := installCode_agrees before oldCode (Code.sourceFunctions raw)
-    have prior : Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) before :=
+  · have agrees := install_code_agrees before oldCode (Compiler.sourceFunctions raw)
+    have prior : Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) before :=
       core_functions_typed_code_agrees agrees oldTyped
     exact staged_core_function_typed_old_wf view _ before after beforeShape (beforeSyntax.code_agrees agrees)
       afterWf retained prior function old
@@ -64,27 +64,27 @@ theorem core_source_functions_publish_wf {M : Type} (view : M → Slice U8)
     have codeBound : index.val < raw.codes.length := by rw [← elaborated.code_count, functionsEq]; exact sourceBound
     let entry := raw.codes[index.val]
     have entryFound : raw.codes[index.val]? = some entry := List.getElem?_eq_getElem codeBound
-    have sourceFound := Code.sourceFunctions_lookup rawIndex entryFound
+    have sourceFound := Compiler.source_functions_lookup rawIndex entryFound
     have resolved := resolves.get sourceBound bound
     simp only [List.get_eq_getElem] at resolved
     obtain ⟨typeBound, equal⟩ := resolved
     have typeFound : raw.types[typeIndex.val]? = some defined[index.val] := by
       rw [typesEq, List.getElem?_eq_getElem typeBound, equal]
-    have sourceTyped := Code.source_function_typed elaborated typed index.val typeIndex entry rawIndex entryFound
+    have sourceTyped := Compiler.source_function_typed elaborated typed index.val typeIndex entry rawIndex entryFound
     have actualType : ModuleElaboration.functionType raw.types typeIndex = decodeFuncType defined[index.val] := by
       simp only [ModuleElaboration.functionType, typeFound, Option.map_some, Option.getD_some,
-        decodeFuncType_source]
+        decode_func_type_source]
     rw [actualType] at sourceTyped
-    have contextEq : ModuleElaboration.contextOf raw = Code.moduleSourceContext inst.module := by
+    have contextEq : ModuleElaboration.contextOf raw = Compiler.moduleSourceContext inst.module := by
       conv_lhs => rw [matched.1]
       exact ModuleElaboration.contextOf_fromEnv matched.2
     simp only [Interp.CoreFunctionTyped, encoded]
     refine ⟨inst, .mk_uN typeIndex.val, entry.declared.map (fun ty => local.LOCAL (Translate.valueType ty)), entry.body, found, ?_, ?_, ?_⟩
-    · exact installCode_lookup oldCode before.instances.len.val (Code.sourceFunctions raw) inst.module index.val _ sourceFound
+    · exact install_code_lookup oldCode before.instances.len.val (Compiler.sourceFunctions raw) inst.module index.val _ sourceFound
     · rwa [← contextEq]
     · rw [← contextEq]
       simpa only [decodeFunction, encoded, found, List.getD_eq_getElem?_getD, List.getElem?_map, signature,
-        Option.map_some, Option.getD_some, ← alloc.vec.Vec.len_val, Code.sourceFunctionCode, CodeEntry.function, defined] using sourceTyped
+        Option.map_some, Option.getD_some, ← alloc.vec.Vec.len_val, Compiler.sourceFunctionCode, CodeEntry.function, defined] using sourceTyped
 
 end Itasca.Runtime.Store
 
@@ -103,15 +103,15 @@ theorem InstantiationCode.core_typed {M : Type} {view : M → Slice U8}
     (raw : ModuleBinary.Module) (shape : Shape view before)
     (oldSyntax : StoreSyntax oldCode before)
     (oldTyped : Interp.CoreFunctionsTyped view oldCode before)
-    (freshWf : wf_store (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready))
+    (freshWf : wf_store (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready))
     (found : ready.instances.val[before.instances.len.val]? = some inst)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw)
-    (bindings : Abs.ModuleBindings
-      (decodeStore view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready)
+    (bindings : SourceMachine.ModuleBindings
+      (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready)
       (decodeInstance ready inst) (ModuleElaboration.contextOf raw)) :
-    Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Code.sourceFunctions raw)) ready := by
+    Interp.CoreFunctionsTyped view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) ready := by
   obtain ⟨staged, count, rfl, retained, entries, table, signatures⟩ := code
   exact core_source_functions_publish_wf view before staged oldCode raw shape oldSyntax freshWf retained
     oldTyped inst found elaborated typed matched bindings signatures

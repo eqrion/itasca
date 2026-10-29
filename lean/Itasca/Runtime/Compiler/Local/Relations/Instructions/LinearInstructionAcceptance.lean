@@ -7,7 +7,7 @@ A typed local transfer fits whether the value occupies one word or two.
 Main declarations: `move_instruction_accepts` and `LinearEmission.instructions_accept`. A direct consumer is `Compiler.Local.Relations.Instructions.ScalarEmissionAcceptance`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A typed local transfer fits whether the value occupies one word or two. -/
@@ -100,4 +100,4 @@ theorem LinearEmission.instructions_accept {locals before source emitted after}
     simp only [slots_append,slots] at inputs
     apply move_instruction_accepts function ty localSlot stackSlot <;> omega
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

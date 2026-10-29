@@ -15,7 +15,7 @@ Structured elseentered reader prefixes and their complete-profile transport. The
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_else_entered_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -81,7 +81,7 @@ theorem structured_callback_else_entered_prefix {jumpTables : List U32} {emit : 
   exact ⟨noEntry, change.noPosition, invariant.begin_else entered live stack stable maps prior frame guard
     (alloc.vec.Vec.len before.function.code) condition core.num.U32.MAX noEntry fixups change sourceType form guardEq
     layout sourceTypes sources consumed (by rw [cursor])⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -89,7 +89,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_else_entered_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
@@ -139,7 +139,7 @@ theorem structured_reader_prefix_else_entered_wasm2 {jumpTables : List U32} {emi
     simpa only [List.flatMap_def] using fronts.current
   have stack : before.reachable = true → Sequence.stackTypes st.core.vals.val = current.front ++ current.results := by
     intro live
-    have segmentKnown : ConcreteStack p.current.vals := (concreteStack_append.mp (vals ▸ invariant.known live)).2
+    have segmentKnown : ConcreteStack p.current.vals := (concrete_stack_append.mp (vals ▸ invariant.known live)).2
     have mono := reach.current live
     have realized := results
     rw [mono] at realized
@@ -178,6 +178,6 @@ theorem structured_reader_prefix_else_entered_wasm2 {jumpTables : List U32} {emi
     reach.begin_else after.reachable _ condition before.function.code.val.length noEntry before.reachable,
     fronts.begin_else _ condition before.function.code.val.length noEntry before.reachable,
     reader_else_boundary_wasm2 p sourceForm encoded opened afterState, afterState⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

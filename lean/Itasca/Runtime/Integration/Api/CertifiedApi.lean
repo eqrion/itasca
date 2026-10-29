@@ -14,7 +14,7 @@ import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Api.ExportBounds
 import Itasca.Runtime.Store.Invariant.SourceStoreTyping
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 
 /-- Public API invariant. Export descriptors retain namespace bounds in
@@ -34,7 +34,7 @@ theorem CertifiedApiStore.source_typed {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {store : runtime.store.Store M}
     (certified : CertifiedApiStore view code store) :
     Store_ok (Store.decodeStore view code store) :=
-  Store.decodeStore_typed view code store certified.shape certified.storeSyntax
+  Store.decode_store_typed view code store certified.shape certified.storeSyntax
     certified.typed certified.segmentBounds certified.exportBounds
 
 theorem CertifiedApiStore.update {M : Type} {view : M → Slice U8}
@@ -55,6 +55,6 @@ theorem CertifiedApiStore.install_code {M : Type} {view : M → Slice U8}
     {code : Store.CodeInterpretation} {store : runtime.store.Store M}
     (certified : CertifiedApiStore view code store) (sources : List funccode) :
     CertifiedApiStore view (Store.installCode code store.instances.len.val sources) store :=
-  certified.change_code (Store.installCode_agrees store code sources)
+  certified.change_code (Store.install_code_agrees store code sources)
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

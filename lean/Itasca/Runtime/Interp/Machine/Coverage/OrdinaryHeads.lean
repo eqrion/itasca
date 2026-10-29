@@ -7,7 +7,7 @@ Exclusion of control instructions from ordinary emission.
 Main declarations: `emission_not_block` and `emission_not_return`. A direct consumer is `Interp.Machine.Global`.
 -/
 
-namespace Itasca.Runtime.Interp.StructuredMachine
+namespace Itasca.Runtime.Interp.Machine
 variable {emission : ContextEmission} [OrdinaryHeads emission]
 
 theorem emission_not_block {C before after emitted bt body}
@@ -44,4 +44,4 @@ theorem emission_not_return {C before after emitted}
     (head : emission C before .RETURN emitted after) : False := by
   have h := OrdinaryHeads.ordinary head
   cases h
-end Itasca.Runtime.Interp.StructuredMachine
+end Itasca.Runtime.Interp.Machine

@@ -11,7 +11,7 @@ Floating-point source-machine transition from typed operands through preservatio
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem number_encoding (ty : numtype) (number : num_) (valid : wf_num_ ty number) :
@@ -21,7 +21,7 @@ theorem number_encoding (ty : numtype) (number : num_) (valid : wf_num_ ty numbe
     subst ty
     cases value with
     | mk_uN bits =>
-      refine ⟨bits, (numberOfBits_integer ity bits).symm, ?_⟩
+      refine ⟨bits, (number_of_bits_integer ity bits).symm, ?_⟩
       cases bounded with
       | uN_case_0 _ limit =>
         cases ity <;> norm_num [sizenn, numtype_Inn, valtype_numtype, valtype_Inn, size] at limit ⊢ <;> omega
@@ -29,7 +29,7 @@ theorem number_encoding (ty : numtype) (number : num_) (valid : wf_num_ ty numbe
     subst ty
     obtain ⟨bits, bound, encoding⟩ := float_encoding fty value valid
     refine ⟨bits, ?_, bound⟩
-    rw [numberOfBits_float, encoding]
+    rw [number_of_bits_float, encoding]
 
 theorem numeric_val_encoding {s : store} {ty : numtype} {value : val}
     (typed : Val_ok s value (valtype_numtype ty)) :
@@ -70,7 +70,7 @@ theorem Instruction.typed_operands (op : Instruction) {s : store} {f : AFrame}
         refine ⟨front, a, a, ?_, firstBound, firstBound, frontWf, heights⟩
         simpa [Instruction.operands, Instruction.arity, Instruction.input] using split
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -78,7 +78,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem Instruction.source_signature_inv (op : Instruction) {C : context} {signature : functype}
@@ -98,21 +98,21 @@ theorem Instruction.frame_preservation (op : Instruction) {s : store} {f : AFram
   | mk C bindings localTypes locals values returns code contextWf =>
     simp only [List.append_nil] at code
     obtain ⟨prefixTypes, ins, outs, instruction, stack, continuation⟩ :=
-      codeStack_after (value_types_concrete (front ++ op.operands a b)) code
+      code_stack_after (value_types_concrete (front ++ op.operands a b)) code
     have signature := op.source_signature_inv instruction
     simp only [Instruction.signature, functype.mk_functype.injEq, list.mk_list.injEq] at signature
     rcases signature with ⟨rfl, rfl⟩
     simp only [List.map_append, operands_types, List.append_cancel_right_eq] at stack
     have frontTyped : ResultsTyped s (front.map valueType) front := by
-      simpa using resultsTyped_take front.length values
-    have resultTyped := numberOfBits_typed s storeWf op.output bits bound
+      simpa using results_typed_take front.length values
+    have resultTyped := number_of_bits_typed s storeWf op.output bits bound
     apply FrameTyped.mk (f := { f with code := after, vals := front ++ [.CONST op.output (numberOfBits op.output bits)] }) C
       bindings localTypes locals ?_ returns ?_ contextWf
     · simpa only [ResultsTyped, List.map_append, List.map_cons, List.map_nil, valueType] using
         List.rel_append frontTyped (List.Forall₂.cons resultTyped List.Forall₂.nil)
     · simpa only [List.map_append, List.map_cons, List.map_nil, List.append_nil, valueType, stack] using continuation
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -120,7 +120,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt Itasca.Runtime.Spec
 
 theorem Instruction.simulation (s : store) (ambient : frame) (f : AFrame)
@@ -141,7 +141,7 @@ theorem Instruction.simulation (s : store) (ambient : frame) (f : AFrame)
   · intro value member
     simp only [List.mem_singleton] at member
     subst value
-    exact .val_case_0 _ _ (numberOfBits_wf _ _ effect.1)
+    exact .val_case_0 _ _ (number_of_bits_wf _ _ effect.1)
   · exact op.source_wf
   · exact effect.2
 
@@ -167,8 +167,8 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
       [admininstr_instr op.source]⟩ []
       ⟨⟨s, f.toFrame⟩, [.TRAP]⟩ :=
     .step (.pure _ _ _ trap before (wf_config_make hs hf wf_trap))
-  have lifted := stepH_active ambient rest f.arity
-    (stepH_decodeLabels (stepH_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
+  have lifted := step_h_active ambient rest f.arity
+    (step_h_decode_labels (step_h_instrs step [] (after.map admininstr_instr) (forall_nil _) (wf_instrs hc))
       f.labels baseValues hl hv) ha hr
   have frameWf : Forall FrameWf ({ f with code := after, vals := baseValues } :: rest) := by
     intro frame hm; simp only [List.mem_cons] at hm
@@ -179,10 +179,10 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
   refine ⟨n + 1, by omega, ?_⟩
   have all := StepsHN.cons lifted tail
   simp only [decode, decodeFrames, vals, List.map_nil, List.nil_append, AFrame.toFrame, AFrame.arity]
-  rw [decodeLabels_move_values _ _ _ _ heights]
+  rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeFrames, operands, vals, instrContext, AFrame.toFrame, AFrame.arity, List.append_assoc] using all
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -190,7 +190,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt Itasca.Runtime.Spec
 
 /-- Relational scalar float transition: every permitted NaN result remains available. -/
@@ -236,7 +236,7 @@ theorem Instruction.prefix_bounds (op : Instruction) {s : store} {f : AFrame} {a
     omega
   constructor
   · intro value member
-    have valid := (frameTyped_wf typed).2.2.1
+    have valid := (frame_typed_wf typed).2.2.1
     apply valid value
     change value ∈ f.vals
     rw [values]
@@ -255,8 +255,8 @@ theorem transition_simulation (s : store) (ambient : frame) (f : AFrame)
     have hf : FrameTyped s { f with code := op.source :: after } [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨frontWf, heights⟩ := op.prefix_bounds hf front a b values
     apply NextSim.single
     simpa only [values] using op.simulation s ambient f rest after front a b bits first second effect
@@ -276,13 +276,13 @@ theorem transition_trap_simulation (s : store) (ambient : frame) (f : AFrame)
     have hf : FrameTyped s { f with code := op.source :: after } [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨frontWf, heights⟩ := op.prefix_bounds hf front a b values
     simpa only [values] using op.trap_simulation s ambient f rest after front a b first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end
 
@@ -290,7 +290,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Abs.Float
+namespace Itasca.Runtime.SourceMachine.Float
 open SpecExt Itasca.Runtime.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
@@ -304,12 +304,12 @@ theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     have hf : FrameTyped s { f with code := op.source :: after } [] := by
       cases typed.frames with | cons h _ => exact h
     have hr : Forall FrameWf rest := by
-      cases typed.frames with | cons _ h => exact framesTyped_wf h
-    obtain ⟨hw, hl, _, hc⟩ := frameTyped_wf hf
+      cases typed.frames with | cons _ h => exact frames_typed_wf h
+    obtain ⟨hw, hl, _, hc⟩ := frame_typed_wf hf
     obtain ⟨frontWf, heights⟩ := op.prefix_bounds hf front a b values
     simpa only [values] using op.simulation s ambient f rest after front a b bits first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Itasca.Runtime.Abs.Float
+end Itasca.Runtime.SourceMachine.Float
 
 end

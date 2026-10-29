@@ -76,7 +76,7 @@ theorem prepare_instance_classified {M P F A : Type}
     {tables memories} (cache : Cache module.module.env tables memories)
     (valid : Valid module.module.env module.profile)
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
-    (compiled : Code.InitializerMappings module)
+    (compiled : Compiler.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (outcome : Result (core.result.Result (runtime.InstanceAddr × Usize) runtime.ExecError × runtime.store.Store M × P))
     (run : runtime.store.instantiate.Store.prepare_instance memory hooks floats allocator before module imports platform = outcome) :
@@ -484,7 +484,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                     simpa only [preparedSource, source] using valid.globals
                                   have globalCapacity : preparedInst.globals.length + (preparedInst.module.module.env.globals.val.length - 0) ≤ Usize.max := by
                                     simpa only [preparedGlobalMap, preparedSource, Nat.sub_zero] using maps.global_capacity instCache
-                                  have publishedCompiled : Code.InitializerMappings preparedInst.module := by simpa only [preparedSource, source] using compiled
+                                  have publishedCompiled : Compiler.InitializerMappings preparedInst.module := by simpa only [preparedSource, source] using compiled
                                   obtain ⟨out, globalRun, globalStore, globalStatus, parts, globalErrors, globalPrefix, globalBound,
                                     globalAccounting, globalMetadata, globalInst, globalFound, globalSource, globalBindings, globalImports,
                                     globalSegments, globalElements, globalData, globalElementMap, globalDataMap⟩ := WP.spec_imp_exists
@@ -519,7 +519,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                       exact Or.inl ⟨_, _, run.symm, globalPrefix, by trivial, by exact PrecommitOrigins.resource True.intro⟩
                                     | true =>
                                       simp only [↓reduceIte, bind_ok] at run
-                                      have globalCompiled : Code.InitializerMappings globalInst.module := by
+                                      have globalCompiled : Compiler.InitializerMappings globalInst.module := by
                                         simpa only [globalSource] using publishedCompiled
                                       have elementValid : ∀ segment ∈ globalInst.module.module.env.elements.val,
                                           Itasca.ModuleSegments.elementValid globalInst.module.module.env segment := by
@@ -592,7 +592,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                             simp only [runtime.compiler.ExecutableModule.impl.profile, bind_ok] at run
                                             have finalSource : dataInst.module = module :=
                                               dataSource.trans (elementSource.trans (globalSource.trans (preparedSource.trans source)))
-                                            have finalCompiled : Code.InitializerMappings dataInst.module := by simpa only [finalSource] using compiled
+                                            have finalCompiled : Compiler.InitializerMappings dataInst.module := by simpa only [finalSource] using compiled
                                             have finalElements : ∀ segment ∈ dataInst.module.module.env.elements.val,
                                                 Itasca.ModuleSegments.elementValid dataInst.module.module.env segment := by
                                               simpa only [finalSource] using valid.elements

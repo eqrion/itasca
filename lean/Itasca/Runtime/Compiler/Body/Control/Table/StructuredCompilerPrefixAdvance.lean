@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCall
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalEmpty
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem StructuredCompilerPrefix.ordinary_empty {jumpTables : List Aeneas.Std.U32} {A : Type} {initial before after : runtime.compiler.FunctionCompiler A}
@@ -58,4 +58,4 @@ theorem StructuredCompilerPrefix.call {jumpTables : List Aeneas.Std.U32} {A : Ty
       (by rw [ordinary.frames])).advance (Nat.le_of_lt consumed), cursor⟩
   simpa only [lowered.2.decoded] using next
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseSource
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredElseEvidence.fresh {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels child label}
     (fresh : child.form.isElse = false) :
@@ -24,7 +24,7 @@ theorem StructuredUniversalElse.pop {jumpTables : List Aeneas.Std.U32} {A : Type
     StructuredUniversalElse (jumpTables := jumpTables) emit after types functions returns locals parents (parent.advance instruction) := by
   intro parentLabel labels groups plans parentShape parentShapes
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, resolvedCode_length]
+    simp [codeEq, resolved_code_length]
   have outer : FramePlans before.function.code.val.length locals after.frames.val (parentLabel :: labels) groups := by
     simpa only [lengthEq] using plans
   have oldParentShape : ScopeLabel parent parentLabel :=
@@ -34,7 +34,7 @@ theorem StructuredUniversalElse.pop {jumpTables : List Aeneas.Std.U32} {A : Type
   have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
     simpa using List.Forall₂.cons oldParentShape parentShapes
   have arms := invariant label (parentLabel :: labels) _ allPlans shape allShapes
-  rw [codeEq, ← resolvedCode_append_groups]
+  rw [codeEq, ← resolved_code_append_groups]
   have outerArms : StructuredElseFrames (jumpTables := jumpTables) emit types functions returns locals
       (resolvedCode before.function.code.val (frameGroups frame label guardTarget ++ groups))
       (parent :: parents.reverse) (parentLabel :: labels) := by
@@ -65,7 +65,7 @@ theorem StructuredUniversalElse.open_plain {jumpTables : List Aeneas.Std.U32} {A
   have resolve : resolvedCode after.function.code.val (⟨[], label.target⟩ :: pending) =
       resolvedCode before.function.code.val pending ++ emitted := by
     simp only [resolvedCode, patchCode, codeEq]
-    exact resolvedCode_append_code _ _ _ (priorPlans.inside sites)
+    exact resolved_code_append_code _ _ _ (priorPlans.inside sites)
   simp only [List.reverse_append, List.reverse_cons, List.reverse_nil, List.nil_append,
     List.singleton_append] at parentShapes ⊢
   cases parentShapes with
@@ -99,7 +99,7 @@ theorem StructuredUniversalElse.open_if {jumpTables : List Aeneas.Std.U32} {A : 
       resolvedCode before.function.code.val pending ++ [.JumpIfZero condition target] := by
     change resolvedCode after.function.code.val (⟨[site], target⟩ :: pending) = _
     rw [codeEq]
-    exact resolvedCode_open_guard _ _ condition core.num.U32.MAX target site position (priorPlans.inside sites)
+    exact resolved_code_open_guard _ _ condition core.num.U32.MAX target site position (priorPlans.inside sites)
   simp only [List.reverse_append, List.reverse_cons, List.reverse_nil, List.nil_append,
     List.singleton_append] at parentShapes ⊢
   cases parentShapes with
@@ -108,5 +108,5 @@ theorem StructuredUniversalElse.open_if {jumpTables : List Aeneas.Std.U32} {A : 
     rw [resolve]
     exact .cons child label (StructuredElseEvidence.fresh fresh) (arms.extend _)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

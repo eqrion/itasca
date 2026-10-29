@@ -8,7 +8,7 @@ Finishing the actual compiler assembles the retained function certificate. The b
 Main declarations: `indexed_compiler_finish_certificate`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedCompilerFinish`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Finishing the actual compiler assembles the retained function certificate.
@@ -45,4 +45,4 @@ theorem indexed_compiler_finish_certificate {A : Type} (ops : runtime.platform.A
   · rw [slotsEq]
     exact capacity.trans stable.capacity
   · simpa only [slotsEq] using returnCode
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

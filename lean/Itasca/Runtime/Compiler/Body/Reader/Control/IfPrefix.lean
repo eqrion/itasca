@@ -13,7 +13,7 @@ Structured if reader prefixes and their complete-profile transport. These are co
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_callback_if_prefix {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
@@ -71,7 +71,7 @@ theorem structured_callback_if_prefix {jumpTables : List U32} {emit : List valty
     (by intro _; simpa only [retained.localsEq, child, SourceScope.enterIf, SourceScope.input] using conditionEq) observed
     newTypes rfl rfl (by simp [child, SourceScope.enterIf, codeEq]) rfl rfl rfl sources consumed (by rw [cursor])
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -79,7 +79,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 /-- An accepted canonical IF reader constructs the complete live child
@@ -140,6 +140,6 @@ theorem structured_reader_prefix_if_wasm2 {jumpTables : List U32} {emit : List v
     rfl
   · exact post.scope_fronts (.inr (.inr rfl)) fronts _ (by simpa [SourceScope.enterIf] using newTypes)
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

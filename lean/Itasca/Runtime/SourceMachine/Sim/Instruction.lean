@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.SourceMachine.Sim.Structured
 
-namespace Itasca.Runtime.Abs
+namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 
 /-- Every successful instruction in the checked integer slice has a counted
@@ -15,11 +15,11 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
   have hf : FrameTyped s { f with code := op :: after } [] := by
     cases typed.frames with | cons h _ => exact h
   have hr : Forall FrameWf rest := by
-    cases typed.frames with | cons _ h => exact framesTyped_wf h
-  obtain ⟨hw, hl, hv, hc⟩ := frameTyped_wf hf
+    cases typed.frames with | cons _ h => exact frames_typed_wf h
+  obtain ⟨hw, hl, hv, hc⟩ := frame_typed_wf hf
   have hafter : Forall wf_instr after := fun i hm => hc i (by simp [hm])
   have hi : wf_instr op := hc op (by simp)
-  have hheights := frameTyped_heights hf
+  have hheights := frame_typed_heights hf
   cases slice with
   | numeric descriptor => exact Numeric.astep_simulation s ambient f rest after descriptor next typed step
   | nop =>
@@ -131,7 +131,7 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
   | ifelse bt yes no =>
     obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
     cases hop
-    obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands
+    obtain ⟨args, conditions, rfl, hargs, hcond⟩ := results_typed_split hoperands
     cases hcond with
     | cons hvalue hend =>
       cases hend
@@ -142,7 +142,7 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
       rw [← step]
       apply NextSim.single
       have result := if_simulation s ambient f rest after (first ++ args) bits bt yes no
-        typed.store typed.ambient hw hl (forall_append hfirst (resultsTyped_wf hargs)) hafter hr
+        typed.store typed.ambient hw hl (forall_append hfirst (results_typed_wf hargs)) hafter hr
         (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi
       simpa only [← hvals] using result
   | br_if index =>
@@ -154,7 +154,7 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
           | uN_case_0 _ bounds => norm_num at bounds ⊢; omega
       obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands, hfirst, heights⟩ := frame_typed_operands_bounds hf
       cases hop
-      obtain ⟨args, conditions, rfl, hargs, hcond⟩ := resultsTyped_split hoperands
+      obtain ⟨args, conditions, rfl, hargs, hcond⟩ := results_typed_split hoperands
       cases hcond with
       | cons hvalue hend =>
         cases hend
@@ -165,8 +165,8 @@ theorem instruction_simulation (s : store) (ambient : frame) (f : AFrame)
         rw [← step]
         apply NextSim.single
         have result := br_if_simulation s ambient f rest after (first ++ args) bits i
-          typed.store typed.ambient hw hl (forall_append hfirst (resultsTyped_wf hargs)) hafter hr
+          typed.store typed.ambient hw hl (forall_append hfirst (results_typed_wf hargs)) hafter hr
           (by intro label hm; have hh := heights label hm; simp only [List.length_append]; omega) hb hi32
         simpa only [← hvals] using result
 
-end Itasca.Runtime.Abs
+end Itasca.Runtime.SourceMachine

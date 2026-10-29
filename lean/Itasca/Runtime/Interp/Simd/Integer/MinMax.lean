@@ -51,7 +51,7 @@ def integerMinMaxOpcode (ty : Jnn) (kind : IntegerMinMax) : U32 :=
   | .I32,.minS => 182#u32 | .I32,.minU => 183#u32 | .I32,.maxS => 184#u32 | .I32,.maxU => 185#u32
   | .I64,.minS => 214#u32 | .I64,.minU => 215#u32 | .I64,.maxS => 216#u32 | .I64,.maxU => 217#u32
 
-theorem integerMinMaxOpcode_index (ty : Jnn) (kind : IntegerMinMax) :
+theorem integer_min_max_opcode_index (ty : Jnn) (kind : IntegerMinMax) :
     (integerMinMaxOpcode ty kind).val%32 = (integerMinMaxIndex kind).val := by
   cases ty <;> cases kind <;> decide
 
@@ -60,7 +60,7 @@ theorem integer_minmax_loop (ty : Jnn) (kind : IntegerMinMax) (x y : U128) :
       y (integerCompareWidth ty) 0#u128 0#u32 ⦃ result => ∀ j, j < 128/lsize (lanetype_Jnn ty) →
         laneBits (lsize (lanetype_Jnn ty)) j result.bv = integerMinMaxBits kind
           (laneBits (lsize (lanetype_Jnn ty)) j x.bv) (laneBits (lsize (lanetype_Jnn ty)) j y.bv) ⦄ := by
-  have widthEq := integerCompareWidth_val ty
+  have widthEq := integer_compare_width_val ty
   rw [←widthEq]
   apply integer_binary_loop x y 0#u128 (integerCompareWidth ty) (integerMinMaxOpcode ty kind) 0#u32
     (by cases ty <;> decide) (by cases ty <;> decide)
@@ -69,7 +69,7 @@ theorem integer_minmax_loop (ty : Jnn) (kind : IntegerMinMax) (x y : U128) :
   · intro j valid a b sa sb remainder aEq bEq saEq sbEq remainderEq
     have exactIndex : remainder = integerMinMaxIndex kind := by
       apply UScalar.eq_of_val_eq
-      exact remainderEq.trans (integerMinMaxOpcode_index ty kind)
+      exact remainderEq.trans (integer_min_max_opcode_index ty kind)
     subst remainder
     have aBits := lane_word_cast _ j x.bv a aEq
     have bBits := lane_word_cast _ j y.bv b bEq
@@ -121,8 +121,8 @@ theorem integer_minmax_packed (ty : Jnn) (kind : IntegerMinMax) (x y result : U1
   have packed := pack_map_of_lanes (lanetype_Jnn ty) (128/lsize (lanetype_Jnn ty)) result.bv.toNat
     (fun j => (integerMinMaxBits kind (laneBits (lsize (lanetype_Jnn ty)) j x.bv)
       (laneBits (lsize (lanetype_Jnn ty)) j y.bv)).toNat)
-    (by intro j valid; rw [←laneBits_toNat,lanes j valid])
-  rw [shapeOf_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
+    (by intro j valid; rw [←lane_bits_to_nat,lanes j valid])
+  rw [shape_of_covers,Nat.mod_eq_of_lt result.bv.isLt] at packed
   unfold integerMinMaxResult minmaxWords Map
   rw [List.map_map]
   have same (bits : Nat) : laneOfBits (lanetype_Jnn ty) bits = .mk_lane__0 ty (.mk_uN bits) := by cases ty <;> rfl

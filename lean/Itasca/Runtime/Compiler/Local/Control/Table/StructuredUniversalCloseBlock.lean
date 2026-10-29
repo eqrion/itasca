@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixControl
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
 /-- Exact BLOCK END patching removes its resolution group and resumes the
@@ -29,7 +29,7 @@ theorem StructuredUniversalPrefix.close_block {jumpTables : List Aeneas.Std.U32}
     StructuredUniversalPrefix (jumpTables := jumpTables) emit after types functions returns locals parents
       (parent.advance (.BLOCK bt child.source)) (child.front ++ child.results) := by
   have lengthEq : after.function.code.val.length = before.function.code.val.length := by
-    simp [codeEq, patchCode_length]
+    simp [codeEq, patch_code_length]
   refine ⟨localsEq, layout, ?_, ?_⟩
   · intro f member
     have original := invariant.sites f (by rw [frames]; exact List.mem_append_left _ member)
@@ -63,7 +63,7 @@ theorem StructuredUniversalPrefix.close_block {jumpTables : List Aeneas.Std.U32}
     have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
       simpa using List.Forall₂.cons oldParentShape parentShapes
     obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
-    have bodyCode := current.finish (by simp [resolvedCode_length]) (by simp [NormalLive, label])
+    have bodyCode := current.finish (by simp [resolved_code_length]) (by simp [NormalLive, label])
     obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
     have closed : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals
         (resolvedCode before.function.code.val (⟨frame.fixups.val, target⟩ :: groups))
@@ -84,5 +84,5 @@ theorem StructuredUniversalPrefix.close_block {jumpTables : List Aeneas.Std.U32}
       exact outerSaved.advance_current (.BLOCK bt child.source)
     · simpa only [resolve, lengthEq, position, SourceScope.advance, SourceScope.input] using restored
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 

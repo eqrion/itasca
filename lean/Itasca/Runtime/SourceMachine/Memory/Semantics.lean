@@ -2,7 +2,7 @@ import Itasca.Runtime.SourceMachine.Memory.Descriptor
 import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Spec.PackedMemory
 
-namespace Itasca.Runtime.Abs.Memory
+namespace Itasca.Runtime.SourceMachine.Memory
 open SpecExt
 
 def PackedWidth.spec {ty : Inn} (width : PackedWidth ty) : Spec.PackedMemory :=
@@ -35,7 +35,7 @@ theorem Load.value_wf (op : Load) (payload : List byte)
   cases op with
   | full ty =>
     apply wf_val.val_case_0
-    exact Spec.numericBytes_wf ty payload valid (by cases ty <;> exact length)
+    exact Spec.numeric_bytes_wf ty payload valid (by cases ty <;> exact length)
   | packed ty width sign =>
     apply wf_val.val_case_0
     have numeric := width.spec.loaded_wf sign payload valid (by simpa only [PackedWidth.spec_bytes,Load.bytes] using length)
@@ -47,8 +47,8 @@ theorem Load.value_type (op : Load) (payload : List byte) :
 
 theorem Store.payload_wf (op : Store) (value : num_) : Forall wf_byte (op.payload value) := by
   cases op with
-  | full ty => exact Spec.numericBytes_payload_wf ty value
-  | packed ty width => exact Spec.integerBytes_wf _ _
+  | full ty => exact Spec.numeric_bytes_payload_wf ty value
+  | packed ty width => exact Spec.integer_bytes_wf _ _
 
 /-- Every scalar load descriptor has the generated source step, with exactly
 its byte-width bounds test and canonical decoded value. -/
@@ -94,4 +94,4 @@ theorem Store.source_step (op : Store) (s : _root_.store) (f : frame) (argument 
       (by simpa only [PackedWidth.spec_type,Store.type] using valueWf) mapped
     cases ty <;> cases width <;> exact source
 
-end Itasca.Runtime.Abs.Memory
+end Itasca.Runtime.SourceMachine.Memory

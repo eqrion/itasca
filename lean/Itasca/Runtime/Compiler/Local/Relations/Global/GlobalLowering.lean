@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Aeneas.Std.Result
 set_option maxRecDepth 4096
@@ -103,4 +103,4 @@ theorem top_is_v128_shape (values : Slice Itasca.code.StackType)
     cases ty <;> simp [valueIsVector]
   obtain ⟨result, actual, equal⟩ := WP.spec_imp_exists total
   simpa only [equal] using actual
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

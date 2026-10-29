@@ -7,7 +7,7 @@ Body-state readers invoke the compiler only after their actual successful parse 
 Main declarations: `reader_body_run_reached`. A direct consumer is `Compiler.Body.Reader.Calls.Safety`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- Body-state readers invoke the compiler only after their actual successful
@@ -31,4 +31,4 @@ theorem reader_body_run_reached {T V : Type}
     | Ok unitValue =>
       cases unitValue
       simpa [CallbackTrace.bodyRun,readEq,called,hookResult,WP.spec_ok] using ready rfl
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

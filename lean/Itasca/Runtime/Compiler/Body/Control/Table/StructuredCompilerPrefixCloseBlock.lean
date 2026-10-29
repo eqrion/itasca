@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadBlock
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Closing an entered BLOCK restores either its live parent prefix or its
@@ -57,7 +57,7 @@ theorem StructuredCompilerPrefix.close_block {jumpTables : List Aeneas.Std.U32} 
     (by simpa [frameGroups, noGuard, label, resolvedCode] using codeEq) (.BLOCK bt child.source)
   have frames := (invariant.frames.close_branches frame target framesEq branches codeEq (by rw [maps])).advance (.BLOCK bt child.source)
   have clean : DormantFrames after.frames.val := (framesEq ▸ invariant.dormant).pop
-  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patchCode_length]
+  have lengthEq : after.function.code.val.length = before.function.code.val.length := by simp [codeEq, patch_code_length]
   refine ⟨invariant.metadata.trans stable, frames, invariant.entryChain.pop.advance _, clean,
     invariant.conditions.pop.advance _, (fun _ => sourceTypes.concrete), ?_, arms, sources.aligned invariant.sources,
     invariant.codeBudget.advance (by omega) consumed,
@@ -83,4 +83,4 @@ theorem StructuredCompilerPrefix.close_block {jumpTables : List Aeneas.Std.U32} 
   | dormant dead retained =>
     have impossible := retained.unentered
     simp [entered] at impossible
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

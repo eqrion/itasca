@@ -2,7 +2,7 @@ import Itasca.Profile.EntryComplete
 import Itasca.Profile.EntrySound
 import Itasca.Module.Code.ReachedEntry
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Forget visitor observations while retaining the independently decoded
@@ -58,4 +58,4 @@ theorem source_entry_prepared (data : Slice U8) (env : module.Env) (index start 
     (by simp only [List.getElem?_eq_getElem w.type_lt,w.function_type])
     (environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _)) w.body_accepted
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

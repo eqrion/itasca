@@ -6,16 +6,16 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Machine.Outcomes.ScalarTraps
 import Itasca.Runtime.Integration.Execution.Mutation.Certificate
-namespace Itasca.Runtime.Theorems
+namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 
 def CumulativeTrap (trap : runtime.Trap) : Prop := FloatCoreTrap trap ∨ trap = .TableOutOfBounds ∨ trap = .UninitializedElement ∨ trap = .IndirectCallTypeMismatch
 
 def CumulativeFailure {M P A : Type} (allocator : runtime.platform.Alloc A)
     (hooks : runtime.platform.Platform P M) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (source : Abs.AState)
+    (store : runtime.store.Store M) (platform : P) (source : SourceMachine.AState)
     (error : runtime.ExecError) : Prop :=
-  ((∃ trap,error=.Trap trap ∧ CumulativeTrap trap) ∧ ∃ n,0<n ∧ Spec.StepsHN n (Abs.decode source) []
+  ((∃ trap,error=.Trap trap ∧ CumulativeTrap trap) ∧ ∃ n,0<n ∧ Spec.StepsHN n (SourceMachine.decode source) []
     ⟨⟨source.store,source.ambient⟩,[.TRAP]⟩) ∨
   (error=.Terminated ∧ ∃ after,hooks.interrupt platform=.ok (.Terminate,after)) ∨
   ∃ index raw inst compiled,
@@ -27,7 +27,7 @@ def CumulativeFailure {M P A : Type} (allocator : runtime.platform.Alloc A)
 variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
   {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
   {store : runtime.store.Store M} {platform : P} {expected : List valtype}
-  {codeLength pc : Nat} {pending : Bool} {source : Abs.AState}
+  {codeLength pc : Nat} {pending : Bool} {source : SourceMachine.AState}
   {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
 
-end Itasca.Runtime.Theorems
+end Itasca.Runtime.Integration

@@ -15,7 +15,7 @@ Construction of br_table targets with their emitted heights and table correspond
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000
@@ -120,10 +120,10 @@ elab "branch_height_effect " h:ident " using " ops:term ", " law:term : tactic =
     | ``runtime.compiler.FunctionCompiler.copy =>
       `(tactic| have effect := compiler_copy_branch_height $ops _ _ _ _ _ _ $h)
     | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_pc_branch_height
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_pc_branch_height
       `(tactic| have effect := $theoremName $ops _ _ _ $h)
     | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Itasca.Runtime.Code.compiler_patch_branch_height
+      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_patch_branch_height
       `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
     | _ => throwError "not a compiler helper"
   evalTactic tac
@@ -170,7 +170,7 @@ theorem compiler_branch_height_result {A : Type} (ops : runtime.platform.Alloc A
     simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
     repeat' branch_height_step accepted using ops, law
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -178,7 +178,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Exact syntactic effect of a table arm. Forward destinations retain their
@@ -240,7 +240,7 @@ theorem compiler_table_target_code {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨fixups,frames,_,code,site,sitePosition,appended⟩ := compiler_branch_forward_skip_success ops law staged frame frameIndex depth source 1#u32
       found position isLoop width after branchCall
     exact .forward frameIndex frame source fixups site found position isLoop width code frames appended sitePosition
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -248,7 +248,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Syntax-only production certificate for the ordered branch fragments. Each
@@ -330,6 +330,6 @@ theorem TableTargetsBuilt.code_prefix {A : Type} {before after : runtime.compile
     obtain ⟨first,firstCode,firstLength⟩ := effect.code_prefix
     obtain ⟨remaining,restCode,restLength⟩ := ih
     exact ⟨first++remaining,by rw [restCode,firstCode,List.append_assoc],by simp only [List.length_append,List.length_cons]; omega⟩
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end

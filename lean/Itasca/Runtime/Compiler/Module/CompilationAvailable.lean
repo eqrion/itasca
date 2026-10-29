@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Module.StreamingAvailable
 import Itasca.Runtime.Compiler.Module.CollectionAvailable
 import Itasca.Runtime.Compiler.Module.SourceCompilationDemand
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
@@ -102,4 +102,4 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
   simp only [bind_ok]
   rfl
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

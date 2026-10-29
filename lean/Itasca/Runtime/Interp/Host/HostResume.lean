@@ -16,20 +16,20 @@ open Aeneas Aeneas.Std
     (index slot : Usize) (store base : Usize)
     (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
-    (bound : base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length)
+    (bound : base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length)
     (indexBound : index.val ≤ args.length)
     (position : slot.val = base.val + (argumentWords args.val index.val).length)
     (initialWords : WordsAt words.val base.val (argumentWords args.val index.val)) :
     runtime.interp.call_loop2 words args index slot types ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val base.val (args.val.map sourceValue) ∧
-      ∀ j, j < base.val ∨ base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ j →
+      ∀ j, j < base.val ∨ base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ j →
         after.val[j]? = words.val[j]? ⦄ := by
   unfold runtime.interp.call_loop2
   apply loop.spec_decr_nat (fun p => args.length - p.2.1.val)
     (fun p => p.1.length = words.length ∧ p.2.1.val ≤ args.length ∧
       p.2.2.val = base.val + (argumentWords args.val p.2.1.val).length ∧
       WordsAt p.1.val base.val (argumentWords args.val p.2.1.val) ∧
-      ∀ j, j < base.val ∨ base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ j →
+      ∀ j, j < base.val ∨ base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ j →
         p.1.val[j]? = words.val[j]?)
   · rintro ⟨current, i, offset⟩ ⟨hlen, hi, hoffset, hpref, preserved⟩
     dsimp only at hlen hi hoffset hpref
@@ -43,10 +43,10 @@ open Aeneas Aeneas.Std
       step as ⟨ty, hty⟩
       have hlookup : args.val[i.val]? = some value := by simp [List.getElem?_eq_getElem hib, hvalue]
       have htype : ty = rawType value := by simpa [typed, ← hvalue] using hty
-      have hnextWords := argumentWords_step hlookup
-      have hcapacity : offset.val + Code.width (sourceType (rawType value)) ≤ current.length := by
-        have hb := argumentWords_bound args.val (i.val + 1)
-        rw [hnextWords, List.length_append, Code.encodeValue_length, sourceValue_type] at hb
+      have hnextWords := argument_words_step hlookup
+      have hcapacity : offset.val + Compiler.width (sourceType (rawType value)) ≤ current.length := by
+        have hb := argument_words_bound args.val (i.val + 1)
+        rw [hnextWords, List.length_append, Compiler.encode_value_length, source_value_type] at hb
         omega
       have hv : ValueOwnedFits store value := owned value (by rw [hvalue]; exact List.getElem_mem hib)
       rw [htype]
@@ -57,7 +57,7 @@ open Aeneas Aeneas.Std
       step as ⟨next, hnext⟩
       refine ⟨?_, by scalar_tac, ?_, ?_, ?_, by scalar_tac⟩
       · simpa [alloc.vec.Vec.val] using hafterLen.trans hlen
-      · rw [hnext, hnextWords, List.length_append, Code.encodeValue_length, sourceValue_type]
+      · rw [hnext, hnextWords, List.length_append, Compiler.encode_value_length, source_value_type]
         scalar_tac
       · rw [hnext, hnextWords]
         apply WordsAt.append
@@ -67,8 +67,8 @@ open Aeneas Aeneas.Std
           exact Or.inl (by omega)
         · simpa [hoffset, alloc.vec.Vec.val] using hencoded
       · intro j outside
-        have nextBound := argumentWords_bound args.val (i.val + 1)
-        rw [hnextWords, List.length_append, Code.encodeValue_length, sourceValue_type] at nextBound
+        have nextBound := argument_words_bound args.val (i.val + 1)
+        rw [hnextWords, List.length_append, Compiler.encode_value_length, source_value_type] at nextBound
         exact (houtside j (by rcases outside with left | right; exact Or.inl (by omega); exact Or.inr (by omega))).trans
           (preserved j outside)
     · have he : i.val = args.length := by scalar_tac
@@ -82,16 +82,16 @@ open Aeneas Aeneas.Std
     (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
     (store base : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
-    (bound : base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
+    (bound : base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
     runtime.interp.call_loop2 words args 0#usize base types ⦃ after =>
       after.length = words.length ∧ ValuesAt after.val base.val (args.val.map sourceValue) ∧
-      ∀ j, j < base.val ∨ base.val + (Code.encodeValues (args.val.map sourceValue)).length ≤ j →
+      ∀ j, j < base.val ∨ base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ j →
         after.val[j]? = words.val[j]? ⦄ := by
   apply host_results_encode_loop words args types 0#usize base store base typed owned bound
   · simp
-  · simp [argumentWords, Code.encodeValues]
+  · simp [argumentWords, Compiler.encodeValues]
   · intro j impossible
-    simp [argumentWords, Code.encodeValues] at impossible
+    simp [argumentWords, Compiler.encodeValues] at impossible
 end Itasca.Runtime.Interp
 
 end

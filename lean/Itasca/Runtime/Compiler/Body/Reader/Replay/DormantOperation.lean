@@ -10,7 +10,7 @@ Dormant structured prefixes for omitted source operations.
 Main declarations: `ReaderPostWasm2.structured_dead_op`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderPostWasm2.structured_dead_op {jumpTables : List U32} {data env sourceLocals index st}
@@ -30,4 +30,4 @@ theorem ReaderPostWasm2.structured_dead_op {jumpTables : List U32} {data env sou
   rw [accepted, WP.spec_ok] at observed
   exact observed.reachable.trans dead
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

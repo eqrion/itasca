@@ -6,7 +6,7 @@ Source effects of direct and conditional branch reader steps.
 Main declarations: `reader_br_wasm2` and `reader_br_if_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.BranchesCompilation`.
 -/
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_br_wasm2 {data env locals index st}
@@ -84,4 +84,4 @@ theorem reader_br_if_wasm2 {data env locals index st}
   · simpa [signatures] using blocks
   · exact stack
   · exact encoded.declared _
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler

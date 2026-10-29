@@ -15,7 +15,7 @@ Checked prefixes for forward branches, including pending-site replacement and tr
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- A branch's overlap-safe copy fits from the independently checked source
@@ -35,7 +35,7 @@ theorem transfer_instruction_accepts (function : runtime.bytecode.CompiledFuncti
 
 /-- Every word in an unconditional branch fragment checks, with only the final
 jump allowed to wait for its recorded control-frame owner. -/
-theorem branchInstructions_open_checks (function : runtime.bytecode.CompiledFunction)
+theorem branch_instructions_open_checks (function : runtime.bytecode.CompiledFunction)
     (pending : Nat → Prop) (start : Nat) (dst src count target : U32)
     (order : dst.val ≤ src.val) (source : src.val+count.val ≤ function.slot_count.val)
     (ready : target.val ≤ function.code.length ∨ pending (start+(branchInstructions dst src count target).length-1)) :
@@ -69,7 +69,7 @@ theorem branchInstructions_open_checks (function : runtime.bytecode.CompiledFunc
 /-- Conditional branch fragments check the selector and transfer immediately;
 only their selected label target may remain pending. The skip address already
 names the fragment's continuation. -/
-theorem branchIfInstructions_open_checks (function : runtime.bytecode.CompiledFunction)
+theorem branch_if_instructions_open_checks (function : runtime.bytecode.CompiledFunction)
     (pending : Nat → Prop) (start : Nat) (dst src count target condition resume : U32)
     (order : dst.val ≤ src.val) (source : src.val+count.val ≤ function.slot_count.val)
     (test : condition.val+1 ≤ function.slot_count.val)
@@ -108,7 +108,7 @@ theorem branchIfInstructions_open_checks (function : runtime.bytecode.CompiledFu
           simpa only [Nat.reduceAdd,show start+3-1 = start+2 by omega] using ready
         | succ index => simp [branchIfInstructions,elided] at found
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -116,7 +116,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Recording a branch changes one frame's liveness and extends its fixups.
@@ -159,7 +159,7 @@ theorem pending_instruction_fixup {A : Type} (compiler : runtime.compiler.Functi
   obtain ⟨within,equal⟩ := List.getElem?_eq_some_iff.mp lookup
   exact ⟨frame,equal ▸ List.getElem_mem within,site,rfl,Or.inr member⟩
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
 
@@ -167,7 +167,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Code
+namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual forward branching preserves every old instruction check, validates
@@ -218,7 +218,7 @@ theorem compiler_branch_forward_instruction_effect {A : Type} (ops : runtime.pla
   · intro position owned
     exact pending_instruction_replace index.val frame _ lookup frames rfl
       (by intro site member; change site ∈ fixups.val; rw [appended]; exact List.mem_append_left _ member) position owned
-  · apply branchInstructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
+  · apply branch_instructions_open_checks after.function (PendingInstructionSite after) before.function.code.length
       frame.height source frame.results core.num.U32.MAX order (sourceFits.trans growth.slots)
     exact .inr (by rw [← siteAt]; exact pending)
 
@@ -241,6 +241,6 @@ theorem compiler_branch_forward_open_instructions {A : Type} (ops : runtime.plat
     CompilerInstructionPrefix after :=
   (compiler_branch_forward_instruction_effect ops law before after frame index depth source skip lookup position forward sourcePosition order sourceFits fixupsFit codeFits offsetsFit coordinateFits called).apply held
 
-end Itasca.Runtime.Code
+end Itasca.Runtime.Compiler
 
 end
