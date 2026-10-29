@@ -1,4 +1,4 @@
-import Itasca.Runtime.Code.Body.Capacity.FunctionCapacity
+import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
 import Itasca.Runtime.Representation.Collection
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Representation.StoreCapacity

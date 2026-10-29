@@ -1,5 +1,5 @@
-import Itasca.Runtime.Abs.Bound
-import Itasca.Runtime.Abs.ReferenceBounds
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.SourceMachine.ReferenceBounds
 import Itasca.Runtime.Interp.Control.StructuredPoint
 
 namespace Itasca.Runtime.Interp

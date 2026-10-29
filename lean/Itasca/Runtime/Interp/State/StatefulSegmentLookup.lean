@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.State.StatefulLookup
-import Itasca.Runtime.Abs.Stateful.InitStore
+import Itasca.Runtime.SourceMachine.Stateful.InitStore
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt
 

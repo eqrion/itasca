@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.State.GlobalMutation
 import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Code.Local.Capacity.GlobalCapacity
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)

@@ -1,6 +1,11 @@
 import Itasca.Runtime.Representation.TypeEntries
 import Itasca.Runtime.Representation.FunctionTable
 import Itasca.Runtime.Representation.FunctionCapacity
+
+/-!
+Source frame capacities for issued functions and decoded store signatures. Interpreter resource causes and store invariants share these certificates.
+-/
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 /-- Every defined function has a source-derived static frame requirement.

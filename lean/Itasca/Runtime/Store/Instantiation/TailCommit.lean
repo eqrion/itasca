@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Instantiation.InstantiateTailCommit
+import Itasca.Runtime.Store.Instantiation.TailCommitExecution
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

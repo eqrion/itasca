@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.PreparationResults
-import Itasca.Runtime.Store.Invariant.FunctionPayloadLoop
+import Itasca.Runtime.Store.Invariant.FunctionPayload
 import Itasca.Runtime.Store.Invariant.FunctionOrderLoop
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv

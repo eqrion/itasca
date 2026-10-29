@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.TableStagingLoop
+import Itasca.Runtime.Store.Api.TableStaging
 import Itasca.Runtime.Store.Api.NewTableCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 namespace Itasca.Runtime.Store

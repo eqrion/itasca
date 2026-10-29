@@ -1,6 +1,101 @@
+import Itasca.Runtime.Store.Preparation.AllocationCauses
+import Itasca.Runtime.Store.Initialization.Data
+import Itasca.Runtime.Store.Invariant.NormalResult
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Store.Initialization.DataStagingLoop
-import Itasca.Runtime.Store.Initialization.DataStagingCause
 import Itasca.Runtime.Store.Preparation.PreparationCalls
+
+/-!
+Data-segment staging resource causes. Byte-copy allocation failures lift through one segment and the staging loop to the complete data allocation cause.
+-/
+
+/-! ## Data Allocation Causes -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+/-- The only failure in copying a source data payload is the exact initial
+byte-vector reservation refusal. -/
+theorem copy_bytes_resource_causes {A : Type} (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator) (source : Slice U8) :
+    runtime.store.copy_bytes allocator source ⦃ answer =>
+      (answer = .Err (.Exhausted .Allocation) ∧
+        allocator.reserve (alloc.vec.Vec.new U8) source.len = .ok (false,alloc.vec.Vec.new U8)) ∨
+      ∃ bytes, answer = .Ok bytes ∧ bytes.val = source.val ⦄ := by
+  unfold runtime.store.copy_bytes
+  dsimp only
+  obtain ⟨reserved,wrapped,called⟩ := reserve_with_cause allocator law (alloc.vec.Vec.new U8) source.len
+  rw [wrapped]
+  cases reserved
+  · simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,called]
+  · simp [core.result.Result.Insts.CoreOpsTry.branch]
+    step with copy_bytes_loop source (alloc.vec.Vec.new U8) 0#usize (by scalar_tac) (by simp) as ⟨bytes,same⟩
+    simp [same]
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Data Staging Cause -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+/-- Both exact allocation requests made when adding a passive data payload. -/
+def DataAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
+    (store : runtime.store.Store M) (data : Itasca.module.Data) (error : runtime.ExecError) : Prop :=
+  error = .Exhausted .Allocation ∧
+    (allocator.reserve (alloc.vec.Vec.new U8) data.init.len = .ok (false,alloc.vec.Vec.new U8) ∨
+      allocator.reserve store.datas 1#usize = .ok (false,store.datas))
+
+theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (instanceIndex index : Usize)
+    (inst : runtime.store.ModuleInst) (data : Itasca.module.Data)
+    (found : store.instances.val[instanceIndex.val]? = some inst)
+    (selected : inst.module.module.tail.data.val[index.val]? = some data)
+    (error : runtime.ExecError) (after : runtime.store.Store M)
+    (run : runtime.store.instantiate.Store.add_instance_data memory allocator store instanceIndex index = .ok (.Err error,after)) :
+    after = store ∧ DataAllocationCause allocator store data error := by
+  unfold runtime.store.instantiate.Store.add_instance_data at run
+  simp only [Code.initializer_vec_index store.instances instanceIndex inst found,
+    runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok,
+    Code.initializer_vec_index inst.module.module.tail.data index data selected] at run
+  obtain ⟨copied,copiedRun,effect⟩ := WP.spec_imp_exists (copy_bytes_resource_causes allocator law data.init.deref)
+  rw [copiedRun,bind_ok] at run
+  rcases effect with ⟨failed,refused⟩ | ⟨bytes,copied,contents⟩
+  · subst copied
+    simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
+    obtain ⟨rfl,rfl⟩ := run
+    exact ⟨rfl,rfl,Or.inl (by simpa [alloc.vec.Vec.deref,alloc.vec.Vec.len,Slice.len] using refused)⟩
+  · subst copied
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at run
+    obtain ⟨answer,reserved,refusal⟩ := reserve_with_cause allocator law store.datas 1#usize
+    rw [reserved] at run
+    cases answer
+    · simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
+      obtain ⟨rfl,rfl⟩ := run
+      exact ⟨rfl,rfl,Or.inr refusal⟩
+    · simp [core.result.Result.Insts.CoreOpsTry.branch] at run
+      obtain ⟨datas,pushed,run⟩ := normal_bind_exists _ _ _ run
+      obtain ⟨⟨current,back⟩,read,run⟩ := normal_bind_exists _ _ _ run
+      simp only [uncurry_apply_pair] at run
+      obtain ⟨addresses,mapped,run⟩ := normal_bind_exists _ _ _ run
+      simp at run
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Data Staging Causes -/
+
+section
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
@@ -110,3 +205,5 @@ theorem data_staging_resource_loop {M A : Type}
   · exact ⟨(fun _ => .refl _ _), (by simp), staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, storeCapacity⟩
 
 end Itasca.Runtime.Store
+
+end

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Invariant.FunctionStaging
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Invariant.AddressOrder
 
 namespace Itasca.Runtime.Store

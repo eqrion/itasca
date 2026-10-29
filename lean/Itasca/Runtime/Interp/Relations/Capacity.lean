@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.FrameBindings
-import Itasca.Runtime.Code.Local.Capacity.OperandBounds
+import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

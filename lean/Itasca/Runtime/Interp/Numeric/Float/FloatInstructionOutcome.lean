@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.Float.Progress
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.Interp.Numeric.Float.FloatBounded
 import Itasca.Runtime.Interp.Numeric.Float.FloatSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatMinMaxSource

@@ -149,7 +149,7 @@ and examples import only `Main`. Between these, the order is a guide.
 | `Contracts` | Definitions of the streaming source, scheduler, and worker obligations. |
 | `Module/` | Readers, constant expressions, sections, environment, code entries, elaboration, and custom sections. |
 | `Stream/` | Sources, scheduler proofs, batches, the driver, and the contiguous adapter. |
-| `Runtime/` | The runtime proofs, laid out in the [execution proof guide](Itasca/Runtime/README.md). |
+| `Runtime/` | Source semantics and machine, representation/platform contracts, compiler, interpreter, store, and API integration proofs; see the [execution proof guide](Itasca/Runtime/README.md). |
 | `Results/` | The headline theorems, each a projection of its internal construction. |
 | `Main` | The entry module, listing every headline theorem. |
 | `Examples/` | Kernel-checked examples, using the results through `Main`. |
@@ -200,14 +200,14 @@ Build targets apply these to the pinned checkouts:
 - [spectec-wasm2-host-typing.patch](../patches/spectec-wasm2-host-typing.patch)
   adds function-instance typing for host code with a valid signature and a
   well-formed module representation, without a Wasm body. The source lemmas in
-  [Runtime/Spec/HostTyping](Itasca/Runtime/Spec/Typing/HostTyping.lean) construct a typed host-only
+  [Runtime/Spec/Typing/HostTyping](Itasca/Runtime/Spec/Typing/HostTyping.lean) construct a typed host-only
   store using the decoder's empty module environment and recover exactly the
   original premises for Wasm function instances. This extends the execution
   typing target; it does not establish callback store-typing preservation.
 - [spectec-wasm2-lane-store.patch](../patches/spectec-wasm2-lane-store.patch)
   checks lane stores in bytes and adds an explicit success bound. Generated
   memory splicing alone does not enforce that bound. General guard partition
-  and boundary lemmas in [Runtime/Spec/SimdMemoryLaneStore](Itasca/Runtime/Spec/SimdMemoryLaneStore.lean)
+  and boundary lemmas in [Runtime/Spec/Simd/MemoryLaneStore](Itasca/Runtime/Spec/Simd/MemoryLaneStore.lean)
   cover all supported widths and unbounded effective addresses. This repairs
   the execution target without changing validator typing or runtime behavior.
 - [spectec-wasm2-memory-write-bounds.patch](../patches/spectec-wasm2-memory-write-bounds.patch)
@@ -365,9 +365,21 @@ for compilation, invocation and instantiation. None of this wrapper review is a
 kernel proof of native Rust, `libm`, allocator or atomic semantics.
 
 Runtime import layers and compiler/invocation integration stages are enforced
-by the audit checker. The [execution proof guide](Itasca/Runtime/README.md) describes the
-layer order, certificate boundaries, and reading paths. Shared store decoding
-and capacity contracts live below compiler/interpreter/store correctness in
-`Itasca.Runtime.Representation`. Validator proofs never import `Itasca.Runtime`
-or `SpecExt`; only `Main` and the runtime results under `Results/` join the two.
-Runtime proofs reach the generated functions through `Itasca.Runtime.Equations`.
+by the audit checker, which also rejects import cycles. `Runtime/Compiler/`
+keeps Local → Body → Module stages. `Runtime/Interp/Machine/` groups machine
+proofs by operations, frames, calls, retention and progress;
+`Runtime/Integration/Execution/` assembles ownership, mutation, dispatch,
+histories, evolving worlds and resource causes. Shared store decoding and
+capacity contracts live below these constructions in `Runtime/Representation/`.
+`Runtime/SourceMachine/` retains the flat source transition system independently
+of the extracted runtime.
+
+The [execution proof guide](Itasca/Runtime/README.md) gives the enforced layer
+map and concrete [compilation](Itasca/Runtime/README.md#compilation),
+[invocation](Itasca/Runtime/README.md#invocation), and
+[instantiation](Itasca/Runtime/README.md#instantiation) reading paths.
+Validator proofs never import `Itasca.Runtime` or `SpecExt`; only `Main` and the
+runtime results under `Results/` join the two. Runtime proofs reach generated
+functions through `Itasca.Runtime.Equations`. The runtime contract entry point
+admits only the exact `Integration.Api.ExecutableInv` module from the integration
+layer; it cannot import the constructions that assume those contracts.

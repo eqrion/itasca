@@ -1,6 +1,6 @@
-import Itasca.Runtime.Code.Local.Control.Common.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.Abs.LabelHeights
+import Itasca.Runtime.SourceMachine.LabelHeights
 
 namespace Itasca.Runtime.Interp
 open Aeneas.Std

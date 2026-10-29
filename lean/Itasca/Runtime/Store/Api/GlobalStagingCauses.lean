@@ -1,6 +1,143 @@
+import Itasca.Runtime.Store.Preparation.AllocationCauses
+import Itasca.Runtime.Store.Api.Define
+import Itasca.Runtime.Store.Api.GlobalErrors
+import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Store.Api.GlobalErrorLoop
-import Itasca.Runtime.Store.Api.GlobalInitializerCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
+
+/-!
+Global staging resource causes from definition through initialization and the staging loop. Actual allocation requests and initializer failures remain distinct explanations of errors.
+-/
+
+/-! ## Global Allocation Causes -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+def GlobalAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
+    (store : runtime.store.Store M) : runtime.ExecError → Prop
+  | .Exhausted .Objects => store.limits.max_objects.val ≤ objectCount store
+  | .Exhausted .Allocation => allocator.reserve store.globals 1#usize = .ok (false,store.globals)
+  | _ => False
+
+theorem define_global_resource_causes {M A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (ty : Itasca.types.GlobalType) (value : runtime.Value)
+    (bound : objectCount store ≤ Usize.max) (typed : ty.valtype = Interp.rawType value)
+    (owned : ValueInStore store value) :
+    runtime.store.Store.define_global_with memory allocator store ty value
+      ⦃ out => ∀ error, out.1 = .Err error → out.2 = store ∧ GlobalAllocationCause allocator store error ⦄ := by
+  obtain ⟨words,encoded,_⟩ := WP.spec_imp_exists (Interp.encode_value_spec value store.id owned.1)
+  unfold runtime.store.Store.define_global_with
+  step with room_spec memory store bound as ⟨room,roomEq⟩
+  rw [roomEq]
+  split
+  · rename_i space
+    simp [core.result.Result.Insts.CoreOpsTry.branch]
+    rw [check_value_owned memory store value owned.1]
+    simp [typed,core.result.Result.Insts.CoreOpsTry.branch,
+      core.cmp.PartialEq.ne.trait_default,core.cmp.PartialEq.ne.default]
+    obtain ⟨answer,reserved,refusal⟩ := reserve_with_cause allocator law store.globals 1#usize
+    rw [reserved]
+    cases answer
+    · simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,GlobalAllocationCause,refusal]
+    · simp [core.result.Result.Insts.CoreOpsTry.branch,encoded]
+      cases words with
+      | mk lo hi =>
+        simp
+        have max : store.globals.length < Usize.max := by unfold objectCount at space; scalar_tac
+        step
+        simp
+  · simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,GlobalAllocationCause]
+    omega
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Global Initializer Causes -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+set_option maxRecDepth 4096
+
+theorem add_global_resource_cause {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
+    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (hg : inst.module.module.env.globals.val[index.val]? = some global)
+    (hmapping : inst.module.global_initializers.val[index.val]? = some function)
+    (hc : inst.module.functions.val[function.val]? = some code)
+    (compiled : Code.InitializerCode code global.init global.gtype.valtype)
+    (resolved : Interp.InitializerResolution store inst global.init global.gtype.valtype words)
+    (bindings : InitializerBindings store inst)
+    (bound : objectCount store ≤ Usize.max)
+    (error : runtime.ExecError) (after : runtime.store.Store M) (host : P)
+    (run : runtime.store.instantiate.Store.add_instance_global memory hooks floats allocator store platform instIndex index = .ok (.Err error,after,host)) :
+    after = store ∧ host = platform ∧
+      (Interp.SyntheticPreparationCause allocator store code error ∨ GlobalAllocationCause allocator store error) := by
+  obtain ⟨evaluated, evalRun, sameStore, sameHost, success⟩ := WP.spec_imp_exists
+    (eval_const_owned memory hooks floats allocator law store platform instIndex function
+      inst code global.init global.gtype.valtype words hi hc compiled resolved bindings)
+  rcases evaluated with ⟨value, after, host⟩
+  dsimp only at sameStore sameHost success evalRun
+  subst after host
+  have errors := eval_const_resource_causes memory hooks floats allocator law store platform instIndex function
+    inst code global.init global.gtype.valtype words hi hc compiled resolved
+    (initializer_reference_bound resolved bindings)
+  rw [evalRun] at errors
+  simp only [WP.spec_ok] at errors
+  unfold runtime.store.instantiate.Store.add_instance_global at run
+  simp only [Code.initializer_vec_index store.instances instIndex inst hi,
+    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
+  rw [Code.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
+  simp only [bind_ok,
+    Code.initializer_vec_index inst.module.global_initializers index function hmapping,
+    evalRun] at run
+  cases value with
+  | Err rejected =>
+    have cause := errors.2.2.2 rejected rfl
+    simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
+    obtain ⟨rfl,rfl,rfl⟩ := run
+    exact ⟨rfl,rfl,Or.inl cause⟩
+  | Ok value =>
+    obtain ⟨owned,typed⟩ := success value rfl
+    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at run
+    obtain ⟨⟨status,changed⟩,defined,run⟩ := normal_bind_exists _ _ _ run
+    have cause := define_global_resource_causes memory allocator law store global.gtype value bound typed.symm owned
+    rw [defined,WP.spec_ok] at cause
+    cases status with
+    | Err rejected =>
+      simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
+      obtain ⟨rfl,rfl,rfl⟩ := run
+      obtain ⟨same,cause⟩ := cause rejected rfl
+      exact ⟨same,rfl,Or.inr cause⟩
+    | Ok address =>
+      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at run
+      obtain ⟨⟨current,back⟩,read,run⟩ := normal_bind_exists _ _ _ run
+      simp only [uncurry_apply_pair] at run
+      obtain ⟨addresses,pushed,run⟩ := normal_bind_exists _ _ _ run
+      simp at run
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Global Staging Causes -/
+
+section
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
@@ -135,3 +272,5 @@ theorem global_staging_resource_loop {M P F A : Type}
   · exact ⟨rfl, (fun _ => .refl _ _), (by simp), True.intro, staged, objectBound, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, rfl, rfl, rfl, rfl⟩
 
 end Itasca.Runtime.Store
+
+end

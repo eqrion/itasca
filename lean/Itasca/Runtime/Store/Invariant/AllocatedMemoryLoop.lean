@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Api.MemoryStaging
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
 
 import Itasca.Runtime.Store.Preparation.StagingAddresses
 

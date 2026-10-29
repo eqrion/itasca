@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.BulkTableLoop
-import Itasca.Runtime.Code.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

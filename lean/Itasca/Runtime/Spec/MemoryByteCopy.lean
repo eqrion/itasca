@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.MemoryFillSource
+import Itasca.Runtime.Spec.MemoryFill
 import Itasca.Runtime.Spec.PackedMemory
 namespace Itasca.Runtime.Spec.Segment
 open SpecExt

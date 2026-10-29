@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntRotate
 import Itasca.Runtime.Interp.Numeric.Integer.IntSigned
-import Itasca.Runtime.Abs.Numeric.Binary
+import Itasca.Runtime.SourceMachine.Numeric.Instruction
 import Itasca.Runtime.Spec.IntegerDeterminism
 
 namespace Itasca.Runtime.Interp

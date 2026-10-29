@@ -1,5 +1,5 @@
-import Itasca.Runtime.Code.Module.CompileTotal
-import Itasca.Runtime.Theorems.CompilationComplete
+import Itasca.Runtime.Compiler.Module.CompileTotal
+import Itasca.Runtime.Integration.Compilation.Complete
 
 /-!
 # Compilation

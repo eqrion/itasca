@@ -1,5 +1,159 @@
-import Itasca.Runtime.Store.Initialization.SegmentInitialize
-import Itasca.Runtime.Code.Module.CompileSemantic
+import Itasca.Runtime.Store.Initialization.SegmentLoop
+import Itasca.Runtime.Interp.Relations.Synthetic
+import Itasca.Runtime.Compiler.Module.SegmentSource
+import Itasca.Runtime.Compiler.Module.CompileSemantic
+
+/-!
+Total compiled segment initialization. Synthetic-frame loop execution lifts to complete segment programs and the accepted compiler certificate, returning without invoking the start function.
+-/
+
+/-! ## Segment Synthetic -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+open Itasca.Runtime.Interp
+
+/-- The actual synthetic entry point allocates its private slots/frame, then
+runs the checked finite segment program. Allocation refusal and ordinary range
+traps return normally; platform and address-space metadata are preserved. -/
+theorem segment_synthetic_total {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
+    (found : store.instances.val[instIndex.val]? = some inst)
+    (functionFound : inst.module.functions.val[function.val]? = some code)
+    (ready : SegmentCodeReady store inst code code.slot_count.val) :
+    runtime.interp.run_synthetic memory hooks floats allocator store platform instIndex function
+      ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ := by
+  unfold runtime.interp.run_synthetic
+  step with vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
+  subst actual
+  step with vec_index_given inst.module.functions function code functionFound as ⟨actual, equal⟩
+  subst actual
+  simp only [lift, bind_ok, runtime.interp.Execution.new]
+  step with ensure_effect allocator law _ _ _ as ⟨status, prepared, ensured⟩
+  cases status with
+  | Err error =>
+    simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    exact SegmentAddressSpace.refl store
+  | Ok unitValue =>
+    cases unitValue
+    simp only [EnsureEffect] at ensured
+    obtain ⟨limit, hslots, hother⟩ := ensured
+    have slots : prepared.slots.val = List.replicate code.slot_count.val 0#u64 := by
+      simpa [alloc.vec.Vec.new] using hslots
+    have frames : prepared.frames.val = [] := by
+      have h := congrArg runtime.interp.Execution.frames hother
+      simpa [alloc.vec.Vec.new] using congrArg alloc.vec.Vec.val h
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    obtain ⟨answer, reserved⟩ := law.reserve_eq prepared.frames 1#usize
+    have reserveCall : runtime.reserve allocator prepared.frames 1#usize = .ok
+        ((if answer then .Ok () else .Err (.Exhausted .Allocation)), prepared.frames) := by
+      cases answer <;> simp [runtime.reserve, reserved]
+    rw [reserveCall, bind_ok]
+    cases answer with
+    | false =>
+      simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      exact SegmentAddressSpace.refl store
+    | true =>
+      simp only [↓reduceIte, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+      step as ⟨pushed, hpushed⟩
+      have pushedFrames : pushed.val = [initializerFrame instIndex function 0#u32] := by
+        simpa [frames, initializerFrame] using hpushed
+      have nonempty : 0 < code.code.length := by
+        have := ready.returnLast
+        by_contra empty
+        have nil : code.code.val = [] := List.eq_nil_of_length_eq_zero (by simp only [alloc.vec.Vec.length] at empty; omega)
+        simp [nil] at this
+      have capacity : prepared.slots.length = code.slot_count.val := by simp [alloc.vec.Vec.length, slots]
+      step with segment_loop_total memory hooks floats allocator view laws store platform
+        {prepared with frames := pushed} instIndex function inst code 0#u32 found functionFound pushedFrames
+        (by simpa using nonempty) (by simpa only [capacity] using ready)
+        as ⟨after, host, finalSlots, result, metadata, hostEq, width, status⟩
+      subst host
+      cases result with
+      | Err error =>
+        simp [core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        exact metadata
+      | Ok unitValue =>
+        cases unitValue
+        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+        step with get_effect finalSlots.deref 0#usize
+        step with get_effect finalSlots.deref 1#usize
+        exact metadata
+
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Segment Initialize -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+/-- The actual instantiation segment entry point returns normally for the
+compiler's retained program and issued instance maps. -/
+theorem initialize_segments_total {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
+    (found : store.instances.val[instIndex.val]? = some inst)
+    (functionFound : inst.module.functions.val[inst.module.initialization.val]? = some code)
+    (ready : SegmentCodeReady store inst code code.slot_count.val) :
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
+      ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ := by
+  unfold runtime.interp.initialize_segments
+  step with Interp.vec_index_given store.instances instIndex inst found as ⟨actual, equal⟩
+  subst actual
+  step with segment_synthetic_total memory hooks floats allocator view laws law store platform instIndex
+    inst.module.initialization inst code found functionFound ready as ⟨result, after, host, metadata, hostEq⟩
+  subst host
+  cases result <;> simp_all [core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- Source typing and the syntactic emitted-program certificate discharge all
+machine-readiness obligations; no execution-safety premise is required. -/
+theorem initialize_segments_program_total {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
+    (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
+    (found : store.instances.val[instIndex.val]? = some inst)
+    (functionFound : inst.module.functions.val[inst.module.initialization.val]? = some code)
+    (program : Code.SegmentProgram inst.module code) (pcBound : code.code.length < U32.max)
+    (shape : InstanceShape store inst) (imports : InitializerImports store inst)
+    (bindings : InitializerBindings store inst)
+    (elementsValid : ∀ segment ∈ inst.module.module.env.elements.val,
+      Itasca.ModuleSegments.elementValid inst.module.module.env segment)
+    (dataValid : ∀ segment ∈ inst.module.module.tail.data.val,
+      Itasca.ModuleData.Valid inst.module.module.env segment) :
+    runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
+      ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ :=
+  initialize_segments_total memory hooks floats allocator view laws law store platform instIndex inst code
+    found functionFound (segment_program_ready store inst code program pcBound shape imports bindings elementsValid dataValid)
+
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Segment Accepted -/
+
+section
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
@@ -29,3 +183,5 @@ theorem initialize_segments_compiled {M P F A : Type}
     found functionFound program pcBound shape imports bindings valid.elements dataValid
 
 end Itasca.Runtime.Store
+
+end

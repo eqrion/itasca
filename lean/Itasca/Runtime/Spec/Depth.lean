@@ -1,5 +1,9 @@
 import SpecExt.Host
 
+/-!
+Administrative frame depth, excluding the ambient frame. Source invocation resource arguments use this nesting measure independently of runtime slots.
+-/
+
 namespace Itasca.Runtime.Spec
 
 mutual

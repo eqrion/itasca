@@ -1,5 +1,9 @@
 import Itasca.Generated.Types
 
+/-!
+Allocator content-preservation and normal-return laws, with a separate allocation-availability premise. Compiler and runtime proofs distinguish valid allocation behavior from requests being granted.
+-/
+
 namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 

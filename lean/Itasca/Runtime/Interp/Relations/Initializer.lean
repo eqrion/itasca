@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.InitializerExecute
-import Itasca.Runtime.Code.Local.Initializer.Initializer
+import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Interp.Relations.Ensure
 import Itasca.Runtime.Interp.Control.LoopBasis
 

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.GlobalTypedEffect
+import Itasca.Runtime.Store.Api.GlobalEffects
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

@@ -1,6 +1,10 @@
 import Itasca.Runtime.Platform.Alloc
 import Itasca.Runtime.Equations
 
+/-!
+Memory-buffer laws relating platform operations to visible bytes and lengths. Runtime memory and store proofs assume these embedding obligations.
+-/
+
 namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 

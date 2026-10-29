@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.SourceValueCauses
-import Itasca.Runtime.Interp.Machines.Core.CoreFunctionTyping
+import Itasca.Runtime.Interp.Machine.Functions.Typing
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

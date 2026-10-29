@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.Unreachable
 import Itasca.Runtime.Interp.Relations.ControlPoint
 

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Invariant.BindingMaps
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
 import Itasca.Runtime.Store.Initialization.SegmentTypes
-import Itasca.Runtime.Code.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.StructuredMachine.OrdinaryHeads
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 namespace Itasca.Runtime.Interp.StructuredMachine
 open Aeneas.Std
 

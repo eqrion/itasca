@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Api.MemoryAllocationCauses
 import Itasca.Runtime.Store.Invariant.NormalResult
-import Itasca.Runtime.Code.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

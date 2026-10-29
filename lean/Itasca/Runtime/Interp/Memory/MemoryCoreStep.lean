@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryCoreStore
-import Itasca.Runtime.Abs.Core.MemoryLoad
-import Itasca.Runtime.Abs.Core.MemoryStore
+import Itasca.Runtime.SourceMachine.Core.MemoryAccess
 namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
  theorem execute_load_core_simulation_exact {M : Type} (memory : runtime.platform.MemoryBuffer M)

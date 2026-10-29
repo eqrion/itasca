@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.State.GlobalCoreEmission
-import Itasca.Runtime.Abs.Core.Globals
+import Itasca.Runtime.SourceMachine.Core.Globals
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt

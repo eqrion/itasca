@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Step
 namespace Itasca.Runtime.Interp.MemoryDescriptor
 
 theorem core_step_load_eq (s : store) (ambient : frame) (f : Abs.AFrame) (rest : List Abs.AFrame)

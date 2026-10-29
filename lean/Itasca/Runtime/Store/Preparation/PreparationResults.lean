@@ -1,8 +1,8 @@
 import Itasca.Runtime.Store.Preparation.PreparedInitializers
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
-import Itasca.Runtime.Store.Invariant.FunctionStagingLoop
-import Itasca.Runtime.Store.Api.TableStagingLoop
-import Itasca.Runtime.Store.Api.MemoryStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
+import Itasca.Runtime.Store.Invariant.FunctionStaging
+import Itasca.Runtime.Store.Api.TableStaging
+import Itasca.Runtime.Store.Api.MemoryStaging
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

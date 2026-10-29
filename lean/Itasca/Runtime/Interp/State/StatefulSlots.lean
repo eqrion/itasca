@@ -1,6 +1,175 @@
-import Itasca.Runtime.Interp.State.StatefulReference
-import Itasca.Runtime.Interp.State.StatefulReads
+import Itasca.Runtime.Interp.State.TableAccess
+import Itasca.Runtime.Interp.Memory.MemorySize
+import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.Interp.Relations.InitializerExecute
+import Itasca.Runtime.Interp.Relations.ReferenceSource
+import Itasca.Runtime.Spec.ReferenceFunction
 import Itasca.Runtime.Interp.Relations.Regions
+
+/-!
+Slot effects for read-only store and reference instructions. Memory/table size, table get and reference operators share the concrete result-write argument while retaining their distinct source effects.
+-/
+
+/-! ## Stateful Reads -/
+
+section
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
+variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+  (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
+  (allocator : runtime.platform.Alloc A)
+
+theorem stateful_table_size_effect (view : M → Slice U8) (code : CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
+    (instanceIndex base : Usize) (dst table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst)
+    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (found : store.instances.val[instanceIndex.val]? = some inst)
+    (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
+    (dstBound : base.val+dst.val < exec.slots.length)
+    (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst) :
+    runtime.interp.execute_table_size memory exec store instanceIndex base dst table ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2 = store ∧
+      SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 object.elements.len)) ∧
+      Abs.Stateful.Transition state f rest after (.tableSize table.val)
+        (Abs.advance state {f with code := after,vals := f.vals++[Abs.integerVal .I32 object.elements.length]} rest) ⦄ := by
+  apply WP.spec_mono (table_size_effect memory exec store instanceIndex base dst table inst address object found mapped issued dstBound)
+  intro out effect
+  refine ⟨effect.1,effect.2.1,effect.2.2,{},trivial,?_⟩
+  simp [Abs.Stateful.evaluate,Abs.Stateful.tableSize,moduleEq,sourceStore,decodeInstance,decodeStore,
+    List.getElem?_map,mapped,issued,decodeTable,alloc.vec.Vec.length]
+
+theorem stateful_memory_size_effect (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (code : CodeInterpretation) (exec : runtime.interp.Execution) (store : runtime.store.Store M)
+    (instanceIndex base : Usize) (dst : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
+    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (found : store.instances.val[instanceIndex.val]? = some inst)
+    (mapped : inst.memories.val[0]? = some address) (issued : store.memories.val[address.index.val]? = some object)
+    (dstBound : base.val+dst.val < exec.slots.length)
+    (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst) :
+    runtime.interp.execute_memory_size memory exec store instanceIndex base dst ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2 = store ∧ ∃ pages : Usize,
+        pages.val = (view object.buf).length / 65536 ∧
+        SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 pages)) ∧
+        Abs.Stateful.Transition state f rest after .memorySize
+          (Abs.advance state {f with code := after,vals := f.vals++[Abs.integerVal .I32 pages.val]} rest) ⦄ := by
+  apply WP.spec_mono (memory_size_handler memory view laws exec store instanceIndex base dst inst address object found mapped issued dstBound)
+  intro out effect
+  obtain ⟨success,same,pages,pagesEq,slots⟩ := effect
+  refine ⟨success,same,pages,pagesEq,slots,{},trivial,?_⟩
+  simp [Abs.Stateful.evaluate,Abs.Stateful.memorySize,moduleEq,sourceStore,decodeInstance,decodeStore,
+    List.getElem?_map,mapped,issued,decodeMemory,decodeBytes,pagesEq]
+
+theorem stateful_table_get_effect (view : M → Slice U8) (code : CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
+    (instanceIndex base : Usize) (dst index table : U32) (inst : runtime.store.ModuleInst)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (position : U32)
+    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
+    (found : store.instances.val[instanceIndex.val]? = some inst)
+    (mapped : inst.tables.val[table.val]? = some address) (issued : store.tables.val[address.index.val]? = some object)
+    (input : UScalar.cast .U32 exec.slots.val[base.val+index.val]! = position)
+    (indexBound : base.val+index.val < exec.slots.length) (dstBound : base.val+dst.val < exec.slots.length)
+    (sourceStore : state.store = decodeStore view code store) (moduleEq : f.module = decodeInstance store inst)
+    (values : f.vals = front++[Abs.integerVal .I32 position.val]) :
+    runtime.interp.execute_table_get memory exec store instanceIndex base dst index table ⦃ out =>
+      if position.val < object.elements.length then
+        out.1 = .Ok () ∧ out.2.2 = store ∧
+        SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) object.elements.val[position.val]!) ∧
+        Abs.Stateful.Transition state f rest after (.tableGet table.val)
+          (Abs.advance state {f with code := after,vals := front++[val_ref (decodeRef object.ty object.elements.val[position.val]!)]} rest)
+      else out = (.Err (.Trap .TableOutOfBounds),exec,store) ∧
+        Abs.Stateful.Transition state f rest after (.tableGet table.val) .trap ⦄ := by
+  have decoded : Abs.integer .I32 (Abs.integerVal .I32 position.val) = some position.val :=
+    Abs.integer_accepts .I32 position.val (by change position.val < 2^32; scalar_tac)
+  apply WP.spec_mono (table_get_effect memory exec store instanceIndex base dst index table inst address object position found mapped issued input indexBound dstBound)
+  intro out effect
+  by_cases inside : position.val < object.elements.length
+  · simp only [inside,ite_true] at effect ⊢
+    refine ⟨effect.1,effect.2.1,effect.2.2,{},trivial,?_⟩
+    simp [Abs.Stateful.evaluate,Abs.Stateful.tableGet,values,Abs.pop_append,decoded,moduleEq,sourceStore,
+      decodeInstance,decodeStore,List.getElem?_map,mapped,issued,decodeTable,inside,alloc.vec.Vec.length]
+  · simp only [inside,ite_false] at effect ⊢
+    refine ⟨effect,{},trivial,?_⟩
+    simp [Abs.Stateful.evaluate,Abs.Stateful.tableGet,values,Abs.pop_append,decoded,moduleEq,sourceStore,
+      decodeInstance,decodeStore,List.getElem?_map,mapped,issued,decodeTable,inside,alloc.vec.Vec.length]
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## Stateful Reference -/
+
+section
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
+
+variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+  (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
+  (allocator : runtime.platform.Alloc A)
+
+theorem stateful_ref_null_effect (exec : runtime.interp.Execution) (base : Usize) (dst : U32)
+    (type : Itasca.types.ElemType) (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (slotBound : base.val+dst.val < exec.slots.length) :
+    runtime.interp.execute_ref_null exec base dst ⦃ out =>
+      out.1 = .Ok () ∧ SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) 0#u64) ∧
+      Abs.Stateful.Transition state f rest after (.refNull (decodeElemType type))
+        (Abs.advance state {f with code := after,vals := f.vals++[.REF_NULL (decodeElemType type)]} rest) ⦄ := by
+  apply WP.spec_mono (ref_null_effect exec base dst slotBound)
+  intro out effect
+  exact ⟨effect.1,effect.2,{},trivial,rfl⟩
+
+theorem stateful_ref_func_effect (exec : runtime.interp.Execution) (store : runtime.store.Store M)
+    (instanceIndex base : Usize) (dst func : U32) (inst : runtime.store.ModuleInst) (address : runtime.FuncAddr)
+    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (found : store.instances.val[instanceIndex.val]? = some inst)
+    (mapped : inst.funcs.val[func.val]? = some address) (issued : address.index.val < store.funcs.length)
+    (slotBound : base.val+dst.val < exec.slots.length)
+    (moduleEq : f.module = decodeInstance store inst) :
+    runtime.interp.execute_ref_func memory exec store instanceIndex base dst func ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2 = store ∧ ∃ word : U64,
+        word.val = address.index.val+1 ∧
+        SlotsEffect exec out.2.1 (exec.slots.val.set (base.val+dst.val) word) ∧
+        Abs.Stateful.Transition state f rest after (.refFunc func.val)
+          (Abs.advance state {f with code := after,vals := f.vals++[.REF_FUNC_ADDR address.index.val]} rest) ⦄ := by
+  have addressBound : address.index.val < U64.max := by
+    have bound := store.funcs.property
+    rcases Usize.bounds_eq with h | h <;> scalar_tac
+  apply WP.spec_mono (ref_func_effect memory exec store instanceIndex base dst func inst address found mapped addressBound slotBound)
+  intro out effect
+  obtain ⟨success,same,word,wordEq,slots⟩ := effect
+  refine ⟨success,same,word,wordEq,slots,{},trivial,?_⟩
+  simp [Abs.Stateful.evaluate,Abs.Stateful.refFunc,moduleEq,decodeInstance,List.getElem?_map,mapped]
+
+theorem stateful_ref_is_null_effect (exec : runtime.interp.Execution) (base : Usize) (dst src : U32)
+    (type : Itasca.types.ElemType) (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame)
+    (after : List instr) (front : List val)
+    (values : f.vals = front++[val_ref (decodeRef type exec.slots.val[base.val+src.val]!)])
+    (sourceBound : base.val+src.val < exec.slots.length) (destinationBound : base.val+dst.val < exec.slots.length) :
+    runtime.interp.execute_ref_is_null exec base dst src ⦃ out =>
+      out.1 = .Ok () ∧ ∃ word : U64,
+        word.val = Spec.referenceIsNull (decodeRef type exec.slots.val[base.val+src.val]!) ∧
+        SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) word) ∧
+        Abs.Stateful.Transition state f rest after .refIsNull
+          (Abs.advance state {f with code := after,vals := front++[Abs.integerVal .I32 word.val]} rest) ⦄ := by
+  apply WP.spec_mono (ref_is_null_effect exec base dst src sourceBound destinationBound)
+  intro out effect
+  let word : U64 := if exec.slots.val[base.val+src.val]! = 0#u64 then 1#u64 else 0#u64
+  have wordEq : word.val = Spec.referenceIsNull (decodeRef type exec.slots.val[base.val+src.val]!) := by
+    rw [decode_ref_is_null]
+    dsimp only [word]
+    split <;> rfl
+  refine ⟨effect.1,word,wordEq,effect.2,{},trivial,?_⟩
+  simp only [Abs.Stateful.evaluate,Abs.Stateful.refIsNull,values,Abs.pop_append,Abs.Stateful.asReference_value,wordEq]
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## Stateful Slots -/
+
+section
+
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std
 
@@ -180,3 +349,5 @@ theorem ref_is_null_slots (exec : runtime.interp.Execution) (raw : runtime.inter
   obtain ⟨success,word,wordEq,written,transition⟩ := effect
   exact ⟨success,word,wordEq,written,frame_write_result slots values position bound written rfl,transition⟩
 end Itasca.Runtime.Interp.Stateful
+
+end

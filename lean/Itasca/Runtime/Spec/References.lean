@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.TableInitSource
+import Itasca.Runtime.Spec.TableInit
 namespace Itasca.Runtime.Spec
 open SpecExt
 

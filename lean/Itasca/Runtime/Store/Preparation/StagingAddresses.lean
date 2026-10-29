@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Api.TableStaging
 import Itasca.Runtime.Store.Api.MemoryStaging
-import Itasca.Runtime.Store.Api.GlobalResultEffect
-import Itasca.Runtime.Store.Initialization.DataResultEffect
+import Itasca.Runtime.Store.Api.GlobalEffects
+import Itasca.Runtime.Store.Initialization.DataEffects
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -39,25 +39,25 @@ RUNTIME_RESULTS = {"Itasca.Results.Compile", "Itasca.Results.Instantiate", "Itas
 # compiler, interpreter or store construction proof can enter through that foundation.
 RUNTIME_LAYERS = {
     "Spec": {"Itasca.Runtime.Spec", "SpecExt", "Itasca.Spec", "Itasca.Support"},
-    "Abs": {"Itasca.Runtime.Abs", "Itasca.Runtime.Spec", "SpecExt", "Itasca.Spec"},
+    "SourceMachine": {"Itasca.Runtime.SourceMachine", "Itasca.Runtime.Spec", "SpecExt", "Itasca.Spec"},
     "Equations": {"Itasca.Generated", "Aeneas"},
     "Platform": {"Itasca.Runtime.Platform", "Itasca.Runtime.Equations", "Itasca.Generated", "Itasca.Runtime.Spec", "SpecExt"},
     "Representation": {"Itasca.Runtime.Representation", "Itasca.Runtime.Equations", "Itasca.Runtime.Platform",
-                       "Itasca.Runtime.Spec", "Itasca.Runtime.Abs", "SpecExt.Builtins", "Itasca"},
-    "Code": {"Itasca.Runtime.Code", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations", "Itasca.Runtime.Platform",
-             "Itasca.Runtime.Abs", "Itasca.Runtime.Spec", "SpecExt.Builtins", "Itasca"},
+                       "Itasca.Runtime.Spec", "Itasca.Runtime.SourceMachine", "SpecExt.Builtins", "Itasca"},
+    "Compiler": {"Itasca.Runtime.Compiler", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations", "Itasca.Runtime.Platform",
+             "Itasca.Runtime.SourceMachine", "Itasca.Runtime.Spec", "SpecExt.Builtins", "Itasca"},
     "Interp": {"Itasca.Runtime.Interp", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations",
-               "Itasca.Runtime.Platform", "Itasca.Runtime.Abs", "Itasca.Runtime.Code", "Itasca.Runtime.Spec",
+               "Itasca.Runtime.Platform", "Itasca.Runtime.SourceMachine", "Itasca.Runtime.Compiler", "Itasca.Runtime.Spec",
                "SpecExt.Builtins", "Itasca.Support", "Itasca.Generated"},
     "Store": {"Itasca.Runtime.Store", "Itasca.Runtime.Representation", "Itasca.Runtime.Equations",
-              "Itasca.Runtime.Platform", "Itasca.Runtime.Spec", "Itasca.Runtime.Interp", "Itasca.Runtime.Code",
+              "Itasca.Runtime.Platform", "Itasca.Runtime.Spec", "Itasca.Runtime.Interp", "Itasca.Runtime.Compiler",
               "Itasca.Generated"},
-    "Theorems": {"Itasca.Runtime", "Itasca", "SpecExt", "Aeneas"},
-    # Contracts stay below the constructions that assume them. The API invariant
-    # is named until Theorems/Api leaves the Theorems layer.
+    "Integration": {"Itasca.Runtime", "Itasca", "SpecExt", "Aeneas"},
+    # Contracts stay below the constructions that assume them. The one API
+    # invariant dependency is admitted exactly in check_runtime_layer, not as
+    # a prefix that would also admit constructions placed below that path.
     "Contracts": {"Itasca.Runtime.Platform", "Itasca.Runtime.Equations", "Itasca.Generated", "Itasca.Runtime.Spec",
-                  "Itasca.Runtime.Representation", "Itasca.Runtime.Store", "Itasca.Runtime.Interp.Relations",
-                  "Itasca.Runtime.Theorems.Api.ExecutableInv", "SpecExt"},
+                  "Itasca.Runtime.Representation", "Itasca.Runtime.Store", "Itasca.Runtime.Interp.Relations", "SpecExt"},
 }
 # Integration stages can use local proofs, but never flow back into them.
 COMPILER_STAGES = {"Local": 0, "Body": 1, "Module": 2}
@@ -84,6 +84,34 @@ def sinks(modules: dict[str, list[str]], library: str = "Itasca") -> list[str]:
     audit = library + ".Audit"
     imported = {i for name, imports in modules.items() if name != audit for i in imports}
     return sorted(m for m in modules if m not in imported and m != audit and not template(m))
+
+
+def check_acyclic(modules: dict[str, list[str]]) -> None:
+    """Reject cycles even when an audit sink reaches them.
+
+    Use an explicit DFS stack so checking a long proof chain does not depend on
+    Python's recursion limit. External modules belong to their own libraries.
+    """
+    finished: set[str] = set()
+    for start in sorted(modules):
+        if start in finished:
+            continue
+        active = {start}
+        path = [start]
+        stack = [iter(modules[start])]
+        while stack:
+            child = next(stack[-1], None)
+            if child is None:
+                finished.add(path[-1])
+                active.remove(path.pop())
+                stack.pop()
+            elif child in active:
+                cycle = path[path.index(child):] + [child]
+                raise ValueError("Import cycle: " + " -> ".join(cycle))
+            elif child in modules and child not in finished:
+                active.add(child)
+                path.append(child)
+                stack.append(iter(modules[child]))
 
 
 def write_audit(root: Path, modules: dict[str, list[str]], library: str = "Itasca") -> None:
@@ -134,9 +162,11 @@ def check_runtime_layer(name: str, imported: str) -> None:
     if layer not in RUNTIME_LAYERS:
         raise ValueError(f"{name} has no declared Itasca.Runtime import layer")
     allowed = RUNTIME_LAYERS[layer] | FOUNDATIONS
-    if layer in {"Spec", "Theorems"}:
+    if layer == "Contracts" and imported == "Itasca.Runtime.Integration.Api.ExecutableInv":
+        return
+    if layer in {"Spec", "Integration"}:
         allowed = allowed | SPEC_MODULES
-    if layer == "Code" and under(imported, "Itasca.Runtime.Code"):
+    if layer == "Compiler" and under(imported, "Itasca.Runtime.Compiler"):
         source_stage = name.split(".")[3]
         target_stage = imported.split(".")[3]
         if source_stage not in COMPILER_STAGES or target_stage not in COMPILER_STAGES:
@@ -156,7 +186,7 @@ def check_runtime_layer(name: str, imported: str) -> None:
     if layer == "Store" and imported in {
         "Itasca.Module.Const.Syntax", "Itasca.Module.Elab.SegmentSyntax",
         "Itasca.Module.Env.Basic", "Itasca.Module.Elab.Metadata",
-        "Itasca.Runtime.Abs.ModuleBindingsExtension", "Itasca.Runtime.Abs.StoreTyping",
+        "Itasca.Runtime.SourceMachine.ModuleBindingsExtension", "Itasca.Runtime.SourceMachine.StoreTyping",
         "Aeneas.Data.List.List", "SpecExt.Wasm1",
     }:
         return
@@ -246,6 +276,7 @@ def check(root: Path, library: str = "Itasca") -> None:
     omitted = {m for m in modules if not template(m)} - seen
     if omitted:
         raise ValueError(f"Modules outside {audit}: " + ", ".join(sorted(omitted)))
+    check_acyclic(modules)
     if library == "SpecExt":
         check_builtins(root)
     print(f"{library} audit import coverage: {len(seen)} modules; layers import downward")

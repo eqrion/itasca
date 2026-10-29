@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.DefinitionErrors
 import Itasca.Runtime.Store.Initialization.InitializerErrors
-import Itasca.Runtime.Code.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
-import Itasca.Runtime.Store.Api.GlobalContentLoop
+import Itasca.Runtime.Store.Api.GlobalLoopCertificates
 import Itasca.Runtime.Store.Initialization.ElementBoundsLoop
-import Itasca.Runtime.Store.Initialization.DataBoundsLoop
+import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -11,9 +11,9 @@ import Itasca.Runtime.Store.Initialization.ElementEffects
 import Itasca.Runtime.Store.Initialization.DataStagingLoop
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
 import Itasca.Runtime.Store.Invariant.ItemErrors
-import Itasca.Runtime.Store.Linking.LinkErrorLoop
+import Itasca.Runtime.Store.Linking.LinkErrors
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
-import Itasca.Runtime.Store.Invariant.ObjectAllocationErrorLoops
+import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Api.GlobalErrorLoop
 import Itasca.Runtime.Store.Initialization.ElementErrorLoop
 import Itasca.Runtime.Store.Initialization.DataErrorLoop

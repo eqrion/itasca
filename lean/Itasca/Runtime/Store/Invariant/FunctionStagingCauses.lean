@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Invariant.FunctionStagingLoop
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Invariant.FunctionTypeCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 namespace Itasca.Runtime.Store

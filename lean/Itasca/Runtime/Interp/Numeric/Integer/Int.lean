@@ -1,5 +1,5 @@
 import Itasca.Runtime.Equations
-import Itasca.Runtime.Abs.Sim.Int
+import Itasca.Runtime.SourceMachine.Sim.Int
 import Itasca.Runtime.Spec.IntegerDiv
 import Itasca.Runtime.Spec.IntegerBits
 

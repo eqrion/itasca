@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.FunctionSourceAllocation
 import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Code.Local.Source.SourceSlice
+import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

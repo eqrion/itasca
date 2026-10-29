@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.TableMemoryBindings
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

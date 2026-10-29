@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Memory.MemoryDispatch
 import Itasca.Runtime.Interp.Memory.MemoryDecode
 import Itasca.Runtime.Interp.Relations.PackedMemorySource
-import Itasca.Runtime.Abs.Memory.Descriptor
+import Itasca.Runtime.SourceMachine.Memory.Descriptor
 
 namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt

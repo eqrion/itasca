@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.StepRecordingLookup
-import Itasca.Runtime.Code.Body.Relations.Common.RecordingEmission
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

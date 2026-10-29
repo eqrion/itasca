@@ -122,7 +122,14 @@ It lists the runtime results too, stated in the same directory, and every
 runtime embedder obligation is listed in
 [lean/Itasca/Runtime/Contracts.lean](lean/Itasca/Runtime/Contracts.lean).
 
-TODO, summarize the execution proofs.
+The runtime proofs cover compilation for both profiles, instantiation without
+executing the start function, and invocation of issued Wasm or host functions.
+Invocation relates returned outcomes to source execution with the actual host
+event log, retains the store invariant, and classifies resource errors. Its
+divergence result allows either infinite source execution or a diverging host
+callback. These results assume the explicit platform and callback contracts;
+the [execution boundary](lean/README.md#execution-boundary) describes their
+premises and the native embedding boundary.
 
 ### Trust boundary
 

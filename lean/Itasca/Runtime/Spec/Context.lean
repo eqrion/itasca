@@ -1,5 +1,9 @@
 import Itasca.Runtime.Spec.Wf
 
+/-!
+Source evaluation-context algebra and transport of reduction. Source-machine simulations use these lemmas to rebuild nested labels and frames.
+-/
+
 namespace Itasca.Runtime.Spec
 open SpecExt
 

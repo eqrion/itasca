@@ -137,8 +137,12 @@ entry to keep its borrow join extractable. Keep native platform wrappers outside
 
 Runtime implementation responsibilities are split between compiler callbacks,
 control and opcode lowering; interpreter operations and dispatch; store object
-access and staged instantiation; and native/platform boundaries. Proof layers
-and their import rules are documented in [Runtime/README](lean/Itasca/Runtime/README.md).
+access and staged instantiation; and native/platform boundaries. Handwritten
+proofs use `Runtime/Compiler`, `Runtime/Interp`, `Runtime/Store` and
+`Runtime/Integration`, with independent `Runtime/SourceMachine` and shared
+`Runtime/Representation` foundations. Compiler proofs retain Local → Body →
+Module stages. Follow the [runtime layer map and reading paths](lean/Itasca/Runtime/README.md)
+when placing a shared helper; a module move must preserve its dependency boundary.
 
 ## API and documentation
 

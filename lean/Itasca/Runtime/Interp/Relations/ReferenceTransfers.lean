@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.ReferenceBounds
+import Itasca.Runtime.SourceMachine.ReferenceBounds
 
 namespace Itasca.Runtime.Interp
 

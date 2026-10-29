@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Integer.Int
-import Itasca.Runtime.Interp.Numeric.Float.Float
+import Itasca.Runtime.Interp.Numeric.Float
 
 /-! The scalar dispatch boundary reads both operands before writing the result.
 A numeric trap leaves the complete execution state unchanged. These lemmas

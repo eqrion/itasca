@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Calls.ReturnRegions
-import Itasca.Runtime.Abs.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Instruction
 import Itasca.Runtime.Interp.Relations.Fetch
 
 

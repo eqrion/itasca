@@ -1,5 +1,10 @@
 import Itasca.Runtime.Representation.ValidatedStacks
 import Itasca.Runtime.Equations
+
+/-!
+Independent source frame demand and compiled-function capacity certificates. The compiler establishes these bounds and store capacity proofs retain them.
+-/
+
 namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 

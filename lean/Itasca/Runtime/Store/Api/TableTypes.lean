@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.TableStagingLoop
+import Itasca.Runtime.Store.Api.TableStaging
 import Itasca.Runtime.Store.Initialization.SegmentTypes
 
 namespace Itasca.Runtime.Store

@@ -69,6 +69,6 @@ operations, host callbacks, compiler eligibility and source resources) are liste
 - platform: `Platform.AllocCorrect`, `Platform.AllocationAvailable`, `Platform.FloatOpsCorrect`,
   `Platform.MemoryLaws`
 - host callbacks: `HostWorldSound`, `NoHostStackOverflow`
-- compiler: `Code.ValidCompilationSource`, `Code.CompileEligible`
+- compiler: `Compiler.ValidCompilationSource`, `Compiler.CompileEligible`
 - source resources: `SourceResourcesFit`, `Interp.SourceCanonicalFunctionCapacity`
 -/

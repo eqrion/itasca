@@ -1,4 +1,9 @@
 import Itasca.Runtime.Equations
+
+/-!
+Retained type-entry certificates for runtime stores. Store staging and source-capacity proofs consume the same independent signature evidence.
+-/
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

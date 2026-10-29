@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Numeric.Float.Float
+import Itasca.Runtime.Interp.Numeric.Float
 import Itasca.Runtime.Spec.FloatReinterpret
 
 namespace Itasca.Runtime.Interp

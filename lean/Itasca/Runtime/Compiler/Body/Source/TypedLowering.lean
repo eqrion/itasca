@@ -1,0 +1,27 @@
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+namespace Itasca.Runtime.Code
+open Aeneas Aeneas.Std Itasca
+
+/-- The exact concrete source types of the validator's complete operand stack. -/
+structure SourceStack (raw : List code.StackType) (types : List valtype) : Prop where
+  concrete : ConcreteStack raw
+  decoded : Sequence.stackTypes raw = types
+
+theorem SourceStack.of_map {raw : List code.StackType} {types : List valtype}
+    (values : List Itasca.types.ValueType) (concrete : raw = values.map code.StackType.Val)
+    (decoded : values.map Translate.valueType = types) : SourceStack raw types := by
+  refine ⟨(concreteStack_iff raw).mpr ⟨values, concrete⟩, ?_⟩
+  simpa only [concrete, Sequence.stackTypes, List.map_map, Function.comp_def] using decoded
+
+/-- Actual lowering plus the exact post-reader type vector. Word offsets alone
+would not distinguish source types that share the same machine width. -/
+def TypedLowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)
+    (raw : List code.StackType) (instruction : Bytecode) (stack : List valtype) : Prop :=
+  Lowered before after instruction stack ∧ SourceStack raw stack
+
+def TypedLoweredEmpty {A : Type} (before after : runtime.compiler.FunctionCompiler A)
+    (raw : List code.StackType) (stack : List valtype) : Prop :=
+  LoweredEmpty before after stack ∧ SourceStack raw stack
+
+end Itasca.Runtime.Code

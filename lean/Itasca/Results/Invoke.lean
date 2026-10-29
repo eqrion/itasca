@@ -1,5 +1,4 @@
-import Itasca.Runtime.Theorems.Invocation.PublicBehaves
-import Itasca.Runtime.Theorems.Invocation.PublicNoSpuriousErrors
+import Itasca.Runtime.Integration.Invocation.Behaves
 
 /-!
 # Invocation

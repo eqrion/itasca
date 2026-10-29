@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.TableTypes
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Initialization.DataStagingLoop

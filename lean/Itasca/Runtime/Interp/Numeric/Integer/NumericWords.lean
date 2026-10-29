@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntegerDispatch
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.Abs.Numeric.Transition
+import Itasca.Runtime.SourceMachine.Numeric.Transition
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Abs.Numeric

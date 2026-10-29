@@ -1,8 +1,8 @@
-import Itasca.Runtime.Store.Initialization.ElementValueSource
-import Itasca.Runtime.Store.Api.GlobalValueSource
-import Itasca.Runtime.Store.Initialization.DataPayload
+import Itasca.Runtime.Store.Initialization.ElementValues
+import Itasca.Runtime.Store.Api.GlobalEffects
+import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Invariant.BindingTyping
-import Itasca.Runtime.Code.Local.Source.SourceSlice
+import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

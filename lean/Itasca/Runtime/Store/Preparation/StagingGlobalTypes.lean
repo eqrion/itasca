@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
-import Itasca.Runtime.Store.Api.GlobalTypeLoop
+import Itasca.Runtime.Store.Api.GlobalLoopCertificates
 import Itasca.Runtime.Store.Initialization.ElementGlobalTypes
 import Itasca.Runtime.Store.Initialization.DataGlobalTypes
 namespace Itasca.Runtime.Store

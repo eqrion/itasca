@@ -7,6 +7,7 @@ fixed file sample. Extraction outputs are excluded throughout, and so are oleans
 left behind by deleted sources.
 """
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
 import re
 import statistics
@@ -45,6 +46,12 @@ def declarations(text: str) -> list[tuple[str, str]]:
     return DECL.findall(text)
 
 
+def namespace_file_counts(texts: Iterable[str]) -> Counter[str]:
+    """Count each namespace once per file, including reopened namespaces."""
+    return Counter(name for text in texts
+                   for name in set(re.findall(r"^namespace (\S+)$", text, re.M)))
+
+
 def swap_profile(name: str) -> str:
     return PROFILE.sub(lambda m: m.group(0)[:-1] + ("2" if m.group(0)[-1] == "1" else "1"), name)
 
@@ -76,8 +83,7 @@ def stats(lib: str) -> None:
               if (f := OLEANS / p.relative_to(ROOT).with_suffix(".olean")).exists()]
     big = sorted((s for s in oleans if s[0] > 10 * 2**20), reverse=True)
     file_pairs, name_pairs = profile_duplicates(files)
-    flat = Counter(m.group(1) for t in files.values()
-                   for m in re.finditer(r"^namespace (\S+)$", t, re.M))
+    flat = namespace_file_counts(files.values())
     widest, width = flat.most_common(1)[0] if flat else ("-", 0)
     gib = lambda n: f"{n / 2**30:.2f} GiB"
     rows = [

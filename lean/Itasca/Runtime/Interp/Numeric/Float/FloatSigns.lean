@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Numeric.Float.Float
+import Itasca.Runtime.Interp.Numeric.Float
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 

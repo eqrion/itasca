@@ -1,4 +1,8 @@
-import Itasca.Runtime.Platform.RecordingLoop
+import Itasca.Runtime.Platform.Recording
+
+/-!
+Invariant witnesses for loops that return. Invocation recording uses this transport without adding a termination assumption to partial executions.
+-/
 
 namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std Lean.Order

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Relations.Erased
-import Itasca.Runtime.Abs.Sim.Compose
+import Itasca.Runtime.SourceMachine.Sim.Compose
 
 namespace Itasca.Runtime.Interp
 

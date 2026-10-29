@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.Abs.Numeric.Decode
-import Itasca.Runtime.Abs.Numeric.OperandsCore
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Numeric.OperandsCore
 
 namespace Itasca.Runtime.Interp
 open Aeneas.Std Abs.Numeric

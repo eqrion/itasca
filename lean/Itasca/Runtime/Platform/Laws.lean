@@ -2,6 +2,10 @@ import Itasca.Runtime.Platform.Alloc
 import Itasca.Runtime.Platform.Float
 import Itasca.Runtime.Platform.Memory
 
+/-!
+The platform-law bundle for floating point, allocation, memory and normal-returning interrupts. Public runtime constructions take this shared embedding contract.
+-/
+
 namespace Itasca.Runtime.Platform
 open Aeneas Aeneas.Std
 

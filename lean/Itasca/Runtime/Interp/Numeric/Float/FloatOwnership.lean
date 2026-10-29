@@ -1,5 +1,5 @@
-import Itasca.Runtime.Abs.Float.Transition
-import Itasca.Runtime.Interp.Core.OwnershipClosure
+import Itasca.Runtime.SourceMachine.Float.Transition
+import Itasca.Runtime.Interp.Machine.Retention.Ownership
 namespace Itasca.Runtime.Interp
 open Abs.Ownership
 

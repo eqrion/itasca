@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.ScalarDispatch
 import Itasca.Runtime.Representation.Store
-import Itasca.Runtime.Code.Local.Relations.Common.Rel
+import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 
 /-! Concrete slot and frame correspondences. These predicates describe data,
 addresses, and emitted instruction locations; they contain no preservation or

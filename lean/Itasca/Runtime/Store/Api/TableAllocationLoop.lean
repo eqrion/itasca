@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.TableMemoryOrder
-import Itasca.Runtime.Store.Invariant.TypeStagingLoop
+import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Preparation.PreparationResults
 
 namespace Itasca.Runtime.Store

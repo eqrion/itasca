@@ -1,8 +1,8 @@
 import Itasca.Runtime.Interp.Relations.FrameBindings
 import Itasca.Runtime.Representation.FunctionTable
 import Itasca.Runtime.Interp.Relations.FrameStack
-import Itasca.Runtime.Code.Local.Relations.Common.Function
-import Itasca.Runtime.Abs.PureHead
+import Itasca.Runtime.Compiler.Local.Relations.Function.Function
+import Itasca.Runtime.SourceMachine.PureHead
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

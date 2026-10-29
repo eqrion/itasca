@@ -1,10 +1,189 @@
-import Itasca.Runtime.Interp.State.StatefulReadDispatch
-import Itasca.Runtime.Interp.State.StatefulCapacity
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
+import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
+import Itasca.Runtime.Interp.State.StatefulLookup
+import Itasca.Runtime.Interp.State.StatefulReferenceValue
 import Itasca.Runtime.Interp.State.StatefulContinue
-import Itasca.Runtime.Interp.StructuredMachine.StatefulPrepare
-import Itasca.Runtime.Interp.StructuredMachine.Execution
-import Itasca.Runtime.Abs.Cumulative.Step
-import Itasca.Runtime.Code.Local.Relations.Common.StatefulEmission
+import Itasca.Runtime.Interp.Machine.Stateful.Prepare
+import Itasca.Runtime.Interp.Machine.Execution
+import Itasca.Runtime.SourceMachine.Cumulative.Step
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+
+/-!
+Read-only store/reference instruction dispatch and structured step. Operand inversion, result slots and checked destination capacity establish the point-step correspondence.
+-/
+
+/-! ## Stateful Capacity -/
+
+section
+
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std Itasca.ResultFacts
+
+private theorem first_checked (first second : Result Bool)
+    (checked : (do let b ← first; if b then second else .ok false) = .ok true) : first=.ok true := by
+  obtain ⟨value,run,checked⟩ := bind_ok_inv _ _ _ checked
+  cases value with
+  | false => simp at checked
+  | true => exact run
+
+theorem read_valid_capacity (compiled : runtime.bytecode.CompiledFunction)
+    (op : Abs.Stateful.Instruction) (first second a entry : U32)
+    (readOnly : op.readOnly=true)
+    (checked : runtime.bytecode.CompiledFunction.instruction_valid compiled (Code.statefulInstruction op first second a entry)=.ok true) :
+    first.val<compiled.slot_count.val := by
+  cases op <;> simp only [Abs.Stateful.Instruction.readOnly,Bool.false_eq_true] at readOnly
+  all_goals
+    simp only [Code.statefulInstruction,runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,
+      runtime.bytecode.Instr.scalar,runtime.bytecode.Instr.load,runtime.bytecode.Instr.store,
+      runtime.bytecode.Instr.simd,bind_ok] at checked
+  all_goals first
+    | (have bound := Code.slots_fit_true compiled first 1#u32 checked; scalar_tac)
+    | (have bound := Code.slots_fit_true compiled first 1#u32 (first_checked _ _ checked); scalar_tac)
+end Itasca.Runtime.Interp.Stateful
+
+end
+
+/-! ## Stateful Read Dispatch -/
+
+section
+
+namespace Itasca.Runtime.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
+
+def ReadResult (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (state : Abs.AState)
+    (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr) (front : List val)
+    (op : Abs.Stateful.Instruction) (output : List valtype) (first : U32)
+    (status : core.result.Result Unit runtime.ExecError) (fresh : runtime.interp.Execution) : Prop :=
+  (∃ produced word, status=.Ok () ∧ produced.map Code.valueType=output ∧
+    SlotsEffect exec fresh (exec.slots.val.set (raw.base.val+first.val) word) ∧
+    FrameSlots fresh raw {f with code:=after,vals:=front++produced} ∧
+    Abs.Stateful.Transition state f rest after op (Abs.advance state {f with code:=after,vals:=front++produced} rest)) ∨
+  (status=.Err (.Trap .TableOutOfBounds) ∧ fresh=exec ∧ Abs.Stateful.Transition state f rest after op .trap)
+
+private theorem decode_reference_type (type : Itasca.types.ElemType) (word : U64) :
+    Code.valueType (val_ref (decodeRef type word))=valtype_reftype (decodeElemType type) := by
+  cases type <;> unfold decodeRef <;> split <;> rfl
+
+private theorem empty_operands {operands : List val} (types : operands.map Code.valueType=[]) : operands=[] :=
+  List.map_eq_nil_iff.mp types
+
+private theorem one_operand {operands : List val} {type : valtype}
+    (types : operands.map Code.valueType=[type]) : ∃ value,operands=[value] ∧ Code.valueType value=type := by
+  obtain ⟨value,equal⟩ := List.length_eq_one_iff.mp (by simpa only [List.length_map,List.length_singleton] using congrArg List.length types)
+  subst operands
+  exact ⟨value,rfl,by simpa using types⟩
+
+theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : CodeInterpretation)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (frameIndex : Usize)
+    (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (C : context)
+    (state : Abs.AState) (f : Abs.AFrame) (rest : List Abs.AFrame) (after : List instr)
+    (front operands : List val) (input output : List valtype) (op : Abs.Stateful.Instruction)
+    (first second a b entry : U32)
+    (readOnly : op.readOnly=true) (signature : Abs.Stateful.Signature C op input output)
+    (bindings : Abs.ModuleBindings (decodeStore view code store) (decodeInstance store inst) C)
+    (found : store.instances.val[raw.instance.val]?=some inst)
+    (sourceStore : state.store=decodeStore view code store) (moduleEq : f.module=decodeInstance store inst)
+    (slots : FrameSlots exec raw f) (values : f.vals=front++operands)
+    (operandTypes : operands.map Code.valueType=input)
+    (typed : ∀ value∈operands,Val_ok (decodeStore view code store) value (Code.valueType value))
+    (position : first.val=Code.slots (f.locals.map Code.valueType)+Code.slots (front.map Code.valueType))
+    (capacity : raw.base.val+first.val<exec.slots.length) (arguments : Code.StatefulArguments op a b) :
+    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex raw.instance raw.function raw.base
+      (Code.statefulInstruction op first second a entry) ⦃ out =>
+      out.2.2.1=store ∧ out.2.2.2=platform ∧ ReadResult exec raw state f rest after front op output first out.1 out.2.1 ⦄ := by
+  cases signature <;> simp only [Abs.Stateful.Instruction.readOnly,Bool.false_eq_true] at readOnly
+  case refNull type =>
+    have operandsNil := empty_operands operandTypes
+    subst operands
+    simp only [List.append_nil] at values
+    subst front
+    let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
+    have typeEq : decodeElemType rawType=type := by cases type <;> rfl
+    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (ref_null_slots exec raw first rawType state f rest after slots position capacity)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    refine ⟨rfl,rfl,Or.inl ⟨[.REF_NULL type],0#u64,effect.1,?_,effect.2.1,?_,?_⟩⟩
+    · cases type <;> rfl
+    · simpa only [typeEq] using effect.2.2.1
+    · simpa only [typeEq] using effect.2.2.2
+  case refFunc index type selected =>
+    have operandsNil := empty_operands operandTypes
+    subst operands
+    simp only [List.append_nil] at values
+    subst front
+    have indexEq : a.val=index := arguments.1
+    obtain ⟨address,mapped,issued⟩ := function_binding_raw view code store inst C index type bindings selected
+    rw [←indexEq] at mapped
+    obtain ⟨out,run,success,same,word,wordEq,written,represented,transition⟩ := WP.spec_imp_exists
+      (ref_func_slots memory exec store raw first a inst address state f rest after found mapped issued slots position capacity moduleEq)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    exact ⟨same,rfl,Or.inl ⟨[.REF_FUNC_ADDR address.index.val],word,success,rfl,written,represented,by simpa only [indexEq] using transition⟩⟩
+  case refIsNull type =>
+    obtain ⟨value,rfl,valueType⟩ := one_operand operandTypes
+    have valueTyped := typed value (by simp)
+    rw [valueType] at valueTyped
+    obtain ⟨reference,rfl,referenceTyped⟩ := Abs.Stateful.reference_operand valueTyped
+    let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
+    have typeEq : decodeElemType rawType=type := by cases type <;> rfl
+    obtain ⟨out,run,success,word,wordEq,written,represented,transition⟩ := WP.spec_imp_exists
+      (ref_is_null_value_slots exec raw first rawType state f rest after front reference slots values (by simpa only [typeEq] using valueType) position)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    exact ⟨rfl,rfl,Or.inl ⟨[Abs.integerVal .I32 word.val],word,success,rfl,written,represented,transition⟩⟩
+  case tableGet index type limits selected =>
+    obtain ⟨value,rfl,valueType⟩ := one_operand operandTypes
+    have valueTyped := typed value (by simp)
+    rw [valueType] at valueTyped
+    obtain ⟨bits,rfl,bitsBound⟩ := Abs.integer_val_inv (ty := .I32) valueTyped
+    let positionValue : U32 := UScalar.ofNatCore bits (by change bits<2^32; exact bitsBound)
+    have bitsEq : positionValue.val=bits := rfl
+    obtain ⟨address,object,mapped,issued,objectType⟩ := table_binding_raw view code store inst C index _ bindings selected
+    have indexEq : a.val=index := arguments.1
+    rw [←indexEq] at mapped
+    obtain ⟨out,run,effect⟩ := WP.spec_imp_exists
+      (table_get_slots memory view code exec store raw first a inst address object state f rest after front positionValue found mapped issued slots (by simpa only [bitsEq] using values) position sourceStore moduleEq)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    split at effect
+    · obtain ⟨success,same,written,represented,transition⟩ := effect
+      refine ⟨same,rfl,Or.inl ⟨[val_ref (decodeRef object.ty object.elements.val[positionValue.val]!)],_,success,?_,written,represented,by simpa only [indexEq] using transition⟩⟩
+      change [Code.valueType (val_ref (decodeRef object.ty object.elements.val[positionValue.val]!))]=[valtype_reftype type]
+      change decodeElemType object.ty=type at objectType
+      rw [←objectType]
+      exact congrArg (fun type => [type]) (decode_reference_type object.ty _)
+    · obtain ⟨same,transition⟩ := effect
+      rw [same]
+      exact ⟨rfl,rfl,Or.inr ⟨rfl,rfl,by simpa only [indexEq] using transition⟩⟩
+  case tableSize index type selected =>
+    have operandsNil := empty_operands operandTypes
+    subst operands
+    simp only [List.append_nil] at values
+    subst front
+    have indexEq : a.val=index := arguments.1
+    obtain ⟨address,object,mapped,issued,objectType⟩ := table_binding_raw view code store inst C index type bindings selected
+    rw [←indexEq] at mapped
+    obtain ⟨out,run,success,same,written,represented,transition⟩ := WP.spec_imp_exists
+      (table_size_slots memory view code exec store raw first a inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    exact ⟨same,rfl,Or.inl ⟨[Abs.integerVal .I32 object.elements.length],_,success,rfl,written,represented,by simpa only [indexEq] using transition⟩⟩
+  case memorySize type selected =>
+    have operandsNil := empty_operands operandTypes
+    subst operands
+    simp only [List.append_nil] at values
+    subst front
+    obtain ⟨address,object,mapped,issued⟩ := memory_binding_raw view code store inst C type bindings selected
+    obtain ⟨out,run,success,same,pages,pagesEq,written,represented,transition⟩ := WP.spec_imp_exists
+      (memory_size_slots memory view laws code exec store raw first inst address object state f rest after found mapped issued slots position capacity sourceStore moduleEq)
+    simp only [Code.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
+    exact ⟨same,rfl,Or.inl ⟨[Abs.integerVal .I32 pages.val],_,success,rfl,written,represented,transition⟩⟩
+end Itasca.Runtime.Interp.Stateful
+
+end
+
+/-! ## Stateful Read Step -/
+
+section
+
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec
 
@@ -77,3 +256,5 @@ theorem read_point_step {M P F A : Type} (memory : runtime.platform.MemoryBuffer
       · exact .stateful transition (by intro impossible; cases impossible)
     · exact Or.inr ⟨error,⟨pc,pcNext,same⟩,.stateful transition (by intro impossible; cases impossible)⟩
 end Itasca.Runtime.Interp.Stateful
+
+end

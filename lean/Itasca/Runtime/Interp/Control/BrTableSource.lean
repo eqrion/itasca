@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Control.JumpTable
-import Itasca.Runtime.Abs.BrTable
+import Itasca.Runtime.SourceMachine.BrTable
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

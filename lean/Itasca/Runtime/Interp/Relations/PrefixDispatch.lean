@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Relations.PrefixEffect
 import Itasca.Runtime.Interp.Numeric.Integer.NumericDispatch
 import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.Code.Local.Relations.Common.Rel
+import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

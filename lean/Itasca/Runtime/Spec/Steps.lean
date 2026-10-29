@@ -1,5 +1,9 @@
 import SpecExt.Host
 
+/-!
+Host-extended source execution sequences and event traces. Runtime correspondence and exact recording compose these source runs without assuming a chosen host reply.
+-/
+
 namespace Itasca.Runtime.Spec
 open SpecExt
 

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Control.PendingJump
 import Itasca.Runtime.Interp.Relations.Regions
-import Itasca.Runtime.Abs.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Instruction
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.SimdShape
+import Itasca.Runtime.Spec.Simd.Shape
 namespace Itasca.Runtime.Spec
 set_option maxRecDepth 4096
 set_option maxHeartbeats 2000000

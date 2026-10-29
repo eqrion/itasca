@@ -1,6 +1,135 @@
+import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Store.Initialization.ElementEffects
+import Itasca.Runtime.Store.Invariant.Typing
+import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Initialization.ElementBoundedEffect
+
+/-!
+Element allocation bounds and staging-loop preservation. The bounded effect retains typed segment contents and supplies the loop certificate used by preparation.
+-/
+
+/-! ## Element Bounded Effect -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+/-- Exact element staging retains the source reference type in the newly
+allocated segment and distinguishes a normal refusal from successful append. -/
+inductive ElementBoundedEffect {M : Type} (store : runtime.store.Store M)
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (source : Itasca.module.Element) :
+    core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
+  | failed (error : runtime.ExecError) : ElementBoundedEffect store instIndex inst source (.Err error) store
+  | appended (elements : alloc.vec.Vec runtime.store.ElemInst) (addresses : alloc.vec.Vec Usize)
+      (values : alloc.vec.Vec U64)
+      (elementValues : elements.val = store.elems.val ++ [{ty := source.elem, refs := values}])
+      (addressValues : addresses.val = inst.elems.val ++ [store.elems.len])
+      (bounded : values.length < 2^32) :
+      ElementBoundedEffect store instIndex inst source (.Ok ())
+        {store with elems := elements, instances := store.instances.set instIndex {inst with elems := addresses}}
+
+theorem ElementBoundedEffect.bounds {M : Type} {store after : runtime.store.Store M}
+    {instIndex inst source status} (effect : ElementBoundedEffect store instIndex inst source status after)
+    (before : SegmentBounds store) : SegmentBounds after := by
+  cases effect with
+  | failed error => exact before
+  | appended elements addresses values stored mapped bounded =>
+    constructor
+    · intro element member
+      simp only [stored, List.mem_append, List.mem_singleton] at member
+      rcases member with old | rfl
+      · exact before.elements element old
+      · exact bounded
+    · exact before.data
+
+theorem ElementBoundedEffect.typed {M : Type} {store after : runtime.store.Store M}
+    {instIndex inst source status} (effect : ElementBoundedEffect store instIndex inst source status after) :
+    ElementTypedEffect store instIndex inst source status after := by
+  cases effect with
+  | failed error => exact .failed error
+  | appended elements addresses values stored mapped bounded => exact .appended elements addresses _ stored mapped
+
+theorem add_instance_element_bounded_effect {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect allocator)
+    (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (hi : store.instances.val[instIndex.val]? = some inst)
+    (helem : inst.module.module.env.elements.val[index.val]? = some segment)
+    (certificates : ElementInitializers store inst index segment)
+    (bindings : InitializerBindings store inst)
+    (sourceBound : segment.init.length < 2^32)
+    (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max) :
+    runtime.store.instantiate.Store.add_instance_element memory hooks floats allocator store platform instIndex index
+      ⦃ out => ElementBoundedEffect store instIndex inst segment out.1 out.2.1 ∧ out.2.2 = platform ⦄ := by
+  unfold runtime.store.instantiate.Store.add_instance_element
+  step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
+  subst found
+  simp only [runtime.compiler.ExecutableModule.env,
+    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+  step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+    (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
+  subst found
+  obtain ⟨reserved, hreserve⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len
+  rw [hreserve]
+  cases reserved with
+  | false =>
+    simpa [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using (ElementBoundedEffect.failed (store := store) (instIndex := instIndex) (inst := inst) (source := segment) (.Exhausted .Allocation))
+  | true =>
+    simp only [↓reduceIte, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    step with element_initializers_loop memory hooks floats allocator law store platform instIndex index
+      segment.init.len inst segment hi helem (by simp) certificates bindings
+      (alloc.vec.Vec.new U64) 0#usize (.Ok ()) (by simp) (by scalar_tac)
+      as ⟨after, host, values, status, hs, hp, hvalues⟩
+    subst after host
+    cases status with
+    | Err error =>
+      simpa [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using (ElementBoundedEffect.failed (store := store) (instIndex := instIndex) (inst := inst) (source := segment) error)
+    | Ok unitValue =>
+      cases unitValue
+      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+      obtain ⟨reserved, hreserve⟩ := reserve_wrapper_eq allocator law store.elems 1#usize
+      rw [hreserve]
+      cases reserved with
+      | false =>
+        simpa [core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] using (ElementBoundedEffect.failed (store := store) (instIndex := instIndex) (inst := inst) (source := segment) (.Exhausted .Allocation))
+      | true =>
+        simp only [↓reduceIte, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+        step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
+        subst found
+        step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
+          (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
+        subst found
+        step as ⟨elements, helements⟩
+        have instanceBound : instIndex.val < store.instances.length :=
+          (List.getElem?_eq_some_iff.mp hi).1
+        step as ⟨old, back, hold, hback⟩
+        have old_eq : old = inst := by
+          have hread := List.getElem?_eq_getElem instanceBound
+          rw [hi] at hread
+          exact hold.trans (Option.some.inj hread).symm
+        subst old
+        step as ⟨addresses, haddresses⟩
+        have instanceRead : store.instances.val[instIndex.val] = inst :=
+          Option.some.inj ((List.getElem?_eq_getElem instanceBound).symm.trans hi)
+        have effect := ElementBoundedEffect.appended (store := store) (instIndex := instIndex) (inst := inst) (source := segment)
+          elements addresses values helements
+          (by simpa only [instanceRead] using haddresses) (by have n := segment.init.len_val; omega)
+        simpa [hback, instanceRead] using And.intro effect (rfl : platform = platform)
+
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Element Bounds Loop -/
+
+section
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
@@ -113,3 +242,5 @@ theorem element_bounds_staging_loop {M P F A : Type}
   · exact ⟨rfl, staged, objectBound, contents, (fun h => h), ⟨inst, found, .refl _ _⟩, startBound, inst, found, rfl, bindings, imports, segments, mapCapacity, storeCapacity, rfl, rfl, matching⟩
 
 end Itasca.Runtime.Store
+
+end

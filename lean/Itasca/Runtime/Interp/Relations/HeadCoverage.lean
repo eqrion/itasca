@@ -1,9 +1,9 @@
-import Itasca.Runtime.Abs.Numeric.Decode
-import Itasca.Runtime.Abs.Float.Descriptor
-import Itasca.Runtime.Abs.Memory.Descriptor
-import Itasca.Runtime.Abs.Stateful.Descriptor
-import Itasca.Runtime.Abs.Simd.Source
-import Itasca.Runtime.Interp.Machines.Slice.SliceOpcode
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Memory.Descriptor
+import Itasca.Runtime.SourceMachine.Stateful.Descriptor
+import Itasca.Runtime.SourceMachine.Simd.Source
+import Itasca.Runtime.Interp.Machine.Emission.Opcode
 import Itasca.Runtime.Interp.Control.NormalizeClosure
 
 namespace Itasca.Runtime.Interp

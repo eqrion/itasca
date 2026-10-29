@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.CopyInterval
-import Itasca.Runtime.Spec.MemoryInitSource
+import Itasca.Runtime.Spec.MemoryInit
 namespace Itasca.Runtime.Spec.Segment
 
 def copyForward {T : Type} [Inhabited T] (words : List T) (dst src : Nat) : Nat → List T

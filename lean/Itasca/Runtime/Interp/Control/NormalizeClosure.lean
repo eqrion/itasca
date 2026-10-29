@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.Normalization
-import Itasca.Runtime.Abs.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.SourceClosure

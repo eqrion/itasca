@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Initialization.SegmentInstruction
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
-import Itasca.Runtime.Code.Local.Relations.Common.SegmentData
-import Itasca.Runtime.Code.Local.Capacity.SegmentBound
+import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
+import Itasca.Runtime.Compiler.Local.Capacity.SegmentBound
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
-import Itasca.Runtime.Code.Local.Relations.Common.Function
+import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

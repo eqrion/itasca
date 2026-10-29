@@ -1,7 +1,7 @@
-import Itasca.Runtime.Abs.StoreTyping
+import Itasca.Runtime.SourceMachine.StoreTyping
 import Itasca.Runtime.Store.Api.ExportBounds
 import Itasca.Runtime.Representation.NameSource
-import Itasca.Runtime.Interp.Machines.Core.CoreFunctionTyping
+import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.Store.Invariant.Typing
 
 namespace Itasca.Runtime.Store

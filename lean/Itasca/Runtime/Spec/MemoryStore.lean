@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.ByteEncoding
-import Itasca.Runtime.Spec.TableInitSource
+import Itasca.Runtime.Spec.TableInit
 import Itasca.Runtime.Spec.SegmentCopySlice
 
 namespace Itasca.Runtime.Spec

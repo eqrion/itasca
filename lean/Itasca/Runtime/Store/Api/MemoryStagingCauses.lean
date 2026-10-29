@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.MemoryStagingLoop
+import Itasca.Runtime.Store.Api.MemoryStaging
 import Itasca.Runtime.Store.Api.NewMemoryCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 namespace Itasca.Runtime.Store

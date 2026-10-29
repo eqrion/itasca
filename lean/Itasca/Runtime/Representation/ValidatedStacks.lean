@@ -2,6 +2,10 @@ import Itasca.Runtime.Representation.StackLayout
 import Itasca.Wasm2.Invariant
 import Itasca.Profile.BodySpec
 
+/-!
+Independent validated source stacks and their maximum slot demand. Function-capacity certificates and compiler folds share this source-only bound.
+-/
+
 namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std Itasca
 

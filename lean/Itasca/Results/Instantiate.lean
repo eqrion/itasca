@@ -1,4 +1,4 @@
-import Itasca.Runtime.Theorems.Instantiation.InstantiateSource
+import Itasca.Runtime.Integration.Instantiation.InstantiateSource
 
 /-!
 # Instantiation

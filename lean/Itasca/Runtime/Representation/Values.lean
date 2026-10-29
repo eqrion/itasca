@@ -1,6 +1,10 @@
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Representation.Encoding
 
+/-!
+Public runtime values, issued-reference ownership and source-value interpretation. Argument and result proofs use these conversions and slot-width facts.
+-/
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

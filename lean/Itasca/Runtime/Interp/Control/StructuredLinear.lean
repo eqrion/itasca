@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.Abs.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Typed
 
 namespace Itasca.Runtime.Interp
 

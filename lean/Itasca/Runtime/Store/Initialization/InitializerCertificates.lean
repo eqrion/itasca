@@ -1,4 +1,4 @@
-import Itasca.Runtime.Code.Local.Initializer.InitializerComplete
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
 import Itasca.Runtime.Store.Initialization.InitializerResolve
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Store.Initialization.PrecheckLoop

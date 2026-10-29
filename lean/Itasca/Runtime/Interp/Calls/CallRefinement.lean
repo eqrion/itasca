@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Calls.DirectCall
 import Itasca.Runtime.Interp.Calls.CallFrames
-import Itasca.Runtime.Abs.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Instruction
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

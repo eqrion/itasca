@@ -1,8 +1,8 @@
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Api.Grow
-import Itasca.Runtime.Store.Invariant.IssuedArguments
+import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Interp.Relations.FrameStorePrefix
-import Itasca.Runtime.Theorems.Api.ExecutableInv
+import Itasca.Runtime.Integration.Api.ExecutableInv
 
 /-!
 # Embedding contracts

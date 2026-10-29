@@ -4,8 +4,8 @@ import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Initialization.DataStagingLoop
 import Itasca.Runtime.Store.Initialization.ElementContentEffect
-import Itasca.Runtime.Store.Initialization.DataContentLoop
-import Itasca.Runtime.Store.Initialization.DataResultEffect
+import Itasca.Runtime.Store.Initialization.DataLoopCertificates
+import Itasca.Runtime.Store.Initialization.DataEffects
 
 import Itasca.Runtime.Store.Initialization.SegmentGlobalMetadata
 

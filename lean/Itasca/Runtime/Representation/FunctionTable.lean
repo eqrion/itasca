@@ -1,5 +1,9 @@
 import Itasca.Runtime.Representation.Store
-import Itasca.Runtime.Abs.CallSafety
+import Itasca.Runtime.SourceMachine.CallSafety
+
+/-!
+Correspondence between issued runtime functions and their source interpretation. Lookup and resolution certificates are shared by frame-stack and capacity proofs.
+-/
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

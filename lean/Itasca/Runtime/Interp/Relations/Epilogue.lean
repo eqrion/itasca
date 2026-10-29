@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.Abs.Sim.Step
-import Itasca.Runtime.Abs.Sim.Compose
+import Itasca.Runtime.SourceMachine.Sim.Step
+import Itasca.Runtime.SourceMachine.Sim.Compose
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt

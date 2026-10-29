@@ -1,5 +1,35 @@
-import Itasca.Runtime.Interp.Numeric.Float.FloatOverflow
+import Itasca.Runtime.Interp.Numeric.Float
 import SpecExt.Builtins.Float.TruncRange
+
+/-!
+Floating-point truncation boundary and result classification. Overflow facts justify checked magnitudes, negative encodings and the final truncation outcome.
+-/
+
+/-! ## Float Overflow -/
+
+section
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt.Builtins.Float
+
+@[step] theorem overflow_effect (negative : Bool) (width : U32) (signed saturating : Bool)
+    (validWidth : width = 32#u32 ∨ width = 64#u32) :
+    runtime.interp.float.overflow negative width signed saturating ⦃ result =>
+      if saturating then ∃ value, result = .Ok value ∧ value.val = magnitudeBoundary width.val negative signed
+      else result = .Err (.Trap .IntegerOverflow) ⦄ := by
+  rcases validWidth with rfl | rfl
+  all_goals cases negative <;> cases signed <;> cases saturating
+  all_goals simp [runtime.interp.float.overflow, magnitudeBoundary, bind_ok]
+  all_goals repeat first | step | scalar_tac | simp_all
+  all_goals norm_num [U32.rMax, U64.rMax, Nat.shiftRight_eq_div_pow]
+
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## Float Trunc Tail -/
+
+section
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
@@ -241,3 +271,5 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
   · exact checked_magnitude_negative_64_true magnitude saturating
 
 end Itasca.Runtime.Interp
+
+end

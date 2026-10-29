@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Abs.Indirect.Definition
+import Itasca.Runtime.SourceMachine.Indirect.Definition
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

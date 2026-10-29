@@ -280,7 +280,48 @@ at most one decoding, so the trees agree.
    [Runtime/Contracts](Itasca/Runtime/Contracts.lean). The
    [execution proof guide](Itasca/Runtime/README.md) explains how they are assembled.
 
-Declarations about an extracted Rust function hang off its name, such as
-`module.validate_module.profile_sound`. Other namespaces name a concept
-(`Wasm2`, `ModuleBinary`, `StreamBatch`). Every file starts with a docstring.
+## Names and proof units
+
+Module paths describe dependency placement; namespaces describe the semantic
+owner. A store decoder belongs to `Store` even when its module lives in
+`Runtime/Representation`, below compiler, interpreter, and store constructions.
+Runtime namespaces use `Compiler` for handwritten compiler concepts,
+`SourceMachine` for the flat source model, `Interp.Machine` for machine proofs
+and `Integration` for joined constructions. Extracted `Itasca.code`,
+`Itasca.runtime.*`, SpecTec identifiers and third-party names retain their
+original spelling.
+
+| Kind | Convention | Example |
+| --- | --- | --- |
+| Module | `UpperCamelCase`, naming its subject without repeating its directory | `Store/Api/MemoryFill` |
+| Type, structure, inductive, named predicate | `UpperCamelCase` | `ExecutableInv`, `FramePoint` |
+| Computational definition | `lowerCamelCase` | `decodeStore` |
+| Theorem basename | `snake_case`, describing its conclusion | `memory_fill_decodes`, `step_integer32_core_forward` |
+
+Facts about extracted functions hang off their Rust path, such as
+`module.validate_module.profile_sound` and `runtime.interp.invoke_with.behaves`.
+Facts about a relation belong under that relation where practical. Wasm names
+retain their instruction spelling, including `br_if` and `call_indirect`.
+Suffixes such as `_eq`, `_iff`, `_sound`, `_complete`, and `_spec`, or a
+`preserves_` prefix, are useful when they describe the conclusion; they are not
+required endings. Public theorem names and statements remain stable during
+internal cleanup.
+
+Group the relation, supporting lemmas, and result that answer one proof question.
+For memory fill, follow the handler effect through mutation to decoded source
+semantics; for integer constants, follow instruction fetch through capacity and
+step preservation to ownership. Keep a separately consumed contract below its
+expensive constructions. A short module is appropriate when it owns such a
+boundary. Begin each new or consolidated module with a docstring explaining its
+question, main relation or result, and consumers; use section comments to mark
+argument stages.
+
+Qualifiers such as `Core`, `Supported`, `Cumulative`, `Eventful` and `Executable`
+distinguish grammars, ownership, mutation or host-event premises. Their
+[documented meanings](Itasca/Runtime/README.md#naming-and-extending-the-proofs)
+remain part of the argument even when related proofs share a module. Avoid catch-all
+module names such as `Misc`, `Extra`, or `Aux`; name a helper's responsibility
+or place it with its consumers. The runtime guide gives the
+[three API reading paths](Itasca/Runtime/README.md#reading-paths).
+
 Check a module and its dependencies with `just check Itasca.Wasm2.Scalar.Step`.

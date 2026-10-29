@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Calls.CallRefinement
-import Itasca.Runtime.Abs.Indirect.Definition
+import Itasca.Runtime.SourceMachine.Indirect.Definition
 import Itasca.Runtime.Interp.Relations.TypedOperands
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.TableFillAlgebra
+import Itasca.Runtime.Spec.TableFill
 import Itasca.Runtime.Spec.SegmentCopySlice
 namespace Itasca.Runtime.Spec.Segment
 

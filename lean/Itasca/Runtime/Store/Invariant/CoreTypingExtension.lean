@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machines.Core.CoreFunctionTyping
+import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 namespace Itasca.Runtime.Store

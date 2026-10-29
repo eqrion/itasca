@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Abs.DecodeDepth
-import Itasca.Runtime.Interp.Machines.Slice.SliceErrors
+import Itasca.Runtime.SourceMachine.DecodeDepth
+import Itasca.Runtime.Interp.Machine.Resources.CallErrors
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

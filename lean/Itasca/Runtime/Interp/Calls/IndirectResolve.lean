@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.Indirect.Definition
+import Itasca.Runtime.SourceMachine.Indirect.Definition
 import Itasca.Runtime.Representation.Store
 
 namespace Itasca.Runtime.Interp

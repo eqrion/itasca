@@ -1,4 +1,4 @@
-import Itasca.Runtime.Abs.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
 import Itasca.Runtime.Store.Invariant.Extension
 import Itasca.Runtime.Store.Initialization.SegmentReady
 namespace Itasca.Runtime.Store

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Code.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Representation.NameSource

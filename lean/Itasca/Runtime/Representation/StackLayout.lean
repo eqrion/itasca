@@ -2,6 +2,10 @@ import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Equations
 import Itasca.Support.TypeTranslation
 
+/-!
+Validator stack widths and their slot-count interpretation. Compiler layout and source-demand proofs use this bridge without importing body construction.
+-/
+
 namespace Itasca.Runtime.Code
 open Aeneas Aeneas.Std
 

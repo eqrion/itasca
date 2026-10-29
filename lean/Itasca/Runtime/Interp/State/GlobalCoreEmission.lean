@@ -1,10 +1,10 @@
-import Itasca.Runtime.Code.Local.Relations.Common.ScalarEmission
-import Itasca.Runtime.Code.Local.Control.Common.Structured
-import Itasca.Runtime.Code.Local.Control.Common.StructuredComposition
-import Itasca.Runtime.Code.Local.Control.Common.StructuredLabels
+import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.Abs.ModuleBindingsExtension
-import Itasca.Runtime.Abs.Numeric.Decode
+import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

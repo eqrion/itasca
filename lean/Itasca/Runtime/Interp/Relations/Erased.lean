@@ -1,6 +1,6 @@
-import Itasca.Runtime.Abs.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.Abs.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Instruction
 
 /-! Source reductions whose compiler emission is empty. They advance the
 abstract continuation while retaining the actual bytecode position and slot
