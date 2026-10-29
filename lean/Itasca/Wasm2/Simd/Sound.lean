@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Simd.Reader
 import Itasca.Wasm2.Simd.Shuffle
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Simd.Visitor
@@ -38,35 +39,17 @@ theorem Pending.fixed {data env profile locals index st}
     (hencoded : At data p.start (.plain op) pos) (hwasm2 : profile ≠ .Wasm1) :
     CoreVisitor.run (Simd.readFixed {st.core with pos := pos} inputs output) hook v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  let decoded := {st.core with pos := pos}
-  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have hmatches : EnvTranslation.Matches env ⟨locals, p.ft.results⟩
-      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
-    (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter _
-  have hbase : (Control.base decoded).val = outer.length := by simp [decoded, Control.base, ctrls, base]
-  have hpoly : Control.polymorphic decoded = p.current.ctrl.polymorphic_base := by
-    simp [decoded, Control.polymorphic, ctrls]
   apply WP.spec_mono (CoreVisitor.run.spec _ hook v (fun _ => True)
     (fun _ s => p.After {st with core := s}) ?_ hhook)
-  · intro r hr hok
-    exact (hr.2 hok).choose_spec
-  · apply WP.spec_mono (Simd.readFixed.segment decoded inputs output outer p.current.vals stack hbase hsize)
-    rintro ⟨res, s⟩ ⟨hc, hp, after, hv, hlen, hout⟩
-    dsimp only at hc hp hv hlen hout
+  · intro r effect accepted
+    exact (effect.2 accepted).choose_spec
+  · apply WP.spec_mono (p.fixed_reader pos inputs output op hsize hw hdecl ht hencoded hwasm2)
+    intro r effect
     refine ⟨trivial, ?_⟩
-    intro u hu
-    cases u
-    dsimp only at hu
-    subst res
-    have htyped := (hout rfl).wasm2_prefix _ hC _ p.current.ops op
-      (by simpa [hpoly] using typed) hw (ht _ hC hmatches)
-    apply p.append_result C outer spine header base {st with core := s} op
-      p.current.ctrl.polymorphic_base after hw
-      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv (fun hp => absurd hp hwasm2) hdecl
-    · simpa [hc, decoded] using ctrls
-    · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
+    intro unit accepted
+    obtain ⟨values, _, post⟩ := effect.2.2 unit accepted
+    exact post.after
+
 
 theorem Pending.simd_pure {data env profile locals index st}
     (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
@@ -232,6 +215,42 @@ theorem Pending.simd_memory_lane {data env profile locals index st}
 
 
 /-- A shuffle's scanner proves the lane limits before its fixed binary stack effect. -/
+theorem Pending.shuffle_reader {data env profile locals index st}
+    (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) (pos : Usize) (hpos : pos.val ≤ data.length)
+    (hsize : st.core.vals.val.length < Usize.max)
+    (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
+      At data p.start (.plain (Simd.shuffle low high)) next) :
+    code.read_simd_shuffle {st.core with pos := pos} data ⦃ r =>
+      ∀ low high, r.1 = .Ok (low, high) →
+        Simd.BitsDecoded data pos low high r.2.pos ∧
+        (∀ lane ∈ Simd.shuffleIndices low high, proj_uN_0 lane < 32) ∧
+        r.2.ctrls = st.core.ctrls ∧ ∃ after,
+          Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals [.V128, .V128] (some .V128) after ∧
+          ReaderPost p r.2 (Simd.shuffle low high) p.current.ctrl.polymorphic_base after ⦄ := by
+  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
+  let decoded := {st.core with pos := pos}
+  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
+    p.current.form p.current.ins p.current.outs
+  have hbase : (Control.base decoded).val = outer.length := by simp [decoded, Control.base, ctrls, base]
+  have hpoly : Control.polymorphic decoded = p.current.ctrl.polymorphic_base := by
+    simp [decoded, Control.polymorphic, ctrls]
+  apply WP.spec_mono (Simd.shuffle_segment decoded data outer p.current.vals stack hbase hsize hpos)
+  rintro ⟨res, s⟩ hpost
+  intro low high hok
+  obtain ⟨hc, after, hvals, hbits, hbound, heffect⟩ := hpost low high hok
+  dsimp only at hc hvals hbits hbound heffect
+  have htyped := heffect.wasm2_prefix _ hC _ p.current.ops (Simd.shuffle low high)
+    (by simpa [hpoly] using typed) (Simd.shuffle_wf low high)
+    (Simd.shuffle_typed _ low high hC hbound)
+  refine ⟨hbits, hbound, hc, after, (by simpa [hpoly] using heffect), ?_⟩
+  apply p.append_reader_context C outer spine header base s (Simd.shuffle low high)
+    p.current.ctrl.polymorphic_base after (Simd.shuffle_wf low high)
+    (hencoded low high s.pos hbits) (by simpa [hpoly] using htyped) ?_ ?_ hvals
+    (Simd.shuffle_declared _ low high) (fun hp => absurd hp hwasm2)
+  · simpa [hc, decoded] using ctrls
+  · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
+
+/-- A shuffle's scanner proves the lane limits before its fixed binary stack effect. -/
 theorem Pending.simd_shuffle {data env profile locals index st}
     (p : Pending data env profile locals index st) (hwasm2 : profile ≠ .Wasm1) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (pos : Usize) (hpos : pos.val ≤ data.length)
@@ -241,32 +260,16 @@ theorem Pending.simd_shuffle {data env profile locals index st}
     Simd.subStep visitor {st.core with pos := pos} data env 13#u32 v ⦃ r =>
       r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   rw [Simd.subStep.shuffle]
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  let decoded := {st.core with pos := pos}
-  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have hbase : (Control.base decoded).val = outer.length := by simp [decoded, Control.base, ctrls, base]
-  have hpoly : Control.polymorphic decoded = p.current.ctrl.polymorphic_base := by
-    simp [decoded, Control.polymorphic, ctrls]
   apply WP.spec_mono (CoreVisitor.run.spec _ _ v (fun _ => True)
     (fun _ s => p.After {st with core := s}) ?_ (fun s a => hv.on_simd_shuffle v s a.1 a.2))
   · intro r hr hok
     exact (hr.2 hok).choose_spec
-  · apply WP.spec_mono (Simd.shuffle_segment decoded data outer p.current.vals stack hbase hsize hpos)
-    rintro ⟨res, s⟩ hpost
+  · apply WP.spec_mono (p.shuffle_reader hwasm2 pos hpos hsize hencoded)
+    intro r effect
     refine ⟨trivial, ?_⟩
-    rintro ⟨low, high⟩ hok
-    obtain ⟨hc, after, hvals, hbits, hbound, heffect⟩ := hpost low high hok
-    dsimp only at hc hvals hbits hbound heffect
-    have htyped := heffect.wasm2_prefix _ hC _ p.current.ops (Simd.shuffle low high)
-      (by simpa [hpoly] using typed) (Simd.shuffle_wf low high)
-      (Simd.shuffle_typed _ low high hC hbound)
-    apply p.append_result C outer spine header base {st with core := s} (Simd.shuffle low high)
-      p.current.ctrl.polymorphic_base after (Simd.shuffle_wf low high)
-      (hencoded low high s.pos hbits) (by simpa [hpoly] using htyped) ?_ ?_ hvals
-      (fun hp => absurd hp hwasm2) (Simd.shuffle_declared _ low high)
-    · simpa [hc, decoded] using ctrls
-    · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
+    rintro ⟨low, high⟩ accepted
+    obtain ⟨_, _, _, _, _, post⟩ := effect low high accepted
+    exact post.after
 
 /-- The complete SIMD prefix dispatcher preserves the independently encoded typed body. -/
 theorem Pending.simd {data env profile locals index st} (p : Pending data env profile locals index st)

@@ -42,7 +42,7 @@ theorem StructuredReaderCompilerStateWasm2.end_nested {jumpTables : List U32} {A
         (savedOuter.map Wasm2.Frames.Saved.vals ++ [savedParent.vals]) := by
       simpa only [split, savedSplit, List.map_append, List.map_cons, List.map_nil] using
         (show ReaderKnownFronts parents current (p.parents.map Wasm2.Frames.Saved.vals) from state.knownFronts)
-    exact ⟨outer, parent.advance instruction, savedOuter, resumedSource savedParent p.current instruction,
+    exact ⟨outer, parent.advance instruction, savedOuter, Wasm2.resumedSource savedParent p.current instruction,
       compiled, boundary, same, reach, fronts, savedKnown.pop instruction⟩
   | false =>
     obtain ⟨outer, parent, savedOuter, savedParent, instruction, split, savedSplit, closed,
@@ -55,6 +55,6 @@ theorem StructuredReaderCompilerStateWasm2.end_nested {jumpTables : List U32} {A
         (savedOuter.map Wasm2.Frames.Saved.vals ++ [savedParent.vals]) := by
       simpa only [split, savedSplit, List.map_append, List.map_cons, List.map_nil] using
         (show ReaderKnownFronts parents current (p.parents.map Wasm2.Frames.Saved.vals) from state.knownFronts)
-    exact ⟨outer, parent.advance instruction, savedOuter, resumedSource savedParent p.current instruction,
+    exact ⟨outer, parent.advance instruction, savedOuter, Wasm2.resumedSource savedParent p.current instruction,
       compiled, boundary, same, reach, fronts, savedKnown.pop instruction⟩
 end Itasca.Runtime.Compiler

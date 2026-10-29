@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Wasm2.Scalar.Step
 import Itasca.Wasm2.NumericExt.Total
 
@@ -26,33 +27,19 @@ theorem Pending.extended_numeric {data env profile locals index st}
     (hwasm2 : profile ≠ .Wasm1) :
     CoreVisitor.run (code.read_conversion {st.core with pos := pos} operation.input operation.output)
       hook v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  let decoded := {st.core with pos := pos}
-  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have hbase : (Control.base decoded).val = outer.length := by simp [decoded, Control.base, ctrls, base]
-  have hpoly : Control.polymorphic decoded = p.current.ctrl.polymorphic_base := by
-    simp [decoded, Control.polymorphic, ctrls]
-  have hread := Numeric.read.segment operation decoded outer p.current.vals stack hbase hsize
-  simp only [Numeric.read, hunary, Bool.false_eq_true, ↓reduceIte] at hread
+  have effect := p.numeric_reader operation pos hsize hencoded hdecl
+    (fun hp => absurd hp hwasm2)
+  simp only [Numeric.read, hunary, Bool.false_eq_true, ↓reduceIte] at effect
   apply WP.spec_mono (CoreVisitor.run.spec _ hook v (fun _ => True)
     (fun _ s => p.After {st with core := s}) ?_ hhook)
-  · intro r hr hok
-    exact (hr.2 hok).choose_spec
-  · apply WP.spec_mono hread
-    rintro ⟨res, s⟩ ⟨hc, hp, after, hv, hlen, hout⟩
-    dsimp only at hc hp hv hlen hout
+  · intro r hr accepted
+    exact (hr.2 accepted).choose_spec
+  · apply WP.spec_mono effect
+    intro r hr
     refine ⟨trivial, ?_⟩
-    intro u hu
-    dsimp only at hu
-    subst res
-    have htyped := hout.wasm2_prefix _ hC p.current.ops operation.instruction
-      (by simpa [hpoly] using typed) operation.wellFormed (operation.typed _ hC)
-    apply p.append_result C outer spine header base {st with core := s} operation.instruction
-      p.current.ctrl.polymorphic_base after operation.wellFormed
-      (by simpa [hp, decoded] using hencoded) (by simpa [hpoly] using htyped) ?_ ?_ hv (fun hp => absurd hp hwasm2) hdecl
-    · simpa [hc, decoded] using ctrls
-    · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
+    intro unit accepted
+    obtain ⟨_, _, post⟩ := hr.2.2 unit accepted
+    exact post.after
 
 /-- Scalar extensions and the base dispatcher share the same successful-step certificate. -/
 theorem Pending.extended_scalar {data env profile locals index st} (p : Pending data env profile locals index st)

@@ -42,7 +42,7 @@ structure SimdReaderEvent {A : Type} (ops : runtime.platform.Alloc A)
   meaning : SimdCallbackMeaning C sub a bits inputs source output
   values : List code.StackType
   position : Usize
-  post : ReaderPostWasm2 p out source p.current.ctrl.polymorphic_base values
+  post : Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values
   effect : Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals inputs output values
   read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out)
   callback : runtime.compiler.lower.FunctionCompiler.op ops before out opcode a b bits = .ok (.Ok (),after)

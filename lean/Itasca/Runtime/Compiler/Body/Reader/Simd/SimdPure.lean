@@ -1,4 +1,6 @@
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdFixed
+import Itasca.Wasm2.Simd.Reader
+import Itasca.Wasm2.Simd.Sound
+import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 
 /-!
@@ -48,14 +50,14 @@ theorem reader_simd_pure_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = next ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
         op.signature.popTypes (some op.signature.output) values ∧
-        ReaderPostWasm2 p out.core op.instruction p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out.core op.instruction p.current.ctrl.polymorphic_base values := by
   obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfd#u8 before after
     (by decide) accepted
   rw [code.step_wasm2.simd,code.step_simd.eq_runs] at run
   have readLeb := reader.read_u32_leb.complete data st.core.pos subopcode next decoded
   simp only [Wasm2.Simd.prefixStep,readLeb,bind_ok] at run
   rw [Wasm2.Simd.subStep.pure visitor _ data env subopcode before op meaning] at run
-  obtain ⟨unitValue,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨unitValue,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   cases unitValue
   rw [Wasm2.Simd.signature_fixed] at read
   have encoded : Wasm2.At data p.start (.plain op.instruction) next := by
@@ -65,7 +67,7 @@ theorem reader_simd_pure_wasm2 {data env locals index st}
       (show Wasm1.BytesAt data st.core.pos bytes next from ⟨first,last,within⟩).append
         (Wasm1.BytesAt.nil data next within)
   refine ⟨callback,read,?_⟩
-  exact reader_simd_fixed_post p next out.core op.signature.popTypes (some op.signature.output)
+  exact Wasm2.Pending.fixed_reader_accepted p next out.core op.signature.popTypes (some op.signature.output)
     op.instruction capacity op.wellFormed (op.declared _)
     (fun C wf _ => by simpa only [Wasm2.Simd.Signature.inputs_pop,Wasm2.Simd.Signature.outputs_pop]
         using op.typed C wf) encoded read

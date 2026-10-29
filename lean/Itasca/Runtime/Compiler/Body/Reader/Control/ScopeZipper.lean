@@ -73,7 +73,7 @@ theorem ReaderScopeZipperWasm2.close {parents current savedParents savedCurrent}
     (split : savedParents = grandparents ++ [parent]) (instruction : instr) :
     ∃ outer scope, parents = outer ++ [scope] ∧
       ReaderScopeZipperWasm2 outer (scope.advance instruction) grandparents
-        (resumedSource parent savedCurrent instruction) := by
+        (Wasm2.resumedSource parent savedCurrent instruction) := by
   obtain ⟨outer, scope, shape, paired, last⟩ := matched_last (split ▸ same.parents)
   exact ⟨outer, scope, shape, paired, last.resume⟩
 

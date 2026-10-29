@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedNumericAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 
 /-!
 Integer, float and scalar-memory replay from source bounds at an indexed point. The final statements convert reached-point availability into the independent source demand premise.

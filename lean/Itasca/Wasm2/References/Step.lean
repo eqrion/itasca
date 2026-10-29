@@ -1,3 +1,4 @@
+import Itasca.Wasm2.References.Reader
 import Itasca.Wasm2.References.Operands
 import Itasca.Wasm2.References.EnvMatches
 import Itasca.Wasm2.Scalar.Step
@@ -37,36 +38,12 @@ theorem Pending.metadata_read {data env profile locals index st} (p : Pending da
         simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) :
     metadataOperands decode pops output metadata ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
-    (p.current.form.label p.current.ins p.current.outs)
-  obtain ⟨⟨res, decoded⟩, hr, hvd, hcd, hed⟩ := WP.spec_imp_exists hd
-  dsimp only at hvd hcd hed
-  cases res with
-  | Err e => simp [metadataOperands, hr]
-  | Ok a =>
-    have hbase : (Control.base decoded).val = outer.length := by
-      simp [Control.base, hcd, ctrls, base]
-    have hpoly : Control.polymorphic decoded = p.current.ctrl.polymorphic_base := by
-      simp [Control.polymorphic, hcd, ctrls]
-    obtain ⟨⟨res, out⟩, hrun, hc, hp, after, hva, hla, heffect⟩ := WP.spec_imp_exists
-      (Simd.readFixed.segment decoded (pops a) (output a) outer p.current.vals
-        (by simpa [hvd] using stack) hbase (by simpa [hvd] using hsize))
-    dsimp only at hc hp hva hla heffect
-    cases res with
-    | Err e => simp [metadataOperands, hr, hrun]
-    | Ok u =>
-      cases u
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (metadata a), out), by simp [metadataOperands, hr, hrun], fun _ => ?_⟩
-      have htyped := (heffect rfl).wasm2_prefix _ hC.wf _ p.current.ops (operation a)
-        (by simpa [hpoly, Frames.enter] using typed) (hw a) (ht a ⟨decoded, hr⟩ _ hC)
-      apply p.append_result C outer spine header base {st with core := out} (operation a)
-        p.current.ctrl.polymorphic_base after (hw a) (by simpa [hp] using hed a rfl)
-        (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hva (fun hp => absurd hp hwasm2)
-        (hdecl a)
-      · simpa [hc, hcd] using ctrls
-      · simpa [code.BodyState.blocks_eq_of_ctrls (hc.trans hcd)] using blocks
+  apply WP.spec_mono (p.metadata_reader decode pops output metadata operation hd hw ht
+    (fun a _ => hdecl a) hsize hwasm2)
+  intro r effect accepted
+  obtain ⟨value, accepted⟩ := accepted
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, post, _⟩ := effect value accepted
+  exact post.after
 
 theorem reference_value_translation (rt : types.ElemType) :
     Translate.valueType (ModuleConstants.referenceValueType rt) = valtype_reftype (Translate.referenceType rt) := by
@@ -142,28 +119,30 @@ theorem Pending.ref_null {data env profile locals index st} (p : Pending data en
 
 /-- The `ref.func` leaf uses the runtime declaration check independently of
 its ordinary generated instruction typing. -/
-theorem Pending.ref_func {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_func_reader {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
-      ∀ idx, r.1 = .Ok idx → p.After {st with core := r.2} ∧
+      ∀ idx, r.1 = .Ok idx → idx.val < env.func_types.val.length ∧ r.2.ctrls = st.core.ctrls ∧
+        r.2.vals.val = st.core.vals.val ++ [.Val .FuncRef] ∧
+        ReaderPost p r.2 (.REF_FUNC (.mk_uN idx.val)) p.current.ctrl.polymorphic_base
+          (p.current.vals ++ [.Val .FuncRef]) ∧
         DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
           (.REF_FUNC (.mk_uN idx.val)) ⦄ := by
   apply WP.spec_mono (code.read_ref_func.spec st.core data env hsize)
   rintro ⟨res, out⟩ ⟨hc, hout⟩ idx hok
   dsimp only at hc hout
   obtain ⟨hd, hi, hdecl, hv⟩ := hout idx hok
-  refine ⟨?_, hdecl⟩
+  refine ⟨hi, hc, hv, ?_, hdecl⟩
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
   obtain ⟨bytes, hbytes, hlen, hbound, hencoding⟩ := hd
-  apply p.append_result C outer spine header base {st with core := out}
+  refine p.append_reader_context C outer spine header base out
     (.REF_FUNC (.mk_uN idx.val)) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .FuncRef]) (.instr_case_41 _ (EnvTranslation.index_wf idx))
     (At.of_immediate p.inbounds hbyte p.pos (.reference (.refFunc idx hencoding))
-      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
-    hdecl
+      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
   · apply typed.append hC.wf _ (.instr_case_41 _ (EnvTranslation.index_wf idx))
     intro ts ht
     obtain ⟨front, hfront, rfl⟩ := (Sequence.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
@@ -174,6 +153,18 @@ theorem Pending.ref_func {data env profile locals index st} (p : Pending data en
   · simpa [hc] using ctrls
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
   · simpa [stack, List.append_assoc] using hv
+
+theorem Pending.ref_func {data env profile locals index st} (p : Pending data env profile locals index st)
+    (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
+    (hsize : st.core.vals.val.length < Usize.max) :
+    code.read_ref_func st.core data env ⦃ r =>
+      ∀ idx, r.1 = .Ok idx → p.After {st with core := r.2} ∧
+        DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
+          (.REF_FUNC (.mk_uN idx.val)) ⦄ := by
+  apply WP.spec_mono (p.ref_func_reader hbyte hsize)
+  intro r effect idx accepted
+  obtain ⟨_, _, _, post, declared⟩ := effect idx accepted
+  exact ⟨post.after, declared⟩
 
 theorem Pending.typed_select {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 28#u8)
@@ -328,10 +319,14 @@ theorem Pending.elem_drop {data env profile locals index st} (p : Pending data e
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
     exact hC.elem_drop idx env.elements.val[idx.val] hi rfl
 
-theorem Pending.ref_is_null {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_is_null_reader {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
-    code.read_ref_is_null st.core ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
+    code.read_ref_is_null st.core ⦃ r => r.2.ctrls = st.core.ctrls ∧ r.2.pos = st.core.pos ∧
+      (r.1 = .Ok () → ∃ rt after,
+        Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
+          [ModuleConstants.referenceValueType rt] (some .I32) after ∧
+        ReaderPost p r.2 .REF_IS_NULL p.current.ctrl.polymorphic_base after) ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
@@ -339,22 +334,35 @@ theorem Pending.ref_is_null {data env profile locals index st} (p : Pending data
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   apply WP.spec_mono (code.read_ref_is_null.segment st.core outer p.current.vals stack hbase hsize)
-  rintro ⟨res, out⟩ ⟨hc, hp, after, hv, heffect⟩ ⟨u, hok⟩
+  rintro ⟨res, out⟩ ⟨hc, hp, after, hv, heffect⟩
   dsimp only at hc hp hv heffect
-  cases u
+  refine ⟨hc, hp, ?_⟩
+  intro hok
   obtain ⟨rt, he⟩ := heffect hok
   have htyped := he.wasm2_prefix _ hC.wf _ p.current.ops .REF_IS_NULL
     (by simpa [hpoly, Frames.enter] using typed) .instr_case_42
     (by simpa [Simd.inputTypes, Simd.outputTypes, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using
       Instr_ok.ref_is_null _ (Translate.referenceType rt) hC.wf .instr_case_42)
-  apply p.append_result C outer spine header base {st with core := out} .REF_IS_NULL
+  refine ⟨rt, after, (by simpa [hpoly] using he), ?_⟩
+  refine p.append_reader_context C outer spine header base out .REF_IS_NULL
     p.current.ctrl.polymorphic_base after .instr_case_42 ?_
-    (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hv
+    (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hv (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
     (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
   · apply At.of_immediate p.inbounds hbyte p.pos (.reference .refIsNull)
     exact ⟨by simp [hp], by simp [hp], by have := p.pos; have := p.inbounds; simp only [hp]; omega⟩
   · simpa [hc] using ctrls
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
+
+theorem Pending.ref_is_null {data env profile locals index st} (p : Pending data env profile locals index st)
+    (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)
+    (hsize : st.core.vals.val.length < Usize.max) :
+    code.read_ref_is_null st.core ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
+  apply WP.spec_mono (p.ref_is_null_reader hbyte hsize)
+  intro r effect accepted
+  obtain ⟨unitValue, accepted⟩ := accepted
+  cases unitValue
+  obtain ⟨_, _, _, post⟩ := effect.2.2 accepted
+  exact post.after
 
 end Itasca.Wasm2

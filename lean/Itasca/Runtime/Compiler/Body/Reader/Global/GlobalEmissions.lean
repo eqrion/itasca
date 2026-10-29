@@ -24,9 +24,9 @@ theorem reader_global_get_wasm2 {data env locals index st}
       .ok (.Ok (), out, after)) :
     ∃ idx values, visitor.on_global_get before out idx = .ok (.Ok (), after) ∧
       code.read_global_get st.core data env = .ok (.Ok idx, out) ∧
-      ReaderPostWasm2 p out (.GLOBAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values := by
+      Wasm2.ReaderPost p out (.GLOBAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values := by
   rw [dispatch_global_get] at accepted
-  obtain ⟨idx, read, callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨idx, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
   have contextMatch : EnvTranslation.Matches env ⟨locals, p.ft.results⟩ (Frames.enter C p.current.form p.current.ins p.current.outs) :=
@@ -34,7 +34,7 @@ theorem reader_global_get_wasm2 {data env locals index st}
   have post := code.read_global_get.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     capacity _ contextMatch p.current.ops (by simpa [polymorphic] using typed)
   rw [read, WP.spec_ok] at post
-  obtain ⟨values, _, source⟩ := reader_index_post_wasm2 p C outer spine header base ctrls blocks
+  obtain ⟨values, _, source⟩ := Wasm2.Pending.index_reader_post p C outer spine header base ctrls blocks
     35#u8 _ byte (fun idx => .instr_case_46 _ (EnvTranslation.index_wf idx))
     (fun idx _ encoded => .globalGet idx encoded) out idx post
   exact ⟨idx, values, callback, read, source⟩
@@ -47,9 +47,9 @@ theorem reader_global_set_wasm2 {data env locals index st}
       .ok (.Ok (), out, after)) :
     ∃ idx values, visitor.on_global_set before out idx = .ok (.Ok (), after) ∧
       code.read_global_set st.core data env = .ok (.Ok idx, out) ∧
-      ReaderPostWasm2 p out (.GLOBAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values := by
+      Wasm2.ReaderPost p out (.GLOBAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values := by
   rw [dispatch_global_set] at accepted
-  obtain ⟨idx, read, callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨idx, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
   have contextMatch : EnvTranslation.Matches env ⟨locals, p.ft.results⟩ (Frames.enter C p.current.form p.current.ins p.current.outs) :=
@@ -57,7 +57,7 @@ theorem reader_global_set_wasm2 {data env locals index st}
   have post := code.read_global_set.wasm2_prefix st.core data env ⟨locals, p.ft.results⟩ outer p.current.vals vals
     (by simpa [Control.base, ctrls] using base) _ contextMatch p.current.ops (by simpa [polymorphic] using typed)
   rw [read, WP.spec_ok] at post
-  obtain ⟨values, _, source⟩ := reader_index_post_wasm2 p C outer spine header base ctrls blocks
+  obtain ⟨values, _, source⟩ := Wasm2.Pending.index_reader_post p C outer spine header base ctrls blocks
     36#u8 _ byte (fun idx => .instr_case_47 _ (EnvTranslation.index_wf idx))
     (fun idx _ encoded => .globalSet idx encoded) out idx post
   exact ⟨idx, values, callback, read, source⟩
@@ -92,7 +92,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (index : U32) (ty : Itasca.types.GlobalType) (values : List code.StackType),
       env.global_types.val[index.val]? = some ty ∧
-      ReaderPostWasm2 p out.core (.GLOBAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.GLOBAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted
         (types.map Translate.valueType ++ [Translate.valueType ty.valtype]) ∧
         ScalarEmission C (types.map Translate.valueType) (.GLOBAL_GET (.mk_uN index.val)) [emitted]
@@ -141,7 +141,7 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
     (∃ (index : U32) (ty : Itasca.types.GlobalType) (values : List code.StackType) (front : List valtype),
       env.global_types.val[index.val]? = some ty ∧ ty.mutability = .Var ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty.valtype] ∧
-      ReaderPostWasm2 p out.core (.GLOBAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.GLOBAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted front ∧
         ScalarEmission C (front ++ [Translate.valueType ty.valtype]) (.GLOBAL_SET (.mk_uN index.val)) [emitted] front) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
 namespace Itasca.Runtime.Compiler

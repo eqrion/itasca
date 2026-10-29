@@ -55,7 +55,7 @@ theorem ReaderReachabilityWasm2.close {reachable parents parent child savedParen
     (nextReachable : Bool) (instruction : instr)
     (entered : nextReachable = true → child.entered = true) :
     ReaderReachabilityWasm2 nextReachable parents (parent.advance instruction) savedParents
-      (resumedSource savedParent savedCurrent instruction) :=
+      (Wasm2.resumedSource savedParent savedCurrent instruction) :=
   invariant.pop nextReachable instruction _ rfl entered
 
 end Itasca.Runtime.Compiler

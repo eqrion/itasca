@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 /-!
 The compiler and canonical validator use the same word width, even for a polymorphic operand that has no concrete source value.
 
-Main declarations: `stack_words_types` and `ReaderEnterPostWasm2.layout`. A direct consumer is `Compiler.Body.Callbacks.Calls.ScopeCallbackInputs`.
+Main declarations: `stack_words_types` and `Wasm2.ReaderEnterPost.layout`. A direct consumer is `Compiler.Body.Callbacks.Calls.ScopeCallbackInputs`.
 -/
 
 namespace Itasca.Runtime.Compiler
@@ -21,9 +21,9 @@ theorem stack_words_types (values : List code.StackType) :
 
 /-- A reader's child frame base identifies exactly the physical source prefix
 below its parameters. This comes from the canonical control zipper. -/
-theorem ReaderEnterPostWasm2.front {data env locals index st out form bt ins outs remaining base}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.front {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) :
     out.core.ctrls.val = (p.parents ++ [{p.current with vals := remaining}]).map Wasm2.Frames.Saved.ctrl ++
       [(Wasm2.Frames.Saved.fresh base form bt ins outs).ctrl] ∧
@@ -44,10 +44,10 @@ theorem ReaderEnterPostWasm2.front {data env locals index st out form bt ins out
 
 /-- Live entry height fits the existing machine word bound because its source
 front is a prefix of the already observed operand stack. -/
-theorem ReaderEnterPostWasm2.layout {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.layout {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val)
     (layout : CompilerLayout compiler (Sequence.stackTypes st.core.vals.val)) :

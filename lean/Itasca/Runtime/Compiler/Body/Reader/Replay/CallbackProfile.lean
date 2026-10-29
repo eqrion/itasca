@@ -30,27 +30,27 @@ theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
     exact reader_single_callback_simd visitor st data env before after out accepted
   by_cases h28 : opcode = 28#u8
   · rw [h28,code.step_wasm2.typed_select] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.select_typed arg,True.intro,True.intro,callback⟩
   by_cases h37 : opcode = 37#u8
   · rw [h37,code.step_wasm2.table_get] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.table_get arg,True.intro,True.intro,callback⟩
   by_cases h38 : opcode = 38#u8
   · rw [h38,code.step_wasm2.table_set] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.table_set arg,True.intro,True.intro,callback⟩
   by_cases h208 : opcode = 208#u8
   · rw [h208,code.step_wasm2.ref_null] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.ref_null arg,True.intro,True.intro,callback⟩
   by_cases h209 : opcode = 209#u8
   · rw [h209,code.step_wasm2.ref_is_null] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.ref_is_null,True.intro,True.intro,callback⟩
   by_cases h210 : opcode = 210#u8
   · rw [h210,code.step_wasm2.ref_func] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
     exact ⟨.ref_func arg,True.intro,True.intro,callback⟩
   by_cases h252 : opcode = 252#u8
   · rw [h252,code.step_wasm2.prefixed] at accepted
@@ -96,27 +96,27 @@ theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisito
       invoke visitor before (.op out.core action) = .ok (.Ok (),after) := by
   by_cases h5 : opcode = 5#u8
   · rw [h5,CallbackTrace.dispatch_else] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.else_ arg.2,True.intro,True.intro,callback⟩
   by_cases h12 : opcode = 12#u8
   · rw [h12,CallbackTrace.dispatch_br] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.br arg.1 arg.2,True.intro,True.intro,callback⟩
   by_cases h13 : opcode = 13#u8
   · rw [h13,CallbackTrace.dispatch_br_if] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.br_if arg.1 arg.2,True.intro,True.intro,callback⟩
   by_cases h15 : opcode = 15#u8
   · rw [h15,CallbackTrace.dispatch_return] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.return_,True.intro,True.intro,callback⟩
   by_cases h16 : opcode = 16#u8
   · rw [h16,CallbackTrace.dispatch_call] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.call arg,True.intro,True.intro,callback⟩
   by_cases h17 : opcode = 17#u8
   · rw [h17,CallbackTrace.dispatch_call_indirect] at accepted
-    obtain ⟨arg,_,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+    obtain ⟨arg,_,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
     exact ⟨.call_indirect arg.1 arg.2,True.intro,True.intro,callback⟩
   have blocked' : opcode ≠ 2#u8 ∧ opcode ≠ 3#u8 ∧ opcode ≠ 4#u8 ∧ opcode ≠ 11#u8 ∧ opcode ≠ 14#u8 := by
     simpa only [global_simps] using blocked

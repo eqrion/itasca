@@ -36,7 +36,7 @@ theorem reader_emit_memory_load_wasm2 {data env locals index st}
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ arg front values, Sequence.stackTypes st.core.vals.val = front ++ [.I32] ∧
-      ReaderPostWasm2 p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [valtype_numtype op.type]) ∧
         ScalarEmission C (front ++ [.I32]) (op.source (MemoryMeaning.memArg arg)) [emitted] (front ++ [valtype_numtype op.type]) := by
   obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_load_reader_facts ops before out.core op ⟨0#u32,0#u32⟩
@@ -90,7 +90,7 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ arg front values, Sequence.stackTypes st.core.vals.val = front ++ [.I32,valtype_numtype op.type] ∧
-      ReaderPostWasm2 p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front) ∧
         ScalarEmission C (front ++ [.I32,valtype_numtype op.type]) (op.source (MemoryMeaning.memArg arg)) [emitted] (front) := by
   obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_store_reader_facts ops before out.core op ⟨0#u32,0#u32⟩

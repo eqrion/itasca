@@ -30,7 +30,7 @@ theorem structured_reader_prefix_dead_local_get_wasm2 {jumpTables : List U32} {d
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.LOCAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.LOCAL_GET (.mk_uN idx.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -57,7 +57,7 @@ theorem structured_reader_prefix_dead_local_set_wasm2 {jumpTables : List U32} {d
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_LOCAL_SET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.LOCAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.LOCAL_SET (.mk_uN idx.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -84,7 +84,7 @@ theorem structured_reader_prefix_dead_local_tee_wasm2 {jumpTables : List U32} {d
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_LOCAL_TEE before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.LOCAL_TEE (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_TEE (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.LOCAL_TEE (.mk_uN idx.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -126,7 +126,7 @@ theorem structured_reader_prefix_local_get_wasm2 {jumpTables : List U32} {data e
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
     ∃ (localIndex : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core ((.LOCAL_GET (.mk_uN localIndex.val))) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core ((.LOCAL_GET (.mk_uN localIndex.val))) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance ((.LOCAL_GET (.mk_uN localIndex.val))))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
@@ -163,7 +163,7 @@ theorem structured_reader_prefix_local_set_wasm2 {jumpTables : List U32} {data e
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (code.OP_LOCAL_SET) before = .ok (.Ok (), out, after)) :
     ∃ (localIndex : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.LOCAL_SET (.mk_uN localIndex.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_SET (.mk_uN localIndex.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.LOCAL_SET (.mk_uN localIndex.val)))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
@@ -197,7 +197,7 @@ theorem structured_reader_prefix_local_tee_wasm2 {jumpTables : List U32} {data e
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (code.OP_LOCAL_TEE) before = .ok (.Ok (), out, after)) :
     ∃ (localIndex : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.LOCAL_TEE (.mk_uN localIndex.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_TEE (.mk_uN localIndex.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.LOCAL_TEE (.mk_uN localIndex.val)))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable

@@ -1,4 +1,11 @@
 import Itasca.Visitor.RunTrace
+import Itasca.Visitor.Erasure
+
+/-!
+Replay a successful reader with a replacement callback at the actual decoded state.
+The replacement supplies its own postcondition; acceptance at unrelated states is
+not required. Compiler capacity proofs instantiate these visitor-only lemmas.
+-/
 
 namespace Itasca.CoreVisitor
 open Aeneas Aeneas.Std VisitorTrace
@@ -33,17 +40,8 @@ theorem run.accepted_lift_on {A V W : Type}
       targetHook targetBefore final a ⦃ out => out.1 = .Ok () ∧ post out.2 ⦄) :
     run read targetHook targetBefore ⦃ out =>
       out.1 = .Ok () ∧ out.2.1 = final ∧ post out.2.2 ⦄ := by
-  rcases (run.returned_iff _ _ _ _ _ _).mp reference with
-    ⟨error,reader,impossible,_⟩ | ⟨a,reply,reader,sourceCalled,resultEq⟩
-  · cases impossible
-  · cases reply with
-    | Err error => simp [hookResult] at resultEq
-    | Ok unit =>
-      cases unit
-      obtain ⟨⟨reply,after⟩,called,accepted,held⟩ := WP.spec_imp_exists (accepts a reader sourceCalled)
-      dsimp only at accepted held
-      subst reply
-      refine WP.exists_imp_spec ⟨(.Ok (),final,after),?_,rfl,rfl,held⟩
-      exact (run.returned_iff _ _ _ _ _ _).mpr (Or.inr ⟨a,.Ok (),reader,called,rfl⟩)
+  obtain ⟨value, readCalled, sourceCalled⟩ := run.accepted _ _ _ _ _ reference
+  exact run.available_of_read read targetHook targetBefore value final post readCalled
+    (accepts value readCalled sourceCalled)
 
 end Itasca.CoreVisitor

@@ -27,7 +27,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     rw [equal] at byte accepted
     obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 37#u8 before after (by decide) accepted
     rw [code.step_wasm2.table_get] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableGet value.val),value,0#u32,?_,?_,reader_table_get_post_wasm2 p byte size value out.core read⟩
     · exact ⟨rfl,rfl⟩
     · simpa only [statefulCallback,Translate.referenceType] using callback
@@ -35,7 +35,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     rw [equal] at byte accepted
     obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 38#u8 before after (by decide) accepted
     rw [code.step_wasm2.table_set] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableSet value.val),value,0#u32,?_,?_,reader_table_set_post_wasm2 p byte size value out.core read⟩
     · exact ⟨rfl,rfl⟩
     · simpa only [statefulCallback,Translate.referenceType] using callback
@@ -47,7 +47,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     have dispatch := code.step_memory_size.dispatch visitor st.core data env ctx before
     simp only [global_simps] at dispatch
     rw [dispatch] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     cases value
     refine ⟨.memorySize,0#u32,0#u32,?_,?_,reader_memory_size_post_wasm2 p byte size out.core read⟩
     · exact ⟨rfl,rfl⟩
@@ -60,7 +60,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     have dispatch := code.step_memory_grow.dispatch visitor st.core data env ctx before
     simp only [global_simps] at dispatch
     rw [dispatch] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     cases value
     refine ⟨.memoryGrow,0#u32,0#u32,?_,?_,reader_memory_grow_post_wasm2 p byte size out.core read⟩
     · exact ⟨rfl,rfl⟩
@@ -69,7 +69,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     rw [equal] at byte accepted
     obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 208#u8 before after (by decide) accepted
     rw [code.step_wasm2.ref_null] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.refNull (Translate.referenceType value)),(match value with | .FuncRef => 0#u32 | .ExternRef => 1#u32),0#u32,?_,?_,reader_ref_null_post_wasm2 p byte size value out.core read⟩
     · cases value <;> exact ⟨rfl,rfl⟩
     · cases value <;> simpa only [statefulCallback,Translate.referenceType] using callback
@@ -77,7 +77,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     rw [equal] at byte accepted
     obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 209#u8 before after (by decide) accepted
     rw [code.step_wasm2.ref_is_null] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     cases value
     refine ⟨.refIsNull,0#u32,0#u32,?_,?_,reader_ref_is_null_post_wasm2 p out.core byte size read⟩
     · exact ⟨rfl,rfl⟩
@@ -86,7 +86,7 @@ theorem reader_stateful_base_wasm2 {data env locals index st}
     rw [equal] at byte accepted
     obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 210#u8 before after (by decide) accepted
     rw [code.step_wasm2.ref_func] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.refFunc value.val),value,0#u32,?_,?_,reader_ref_func_post_wasm2 p value out.core byte size read⟩
     · exact ⟨rfl,rfl⟩
     · simpa only [statefulCallback,Translate.referenceType] using callback

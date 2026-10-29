@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
@@ -39,7 +39,7 @@ theorem IndexedTableReaderCompilerPointWasm2.control_capacity_from_source {A : T
   have endBound := chunk.encoded.span
   change st.core.pos.val < out.core.pos.val ∧ out.core.pos.val ≤ data.length at endBound
   rw [kind.dispatch] at canonical
-  obtain ⟨value,_,called⟩ := reader_body_success _ _ _ _ _ _ canonical
+  obtain ⟨value,_,called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ canonical
   have operands := (source_callback_demand before after final out.core (kind.action value) (.Ok ()) out data env
     ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) called tail).1
   have capacity := room.capacity budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources

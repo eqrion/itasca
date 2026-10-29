@@ -40,7 +40,7 @@ theorem reader_emit_local_get_wasm2 {data env locals typeIndex st}
     after.next_source = out.core.pos ∧
     (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType),
       locals.val[index.val]? = some ty ∧
-      ReaderPostWasm2 p out.core (.LOCAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [Translate.valueType ty]) ∧
         LinearEmission (compilerLocals before) (types.map Translate.valueType) (.LOCAL_GET (.mk_uN index.val)) [emitted] (types.map Translate.valueType ++ [Translate.valueType ty])) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -90,7 +90,7 @@ theorem reader_emit_local_set_wasm2 {data env locals typeIndex st}
     (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType) (front : List valtype),
       locals.val[index.val]? = some ty ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
-      ReaderPostWasm2 p out.core (.LOCAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted front ∧
         LinearEmission (compilerLocals before) (front ++ [Translate.valueType ty]) (.LOCAL_SET (.mk_uN index.val)) [emitted] front) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -147,7 +147,7 @@ theorem reader_emit_local_tee_wasm2 {data env locals typeIndex st}
     (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType) (front : List valtype),
       locals.val[index.val]? = some ty ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
-      ReaderPostWasm2 p out.core (.LOCAL_TEE (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.LOCAL_TEE (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [Translate.valueType ty]) ∧
         LinearEmission (compilerLocals before) (front ++ [Translate.valueType ty]) (.LOCAL_TEE (.mk_uN index.val)) [emitted] (front ++ [Translate.valueType ty])) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2

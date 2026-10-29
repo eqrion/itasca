@@ -1,5 +1,23 @@
 # Execution proof simplification and merge plan
 
+## Current work: shared validator and compiler proofs
+
+Updated 2026-10-29. The library/extraction merge and
+[phase 10](#phase-10-consolidate-files-and-naming) and
+[phase 11](#phase-11-share-validator-and-compiler-proofs) are complete: related
+proofs are consolidated, validator/compiler reader certificates are shared, and
+the guides give concrete reading paths. The execution guarantees are unchanged.
+The earlier phases below retain the implementation history and design rationale;
+their old `Exec` paths and commands are historical, not current instructions.
+Phase 10's scope and checks supersede the historical ground rules for this work.
+
+Phases 1, 2, 3, 5 and 9 landed; phase 4's bundles landed, while output/API
+redesign is deferred. Phase 6 was abandoned for a semantic reason: compiled code
+does not uniquely determine its source. Phase 7's organization work is folded
+into phase 10; replacing the abstract transition system is deferred. Phase 8 is
+only triggered by measured build problems. Phase 11 follows the merge and
+shares reader proofs while preserving the public contracts.
+
 Goal: a manageable proof base for the runtime, then one unified library.
 First simplify what the execution theorems claim and delete the machinery
 only the removed claims need. Then merge `Exec/` into `Itasca/` as
@@ -533,34 +551,520 @@ Stopped before phase 10. Step 1 re-files essentially all of `Itasca/Runtime`
 and needs a docstring per new file; step 2 renames thousands of theorems. Both
 need a decision on how to group concepts before starting.
 
-## Phase 10: consolidate files and naming (previous plan's phases 9, 10)
+## Phase 10: consolidate files and naming
 
-1. One file per concept, ~200-600 lines, module docstring on every file,
-   directory depth ≤ 3 under `Itasca/Runtime`. Leaves first.
-2. Naming scheme into `PROOF_GUIDE.md` (docs commit), then rename by
-   directory:
-   - namespaces name concepts, not layers;
-   - facts about extracted functions hang off the Rust path
-     (`runtime.interp.invoke_with.behaves`);
-   - `snake_case` theorems, `UpperCamelCase` definitions, spec mnemonics with
-     `_` (`br_if`, `call_indirect`);
-   - result suffixes `_sound`, `_complete`, `_preserves`, `_inv`, `_eq`,
-     `_spec`;
-   - banned: `Extra`, `Legacy`, `Old`, `New`, `Aux`, `Misc`, `Generic`.
-3. Resolve the deferred `Wasm2`/`_wasm2` tags (51 files, 361 declarations)
-   and `Itasca/Wasm1/Complete` naming.
-4. Lint in `scripts/` for banned words and camelCase theorem segments.
+### Scope and invariants
+
+Primary scope: handwritten `Itasca/Runtime` modules, their internal declaration
+names, importers, audit rules, and documentation. Update validator-side files
+only where they refer to moved runtime modules or declarations. Keep `Main`,
+`Results`, the two contract entry points, the single extraction, and library
+boundaries. A repository-wide validator naming pass is not part of this phase.
+
+Preserve public theorem names, types, premises, conclusions and attributes.
+Preserve the exact-recording, resource-cause, divergence, rollback, source-code
+interpretation and profile distinctions inside their constructions. In
+particular, do not remove `afterCode`, replace `Abs.astep`, weaken host laws,
+change Rust APIs, or re-prove compiler/validator sharing as part of a file move.
+No new axioms, placeholders, audit exceptions or reachability exemptions.
+
+The organizing principle is a proof concept with a readable argument: its
+relation or invariant, supporting lemmas, and the result those lemmas establish.
+Rust ownership informs the major areas, but source semantics and representation
+certificates need their own areas. Do not force them into a Rust-shaped tree.
+
+### Baseline and concrete problems
+
+Filesystem inventory on 2026-10-28, after the merge; physical lines, including
+imports and blank lines, in handwritten runtime `.lean` files:
+
+| Area | Files | Lines | Files under 100 lines |
+| --- | ---: | ---: | ---: |
+| `Code` | 1,186 | 88,912 | 947 |
+| `Interp` | 564 | 43,348 | 451 |
+| `Store` | 320 | 27,548 | 207 |
+| `Abs` | 185 | 14,517 | 141 |
+| `Spec` | 159 | 9,932 | 137 |
+| `Theorems` | 148 | 11,252 | 119 |
+| `Representation`, `Platform`, root files | 25 | 1,739 | 19 |
+| **Total** | **2,587** | **197,245** | **2,021** |
+
+These are file statistics, not a new elaboration/performance baseline. Reader
+proofs alone occupy 378 files; `Interp/StructuredMachine` has 126;
+`Theorems/Composition` has 83. Names often repeat their entire directory path
+or record an earlier expansion of the instruction subset. The current README
+also still describes instantiation as running start code, despite the completed
+phase 5. Both the map and the prose need to describe the checked construction.
+
+### Proposed ownership and target layout
+
+Paths below are relative to `Itasca/Runtime`. They describe destinations, not
+permission to move a declaration above its dependencies. Confirm each group
+against its imports before merging it.
+
+| Current area | Target | Ownership and grouping |
+| --- | --- | --- |
+| `Spec` | `Spec` | Source-rule algebra and typing, grouped by operation or judgment. Keep independent of the extracted runtime. |
+| `Abs` | `SourceMachine` | Flat source state, decoding, transitions, typing and simulation. Retain the transition system; give the model a descriptive name. |
+| `Equations` | `Equations` | Keep the generated-equation gateway separate, however small. |
+| `Platform` | `Platform` | Allocator, memory, float and host contracts; separate independently consumed contracts. |
+| `Representation` | `Representation` | Shared encoding, decoding, layout and capacity certificates. Keep below their compiler/interpreter/store consumers. |
+| `Code/Local` | `Compiler/Local` | Per-operation emission, callbacks, source relations and capacity arguments. |
+| `Code/Body` | `Compiler/Body` | Reader replay, structured control, and whole-body certificates. |
+| `Code/Module` | `Compiler/Module` | Entry assembly, scheduling, finalization and module certificates. |
+| `Interp` | `Interp` | Operation proofs, machine relations and machine steps; keep invocation integration separate. |
+| `Store` | `Store` | API operations, invariant preservation, linking, preparation, initialization and instantiation. |
+| `Theorems` | `Integration` | Constructions joining compiler, interpreter, store and host proofs; organized by the API or execution concept they establish. |
+| `Contracts` | `Contracts` | Stable entry point for embedder obligations; keep independent of constructions assuming those obligations. |
+
+Retain Local → Body → Module as enforced compiler stages. Within a stage,
+prefer a topic directory containing a few substantial modules. For example:
+
+```text
+Runtime/
+  Spec/                 SourceMachine/
+  Equations.lean        Platform/             Representation/
+  Compiler/
+    Local/              # Emission, Control, Capacity, ...
+    Body/
+      Reader/           # Calls, Memory, Table, Control, Replay, ...
+      Relations/        # independent body certificates and their lemmas
+    Module/
+  Interp/
+    Relations/          # shared machine contracts
+    Machine/            # frames, control, instruction-family steps
+    Invocation/         # setup, loop, recording, readback
+  Store/
+    Invariant/          Api/                  Linking/
+    Preparation/        Initialization/       Instantiation/
+  Integration/
+    Api/                Compilation/         Invocation/
+    Instantiation/      Host/                Execution/
+  Contracts.lean
+```
+
+`Interp/Machine` is the proposed home for `StructuredMachine` and the adapters
+currently spread across `Core`, `FloatCore`, `Cumulative` and `Machines`.
+Do not merge different relations just because they have similar names. Describe
+which grammar, ownership, store-mutation or host premise distinguishes them.
+Keep genuinely independent contracts in `Interp/Relations` and combine their
+proof adapters by operation family where the dependency graph permits.
+
+`Integration/Execution` replaces the historical `Composition` stage names with
+concepts such as `Ownership`, `Mutation`, `Dispatch`, `Resources`, `History`,
+and `World`. `Integration/Api` initially retains `Theorems/Api` intact. The
+special contract dependency on `ExecutableInv` must remain precise; relocating
+that invariant to a lower layer requires an import-closure check and is not a
+reason to allow `Contracts` to import all of `Integration`.
+
+Prefer about three directory levels below `Runtime`, but allow an extra level
+when it distinguishes useful families or enforced stages. Do not flatten
+`Compiler/Body/Reader` into an enormous directory merely to meet a depth limit.
+
+### Consolidation rules
+
+1. Merge by argument and shared consumers, not by alphabetical adjacency or
+   line count. A definition plus its inversion, preservation and final step
+   lemmas often belongs together. A small contract used widely can stay small.
+2. Around 200–600 lines is a useful starting point for a cohesive module, not
+   a minimum, maximum or acceptance test. Keep a coherent 100-line contract or
+   900-line proof when splitting it would harm navigation. Never pad a file.
+3. Keep cheap foundational statements separate from expensive constructions
+   when their consumers differ. Do not make every reader import every opcode,
+   or every invariant user import the full invocation proof.
+4. Before merging a set, contract it in the import graph and check for cycles.
+   A path from one member through an external module back to another member
+   can make a merge cyclic even though the original graph is acyclic. Expand
+   the group only if it remains conceptually coherent; otherwise keep the split.
+5. Preserve declaration order and namespace/section boundaries. Review local
+   notation, `open`, variables, options, attributes and private helper names:
+   concatenating files can change elaboration scope and cause name collisions.
+6. Do not add import-only facades for every deleted file. Remove superseded
+   modules and update consumers in the same buildable batch. Guides provide
+   navigation; imports should express actual dependencies.
+7. Start each resulting module with a short module docstring: what question it
+   answers, the main relation/result, and where its construction is consumed.
+   Use section comments inside larger files to show the proof progression.
+
+### Concrete consolidation candidates
+
+These are starting groups for dependency review, not blind filename globs.
+
+| Existing cluster | Proposed grouping | Boundary to preserve |
+| --- | --- | --- |
+| `Store/Api/MemoryFillEffect`, `MemoryFillMutation`, `MemoryFillSemantics` | `Store/Api/MemoryFill` | Handler effect → metadata/mutation → decoded source effect. Check whether low-level consumers need the effect without the source-semantics imports. |
+| `Store/Api/TableFill{Loop,Lists,Effect,Mutation,Semantics}` | `Store/Api/TableFill`, or `TableFill` plus a separately consumed loop module | Keep independent list/loop helpers low enough for other operations. |
+| `Interp/StructuredMachine/IntegerConstant{Point,Capacity,Bounded,Step,ExecutionOwned}` | `Interp/Machine/IntegerConstant` | Fetch/inversion → capacity → step → ownership. Do the analogous float group separately before considering shared constants. |
+| `Code/Body/Reader/Calls/Reader*` and call acceptance modules | `Compiler/Body/Reader/Calls`, with `IndirectCalls` or `CallAcceptance` only when useful | Separate direct/indirect lookup obligations and accepted-step versus successful replay directions. |
+| Reader table/control prefix, dormant-scope and compiler-step files | Topic modules under `Compiler/Body/Reader/Control` and `Table` | A table of labels/control maps is not a Wasm table operation. Classify by definitions before relocating misleadingly named files. |
+| `Theorems/Composition/Stateful/StatefulMemoryFill*` | `Integration/Execution/MemoryFill` | Join the operation, source step and dispatch lifting, while keeping the store operation below integration. Repeat per bulk operation. |
+| `Composition/Eventful/*`, `Composition/World/*` | `Integration/Execution/{World,History,Resources,Loop}` as dependencies permit | Retain exact recorded events, resource causes and the diverging-host alternative. |
+| `Theorems/Invocation/Public*` and associated outcomes | `Integration/Invocation/{Outcomes,Resources,Divergence,Behaves}` | Shared outcome definitions must remain below proofs using them; public `Results/Invoke` remains a small projection. |
+
+Begin with the memory-fill cluster as a pilot: its effect, mutation and source
+meaning form an inspectable argument. Then try integer constants to exercise a
+more connected interpreter family. If either merge increases import cost or
+creates cycles, record the retained boundary and apply that lesson before
+consolidating the compiler's much larger reader tree.
+
+### Naming policy
+
+Write these conventions into `PROOF_GUIDE.md` and the runtime guide before the
+first declaration-rename batch, with examples from the pilots:
+
+- Module names use `UpperCamelCase` and identify their subject. Omit redundant
+  directory prefixes: `Compiler/Body/Reader/Memory.lean`, not another
+  `ReaderMemory...` basename at every level. Keep a qualifier when it actually
+  distinguishes two concepts.
+- Namespaces identify semantic owners. Module paths identify dependency
+  placement; they need not match exactly. A store decoder can still belong to
+  `Store` while its definition lives under `Representation`.
+- Adopt `Compiler` for handwritten compiler concepts and `SourceMachine` for
+  the abstract source model, replacing handwritten `Code` and `Abs` qualifiers
+  in a separate mechanical pass. Do not rename extracted `Itasca.code` or
+  `Itasca.runtime.*`, SpecTec identifiers, or third-party declarations.
+- Types, structures, inductives and named predicates use `UpperCamelCase`.
+  Computational definitions use `lowerCamelCase` (for example `decodeStore`);
+  theorem basenames use `snake_case`. Do not capitalize every `def`: predicates
+  and computations serve different roles.
+- Facts about an extracted function remain under its extracted Rust name;
+  facts about a relation belong under that relation where practical. Preserve
+  public names such as `runtime.interp.invoke_with.behaves`.
+- Name the conclusion: `preserves_*`, `*_eq`, `*_iff`, `*_sound`,
+  `*_complete`, `*_spec`, or an informative operation name. These are examples,
+  not mandatory suffixes. Preserve Wasm spellings such as `br_if` and
+  `call_indirect`; do not force extracted owner segments into another style.
+- Replace historical adjectives (`Core`, `Supported`, `Cumulative`, `Eventful`,
+  `Executable`) only after documenting what each means. Use a concrete subject
+  such as ownership, mutation, dispatch or host events when that is the real
+  distinction. If a name identifies a retained grammar/invariant, document it
+  rather than incorrectly erasing the distinction.
+- Avoid new catch-all names such as `Misc`, `Extra`, `Aux`, `Old` or `New`.
+  Existing `Common`/`Generic` modules should acquire a specific responsibility
+  or have their helpers moved to their consumers; no mechanical word ban.
+
+Maintain explicit old → new module and declaration mappings per migration batch
+in its review description. Rename identifiers using token-aware edits or exact
+qualified replacements, then inspect comments, tactic registrations, quoted
+names and reachability roots separately. Avoid a repository-wide textual
+replacement of words such as `Code`, `Core` or `World`.
+
+### Implementation sequence and exit criteria
+
+**10.1 — Inventory and freeze the contract.** Capture `just exec-stats`,
+`just dead`, current public theorem statements and attributes, and the import
+graph using the existing tokenizer/audit machinery. Record tiny-file clusters,
+fan-in, expensive modules and candidate cycles. Start with a passing
+`just prove`, or record an existing failure before attributing it to cleanup.
+Prepare the first two pilot mappings, including retained small files and why.
+Exit: a reproducible baseline and concrete, acyclic pilot groups.
+
+**10.2 — Prove the grouping policy on two pilots.** Merge memory-fill files,
+then integer-constant files, retaining current directory and declaration names
+where possible. Add docstrings and update all importers. Compare targeted
+elaboration with warm dependencies and inspect the expanded import closure.
+Exit: both groups read as complete arguments, required checks pass, and any
+cost-driven exceptions are documented. A lower file count alone is insufficient.
+
+**10.3 — Establish the major owners.** Move `Code` → `Compiler`, `Abs` →
+`SourceMachine`, and `Theorems` → `Integration`, one owner per buildable batch.
+Keep internal declaration namespaces unchanged until their rename batches.
+Update `RUNTIME_LAYERS`, compiler stage checks, the precise contract exception,
+audit sinks, scripts and documentation alongside each move. Preserve or
+strengthen restrictions; never temporarily allow unrestricted runtime imports.
+Exit: the new major map is enforced and no active imports use the old paths.
+
+**10.4 — Consolidate from foundations to consumers.** Work through source
+semantics/source machine, representation/platform, compiler Local → Body →
+Module, interpreter relations/operations/machine, store, then integration.
+Within an area, migrate coherent dependency groups, not an entire tree at once.
+The pilots need not be repeated. Compiler reader work is several batches:
+shared contracts/replay, scalar/float, memory/table, calls/control, SIMD, then
+whole-body composition. Interleave a lower shared helper with its consumers
+when needed to keep every batch buildable. Record the new reading path after
+each area. Exit: the candidate families are consolidated, old modules removed,
+and remaining small files have clear independent responsibilities.
+
+**10.5 — Normalize internal names by owner.** Use separate rename commits after
+the relevant file consolidation so reviewers can distinguish movement from
+naming. Rename namespace owners before basenames within each affected family;
+update all references atomically, including tactic and reachability metadata.
+Compare public theorem types against the baseline modulo the explicit internal
+renaming map. A successful build alone does not establish unchanged statements.
+Exit: consistent internal vocabulary, stable public names, no stale references.
+
+**10.6 — Finish documentation and integration.** Update the runtime guide's
+layer table, compiler stages and public-construction links. Correct stale
+instantiation/start prose against `Results/Instantiate`. Add three concrete
+reading paths: compilation, invocation, and instantiation, each from `Results`
+through its construction to the foundational certificates. Update `lean/README`,
+`PROOF_GUIDE` and any affected root documentation; keep historical paths clearly
+marked as history. Record final metrics and any deferred clusters in this plan.
+Exit: a reader can follow a representative operation through its complete proof
+without hunting through a succession of single-lemma files.
+
+### Verification and completion
+
+For each proof migration batch:
+
+1. Run targeted `just check` commands while iterating, including affected
+   consumers, not only the newly merged module.
+2. Run `just audit-imports` after additions, moves or deletions. If audit rules
+   change, run the existing checker regression tests and preserve tests that
+   reject upward imports, contract cycles and validator/runtime leakage.
+3. Run `just prove` for integration. It includes audit coverage, transitive axiom
+   checks and reachability. Investigate dead reports alongside explicit name
+   references; do not delete a lemma solely because automation hid its use.
+4. Check updated documentation links and `git diff --check`.
+5. Record files/lines, import closure and relevant timing changes for the area.
+   Profile only when new changes or regressions warrant it; preserve caches.
+
+No Cargo or extraction run is needed for handwritten-proof-only moves. If the
+scope expands to Rust, extraction, toolchain or specification inputs, apply the
+full corresponding checks in `AGENTS.md` and `DEVELOPMENT.md`.
+
+Final acceptance is qualitative and checked: coherent ownership, readable proof
+units, documented distinctions, unchanged public guarantees, enforced import
+boundaries, and passing integrated proofs. Report the reduction in files under
+100 lines and in navigation hops for the three reading paths, but impose no
+file-count quota, hard size limit or arbitrary percentage reduction. Investigate
+material build regressions rather than trading away dependency hygiene for size.
+
+### Execution record
+
+The baseline `just prove` passed before proof edits: 81,305 declarations audited,
+35 unreachable declarations in 16 modules, and no unused modules outside the
+existing documented allowlist.
+The baseline contains 2,587 runtime files / 197,245 lines, including 2,021 files
+under 100 lines; compiled runtime oleans total 1.25 GiB. All 51 theorem types in
+the result modules, including generated auxiliaries, were captured from Lean's
+elaborated environment for the final comparison.
+
+The memory-fill pilot combines `MemoryFillEffect`, `MemoryFillMutation`, and
+`MemoryFillSemantics` into `Store/Api/MemoryFill`. The integer-constant pilot
+combines `IntegerConstant{Point,Capacity,Step,Bounded,ExecutionOwned}` into
+`Interp/StructuredMachine/IntegerConstant`. Both passed targeted checks and
+`just prove`, retaining the baseline audit and reachability counts. Warm isolated
+re-elaboration took about 6.5 seconds versus 18 seconds across the old memory-fill
+files, and 6.3 seconds versus 30 seconds across the old integer-constant files.
+These timings include import loading; they are not whole-build speedups.
+
+The memory-fill merge adds five source-semantics modules to `StoreMutationFacts`
+and none to its execution consumer. Integer constants add none to their consumer.
+The broader reviewed consolidation graph is acyclic; its maximum cumulative
+expansion for a retained runtime module is 26 original modules. Shared table-fill
+loops, prepared-run relations, staging contracts, and SIMD primitives stay below
+their larger constructions.
+
+The `Compiler`, `SourceMachine`, and `Integration` module-owner moves each passed
+`just prove`, with unchanged audit and reachability counts. The consolidation
+combines 911 files into 321 argument modules, in addition to the two pilots,
+and makes 745 topic moves. Five declaration-free facades were removed, with their
+imports inlined. Shared table-fill loops, cheap prepared-run relations, source
+instruction descriptors, SIMD packing primitives, and recorded/unrecorded entry
+boundaries remain separate because their consumers or proof premises differ;
+merging the first two would add 151 and 316 dependency modules respectively.
+
+The consolidation build passed `just prove`. A token-preservation check against
+the starting commit verified all 2,550,126 original runtime body tokens, excluding
+comments and imports; the only additional tokens were anonymous scope wrappers.
+All 51 result-module kernel theorem types were exactly identical before naming.
+The audit counted 80,492 declarations rather than 81,305, with the handwritten
+inventory unchanged. Preserved compiled artifacts show generated-helper reuse:
+a sample of 246 groups accounts for 748 fewer generated constants. For example,
+`BranchSkipSafety` retains all six source declarations while 27 private
+matcher/equation helpers are generated once rather than three times. Overwritten
+artifacts prevent reconstructing the entire count difference from that sample.
+Reachability remained 35 declarations in 16 modules, with no unused modules.
+
+The naming pass changes semantic owners first, then 667 theorem basenames using
+Lean's resolved definition/reference positions. All 47 unmatched textual names
+were reviewed as local bindings or a foreign constructor case; no tactic or
+reachability metadata required renaming. Comment repairs cover all 64 stale
+theorem references plus the public owner/path references. All 11 frozen public
+source files preserve their body tokens and attributes, apart from 14 intended
+internal namespace references. Grammar types use explicit `ModuleBinary.Code`
+qualification where a bare `Code` would be confused with the compiler owner;
+one inline tactic block was reindented for the longer namespace names.
+[PHASE10_MAP.json](PHASE10_MAP.json) records module,
+namespace, private-name, and theorem mappings.
+
+The final source inventory is 1,986 files / 207,748 lines, including 1,268 files
+under 100 lines and 446 single-theorem files. The handwritten inventory remains
+7,164 theorems and 1,506 definitions. Module documentation covers 993 files,
+including every one of the 323 consolidated units. Added documentation and
+scope boundaries account for the line increase. The namespace statistics now
+count reopened namespaces once per file.
+
+The three fixed-endpoint shortest import paths are:
+
+| Public result → foundation | Baseline hops | Final hops |
+| --- | ---: | ---: |
+| Compilation → reader call safety | 5 | 5 |
+| Invocation → memory-fill effect | 6 | 5 |
+| Instantiation → precheck witness | 5 | 4 |
+
+These measure import edges, not proof complexity. The runtime guide provides
+complete compilation, invocation, instantiation and operation reading paths.
+All 215 guide links and anchors resolve. Audit coverage and all 41 script tests
+pass; the checker now rejects reachable import cycles and restricts the contract
+exception to the exact API invariant module.
+
+Final targeted result builds and `just prove` pass, including all 80,492
+declarations in the axiom audit. All 51 result-module kernel theorem types match
+the baseline modulo the five recorded namespace prefixes and 667 exact theorem
+mappings; public names, attributes, binders, universes and premises are unchanged.
+The final reachability inventory matches all 35 baseline declarations by mapped
+name, not just by count. Active runtime oleans total 1.20 GiB versus 1.25 GiB at
+baseline; dependency and obsolete build caches were preserved. Whitespace checks
+include the staged moved files as well as the working-tree diff.
+
+The structural changes are committed as `559079ca`; the separate namespace and
+theorem naming changes are committed as `cad21817`. This plan's pre-existing edits
+and completion record remain uncommitted. Import rewriting also removes one
+duplicate `Handler.NumericDispatch` import from `Wasm2/Scalar/Total`; its proof
+body is unchanged. Rust, extraction outputs, specification sources and pins are
+unchanged. The trust boundary is unchanged. Phase 10 is complete; phase 11 had
+not been started at that point.
 
 ## Phase 11: share validator and compiler proofs
 
-Depends on the merge and on phase 0's overlap numbers.
+Phase 11 is complete. Work compared `Runtime/Compiler/Body/Reader` with
+`Visitor/`, `Handler/`, and `Wasm2/`. Phase 0's line estimates are historical
+sampling results, not a deletion target. Its specification-typing comparison
+found no substantial overlap, so merging `Spec/` with `Runtime/Spec/Typing`
+is outside this phase.
 
-1. Read `Code/Body/Reader` against `Itasca/Visitor`/`Itasca/Handler`. The
-   compiler's callbacks already receive the validator's `&OpIterState`.
-2. If the reader facts are re-derived: parameterize the validator's
-   per-opcode lemmas by a generic callback contract; the compiler proves only
-   its callback obligation per opcode.
-3. Deduplicate `Itasca/Spec` and `Runtime/Spec/Typing` where they overlap.
+The shared interface must retain exact decoded arguments, callback equations,
+stack effects, and advancement of the original source prefix. Existing forward
+validator theorems often retain only `Pending.After`; compiler inversion needs
+the stronger evidence. Successful-step inversion must not acquire totality or
+universal callback-acceptance premises. Compiler completeness must continue to
+construct actual acceptance from independent source and allocation premises.
+
+1. Remove confirmed duplicate inversion lemmas and move visitor-only replay
+   helpers out of Runtime. Preserve exact callback state and arguments.
+2. Pilot shared reader postconditions on the four scalar constants and
+   `unreachable`. Derive validator forward preservation and compiler inversion
+   from the same reader proofs, covering both profiles. Keep compiler emission,
+   capacity, checking and publication obligations in Runtime.
+3. Before broader rollout, pilot a control instruction and `br_table`. The
+   latter has repeated label callbacks and a distinct final callback; a
+   single-callback interface cannot replace its loop correspondence.
+4. Expand by instruction family only where both consumers can reuse the same
+   facts. Delete superseded proofs in each batch. Record actual changes in
+   proof size and import dependencies rather than counting moves as deletion.
+
+Keep validator imports independent of Runtime and SpecExt. Shared handler and
+visitor helpers must respect existing downward-layer rules. Preserve public
+theorem statements and contracts; compare elaborated result-module types as
+well as source statements. Run targeted checks while iterating, refresh audit
+imports after file changes, and finish each batch with `just prove` and
+documentation/whitespace checks. These handwritten-proof changes do not need
+Rust or extraction checks.
+
+### Pilot record
+
+The starting `just prove` passes, with 35 unreachable declarations in 16
+modules and no unused modules. All 51 result-module kernel theorem types were
+captured before edits for exact comparison. The first batch shares scalar
+reader facts and removes generic callback duplication. The rollout record below
+continues that baseline through control and the other instruction families.
+
+The shared interface is `Wasm2.ReaderPost` in
+`Wasm2/Scalar/ReaderPost.lean`, generalized from the compiler's
+`ReaderPostWasm2` to both profiles. `Pending.append_reader` replaces
+`Compiler.reader_append_wasm2`; Wasm 1.0 callers supply their independent
+grammar and instruction restriction. `Wasm2/Scalar/BasicReader.lean` proves
+the four constant readers and `unreachable` once. Existing validator forward
+theorems project `Pending.After`; compiler adapters retain the exact decoded
+argument, read equation, callback equation, stack effect and shared certificate.
+Runtime-specific extensions of the certificate follow its new namespace.
+
+`Runtime/Compiler/Body/Reader/Replay/Run.lean` is removed: every use of
+`Compiler.reader_run_success` now uses the existing `CoreVisitor.run.accepted`.
+`Runtime/Compiler/Local/Capacity/ReaderAcceptance.lean` moves to
+`Visitor/ReaderAcceptance.lean` without changing its declaration names or
+statements. Its reached-state lifting proof now composes `run.accepted` with
+`run.available_of_read`. No compatibility facades remain.
+
+The sampled import closures add only the two new shared scalar modules.
+`Wasm2/Scalar/Step` grows from 84 to 86 dependencies; compiler replay Post,
+float ConstantPrefix, and TerminalInstructionPrefix each gain one net module,
+because the duplicate runtime Run module disappears. No existing dependency
+family is newly pulled into those consumers. Audit coverage still enforces
+validator/runtime separation and downward imports.
+
+The pilot's handwritten Lean source grows by 15 lines overall, including its
+shared interfaces and documentation. It establishes reuse for these five
+instructions and removes the duplicate inversion proof; it does not establish
+the historical 6–9k-line reduction estimate. Most touched runtime files only
+update the certificate name or replace the duplicate inversion lemma.
+
+The pilot is checked: targeted validator/compiler consumer builds, all 41
+checker tests, `just audit-imports`, and `just prove` pass. The axiom audit
+checks 80,484 Itasca declarations using only the permitted logical foundations.
+All 51 result-module kernel theorem types exactly match the baseline; public
+result and contract source files are unchanged. Reachability remains 35 unused
+declarations in 16 modules, with no unused modules. All 75 local links/anchors
+in the edited guides resolve and `git diff --check` passes. Rust, generated
+models, specification sources, pins, and the trust boundary are unchanged.
+This was the scalar pilot; the following rollout completes the phase.
+
+### Rollout record
+
+The shared certificates now cover control entry, exact parent resumption at
+`end`/`else`, return, direct/indirect calls, ordinary branches and `br_table`.
+`Pending.enter_reader`, `end_reader`, `return_reader`, `call_reader`,
+`call_indirect_reader`, `branch_reader`, `branch_if_reader` and
+`branch_table_reader` retain the stronger source facts. The existing forward
+preservation statements are projections. Compiler inversion separately recovers
+the actual callback and identifies its metadata with the independently decoded
+bytes; it acquires no universal callback-success premise.
+
+The scalar rollout adds `nop`, `drop`, `select`, numeric/sign-extension/saturating
+operations, local/global index effects and scalar memory source posts. Reference,
+table and bulk instructions reuse the metadata reader certificate; `ref.func`
+and `ref.is_null` now share their exact source-post proofs too. SIMD uses the
+shared fixed-operand certificate, with a separate shared shuffle reader retaining
+its lane bounds and bytes. Three obsolete scalar visitor-lifting proofs and the
+compiler-only `Replay/Metadata` and `Simd/SimdFixed` modules are removed.
+
+Generic successful control-reader replay lives in `Wasm2/Trace/Acceptance`;
+reached `br_table` replay lives in `Wasm2/Visitor/AcceptedTable`; generic body
+replay lives in `Visitor/BodyReplay`. Their old runtime files are removed.
+`br_table` retains its loop correspondence and distinct terminal callback.
+Its reached-state relation and the existing universal visitor transfer theorem
+serve different premises and remain separate. Compiler emission, allocation,
+source demand, checking and control-layout proofs also remain separate. Scalar
+memory size/grow keep their profile-generic reserved-byte proof and the
+compiler's richer metadata-effect adapter; both reuse the lower reader facts.
+The phase-0 specification-typing comparison found no substantial duplication,
+so there is no speculative `Spec`/runtime typing merge.
+
+Measured against the pre-pilot checkout, handwritten `Itasca` Lean source changes
+from 274,941 to 274,825 lines, a net reduction of 116 lines including shared
+interfaces and module comments. The rollout alone removes 131 net lines:
+Runtime shrinks by 1,037, while shared Visitor/Wasm2 code grows by 906. Moves are
+included in both sides and are not counted as deletions. The historical 6–9k
+estimate is not the achieved reduction.
+
+The sampled import closures change from 84 to 90 for `Wasm2/Scalar/Step`,
+237 to 244 for compiler `Replay/Post`, 383 to 391 for `Float/ConstantPrefix`,
+and 429 to 437 for `Control/TerminalInstructionPrefix`. The additions are the
+shared reader modules and control acceptance; the duplicate runtime Run module
+is removed. Validator imports remain independent of Runtime and SpecExt, and
+audit coverage checks the downward-layer rules.
+
+Final validation passes: targeted shared-family checks, `just audit-imports`,
+all 41 checker tests and `just prove`. The transitive axiom audit checks 80,460
+Itasca declarations using only the permitted logical foundations. Reachability
+remains at the baseline of 35 unused declarations in 16 modules and zero unused
+modules. All 51 result-module kernel theorem types exactly match the pre-pilot
+snapshot; public result and contract source files are unchanged. All 81 local
+documentation links/anchors resolve, and `git diff --check` passes. Rust,
+extracted models, specification sources and pins are unchanged. No trust-boundary
+change was introduced. Phase 11 is complete.
 
 ## Leftovers from the previous plan
 

@@ -32,7 +32,7 @@ theorem reader_emit_indirect_call_wasm2 {data env locals typeIndex st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ index table values emitted output,
       after.function.indirect.val = before.function.indirect.val ++ [(table,index)] ∧
-      ReaderPostWasm2 p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       TypedLowered before after out.core.vals.val emitted output ∧
       IndirectCallEmission after.function.indirect.val C (Sequence.stackTypes st.core.vals.val)
         (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) [emitted] output := by

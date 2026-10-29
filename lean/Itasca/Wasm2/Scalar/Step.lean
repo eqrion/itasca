@@ -1,3 +1,8 @@
+import Itasca.Wasm2.Scalar.MemoryReader
+import Itasca.Wasm2.Scalar.StackReader
+import Itasca.Wasm2.Scalar.IndexReader
+import Itasca.Wasm2.Scalar.NumericReader
+import Itasca.Wasm2.Scalar.BasicReader
 import Itasca.Wasm2.Scalar.Memory
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm2.Step.ScalarContext
@@ -40,25 +45,6 @@ private theorem Pending.append_scalar {data env profile locals index st}
     (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv
     (fun _ => ⟨encoded, encoded.leaf p.inbounds hbr _⟩) (encoded.declared _)
 
-private theorem Pending.append_scalar_simple {data env profile locals index st}
-    (p : Pending data env profile locals index st)
-    (s : code.OpIterState) (op : instr) (poly : Bool) (vals : List code.StackType)
-    (hwf : wf_instr op) (encoded : Wasm1.At data p.start (.plain op) s.pos)
-    (htyped : ∀ C, wf_context C →
-      TypedPrefix C ((p.current.form.params p.current.ins).map Translate.valueType)
-        p.current.ops p.current.ctrl.polymorphic_base p.current.vals →
-      TypedPrefix C ((p.current.form.params p.current.ins).map Translate.valueType)
-        (p.current.ops ++ [op]) poly vals)
-    (hctrls : s.ctrls.val = p.parents.map Frames.Saved.ctrl ++
-      [{ p.current.ctrl with polymorphic_base := poly }])
-    (hvals : s.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ++ vals)
-    (hlen : vals.length ≤ p.current.vals.length + 1)
-    (hbr : data.val[p.start.val]'p.inbounds ≠ 0x0E#u8) : p.After {st with core := s} := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  apply p.append_scalar C outer spine header base ctrls stack s op poly vals hwf encoded
-    (htyped _ (Frames.enter_wf _ (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩)) _ _ _) typed)
-    hctrls _ hlen hbr
-  simpa [stack, base] using hvals
 
 end Itasca.Wasm2
 
@@ -74,12 +60,7 @@ theorem Pending.step_nop {data env profile locals index st}
   apply WP.spec_mono (code.step_nop.total visitor st.core data env ⟨locals, p.ft.results⟩ v hvisitor.toCore)
   intro r hr _
   rw [hr]
-  obtain ⟨_, outer, _, _, hbase, _, hc, _, hv⟩ := p.opened
-  apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) st.core .NOP p.current.ctrl.polymorphic_base p.current.vals .instr_case_0
-    (.no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop)
-    (fun C hC h => h.nop hC) _ _ (by omega)
-  · simpa using hc
-  · simp [hv, hbase]
+  exact (p.nop_reader hbyte).after
 
 /-- UNREACHABLE trims the current frame and records the exact byte. -/
 theorem Pending.step_unreachable {data env profile locals index st}
@@ -89,17 +70,9 @@ theorem Pending.step_unreachable {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_UNREACHABLE v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_unreachable.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ hvisitor.toCore) ?_
-  · obtain ⟨_, outer, _, _, hbase, _, hc, _, hv⟩ := p.opened
-    obtain ⟨s, hr, hsvals, _, hsctrls, hspos⟩ := WP.spec_imp_exists
-      (code.mark_unreachable.spec st.core (p.parents.map Frames.Saved.ctrl) p.current.ctrl hc
-        (by simp [hbase, hv]))
-    have encoded : Wasm1.At data p.start (.plain .UNREACHABLE) s.pos :=
-      .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
-        (by simpa [hspos] using p.pos) .unreachable
-    have hafter := p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s .UNREACHABLE true [] .instr_case_1 encoded
-      (fun C hC h => h.unreachable hC) hsctrls (by simpa using hsvals) (by simp)
-    simp only [code.read_unreachable, hr, bind_ok, WP.spec_ok]
-    exact ⟨trivial, fun _ _ => hafter⟩
+  · apply WP.spec_mono (p.read_unreachable hbyte)
+    intro r effect
+    exact ⟨trivial, fun _ _ => effect.2.2.after⟩
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
@@ -111,30 +84,14 @@ theorem Pending.step_drop {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_DROP v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_drop.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ hvisitor.toCore) ?_
-  · obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
-    have hb : (Control.base st.core).val = outer.length := by simp [Control.base, hctrls, hbase]
-    have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
-      simp [Control.polymorphic, hctrls]
-    change code.pop_stack_type st.core ⦃ _ ⦄
-    apply WP.spec_mono (code.pop_stack_type.segment st.core outer p.current.vals hstack hb)
-    rintro ⟨res, s⟩ ⟨hc, hp, rest, hv, hout⟩
-    dsimp only at hc hp hv hout
+  · apply WP.spec_mono (p.read_drop hbyte)
+    intro r effect
     refine ⟨trivial, ?_⟩
-    intro t hok
-    dsimp only at hok ⊢
-    subst res
-    change StackSemantics.Popped (Control.polymorphic st.core) p.current.vals t rest at hout
-    rw [hpoly] at hout
-    have encoded : Wasm1.At data p.start (.plain .DROP) s.pos :=
-      .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
-        (by simpa [hp] using p.pos) .drop
-    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s .DROP p.current.ctrl.polymorphic_base rest .instr_case_2 encoded
-      (fun C hC h => hout.wasm2_prefix_drop C hC p.current.ops h) _ _
-      (by have := hout.length; omega)
-    · simpa [hc] using hctrls
-    · simpa [hstack, hbase] using hv
-  · intro r hr hok
-    exact (hr.2 hok).choose_spec
+    intro value accepted
+    obtain ⟨_, _, post⟩ := effect value accepted
+    exact post.after
+  · intro r effect accepted
+    exact (effect.2 accepted).choose_spec
 
 end Itasca.Wasm2
 
@@ -149,22 +106,9 @@ theorem Pending.step_i32Const {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_I32_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_i32_const.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ hvisitor.toCore) ?_
-  · apply WP.spec_mono (code.read_i32_const.spec st.core data hsize)
-    rintro ⟨res, s⟩ ⟨hc, hout⟩
-    dsimp only at hc hout
-    refine ⟨trivial, ?_⟩
-    intro value hok
-    dsimp only at hok ⊢
-    subst res
-    obtain ⟨hd, hv⟩ := hout
-    obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
-    have encoded : Wasm1.At data p.start (.plain (Spec.i32Const value)) s.pos :=
-      .of_s32 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (Spec.i32Const value) p.current.ctrl.polymorphic_base
-      (p.current.vals ++ [.Val .I32]) (Spec.i32Const_wf value) encoded
-      (fun C hC h => h.i32Const hC value) _ _ (by simp)
-    · simpa [hc] using hctrls
-    · simpa [hstack, hbase, List.append_assoc] using hv
+  · apply WP.spec_mono (p.read_i32_const hsize hbyte)
+    intro r effect
+    exact ⟨trivial, fun value accepted => (effect value accepted).2.after⟩
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
@@ -176,22 +120,9 @@ theorem Pending.step_i64Const {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_I64_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_i64_const.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ (hvisitor.on_i64_const v)) ?_
-  · apply WP.spec_mono (code.read_i64_const.spec st.core data hsize)
-    rintro ⟨res, s⟩ ⟨hc, hout⟩
-    dsimp only at hc hout
-    refine ⟨trivial, ?_⟩
-    intro value hok
-    dsimp only at hok ⊢
-    subst res
-    obtain ⟨hd, hv⟩ := hout
-    obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
-    have encoded : Wasm1.At data p.start (.plain (ScalarConst.i64 value)) s.pos :=
-      .of_s64 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
-      (p.current.vals ++ [.Val .I64]) (ScalarConst.i64_wf value) encoded
-      (fun C hC h => h.i64Const hC value) _ _ (by simp)
-    · simpa [hc] using hctrls
-    · simpa [hstack, hbase, List.append_assoc] using hv
+  · apply WP.spec_mono (p.read_i64_const hsize hbyte)
+    intro r effect
+    exact ⟨trivial, fun value accepted => (effect value accepted).2.after⟩
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
@@ -203,22 +134,9 @@ theorem Pending.step_f32Const {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_F32_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_f32_const.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ (hvisitor.on_f32_const v)) ?_
-  · apply WP.spec_mono (code.read_f32_const.spec st.core data hsize)
-    rintro ⟨res, s⟩ ⟨hc, hout⟩
-    dsimp only at hc hout
-    refine ⟨trivial, ?_⟩
-    intro value hok
-    dsimp only at hok ⊢
-    subst res
-    obtain ⟨hd, hv⟩ := hout
-    obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
-    have encoded : Wasm1.At data p.start (.plain (ScalarConst.f32 value)) s.pos :=
-      .of_f32 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
-      (p.current.vals ++ [.Val .F32]) (ScalarConst.f32_wf value) encoded
-      (fun C hC h => h.f32Const hC value) _ _ (by simp)
-    · simpa [hc] using hctrls
-    · simpa [hstack, hbase, List.append_assoc] using hv
+  · apply WP.spec_mono (p.read_f32_const hsize hbyte)
+    intro r effect
+    exact ⟨trivial, fun value accepted => (effect value accepted).2.after⟩
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
@@ -230,22 +148,9 @@ theorem Pending.step_f64Const {data env profile locals index st}
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_F64_CONST v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   refine WP.spec_mono (code.step_f64_const.of_read visitor st.core data env ⟨locals, p.ft.results⟩ v
     (fun _ => True) (fun _ s => p.After {st with core := s}) ?_ (hvisitor.on_f64_const v)) ?_
-  · apply WP.spec_mono (code.read_f64_const.spec st.core data hsize)
-    rintro ⟨res, s⟩ ⟨hc, hout⟩
-    dsimp only at hc hout
-    refine ⟨trivial, ?_⟩
-    intro value hok
-    dsimp only at hok ⊢
-    subst res
-    obtain ⟨hd, hv⟩ := hout
-    obtain ⟨_, outer, _, _, hbase, _, hctrls, _, hstack⟩ := p.opened
-    have encoded : Wasm1.At data p.start (.plain (ScalarConst.f64 value)) s.pos :=
-      .of_f64 value p.inbounds (by simpa [global_simps] using hbyte) p.pos hd
-    apply p.append_scalar_simple (hbr := by rw [hbyte]; simp [global_simps]) s (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
-      (p.current.vals ++ [.Val .F64]) (ScalarConst.f64_wf value) encoded
-      (fun C hC h => h.f64Const hC value) _ _ (by simp)
-    · simpa [hc] using hctrls
-    · simpa [hstack, hbase, List.append_assoc] using hv
+  · apply WP.spec_mono (p.read_f64_const hsize hbyte)
+    intro r effect
+    exact ⟨trivial, fun value accepted => (effect value accepted).2.after⟩
   · intro r hr hok
     exact (hr.2 hok).choose_spec
 
@@ -261,24 +166,24 @@ theorem Pending.step_numeric_mapped {data env profile locals index st}
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
     (hmap : Numeric.opcodeMeaning opcode = some op) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ opcode v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have hbase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
-  have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
-    simp [Control.polymorphic, ctrls]
-  apply WP.spec_mono (code.step.numeric_wasm2_prefix visitor st.core data env ⟨locals, p.ft.results⟩ opcode op outer
-    p.current.vals v _ hC p.current.ops (by simpa [hpoly] using typed) hmap stack hbase
-    hsize hvisitor)
-  rintro ⟨res, s, v'⟩ ⟨hc, hp, after, hv, hlen, hout⟩ hok
-  dsimp only at hc hp hv hlen hout hok ⊢
-  have encoded : Wasm1.At data p.start (.plain op.instruction) s.pos :=
-    .no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) (.numeric opcode op hmap)
-  apply p.append_scalar (hbr := by rw [hbyte]; rintro rfl; simp [Numeric.opcodeMeaning] at hmap)
-    C outer spine header base ctrls stack s op.instruction
-    p.current.ctrl.polymorphic_base after op.wellFormed encoded _ _ hv hlen
-  · simpa [hpoly] using hout hok
-  · simpa [hc] using ctrls
+  have encoded : Wasm1.At data p.start (.plain op.instruction) st.core.pos :=
+    .no_immediate p.inbounds hbyte p.pos (.numeric opcode op hmap)
+  have effect := p.numeric_reader op st.core.pos hsize (.plain encoded) (encoded.declared _)
+    (fun _ C => ⟨encoded, encoded.leaf p.inbounds
+      (by rw [hbyte]; rintro rfl; simp [Numeric.opcodeMeaning] at hmap) C⟩)
+  dsimp only at effect
+  rw [code.step.numeric_dispatch visitor st.core data env ⟨locals,p.ft.results⟩ opcode v (Numeric.NumericOp.bounds hmap).1]
+  rw [code.step_numeric.dispatch visitor st.core opcode op v hmap]
+  apply WP.spec_mono (CoreVisitor.run.spec _ _ v (fun _ => True)
+    (fun _ out => p.After {st with core := out}) ?_ (fun out _ => hvisitor.visit_numeric v out opcode))
+  · intro result held accepted
+    exact (held.2 accepted).choose_spec
+  · apply WP.spec_mono effect
+    intro result held
+    refine ⟨trivial, ?_⟩
+    intro unit accepted
+    obtain ⟨_, _, post⟩ := held.2.2 unit accepted
+    exact post.after
 
 /-- Unmapped high opcodes terminate with rejection; mapped scalar opcodes preserve the invariant. -/
 theorem Pending.step_numeric {data env profile locals index st}
@@ -299,25 +204,17 @@ theorem Pending.step_select {data env profile locals index st}
     (hvisitor : FullVisitor.Total visitor) (v : V) (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
     code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_SELECT v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, stack⟩ := id p.opened
-  have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have hbase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
-  have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
-    simp [Control.polymorphic, ctrls]
-  apply WP.spec_mono (code.step_select.wasm2_prefix visitor st.core data env ⟨locals, p.ft.results⟩ outer
-    p.current.vals v _ hC p.current.ops (by simpa [hpoly] using typed) stack hbase
-    hsize hvisitor)
-  rintro ⟨res, s, v'⟩ ⟨hc, hp, after, hv, hlen, hout⟩ hok
-  dsimp only at hc hp hv hlen hout hok ⊢
-  have encoded : Wasm1.At data p.start (.plain (.SELECT none)) s.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using hbyte)
-      (by simpa [hp] using p.pos) .select
-  apply p.append_scalar (hbr := by rw [hbyte]; simp [global_simps]) C outer spine header base ctrls stack s
-    (.SELECT none)
-    p.current.ctrl.polymorphic_base after (.instr_case_3 _) encoded _ _ hv hlen
-  · simpa [hpoly] using hout hok
-  · simpa [hc] using ctrls
+  rw [code.step_select.dispatch]
+  refine WP.spec_mono (CoreVisitor.run.spec _ _ v (fun _ => True)
+    (fun _ s => p.After {st with core := s}) ?_ (hvisitor.on_select v)) ?_
+  · apply WP.spec_mono (p.read_select hsize hbyte)
+    intro r effect
+    refine ⟨trivial, ?_⟩
+    intro value accepted
+    obtain ⟨_, _, post⟩ := effect value accepted
+    exact post.after
+  · intro r effect accepted
+    exact (effect.2 accepted).choose_spec
 
 end Itasca.Wasm2
 
@@ -352,15 +249,13 @@ private theorem Pending.index_post_after {data env profile locals index st} (p :
       (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops op r)
     (idx : U32) (hr : r.1 = .Ok idx) (hbr : opcode ≠ 0x0E#u8 := by decide) :
     p.After {st with core := r.2} := by
-  obtain ⟨hd, hc, rest, hv, hl, ht⟩ := hpost idx hr
-  have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
-    simp [Control.polymorphic, ctrls]
-  apply p.append_scalar (hbr := by rw [hbyte]; exact hbr) C outer spine header base ctrls vals r.2
-    (op idx)
-    p.current.ctrl.polymorphic_base rest (hwf idx) _ (by simpa [hpoly] using ht) _ hv hl
-  · obtain ⟨bytes, hs, hn, hb, he⟩ := hd
-    exact .of_immediate p.inbounds hbyte p.pos (himm idx bytes he) ⟨hs, hn, hb⟩
-  · simp [hc, ctrls]
+  rcases r with ⟨result, out⟩
+  dsimp only at hr
+  subst result
+  obtain ⟨_, _, _, _, _, _, _, blocks, _⟩ := p.opened
+  obtain ⟨values, _, post⟩ := p.index_reader_post C outer spine header base ctrls blocks
+    opcode op hbyte hwf himm out idx hpost hbr
+  exact post.after
 
 /-- `local.get` preserves `Pending` on success. -/
 theorem Pending.step_local_get {data env profile locals index st} (p : Pending data env profile locals index st)
@@ -550,16 +445,12 @@ theorem Pending.step_memory {data env profile locals index st} (p : Pending data
   apply run_after p _ _ v _ (fun s arg => hvisitor.visit_memory v s opcode arg)
   refine WP.spec_mono hread ?_
   intro r hr arg hi
-  obtain ⟨⟨middle, halign, hoffset⟩, hc, rest, hv, hl, ht⟩ := hr arg hi
-  have hwf : wf_instr (operation.op arg) := ht.wellFormed _ (by simp)
-  apply p.append_scalar (hbr := by rw [hbyte]; rintro rfl; simp [MemoryMeaning.opcodeMeaning] at hrow)
-    C outer spine header base ctrls vals r.2 (operation.op arg)
-    p.current.ctrl.polymorphic_base rest hwf _ (by simpa [hpoly] using ht) _ hv hl
-  · obtain ⟨alignment, ha, hna, hba, hea⟩ := halign
-    obtain ⟨offset, ho, hno, hbo, heo⟩ := hoffset
-    exact .of_immediate p.inbounds hbyte p.pos (.memory opcode operation arg hrow hea heo)
-      ((show Wasm1.BytesAt data st.core.pos alignment middle from ⟨ha, hna, hba⟩).append ⟨ho, hno, hbo⟩)
-  · simp [hc, ctrls]
+  rcases r with ⟨result, out⟩
+  dsimp only at hi
+  subst result
+  obtain ⟨values, post⟩ := p.memory_reader_post C outer spine header base ctrls blocks
+    opcode operation hbyte hrow arg out hr
+  exact post.after
 
 end Itasca.Wasm2
 namespace Itasca.Wasm2

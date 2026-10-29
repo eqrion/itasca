@@ -1,10 +1,12 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Metadata
+import Itasca.Wasm2.References.Reader
+import Itasca.Wasm2.References.Step
+import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Relations.Stacks.KnownFixedStack
 
 /-!
 Live metadata readers retain the precise full operand suffix used by the slot compiler, including values saved outside the current source scope.
 
-Main declarations: `MetadataReaderPost.types`. A direct consumer is `Compiler.Body.Reader.Stateful.StatefulPost`.
+Main declarations: `Wasm2.MetadataReaderPost.types`. A direct consumer is `Compiler.Body.Reader.Stateful.StatefulPost`.
 -/
 
 namespace Itasca.Runtime.Compiler
@@ -12,12 +14,12 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Live metadata readers retain the precise full operand suffix used by the
 slot compiler, including values saved outside the current source scope. -/
-theorem MetadataReaderPost.types {data env locals index st}
+theorem _root_.Itasca.Wasm2.MetadataReaderPost.types {data env locals index st}
     {p : Pending data env .Wasm2 locals index st} {A B : Type}
     {decode : Result (core.result.Result A error.OpError × code.OpIterState)}
     {pops : A → List types.ValueType} {output : A → Option types.ValueType}
     {metadata : A → B} {operation : A → instr} {value : B} {out : code.OpIterState}
-    (post : MetadataReaderPost p decode pops output metadata operation value out)
+    (post : Wasm2.MetadataReaderPost p decode pops output metadata operation value out)
     (known : ConcreteStack st.core.vals.val)
     (monomorphic : p.current.ctrl.polymorphic_base = false)
     (size : st.core.vals.val.length < Usize.max) :
@@ -28,7 +30,7 @@ theorem MetadataReaderPost.types {data env locals index st}
         (∀ C, EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C →
           Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
             (.mk_list (Simd.outputTypes (output a))))) ∧
-        ∃ values, ReaderPostWasm2 p out (operation a) p.current.ctrl.polymorphic_base values := by
+        ∃ values, Wasm2.ReaderPost p out (operation a) p.current.ctrl.polymorphic_base values := by
   obtain ⟨a,middle,values,decoded,middleValues,middleControls,metadataEq,read,controls,position,effect,post,principal⟩ := post
   obtain ⟨C,outer,spine,header,base,typed,ctrls,blocks,stack⟩ := p.opened
   have middleBase : (Control.base middle).val = outer.length := by

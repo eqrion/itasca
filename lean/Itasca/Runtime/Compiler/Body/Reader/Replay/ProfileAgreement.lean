@@ -1,4 +1,6 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Run
+import Itasca.Runtime.Compiler.Local.Source.SourceStacks
+import Itasca.Visitor.EventDispatch
+import Itasca.Visitor.Erasure
 import Itasca.Wasm2.Step.Dispatch
 
 /-!

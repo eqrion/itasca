@@ -87,7 +87,7 @@ theorem structured_reader_prefix_if_dead_wasm2 {jumpTables : List U32} {emit : L
       st data env ctx index .Wasm2 code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterIf (Wasm2.blockType bt) 0#u32 front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length false
-      ReaderEnterPostWasm2 p out .then_ bt ins outs remaining base ∧
+      Wasm2.ReaderEnterPost p out .then_ bt ins outs remaining base ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals (parents ++ [current]) child out.core.vals.val out.core.pos.val ∧
       ReaderScopeZipperWasm2 (parents ++ [current]) child
         (p.parents ++ [{p.current with vals := remaining}]) (Wasm2.Frames.Saved.fresh base .then_ bt ins outs) ∧

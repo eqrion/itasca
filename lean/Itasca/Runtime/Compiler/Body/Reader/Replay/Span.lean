@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 /-!
 Byte-coordinate spans consumed by accepted reader steps.
 
-Main declarations: `reader_span_wasm2` and `ReaderPostWasm2.span`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
+Main declarations: `reader_span_wasm2` and `Wasm2.ReaderPost.span`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
 -/
 
 namespace Itasca.Runtime.Compiler
@@ -16,9 +16,9 @@ theorem reader_span_wasm2 {data env locals index st token next}
   have pos := p.pos
   exact ⟨by omega, span.2⟩
 
-theorem ReaderPostWasm2.span {data env locals index st out instruction poly values}
+theorem _root_.Itasca.Wasm2.ReaderPost.span {data env locals index st out instruction poly values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderPostWasm2 p out instruction poly values) :
+    (post : Wasm2.ReaderPost p out instruction poly values) :
     st.core.pos.val ≤ out.pos.val ∧ out.pos.val ≤ data.length := reader_span_wasm2 p post.encoded
 
 end Itasca.Runtime.Compiler

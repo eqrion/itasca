@@ -7,9 +7,8 @@ import Itasca.Wasm2.Scalar.Total
 Re-proves the typed-prefix effect of the shared scalar handlers against the Wasm 2.0
 `TypedPrefix` zipper. `TypedPrefix.nop`, `.unreachable` and the constant lemmas extend a prefix
 by one instruction, `NumericEffect.wasm2_prefix`, `Popped.wasm2_prefix_drop` and
-`SelectEffect.wasm2_prefix` do so for stack effects, and `code.step_numeric.wasm2_prefix`,
-`code.step.numeric_wasm2_prefix` and `code.step_select.wasm2_prefix` lift them to the extracted
-handlers.
+`SelectEffect.wasm2_prefix` do so for stack effects. `NumericReader` and
+`StackReader` lift these facts to shared reader specifications.
 -/
 
 open Aeneas Aeneas.Std
@@ -129,105 +128,3 @@ theorem SelectEffect.wasm2_prefix {initial : List valtype} {poly before t after}
   · exact .mk_Resulttype_sub _ _ rfl (by simpa [Forall₂] using selectedType_sub hu)
 
 end Itasca.StackSemantics
-
-namespace Itasca
-
-/-- `code.step_numeric` on a mapped numeric opcode is total, keeps frames and cursor, and extends
-the typed prefix by the opcode's instruction on success. -/
-theorem code.step_numeric.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
-    (hmap : Numeric.NumericOp opcode op)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step_numeric visitor st opcode v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [op.instruction])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step_numeric.dispatch visitor st opcode op v hmap]
-  obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=
-    WP.spec_imp_exists (Numeric.read.segment op st outer segment hvals hbase hsize)
-  dsimp only at hc hp hv hlen hout
-  cases res with
-  | Err e =>
-    rw [WP.spec_equiv_exists]
-    refine ⟨(.Err e, s, v), ?_, hc, hp, after, hv, hlen, by simp⟩
-    simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok u =>
-    have hprefix := hout.wasm2_prefix C hC ops op.instruction htyped op.wellFormed (op.typed C hC)
-    obtain ⟨vis, v', hvst⟩ := hvisit.visit_numeric v s opcode
-    cases vis with
-    | Ok u =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (), s, v'), ?_, hc, hp, after, hv, hlen, fun _ => hprefix⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
-    | Err e =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, after, hv, hlen, by simp⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
-/-- `code.step` on a mapped numeric opcode has the same effect as `code.step_numeric`. -/
-theorem code.step.numeric_wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (opcode : U8) (op : Numeric.Operation)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
-    (hmap : Numeric.NumericOp opcode op)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step visitor st data env ctx opcode v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [op.instruction])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step.numeric_dispatch visitor st data env ctx opcode v hmap.bounds.1]
-  exact code.step_numeric.wasm2_prefix visitor st opcode op outer segment v C hC ops htyped
-    hmap hvals hbase hsize hvisit
-
-/-- `code.step_select` extends the typed prefix by an untyped `select` on success. -/
-theorem code.step_select.wasm2_prefix {inputs : List valtype} {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
-    (outer segment : List code.StackType) (v : V) (C : context) (hC : wf_context C)
-    (ops : List instr) (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment)
-    (hvals : st.vals.val = outer ++ segment)
-    (hbase : (Control.base st).val = outer.length)
-    (hsize : st.vals.val.length < Usize.max)
-    (hvisit : FullVisitor.Total visitor) :
-    code.step visitor st data env ctx code.OP_SELECT v ⦃ r =>
-      r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
-      ∃ after, r.2.1.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
-        (r.1 = .Ok () → Wasm2.TypedPrefix C inputs (ops ++ [.SELECT none])
-          (Control.polymorphic st) after) ⦄ := by
-  rw [code.step_select.dispatch]
-  obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, hout⟩ :=
-    WP.spec_imp_exists (code.read_select.segment st outer segment hvals hbase hsize)
-  dsimp only at hc hp hv hlen hout
-  cases res with
-  | Err e =>
-    rw [WP.spec_equiv_exists]
-    refine ⟨(.Err e, s, v), ?_, hc, hp, after, hv, hlen, by simp⟩
-    simp [CoreVisitor.run, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok t =>
-    have hprefix := hout.wasm2_prefix C hC ops htyped
-    obtain ⟨vis, v', hvst⟩ := hvisit.on_select v s t
-    cases vis with
-    | Ok u =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (), s, v'), ?_, hc, hp, after, hv, hlen, fun _ => hprefix⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
-    | Err e =>
-      rw [WP.spec_equiv_exists]
-      refine ⟨(.Err (.Visitor e), s, v'), ?_, hc, hp, after, hv, hlen, by simp⟩
-      simp [CoreVisitor.run, hr, hvst, code.visit, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-
-end Itasca

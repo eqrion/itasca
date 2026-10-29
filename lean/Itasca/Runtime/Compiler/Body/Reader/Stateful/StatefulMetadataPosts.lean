@@ -1,4 +1,6 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Metadata
+import Itasca.Wasm2.References.Reader
+import Itasca.Wasm2.References.Step
+import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Wasm2.Bulk.Step
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
 
@@ -19,10 +21,10 @@ theorem reader_memory_fill_wasm2 {data env locals index st} (p : Pending data en
     (hsize : st.core.vals.val.length < Usize.max)
     (value : Unit) (out : code.OpIterState)
     (accepted : code.read_memory_fill {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.read_bulk_memory {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (code.read_bulk_memory {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
       (fun _ => .MEMORY_FILL) value out := by
   rw [code.read_memory_fill.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.read_bulk_memory {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (code.read_bulk_memory {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
     (fun _ => .MEMORY_FILL) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.read_bulk_memory.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -48,10 +50,10 @@ theorem reader_memory_copy_wasm2 {data env locals index st} (p : Pending data en
     (hsize : st.core.vals.val.length < Usize.max)
     (value : Unit) (out : code.OpIterState)
     (accepted : code.read_memory_copy {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (memoryCopyMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (memoryCopyMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
       (fun _ => .MEMORY_COPY) value out := by
   rw [code.read_memory_copy.fixed] at accepted
-  apply reader_metadata_wasm2 p (memoryCopyMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (memoryCopyMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
     (fun _ => .MEMORY_COPY) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (memoryCopyMetadata.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -77,10 +79,10 @@ theorem reader_memory_init_wasm2 {data env locals index st} (p : Pending data en
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_memory_init {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (memoryInitMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (memoryInitMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
       (fun idx => .MEMORY_INIT (.mk_uN idx.val)) value out := by
   rw [code.read_memory_init.fixed] at accepted
-  apply reader_metadata_wasm2 p (memoryInitMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (memoryInitMetadata {st.core with pos := next} data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
     (fun idx => .MEMORY_INIT (.mk_uN idx.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (memoryInitMetadata.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -105,7 +107,7 @@ theorem reader_table_init_wasm2 {data env locals index st} (p : Pending data env
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32 × U32) (out : code.OpIterState)
     (accepted : code.read_table_init {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (referencePairMetadata (code.take_element {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (referencePairMetadata (code.take_element {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
       (fun a => .TABLE_INIT (.mk_uN a.2.val) (.mk_uN a.1.val)) value out := by
   rw [code.read_table_init.fixed] at accepted
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
@@ -114,7 +116,7 @@ theorem reader_table_init_wasm2 {data env locals index st} (p : Pending data env
       ∃ hi : i.val < env.elements.val.length,
         ty = ModuleConstants.referenceValueType env.elements.val[i.val].elem)
     (code.take_element.spec {st.core with pos := next} data env)
-  apply reader_metadata_wasm2 p (referencePairMetadata (code.take_element {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (referencePairMetadata (code.take_element {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
     (fun a => .TABLE_INIT (.mk_uN a.2.val) (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono hmetadata
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -141,7 +143,7 @@ theorem reader_table_copy_wasm2 {data env locals index st} (p : Pending data env
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32 × U32) (out : code.OpIterState)
     (accepted : code.read_table_copy {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (referencePairMetadata (code.take_table {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (referencePairMetadata (code.take_table {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
       (fun a => .TABLE_COPY (.mk_uN a.1.val) (.mk_uN a.2.val)) value out := by
   rw [code.read_table_copy.fixed] at accepted
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
@@ -150,7 +152,7 @@ theorem reader_table_copy_wasm2 {data env locals index st} (p : Pending data env
       ∃ hi : i.val < env.table_types.val.length,
         ty = ModuleConstants.referenceValueType env.table_types.val[i.val].elem)
     (code.take_table.spec {st.core with pos := next} data env)
-  apply reader_metadata_wasm2 p (referencePairMetadata (code.take_table {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (referencePairMetadata (code.take_table {st.core with pos := next} data env) data env) (fun _ => [.I32,.I32,.I32]) (fun _ => none) id
     (fun a => .TABLE_COPY (.mk_uN a.1.val) (.mk_uN a.2.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono hmetadata
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -187,10 +189,10 @@ theorem reader_table_get_wasm2 {data env locals index st} (p : Pending data env 
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_table_get st.core data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
+    Wasm2.MetadataReaderPost p (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
       (fun a => .TABLE_GET (.mk_uN a.1.val)) value out := by
   rw [code.read_table_get.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
     (fun a => .TABLE_GET (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_table.spec st.core data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -216,10 +218,10 @@ theorem reader_table_set_wasm2 {data env locals index st} (p : Pending data env 
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_table_set st.core data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
+    Wasm2.MetadataReaderPost p (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
       (fun a => .TABLE_SET (.mk_uN a.1.val)) value out := by
   rw [code.read_table_set.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_SET (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_table.spec st.core data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -245,10 +247,10 @@ theorem reader_ref_null_wasm2 {data env locals index st} (p : Pending data env .
     (hsize : st.core.vals.val.length < Usize.max)
     (value : types.ElemType) (out : code.OpIterState)
     (accepted : code.read_ref_null st.core data = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_reference_type st.core data) (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id
+    Wasm2.MetadataReaderPost p (code.take_reference_type st.core data) (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id
       (fun rt => .REF_NULL (Translate.referenceType rt)) value out := by
   rw [code.read_ref_null.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_reference_type st.core data) (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_reference_type st.core data) (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id
     (fun rt => .REF_NULL (Translate.referenceType rt)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_reference_type.spec st.core data)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -268,10 +270,10 @@ theorem reader_table_grow_wasm2 {data env locals index st} (p : Pending data env
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_table_grow {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
+    Wasm2.MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
       (fun a => .TABLE_GROW (.mk_uN a.1.val)) value out := by
   rw [code.read_table_grow.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_GROW (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -299,10 +301,10 @@ theorem reader_table_size_wasm2 {data env locals index st} (p : Pending data env
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_table_size {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
+    Wasm2.MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
       (fun a => .TABLE_SIZE (.mk_uN a.1.val)) value out := by
   rw [code.read_table_size.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_SIZE (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -330,10 +332,10 @@ theorem reader_table_fill_wasm2 {data env locals index st} (p : Pending data env
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.read_table_fill {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
+    Wasm2.MetadataReaderPost p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
       (fun a => .TABLE_FILL (.mk_uN a.1.val)) value out := by
   rw [code.read_table_fill.fixed] at accepted
-  apply reader_metadata_wasm2 p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_FILL (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -361,10 +363,10 @@ theorem reader_data_drop_wasm2 {data env locals index st} (p : Pending data env 
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32) (out : code.OpIterState)
     (accepted : code.take_data_index {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_data_index {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (code.take_data_index {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
       (fun idx => .DATA_DROP (.mk_uN idx.val)) value out := by
   rw [← metadataOperands.empty (code.take_data_index {st.core with pos := next} data env)] at accepted
-  apply reader_metadata_wasm2 p (code.take_data_index {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_data_index {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
     (fun idx => .DATA_DROP (.mk_uN idx.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_data_index.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -389,10 +391,10 @@ theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env 
     (hsize : st.core.vals.val.length < Usize.max)
     (value : U32 × types.ValueType) (out : code.OpIterState)
     (accepted : code.take_element {st.core with pos := next} data env = .ok (.Ok value,out)) :
-    MetadataReaderPost p (code.take_element {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
+    Wasm2.MetadataReaderPost p (code.take_element {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
       (fun a => .ELEM_DROP (.mk_uN a.1.val)) value out := by
   rw [← metadataOperands.empty (code.take_element {st.core with pos := next} data env)] at accepted
-  apply reader_metadata_wasm2 p (code.take_element {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
+  apply Wasm2.Pending.metadata_reader_accepted p (code.take_element {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
     (fun a => .ELEM_DROP (.mk_uN a.1.val)) ?_ ?_ ?_ ?_ hsize value out accepted
   · apply WP.spec_mono (code.take_element.spec {st.core with pos := next} data env)
     rintro ⟨res, decoded⟩ ⟨hv, hc, hd⟩
@@ -455,10 +457,10 @@ theorem reader_memory_size_wasm2 {data env locals index st}
     (byte : data.val[p.start.val]'p.inbounds = 63#u8)
     (size : st.core.vals.val.length < Usize.max) (out : code.OpIterState)
     (accepted : code.read_memory_size st.core data env = .ok (.Ok (),out)) :
-    MetadataReaderPost p (code.read_bulk_memory st.core data env) (fun _ => [])
+    Wasm2.MetadataReaderPost p (code.read_bulk_memory st.core data env) (fun _ => [])
       (fun _ => some .I32) id (fun _ => .MEMORY_SIZE) () out := by
   rw [memory_size_fixed] at accepted
-  apply reader_metadata_wasm2 p (code.read_bulk_memory st.core data env) (fun _ => [])
+  apply Wasm2.Pending.metadata_reader_accepted p (code.read_bulk_memory st.core data env) (fun _ => [])
     (fun _ => some .I32) id (fun _ => .MEMORY_SIZE) ?_ ?_ ?_ ?_ size () out accepted
   · apply WP.spec_mono (code.read_bulk_memory.spec st.core data env)
     rintro ⟨result,middle⟩ ⟨values,controls,decoded⟩
@@ -480,10 +482,10 @@ theorem reader_memory_grow_wasm2 {data env locals index st}
     (byte : data.val[p.start.val]'p.inbounds = 64#u8)
     (size : st.core.vals.val.length < Usize.max) (out : code.OpIterState)
     (accepted : code.read_memory_grow st.core data env = .ok (.Ok (),out)) :
-    MetadataReaderPost p (code.read_bulk_memory st.core data env) (fun _ => [.I32])
+    Wasm2.MetadataReaderPost p (code.read_bulk_memory st.core data env) (fun _ => [.I32])
       (fun _ => some .I32) id (fun _ => .MEMORY_GROW) () out := by
   rw [memory_grow_fixed] at accepted
-  apply reader_metadata_wasm2 p (code.read_bulk_memory st.core data env) (fun _ => [.I32])
+  apply Wasm2.Pending.metadata_reader_accepted p (code.read_bulk_memory st.core data env) (fun _ => [.I32])
     (fun _ => some .I32) id (fun _ => .MEMORY_GROW) ?_ ?_ ?_ ?_ size () out accepted
   · apply WP.spec_mono (code.read_bulk_memory.spec st.core data env)
     rintro ⟨result,middle⟩ ⟨values,controls,decoded⟩

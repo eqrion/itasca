@@ -65,7 +65,7 @@ theorem reader_emit_float32_wasm2 {data env locals index st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
+      Wasm2.ReaderPost p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
         (p.current.vals ++ [.Val .F32]) ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [.F32]) ∧
         ScalarEmission C (types.map Translate.valueType) (ScalarConst.f32 value) [emitted]
@@ -116,7 +116,7 @@ theorem reader_emit_float64_wasm2 {data env locals index st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
+      Wasm2.ReaderPost p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
         (p.current.vals ++ [.Val .F64]) ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [.F64]) ∧
         ScalarEmission C (types.map Translate.valueType) (ScalarConst.f64 value) [emitted]

@@ -23,13 +23,13 @@ theorem reader_simd_constant_wasm2 {data env locals index st}
       Wasm2.Simd.readFixed {st.core with pos := position} [] (some .V128) = .ok (.Ok (),out.core) ∧
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = position ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals [] (some .V128) values ∧
-        ReaderPostWasm2 p out.core (Wasm2.Simd.vectorConstant low high) p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out.core (Wasm2.Simd.vectorConstant low high) p.current.ctrl.polymorphic_base values := by
   obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfd#u8 before after (by decide) accepted
   rw [code.step_wasm2.simd,code.step_simd.eq_runs] at run
   have readLeb := reader.read_u32_leb.complete data st.core.pos 12#u32 next decoded
   simp only [Wasm2.Simd.prefixStep,readLeb,bind_ok] at run
   rw [Wasm2.Simd.subStep.constant] at run
-  obtain ⟨⟨low,high⟩,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨⟨low,high⟩,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   rw [Wasm2.Simd.const_fixed] at read
   obtain ⟨⟨reply,middle⟩,take,controls,values,bits⟩ := WP.spec_imp_exists
     (Wasm2.Simd.take_bits_spec {st.core with pos := next} data)
@@ -49,7 +49,7 @@ theorem reader_simd_constant_wasm2 {data env locals index st}
       exact Wasm2.At.of_immediate p.inbounds byte p.pos (.simd 12#u32 leb (.constant low high lo hi))
         ((show Wasm1.BytesAt data st.core.pos prefixBytes next from ⟨first,last,within⟩).append span)
     refine ⟨low,high,middle.pos,bitSpan,callback,fixed,?_⟩
-    exact reader_simd_fixed_post p middle.pos out.core [] (some .V128) _ capacity
+    exact Wasm2.Pending.fixed_reader_accepted p middle.pos out.core [] (some .V128) _ capacity
       (Wasm2.Simd.vectorConstant_wf low high) (Wasm2.Simd.vectorConstant_declared _ low high)
       (fun C wf _ => Wasm2.Simd.vectorConstant_typed C low high wf) encoded fixed
 end Itasca.Runtime.Compiler

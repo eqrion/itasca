@@ -104,7 +104,7 @@ theorem reader_unreachable_effects {A : Type}
   have dispatch := dispatch_unreachable (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases value
   exact ⟨compiler_unreachable_tables ops law before after out callback,
     compiler_unreachable_depths ops law before after out callback,
@@ -122,7 +122,7 @@ theorem reader_nop_effects {A : Type}
   have dispatch := dispatch_nop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases value
   exact ⟨compiler_nop_tables ops law before after out callback,
     compiler_nop_depths ops law before after out callback,
@@ -140,7 +140,7 @@ theorem reader_drop_effects {A : Type}
   have dispatch := dispatch_drop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_drop_tables ops law before after out value callback,
     compiler_drop_depths ops law before after out value callback,
     compiler_drop_code_mono ops law before after out value callback,
@@ -157,7 +157,7 @@ theorem reader_local_get_effects {A : Type}
   have dispatch := dispatch_local_get (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_local_get_tables ops law before after out value callback,
     compiler_local_get_depths ops law before after out value callback,
     compiler_local_get_code_mono ops law before after out value callback,
@@ -174,7 +174,7 @@ theorem reader_local_set_effects {A : Type}
   have dispatch := dispatch_local_set (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_local_set_tables ops law before after out value callback,
     compiler_local_set_depths ops law before after out value callback,
     compiler_local_set_code_mono ops law before after out value callback,
@@ -191,7 +191,7 @@ theorem reader_local_tee_effects {A : Type}
   have dispatch := dispatch_local_tee (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_local_tee_tables ops law before after out value callback,
     compiler_local_tee_depths ops law before after out value callback,
     compiler_local_tee_code_mono ops law before after out value callback,
@@ -208,7 +208,7 @@ theorem reader_i32_const_effects {A : Type}
   have dispatch := dispatch_i32_const (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_i32_const_tables ops law before after out value callback,
     compiler_i32_const_depths ops law before after out value callback,
     compiler_i32_const_code_mono ops law before after out value callback,
@@ -225,7 +225,7 @@ theorem reader_i64_const_effects {A : Type}
   have dispatch := dispatch_i64_const (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_i64_const_tables ops law before after out value callback,
     compiler_i64_const_depths ops law before after out value callback,
     compiler_i64_const_code_mono ops law before after out value callback,
@@ -242,7 +242,7 @@ theorem reader_select_effects {A : Type}
   have dispatch := dispatch_select (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_core_tables ops law before after out (.select false) callback,
     compiler_core_depths ops law before after out (.select false) callback,
     compiler_core_code_mono ops law before after out (.select false) callback,
@@ -259,7 +259,7 @@ theorem reader_global_get_effects {A : Type}
   have dispatch := dispatch_global_get (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_core_tables ops law before after out (.globalGet value) callback,
     compiler_core_depths ops law before after out (.globalGet value) callback,
     compiler_core_code_mono ops law before after out (.globalGet value) callback,
@@ -276,7 +276,7 @@ theorem reader_global_set_effects {A : Type}
   have dispatch := dispatch_global_set (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   exact ⟨compiler_core_tables ops law before after out (.globalSet value) callback,
     compiler_core_depths ops law before after out (.globalSet value) callback,
     compiler_core_code_mono ops law before after out (.globalSet value) callback,
@@ -293,7 +293,7 @@ theorem reader_f32_const_effects {A : Type}
   have dispatch := dispatch_f32_const (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const ops before out value = _ at callback
   rw [callback_float32_eq] at callback
   exact ⟨compiler_op65_tables ops law before after out _ _ _ callback,
@@ -312,7 +312,7 @@ theorem reader_f64_const_effects {A : Type}
   have dispatch := dispatch_f64_const (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at accepted
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const ops before out value = _ at callback
   rw [callback_float64_eq] at callback
   exact ⟨compiler_op66_tables ops law before after out _ _ _ callback,
@@ -331,7 +331,7 @@ theorem reader_memory_load_effects {A : Type}
     OrdinaryEffects before after out := by
   obtain ⟨meaning,_,_,_,_,_,_,_,_⟩ := memory_load_reader_facts ops before out op ⟨0#u32,0#u32⟩
   rw [code.step_memory.dispatch (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before _ (memoryLoadMeaning op) meaning] at accepted
-  obtain ⟨arg,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨arg,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   obtain ⟨_,kind,ty,source,callbackEq,_,_,_,_⟩ := memory_load_reader_facts ops before out op arg
   rw [callbackEq] at callback
   exact ⟨compiler_core_tables ops law before after out (.load op arg.offset arg.align) callback,
@@ -350,7 +350,7 @@ theorem reader_memory_store_effects {A : Type}
     OrdinaryEffects before after out := by
   obtain ⟨meaning,_,_,_,_,_,_,_,_⟩ := memory_store_reader_facts ops before out op ⟨0#u32,0#u32⟩
   rw [code.step_memory.dispatch (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before _ (memoryStoreMeaning op) meaning] at accepted
-  obtain ⟨arg,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨arg,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   obtain ⟨_,kind,ty,source,callbackEq,_,_,_,_⟩ := memory_store_reader_facts ops before out op arg
   rw [callbackEq] at callback
   exact ⟨compiler_core_tables ops law before after out (.store op arg.offset arg.align) callback,
@@ -369,7 +369,7 @@ theorem reader_numeric_base_effects {A : Type}
     OrdinaryEffects before after out := by
   obtain ⟨operation,hook,meaning,handler,_,_,_,hookEq,_,_,_,_⟩ := integer_reader_facts ops before out op baseOpcode
   rw [dispatch_numeric (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before _ operation hook meaning handler] at accepted
-  obtain ⟨reply,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨reply,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases reply
   rw [hookEq] at callback
   exact ⟨compiler_numeric_tables ops law before after out op callback,
@@ -388,7 +388,7 @@ theorem reader_float_base_effects {A : Type}
     OrdinaryEffects before after out := by
   obtain ⟨operation,hook,meaning,handler,_,_,_,hookEq,_,_,_,_⟩ := float_reader_facts ops before out op baseOpcode
   rw [dispatch_numeric (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx before _ operation hook meaning handler] at accepted
-  obtain ⟨reply,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨reply,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases reply
   rw [hookEq] at callback
   exact ⟨compiler_float_tables ops law before after out op callback,
@@ -519,7 +519,7 @@ theorem reader_return_effects_wasm2 {A : Type}
       st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_return] at accepted
-  obtain ⟨value,read,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   cases value
   exact ⟨compiler_return_tables ops law before after out.core callback,
     compiler_return_depths ops law before after out.core callback,
@@ -535,7 +535,7 @@ theorem reader_call_effects_wasm2 {A : Type}
       st data env ctx index .Wasm2 16#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_call] at accepted
-  obtain ⟨value,read,callback⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value,read,callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact ⟨compiler_call_tables ops law before after out.core value callback,
     compiler_call_depths ops law before after out.core value callback,
     compiler_call_code_mono ops law before after out.core value callback,

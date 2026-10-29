@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.StackReader
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
@@ -32,27 +33,13 @@ theorem reader_drop_wasm2 {data env locals index st}
     ∃ value values, visitor.on_drop before out value = .ok (.Ok (), after) ∧
       code.read_drop st.core = .ok (.Ok value, out) ∧
       StackSemantics.Popped p.current.ctrl.polymorphic_base p.current.vals value values ∧
-      ReaderPostWasm2 p out .DROP p.current.ctrl.polymorphic_base values := by
+      Wasm2.ReaderPost p out .DROP p.current.ctrl.polymorphic_base values := by
   rw [dispatch_drop] at accepted
-  obtain ⟨value, read, callback⟩ := reader_run_success _ _ _ _ _ accepted
-  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
-  have physicalBase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
-  have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
-  have effect := code.pop_stack_type.segment st.core outer p.current.vals vals physicalBase
-  change code.pop_stack_type st.core = .ok (.Ok value, out) at read
+  obtain ⟨value, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
+  have effect := p.read_drop byte
   rw [read, WP.spec_ok] at effect
-  obtain ⟨controls, position, values, stack, popped⟩ := effect
-  dsimp only at controls position stack popped
-  change StackSemantics.Popped (Control.polymorphic st.core) p.current.vals value values at popped
-  rw [polymorphic] at popped
-  refine ⟨value, values, callback, read, popped, ?_⟩
-  have encoded : Wasm1.At data p.start (.plain .DROP) out.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using byte) (by simpa [position] using p.pos) .drop
-  apply reader_append_wasm2 p out .DROP p.current.ctrl.polymorphic_base values .instr_case_2 (.plain encoded)
-    (fun C wf priorTyped => popped.wasm2_prefix_drop C wf p.current.ops priorTyped)
-  · simpa [controls] using ctrls
-  · simpa [vals, base] using stack
-  · exact encoded.declared _
+  obtain ⟨values, operands, post⟩ := effect value rfl
+  exact ⟨value, values, callback, read, operands, post⟩
 
 end Itasca.Runtime.Compiler
 
@@ -77,7 +64,7 @@ theorem reader_emit_nop_wasm2 {data env locals index st}
       st data env ctx index .Wasm2 code.OP_NOP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (ReaderPostWasm2 p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
+    (Wasm2.ReaderPost p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
       TypedLoweredEmpty before after out.core.vals.val (types.map Translate.valueType) ∧
       LinearEmission (compilerLocals before) (types.map Translate.valueType) .NOP [] (types.map Translate.valueType)) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -124,7 +111,7 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
     after.next_source = out.core.pos ∧
     (∃ (front : List valtype) (ty : types.ValueType) (values : List code.StackType),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
-      ReaderPostWasm2 p out.core .DROP p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core .DROP p.current.ctrl.polymorphic_base values ∧
       TypedLoweredEmpty before after out.core.vals.val front ∧
       LinearEmission (compilerLocals before) (front ++ [Translate.valueType ty]) .DROP [] front) := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2

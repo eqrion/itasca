@@ -28,7 +28,7 @@ theorem structured_reader_prefix_nop_wasm2 {jumpTables : List U32} {data env sou
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_NOP before = .ok (.Ok (), out, after)) :
-    ReaderPostWasm2 p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
+    Wasm2.ReaderPost p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .NOP)
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
@@ -55,7 +55,7 @@ theorem structured_reader_prefix_drop_wasm2 {jumpTables : List U32} {data env so
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_DROP before = .ok (.Ok (), out, after)) :
     ∃ values,
-      ReaderPostWasm2 p out.core .DROP p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core .DROP p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .DROP)
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.BodyAcceptance
+import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterSafety
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Local.Capacity.ScopeAvailability

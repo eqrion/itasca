@@ -184,10 +184,10 @@ theorem structured_reader_prefix_end_entered_wasm2 {jumpTables : List U32} {emit
       parents = outer ++ [parent] ∧ p.parents = savedOuter ++ [savedParent] ∧
       Wasm2.Frames.Closed p.current.form p.current.bt p.current.ops instruction ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns compilerLocals outer (parent.advance instruction) out.core.vals.val out.core.pos.val ∧
-      ReaderScopeZipperWasm2 outer (parent.advance instruction) savedOuter (resumedSource savedParent p.current instruction) ∧
-      ReaderReachabilityWasm2 after.reachable outer (parent.advance instruction) savedOuter (resumedSource savedParent p.current instruction) ∧
+      ReaderScopeZipperWasm2 outer (parent.advance instruction) savedOuter (Wasm2.resumedSource savedParent p.current instruction) ∧
+      ReaderReachabilityWasm2 after.reachable outer (parent.advance instruction) savedOuter (Wasm2.resumedSource savedParent p.current instruction) ∧
       ReaderScopeFronts outer (parent.advance instruction) (savedOuter.map Wasm2.Frames.Saved.vals) ∧
-      ReaderBoundaryWasm2 data env locals index p.ft out savedOuter (resumedSource savedParent p.current instruction) ∧ p.After out := by
+      ReaderBoundaryWasm2 data env locals index p.ft out savedOuter (Wasm2.resumedSource savedParent p.current instruction) ∧ p.After out := by
   obtain ⟨callback, read, encoded, results, zipper, afterState⟩ := reader_end_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   rcases zipper with ⟨root, savedEmpty, _⟩ | ⟨savedOuter, savedParent, instruction, savedSplit, closed, opened⟩

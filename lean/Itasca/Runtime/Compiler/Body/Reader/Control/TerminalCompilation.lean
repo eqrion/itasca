@@ -162,7 +162,7 @@ theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env 
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (), out, after)) :
-    ReaderPostWasm2 p out.core .RETURN true [] ∧
+    Wasm2.ReaderPost p out.core .RETURN true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions (p.ft.results.val.map Translate.valueType)
         locals parents (current.advance .RETURN) out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨callback, read, values, post⟩ := reader_return_wasm2 p
@@ -206,7 +206,7 @@ theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data
     (byte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
-    ReaderPostWasm2 p out.core .UNREACHABLE true [] ∧
+    Wasm2.ReaderPost p out.core .UNREACHABLE true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .UNREACHABLE)
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2

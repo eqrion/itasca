@@ -1,6 +1,11 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Binary.ReadByte
 
+/-!
+Replay an independently accepted body through reached-step callback obligations.
+The source suffix supplies validation evidence; the target must construct actual
+success, including cursor progress and the final closed state, for either profile.
+-/
 namespace Itasca
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096

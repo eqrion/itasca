@@ -31,14 +31,14 @@ theorem reader_simd_memory_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = position ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
         (Wasm2.Simd.fullMemoryInputs op.store) (Wasm2.Simd.memoryOutput op.store) values ∧
-        ReaderPostWasm2 p out.core (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
+        Wasm2.ReaderPost p out.core (op.instruction (MemoryMeaning.memArg arg) (.mk_uN 0))
           p.current.ctrl.polymorphic_base values := by
   obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfd#u8 before after (by decide) accepted
   rw [code.step_wasm2.simd,code.step_simd.eq_runs] at run
   have readLeb := reader.read_u32_leb.complete data st.core.pos subopcode next decoded
   simp only [Wasm2.Simd.prefixStep,readLeb,bind_ok] at run
   rw [Wasm2.Simd.subStep.memory visitor _ data env subopcode before op meaning full] at run
-  obtain ⟨arg,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨arg,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   rw [Wasm2.Simd.full_memory_fixed] at read
   obtain ⟨⟨reply,parsed⟩,take,values,controls,argInfo⟩ := WP.spec_imp_exists
     (code.read_memarg.spec {st.core with pos := next} data)
@@ -68,7 +68,7 @@ theorem reader_simd_memory_wasm2 {data env locals index st}
           ((show Wasm1.BytesAt data st.core.pos prefixBytes next from ⟨first,last,within⟩).append
             ((show Wasm1.BytesAt data next alignBytes middle from ⟨af,al,ab⟩).append ⟨of,ol,ob⟩))
       refine ⟨arg,middle,parsed.pos,alignment,offset,check,callback,fixed,?_⟩
-      exact reader_simd_fixed_post p parsed.pos out.core _ _ _ capacity
+      exact Wasm2.Pending.fixed_reader_accepted p parsed.pos out.core _ _ _ capacity
         (op.wellFormed _ _ (MemoryMeaning.memArg_wf arg) (by constructor; decide)) (op.declared _ _ _)
         (fun C wf matched => by
           simpa only [op.inputs_full full,Wasm2.Simd.MemoryOperation.outputs_pop,UScalar.ofNatCore_val_eq] using
@@ -110,14 +110,14 @@ theorem reader_simd_memory_lane_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = position ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
         [.V128, .I32] (Wasm2.Simd.memoryOutput op.store) values ∧
-        ReaderPostWasm2 p out.core (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
+        Wasm2.ReaderPost p out.core (op.instruction (MemoryMeaning.memArg arg) (.mk_uN lane.val))
           p.current.ctrl.polymorphic_base values := by
   obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfd#u8 before after (by decide) accepted
   rw [code.step_wasm2.simd,code.step_simd.eq_runs] at run
   have readLeb := reader.read_u32_leb.complete data st.core.pos subopcode next decoded
   simp only [Wasm2.Simd.prefixStep,readLeb,bind_ok] at run
   rw [Wasm2.Simd.subStep.memoryLane visitor _ data env subopcode before op meaning laned] at run
-  obtain ⟨⟨arg,lane⟩,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨⟨arg,lane⟩,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   rw [Wasm2.Simd.memory_lane_fixed] at read
   obtain ⟨⟨reply,parsed⟩,take,values,controls,argInfo⟩ := WP.spec_imp_exists
     (code.read_memarg.spec {st.core with pos := next} data)
@@ -157,7 +157,7 @@ theorem reader_simd_memory_lane_wasm2 {data env locals index st}
             ((show Wasm1.BytesAt data st.core.pos prefixBytes next from ⟨first,last,within⟩).append
               ((show Wasm1.BytesAt data next alignBytes middle from ⟨af,al,ab⟩).append ((show Wasm1.BytesAt data middle offsetBytes parsed.pos from ⟨of,ol,ob⟩).append laneSpan)))
         refine ⟨arg,middle,parsed.pos,lane,finished.pos,alignment,offset,laneSpan,by simpa only [Wasm2.Simd.MemoryOperation.runtime,U8.ofNatCore_val_eq] using laneBound,check,callback,fixed,?_⟩
-        exact reader_simd_fixed_post p finished.pos out.core _ _ _ capacity
+        exact Wasm2.Pending.fixed_reader_accepted p finished.pos out.core _ _ _ capacity
           (op.wellFormed _ _ (MemoryMeaning.memArg_wf arg) laneWf) (op.declared _ _ _)
           (fun C wf matched => by
             simpa only [op.inputs_lane laned,Wasm2.Simd.MemoryOperation.outputs_pop,UScalar.ofNatCore_val_eq] using

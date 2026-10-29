@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.StackReader
 import Itasca.Runtime.Compiler.Body.Reader.Local.Wasm2Local
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectTypes
@@ -27,31 +28,14 @@ theorem reader_select_wasm2 {data env locals index st}
     ∃ selected values, visitor.on_select before out selected = .ok (.Ok (), after) ∧
       code.read_select st.core = .ok (.Ok selected, out) ∧
       StackSemantics.SelectEffect p.current.ctrl.polymorphic_base p.current.vals selected values ∧
-      ReaderPostWasm2 p out (.SELECT none) p.current.ctrl.polymorphic_base values := by
+      Wasm2.ReaderPost p out (.SELECT none) p.current.ctrl.polymorphic_base values := by
   rw [code.step_select.dispatch] at accepted
-  obtain ⟨selected, read, callback⟩ := reader_run_success _ _ _ _ _ accepted
-  obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
-  have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
-    simp [Control.polymorphic, ctrls]
-  have effect := code.read_select.segment st.core outer p.current.vals vals
-    (by simpa [Control.base, ctrls] using base) capacity
+  obtain ⟨selected, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
+  have effect := p.read_select capacity (by simpa [global_simps] using byte)
   rw [read, WP.spec_ok] at effect
-  obtain ⟨controls, position, values, stack, length, selectedEffect⟩ := effect
-  dsimp only at controls position stack length selectedEffect
-  have Cwf := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
-    p.current.form p.current.ins p.current.outs
-  have newTyped := selectedEffect.wasm2_prefix _ Cwf p.current.ops (by simpa [polymorphic] using typed)
-  rw [polymorphic] at selectedEffect newTyped
-  refine ⟨selected, values, callback, read, selectedEffect, ?_⟩
-  have encoded : Wasm1.At data p.start (.plain (.SELECT none)) out.pos := by
-    rw [position]
-    exact .no_immediate p.inbounds byte p.pos .select
-  apply reader_append_context_wasm2 p C outer spine header base out (.SELECT none)
-    p.current.ctrl.polymorphic_base values (.instr_case_3 _) (.plain encoded) newTyped
-  · simpa [controls] using ctrls
-  · simpa [controls] using blocks
-  · exact stack
-  · exact encoded.declared _
+  obtain ⟨values, operands, post⟩ := effect selected rfl
+  exact ⟨selected, values, callback, read, operands, post⟩
+
 end Itasca.Runtime.Compiler
 
 end
@@ -81,7 +65,7 @@ theorem reader_emit_select_wasm2 {data env locals typeIndex st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (ty : Itasca.types.ValueType) (front : List valtype) (values : List code.StackType),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty, Translate.valueType ty, .I32] ∧
-      ReaderPostWasm2 p out.core (.SELECT none) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.SELECT none) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [Translate.valueType ty]) ∧
         ScalarEmission C (front ++ [Translate.valueType ty, Translate.valueType ty, .I32]) (.SELECT none)
           [emitted] (front ++ [Translate.valueType ty]) := by

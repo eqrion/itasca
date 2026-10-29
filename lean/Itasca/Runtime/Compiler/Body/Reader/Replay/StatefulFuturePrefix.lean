@@ -28,7 +28,7 @@ theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data e
     (callback : runtime.compiler.lower.FunctionCompiler.op ops before out (statefulOpcode op) a b 0#u128 = .ok (.Ok (),after))
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max) :
-    ∃ values, ReaderPostWasm2 p out op.source p.current.ctrl.polymorphic_base values ∧
+    ∃ values, Wasm2.ReaderPost p out op.source p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit
         initial after types functions returns locals parents (current.advance op.source) out.vals.val out.pos.val ∧
       after.reachable = before.reachable := by

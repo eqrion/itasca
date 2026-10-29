@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.SelectAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
@@ -195,7 +195,7 @@ theorem reached_reader_global_set_available {A V : Type}
   by_cases live : compiler.reachable = true
   · have raw := reference
     rw [code.step_global_set.dispatch] at raw
-    obtain ⟨index,read,_⟩ := reader_run_success _ _ _ _ _ raw
+    obtain ⟨index,read,_⟩ := CoreVisitor.run.accepted _ _ _ _ _ raw
     have currentKnown := (concrete_stack_append.mp (values ▸ known live)).2
     obtain ⟨ty,_,_,shape⟩ := reader_global_set_effect st out data env index outer segment values base
       (monomorphic live) currentKnown read
@@ -229,7 +229,7 @@ theorem reached_reader_select_available {A V : Type}
   by_cases live : compiler.reachable = true
   · have raw := reference
     rw [code.step_select.dispatch] at raw
-    obtain ⟨selected,read,_⟩ := reader_run_success _ _ _ _ _ raw
+    obtain ⟨selected,read,_⟩ := CoreVisitor.run.accepted _ _ _ _ _ raw
     have checked := code.read_select.segment st outer segment values base capacity
     rw [read,WP.spec_ok] at checked
     obtain ⟨_,_,rest,new,_,effect⟩ := checked

@@ -201,6 +201,26 @@ Cross-family composition uses:
 
 Both profiles use the Wasm 2.0 reader proofs. A valid Wasm 1.0 body has the same
 run under both profiles (`code.validate_body_with.wasm1_of_body`).
+The exact source-prefix certificate is shared with the validator in
+[Wasm2/Scalar/ReaderPost](../Wasm2/Scalar/ReaderPost.lean). Shared reader proofs
+cover scalar constants and stack operations, numeric instructions, local/global
+indices, memory operands, reference/table metadata and SIMD effects. Validator
+preservation projects `Pending.After`; compiler inversion retains the same exact
+source frame, decoded arguments and operand effects. Control entry and closure
+use [EnterStep](../Wasm2/Control/EnterStep.lean) and
+[EndStep](../Wasm2/Control/EndStep.lean); branches and calls use
+[BranchStep](../Wasm2/Control/BranchStep.lean).
+
+Accepted steps expose the actual reader and callback via
+`CoreVisitor.run.accepted` or
+[CallbackTrace.bodyRun.accepted](../Wasm2/Trace/Acceptance.lean).
+[Visitor/ReaderAcceptance](../Visitor/ReaderAcceptance.lean) and
+[Visitor/BodyReplay](../Visitor/BodyReplay.lean) replay only the reached callback
+obligations. [AcceptedTable](../Wasm2/Visitor/AcceptedTable.lean) preserves the
+repeated label callbacks and distinct final callback of `br_table`. Successful
+inversion does not require total visitors or acceptance at unrelated states.
+Emission, allocation, control layout, checking and publication remain in the
+compiler layers; completeness still constructs actual compiler acceptance.
 [Checking/BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
 constructs actual body success with the checker premises at root close.
 

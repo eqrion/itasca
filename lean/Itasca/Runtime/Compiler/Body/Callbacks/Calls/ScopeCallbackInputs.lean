@@ -5,10 +5,10 @@ open Aeneas.Std Itasca
 
 /-- The canonical Wasm 2 reader and captured type table supply the physical
 premises consumed by all live BLOCK, LOOP, and IF callback wrappers. -/
-theorem ReaderEnterPostWasm2.callback_inputs {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.callback_inputs {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val)
     (layout : CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))

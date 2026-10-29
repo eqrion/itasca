@@ -31,7 +31,7 @@ theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourc
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
+      Wasm2.ReaderPost p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f32 value))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -58,7 +58,7 @@ theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourc
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
+      Wasm2.ReaderPost p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f64 value))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
@@ -99,7 +99,7 @@ theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLoca
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
+      Wasm2.ReaderPost p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f32 value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable
@@ -135,7 +135,7 @@ theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLoca
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
+      Wasm2.ReaderPost p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f64 value))
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable

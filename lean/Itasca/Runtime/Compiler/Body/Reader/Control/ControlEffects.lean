@@ -30,7 +30,7 @@ theorem reader_block_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 2#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_block] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_block_effects ops law before after out.core value called
 
 theorem reader_loop_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -40,7 +40,7 @@ theorem reader_loop_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 3#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_loop] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_loop_effects ops law before after out.core value called
 
 theorem reader_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -50,7 +50,7 @@ theorem reader_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 4#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_if] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_if_effects ops law before after out.core value called
 
 theorem reader_else_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -60,7 +60,7 @@ theorem reader_else_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 5#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_else] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_else_effects ops law before after out.core value.2 called
 
 theorem reader_end_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -70,7 +70,7 @@ theorem reader_end_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_end] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_end_effects ops law before after out.core value.1 value.2 called
 
 theorem reader_br_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -80,7 +80,7 @@ theorem reader_br_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_br] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_br_effects ops law before after out.core value.1 value.2 called
 
 theorem reader_br_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
@@ -90,7 +90,7 @@ theorem reader_br_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
       st data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_br_if] at accepted
-  obtain ⟨value, _, called⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact compiler_br_if_effects ops law before after out.core value.1 value.2 called
 
 theorem reader_control_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)

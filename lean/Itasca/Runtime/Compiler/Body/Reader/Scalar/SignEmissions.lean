@@ -31,7 +31,7 @@ theorem reader_emit_sign_wasm2 {data env locals index st}
     after.next_source = out.core.pos ∧
     (∃ front values,
       Sequence.stackTypes st.core.vals.val = front ++ List.replicate op.arity (integerType op.input) ∧
-      ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [integerType op.output]) ∧
         LinearEmission (compilerLocals before) (front ++ List.replicate op.arity (integerType op.input))
           op.source [emitted] (front ++ [integerType op.output])) := by

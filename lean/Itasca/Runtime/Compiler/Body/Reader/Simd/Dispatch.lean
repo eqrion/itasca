@@ -134,7 +134,7 @@ theorem simd_reader_event_constant (constant : sub = 12#u32) :
   obtain ⟨low,high,position,bits,callback,read,controls,cursor,values,effect,post⟩ := reader_simd_constant_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx next decoded byte accepted
   rw [compiler_simd_constant_callback ops before out.core low high] at callback
-  have normalized : ReaderPostWasm2 p out.core (.VCONST .V128 (.mk_uN (initializerBits low high).val))
+  have normalized : Wasm2.ReaderPost p out.core (.VCONST .V128 (.mk_uN (initializerBits low high).val))
       p.current.ctrl.polymorphic_base values := by
     simpa only [initializer_bits_val,Wasm2.Simd.vectorConstant] using post
   exact ⟨{

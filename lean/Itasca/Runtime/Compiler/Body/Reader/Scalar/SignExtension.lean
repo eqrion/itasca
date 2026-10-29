@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
@@ -32,33 +33,22 @@ theorem reader_sign_wasm2 {data env locals index st}
       out.ctrls = st.core.ctrls ∧ out.pos = st.core.pos ∧
       ∃ values, StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals
           operation.inputs operation.output values ∧
-        ReaderPostWasm2 p out operation.instruction p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out operation.instruction p.current.ctrl.polymorphic_base values := by
   rw [code.step_extended.sign visitor st.core data env ctx opcode operation before meaning] at accepted
-  obtain ⟨unit, converted, callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨unit, converted, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases unit
   have unary := (Wasm2.NumericExtensions.sign_properties meaning).1
   have read : Numeric.read operation st.core = .ok (.Ok (), out) := by
     simpa only [Numeric.read, unary, Bool.false_eq_true, ↓reduceIte] using converted
-  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
-  have physicalBase : (Control.base st.core).val = outer.length := by simp [Control.base, ctrls, base]
-  have polymorphic : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
-  have effect := Numeric.read.segment operation st.core outer p.current.vals vals physicalBase capacity
+  have encoded : Wasm2.At data p.start (.plain operation.instruction) st.core.pos :=
+    .of_immediate p.inbounds byte p.pos (.signExtension opcode operation meaning)
+      (Wasm1.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
+  have effect := p.numeric_reader operation st.core.pos capacity encoded (Wasm2.NumericExtensions.sign_declared meaning _)
+  dsimp only at effect
   rw [read, WP.spec_ok] at effect
-  obtain ⟨controls, position, values, stack, length, numeric⟩ := effect
-  dsimp only at controls position stack length numeric
-  rw [polymorphic] at numeric
-  refine ⟨callback, read, converted, controls, position, values, numeric, ?_⟩
-  have encoded : Wasm2.At data p.start (.plain operation.instruction) out.pos :=
-    Wasm2.At.of_immediate p.inbounds byte p.pos (.signExtension opcode operation meaning)
-      (by simpa only [position] using (Wasm1.BytesAt.nil data st.core.pos
-        (by have := p.pos; have := p.inbounds; omega)))
-  apply reader_append_wasm2 p out operation.instruction p.current.ctrl.polymorphic_base values
-    operation.wellFormed encoded
-    (fun C wf priorTyped => numeric.wasm2_prefix C wf p.current.ops operation.instruction priorTyped
-      operation.wellFormed (operation.typed C wf))
-  · simpa [controls] using ctrls
-  · simpa [vals, base] using stack
-  · exact Wasm2.NumericExtensions.sign_declared meaning _
+  obtain ⟨controls, position, rest⟩ := effect
+  obtain ⟨values, numeric, post⟩ := rest () rfl
+  exact ⟨callback, read, converted, controls, position, values, numeric, post⟩
 
 /-- The five Wasm2 sign extensions match their canonical operation and visitor
 hook, and invoke the ordinary integer lowering entry with their exact opcode. -/
@@ -120,7 +110,7 @@ theorem reader_integer_sign_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = st.core.pos ∧
       ∃ values, StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals
           operation.inputs operation.output values ∧
-        ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values := by
   obtain ⟨operation, hook, meaning, instruction, inputs, output, encoding, hookEq, ordinary, base⟩ :=
     integer_sign_reader_facts ops before out.core op extension
   obtain ⟨capacity, run⟩ := profile_scalar_success

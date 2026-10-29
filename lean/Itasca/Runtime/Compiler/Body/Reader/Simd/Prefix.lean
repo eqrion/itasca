@@ -17,12 +17,12 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem ReaderPostWasm2.simd_dead_prefix {jumpTables : List U32} {data env sourceLocals index st}
+theorem _root_.Itasca.Wasm2.ReaderPost.simd_dead_prefix {jumpTables : List U32} {data env sourceLocals index st}
     {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     {emit types functions returns locals parents current source poly values}
-    (post : ReaderPostWasm2 p out source poly values)
+    (post : Wasm2.ReaderPost p out source poly values)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false) (opcode : U16) (a b : U32) (bits : U128)
     (lower : 512 ≤ opcode.val) (upper : opcode.val < 768)
@@ -48,13 +48,13 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The complete SIMD prefix step handles live emission and polymorphic dead
 code, retaining an exact append witness for all function tables. -/
-theorem ReaderPostWasm2.simd_callback_prefix {jumpTables : List U32} {data env sourceLocals index st source values position inputs output}
+theorem _root_.Itasca.Wasm2.ReaderPost.simd_callback_prefix {jumpTables : List U32} {data env sourceLocals index st source values position inputs output}
     {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     (C : context) {emit} [SimdEmbedding after.function.simd.val after.function.v128_pool.val C emit]
     {types functions returns locals parents current}
-    (post : ReaderPostWasm2 p out source p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values)
     (effect : Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals inputs output values)
     (read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out))
     (capacity : st.core.vals.val.length < Usize.max)

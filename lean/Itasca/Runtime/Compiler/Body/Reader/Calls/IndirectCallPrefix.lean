@@ -34,7 +34,7 @@ theorem structured_reader_prefix_indirect_call_wasm2 {jumpTables : List U32} {da
       st data env ctx typeIndex .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
     ∃ (index table : U32) (values : List code.StackType) (extra : List (U32 × U32)),
       after.function.indirect.val = before.function.indirect.val ++ extra ∧
-      ReaderPostWasm2 p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents
         (current.advance (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val))) out.core.vals.val out.core.pos.val ∧
       after.reachable = before.reachable := by

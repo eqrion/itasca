@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

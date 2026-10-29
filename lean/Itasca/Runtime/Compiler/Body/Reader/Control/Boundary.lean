@@ -28,9 +28,9 @@ def ReaderBoundaryWasm2.pending {data env locals index ft st parents current}
     boundary.bodyType, boundary.consumed, boundary.declared, inbounds, advance, boundary.bounds.ctrls,
     (fun h => nomatch h), (fun h => nomatch h), (fun h => nomatch h)⟩
 
-theorem ReaderPostWasm2.boundary {data env locals index st out instruction poly values}
+theorem _root_.Itasca.Wasm2.ReaderPost.boundary {data env locals index st out instruction poly values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderPostWasm2 p out instruction poly values)
+    (post : Wasm2.ReaderPost p out instruction poly values)
     (declared : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction) :
     ReaderBoundaryWasm2 data env locals index p.ft {core := out} p.parents
       (p.current.advance (.plain instruction) instruction poly values) := by

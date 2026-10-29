@@ -196,7 +196,7 @@ theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
     (byte : data.val[p.start.val]'p.inbounds=0x0e#u8)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env .Wasm2 before=.ok (.Ok (),out,after)) :
-    ReaderPostWasm2 p out.core (BrTable.instruction depths fallback) true [] ∧
+    Wasm2.ReaderPost p out.core (BrTable.instruction depths fallback) true [] ∧
     StructuredCompilerPrefix jumpTables emit initial after types functions returns locals parents
       (current.advance (BrTable.instruction depths fallback)) out.core.vals.val out.core.pos.val ∧
     CompilerTableBoundary after ∧ after.reachable=false := by

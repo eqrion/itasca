@@ -1,4 +1,6 @@
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdFixed
+import Itasca.Wasm2.Simd.Reader
+import Itasca.Wasm2.Simd.Sound
+import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Relations.Stacks.KnownFixedStack
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 
@@ -15,7 +17,7 @@ open Aeneas Aeneas.Std Itasca
 the physical reader also proves the absence of unknown stack entries. -/
 theorem reader_simd_fixed_types {data env locals index st out source values position inputs output}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderPostWasm2 p out source p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values)
     (effect : Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals inputs output values)
     (read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out))
     (known : ConcreteStack st.core.vals.val)

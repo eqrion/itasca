@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.BodyAcceptance
+import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Wasm2.Trace.ControlRecords
 
 /-!

@@ -203,7 +203,7 @@ theorem structured_reader_prefix_br_wasm2 {jumpTables : List U32} {data env sour
     (byte : data.val[p.start.val]'p.inbounds = 12#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
-    ∃ depth : U32, ReaderPostWasm2 p out.core (.BR (.mk_uN depth.val)) true [] ∧
+    ∃ depth : U32, Wasm2.ReaderPost p out.core (.BR (.mk_uN depth.val)) true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.BR (.mk_uN depth.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨depth, view, callback, read, post⟩ := reader_br_wasm2 p
@@ -241,7 +241,7 @@ theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env s
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
     ∃ (depth : U32) (values : List code.StackType),
-      ReaderPostWasm2 p out.core (.BR_IF (.mk_uN depth.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.BR_IF (.mk_uN depth.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.BR_IF (.mk_uN depth.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = before.reachable := by
   obtain ⟨depth, view, values, callback, read, post⟩ := reader_br_if_wasm2 p

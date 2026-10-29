@@ -18,11 +18,43 @@ private theorem empty_spine_form {env root parents C outer form ins}
   | root => rfl
   | push => simp at he
 
+/-- Exact child-to-parent source resumption on a non-root `end`. -/
+def resumedSource (parent child : Frames.Saved) (instruction : instr) : Frames.Saved :=
+  { parent with
+    ops := parent.ops ++ [instruction]
+    vals := parent.vals ++ child.outs.map code.StackType.Val
+    tokens := parent.tokens ++ child.trace ++ [.end_] }
+
+/-- The supplied source zipper after END, including the root completion alternative. -/
+def ReaderEndZipper {data env profile locals index st}
+    (p : Pending data env profile locals index st) (out : code.BodyState) : Prop :=
+  (p.current.form = .body ∧ p.parents = [] ∧
+    BodyTokens (Frames.trace p.parents p.current ++ [.end_]) p.current.ops ∧
+    Instrs_ok (Frames.enter (bodyContext env locals p.ft) .body p.current.ins p.current.outs)
+      p.current.ops (.mk_functype (.mk_list []) (.mk_list (p.current.outs.map Translate.valueType)))) ∨
+  ∃ grandparents parent instruction, p.parents = grandparents ++ [parent] ∧
+    Frames.Closed p.current.form p.current.bt p.current.ops instruction ∧
+    Frames.Open env (bodyContext env locals p.ft) out grandparents
+      (resumedSource parent p.current instruction)
+
+/-- Exact source resumption and operand results for either closing handler. -/
+def ReaderClosePost {data env profile locals index st}
+    (p : Pending data env profile locals index st) (out : code.BodyState) (isElse : Bool) : Prop :=
+  if isElse then
+    p.current.form = .then_ ∧ At data p.start .else_ out.core.pos ∧
+      Sequence.Realizes p.current.ctrl.polymorphic_base p.current.vals
+        (p.current.outs.map Translate.valueType) ∧
+      Frames.Open env (bodyContext env locals p.ft) out p.parents p.current.nextElse ∧ p.After out
+  else
+    At data p.start .end_ out.core.pos ∧
+      Sequence.Realizes p.current.ctrl.polymorphic_base p.current.vals
+        (p.current.outs.map Translate.valueType) ∧ ReaderEndZipper p out ∧ p.After out
+
 /-- The actual closing handlers preserve the independent typed zipper. -/
-theorem Pending.end_after {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.end_reader {data env profile locals index st} (p : Pending data env profile locals index st)
     (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
-    code.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.end_frame st env isElse ⦃ r => r.1 = .Ok () → ReaderClosePost p r.2 isElse ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   apply WP.spec_mono (code.end_frame.sound st env isElse
     (p.parents.map Frames.Saved.ctrl) (p.parents.map Frames.Saved.bt)
@@ -45,6 +77,7 @@ theorem Pending.end_after {data env profile locals index st} (p : Pending data e
     cases hf : p.current.form with
     | body =>
       have hp : p.parents = [] := (p.opened.finish_body hf hres).1
+      refine ⟨encoded, hres, .inl ⟨hf, hp, (p.opened.finish_body hf hres).2⟩, ?_⟩
       exact p.finish_body r.2 encoded (by simpa [hop] using hbyte) hf hres (by simpa [hp] using hc) (by simpa [hp] using hb)
     | block | loop | then_ | else_ thenTokens thenOps =>
       all_goals
@@ -60,6 +93,7 @@ theorem Pending.end_after {data env profile locals index st} (p : Pending data e
           (by simpa [htake, List.map_eq_nil_iff, hn] using hv)
         have hframes := p.profileFrames
         rw [he] at hframes
+        refine ⟨encoded, hres, .inr ⟨gps, parent, op, he, closed, ho⟩, ?_⟩
         refine p.running_after r.2 gps _ .end_ encoded ho ?_ htrace ?_
           (hframes.close closed header.inputs header.outputs _ _)
           (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
@@ -76,9 +110,22 @@ theorem Pending.end_after {data env profile locals index st} (p : Pending data e
       exact ⟨by simp [hpos], by simp [hpos], by have hp := p.pos; have hi := p.inbounds; rw [hpos]; omega⟩
     obtain ⟨ho, ht⟩ := p.opened.else_ hroot hform hres (by simpa [Frames.Saved.nextElse] using hc)
       hb (by simpa [htake] using hv)
+    refine ⟨hform, encoded, hres, ho, ?_⟩
     refine p.running_after r.2 p.parents p.current.nextElse .else_ encoded ho ?_ ht ?_
       (p.profileFrames.else_ hform) (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
     · simpa [Frames.bodyType_else] using p.bodyType
     · simp [hb]
+
+/-- The actual closing handlers preserve the independent typed zipper. -/
+theorem Pending.end_after {data env profile locals index st} (p : Pending data env profile locals index st)
+    (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
+    (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
+    code.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+  apply WP.spec_mono (p.end_reader isElse opcode hop hbyte)
+  intro r effect accepted
+  have post := effect accepted
+  cases isElse
+  · exact post.2.2.2
+  · exact post.2.2.2.2
 
 end Itasca.Wasm2

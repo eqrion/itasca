@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.BodyAcceptance
+import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
 import Itasca.Runtime.Compiler.Local.Capacity.ConditionalBranchAvailability

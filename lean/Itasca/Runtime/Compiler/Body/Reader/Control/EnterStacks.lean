@@ -4,16 +4,16 @@ import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 /-!
 Live Wasm 2 entry exposes the full physical prefix below its block parameters and condition.
 
-Main declarations: `ReaderEnterPostWasm2.stacks`. A direct consumer is `Compiler.Body.Reader.Control.KnownFrontEntry`.
+Main declarations: `Wasm2.ReaderEnterPost.stacks`. A direct consumer is `Compiler.Body.Reader.Control.KnownFrontEntry`.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Live Wasm 2 entry exposes the full physical prefix below its block parameters and condition. -/
-theorem ReaderEnterPostWasm2.stacks {data env locals index st out form bt ins outs remaining base}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.stacks {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val) :
     ∃ front : List valtype,

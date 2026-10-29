@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.StatefulCallbackAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
 
 /-!

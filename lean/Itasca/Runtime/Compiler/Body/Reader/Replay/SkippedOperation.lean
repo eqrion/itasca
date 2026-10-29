@@ -4,18 +4,18 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 /-!
 Structured reader prefixes for skipped source instructions.
 
-Main declarations: `ReaderPostWasm2.structured_skip`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectCallPrefix`.
+Main declarations: `Wasm2.ReaderPost.structured_skip`. A direct consumer is `Compiler.Body.Reader.Calls.IndirectCallPrefix`.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem ReaderPostWasm2.structured_skip {jumpTables : List U32} {data env sourceLocals index st}
+theorem _root_.Itasca.Wasm2.ReaderPost.structured_skip {jumpTables : List U32} {data env sourceLocals index st}
     {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     {emit types functions returns locals parents current instruction poly values}
-    (post : ReaderPostWasm2 p out instruction poly values)
+    (post : Wasm2.ReaderPost p out instruction poly values)
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (ordinary : CompilerOrdinaryStable before after) (sources : SourceProgress before after)

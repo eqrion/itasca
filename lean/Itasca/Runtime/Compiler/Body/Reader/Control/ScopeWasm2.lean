@@ -67,8 +67,8 @@ theorem SourceScopeMatchesWasm2.begin_else {scope saved}
 
 theorem SourceScopeMatchesWasm2.resume {scope parent child instruction}
     (same : SourceScopeMatchesWasm2 scope parent) :
-    SourceScopeMatchesWasm2 (scope.advance instruction) (resumedSource parent child instruction) :=
-  ⟨same.form, same.params, same.results, by simp [SourceScope.advance, resumedSource, same.source]⟩
+    SourceScopeMatchesWasm2 (scope.advance instruction) (Wasm2.resumedSource parent child instruction) :=
+  ⟨same.form, same.params, same.results, by simp [SourceScope.advance, Wasm2.resumedSource, same.source]⟩
 
 theorem SourceScopeMatchesWasm2.fresh (bt : signature.BlockType) (form : Wasm2.Frames.Form)
     (scopeForm : ScopeForm) (matched : ScopeFormMatchesWasm2 bt scopeForm form)

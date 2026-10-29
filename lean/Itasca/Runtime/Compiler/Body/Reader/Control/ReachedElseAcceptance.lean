@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.BodyAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Wasm2.Trace.Acceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.ElseDispatchAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead

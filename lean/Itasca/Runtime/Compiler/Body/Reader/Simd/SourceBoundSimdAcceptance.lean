@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
 
 /-!
@@ -36,7 +36,7 @@ theorem reader_simd_nonconstant_available {data env locals index st source value
     (number : opcode.val = 512+sub.val)
     (meaning : SimdImmediateMeaning C sub (simdImmediate sub a bits) (Wasm2.Simd.inputTypes inputs) source
       (Wasm2.Simd.outputTypes output))
-    (post : ReaderPostWasm2 p out source p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values)
     (effect : Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals inputs output values)
     (read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out))
     (capacity : st.core.vals.val.length < Usize.max)
@@ -470,7 +470,7 @@ private theorem reader_source_event {R : Type}
     (reference : CoreVisitor.run read (fun log state value => invoke recorder log (.op state (action value))) before =
       .ok (.Ok (),out,after)) :
     ∃ actual, invoke recorder before (.op out actual) = .ok (.Ok (),after) := by
-  obtain ⟨value,_,called⟩ := reader_run_success _ _ _ _ _ reference
+  obtain ⟨value,_,called⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
   exact ⟨action value,called⟩
 
 /-- Every successful SIMD reader ends in its actual recorded source event at

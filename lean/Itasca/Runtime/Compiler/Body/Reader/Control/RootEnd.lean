@@ -36,7 +36,7 @@ theorem step_end_root_wasm2 {data env locals index st}
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0b#u8 before =
       .ok (.Ok (),out,after)) : out.core.ctrls.val = [] := by
   rw [Wasm2.CallbackTrace.dispatch_end] at accepted
-  obtain ⟨pair,read,_⟩ := reader_body_success _ _ _ _ _ _ accepted
+  obtain ⟨pair,read,_⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
   exact reader_end_root_wasm2 p single read
 
 end Itasca.Runtime.Compiler

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.LocalVariableAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.DeadOpAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
@@ -29,7 +29,7 @@ theorem compiler_reader_local_get_available {A V : Type}
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   rw [code.step_local_get.dispatch] at reference ⊢
-  obtain ⟨index,read,_⟩ := reader_run_success _ _ _ _ _ reference
+  obtain ⟨index,read,_⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
   have callback : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_local_get compiler out index ⦃ result =>
       result.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget result.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -68,7 +68,7 @@ theorem compiler_reader_local_set_available {A V : Type}
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   rw [code.step_local_set.dispatch] at reference ⊢
-  obtain ⟨index,read,_⟩ := reader_run_success _ _ _ _ _ reference
+  obtain ⟨index,read,_⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
   have callback : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_local_set compiler out index ⦃ result =>
       result.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget result.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -113,7 +113,7 @@ theorem compiler_reader_local_tee_available {A V : Type}
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   rw [code.step_local_tee.dispatch] at reference ⊢
-  obtain ⟨index,read,_⟩ := reader_run_success _ _ _ _ _ reference
+  obtain ⟨index,read,_⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
   have callback : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_local_tee compiler out index ⦃ result =>
       result.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget result.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by

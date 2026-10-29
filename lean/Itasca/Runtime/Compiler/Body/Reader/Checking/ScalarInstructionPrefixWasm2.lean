@@ -142,7 +142,7 @@ theorem reader_dead_scalar_checked_prefix {A : Type} (ops : runtime.platform.All
       st data env ctx kind.opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   rw [kind.dispatch] at accepted
-  obtain ⟨value,_,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨value,_,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   by_cases trap : kind = .unreachable
   · subst kind
     exact ⟨compiler_unreachable_open_instructions ops law before after out codeFits sourceFits coordinateFits held callback,
@@ -179,7 +179,7 @@ theorem reader_nop_open_instructions_wasm2 {A : Type}
   have dispatch := dispatch_nop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st.core data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at run
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   cases value
   exact compiler_nop_drop_open_instructions ops law before after out.core false held exits callback
 
@@ -198,7 +198,7 @@ theorem reader_drop_open_instructions_wasm2 {A : Type}
   have dispatch := dispatch_drop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st.core data env ctx before
   simp only [global_simps] at dispatch
   rw [dispatch] at run
-  obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   exact compiler_nop_drop_open_instructions ops law before after out.core true held exits callback
 
 end Itasca.Runtime.Compiler

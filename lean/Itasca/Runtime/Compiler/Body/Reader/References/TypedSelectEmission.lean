@@ -32,7 +32,7 @@ theorem reader_emit_typed_select_wasm2 {data env locals index st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (ty : types.ValueType) (front : List valtype) (values : List code.StackType) (emitted : runtime.bytecode.Instr),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty,Translate.valueType ty,.I32] ∧
-      ReaderPostWasm2 p out.core (.SELECT (some [Translate.valueType ty])) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.SELECT (some [Translate.valueType ty])) p.current.ctrl.polymorphic_base values ∧
       TypedLowered before after out.core.vals.val emitted (front ++ [Translate.valueType ty]) ∧
       TypedSelectEmission C (front ++ [Translate.valueType ty,Translate.valueType ty,.I32])
         (.SELECT (some [Translate.valueType ty])) [emitted] (front ++ [Translate.valueType ty]) := by

@@ -2,10 +2,10 @@ import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
 
 /-!
@@ -21,9 +21,9 @@ open Aeneas Aeneas.Std Itasca
 
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the numeric callback runs, including extension opcodes. -/
-theorem ReaderPostWasm2.numeric_available {data env locals index st out instruction values}
+theorem _root_.Itasca.Wasm2.ReaderPost.numeric_available {data env locals index st out instruction values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderPostWasm2 p out instruction p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
     {input : List types.ValueType} {output : types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
@@ -49,9 +49,9 @@ theorem ReaderPostWasm2.numeric_available {data env locals index st out instruct
 
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the float callback runs, including extension opcodes. -/
-theorem ReaderPostWasm2.float_available {data env locals index st out instruction values}
+theorem _root_.Itasca.Wasm2.ReaderPost.float_available {data env locals index st out instruction values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderPostWasm2 p out instruction p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
     {input : List types.ValueType} {output : types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)

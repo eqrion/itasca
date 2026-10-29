@@ -7,15 +7,15 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 /-!
 Reader boundaries through scope entry and root closure.
 
-Main declarations: `ReaderEnterPostWasm2.boundary` and `reader_root_end_source_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseDormantWasm2Prefix`.
+Main declarations: `Wasm2.ReaderEnterPost.boundary` and `reader_root_end_source_wasm2`. A direct consumer is `Compiler.Body.Reader.Control.ElseDormantWasm2Prefix`.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem ReaderEnterPostWasm2.boundary {data env locals index st out form bt ins outs remaining base}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.boundary {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) :
     ReaderBoundaryWasm2 data env locals index p.ft out
       (p.parents ++ [{p.current with vals := remaining}])
@@ -55,12 +55,12 @@ theorem reader_end_boundary_wasm2 {data env locals index st out grandparents par
     (parents : p.parents = grandparents ++ [parent])
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
     (opened : Wasm2.Frames.Open env (Wasm2.bodyContext env locals p.ft) out grandparents
-      (resumedSource parent p.current instruction)) (after : p.After out) :
+      (Wasm2.resumedSource parent p.current instruction)) (after : p.After out) :
     ReaderBoundaryWasm2 data env locals index p.ft out grandparents
-      (resumedSource parent p.current instruction) := by
-  have trace : Wasm2.Frames.trace grandparents (resumedSource parent p.current instruction) =
+      (Wasm2.resumedSource parent p.current instruction) := by
+  have trace : Wasm2.Frames.trace grandparents (Wasm2.resumedSource parent p.current instruction) =
       Wasm2.Frames.trace p.parents p.current ++ [.end_] := by
-    simp [Wasm2.Frames.trace, Wasm2.Frames.Saved.trace, resumedSource, parents, List.append_assoc]
+    simp [Wasm2.Frames.trace, Wasm2.Frames.Saved.trace, Wasm2.resumedSource, parents, List.append_assoc]
   refine ⟨p.signature, after.1.bounds, opened, ?_, ?_, ?_⟩
   · exact (Wasm2.Frames.bodyType_close grandparents parent p.current instruction).trans
       (by simpa only [← parents] using p.bodyType)
@@ -72,7 +72,7 @@ theorem reader_root_end_encoding_wasm2 {data env locals index st out}
     (p : Wasm2.Pending data env .Wasm2 locals index st)
     (root : p.current.form = .body)
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
-    (zipper : ReaderEndZipper p out)
+    (zipper : Wasm2.ReaderEndZipper p out)
     (finished : out.core.pos.val = data.length) :
     Wasm2.BodyEncoding data p.current.ops := by
   rcases zipper with ⟨_, _, tokens, _⟩ | ⟨_, _, _, _, closed, _⟩
@@ -87,7 +87,7 @@ theorem reader_root_end_source_wasm2 {data env locals index st out source}
     (p : Wasm2.Pending data env .Wasm2 locals index st)
     (root : p.current.form = .body)
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
-    (zipper : ReaderEndZipper p out)
+    (zipper : Wasm2.ReaderEndZipper p out)
     (finished : out.core.pos.val = data.length)
     (body : Wasm2.BodyEncoding data source) : p.current.ops = source :=
   (reader_root_end_encoding_wasm2 p root encoded zipper finished).unique body

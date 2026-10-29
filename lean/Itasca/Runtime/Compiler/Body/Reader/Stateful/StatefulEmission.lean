@@ -31,7 +31,7 @@ theorem StatefulReaderPost.emission {data env locals index st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.pos ∧
       (∃ extra,after.function.indirect.val = before.function.indirect.val ++ extra) ∧
-      ∃ values emitted output, ReaderPostWasm2 p out op.source p.current.ctrl.polymorphic_base values ∧
+      ∃ values emitted output, Wasm2.ReaderPost p out op.source p.current.ctrl.polymorphic_base values ∧
         TypedLowered before after out.vals.val emitted output ∧
         StatefulEmission after.function.indirect.val C (Sequence.stackTypes st.core.vals.val)
           op.source [emitted] output := by

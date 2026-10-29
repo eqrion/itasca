@@ -41,7 +41,7 @@ theorem reader_emit_const32_wasm2 {data env locals index st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,
-      ReaderPostWasm2 p out.core (Spec.i32Const value) p.current.ctrl.polymorphic_base
+      Wasm2.ReaderPost p out.core (Spec.i32Const value) p.current.ctrl.polymorphic_base
         (p.current.vals ++ [.Val .I32]) ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [.I32]) ∧
         LinearEmission (compilerLocals before) (types.map Translate.valueType) (Spec.i32Const value) [emitted]
@@ -90,7 +90,7 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,
-      ReaderPostWasm2 p out.core (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
+      Wasm2.ReaderPost p out.core (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
         (p.current.vals ++ [.Val .I64]) ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [.I64]) ∧
         LinearEmission (compilerLocals before) (types.map Translate.valueType) (ScalarConst.i64 value) [emitted]

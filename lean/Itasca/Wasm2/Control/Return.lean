@@ -72,9 +72,11 @@ theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U3
     hp'.trans hp, by simpa [hvals, hb] using hv'⟩
 
 /-- The `return` opcode (`0x0f`) preserves `Pending` on success. -/
-theorem Pending.return_ {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.return_reader {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
-    returnStep st env index ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    returnStep st env index ⦃ r => r.1 = .Ok () →
+      r.2.core.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ∧
+      ReaderPost p r.2.core .RETURN true [] ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
     p.current.form p.current.ins p.current.outs
@@ -89,8 +91,17 @@ theorem Pending.return_ {data env profile locals index st} (p : Pending data env
   obtain ⟨hv, hc, hb, hp, ht⟩ := hr hok
   have encoded : Wasm1.At data p.start (.plain .RETURN) r.2.core.pos :=
     .no_immediate p.inbounds hbyte (by simpa [hp] using p.pos) .return_
-  exact p.append_result C outer spine header base r.2 .RETURN true [] .instr_case_12
+  refine ⟨by simpa [vals,base] using hv, ?_⟩
+  exact p.append_reader_context C outer spine header base r.2.core .RETURN true [] .instr_case_12
     (.plain encoded) ht hc (by simpa [hb] using blocks) (by simpa using hv)
-    (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+    (encoded.declared _) (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+
+/-- Forward preservation projects the shared return-reader certificate. -/
+theorem Pending.return_ {data env profile locals index st} (p : Pending data env profile locals index st)
+    (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
+    returnStep st env index ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+  apply WP.spec_mono (p.return_reader hbyte)
+  intro r effect accepted
+  exact (effect accepted).2.after
 
 end Itasca.Wasm2

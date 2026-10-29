@@ -37,7 +37,7 @@ theorem structured_reader_prefix_dead_saturating_wasm2 {jumpTables : List U32} {
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (0xfc#u8) before = .ok (.Ok (), out, after)) :
     ∃ values,
-      ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance op.source)
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
   obtain ⟨operation,instruction,inputs,output,callback,_,_,_,_,values,effect,post⟩ :=
@@ -74,7 +74,7 @@ theorem structured_reader_prefix_saturating_wasm2 {jumpTables : List U32} {data 
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (0xfc#u8) before = .ok (.Ok (), out, after)) :
     ∃ values,
-      ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance op.source)
         out.core.vals.val out.core.pos.val := by
   obtain ⟨entered, retained⟩ := invariant.live reachable

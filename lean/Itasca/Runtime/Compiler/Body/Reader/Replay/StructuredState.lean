@@ -34,7 +34,7 @@ theorem StructuredReaderCompilerStateWasm2.advance {jumpTables : List U32} {A : 
       st parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     {out instruction poly values}
-    (post : ReaderPostWasm2 (state.boundary.pending next advance inbounds) out instruction poly values)
+    (post : Wasm2.ReaderPost (state.boundary.pending next advance inbounds) out instruction poly values)
     (declared : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction)
     (compiled : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance instruction)
       out.vals.val out.pos.val) (mono : after.reachable = true → poly = false) :

@@ -33,7 +33,7 @@ theorem reader_emit_float_wasm2 {data env locals index st}
     after.next_source = out.core.pos ∧
     (∃ front values,
       Sequence.stackTypes st.core.vals.val = front ++ List.replicate op.arity (valtype_numtype op.input) ∧
-      ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [valtype_numtype op.output]) ∧
         ScalarEmission C (front ++ List.replicate op.arity (valtype_numtype op.input))
           op.source [emitted] (front ++ [valtype_numtype op.output])) := by

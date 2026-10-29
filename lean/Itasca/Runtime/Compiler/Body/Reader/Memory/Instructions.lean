@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.MemoryReader
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryStacks
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
@@ -27,9 +28,9 @@ theorem reader_memory_wasm2 {data env locals index st}
     (accepted : code.step visitor st.core data env ⟨locals,p.ft.results⟩ opcode before = .ok (.Ok (),out,after)) :
     ∃ arg values, code.visit_memory visitor before out opcode arg = .ok (.Ok (),after) ∧
       memoryReader operation st.core data env = .ok (.Ok arg,out) ∧
-      ReaderPostWasm2 p out (operation.op arg) p.current.ctrl.polymorphic_base values := by
+      Wasm2.ReaderPost p out (operation.op arg) p.current.ctrl.polymorphic_base values := by
   rw [code.step_memory.dispatch visitor st.core data env ⟨locals,p.ft.results⟩ before opcode operation meaning] at accepted
-  obtain ⟨arg,read,callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨arg,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   obtain ⟨C,outer,spine,header,base,typed,ctrls,blocks,vals⟩ := p.opened
   have poly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic,ctrls]
   have envMatches : EnvTranslation.Matches env ⟨locals,p.ft.results⟩ (Wasm2.Frames.enter C p.current.form p.current.ins p.current.outs) :=
@@ -49,25 +50,9 @@ theorem reader_memory_wasm2 {data env locals index st}
         _ envMatches p.current.ops (by simpa [poly] using typed) opcode operation meaning hs
   change memoryReader operation st.core data env = .ok (.Ok arg,out) at read
   rw [read,WP.spec_ok] at effect
-  obtain ⟨⟨middle,halign,hoffset⟩,controls,rest,stack,length,newTyped⟩ := effect arg rfl
-  dsimp only at controls stack hoffset
-  have wf := newTyped.wellFormed (operation.op arg) (by simp)
-  have encoded1 : Wasm1.At data p.start (.plain (operation.op arg)) out.pos := by
-    obtain ⟨alignment,ha,hna,hba,hea⟩ := halign
-    obtain ⟨offset,ho,hno,hbo,heo⟩ := hoffset
-    exact .of_immediate p.inbounds byte p.pos (.memory opcode operation arg meaning hea heo)
-      ((show Wasm1.BytesAt data st.core.pos alignment middle from ⟨ha,hna,hba⟩).append ⟨ho,hno,hbo⟩)
-  have controlEq : out.ctrls.val = p.parents.map Wasm2.Frames.Saved.ctrl ++
-      [{p.current.ctrl with polymorphic_base := p.current.ctrl.polymorphic_base}] := by simpa [controls] using ctrls
-  have finalTyped := newTyped
-  rw [poly] at finalTyped
-  have newBlocks : ({st with core := out} : code.BodyState).blocks.val = p.parents.map Wasm2.Frames.Saved.bt ++ [p.current.bt] := by
-    simpa [controls,ctrls] using blocks
-  refine ⟨arg,rest,callback,read,.plain encoded1,?_,?_⟩
-  · exact ⟨C,outer,spine,⟨header.kind,header.inputs,header.outputs,
-      header.prior,.simple header.emits (.plain (operation.op arg) wf)⟩,base,finalTyped,controlEq,newBlocks,stack⟩
-  · exact p.append_result C outer spine header base {st with core := out} (operation.op arg)
-      p.current.ctrl.polymorphic_base rest wf (.plain encoded1) finalTyped controlEq newBlocks stack (fun h => nomatch h) (encoded1.declared _)
+  obtain ⟨values, post⟩ := p.memory_reader_post C outer spine header base ctrls blocks
+    opcode operation byte meaning arg out effect
+  exact ⟨arg, values, callback, read, post⟩
 
 end Itasca.Runtime.Compiler
 

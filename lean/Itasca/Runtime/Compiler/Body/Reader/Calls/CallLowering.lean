@@ -53,7 +53,7 @@ theorem reader_emit_call_wasm2 {data env locals typeIndex st}
     (∃ (index : U32) (ft : types.FuncType) (values : List code.StackType) (front : List valtype) (base : U32),
       env.func_types.val[index.val]? = some ft ∧
       Sequence.stackTypes st.core.vals.val = front ++ ft.params.val.map Translate.valueType ∧
-      ReaderPostWasm2 p out.core (.CALL (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
+      Wasm2.ReaderPost p out.core (.CALL (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       base.val = slots (compilerLocals before) + slots front ∧
       TypedLowered before after out.core.vals.val (.Call index base) (front ++ ft.results.val.map Translate.valueType)) := by
   obtain ⟨index, values, callback, read, post⟩ := reader_call_wasm2 p

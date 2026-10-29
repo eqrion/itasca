@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Run
+import Itasca.Runtime.Compiler.Local.Source.SourceStacks
+import Itasca.Visitor.EventDispatch
+import Itasca.Visitor.Erasure
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
@@ -23,7 +25,7 @@ theorem reference_reader_demand {A R : Type}
     (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (tail : code.body_loop_loop recorder data env ctx index profile after out = .ok (.Ok (),final)) :
     CallbackDemand compiler out.core bound := by
-  obtain ⟨value,_,called⟩ := reader_run_success _ _ _ _ _ reference
+  obtain ⟨value,_,called⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
   have vectors := source_callback_demand before after final out.core (action value) (.Ok ()) out data env ctx index profile
     (.Ok ()) called tail
   exact room.demand budget metadata codeBudget sources cursor remaining out.core vectors.1

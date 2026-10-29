@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts

@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryLayout
 /-!
 The complete post-reader stack recovers a live Wasm 2 child front by cancelling its exact translated parameter suffix.
 
-Main declarations: `ReaderEnterPostWasm2.scope_fronts` and `ReaderEnterPostWasm2.scope_fronts_dormant`. A direct consumer is `Compiler.Body.Reader.Control.BlockDormantPrefix`.
+Main declarations: `Wasm2.ReaderEnterPost.scope_fronts` and `Wasm2.ReaderEnterPost.scope_fronts_dormant`. A direct consumer is `Compiler.Body.Reader.Control.BlockDormantPrefix`.
 -/
 
 namespace Itasca.Runtime.Compiler
@@ -12,9 +12,9 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The complete post-reader stack recovers a live Wasm 2 child front by
 cancelling its exact translated parameter suffix. -/
-theorem ReaderEnterPostWasm2.scope_fronts {data env locals index st out form bt ins outs remaining base}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.scope_fronts {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (child : SourceScope)
@@ -32,9 +32,9 @@ theorem ReaderEnterPostWasm2.scope_fronts {data env locals index st out form bt 
 
 /-- A dormant Wasm 2 entry retains the exact saved prefix even when operand
 popping used the polymorphic stack rule. -/
-theorem ReaderEnterPostWasm2.scope_fronts_dormant {data env locals index st out form bt ins outs remaining base}
+theorem _root_.Itasca.Wasm2.ReaderEnterPost.scope_fronts_dormant {data env locals index st out form bt ins outs remaining base}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
-    (post : ReaderEnterPostWasm2 p out form bt ins outs remaining base)
+    (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (child : SourceScope)

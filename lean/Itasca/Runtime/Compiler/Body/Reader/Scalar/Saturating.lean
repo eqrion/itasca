@@ -1,3 +1,4 @@
+import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
 
@@ -27,35 +28,25 @@ theorem reader_saturating_wasm2 {data env locals index st}
       out.ctrls = st.core.ctrls ∧ out.pos = next ∧
       ∃ values, StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals
           operation.inputs operation.output values ∧
-        ReaderPostWasm2 p out operation.instruction p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out operation.instruction p.current.ctrl.polymorphic_base values := by
   have readLeb := reader.read_u32_leb.complete data st.core.pos subopcode next decoded
   rw [code.step_extended.prefixed] at accepted
   simp only [Wasm2.prefixedStep, readLeb, bind_ok, meaning] at accepted
-  obtain ⟨unit, converted, callback⟩ := reader_run_success _ _ _ _ _ accepted
+  obtain ⟨unit, converted, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   cases unit
   have unary := Wasm2.NumericExtensions.saturating_unary meaning
   have read : Numeric.read operation {st.core with pos := next} = .ok (.Ok (), out) := by
     simpa only [Numeric.read, unary, Bool.false_eq_true, ↓reduceIte] using converted
-  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
-  have physicalBase : (Control.base {st.core with pos := next}).val = outer.length := by simp [Control.base, ctrls, base]
-  have polymorphic : Control.polymorphic {st.core with pos := next} = p.current.ctrl.polymorphic_base := by simp [Control.polymorphic, ctrls]
-  have effect := Numeric.read.segment operation {st.core with pos := next} outer p.current.vals vals physicalBase capacity
-  rw [read, WP.spec_ok] at effect
-  obtain ⟨controls, position, values, stack, length, numeric⟩ := effect
-  dsimp only at controls position stack length numeric
-  rw [polymorphic] at numeric
-  refine ⟨callback, read, converted, controls, position, values, numeric, ?_⟩
-  have encoded : Wasm2.At data p.start (.plain operation.instruction) out.pos := by
+  have encoded : Wasm2.At data p.start (.plain operation.instruction) next := by
     obtain ⟨bytes, first, last, slice, leb⟩ := decoded
-    apply Wasm2.At.of_immediate p.inbounds byte p.pos (.saturating subopcode operation meaning leb)
-    simpa only [position] using (show Wasm1.BytesAt data st.core.pos bytes next from ⟨first, last, slice⟩)
-  apply reader_append_wasm2 p out operation.instruction p.current.ctrl.polymorphic_base values
-    operation.wellFormed encoded
-    (fun C wf priorTyped => numeric.wasm2_prefix C wf p.current.ops operation.instruction priorTyped
-      operation.wellFormed (operation.typed C wf))
-  · simpa [controls] using ctrls
-  · simpa [vals, base] using stack
-  · exact Wasm2.NumericExtensions.saturating_declared meaning _
+    exact Wasm2.At.of_immediate p.inbounds byte p.pos (.saturating subopcode operation meaning leb)
+      (show Wasm1.BytesAt data st.core.pos bytes next from ⟨first, last, slice⟩)
+  have effect := p.numeric_reader operation next capacity encoded (Wasm2.NumericExtensions.saturating_declared meaning _)
+  dsimp only at effect
+  rw [read, WP.spec_ok] at effect
+  obtain ⟨controls, position, rest⟩ := effect
+  obtain ⟨values, numeric, post⟩ := rest () rfl
+  exact ⟨callback, read, converted, controls, position, values, numeric, post⟩
 
 theorem float_saturating_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : code.OpIterState)
@@ -128,7 +119,7 @@ theorem reader_float_saturating_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = next ∧
       ∃ values, StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals
         operation.inputs operation.output values ∧
-        ReaderPostWasm2 p out.core op.source p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values := by
   obtain ⟨sub,operation,hook,subEq,bound,meaning,instruction,inputs,output,encoding,hookEq⟩ :=
     float_saturating_reader_facts ops before out.core op extension
   have same : sub = subopcode := (UScalar.eq_equiv _ _).mpr (subEq.trans subopcodeEq.symm)

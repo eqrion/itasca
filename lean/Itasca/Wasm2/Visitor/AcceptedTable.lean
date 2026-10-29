@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Wasm2.Trace.ControlRefinement
 
 /-!
@@ -7,7 +7,7 @@ Successful table iterations either continue or finish with acceptance.
 Main declarations: `TableFlowAccepted` and `TableFlowRelated`. A direct consumer is `Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Wasm2.Visitor
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Visitor
 set_option maxRecDepth 4096
 
@@ -101,7 +101,7 @@ theorem table_rest_accepted_replay {V W : Type}
         by simpa only [nextEq,last,↓reduceIte,tableVisitor] using held⟩
 
 /-- Replays the actual label read and optional label hook of one accepted
-Wasm 2 table iteration, retaining source state at each callback boundary. -/
+table iteration, retaining source state at each callback boundary. -/
 theorem table_body_accepted_replay {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
     (related : Nat → code.OpIterState → V → W → Prop)
@@ -173,7 +173,7 @@ theorem table_body_accepted_replay {V W : Type}
         exact table_rest_accepted_replay source target related readRelated post count finish out env index depth ts bounded arity _
           after targetAfter (by simpa only [last,↓reduceIte] using retained) flow accepted reference
 
-/-- Replay the entire Wasm 2 label loop from an independently accepted run.
+/-- Replay the entire profile-selected label loop from an independently accepted run.
 Only reached successful label and final callbacks need available target
 implementations. It does not require universal compiler visitor acceptance. -/
 theorem table_loop_reader_accepted_replay {V W : Type}
@@ -246,4 +246,4 @@ theorem table_loop_reader_accepted_replay {V W : Type}
           index'' progress.2 arity'' first'' next' before' compiler' retained tail rfl
         exact ⟨targetAfter,by simpa only [bind_ok,code.branch_table_with_loop] using targetTail,retained'⟩
 
-end Itasca.Runtime.Compiler
+end Itasca.Wasm2.Visitor

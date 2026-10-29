@@ -47,13 +47,13 @@ theorem reader_simd_lane_wasm2 {data env locals index st}
       out.core.ctrls = st.core.ctrls ∧ out.core.pos = position ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
         (Wasm2.Simd.laneInputs op.runtime.1 op.replace) (Wasm2.Simd.laneOutput op.runtime.1 op.replace) values ∧
-        ReaderPostWasm2 p out.core (op.instruction (.mk_uN lane.val)) p.current.ctrl.polymorphic_base values := by
+        Wasm2.ReaderPost p out.core (op.instruction (.mk_uN lane.val)) p.current.ctrl.polymorphic_base values := by
   obtain ⟨capacity,run⟩ := profile_scalar_success visitor st out data env ctx index 0xfd#u8 before after (by decide) accepted
   rw [code.step_wasm2.simd,code.step_simd.eq_runs] at run
   have readLeb := reader.read_u32_leb.complete data st.core.pos subopcode next decoded
   simp only [Wasm2.Simd.prefixStep,readLeb,bind_ok] at run
   rw [Wasm2.Simd.subStep.lane visitor _ data env subopcode before op meaning] at run
-  obtain ⟨lane,read,callback⟩ := reader_run_success _ _ _ _ _ run
+  obtain ⟨lane,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
   rw [Wasm2.Simd.lane_fixed] at read
   obtain ⟨⟨reply,middle⟩,take,controls,values,laneInfo⟩ := WP.spec_imp_exists
     (Wasm2.Simd.take_lane_spec {st.core with pos := next} data op.runtime.2.1)
@@ -74,7 +74,7 @@ theorem reader_simd_lane_wasm2 {data env locals index st}
       exact Wasm2.At.of_immediate p.inbounds byte p.pos (.simd subopcode leb (.lane subopcode op lane meaning))
         ((show Wasm1.BytesAt data st.core.pos bytes next from ⟨first,last,within⟩).append span)
     refine ⟨lane,middle.pos,bound,span,callback,fixed,?_⟩
-    exact reader_simd_fixed_post p middle.pos out.core _ _ (op.instruction (.mk_uN lane.val))
+    exact Wasm2.Pending.fixed_reader_accepted p middle.pos out.core _ _ (op.instruction (.mk_uN lane.val))
       capacity (op.wellFormed _ laneWf) (op.declared _ _)
       (fun C wf _ => by simpa only [Wasm2.Simd.LaneOperation.inputs_pop,Wasm2.Simd.LaneOperation.outputs_pop]
           using op.typed C (.mk_uN lane.val) wf laneWf bound) encoded fixed

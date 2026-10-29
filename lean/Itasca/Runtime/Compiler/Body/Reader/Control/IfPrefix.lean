@@ -102,7 +102,7 @@ theorem structured_reader_prefix_if_wasm2 {jumpTables : List U32} {emit : List v
     ∃ bt ins outs remaining base front condition,
       let child := SourceScope.enterIf (Wasm2.blockType bt) condition front (ins.map Translate.valueType)
         (outs.map Translate.valueType) before.function.code.val.length true
-      ReaderEnterPostWasm2 p out .then_ bt ins outs remaining base ∧
+      Wasm2.ReaderEnterPost p out .then_ bt ins outs remaining base ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals (parents ++ [current]) child out.core.vals.val out.core.pos.val ∧
       ReaderScopeZipperWasm2 (parents ++ [current]) child
         (p.parents ++ [{p.current with vals := remaining}]) (Wasm2.Frames.Saved.fresh base .then_ bt ins outs) ∧

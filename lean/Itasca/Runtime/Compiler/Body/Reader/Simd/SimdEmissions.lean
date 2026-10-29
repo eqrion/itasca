@@ -21,7 +21,7 @@ theorem reader_simd_fixed_emission {data env locals index st source values posit
     (number : opcode.val = 512 + sub.val) (bounded : sub.val < 256) (nonconstant : sub.val ≠ 12)
     (meaning : SimdImmediateMeaning C sub (simdImmediate sub a bits)
       (Wasm2.Simd.inputTypes inputs) source (Wasm2.Simd.outputTypes output))
-    (post : ReaderPostWasm2 p out source p.current.ctrl.polymorphic_base values)
+    (post : Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values)
     (effect : Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals inputs output values)
     (read : Wasm2.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out))
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)

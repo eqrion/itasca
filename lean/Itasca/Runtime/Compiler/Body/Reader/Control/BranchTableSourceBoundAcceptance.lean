@@ -1,10 +1,10 @@
-import Itasca.Runtime.Compiler.Local.Capacity.ReaderAcceptance
+import Itasca.Visitor.ReaderAcceptance
 import Itasca.Visitor.ReachedTableLabels
 import Itasca.Runtime.Compiler.Local.Capacity.BranchLabelAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
 import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
 import Itasca.Wasm2.Trace.TableBytes
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableLoopReplay
+import Itasca.Wasm2.Visitor.AcceptedTable
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableDecodePrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSafetyWasm2
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability
@@ -14,7 +14,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Capacity.BodyReplay
+import Itasca.Visitor.BodyReplay
 
 /-!
 Source-bounded br_table reader replay. Label-collection invariants, loop framing and callback availability establish successful compilation from the independent source demand.
@@ -197,7 +197,7 @@ theorem compiler_table_loop_collect_available {A V : Type}
     apply WP.exists_imp_spec
     refine ⟨(.Ok (),targetAfter),called,rfl,collected,?_,held.2.2⟩
     simpa only [frame,appended] using decodedPrefix
-  obtain ⟨targetAfter,called,retained⟩ := table_loop_reader_accepted_replay source
+  obtain ⟨targetAfter,called,retained⟩ := Wasm2.Visitor.table_loop_reader_accepted_replay source
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) related readRelated post data env profile count
     readMoves label (fun state sourceBefore current marked depth ts sourceAfter held mark call =>
       finish state current marked depth ts sourceBefore sourceAfter held.1 held.2.1 held.2.2.1 held.2.2.2 mark call)
@@ -243,7 +243,7 @@ theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
     rw [read,WP.spec_ok] at actual
     obtain ⟨values,controls,_,_⟩ := actual depth ts rfl
     exact ⟨values.trans held.1,controls.trans held.2.1,held.2.2⟩
-  obtain ⟨targetAfter,_,retained⟩ := table_loop_reader_accepted_replay source source related readRelated post
+  obtain ⟨targetAfter,_,retained⟩ := Wasm2.Visitor.table_loop_reader_accepted_replay source source related readRelated post
     data env profile count readMoves
     (by
       intro i state left right depth ts next _ held called

@@ -32,61 +32,61 @@ theorem reader_stateful_bulk_wasm2 {data env locals index st}
   · have equal : subopcode = 8#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.memoryInit value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_memory_init_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 9#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.dataDrop value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_data_drop_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 10#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨.memoryCopy,0#u32,0#u32,⟨rfl,rfl⟩,?_,reader_memory_copy_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 11#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨.memoryFill,0#u32,0#u32,⟨rfl,rfl⟩,?_,reader_memory_fill_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 12#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableInit value.2.val value.1.val),value.1,value.2,⟨rfl,rfl⟩,?_,reader_table_init_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 13#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.elemDrop value.1.val),value.1,0#u32,⟨rfl,rfl⟩,?_,reader_elem_drop_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 14#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableCopy value.1.val value.2.val),value.1,value.2,⟨rfl,rfl⟩,?_,reader_table_copy_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 15#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableGrow value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_table_grow_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 16#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableSize value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_table_size_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
   · have equal : subopcode = 17#u32 := (UScalar.eq_equiv _ _).mpr member
     subst subopcode
     simp only [bulkStep] at run
-    obtain ⟨value,read,callback⟩ := reader_run_success _ _ _ _ _ run
+    obtain ⟨value,read,callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ run
     refine ⟨(.tableFill value.val),value,0#u32,⟨rfl,rfl⟩,?_,reader_table_fill_post_wasm2 p byte next decoded size value out.core read⟩
     simpa only [statefulCallback] using callback
 

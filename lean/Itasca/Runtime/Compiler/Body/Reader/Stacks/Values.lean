@@ -4,14 +4,14 @@ import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
 /-!
 Concrete operand values and their types after reader execution.
 
-Main declarations: `ReaderPostWasm2.values` and `numeric_full_stack_types`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance`.
+Main declarations: `Wasm2.ReaderPost.values` and `numeric_full_stack_types`. A direct consumer is `Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance`.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem ReaderPostWasm2.values {data env locals index st out instruction poly values}
-    {p : Wasm2.Pending data env .Wasm2 locals index st} (post : ReaderPostWasm2 p out instruction poly values) :
+theorem _root_.Itasca.Wasm2.ReaderPost.values {data env locals index st out instruction poly values}
+    {p : Wasm2.Pending data env .Wasm2 locals index st} (post : Wasm2.ReaderPost p out instruction poly values) :
     st.core.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ p.current.vals ∧
     out.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ values := by
   obtain ⟨_, outer, spine, _, _, _, _, _, old⟩ := p.opened

@@ -27,11 +27,30 @@ def Frames.Form.opcode (form : Frames.Form) : U8 :=
   | .then_ => 0x04#u8
   | _ => 0x02#u8
 
+/-- Entry retains the exact supplied parent zipper and decoded callback signature. -/
+structure ReaderEnterPost {data env profile locals index st}
+    (p : Pending data env profile locals index st) (out : code.BodyState)
+    (form : Frames.Form) (bt : signature.BlockType)
+    (ins outs : List types.ValueType) (remaining : List code.StackType) (base : Usize) : Prop where
+  inputs : resolve env (Wasm2.inputs bt) = some ins
+  outputs : resolve env (Wasm2.outputs bt) = some outs
+  inputBound : ins.length ≤ 1000
+  outputBound : outs.length ≤ 1000
+  encoded : At data p.start (form.token bt) out.core.pos
+  popped : ∀ ts, Sequence.Realizes p.current.ctrl.polymorphic_base remaining ts →
+    Sequence.Realizes p.current.ctrl.polymorphic_base p.current.vals (ts ++ form.args ins)
+  basePosition : base.val = p.current.ctrl.value_stack_base.val + remaining.length
+  opened : Frames.Open env (bodyContext env locals p.ft) out
+    (p.parents ++ [{ p.current with vals := remaining }]) (Frames.Saved.fresh base form bt ins outs)
+  after : p.After out
+
 /-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
-theorem Pending.enter_after {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.enter_reader {data env profile locals index st} (p : Pending data env profile locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
-    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs remaining newBase,
+      Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
+      ReaderEnterPost p r.2 form bt ins outs remaining newBase ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have hcap : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
@@ -53,6 +72,9 @@ theorem Pending.enter_after {data env profile locals index st} (p : Pending data
     newBase remaining (by simpa [Control.polymorphic, ctrls] using hpop)
     (by simpa [base] using hbase) hctrls hblocks
     (by simpa [vals, base] using hvals)
+  refine ⟨bt, ins, outs, remaining, newBase, hdecoded, hin, hout, hip, hop, encoded,
+    (by simpa [Control.polymorphic, ctrls] using hpop),
+    (by simpa [base] using hbase), ho, ?_⟩
   refine p.running_after r.2 _ _ (form.token bt) encoded ho ?_ ?_ ?_
     (p.profileFrames.enter form initial bt ins outs newBase remaining hscalar) ?_
     (by cases form <;> simp [Frames.Form.token, Token.Declared])
@@ -65,5 +87,15 @@ theorem Pending.enter_after {data env profile locals index st} (p : Pending data
     refine p.wasm1_at encoded ?_ ?_ hp
     · rw [hbyte]; rcases initial with rfl | rfl | rfl <;> decide
     · rcases initial with rfl | rfl | rfl <;> exact hscalar hp
+
+/-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
+theorem Pending.enter_after {data env profile locals index st} (p : Pending data env profile locals index st)
+    (form : Frames.Form) (initial : form.Initial)
+    (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
+    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+  apply WP.spec_mono (p.enter_reader form initial hbyte)
+  intro r effect accepted
+  obtain ⟨_, _, _, _, _, _, post⟩ := effect accepted
+  exact post.after
 
 end Itasca.Wasm2
